@@ -1,11 +1,17 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { switchToSession } from "../../redux/thunks/session";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import {
+  deleteSession,
+  getSession,
+  loadSession,
+  updateSession,
+} from "../../redux/thunks/session";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -21,6 +27,7 @@ export function HistoryTableRow({
 }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -29,23 +36,30 @@ export function HistoryTableRow({
   );
   const currentSessionId = useAppSelector((state) => state.session.id);
 
+  useEffect(() => {
+    setSessionTitleEditValue(sessionMetadata.title);
+  }, [sessionMetadata]);
+
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (sessionTitleEditValue !== sessionMetadata.title) {
-        const session;
-        const sessionData = await getSession(sessionMetadata.sessionId);
-        sessionData.title = sessionTitleEditValue;
-        await updateSession(sessionData);
-        onEdit({
-          ...sessionMetadata,
-          title: sessionTitleEditValue,
-        });
+        // imperfect solution of loading session just to update it
+        // but fine for now, pretty low latency
+        const currentSession = await getSession(
+          ideMessenger,
+          sessionMetadata.sessionId,
+        );
+        await dispatch(
+          updateSession({
+            ...currentSession,
+            title: sessionTitleEditValue,
+          }),
+        );
       }
-      setEditing(false);
     } else if (e.key === "Escape") {
-      setEditing(false);
       setSessionTitleEditValue(sessionMetadata.title);
     }
+    setEditing(false);
   };
 
   return (
@@ -59,9 +73,13 @@ export function HistoryTableRow({
           className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
           onClick={async () => {
             if (sessionMetadata.sessionId !== currentSessionId) {
-              await dispatch(switchToSession(sessionMetadata.sessionId));
+              await dispatch(
+                loadSession({
+                  sessionId: sessionMetadata.sessionId,
+                  saveCurrentSession: true,
+                }),
+              );
             }
-
             navigate("/");
           }}
         >
@@ -80,7 +98,7 @@ export function HistoryTableRow({
               </div>
             ) : (
               <span className="text-md block max-w-80 truncate text-base font-semibold">
-                {JSON.stringify(sessionMetadata.title).slice(1, -1)}
+                {sessionMetadata.title}
               </span>
             )}
 
@@ -117,8 +135,7 @@ export function HistoryTableRow({
                 text="Delete"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  await deleteSession(sessionMetadata.sessionId);
-                  onDelete(sessionMetadata.sessionId);
+                  await dispatch(deleteSession(sessionMetadata.sessionId));
                 }}
               >
                 <TrashIcon width="1.3em" height="1.3em" />

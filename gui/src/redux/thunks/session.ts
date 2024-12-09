@@ -16,7 +16,7 @@ const MAX_TITLE_LENGTH = 100;
 // Async session functions live in thunks (because of IDE messaging mostly)
 // see sessionSlice for sync redux session functions
 
-async function getSession(
+export async function getSession(
   ideMessenger: IIdeMessenger,
   id: string,
 ): Promise<Session> {
