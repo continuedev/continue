@@ -1,5 +1,4 @@
 import { streamResponse } from "@continuedev/fetch";
-import fetch from "node-fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -16,7 +15,7 @@ import {
 } from "openai/resources/index";
 
 import { GeminiConfig } from "../types.js";
-import { embedding } from "../util.js";
+import { customFetch, embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -157,7 +156,7 @@ export class GeminiApi implements BaseLlmApi {
       `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
       this.apiBase,
     ).toString();
-    const resp = await fetch(apiURL, {
+    const resp = await customFetch(this.config.requestOptions)(apiURL, {
       method: "POST",
       body: JSON.stringify(this._convertBody(body, apiURL)),
       signal,
@@ -244,7 +243,7 @@ export class GeminiApi implements BaseLlmApi {
 
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
     const inputs = Array.isArray(body.input) ? body.input : [body.input];
-    const response = await fetch(
+    const response = await customFetch(this.config.requestOptions)(
       new URL(`${body.model}:batchEmbedContents`, this.apiBase),
       {
         method: "POST",

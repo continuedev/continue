@@ -13,6 +13,7 @@ import {
 } from "openai/resources/index";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
+import { maybeCustomFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -29,6 +30,7 @@ export class OpenAIApi implements BaseLlmApi {
     this.openai = new OpenAI({
       apiKey: config.apiKey,
       baseURL: this.apiBase,
+      fetch: maybeCustomFetch(config.requestOptions),
     });
   }
 

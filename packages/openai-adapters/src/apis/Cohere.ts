@@ -1,5 +1,4 @@
 import { streamJSON } from "@continuedev/fetch";
-import fetch from "node-fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -15,7 +14,7 @@ import {
   Model,
 } from "openai/resources/index";
 import { CohereConfig } from "../types.js";
-import { chatCompletion, embedding } from "../util.js";
+import { chatCompletion, customFetch, embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -68,12 +67,15 @@ export class CohereApi implements BaseLlmApi {
       Authorization: `Bearer ${this.config.apiKey}`,
     };
 
-    const resp = await fetch(new URL("chat", this.apiBase), {
-      method: "POST",
-      headers,
-      body: JSON.stringify(this._convertBody(body)),
-      signal,
-    });
+    const resp = await customFetch(this.config.requestOptions)(
+      new URL("chat", this.apiBase),
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(this._convertBody(body)),
+        signal,
+      },
+    );
 
     const data = (await resp.json()) as any;
     const { input_tokens, output_tokens } = data.meta.tokens;
@@ -98,12 +100,15 @@ export class CohereApi implements BaseLlmApi {
       Authorization: `Bearer ${this.config.apiKey}`,
     };
 
-    const resp = await fetch(new URL("chat", this.apiBase), {
-      method: "POST",
-      headers,
-      body: JSON.stringify(this._convertBody(body)),
-      signal,
-    });
+    const resp = await customFetch(this.config.requestOptions)(
+      new URL("chat", this.apiBase),
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(this._convertBody(body)),
+        signal,
+      },
+    );
 
     for await (const value of streamJSON(resp as any)) {
       if (value.event_type === "text-generation") {
@@ -145,7 +150,7 @@ export class CohereApi implements BaseLlmApi {
   }
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     const endpoint = new URL("rerank", this.apiBase);
-    const response = await fetch(endpoint, {
+    const response = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
@@ -172,7 +177,7 @@ export class CohereApi implements BaseLlmApi {
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
     const url = new URL("/embed", this.apiBase);
     const texts = typeof body.input === "string" ? [body.input] : body.input;
-    const response = await fetch(url, {
+    const response = await customFetch(this.config.requestOptions)(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

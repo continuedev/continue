@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -11,7 +10,7 @@ import {
   Model,
 } from "openai/resources/index";
 import { JinaConfig } from "../types.js";
-import { rerank } from "../util.js";
+import { customFetch, rerank } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -60,7 +59,7 @@ export class JinaApi implements BaseLlmApi {
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     const endpoint = new URL("rerank", this.apiBase);
-    const response = await fetch(endpoint, {
+    const response = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
