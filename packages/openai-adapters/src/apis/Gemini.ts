@@ -116,12 +116,16 @@ export class GeminiApi implements BaseLlmApi {
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
     let completion = "";
-    for await (const chunk of this.chatCompletionStream({
-      ...body,
-      stream: true,
-    })) {
+    for await (const chunk of this.chatCompletionStream(
+      {
+        ...body,
+        stream: true,
+      },
+      signal,
+    )) {
       completion += chunk.choices[0].delta.content;
     }
     return {
@@ -147,6 +151,7 @@ export class GeminiApi implements BaseLlmApi {
 
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const apiURL = new URL(
       `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
@@ -155,6 +160,7 @@ export class GeminiApi implements BaseLlmApi {
     const resp = await fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(this._convertBody(body, apiURL)),
+      signal,
     });
 
     let buffer = "";

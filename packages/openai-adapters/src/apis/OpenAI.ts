@@ -34,34 +34,43 @@ export class OpenAIApi implements BaseLlmApi {
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    const response = await this.openai.chat.completions.create(body);
+    const response = await this.openai.chat.completions.create(body, {
+      signal,
+    });
     return response;
   }
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const response = await this.openai.chat.completions.create(body);
+    const response = await this.openai.chat.completions.create(body, {
+      signal,
+    });
     for await (const result of response) {
       yield result;
     }
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<Completion> {
-    const response = await this.openai.completions.create(body);
+    const response = await this.openai.completions.create(body, { signal });
     return response;
   }
   async *completionStream(
     body: CompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<Completion, any, unknown> {
-    const response = await this.openai.completions.create(body);
+    const response = await this.openai.completions.create(body, { signal });
     for await (const result of response) {
       yield result;
     }
   }
   async *fimStream(
     body: FimCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const endpoint = new URL("fim/completions", this.apiBase);
     const resp = await fetch(endpoint, {
@@ -85,6 +94,7 @@ export class OpenAIApi implements BaseLlmApi {
         "x-api-key": this.config.apiKey ?? "",
         Authorization: `Bearer ${this.config.apiKey}`,
       },
+      signal,
     });
     for await (const chunk of streamSse(resp as any)) {
       if (chunk.choices && chunk.choices.length > 0) {

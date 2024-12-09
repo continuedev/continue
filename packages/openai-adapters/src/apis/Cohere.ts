@@ -61,6 +61,7 @@ export class CohereApi implements BaseLlmApi {
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
     const headers = {
       "Content-Type": "application/json",
@@ -71,6 +72,7 @@ export class CohereApi implements BaseLlmApi {
       method: "POST",
       headers,
       body: JSON.stringify(this._convertBody(body)),
+      signal,
     });
 
     const data = (await resp.json()) as any;
@@ -89,6 +91,7 @@ export class CohereApi implements BaseLlmApi {
 
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const headers = {
       "Content-Type": "application/json",
@@ -99,6 +102,7 @@ export class CohereApi implements BaseLlmApi {
       method: "POST",
       headers,
       body: JSON.stringify(this._convertBody(body)),
+      signal,
     });
 
     for await (const value of streamJSON(resp as any)) {

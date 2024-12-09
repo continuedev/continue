@@ -87,6 +87,7 @@ export class AnthropicApi implements BaseLlmApi {
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
     const response = await fetch(new URL("messages", this.apiBase), {
       method: "POST",
@@ -97,6 +98,7 @@ export class AnthropicApi implements BaseLlmApi {
         "x-api-key": this.config.apiKey,
       },
       body: JSON.stringify(this._convertBody(body)),
+      signal,
     });
 
     const completion = (await response.json()) as any;
@@ -127,6 +129,7 @@ export class AnthropicApi implements BaseLlmApi {
   }
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     body.messages;
     const response = await fetch(new URL("messages", this.apiBase), {
@@ -138,6 +141,7 @@ export class AnthropicApi implements BaseLlmApi {
         "x-api-key": this.config.apiKey,
       },
       body: JSON.stringify(this._convertBody(body)),
+      signal,
     });
 
     for await (const value of streamSse(response as any)) {
@@ -165,16 +169,19 @@ export class AnthropicApi implements BaseLlmApi {
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<Completion> {
     throw new Error("Method not implemented.");
   }
   async *completionStream(
     body: CompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<Completion, any, unknown> {
     throw new Error("Method not implemented.");
   }
   async *fimStream(
     body: FimCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     throw new Error("Method not implemented.");
   }

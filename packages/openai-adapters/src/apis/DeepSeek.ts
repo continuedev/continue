@@ -17,6 +17,7 @@ export class DeepSeekApi extends OpenAIApi {
 
   async *fimStream(
     body: FimCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const endpoint = new URL("beta/completions", this.apiBase);
     const resp = await fetch(endpoint, {
@@ -38,6 +39,7 @@ export class DeepSeekApi extends OpenAIApi {
         Accept: "application/json",
         Authorization: `Bearer ${this.config.apiKey}`,
       },
+      signal,
     });
     for await (const chunk of streamSse(resp as any)) {
       yield chatChunk({
