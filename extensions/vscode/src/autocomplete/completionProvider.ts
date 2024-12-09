@@ -88,8 +88,7 @@ export class ContinueCompletionProvider
 
     this.loadingSpinnerDecorationType =
       vscode.window.createTextEditorDecorationType({
-        backgroundColor: "yellow",
-        textDecoration: "underline",
+        backgroundColor: "transparent",
 
         gutterIconPath: context.asAbsolutePath("media/loading.webp"),
         gutterIconSize: "cover",

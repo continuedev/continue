@@ -119,7 +119,7 @@
         },
         "continue.enableTabAutocompleteLineSpinner": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "markdownDescription": "If enabled, a loading spinner is displayed to the left of the line while the autocomplete request is running"
         },
         "continue.pauseTabAutocompleteOnBattery": {
