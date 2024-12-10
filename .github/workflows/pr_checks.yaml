@@ -27,33 +27,6 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
-  vscode-checks:
-    needs: install-root
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
-
-      - name: Install vscode dependencies
-        run: |
-          cd extensions/vscode
-          npm ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-
-      - name: Type check and lint
-        run: |
-          cd extensions/vscode
-          npx tsc --noEmit
-          npm run lint
-
   core-checks:
     needs: install-root
     runs-on: ubuntu-latest
@@ -143,6 +116,38 @@ jobs:
         run: |
           cd binary
           npx tsc --noEmit
+
+  vscode-checks:
+    needs: [install-root, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v3
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Install vscode dependencies
+        run: |
+          cd extensions/vscode
+          npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - name: Type check and lint
+        run: |
+          cd extensions/vscode
+          npx tsc --noEmit
+          npm run lint
 
   tests:
     needs: [vscode-checks, core-checks, gui-checks, binary-checks]
