@@ -7,6 +7,9 @@
       "dependsOn": [
         // To detect compile errors
         "vscode-extension:tsc",
+        // To ensure extension.js is regenerated even if
+        // vscode-extension:esbuild is already running in background
+        "vscode-extension:touch-source",
         // To build the React app that is used in the extension
         "vscode-extension:continue-ui:build",
         // // To bundle the code the same way we do for publishing
@@ -18,6 +21,12 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "vscode-extension:touch-source",
+      "type": "shell",
+      "command": "touch",
+      "args": ["${workspaceFolder}/extensions/vscode/src/extension.ts"]
     },
     {
       "label": "vscode-extension:esbuild",
