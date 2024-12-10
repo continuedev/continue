@@ -1,7 +1,9 @@
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
+import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
+import com.github.continuedev.continueintellijextension.utils.getOS
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
@@ -28,7 +30,10 @@ import kotlinx.coroutines.*
 import java.awt.Desktop
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
-import java.io.*
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStreamReader
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Paths
@@ -41,19 +46,14 @@ class IntelliJIDE(
     private val ripgrep: String
 
     init {
-        val pluginId = "com.github.continuedev.continueintellijextension"
+        val myPluginId = "com.github.continuedev.continueintellijextension"
         val pluginDescriptor =
-            PluginManager.getPlugin(PluginId.getId(pluginId)) ?: throw Exception("Plugin not found")
+            PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
+
         val pluginPath = pluginDescriptor.pluginPath
-        val osName = System.getProperty("os.name").toLowerCase()
-        val os = when {
-            osName.contains("mac") || osName.contains("darwin") -> "darwin"
-            osName.contains("win") -> "win32"
-            osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
-            else -> "linux"
-        }
+        val os = getOS()
         ripgrep =
-            Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + if (os == "win32") ".exe" else "").toString()
+            Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + if (os == OS.WINDOWS) ".exe" else "").toString()
     }
 
     override suspend fun getIdeInfo(): IdeInfo {
@@ -82,7 +82,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getIdeSettings(): IdeSettings {
-        val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
+        val settings = service<ContinueExtensionSettings>()
 
         return IdeSettings(
             remoteConfigServerUrl = settings.continueState.remoteConfigServerUrl,
@@ -106,17 +106,26 @@ class IntelliJIDE(
                 ProcessBuilder("git", "diff", "--cached")
             }
             builder.directory(File(workspaceDir))
-            val process = builder.start()
+            val process = withContext(Dispatchers.IO) {
+                builder.start()
+            }
 
             val reader = BufferedReader(InputStreamReader(process.inputStream))
-            var line: String? = reader.readLine()
+            var line: String? = withContext(Dispatchers.IO) {
+                reader.readLine()
+            }
             while (line != null) {
                 output.append(line)
                 output.append("\n")
-                line = reader.readLine()
+                line = withContext(Dispatchers.IO) {
+                    reader.readLine()
+                }
             }
 
-            process.waitFor()
+            withContext(Dispatchers.IO) {
+                process.waitFor()
+            }
+
             diffs.add(output.toString())
         }
 
@@ -125,7 +134,9 @@ class IntelliJIDE(
 
     override suspend fun getClipboardContent(): Map<String, String> {
         val clipboard = Toolkit.getDefaultToolkit().systemClipboard
-        val data = clipboard.getData(DataFlavor.stringFlavor)
+        val data = withContext(Dispatchers.IO) {
+            clipboard.getData(DataFlavor.stringFlavor)
+        }
         val text = data as? String ?: ""
         return mapOf("text" to text)
     }
@@ -168,10 +179,10 @@ class IntelliJIDE(
     }
 
     override suspend fun getWorkspaceDirs(): List<String> {
-        if (this.workspacePath != null) {
-            return listOf(this.workspacePath)
+        return if (this.workspacePath != null) {
+            listOf(this.workspacePath)
         } else {
-            return emptyList()
+            emptyList()
         }
     }
 
@@ -211,7 +222,9 @@ class IntelliJIDE(
     }
 
     override suspend fun openUrl(url: String) {
-        Desktop.getDesktop().browse(URI(url))
+        withContext(Dispatchers.IO) {
+            Desktop.getDesktop().browse(URI(url))
+        }
     }
 
     override suspend fun runCommand(command: String) {
@@ -245,12 +258,14 @@ class IntelliJIDE(
             } else {
                 val file = File(filepath)
                 if (!file.exists()) return ""
-                FileInputStream(file).use { fis ->
-                    val sizeToRead = minOf(100000, file.length()).toInt()
-                    val buffer = ByteArray(sizeToRead)
-                    val bytesRead = fis.read(buffer, 0, sizeToRead)
-                    if (bytesRead <= 0) return ""
-                    String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
+                withContext(Dispatchers.IO) {
+                    FileInputStream(file).use { fis ->
+                        val sizeToRead = minOf(100000, file.length()).toInt()
+                        val buffer = ByteArray(sizeToRead)
+                        val bytesRead = fis.read(buffer, 0, sizeToRead)
+                        if (bytesRead <= 0) return@use ""
+                        String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -313,7 +328,7 @@ class IntelliJIDE(
     override suspend fun getSearchResults(query: String): String {
         val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--", query, ".")
         command.setWorkDirectory(project.basePath)
-        return ExecUtil.execAndGetOutput(command).stdout ?: ""
+        return ExecUtil.execAndGetOutput(command).stdout
     }
 
     override suspend fun subprocess(command: String, cwd: String?): Pair<String, String> {
@@ -322,10 +337,14 @@ class IntelliJIDE(
         if (cwd != null) {
             builder.directory(File(cwd))
         }
-        val process = builder.start()
+        val process = withContext(Dispatchers.IO) {
+            builder.start()
+        }
         val stdout = process.inputStream.bufferedReader().readText()
         val stderr = process.errorStream.bufferedReader().readText()
-        process.waitFor()
+        withContext(Dispatchers.IO) {
+            process.waitFor()
+        }
         return Pair(stdout, stderr)
     }
 
@@ -414,7 +433,7 @@ class IntelliJIDE(
             val targetDir = if (directory.isFile) directory.parentFile else directory
             val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
             builder.directory(targetDir)
-            var output: String? = null
+            var output: String?
             try {
                 val process = builder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
@@ -497,7 +516,7 @@ class IntelliJIDE(
 
     override suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String? {
         val continueSettingsService = service<ContinueExtensionSettings>()
-        return continueSettingsService.continueState.ghAuthToken;
+        return continueSettingsService.continueState.ghAuthToken
     }
 
     override suspend fun gotoDefinition(location: Location): List<RangeInFile> {

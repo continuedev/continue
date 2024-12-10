@@ -192,9 +192,6 @@ class CoreMessenger(
                 }
 
                 println("Core process exited with output: $err")
-                CoroutineScope(Dispatchers.Main).launch {
-                    ideProtocolClient.showToast("error", "Core process exited with output: $err")
-                }
 
                 // Log the cause of the failure
                 val telemetryService = service<TelemetryService>()
@@ -210,7 +207,7 @@ class CoreMessenger(
                 try {
                     while (true) {
                         val line = reader?.readLine()
-                        if (line != null && line.isNotEmpty()) {
+                        if (!line.isNullOrEmpty()) {
                             try {
                                 handleMessage(line)
                             } catch (e: Exception) {

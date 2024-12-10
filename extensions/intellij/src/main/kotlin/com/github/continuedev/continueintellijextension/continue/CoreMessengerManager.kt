@@ -18,7 +18,7 @@ class CoreMessengerManager(
 ) {
 
     var coreMessenger: CoreMessenger? = null
-    var lastBackoffInterval = 0.5
+    private var lastBackoffInterval = 0.5
 
     init {
         coroutineScope.launch {

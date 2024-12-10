@@ -35,7 +35,7 @@ class IdeProtocolClient(
     init {
         // Setup config.json / config.ts save listeners
         VirtualFileManager.getInstance().addAsyncFileListener(
-            AsyncFileSaveListener(this), ContinuePluginDisposable.getInstance(project)
+            AsyncFileSaveListener(continuePluginService), ContinuePluginDisposable.getInstance(project)
         )
     }
 
