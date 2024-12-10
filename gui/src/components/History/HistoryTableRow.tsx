@@ -21,9 +21,11 @@ function lastPartOfPath(path: string): string {
 export function HistoryTableRow({
   sessionMetadata,
   date,
+  index,
 }: {
   sessionMetadata: SessionMetadata;
   date: Date;
+  index: number;
 }) {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -66,6 +68,7 @@ export function HistoryTableRow({
   return (
     <tr>
       <td
+        data-testid={`history-row-${index}`}
         className="p-1"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -85,6 +88,7 @@ export function HistoryTableRow({
           }}
         >
           <div className="flex-1 cursor-pointer space-y-1">
+            {`history-row-${index}`}
             {editing ? (
               <div className="text-md">
                 <Input

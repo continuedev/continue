@@ -140,7 +140,11 @@ export function History() {
                   </tr>
                 )}
 
-                <HistoryTableRow sessionMetadata={session} date={date} />
+                <HistoryTableRow
+                  sessionMetadata={session}
+                  date={date}
+                  index={index}
+                />
               </Fragment>
             );
           })}
