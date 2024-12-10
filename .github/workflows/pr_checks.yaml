@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      
+
       - uses: actions/cache@v3
         with:
           path: node_modules
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      
+
       - uses: actions/cache@v3
         with:
           path: node_modules
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      
+
       - uses: actions/cache@v3
         with:
           path: node_modules
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      
+
       - uses: actions/cache@v3
         with:
           path: node_modules
@@ -113,30 +113,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      
-      - uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Install binary dependencies
-        run: |
-          cd binary
-          npm ci
-
-      - name: Type check
-        run: |
-          cd binary
-          npx tsc --noEmit
-
-    needs: install-root
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-      
       - uses: actions/cache@v3
         with:
           path: node_modules
@@ -160,7 +137,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-      
+
       - uses: actions/cache@v3
         with:
           path: node_modules
