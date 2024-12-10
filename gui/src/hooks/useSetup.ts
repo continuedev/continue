@@ -19,6 +19,7 @@ import {
 import { setTTSActive } from "../redux/slices/uiSlice";
 import useUpdatingRef from "./useUpdatingRef";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
+import { refreshSessionMetadata } from "../redux/thunks/session";
 
 function useSetup() {
   const dispatch = useAppDispatch();
@@ -27,7 +28,7 @@ function useSetup() {
   const defaultModelTitle = useAppSelector(
     (store) => store.config.defaultModelTitle,
   );
-  const defaultModelTitleRef = useUpdatingRef(defaultModelTitle);
+
   const hasLoadedConfig = useRef(false);
   const loadConfig = useCallback(
     async (initial: boolean) => {
@@ -64,6 +65,7 @@ function useSetup() {
         ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
         dispatch(updateFileSymbolsFromHistory())
+        dispatch(refreshSessionMetadata({}));
 
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);

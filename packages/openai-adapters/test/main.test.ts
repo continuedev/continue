@@ -303,7 +303,7 @@ const EMBEDDINGS_TESTS: LlmApiConfig[] = [
   },
   {
     provider: "openai",
-    model: "voyage-code-2",
+    model: "voyage-code-3",
     apiKey: process.env.VOYAGE_API_KEY!,
     apiBase: "https://api.voyageai.com/v1/",
   },

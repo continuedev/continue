@@ -1,15 +1,10 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 class Anthropic extends BaseLLM {
-  static providerName: ModelProvider = "anthropic";
+  static providerName = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-3-5-sonnet-latest",
     contextLength: 200_000,

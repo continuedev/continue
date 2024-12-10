@@ -1,7 +1,7 @@
 import path from "path";
 
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
-import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 

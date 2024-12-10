@@ -4,9 +4,9 @@
 import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { SiteIndexingConfig } from "../../index.js";
+import FreeTrial from "../../llm/llms/FreeTrial.js";
 import FileSystemIde from "../../util/filesystem.js";
 import { editConfigJson } from "../../util/paths.js";
-import FreeTrialEmbeddingsProvider from "../embeddings/FreeTrialEmbeddingsProvider.js";
 
 import DocsService from "./DocsService.js";
 import preIndexedDocs from "./preIndexedDocs.js";
@@ -113,7 +113,7 @@ describe.skip("DocsService Integration Tests", () => {
     editConfigJson((config) => ({
       ...config,
       embeddingsProvider: {
-        provider: FreeTrialEmbeddingsProvider.providerName,
+        provider: FreeTrial.providerName,
       },
     }));
 

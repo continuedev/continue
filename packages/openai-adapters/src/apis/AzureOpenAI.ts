@@ -13,8 +13,10 @@ import {
   ChatCompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
+  Model,
 } from "openai/resources/index.js";
-import { LlmApiConfig } from "../index.js";
+import { AzureConfig } from "../types.js";
+import { embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -32,7 +34,7 @@ const MS_TOKEN = 30;
 export class AzureOpenAIApi implements BaseLlmApi {
   private client: OpenAIClient;
 
-  constructor(private config: LlmApiConfig) {
+  constructor(private config: AzureConfig) {
     let proxyOptions;
     const PROXY = HTTPS_PROXY ?? HTTP_PROXY;
     if (PROXY) {
@@ -60,6 +62,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
     body:
       | ChatCompletionCreateParamsStreaming
       | ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ) {
     return {
       maxTokens: body.max_tokens ?? undefined,
@@ -69,16 +72,18 @@ export class AzureOpenAIApi implements BaseLlmApi {
       presencePenalty: body.presence_penalty ?? undefined,
       stop:
         typeof body.stop === "string" ? [body.stop] : (body.stop ?? undefined),
+      abortSignal: signal,
     };
   }
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
     const completion = await this.client.getChatCompletions(
       body.model,
       body.messages,
-      this._bodyToOptions(body),
+      this._bodyToOptions(body, signal),
     );
     return {
       ...completion,
@@ -106,11 +111,12 @@ export class AzureOpenAIApi implements BaseLlmApi {
   }
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const events = await this.client.streamChatCompletions(
       body.model,
       body.messages,
-      this._bodyToOptions(body),
+      this._bodyToOptions(body, signal),
     );
 
     const eventBuffer: ChatCompletionChunk[] = [];
@@ -167,6 +173,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<Completion> {
     const { prompt, logprobs, ...restOfBody } = body;
     const messages = [
@@ -175,10 +182,13 @@ export class AzureOpenAIApi implements BaseLlmApi {
         content: prompt as any,
       },
     ];
-    const resp = await this.chatCompletionNonStream({
-      messages,
-      ...restOfBody,
-    });
+    const resp = await this.chatCompletionNonStream(
+      {
+        messages,
+        ...restOfBody,
+      },
+      signal,
+    );
     return {
       ...resp,
       object: "text_completion",
@@ -192,6 +202,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
   }
   async *completionStream(
     body: CompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<Completion> {
     const { prompt, logprobs, ...restOfBody } = body;
     const messages = [
@@ -200,13 +211,21 @@ export class AzureOpenAIApi implements BaseLlmApi {
         content: prompt as any,
       },
     ];
-    for await (const event of this.chatCompletionStream({
-      messages,
-      ...restOfBody,
-    })) {
+    for await (const event of this.chatCompletionStream(
+      {
+        messages,
+        ...restOfBody,
+      },
+      signal,
+    )) {
       yield {
         ...event,
         object: "text_completion",
+        usage: {
+          completion_tokens: event.usage?.completion_tokens ?? 0,
+          prompt_tokens: event.usage?.prompt_tokens ?? 0,
+          total_tokens: event.usage?.total_tokens ?? 0,
+        },
         choices: event.choices.map((choice) => ({
           ...choice,
           text: choice.delta.content ?? "",
@@ -231,23 +250,23 @@ export class AzureOpenAIApi implements BaseLlmApi {
       model: body.model,
     });
 
-    const output = {
-      data: response.data.map((item) => ({
-        ...item,
-        object: "embedding" as const,
-      })),
+    const output = embedding({
+      data: response.data.map((item) => item.embedding),
       model: body.model,
-      object: "list" as const,
       usage: {
         prompt_tokens: response.usage.promptTokens,
         total_tokens: response.usage.totalTokens,
       },
-    };
+    });
 
     return output;
   }
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     throw new Error("Azure OpenAI does not support reranking.");
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

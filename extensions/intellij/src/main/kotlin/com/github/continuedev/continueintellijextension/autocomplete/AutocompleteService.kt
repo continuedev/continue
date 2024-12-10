@@ -98,8 +98,7 @@ class AutocompleteService(private val project: Project) {
 
                     if (shouldRenderCompletion(finalTextToInsert, column, lineLength, editor)) {
                         renderCompletion(editor, offset, finalTextToInsert)
-                        pendingCompletion = pendingCompletion?.copy(text = finalTextToInsert)
-
+                        pendingCompletion = PendingCompletion(editor, offset, completionId, finalTextToInsert)
                         // Hide auto-popup
 //                    AutoPopupController.getInstance(project).cancelAllRequests()
                     }
@@ -152,8 +151,8 @@ class AutocompleteService(private val project: Project) {
             return
         }
         if (isInjectedFile(editor)) return
-        // Don't render completions when code completion dropdown is visible
-        if (!autocompleteLookupListener.isLookupEmpty()) {
+        // Skip rendering completions if the code completion dropdown is already visible and the IDE completion side-by-side setting is disabled
+        if (shouldSkipRender(ServiceManager.getService(ContinueExtensionSettings::class.java))) {
             return
         }
 
@@ -209,6 +208,10 @@ class AutocompleteService(private val project: Project) {
             clearCompletions(editor)
         }
     }
+
+    private fun shouldSkipRender(settings: ContinueExtensionSettings) =
+        !settings.continueState.showIDECompletionSideBySide && !autocompleteLookupListener.isLookupEmpty()
+
 
     private fun splitKeepingDelimiters(input: String, delimiterPattern: String = "\\s+"): List<String> {
         val initialSplit = input.split("(?<=$delimiterPattern)|(?=$delimiterPattern)".toRegex())

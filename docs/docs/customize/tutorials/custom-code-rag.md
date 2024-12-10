@@ -4,7 +4,7 @@ While Continue comes with [@Codebase](../deep-dives/codebase.md) out of the box,
 
 ## Step 1: Choose an embeddings model
 
-If possible, we recommend using [`voyage-code-2`](https://docs.voyageai.com/docs/embeddings), which will give the most accurate answers of any existing embeddings model for code. You can obtain an API key [here](https://dash.voyageai.com/api-keys). Because their API is [OpenAI-compatible](https://docs.voyageai.com/reference/embeddings-api), you can use any OpenAI client by swapping out the URL.
+If possible, we recommend using [`voyage-code-3`](https://docs.voyageai.com/docs/embeddings), which will give the most accurate answers of any existing embeddings model for code. You can obtain an API key [here](https://dash.voyageai.com/api-keys). Because their API is [OpenAI-compatible](https://docs.voyageai.com/reference/embeddings-api), you can use any OpenAI client by swapping out the URL.
 
 ## Step 2: Choose a vector database
 
@@ -16,7 +16,7 @@ There are a number of available vector databases, but because most vector databa
 
 Most embeddings models can only handle a limited amount of text at once. To get around this, we "chunk" our code into smaller pieces.
 
-If you use `voyage-code-2`, it has a maximum context length of 16,000 tokens, which is enough to fit most files. This means that in the beginning you can get away with a more naive strategy of truncating files that exceed the limit. In order of easiest to most comprehensive, 3 chunking strategies you can use are:
+If you use `voyage-code-3`, it has a maximum context length of 16,000 tokens, which is enough to fit most files. This means that in the beginning you can get away with a more naive strategy of truncating files that exceed the limit. In order of easiest to most comprehensive, 3 chunking strategies you can use are:
 
 1. Truncate the file when it goes over the context length: in this case you will always have 1 chunk per file.
 2. Split the file into chunks of a fixed length: starting at the top of the file, add lines you your current chunk until it reaches the limit, then start a new chunk.
@@ -40,7 +40,7 @@ from lancedb.embeddings import get_registry
 
 db = lancedb.connect("/tmp/db")
 func = get_registry().get("openai").create(
-    name="voyage-code-2",
+    name="voyage-code-3",
     base_url="https://api.voyageai.com/v1/",
     api_key=os.environ["VOYAGE_API_KEY"],
 )
@@ -48,7 +48,7 @@ func = get_registry().get("openai").create(
 class CodeChunks(LanceModel):
     filename: str
     text: str = func.SourceField()
-    # 1536 is the embedding dimension of the `voyage-code-2` model.
+    # 1536 is the embedding dimension of the `voyage-code-3` model.
     vector: Vector(1536) = func.VectorField()
 
 table = db.create_table("code_chunks", schema=CodeChunks, mode="overwrite")

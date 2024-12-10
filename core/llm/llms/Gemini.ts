@@ -3,19 +3,19 @@ import {
   CompletionOptions,
   LLMOptions,
   MessagePart,
-  ModelProvider,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 class Gemini extends BaseLLM {
-  static providerName: ModelProvider = "gemini";
+  static providerName = "gemini";
 
   static defaultOptions: Partial<LLMOptions> = {
     model: "gemini-pro",
     apiBase: "https://generativelanguage.googleapis.com/v1beta/",
     maxStopWords: 5,
+    maxEmbeddingBatchSize: 100,
   };
 
   // Function to convert completion options to Gemini format
@@ -245,10 +245,39 @@ class Gemini extends BaseLLM {
     const data = await response.json();
     yield { role: "assistant", content: data.candidates[0].content };
   }
-}
 
-async function delay(seconds: number) {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
+  async _embed(batch: string[]): Promise<number[][]> {
+    // Batch embed endpoint: https://ai.google.dev/api/embeddings?authuser=1#EmbedContentRequest
+    const requests = batch.map((text) => ({
+      model: this.model,
+      content: {
+        role: "user",
+        parts: [{ text }],
+      },
+    }));
+
+    const resp = await this.fetch(
+      new URL(`${this.model}:batchEmbedContents`, this.apiBase),
+      {
+        method: "POST",
+        body: JSON.stringify({
+          requests,
+        }),
+        headers: {
+          "x-goog-api-key": this.apiKey,
+          "Content-Type": "application/json",
+        } as any,
+      },
+    );
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+
+    return data.embeddings.map((embedding: any) => embedding.values);
+  }
 }
 
 export default Gemini;

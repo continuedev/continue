@@ -183,11 +183,6 @@ class RepoMapGenerator {
   }
 
   private logRepoMapGeneration(): void {
-    console.debug(
-      `Generated repo map for ${this.repoMapDirs.join(", ")} at ${
-        this.repoMapPath
-      }`,
-    );
     if (this.contentTokens >= this.maxRepoMapTokens) {
       console.debug(
         "Full repo map was unable to be generated due to context window limitations",

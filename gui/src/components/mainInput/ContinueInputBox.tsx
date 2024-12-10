@@ -3,12 +3,10 @@ import { ContextItemWithId, InputModifiers } from "core";
 import { useDispatch } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
-import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 import { useAppSelector } from "../../redux/hooks";
-import { newSession, setMessageAtIndex } from "../../redux/slices/sessionSlice";
 import { ToolbarOptions } from "./InputToolbar";
 import { useMemo } from "react";
 
@@ -76,8 +74,6 @@ const GradientBorder = styled.div<{
 `;
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
-  const dispatch = useDispatch();
-
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const availableSlashCommands = useAppSelector(
     selectSlashCommandComboBoxInputs,
@@ -93,7 +89,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
   const filteredContextProviders = useMemo(() => {
     if (!props.isEditMode) {
-      availableContextProviders;
+      return availableContextProviders ?? [];
     }
 
     return (
@@ -124,22 +120,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     : {
         hideTools: !useTools,
       };
-
-  useWebviewListener(
-    "newSessionWithPrompt",
-    async (data) => {
-      if (props.isMainInput) {
-        dispatch(newSession());
-        dispatch(
-          setMessageAtIndex({
-            message: { role: "user", content: data.prompt },
-            index: 0,
-          }),
-        );
-      }
-    },
-    [props.isMainInput],
-  );
 
   return (
     <div className={`${props.hidden ? "hidden" : ""}`}>
