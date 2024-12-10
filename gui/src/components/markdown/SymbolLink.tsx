@@ -1,8 +1,8 @@
 import { SymbolWithRange } from "core";
 import { useContext, useMemo } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { ToolTip } from "../gui/Tooltip";
-import { v4 as uuidv4 } from "uuid";
 
 interface SymbolLinkProps {
   symbol: SymbolWithRange;
@@ -42,15 +42,14 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
         className="mx-[0.1em] mb-[0.15em] inline-flex cursor-pointer flex-row items-center gap-[0.2rem] rounded-md align-middle hover:ring-1"
         onClick={onClick}
         data-tooltip-id={id}
+        data-tooltip-delay-show={500}
       >
         <code className="align-middle underline underline-offset-2">
           {content}
         </code>
       </span>
       <ToolTip id={id} place="top" className="m-0 p-0">
-        <pre className="text-left">
-          <code>{processedContent ?? symbol.filepath}</code>
-        </pre>
+        <pre className="text-left">{processedContent ?? symbol.filepath}</pre>
       </ToolTip>
     </>
   );
