@@ -11,7 +11,7 @@ import { GUISelectors } from "../selectors/GUI.selectors";
 import * as path from "path";
 import { TestUtils } from "../TestUtils";
 
-const DEFAULT_TIMEOUT = 100000000;
+const DEFAULT_TIMEOUT = 30_000;
 
 describe("GUI Test", () => {
   let view: WebView;
@@ -32,7 +32,7 @@ describe("GUI Test", () => {
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
 
     // await new Promise((res) => {
-    //   setTimeout(res, 10000000);
+    //   setTimeout(res, DEFAULT_TIMEOUT);
     // });
   });
 
@@ -71,6 +71,59 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
       );
     });
+
+    it.only("Can delete messages", async () => {
+      const { userMessage: userMessage0, llmResponse: llmResponse0 } =
+        TestUtils.generateTestMessagePair(0);
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage0,
+        inputFieldIndex: 0,
+      });
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse0),
+      );
+
+      const { userMessage: userMessage1, llmResponse: llmResponse1 } =
+        TestUtils.generateTestMessagePair(1);
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage1,
+        inputFieldIndex: 1,
+      });
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse1),
+      );
+
+      const { userMessage: userMessage2, llmResponse: llmResponse2 } =
+        TestUtils.generateTestMessagePair(2);
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage2,
+        inputFieldIndex: 2,
+      });
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse2),
+      );
+
+      GUISelectors.getThreadMessageByText(view, llmResponse1);
+      await (await GUISelectors.getNthMessageDeleteButton(view, 1)).click();
+      await TestUtils.expectNoElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse1),
+      );
+
+      GUISelectors.getThreadMessageByText(view, llmResponse0);
+      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
+      await TestUtils.expectNoElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse0),
+      );
+
+      GUISelectors.getThreadMessageByText(view, llmResponse2);
+      await (await GUISelectors.getNthMessageDeleteButton(view, 0)).click();
+      await TestUtils.expectNoElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse2),
+      );
+    }).timeout(DEFAULT_TIMEOUT);
 
     it("Can edit messages", async () => {
       const { userMessage: userMessage0, llmResponse: llmResponse0 } =

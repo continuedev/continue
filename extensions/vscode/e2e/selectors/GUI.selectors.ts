@@ -38,6 +38,15 @@ export class GUISelectors {
     return SelectorUtils.getElementByDataTestId(view, `history-row-${index}`);
   }
 
+  public static getNthMessageDeleteButton(view: WebView, index: number) {
+    const adjustedIndex = 1 + index * 2;
+
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `delete-button-${adjustedIndex}`,
+    );
+  }
+
   public static getModelDropdownOption(view: WebView, option: string) {
     return view.findWebElement(
       By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
