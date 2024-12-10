@@ -3,7 +3,7 @@ import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
-import { EXPERIMENTS, PosthogFeatureFlag, Telemetry } from "../util/posthog.js";
+import { PosthogFeatureFlag, Telemetry } from "../util/posthog.js";
 
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
@@ -59,8 +59,9 @@ export class CompletionProvider {
       return undefined;
     }
 
+    // Temporary fix for JetBrains autocomplete bug as described in https://github.com/continuedev/continue/pull/3022
     if (llm.model === undefined && llm.completionOptions?.model !== undefined) {
-      llm.model = llm.completionOptions.model
+      llm.model = llm.completionOptions.model;
     }
 
     // Ignore empty API keys for Mistral since we currently write

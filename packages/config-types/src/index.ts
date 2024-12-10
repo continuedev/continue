@@ -125,6 +125,7 @@ export const uiOptionsSchema = z.object({
   fontSize: z.number().optional(),
   displayRawMarkdown: z.boolean().optional(),
   showChatScrollbar: z.boolean().optional(),
+  codeWrap: z.boolean().optional(),
 });
 export type UiOptions = z.infer<typeof uiOptionsSchema>;
 
