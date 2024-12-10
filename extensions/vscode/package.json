@@ -651,6 +651,7 @@
     "cargo-cp-artifact": "^0.1",
     "chai": "^4.5.0",
     "esbuild": "0.17.19",
+    "esbuild-visualizer": "^0.6.0",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
