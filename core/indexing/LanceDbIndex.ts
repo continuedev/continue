@@ -7,11 +7,10 @@ import { IContinueServerClient } from "../continueServer/interface.js";
 import {
   BranchAndDir,
   Chunk,
-  EmbeddingsProvider,
+  ILLM,
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
-import { getBasename } from "../util/index.js";
 import { getLanceDbPath, migrate } from "../util/paths.js";
 
 import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
@@ -23,6 +22,7 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
+import { getUriPathBasename } from "../util/uri.js";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -40,13 +40,12 @@ type ChunkMap = Map<string, ItemWithChunks>;
 export class LanceDbIndex implements CodebaseIndex {
   relativeExpectedTime: number = 13;
   get artifactId(): string {
-    return `vectordb::${this.embeddingsProvider.id}`;
+    return `vectordb::${this.embeddingsProvider.embeddingId}`;
   }
 
   constructor(
-    private readonly embeddingsProvider: EmbeddingsProvider,
+    private readonly embeddingsProvider: ILLM,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly pathSep: string,
     private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
@@ -125,7 +124,7 @@ export class LanceDbIndex implements CodebaseIndex {
       try {
         const content = await this.readFile(item.path);
 
-        if (!shouldChunk(this.pathSep, item.path, content)) {
+        if (!shouldChunk(item.path, content)) {
           continue;
         }
 
@@ -148,7 +147,7 @@ export class LanceDbIndex implements CodebaseIndex {
     const chunkParams = {
       filepath: item.path,
       contents: content,
-      maxChunkSize: this.embeddingsProvider.maxChunkSize,
+      maxChunkSize: this.embeddingsProvider.maxEmbeddingChunkSize,
       digest: item.cacheKey,
     };
 
@@ -168,7 +167,7 @@ export class LanceDbIndex implements CodebaseIndex {
       return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
     } catch (err) {
       throw new Error(
-        `Failed to generate embeddings for ${chunks.length} chunks with provider: ${this.embeddingsProvider.id}: ${err}`,
+        `Failed to generate embeddings for ${chunks.length} chunks with provider: ${this.embeddingsProvider.embeddingId}: ${err}`,
         { cause: err },
       );
     }
@@ -350,7 +349,7 @@ export class LanceDbIndex implements CodebaseIndex {
       accumulatedProgress += 1 / results.addTag.length / 3;
       yield {
         progress: accumulatedProgress,
-        desc: `Indexing ${getBasename(path)}`,
+        desc: `Indexing ${getUriPathBasename(path)}`,
         status: "indexing",
       };
     }
@@ -372,7 +371,7 @@ export class LanceDbIndex implements CodebaseIndex {
         accumulatedProgress += 1 / toDel.length / 3;
         yield {
           progress: accumulatedProgress,
-          desc: `Stashing ${getBasename(path)}`,
+          desc: `Stashing ${getUriPathBasename(path)}`,
           status: "indexing",
         };
       }
@@ -391,7 +390,7 @@ export class LanceDbIndex implements CodebaseIndex {
       accumulatedProgress += 1 / results.del.length / 3;
       yield {
         progress: accumulatedProgress,
-        desc: `Removing ${getBasename(path)}`,
+        desc: `Removing ${getUriPathBasename(path)}`,
         status: "indexing",
       };
     }

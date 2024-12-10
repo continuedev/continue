@@ -1,17 +1,22 @@
-import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { ChatMessage, CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
-
-const RESPONSES: Record<string, string> = {
-  "How are you?": "I'm fine",
-};
 
 const HARDCODED_CHAT_RESPONSE = "THIS IS A HARDCODED RESPONSE";
 
 class TestLLM extends BaseLLM {
-  static providerName: ModelProvider = "test";
+  static providerName = "test";
 
   private findResponse(prompt: string) {
-    return Object.entries(RESPONSES).find(([key]) => prompt.includes(key))?.[1];
+    // Matches TEST_USER_MESSAGE_ followed by digits, preceded and followed by non-digit characters
+    const matches = Array.from(
+      prompt.matchAll(/[^0-9]*TEST_USER_MESSAGE_(\d+)[^0-9]*/g),
+    );
+    if (matches.length > 0) {
+      const lastMatch = matches[matches.length - 1];
+      const number = lastMatch[1];
+      return `TEST_LLM_RESPONSE_${number}`;
+    }
+    return undefined;
   }
 
   protected async *_streamComplete(

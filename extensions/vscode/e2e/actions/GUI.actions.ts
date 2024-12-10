@@ -1,4 +1,5 @@
 import {
+  Key,
   WebDriver,
   WebElement,
   WebView,
@@ -56,4 +57,21 @@ export class GUIActions {
 
     await dropdownOption.click();
   };
+
+  public static async sendMessage({
+    view,
+    message,
+    inputFieldIndex,
+  }: {
+    view: WebView;
+    message: string;
+    inputFieldIndex: number;
+  }) {
+    const editor = await GUISelectors.getMessageInputFieldAtIndex(
+      view,
+      inputFieldIndex,
+    );
+    await editor.sendKeys(message);
+    await editor.sendKeys(Key.ENTER);
+  }
 }

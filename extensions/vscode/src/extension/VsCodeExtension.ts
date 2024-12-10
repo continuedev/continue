@@ -5,7 +5,7 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { InProcessMessenger } from "core/util/messenger";
+import { InProcessMessenger } from "core/protocol/messenger";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";

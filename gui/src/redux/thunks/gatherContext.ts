@@ -9,11 +9,11 @@ import {
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
 } from "../../components/mainInput/resolveInput";
-import { updateFileSymbolsFromContextItems } from "../../util/symbols";
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
 import { setIsGatheringContext } from "../slices/sessionSlice";
-import { getBasename, getRelativePath } from "core/util/uri";
+import { getRelativePath, getUriPathBasename } from "core/util/uri";
+import { updateFileSymbolsFromNewContextItems } from "./updateFileSymbols";
 
 export const gatherContext = createAsyncThunk<
   {
@@ -85,7 +85,7 @@ export const gatherContext = createAsyncThunk<
               currentFile.path,
               await extra.ideMessenger.ide.getWorkspaceDirs(),
             )}\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getBasename(currentFile.path)}`,
+            name: `Active file: ${getUriPathBasename(currentFile.path)}`,
             description: currentFile.path,
             id: {
               itemId: currentFile.path,
@@ -100,11 +100,7 @@ export const gatherContext = createAsyncThunk<
       }
     }
 
-    await updateFileSymbolsFromContextItems(
-      selectedContextItems,
-      extra.ideMessenger,
-      dispatch,
-    );
+    dispatch(updateFileSymbolsFromNewContextItems(selectedContextItems));
 
     if (promptPreamble) {
       if (typeof content === "string") {

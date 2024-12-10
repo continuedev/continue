@@ -1,27 +1,31 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
-import useHistory from "../../hooks/useHistory";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import {
+  deleteSession,
+  getSession,
+  loadSession,
+  updateSession,
+} from "../../redux/thunks/session";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { useAppSelector } from "../../redux/hooks";
-import { getLastNPathParts } from "core/util/uri";
+import { getLastNUriRelativePathParts } from "core/util/uri";
 
 export function HistoryTableRow({
   sessionMetadata,
   date,
-  onDelete,
-  onEdit,
+  index,
 }: {
   sessionMetadata: SessionMetadata;
   date: Date;
-  onDelete: (sessionId: string) => void;
-  onEdit: (session: SessionMetadata) => void;
+  index: number;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -30,30 +34,37 @@ export function HistoryTableRow({
   );
   const currentSessionId = useAppSelector((state) => state.session.id);
 
-  const { saveSession, deleteSession, loadSession, getSession, updateSession } =
-    useHistory(dispatch);
+  useEffect(() => {
+    setSessionTitleEditValue(sessionMetadata.title);
+  }, [sessionMetadata]);
 
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (sessionTitleEditValue !== sessionMetadata.title) {
-        const sessionData = await getSession(sessionMetadata.sessionId);
-        sessionData.title = sessionTitleEditValue;
-        await updateSession(sessionData);
-        onEdit({
-          ...sessionMetadata,
-          title: sessionTitleEditValue,
-        });
+        // imperfect solution of loading session just to update it
+        // but fine for now, pretty low latency
+        const currentSession = await getSession(
+          ideMessenger,
+          sessionMetadata.sessionId,
+        );
+        await dispatch(
+          updateSession({
+            ...currentSession,
+            title: sessionTitleEditValue,
+          }),
+        );
       }
       setEditing(false);
     } else if (e.key === "Escape") {
-      setEditing(false);
       setSessionTitleEditValue(sessionMetadata.title);
+      setEditing(false);
     }
   };
 
   return (
     <tr>
       <td
+        data-testid={`history-row-${index}`}
         className="p-1"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -61,12 +72,14 @@ export function HistoryTableRow({
         <div
           className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
           onClick={async () => {
-            // Save current session
             if (sessionMetadata.sessionId !== currentSessionId) {
-              await saveSession();
-              await loadSession(sessionMetadata.sessionId);
+              await dispatch(
+                loadSession({
+                  sessionId: sessionMetadata.sessionId,
+                  saveCurrentSession: true,
+                }),
+              );
             }
-
             navigate("/");
           }}
         >
@@ -85,13 +98,17 @@ export function HistoryTableRow({
               </div>
             ) : (
               <span className="text-md block max-w-80 truncate text-base font-semibold">
-                {JSON.stringify(sessionMetadata.title).slice(1, -1)}
+                {sessionMetadata.title}
               </span>
             )}
 
             <div className="flex" style={{ color: "#9ca3af" }}>
               <span>
-                {getLastNPathParts(sessionMetadata.workspaceDirectory || "", 1)}
+                {getLastNUriRelativePathParts(
+                  window.workspacePaths ?? [],
+                  sessionMetadata.workspaceDirectory || "",
+                  1,
+                )}
               </span>
               {/* Uncomment to show the date */}
               {/* <span className="inline-block ml-auto">
@@ -122,8 +139,7 @@ export function HistoryTableRow({
                 text="Delete"
                 onClick={async (e) => {
                   e.stopPropagation();
-                  await deleteSession(sessionMetadata.sessionId);
-                  onDelete(sessionMetadata.sessionId);
+                  await dispatch(deleteSession(sessionMetadata.sessionId));
                 }}
               >
                 <TrashIcon width="1.3em" height="1.3em" />

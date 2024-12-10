@@ -6,8 +6,16 @@ export class GUISelectors {
     return view.findWebElement(By.xpath("//*[contains(text(), 'Quickly')]"));
   }
 
-  public static getTipTapEditor(view: WebView) {
-    return view.findWebElement(By.className("tiptap"));
+  public static getMessageInputFields(view: WebView) {
+    return view.findWebElements(By.className("tiptap"));
+  }
+
+  public static async getMessageInputFieldAtIndex(
+    view: WebView,
+    index: number,
+  ) {
+    const elements = await view.findWebElements(By.className("tiptap"));
+    return elements[index];
   }
 
   public static getAllIframes(driver: WebDriver) {
@@ -26,6 +34,19 @@ export class GUISelectors {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
   }
 
+  public static getNthHistoryTableRow(view: WebView, index: number) {
+    return SelectorUtils.getElementByDataTestId(view, `history-row-${index}`);
+  }
+
+  public static getNthMessageDeleteButton(view: WebView, index: number) {
+    const adjustedIndex = 1 + index * 2;
+
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `delete-button-${adjustedIndex}`,
+    );
+  }
+
   public static getModelDropdownOption(view: WebView, option: string) {
     return view.findWebElement(
       By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
@@ -36,5 +57,13 @@ export class GUISelectors {
     return view.findWebElement(
       By.xpath(`//*[@class="thread-message"]//*[contains(text(), "${text}")]`),
     );
+  }
+
+  public static getHistoryNavButton(view: WebView) {
+    return SelectorUtils.getElementByAriaLabel(view, "View History");
+  }
+
+  public static getNewSessionNavButton(view: WebView) {
+    return SelectorUtils.getElementByAriaLabel(view, "New Session");
   }
 }

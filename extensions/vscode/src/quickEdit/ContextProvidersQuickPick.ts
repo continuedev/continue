@@ -1,5 +1,5 @@
+import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { ContinueConfig, IDE } from "core";
-import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { QuickPickItem, window } from "vscode";
 
 export async function getContextProviderItems({

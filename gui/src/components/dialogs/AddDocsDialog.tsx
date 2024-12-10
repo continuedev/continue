@@ -215,13 +215,23 @@ function AddDocsDialog() {
                       {/* <div>
                         <LinkIcon className="h-2 w-2" />
                       </div> */}
-                      <p className="lines lines-1 m-0 p-0">
+                      <p
+                        className="lines lines-1 m-0 p-0 hover:underline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          ideMessenger.post("openUrl", details.docsLink);
+                        }}
+                      >
                         {details.docsLink}
                       </p>
                     </div>
                   )}
                 </div>
-                <div>
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   <InformationCircleIcon
                     data-tooltip-id={id + "-info"}
                     className="text-vsc-foreground-muted h-3.5 w-3.5 select-none"

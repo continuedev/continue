@@ -5,7 +5,6 @@ import { selectDefaultModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
-  clearLastEmptyResponse,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";
@@ -17,70 +16,65 @@ export const streamNormalInput = createAsyncThunk<
   ChatMessage[],
   ThunkApiType
 >("chat/streamNormalInput", async (messages, { dispatch, extra, getState }) => {
-  try {
-    // Gather state
-    const state = getState();
-    const defaultModel = selectDefaultModel(state);
-    const toolSettings = state.ui.toolSettings;
-    const streamAborter = state.session.streamAborter;
-    const useTools = state.ui.useTools;
+  // Gather state
+  const state = getState();
+  const defaultModel = selectDefaultModel(state);
+  const toolSettings = state.ui.toolSettings;
+  const streamAborter = state.session.streamAborter;
+  const useTools = state.ui.useTools;
 
-    if (!defaultModel) {
-      throw new Error("Default model not defined");
+  if (!defaultModel) {
+    throw new Error("Default model not defined");
+  }
+
+  // Send request
+  const gen = extra.ideMessenger.llmStreamChat(
+    defaultModel.title,
+    streamAborter.signal,
+    messages,
+    {
+      tools: useTools
+        ? Object.keys(toolSettings)
+            .filter((tool) => toolSettings[tool] !== "disabled")
+            .map((toolName) =>
+              state.config.config.tools.find(
+                (tool) => tool.function.name === toolName,
+              ),
+            )
+            .filter(Boolean)
+        : undefined,
+    },
+  );
+
+  // Stream response
+  let next = await gen.next();
+  while (!next.done) {
+    if (!getState().session.isStreaming) {
+      dispatch(abortStream());
+      break;
     }
 
-    // Send request
-    const gen = extra.ideMessenger.llmStreamChat(
-      defaultModel.title,
-      streamAborter.signal,
-      messages,
-      {
-        tools: useTools
-          ? Object.keys(toolSettings)
-              .filter((tool) => toolSettings[tool] !== "disabled")
-              .map((toolName) =>
-                state.config.config.tools.find(
-                  (tool) => tool.function.name === toolName,
-                ),
-              )
-              .filter(Boolean)
-          : undefined,
-      },
-    );
+    const updates = next.value as ChatMessage[];
+    dispatch(streamUpdate(updates));
+    next = await gen.next();
+  }
 
-    // Stream response
-    let next = await gen.next();
-    while (!next.done) {
-      if (!getState().session.isStreaming) {
-        dispatch(abortStream());
-        break;
-      }
+  // Attach prompt log
+  let returnVal = next.value as PromptLog;
+  if (returnVal) {
+    dispatch(addPromptCompletionPair([returnVal]));
+  }
 
-      const updates = next.value as ChatMessage[];
-      dispatch(streamUpdate(updates));
-      next = await gen.next();
+  // If it's a tool call that is automatically accepted, we should call it
+  const toolCallState = selectCurrentToolCall(getState());
+  if (toolCallState) {
+    dispatch(setToolGenerated());
+
+    if (
+      toolSettings[toolCallState.toolCall.function.name] ===
+      "allowedWithoutPermission"
+    ) {
+      await dispatch(callTool());
     }
-
-    // Attach prompt log
-    let returnVal = next.value as PromptLog;
-    if (returnVal) {
-      dispatch(addPromptCompletionPair([returnVal]));
-    }
-
-    // If it's a tool call that is automatically accepted, we should call it
-    const toolCallState = selectCurrentToolCall(getState());
-    if (toolCallState) {
-      dispatch(setToolGenerated());
-
-      if (
-        toolSettings[toolCallState.toolCall.function.name] ===
-        "allowedWithoutPermission"
-      ) {
-        await dispatch(callTool());
-      }
-    }
-  } catch (e) {
-    // If there's an error, we should clear the response so there aren't two input boxes
-    dispatch(clearLastEmptyResponse());
   }
 });

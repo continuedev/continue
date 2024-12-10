@@ -108,7 +108,8 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       const fileChunks = chunkDocument({
         filepath,
         contents,
-        maxChunkSize: this.options.config.embeddingsProvider.maxChunkSize,
+        maxChunkSize:
+          this.options.config.embeddingsProvider.maxEmbeddingChunkSize,
         digest: filepath,
       });
 

@@ -46,6 +46,7 @@ export default function ResponseActions({
           )}
 
           <HeaderButtonWithToolTip
+            testId={`delete-button-${index}`}
             text="Delete"
             tabIndex={-1}
             onClick={onDelete}

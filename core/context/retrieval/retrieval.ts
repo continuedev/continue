@@ -1,5 +1,5 @@
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
-import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
 import { getUriPathBasename } from "../../util/uri";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
