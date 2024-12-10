@@ -390,6 +390,7 @@ export interface InputModifiers {
 export interface SymbolWithRange extends RangeInFile {
   name: string;
   type: Parser.SyntaxNode["type"];
+  content: string;
 }
 
 export type FileSymbolMap = Record<string, SymbolWithRange[]>;

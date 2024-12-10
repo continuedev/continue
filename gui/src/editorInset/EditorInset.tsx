@@ -17,7 +17,6 @@ const EditorInsetDiv = styled.div`
 `;
 
 function EditorInset() {
-  const dispatch = useDispatch();
   const availableSlashCommands = useAppSelector(
     selectSlashCommandComboBoxInputs,
   );
@@ -25,7 +24,7 @@ function EditorInset() {
     (store) => store.config.config.contextProviders,
   );
 
-  useSetup(dispatch);
+  useSetup();
 
   const elementRef = useRef<HTMLDivElement | null>(null);
 
