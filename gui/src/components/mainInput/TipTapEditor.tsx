@@ -37,7 +37,6 @@ import {
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
-import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
@@ -73,6 +72,11 @@ import {
   setMainEditorContentTrigger,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
+import {
+  loadLastSession,
+  loadSession,
+  saveCurrentSession,
+} from "../../redux/thunks/session";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -186,8 +190,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useAppSelector((store) => store.session.history.length);
 
   const useActiveFile = useAppSelector(selectUseActiveFile);
-
-  const { saveSession, loadSession, loadLastSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
 
@@ -420,12 +422,14 @@ function TipTapEditor(props: TipTapEditorProps) {
               if (inDropdownRef.current || !isInEditModeRef.current) {
                 return false;
               }
-
-              loadLastSession().catch((e) =>
-                console.error(`Failed to load last session: ${e}`),
-              );
-
-              dispatch(exitEditMode());
+              (async () => {
+                await dispatch(
+                  loadLastSession({
+                    saveCurrentSession: false,
+                  }),
+                );
+                dispatch(exitEditMode());
+              })();
 
               return true;
             },
@@ -695,14 +699,18 @@ function TipTapEditor(props: TipTapEditorProps) {
       dispatch(clearCodeToEdit());
 
       if (historyLength > 0) {
-        await saveSession();
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: false,
+          }),
+        );
       }
       setTimeout(() => {
         editor?.commands.blur();
         editor?.commands.focus("end");
       }, 20);
     },
-    [historyLength, saveSession, editor, props.isMainInput],
+    [historyLength, editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -724,12 +732,16 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      await saveSession();
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: true,
+        }),
+      );
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput, saveSession],
+    [editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -850,12 +862,17 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueSessionId",
     async (data) => {
-      if (!props.isMainInput) {
+      if (!props.isMainInput || !data.sessionId) {
         return;
       }
-      loadSession(data.sessionId);
+      await dispatch(
+        loadSession({
+          sessionId: data.sessionId,
+          saveCurrentSession: true,
+        }),
+      );
     },
-    [loadSession, props.isMainInput],
+    [props.isMainInput],
   );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);

@@ -27,7 +27,7 @@ import {
   selectIsInEditMode,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
-import useHistory from "../../hooks/useHistory";
+import { loadLastSession } from "../../redux/thunks/session";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -89,7 +89,6 @@ function InputToolbar(props: InputToolbarProps) {
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
-  const { loadLastSession } = useHistory(dispatch);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
   const shouldRenderToolsButton =
@@ -193,11 +192,12 @@ function InputToolbar(props: InputToolbarProps) {
           {isInEditMode && (
             <HoverItem
               className="hidden hover:underline sm:flex"
-              onClick={(e) => {
-                loadLastSession().catch((e) =>
-                  console.error(`Failed to load last session: ${e}`),
+              onClick={async (e) => {
+                await dispatch(
+                  loadLastSession({
+                    saveCurrentSession: false,
+                  }),
                 );
-
                 dispatch(exitEditMode());
               }}
             >
