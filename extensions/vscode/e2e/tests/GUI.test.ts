@@ -13,7 +13,7 @@ import { TestUtils } from "../TestUtils";
 
 const DEFAULT_TIMEOUT = 30_000;
 
-describe("GUI Test", () => {
+describe("GUI Test X", () => {
   let view: WebView;
   let driver: WebDriver;
 
