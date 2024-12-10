@@ -164,8 +164,8 @@ jobs:
           npx tsc --noEmit
           npm run lint
 
-  tests:
-    needs: [vscode-checks, core-checks, gui-checks, binary-checks]
+  core-tests:
+    needs: [core-checks]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -175,16 +175,32 @@ jobs:
 
       - uses: actions/cache@v3
         with:
-          path: node_modules
-          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('extensions/core/package-lock.json') }}
 
-      - name: Install all test dependencies
+      - name: Run core tests
         run: |
-          cd extensions/vscode && npm ci
-          cd ../core && npm ci
-          cd ../gui && npm ci
-        env:
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          cd extensions/core
+          npm test
+
+  vscode-tests:
+    needs: [vscode-checks, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v3
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - uses: actions/cache@v3
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Install and setup Xvfb
         run: |
@@ -198,12 +214,31 @@ jobs:
           npm run package
           npm run e2e:ci
 
-      - name: Run core tests
-        run: |
-          cd core
-          npm test
+  gui-tests:
+    needs: [gui-checks, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v3
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
+      - uses: actions/cache@v3
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Install GUI dependencies
+        run: cd extensions/gui && npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Run gui tests
         run: |
-          cd gui
+          cd extensions/gui
           npm test
