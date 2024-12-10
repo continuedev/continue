@@ -1,34 +1,16 @@
 package com.github.continuedev.continueintellijextension
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import com.google.gson.JsonElement
 
-
-// Enums and basic types
-
-@Serializable
-enum class IdeType {
-    @SerialName("jetbrains")
-    JETBRAINS,
-    @SerialName("vscode")
-    VSCODE;
+sealed class IdeType(val value: String) {
+    object JetBrains : IdeType("jetbrains")  // Fix: Extend IdeType, not ToastType
+    object VsCode : IdeType("vscode")
 }
 
-enum class DiffLineType {
-    NEW,
-    OLD,
-    SAME
-}
-
-enum class DiffLine {
-  type: DiffLineType,
-  line: string;
-}
-
-enum class ToastType {
-    INFO,
-    ERROR,
-    WARNING
+sealed class ToastType(val value: String) {
+    object Info : ToastType("info")
+    object Error : ToastType("error")
+    object Warning : ToastType("warning")
 }
 
 enum class FileType(val value: Int) {
@@ -42,8 +24,6 @@ enum class ConfigMergeType {
     MERGE,
     OVERWRITE
 }
-
-// Data classes for basic types
 
 data class Position(val line: Int, val character: Int)
 
@@ -81,9 +61,9 @@ data class RangeInFile(
     val range: Range
 )
 
-data class CurrentFile(
-    val isUntitled: Boolean,
-    val path: String,
+data class RangeInFileWithContents(
+    val filepath: String,
+    val range: Range,
     val contents: String
 )
 
@@ -108,7 +88,123 @@ data class IdeSettings(
 
 data class ContinueRcJson(
     val mergeBehavior: ConfigMergeType
-    // Add other optional fields as needed
 )
 
-data class DirEntry(val name: String, val type: FileType)
+
+interface IDE {
+    suspend fun getIdeInfo(): IdeInfo
+
+    suspend fun getIdeSettings(): IdeSettings
+
+    suspend fun getDiff(includeUnstaged: Boolean): List<String>
+
+    suspend fun getClipboardContent(): Map<String, String>
+
+    suspend fun isTelemetryEnabled(): Boolean
+
+    suspend fun getUniqueId(): String
+
+    suspend fun getTerminalContents(): String
+
+    suspend fun getDebugLocals(threadIndex: Int): String
+
+    suspend fun getTopLevelCallStackSources(
+        threadIndex: Int,
+        stackDepth: Int
+    ): List<String>
+
+    suspend fun getAvailableThreads(): List<Thread>
+
+    suspend fun listFolders(): List<String>
+
+    suspend fun getWorkspaceDirs(): List<String>
+
+    suspend fun getWorkspaceConfigs(): List<ContinueRcJson>
+
+    suspend fun fileExists(filepath: String): Boolean
+
+    suspend fun writeFile(path: String, contents: String)
+
+    suspend fun showVirtualFile(title: String, contents: String)
+
+    suspend fun getContinueDir(): String
+
+    suspend fun openFile(path: String)
+
+    suspend fun openUrl(url: String)
+
+    suspend fun runCommand(command: String)
+
+    suspend fun saveFile(filepath: String)
+
+    suspend fun readFile(filepath: String): String
+
+    suspend fun readRangeInFile(filepath: String, range: Range): String
+
+    suspend fun showLines(
+        filepath: String,
+        startLine: Int,
+        endLine: Int
+    )
+
+    suspend fun showDiff(
+        filepath: String,
+        newContents: String,
+        stepIndex: Int
+    )
+
+    suspend fun getOpenFiles(): List<String>
+
+    suspend fun getCurrentFile(): Map<String, Any>?
+
+    suspend fun getPinnedFiles(): List<String>
+
+    suspend fun getSearchResults(query: String): String
+
+    suspend fun subprocess(command: String, cwd: String? = null): Pair<String, String>
+
+    suspend fun getProblems(filepath: String? = null): List<Problem>
+
+    suspend fun getBranch(dir: String): String
+
+    suspend fun getTags(artifactId: String): List<IndexTag>
+
+    suspend fun getRepoName(dir: String): String?
+
+    suspend fun showToast(
+        type: ToastType,
+        message: String,
+        vararg otherParams: Any
+    ): Any
+
+    suspend fun getGitRootPath(dir: String): String?
+
+    suspend fun listDir(dir: String): List<Pair<String, FileType>>
+
+    suspend fun getLastModified(files: List<String>): Map<String, Long>
+
+    suspend fun getGitHubAuthToken(args: GetGhTokenArgs): String?
+
+    // LSP
+    suspend fun gotoDefinition(location: Location): List<RangeInFile>
+
+    // Callbacks
+    fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
+
+    suspend fun pathSep(): String
+}
+
+data class GetGhTokenArgs(
+    val force: String?
+)
+
+data class Message(
+    val messageType: String,
+    val messageId: String,
+    val data: JsonElement
+)
+
+// TODO: Needs to be updated to handle new "apply" logic
+data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
+
+data class DeleteAtIndex(val index: Int)
