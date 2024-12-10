@@ -101,7 +101,6 @@ jobs:
       - name: core checks
         run: |
           cd core
-          npm ci
           npx tsc --noEmit
           npm run lint
         env:
