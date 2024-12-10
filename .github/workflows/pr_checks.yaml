@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-
     paths:
       - "extensions/vscode/**"
       - "core/**"
@@ -15,45 +14,58 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Check-out repository
       - name: Check-out repository
         uses: actions/checkout@v4
 
-      # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
 
       - name: Cache root node_modules
+        id: cache-root
         uses: actions/cache@v3
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+          key: ${{ runner.os }}-node-root-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-root-
 
       - name: Cache extension node_modules
+        id: cache-extension
         uses: actions/cache@v3
         with:
           path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
+          key: ${{ runner.os }}-node-ext-${{ hashFiles('extensions/vscode/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-ext-
 
       - name: Cache core node_modules
+        id: cache-core
         uses: actions/cache@v3
         with:
           path: core/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
+          key: ${{ runner.os }}-node-core-${{ hashFiles('core/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-core-
 
       - name: Cache gui node_modules
+        id: cache-gui
         uses: actions/cache@v3
         with:
           path: gui/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+          key: ${{ runner.os }}-node-gui-${{ hashFiles('gui/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-gui-
 
       - name: Cache binary node_modules
+        id: cache-binary
         uses: actions/cache@v3
         with:
           path: binary/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+          key: ${{ runner.os }}-node-binary-${{ hashFiles('binary/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-binary-
 
       - name: root install
         run: |
