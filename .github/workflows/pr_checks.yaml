@@ -82,7 +82,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   gui-checks:
-    needs: install-root
+    needs: [install-root, core-checks]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
