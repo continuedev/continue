@@ -3,6 +3,7 @@ import { countTokensAsync } from "../../llm/countTokens.js";
 import { extractMinimalStackTraceInfo } from "../../util/extractMinimalStackTraceInfo.js";
 import { Telemetry } from "../../util/posthog.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
+import { getUriPathBasename } from "../../util/uri.js";
 
 import { basicChunker } from "./basic.js";
 import { codeChunker } from "./code.js";
@@ -84,11 +85,7 @@ export async function* chunkDocument({
   }
 }
 
-export function shouldChunk(
-  pathSep: string,
-  filepath: string,
-  contents: string,
-): boolean {
+export function shouldChunk(fileUri: string, contents: string): boolean {
   if (contents.length > 1000000) {
     // if a file has more than 1m characters then skip it
     return false;
@@ -96,7 +93,6 @@ export function shouldChunk(
   if (contents.length === 0) {
     return false;
   }
-  const basename = filepath.split(pathSep).pop();
-  // files without extensions are often binary files, skip it if so
-  return basename?.includes(".") ?? false;
+  const baseName = getUriPathBasename(fileUri);
+  return baseName.includes(".");
 }

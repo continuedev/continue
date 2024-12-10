@@ -19,6 +19,15 @@ export function getRelativePath(
   const fullPath = getFullPath(fileUri);
 }
 
+export function splitUriPath(uri: string): string[] {
+  let parts = path.includes("/") ? path.split("/") : path.split("\\");
+  if (withRoot !== undefined) {
+    const rootParts = splitPath(withRoot);
+    parts = parts.slice(rootParts.length - 1);
+  }
+  return parts;
+}
+
 export function getLastNUriRelativePathParts(
   workspaceDirs: string[],
   uri: string,
@@ -94,4 +103,21 @@ export function shortestRelativeUriPaths(uris: string[]): string[] {
   }
 
   return currentRelativeUris;
+}
+export function isUriWithinDirectory(
+  uri: string,
+  directoryUri: string,
+): boolean {
+  const uriPath = getFullPath(uri);
+  const directoryPath = getFullPath(directoryUri);
+
+  if (uriPath === directoryPath) {
+    return false;
+  }
+  return uriPath.startsWith(directoryPath);
+}
+
+export function getUriFileExtension(uri: string) {
+  const baseName = getUriPathBasename(uri);
+  return baseName.split(".")[-1] ?? "";
 }

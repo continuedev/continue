@@ -15,7 +15,6 @@ export interface RetrievalPipelineOptions {
   nRetrieve: number;
   nFinal: number;
   tags: BranchAndDir[];
-  pathSep: string;
   filterDirectory?: string;
   includeEmbeddings?: boolean; // Used to handle JB w/o an embeddings model
 }
@@ -37,8 +36,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   constructor(protected readonly options: RetrievalPipelineOptions) {
     this.lanceDbIndex = new LanceDbIndex(
       options.config.embeddingsProvider,
-      (path) => options.ide.readFile(path),
-      options.pathSep,
+      (uri) => options.ide.readFile(uri),
     );
   }
 

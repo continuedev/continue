@@ -1,4 +1,5 @@
 import { Chunk } from "../../../";
+import { isUriWithinDirectory } from "../../../util/uri";
 import { requestFilesFromRepoMap } from "../repoMapRequest";
 import { deduplicateChunks } from "../util";
 
@@ -45,7 +46,7 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
       retrievalResults = retrievalResults.filter((chunk) =>
-        chunk.filepath.startsWith(filterDirectory),
+        isUriWithinDirectory(chunk.filepath, filterDirectory),
       );
     }
 
