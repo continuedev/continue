@@ -63,6 +63,7 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private recentlyEditedTracker = new RecentlyEditedTracker();
+  private loadingSpinnerTimeout?: NodeJS.Timeout;
   private loadingSpinnerDecorationType: vscode.TextEditorDecorationType;
 
   constructor(
@@ -90,7 +91,7 @@ export class ContinueCompletionProvider
       vscode.window.createTextEditorDecorationType({
         backgroundColor: "transparent",
 
-        gutterIconPath: context.asAbsolutePath("media/loading.webp"),
+        gutterIconPath: context.asAbsolutePath("media/loading.gif"),
         gutterIconSize: "cover",
       });
   }
@@ -226,9 +227,14 @@ export class ContinueCompletionProvider
           "enableTabAutocompleteLineSpinner",
         )
       ) {
-        editor.setDecorations(this.loadingSpinnerDecorationType, [
-          new vscode.Range(editor.selection.end, editor.selection.end),
-        ]);
+        clearTimeout(this.loadingSpinnerTimeout);
+        this.loadingSpinnerTimeout = setTimeout(
+          () =>
+            editor.setDecorations(this.loadingSpinnerDecorationType, [
+              new vscode.Range(editor.selection.end, editor.selection.end),
+            ]),
+          250,
+        );
       }
 
       const outcome =
@@ -291,6 +297,7 @@ export class ContinueCompletionProvider
       return [completionItem];
     } finally {
       stopStatusBarLoading();
+      clearTimeout(this.loadingSpinnerTimeout);
       editor?.setDecorations(this.loadingSpinnerDecorationType, []);
     }
   }
