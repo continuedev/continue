@@ -176,11 +176,11 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('extensions/core/package-lock.json') }}
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Run core tests
         run: |
-          cd extensions/core
+          cd core
           npm test
 
   vscode-tests:
@@ -234,11 +234,11 @@ jobs:
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Install GUI dependencies
-        run: cd extensions/gui && npm ci
+        run: cd gui && npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Run gui tests
         run: |
-          cd extensions/gui
+          cd gui
           npm test
