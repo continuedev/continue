@@ -49,11 +49,11 @@ jobs:
             platform: alpine
             arch: x64
             npm_config_arch: x64
-          - os: macos-12 # should migrate this to the newer x64 version of macos-14
+          - os: macos-13
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-12 # same here, especially
+          - os: macos-13
             platform: darwin
             arch: arm64
             npm_config_arch: arm64

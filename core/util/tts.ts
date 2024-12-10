@@ -1,7 +1,9 @@
 import { exec, ChildProcess } from "child_process";
 import os from "node:os";
 
-import type { IMessenger } from "./messenger";
+import { removeCodeBlocksAndTrim } from ".";
+
+import type { IMessenger } from "../protocol/messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 
 // The amount of time before a process is declared
@@ -9,26 +11,12 @@ import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 const ttsKillTimeout: number = 5000;
 
 /**
- * Removes code blocks from a message.
- *
- * Return modified message text.
- */
-function removeCodeBlocks(msgText: string): string {
-  const codeBlockRegex = /```[\s\S]*?```/g;
-
-  // Remove code blocks from the message text
-  const textWithoutCodeBlocks = msgText.replace(codeBlockRegex, "");
-
-  return textWithoutCodeBlocks.trim();
-}
-
-/**
  * Cleans a message text to safely be used in 'exec' context on host.
  *
  * Return modified message text.
  */
-function sanitizeMessageForTTS(message: string): string {
-  message = removeCodeBlocks(message);
+export function sanitizeMessageForTTS(message: string): string {
+  message = removeCodeBlocksAndTrim(message);
 
   // Remove or replace problematic characters
   message = message

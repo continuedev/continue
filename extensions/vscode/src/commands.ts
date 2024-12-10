@@ -456,13 +456,16 @@ const getCommandsMap: (
           hideGUI();
         } else {
           void sidebar.webviewProtocol?.request(
-            "focusContinueInput",
+            "focusContinueInputWithNewSession",
             undefined,
           );
         }
       } else {
         focusGUI();
-        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+        sidebar.webviewProtocol?.request(
+          "focusContinueInputWithNewSession",
+          undefined,
+        );
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
@@ -729,6 +732,7 @@ const getCommandsMap: (
       if (fullScreenTab && fullScreenPanel) {
         // Full screen open, but not focused - focus it
         fullScreenPanel.reveal();
+        vscode.commands.executeCommand("continue.focusContinueInput");
         return;
       }
 

@@ -4,21 +4,16 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-import {
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 class BedrockImport extends BaseLLM {
-  static providerName: ModelProvider = "bedrockimport";
+  static providerName = "bedrockimport";
   static defaultOptions: Partial<LLMOptions> = {
-    region: "us-east-1"
+    region: "us-east-1",
   };
   // the BedRock imported custom model ARN
   modelArn?: string | undefined;
-  profile?: string | undefined;
 
   constructor(options: LLMOptions) {
     super(options);
@@ -52,7 +47,7 @@ class BedrockImport extends BaseLLM {
 
     const input = this._generateInvokeModelCommandInput(prompt, options);
     const command = new InvokeModelWithResponseStreamCommand(input);
-    const response = await client.send(command, {abortSignal: signal});
+    const response = await client.send(command, { abortSignal: signal });
 
     if (response.body) {
       for await (const item of response.body) {
@@ -69,23 +64,22 @@ class BedrockImport extends BaseLLM {
     options: CompletionOptions,
   ): any {
     const payload = {
-      prompt: prompt
+      prompt: prompt,
     };
 
     return {
       body: JSON.stringify(payload),
       modelId: this.modelArn,
       accept: "application/json",
-      contentType: "application/json"
+      contentType: "application/json",
     };
   }
 
   private async _getCredentials() {
     try {
-      return await
-      fromIni({
+      return await fromIni({
         profile: this.profile,
-        ignoreCache: true
+        ignoreCache: true,
       })();
     } catch (e) {
       console.warn(

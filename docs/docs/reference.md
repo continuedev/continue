@@ -206,10 +206,11 @@ Configuration for the reranker model used in response ranking.
 
 **Properties:**
 
-- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`
+- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`, `bedrock`
 - `params`:
   - `model`: Model name
   - `apiKey`: Api key
+  - `region`: Region (for Bedrock only)
 
 Example
 
@@ -364,6 +365,7 @@ Customizable UI settings to control interface appearance and behavior.
 - `fontSize`: Specifies font size for UI elements.
 - `displayRawMarkdown`: If `true`, shows raw markdown in responses.
 - `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
+- `codeWrap`: If `true`, enables text wrapping in code blocks.
 
 Example:
 
@@ -372,7 +374,9 @@ Example:
   "ui": {
     "codeBlockToolbarPosition": "bottom",
     "fontSize": 14,
-    "displayRawMarkdown": false
+    "displayRawMarkdown": false,
+    "showChatScrollbar": false,
+    "codeWrap": false
   }
 }
 ```

@@ -10,10 +10,10 @@ import { getBasename, getRelativePath } from "core/util";
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
 } from "../../components/mainInput/resolveInput";
-import { updateFileSymbolsFromContextItems } from "../../util/symbols";
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
 import { setIsGatheringContext } from "../slices/sessionSlice";
+import { updateFileSymbolsFromNewContextItems } from "./updateFileSymbols";
 
 export const gatherContext = createAsyncThunk<
   {
@@ -38,6 +38,11 @@ export const gatherContext = createAsyncThunk<
     const defaultContextProviders =
       state.config.config.experimental?.defaultContext ?? [];
 
+    if (!state.config.defaultModelTitle) {
+      console.error("Failed to gather context, no model selected");
+      return;
+    }
+
     // Resolve context providers and construct new history
     const shouldGatherContext =
       modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
@@ -47,13 +52,14 @@ export const gatherContext = createAsyncThunk<
     }
 
     let [selectedContextItems, selectedCode, content] =
-      await resolveEditorContent(
+      await resolveEditorContent({
         editorState,
         modifiers,
-        extra.ideMessenger,
+        ideMessenger: extra.ideMessenger,
         defaultContextProviders,
         dispatch,
-      );
+        selectedModelTitle: state.config.defaultModelTitle,
+      });
 
     // Automatically use currently open file
     if (!modifiers.noContext) {
@@ -94,11 +100,7 @@ export const gatherContext = createAsyncThunk<
       }
     }
 
-    await updateFileSymbolsFromContextItems(
-      selectedContextItems,
-      extra.ideMessenger,
-      dispatch,
-    );
+    dispatch(updateFileSymbolsFromNewContextItems(selectedContextItems));
 
     if (promptPreamble) {
       if (typeof content === "string") {

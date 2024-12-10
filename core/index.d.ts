@@ -1,6 +1,5 @@
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-
 declare global {
   interface Window {
     ide?: "vscode";
@@ -59,14 +58,7 @@ export interface IndexingStatus {
   type: "docs";
   progress: number;
   description: string;
-  status:
-    | "indexing"
-    | "complete"
-    | "paused"
-    | "failed"
-    | "aborted"
-    | "deleted"
-    | "pending";
+  status: "indexing" | "complete" | "paused" | "failed" | "aborted" | "pending";
   embeddingsProviderId: string;
   isReindexing?: boolean;
   debugInfo?: string;
@@ -83,7 +75,7 @@ export type PromptTemplateFunction = (
 export type PromptTemplate = string | PromptTemplateFunction;
 
 export interface ILLM extends LLMOptions {
-  get providerName(): ModelProvider;
+  get providerName(): string;
 
   uniqueId: string;
   model: string;
@@ -107,6 +99,11 @@ export interface ILLM extends LLMOptions {
   apiType?: string;
   region?: string;
   projectId?: string;
+
+  // Embedding options
+  embeddingId: string;
+  maxEmbeddingChunkSize: number;
+  maxEmbeddingBatchSize: number;
 
   complete(
     prompt: string,
@@ -138,6 +135,10 @@ export interface ILLM extends LLMOptions {
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
+
+  embed(chunks: string[]): Promise<number[][]>;
+
+  rerank(query: string, chunks: Chunk[]): Promise<number[]>;
 
   countTokens(text: string): number;
 
@@ -175,8 +176,8 @@ export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 export interface ContextProviderExtras {
   config: ContinueConfig;
   fullInput: string;
-  embeddingsProvider: EmbeddingsProvider;
-  reranker: Reranker | undefined;
+  embeddingsProvider: ILLM;
+  reranker: ILLM | undefined;
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
@@ -195,10 +196,12 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
+
   loadSubmenuItems?: (
     args: LoadSubmenuItemsArgs,
   ) => Promise<ContextSubmenuItem[]>;
@@ -275,10 +278,12 @@ export interface Range {
   start: Position;
   end: Position;
 }
+
 export interface Position {
   line: number;
   character: number;
 }
+
 export interface FileEdit {
   filepath: string;
   range: Range;
@@ -385,6 +390,7 @@ export interface InputModifiers {
 export interface SymbolWithRange extends RangeInFile {
   name: string;
   type: Parser.SyntaxNode["type"];
+  content: string;
 }
 
 export type FileSymbolMap = Record<string, SymbolWithRange[]>;
@@ -455,6 +461,11 @@ export interface LLMOptions {
 
   useLegacyCompletionsEndpoint?: boolean;
 
+  // Embedding options
+  embeddingId?: string;
+  maxEmbeddingChunkSize?: number;
+  maxEmbeddingBatchSize?: number;
+
   // Cloudflare options
   accountId?: string;
 
@@ -479,6 +490,7 @@ export interface LLMOptions {
   // IBM watsonx Options
   deploymentId?: string;
 }
+
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
   Exclude<keyof T, Keys>
@@ -535,6 +547,7 @@ export class Thread {
 }
 
 export type IdeType = "vscode" | "jetbrains";
+
 export interface IdeInfo {
   ideType: IdeType;
   name: string;
@@ -570,42 +583,68 @@ export interface IdeSettings {
 
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
+
   getIdeSettings(): Promise<IdeSettings>;
+
   getDiff(includeUnstaged: boolean): Promise<string[]>;
+
   getClipboardContent(): Promise<{ text: string; copiedAt: string }>;
+
   isTelemetryEnabled(): Promise<boolean>;
+
   getUniqueId(): Promise<string>;
+
   getTerminalContents(): Promise<string>;
+
   getDebugLocals(threadIndex: number): Promise<string>;
+
   getTopLevelCallStackSources(
     threadIndex: number,
     stackDepth: number,
   ): Promise<string[]>;
+
   getAvailableThreads(): Promise<Thread[]>;
+
   listFolders(): Promise<string[]>;
+
   getWorkspaceDirs(): Promise<string[]>;
+
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
+
   fileExists(filepath: string): Promise<boolean>;
+
   writeFile(path: string, contents: string): Promise<void>;
+
   showVirtualFile(title: string, contents: string): Promise<void>;
+
   getContinueDir(): Promise<string>;
+
   openFile(path: string): Promise<void>;
+
   openUrl(url: string): Promise<void>;
+
   runCommand(command: string): Promise<void>;
+
   saveFile(filepath: string): Promise<void>;
+
   readFile(filepath: string): Promise<string>;
+
   readRangeInFile(filepath: string, range: Range): Promise<string>;
+
   showLines(
     filepath: string,
     startLine: number,
     endLine: number,
   ): Promise<void>;
+
   showDiff(
     filepath: string,
     newContents: string,
     stepIndex: number,
   ): Promise<void>;
+
   getOpenFiles(): Promise<string[]>;
+
   getCurrentFile(): Promise<
     | undefined
     | {
@@ -614,21 +653,33 @@ export interface IDE {
         contents: string;
       }
   >;
+
   getPinnedFiles(): Promise<string[]>;
+
   getSearchResults(query: string): Promise<string>;
+
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
+
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
+
   getBranch(dir: string): Promise<string>;
+
   getTags(artifactId: string): Promise<IndexTag[]>;
+
   getRepoName(dir: string): Promise<string | undefined>;
+
   showToast(
     type: ToastType,
     message: string,
     ...otherParams: any[]
   ): Promise<any>;
+
   getGitRootPath(dir: string): Promise<string | undefined>;
+
   listDir(dir: string): Promise<[string, FileType][]>;
+
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
+
   getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // LSP
@@ -636,6 +687,7 @@ export interface IDE {
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
+
   pathSep(): Promise<string>;
 }
 
@@ -724,151 +776,6 @@ type TemplateType =
   | "gemma"
   | "granite"
   | "llama3";
-
-type ModelProvider =
-  | "openai"
-  | "free-trial"
-  | "anthropic"
-  | "cohere"
-  | "together"
-  | "ollama"
-  | "huggingface-tgi"
-  | "huggingface-inference-api"
-  | "kindo"
-  | "llama.cpp"
-  | "replicate"
-  | "text-gen-webui"
-  | "lmstudio"
-  | "llamafile"
-  | "gemini"
-  | "mistral"
-  | "bedrock"
-  | "bedrockimport"
-  | "sagemaker"
-  | "deepinfra"
-  | "flowise"
-  | "groq"
-  | "continue-proxy"
-  | "fireworks"
-  | "custom"
-  | "cloudflare"
-  | "deepseek"
-  | "azure"
-  | "openai-aiohttp"
-  | "msty"
-  | "watsonx"
-  | "openrouter"
-  | "sambanova"
-  | "nvidia"
-  | "vllm"
-  | "mock"
-  | "cerebras"
-  | "askSage"
-  | "vertexai"
-  | "nebius"
-  | "xAI"
-  | "moonshot"
-  | "siliconflow"
-  | "function-network";
-
-export type ModelName =
-  | "AUTODETECT"
-  // OpenAI
-  | "gpt-3.5-turbo"
-  | "gpt-3.5-turbo-16k"
-  | "gpt-4"
-  | "gpt-3.5-turbo-0613"
-  | "gpt-4-32k"
-  | "gpt-4o"
-  | "gpt-4o-mini"
-  | "gpt-4-turbo"
-  | "gpt-4-turbo-preview"
-  | "gpt-4-vision-preview"
-  | "o1-preview"
-  | "o1-mini"
-  // Mistral
-  | "codestral-latest"
-  | "open-mistral-7b"
-  | "open-mixtral-8x7b"
-  | "open-mixtral-8x22b"
-  | "mistral-small-latest"
-  | "mistral-large-latest"
-  | "mistral-7b"
-  | "mistral-8x7b"
-  | "mistral-8x22b"
-  | "mistral-tiny"
-  | "mistral-small"
-  | "mistral-medium"
-  | "mistral-embed"
-  | "mistral-nemo"
-  // Llama 2
-  | "llama2-7b"
-  | "llama2-13b"
-  | "llama2-70b"
-  | "codellama-7b"
-  | "codellama-13b"
-  | "codellama-34b"
-  | "codellama-70b"
-  // Llama 3
-  | "llama3-8b"
-  | "llama3-70b"
-  // Llama 3.1
-  | "llama3.1-8b"
-  | "llama3.1-70b"
-  | "llama3.1-405b"
-  // Llama 3.2
-  | "llama3.2-1b"
-  | "llama3.2-3b"
-  | "llama3.2-11b"
-  | "llama3.2-90b"
-  // xAI
-  | "grok-beta"
-  // Other Open-source
-  | "phi2"
-  | "phi-3-mini"
-  | "phi-3-medium"
-  | "phind-codellama-34b"
-  | "wizardcoder-7b"
-  | "wizardcoder-13b"
-  | "wizardcoder-34b"
-  | "zephyr-7b"
-  | "codeup-13b"
-  | "deepseek-7b"
-  | "deepseek-33b"
-  | "deepseek-2-lite"
-  | "neural-chat-7b"
-  | "gemma-7b-it"
-  | "gemma2-2b-it"
-  | "gemma2-9b-it"
-  | "olmo-7b"
-  | "qwen-coder2.5-7b"
-  // Anthropic
-  | "claude-3-5-sonnet-latest"
-  | "claude-3-5-sonnet-20240620"
-  | "claude-3-opus-20240229"
-  | "claude-3-sonnet-20240229"
-  | "claude-3-haiku-20240307"
-  | "claude-2.1"
-  | "claude-2"
-  // Cohere
-  | "command-r"
-  | "command-r-plus"
-  // Gemini
-  | "gemini-pro"
-  | "gemini-1.5-pro-latest"
-  | "gemini-1.5-pro"
-  | "gemini-1.5-flash-latest"
-  | "gemini-1.5-flash"
-  // Tab autocomplete
-  | "deepseek-1b"
-  | "starcoder-1b"
-  | "starcoder-3b"
-  | "starcoder2-3b"
-  | "stable-code-3b"
-  // Moonshot
-  | "moonshot-v1-8k"
-  | "moonshot-v1-32k"
-  | "moonshot-v1-128k";
 
 export interface RequestOptions {
   timeout?: number;
@@ -970,7 +877,7 @@ export interface ModelCapability {
 
 export interface ModelDescription {
   title: string;
-  provider: ModelProvider;
+  provider: string;
   model: string;
   apiKey?: string;
   apiBase?: string;
@@ -984,28 +891,6 @@ export interface ModelDescription {
   capabilities?: ModelCapability;
   cacheBehavior?: CacheBehavior;
 }
-
-export type EmbeddingsProviderName =
-  | "sagemaker"
-  | "bedrock"
-  | "huggingface-tei"
-  | "transformers.js"
-  | "ollama"
-  | "openai"
-  | "cohere"
-  | "lmstudio"
-  | "free-trial"
-  | "gemini"
-  | "continue-proxy"
-  | "deepinfra"
-  | "nvidia"
-  | "voyage"
-  | "mistral"
-  | "nebius"
-  | "vertexai"
-  | "watsonx"
-  | "function-network"
-  | "siliconflow";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -1028,32 +913,12 @@ export interface EmbedOptions {
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
-  provider: EmbeddingsProviderName;
+  provider: string;
 }
-
-export interface EmbeddingsProvider {
-  id: string;
-  providerName: EmbeddingsProviderName;
-  maxChunkSize: number;
-  embed(chunks: string[]): Promise<number[][]>;
-}
-
-export type RerankerName =
-  | "cohere"
-  | "voyage"
-  | "llm"
-  | "free-trial"
-  | "huggingface-tei"
-  | "continue-proxy";
 
 export interface RerankerDescription {
-  name: RerankerName;
-  params?: { [key: string]: any };
-}
-
-export interface Reranker {
   name: string;
-  rerank(query: string, chunks: Chunk[]): Promise<number[]>;
+  params?: { [key: string]: any };
 }
 
 export interface TabAutocompleteOptions {
@@ -1104,6 +969,7 @@ export interface ContinueUIConfig {
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
   getChatTitles?: boolean;
+  codeWrap?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -1271,7 +1137,7 @@ export interface Config {
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
   userToken?: string;
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
-  embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
+  embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
     | CustomLLM
@@ -1282,7 +1148,7 @@ export interface Config {
   /** UI styles customization */
   ui?: ContinueUIConfig;
   /** Options for the reranker */
-  reranker?: RerankerDescription | Reranker;
+  reranker?: RerankerDescription | ILLM;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
@@ -1301,11 +1167,11 @@ export interface ContinueConfig {
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
-  embeddingsProvider: EmbeddingsProvider;
+  embeddingsProvider: ILLM;
   tabAutocompleteModels?: ILLM[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
-  reranker?: Reranker;
+  reranker?: ILLM;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];

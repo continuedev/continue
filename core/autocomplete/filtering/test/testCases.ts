@@ -810,8 +810,7 @@ func main() {}`,
 }`,
     expectedCompletion: `string
     State   string
-    ZipCode string
-}`,
+    ZipCode string`,
   },
 
   {
@@ -1118,8 +1117,7 @@ impl Calculator {
         self.result /= number;
     } else {
         println!("Cannot divide by zero.");
-    }
-}`,
+    }`,
   },
   {
     description: "Should autocomplete Rust struct definition",
@@ -1600,8 +1598,7 @@ interface User {
   age: number;
 }`,
     expectedCompletion: `mail: string;
-  age: number;
-}`,
+  age: number;`,
   },
   {
     description: "Should autocomplete TypeScript interface declarations",
@@ -1853,8 +1850,7 @@ let john = { FirstName = "John"; LastName = "Doe"; Age = 30 }`,
     Address: string
 }`,
     expectedCompletion: `
-    Address: string
-}`,
+    Address: string`,
   },
 
   {

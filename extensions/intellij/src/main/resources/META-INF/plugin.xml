@@ -15,7 +15,7 @@
         <ProviderFactory
                 implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
     </extensions>
-        <extensions defaultExtensionNs="JavaScript.JsonSchema">
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
         <ProviderFactory
                 implementation="com.github.continuedev.continueintellijextension.continue.ConfigRcJsonSchemaProviderFactory"/>
     </extensions>
@@ -38,6 +38,8 @@
                 id="AutocompleteSpinnerWidget"/>
         <notificationGroup id="Continue"
                            displayType="BALLOON"/>
+        <actionPromoter order="last"
+                        implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -120,10 +122,10 @@
         <action id="continue.newContinueSession"
                 icon="AllIcons.General.Add"
                 class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
-                text="Start New Continue Session"
-                description="Start New Continue Session">
+                text="New Session"
+                description="New Session">
 
-            <override-text place="GoToAction" text="Continue: New Session"/>
+            <override-text place="GoToAction" text="New Session"/>
         </action>
 
         <action id="continue.viewHistory"
@@ -131,8 +133,40 @@
                 class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
                 text="View History"
                 description="View History">
-            <override-text place="GoToAction" text="Continue: View History"/>
+            <override-text place="GoToAction" text="View History"/>
         </action>
+
+        <action id="continue.openConfig"
+                class="com.github.continuedev.continueintellijextension.actions.OpenConfigAction"
+                icon="AllIcons.General.GearPlain"
+                text="Open Continue Config"
+                description="Open Continue Config">
+            <override-text place="GoToAction" text="Open Continue Config"/>
+        </action>
+
+        <action id="continue.openAccountDialog"
+                class="com.github.continuedev.continueintellijextension.actions.OpenAccountDialogAction"
+                icon="AllIcons.CodeWithMe.CwmAccess"
+                text="Account"
+                description="Account">
+            <override-text place="GoToAction" text="Account"/>
+        </action>
+
+        <action id="continue.openMorePage"
+                class="com.github.continuedev.continueintellijextension.actions.OpenMorePageAction"
+                icon="AllIcons.Actions.MoreHorizontal"
+                text="More"
+                description="More">
+            <override-text place="GoToAction" text="More"/>
+        </action>
+
+        <group id="ContinueSidebarActionsGroup">
+            <reference ref="continue.newContinueSession"/>
+            <reference ref="continue.viewHistory"/>
+            <reference ref="continue.openConfig"/>
+            <reference ref="continue.openAccountDialog"/>
+            <reference ref="continue.openMorePage"/>
+        </group>
 
         <action id="continue.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
@@ -145,11 +179,6 @@
             <add-to-group group-id="EditorPopupMenu"/>
             <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
         </action>
-
-        <group id="ContinueSidebarActionsGroup">
-            <reference ref="continue.newContinueSession"/>
-            <reference ref="continue.viewHistory"/>
-        </group>
 
         <action id="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
                 class="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"

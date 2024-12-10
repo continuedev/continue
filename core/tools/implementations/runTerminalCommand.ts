@@ -1,6 +1,9 @@
+import childProcess from "node:child_process";
+import util from "node:util";
+
 import { ToolImpl } from ".";
-const util = require("node:util");
-const asyncExec = util.promisify(require("node:child_process").exec);
+
+const asyncExec = util.promisify(childProcess.exec);
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();

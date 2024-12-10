@@ -1,4 +1,4 @@
-import { ModelCapability, ModelProvider, TemplateType } from "../index.js";
+import { ModelCapability, TemplateType } from "../index.js";
 
 import {
   anthropicTemplateMessages,
@@ -36,7 +36,7 @@ import {
   zephyrEditPrompt,
 } from "./templates/edit.js";
 
-const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
+const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
   "openai",
   "ollama",
@@ -52,7 +52,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "watsonx",
 ];
 
-const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
+const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
   "gemini",
@@ -65,6 +65,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "openrouter",
   "vertexai",
   "azure",
+  "scaleway",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -92,7 +93,7 @@ function modelSupportsTools(modelName: string) {
 }
 
 function modelSupportsImages(
-  provider: ModelProvider,
+  provider: string,
   model: string,
   title: string | undefined,
   capabilities: ModelCapability | undefined,
@@ -115,7 +116,7 @@ function modelSupportsImages(
 
   return false;
 }
-const PARALLEL_PROVIDERS: ModelProvider[] = [
+const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
   "sagemaker",
@@ -134,10 +135,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "function-network",
 ];
 
-function llmCanGenerateInParallel(
-  provider: ModelProvider,
-  model: string,
-): boolean {
+function llmCanGenerateInParallel(provider: string, model: string): boolean {
   if (provider === "openai") {
     return model.includes("gpt");
   }
@@ -241,7 +239,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
 function autodetectTemplateFunction(
   model: string,
-  provider: ModelProvider,
+  provider: string,
   explicitTemplate: TemplateType | undefined = undefined,
 ) {
   if (

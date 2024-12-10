@@ -7,6 +7,7 @@ import {
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
 import { streamResponse } from "core/llm/stream";
+import { stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -19,22 +20,29 @@ import {
   vscBackground,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
+import CodeToEditCard from "../../components/CodeToEditCard";
+import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
+import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import {
   OnboardingCard,
   useOnboardingCard,
 } from "../../components/OnboardingCard";
+import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
+import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { submitEdit } from "../../redux/slices/editModeState";
 import {
   clearLastEmptyResponse,
   newSession,
@@ -42,6 +50,14 @@ import {
   selectIsSingleRangeEditOrInsertion,
   setInactive,
 } from "../../redux/slices/sessionSlice";
+import {
+  setDialogEntryOn,
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiSlice";
+import { RootState } from "../../redux/store";
+import { cancelStream } from "../../redux/thunks/cancelStream";
+import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
@@ -49,27 +65,16 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
+import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
-  setDialogMessage,
-  setDialogEntryOn,
-  setShowDialog,
-} from "../../redux/slices/uiSlice";
-import { RootState } from "../../redux/store";
-import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
-import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
-import { submitEdit } from "../../redux/slices/editModeState";
-import { stripImages } from "core/util/messageContent";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
-import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
-import CodeToEditCard from "../../components/CodeToEditCard";
-import { exitEditMode } from "../../redux/thunks/exitEditMode";
+  loadLastSession,
+  saveCurrentSession,
+} from "../../redux/thunks/session";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -133,9 +138,12 @@ export function Chat() {
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
+  const selectedModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
   const defaultModel = useAppSelector(selectDefaultModel);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
-  const active = useAppSelector((state) => state.session.isStreaming);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
@@ -144,8 +152,6 @@ export function Chat() {
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
-  const { saveSession, getLastSessionId, loadLastSession } =
-    useHistory(dispatch);
   const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
   const toolCallState = useSelector<RootState, ToolCallState | undefined>(
     selectCurrentToolCall,
@@ -161,7 +167,7 @@ export function Chat() {
   const isSingleRangeEditOrInsertion = useAppSelector(
     selectIsSingleRangeEditOrInsertion,
   );
-
+  const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const snapToBottom = useCallback(() => {
     if (!stepsDivRef.current) return;
     const elem = stepsDivRef.current;
@@ -181,13 +187,9 @@ export function Chat() {
     setIsAtBottom(true);
   }, [stepsDivRef, setIsAtBottom]);
 
-  const returnToLastSessionButtonText = isInEditMode
-    ? "Back to Chat"
-    : "Last Session";
-
   useEffect(() => {
-    if (active) snapToBottom();
-  }, [active, snapToBottom]);
+    if (isStreaming) snapToBottom();
+  }, [isStreaming, snapToBottom]);
 
   // useEffect(() => {
   //   setTimeout(() => {
@@ -203,7 +205,7 @@ export function Chat() {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        // dispatch(cancelGeneration()); TODO!!!
+        dispatch(cancelStream());
       }
     };
     window.addEventListener("keydown", listener);
@@ -211,7 +213,7 @@ export function Chat() {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [active]);
+  }, [isStreaming]);
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -228,7 +230,12 @@ export function Chat() {
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
   const sendInput = useCallback(
-    (editorState: JSONContent, modifiers: InputModifiers, editor: Editor) => {
+    (
+      editorState: JSONContent,
+      modifiers: InputModifiers,
+      editor: Editor,
+      index?: number,
+    ) => {
       if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
         if (u) {
@@ -253,13 +260,15 @@ export function Chat() {
         return;
       }
 
-      editor.commands.clearContent(true);
-
       const promptPreamble = isInEditMode
         ? getMultifileEditPrompt(codeToEdit)
         : undefined;
 
-      dispatch(streamResponseThunk({ editorState, modifiers, promptPreamble }));
+      dispatch(
+        streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
+      );
+
+      editor.commands.clearContent(true);
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -284,16 +293,17 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    const [contextItems, __, userInstructions] = await resolveEditorContent(
+    const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
-      {
+      modifiers: {
         noContext: true,
         useCodebase: false,
       },
       ideMessenger,
-      [],
+      defaultContextProviders: [],
       dispatch,
-    );
+      selectedModelTitle,
+    });
 
     const prompt = [
       ...contextItems.map((item) => item.content),
@@ -311,11 +321,16 @@ export function Chat() {
   useWebviewListener(
     "newSession",
     async () => {
-      saveSession();
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: true,
+        }),
+      );
+      // unwrapResult(response) // errors if session creation failed
       mainTextInputRef.current?.focus?.();
       dispatch(exitEditMode());
     },
-    [saveSession],
+    [mainTextInputRef],
   );
 
   const isLastUserInput = useCallback(
@@ -331,6 +346,16 @@ export function Chat() {
 
   return (
     <>
+      {isInEditMode && (
+        <PageHeader
+          title="Back to Chat"
+          onClick={async () => {
+            await dispatch(loadLastSession({ saveCurrentSession: false }));
+            dispatch(exitEditMode());
+          }}
+        />
+      )}
+
       {widget}
       <StepsDiv
         ref={stepsDivRef}
@@ -355,7 +380,9 @@ export function Chat() {
                 <>
                   {isInEditMode && index === 0 && <CodeToEditCard />}
                   <ContinueInputBox
-                    onEnter={sendInput}
+                    onEnter={(editorState, modifiers, editor) =>
+                      sendInput(editorState, modifiers, editor, index)
+                    }
                     isLastUserInput={isLastUserInput(index)}
                     isMainInput={false}
                     editorState={item.editorState}
@@ -423,7 +450,7 @@ export function Chat() {
         <ChatScrollAnchor
           scrollAreaRef={stepsDivRef}
           isAtBottom={isAtBottom}
-          trackVisibility={active}
+          trackVisibility={isStreaming}
         />
       </StepsDiv>
 
@@ -439,7 +466,7 @@ export function Chat() {
               ■ Stop TTS
             </StopButton>
           )}
-          {active && (
+          {isStreaming && (
             <StopButton
               onClick={() => {
                 dispatch(setInactive());
@@ -466,32 +493,28 @@ export function Chat() {
 
         <div
           style={{
-            pointerEvents: active ? "none" : "auto",
+            pointerEvents: isStreaming ? "none" : "auto",
           }}
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {history.length === 0 &&
-              getLastSessionId() &&
-              !hasPendingApplies ? (
+              {history.length === 0 && lastSessionId && !isInEditMode && (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
-                      loadLastSession().catch((e) =>
-                        console.error(`Failed to load last session: ${e}`),
+                      await dispatch(
+                        loadLastSession({
+                          saveCurrentSession: true,
+                        }),
                       );
-
-                      if (isInEditMode) {
-                        dispatch(exitEditMode());
-                      }
                     }}
                     className="flex items-center gap-2"
                   >
                     <ArrowLeftIcon className="h-3 w-3" />
-                    {returnToLastSessionButtonText}
+                    Last Session
                   </NewSessionButton>
                 </div>
-              ) : null}
+              )}
             </div>
             <ConfigErrorIndicator />
           </div>
@@ -499,16 +522,18 @@ export function Chat() {
           {hasPendingApplies && isSingleRangeEditOrInsertion && (
             <AcceptRejectAllButtons
               pendingApplyStates={pendingApplyStates}
-              onAcceptOrReject={() => {
-                loadLastSession().catch((e) =>
-                  console.error(`Failed to load last session: ${e}`),
-                );
-
-                dispatch(exitEditMode());
+              onAcceptOrReject={async (outcome) => {
+                if (outcome === "acceptDiff") {
+                  await dispatch(
+                    loadLastSession({
+                      saveCurrentSession: false,
+                    }),
+                  );
+                  dispatch(exitEditMode());
+                }
               }}
             />
           )}
-
           {history.length === 0 && (
             <>
               {onboardingCard.show && (

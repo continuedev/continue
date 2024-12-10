@@ -5,8 +5,8 @@ import FeedbackButtons from "./FeedbackButtons";
 import { renderChatMessage } from "core/util/messageContent";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import useHistory from "../../hooks/useHistory";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import { loadLastSession } from "../../redux/thunks/session";
 
 export interface EditActionsProps {
   index: number;
@@ -18,7 +18,6 @@ export default function EditActions({ index, item }: EditActionsProps) {
   //   (store: RootState) => store.state.curCheckpointIndex,
   // );
   const dispatch = useAppDispatch();
-  const { loadLastSession } = useHistory(dispatch);
 
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
@@ -58,12 +57,15 @@ export default function EditActions({ index, item }: EditActionsProps) {
         {hasPendingApplies && (
           <AcceptRejectAllButtons
             pendingApplyStates={pendingApplyStates}
-            onAcceptOrReject={() => {
-              loadLastSession().catch((e) =>
-                console.error(`Failed to load last session: ${e}`),
-              );
-
-              dispatch(exitEditMode());
+            onAcceptOrReject={async (outcome) => {
+              if (outcome === "acceptDiff") {
+                await dispatch(
+                  loadLastSession({
+                    saveCurrentSession: false,
+                  }),
+                );
+                dispatch(exitEditMode());
+              }
             }}
           />
         )}

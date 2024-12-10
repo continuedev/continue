@@ -8,7 +8,6 @@ type LocalStorageTypes = {
   ide: "vscode" | "jetbrains";
   ftc: number;
   fontSize: number;
-  lastSessionId: string | undefined;
   [key: `inputHistory_${string}`]: JSONContent[];
   extensionVersion: string;
   showTutorialCard: boolean;

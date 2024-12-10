@@ -37,7 +37,6 @@ import {
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
-import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
@@ -68,9 +67,16 @@ import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   clearCodeToEdit,
+  selectHasCodeToEdit,
   selectIsInEditMode,
+  setMainEditorContentTrigger,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
+import {
+  loadLastSession,
+  loadSession,
+  saveCurrentSession,
+} from "../../redux/thunks/session";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -185,8 +191,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const useActiveFile = useAppSelector(selectUseActiveFile);
 
-  const { saveSession, loadSession, loadLastSession } = useHistory(dispatch);
-
   const posthog = usePostHog();
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
@@ -253,7 +257,8 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const isInEditModeRef = useUpdatingRef(isInEditMode);
-
+  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
@@ -297,10 +302,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
     return undefined;
   }
-
-  const mainEditorContent = useAppSelector(
-    (store) => store.session.mainEditorContent,
-  );
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
@@ -379,7 +380,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
               onEnterRef.current({
                 useCodebase: false,
-                noContext: useActiveFile,
+                noContext: !!useActiveFile,
               });
 
               return true;
@@ -421,12 +422,14 @@ function TipTapEditor(props: TipTapEditorProps) {
               if (inDropdownRef.current || !isInEditModeRef.current) {
                 return false;
               }
-
-              loadLastSession().catch((e) =>
-                console.error(`Failed to load last session: ${e}`),
-              );
-
-              dispatch(exitEditMode());
+              (async () => {
+                await dispatch(
+                  loadLastSession({
+                    saveCurrentSession: false,
+                  }),
+                );
+                dispatch(exitEditMode());
+              })();
 
               return true;
             },
@@ -489,7 +492,6 @@ function TipTapEditor(props: TipTapEditorProps) {
           ),
           allow: () => isInEditModeRef.current,
           command: async ({ editor, range, props }) => {
-            console.log({ range });
             editor.chain().focus().insertContentAt(range, "").run();
             const filepath = props.id;
             const contents = await ideMessenger.ide.readFile(filepath);
@@ -537,7 +539,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: `font-size: ${getFontSize()}px;`,
       },
     },
-    content: props.editorState || mainEditorContent || "",
+    content: props.editorState,
     editable: !isStreaming || props.isMainInput,
   });
 
@@ -630,7 +632,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
-      if (isStreaming) {
+      if (isStreaming || isEditModeAndNoCodeToEdit) {
         return;
       }
 
@@ -657,6 +659,18 @@ function TipTapEditor(props: TipTapEditorProps) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, isStreaming, editor]);
+
+  // This allows anywhere in the app to set the content of the main input
+  const mainInputContentTrigger = useAppSelector(
+    (store) => store.session.mainEditorContentTrigger,
+  );
+  useEffect(() => {
+    if (!props.isMainInput || !mainInputContentTrigger) {
+      return;
+    }
+    editor.commands.setContent(mainInputContentTrigger);
+    dispatch(setMainEditorContentTrigger(undefined));
+  }, [editor, props.isMainInput, mainInputContentTrigger]);
 
   // IDE event listeners
   useWebviewListener(
@@ -685,14 +699,18 @@ function TipTapEditor(props: TipTapEditorProps) {
       dispatch(clearCodeToEdit());
 
       if (historyLength > 0) {
-        await saveSession();
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: false,
+          }),
+        );
       }
       setTimeout(() => {
         editor?.commands.blur();
         editor?.commands.focus("end");
       }, 20);
     },
-    [historyLength, saveSession, editor, props.isMainInput],
+    [historyLength, editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -714,12 +732,16 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      await saveSession();
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: true,
+        }),
+      );
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput, saveSession],
+    [editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -840,12 +862,17 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueSessionId",
     async (data) => {
-      if (!props.isMainInput) {
+      if (!props.isMainInput || !data.sessionId) {
         return;
       }
-      loadSession(data.sessionId);
+      await dispatch(
+        loadSession({
+          sessionId: data.sessionId,
+          saveCurrentSession: true,
+        }),
+      );
     },
-    [loadSession, props.isMainInput],
+    [props.isMainInput],
   );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);

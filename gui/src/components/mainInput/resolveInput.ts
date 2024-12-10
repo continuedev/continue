@@ -19,20 +19,29 @@ interface MentionAttrs {
   query?: string;
 }
 
+interface ResolveEditorContentInput {
+  editorState: JSONContent;
+  modifiers: InputModifiers;
+  ideMessenger: IIdeMessenger;
+  defaultContextProviders: DefaultContextProvider[];
+  selectedModelTitle: string;
+  dispatch: Dispatch;
+}
+
 /**
  * This function converts the input from the editor to a string, resolving any context items
  * Context items are appended to the top of the prompt and then referenced within the input
- * @param editor
- * @returns string representation of the input
  */
-
-async function resolveEditorContent(
-  editorState: JSONContent,
-  modifiers: InputModifiers,
-  ideMessenger: IIdeMessenger,
-  defaultContextProviders: DefaultContextProvider[],
-  dispatch: Dispatch,
-): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
+async function resolveEditorContent({
+  editorState,
+  modifiers,
+  ideMessenger,
+  defaultContextProviders,
+  selectedModelTitle,
+  dispatch,
+}: ResolveEditorContentInput): Promise<
+  [ContextItemWithId[], RangeInFile[], MessageContent]
+> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
@@ -116,13 +125,13 @@ async function resolveEditorContent(
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
-    const data = {
+    const result = await ideMessenger.request("context/getContextItems", {
       name: item.itemType === "contextProvider" ? item.id : item.itemType,
       query: item.query,
       fullInput: stripImages(parts),
       selectedCode,
-    };
-    const result = await ideMessenger.request("context/getContextItems", data);
+      selectedModelTitle,
+    });
     if (result.status === "success") {
       const resolvedItems = result.content;
       contextItems.push(...resolvedItems);
@@ -139,6 +148,7 @@ async function resolveEditorContent(
       query: "",
       fullInput: stripImages(parts),
       selectedCode,
+      selectedModelTitle,
     });
 
     if (result.status === "success") {
@@ -158,6 +168,7 @@ async function resolveEditorContent(
         query: provider.query ?? "",
         fullInput: stripImages(parts),
         selectedCode,
+        selectedModelTitle,
       });
       if (result.status === "success") {
         return result.content;

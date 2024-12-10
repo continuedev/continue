@@ -1,18 +1,18 @@
-export function removeQuotesAndEscapes(output: string): string {
-  output = output.trim();
+export function removeQuotesAndEscapes(input: string): string {
+  let output = input.trim();
 
   // Replace smart quotes
-  output = output.replace("“", '"');
-  output = output.replace("”", '"');
-  output = output.replace("‘", "'");
-  output = output.replace("’", "'");
+  output = output.replaceAll("“", '"');
+  output = output.replaceAll("”", '"');
+  output = output.replaceAll("‘", "'");
+  output = output.replaceAll("’", "'");
 
   // Remove escapes
-  output = output.replace('\\"', '"');
-  output = output.replace("\\'", "'");
-  output = output.replace("\\n", "\n");
-  output = output.replace("\\t", "\t");
-  output = output.replace("\\\\", "\\");
+  output = output.replaceAll('\\"', '"');
+  output = output.replaceAll("\\'", "'");
+  output = output.replaceAll("\\n", "\n");
+  output = output.replaceAll("\\t", "\t");
+  output = output.replaceAll("\\\\", "\\");
   while (
     (output.startsWith('"') && output.endsWith('"')) ||
     (output.startsWith("'") && output.endsWith("'"))
@@ -192,63 +192,37 @@ export function getRelativePath(
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {
+  const extToLangMap: { [key: string]: string } = {
+    py: "python",
+    js: "javascript",
+    jsx: "jsx",
+    tsx: "tsx",
+    ts: "typescript",
+    java: "java",
+    go: "go",
+    rb: "ruby",
+    rs: "rust",
+    c: "c",
+    cpp: "cpp",
+    cs: "csharp",
+    php: "php",
+    scala: "scala",
+    swift: "swift",
+    kt: "kotlin",
+    md: "markdown",
+    json: "json",
+    html: "html",
+    css: "css",
+    sh: "shell",
+    yaml: "yaml",
+    toml: "toml",
+    tex: "latex",
+    sql: "sql",
+    ps1: "powershell",
+  };
+
   const ext = filepath.split(".").pop();
-  switch (ext) {
-    case "py":
-      return "python";
-    case "js":
-      return "javascript";
-    case "jsx":
-      return "jsx";
-    case "tsx":
-      return "tsx";
-    case "ts":
-      return "typescript";
-    case "java":
-      return "java";
-    case "go":
-      return "go";
-    case "rb":
-      return "ruby";
-    case "rs":
-      return "rust";
-    case "c":
-      return "c";
-    case "cpp":
-      return "cpp";
-    case "cs":
-      return "csharp";
-    case "php":
-      return "php";
-    case "scala":
-      return "scala";
-    case "swift":
-      return "swift";
-    case "kt":
-      return "kotlin";
-    case "md":
-      return "markdown";
-    case "json":
-      return "json";
-    case "html":
-      return "html";
-    case "css":
-      return "css";
-    case "sh":
-      return "shell";
-    case "yaml":
-      return "yaml";
-    case "toml":
-      return "toml";
-    case "tex":
-      return "latex";
-    case "sql":
-      return "sql";
-    case "ps1":
-      return "powershell";
-    default:
-      return ext ?? "";
-  }
+  return ext ? (extToLangMap[ext] ?? ext) : "";
 }
 
 export function copyOf(obj: any): any {
@@ -257,6 +231,7 @@ export function copyOf(obj: any): any {
   }
   return JSON.parse(JSON.stringify(obj));
 }
+``;
 
 export function deduplicateArray<T>(
   array: T[],
@@ -327,4 +302,18 @@ export function dedent(strings: TemplateStringsArray, ...values: any[]) {
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Removes code blocks from a message.
+ *
+ * Return modified message text.
+ */
+export function removeCodeBlocksAndTrim(text: string): string {
+  const codeBlockRegex = /```[\s\S]*?```/g;
+
+  // Remove code blocks from the message text
+  const textWithoutCodeBlocks = text.replace(codeBlockRegex, "");
+
+  return textWithoutCodeBlocks.trim();
 }
