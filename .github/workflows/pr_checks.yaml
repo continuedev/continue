@@ -11,15 +11,14 @@ on:
       - ".github/workflows**"
 
 jobs:
-  install-root:
-    runs-on: ubuntu-latest
+  install-root:g
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
@@ -36,12 +35,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
@@ -68,17 +67,17 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
@@ -102,17 +101,17 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
@@ -136,17 +135,17 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
@@ -173,7 +172,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
@@ -192,12 +191,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
@@ -220,12 +219,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
