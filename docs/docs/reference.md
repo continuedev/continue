@@ -375,7 +375,7 @@ Example:
     "codeBlockToolbarPosition": "bottom",
     "fontSize": 14,
     "displayRawMarkdown": false,
-    "showScrollBar": false,
+    "showChatScrollbar": false,
     "codeWrap": false
   }
 }
