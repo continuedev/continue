@@ -20,6 +20,21 @@ const esbuildConfig = {
   inject: ["./scripts/importMetaUrl.js"],
   define: { "import.meta.url": "importMetaUrl" },
   supported: { "dynamic-import": false },
+  plugins: [
+    {
+      name: "on-end-plugin",
+      setup(build) {
+        build.onEnd((result) => {
+          if (result.errors.length > 0) {
+            console.error("Build failed with errors:", result.errors);
+            throw new Error(result.errors);
+          } else {
+            console.log("VS Code Extension esbuild complete"); // used verbatim in vscode tasks to detect completion
+          }
+        });
+      },
+    },
+  ],
 };
 
 (async () => {
@@ -30,5 +45,4 @@ const esbuildConfig = {
   } else {
     await esbuild.build(esbuildConfig);
   }
-  console.log("VS Code Extension esbuild complete"); // Used in task endpattern to signal completion
 })();
