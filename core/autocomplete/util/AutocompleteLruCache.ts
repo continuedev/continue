@@ -7,7 +7,7 @@ import {
   truncateSqliteLikePattern,
 } from "../../indexing/refreshIndex.js";
 import { getTabAutocompleteCacheSqlitePath } from "../../util/paths.js";
-
+//hello
 export class AutocompleteLruCache {
   private static capacity = 1000;
   private mutex = new Mutex();
