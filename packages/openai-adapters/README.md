@@ -53,6 +53,7 @@ They are concerned with:
 - [ ] Replicate
 - [ ] SageMaker
 - [x] SambaNova
+- [x] Scaleway
 - [ ] Silicon Flow
 - [x] TextGen Web UI
 - [x] Together
