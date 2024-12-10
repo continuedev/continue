@@ -1,8 +1,8 @@
 import { RangeInFile } from "core";
 import { useContext } from "react";
-import { getBasename } from "core/util";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import FileIcon from "../FileIcon";
+import { getFileName } from "core/util/uri";
 
 interface FilenameLinkProps {
   rif: RangeInFile;
@@ -25,8 +25,8 @@ function FilenameLink({ rif }: FilenameLinkProps) {
       onClick={onClick}
     >
       <FileIcon filename={rif.filepath} height="20px" width="20px" />
-      <span className="align-baseline underline underline-offset-2 mb-0.5">
-        {getBasename(rif.filepath)}
+      <span className="mb-0.5 align-baseline underline underline-offset-2">
+        {getFileName(rif.filepath)}
       </span>
     </span>
   );

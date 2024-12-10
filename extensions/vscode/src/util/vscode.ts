@@ -141,20 +141,6 @@ export function getPathSep(): string {
   return isWindowsLocalButNotRemote() ? "/" : path.sep;
 }
 
-export function uriFromFilePath(filepath: string): vscode.Uri {
-  let finalPath = filepath;
-  if (vscode.env.remoteName) {
-    if (isWindowsLocalButNotRemote()) {
-      finalPath = windowsToPosix(filepath);
-    }
-    return vscode.Uri.parse(
-      `vscode-remote://${vscode.env.remoteName}${finalPath}`,
-    );
-  } else {
-    return vscode.Uri.file(finalPath);
-  }
-}
-
 export function getUniqueId() {
   const id = vscode.env.machineId;
   if (id === "someValue.machineId") {

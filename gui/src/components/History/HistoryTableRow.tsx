@@ -7,11 +7,7 @@ import { Input } from "..";
 import useHistory from "../../hooks/useHistory";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useAppSelector } from "../../redux/hooks";
-
-function lastPartOfPath(path: string): string {
-  const sep = path.includes("/") ? "/" : "\\";
-  return path.split(sep).pop() || path;
-}
+import { getLastNPathParts } from "core/util/uri";
 
 export function HistoryTableRow({
   sessionMetadata,
@@ -95,7 +91,7 @@ export function HistoryTableRow({
 
             <div className="flex" style={{ color: "#9ca3af" }}>
               <span>
-                {lastPartOfPath(sessionMetadata.workspaceDirectory || "")}
+                {getLastNPathParts(sessionMetadata.workspaceDirectory || "", 1)}
               </span>
               {/* Uncomment to show the date */}
               {/* <span className="inline-block ml-auto">

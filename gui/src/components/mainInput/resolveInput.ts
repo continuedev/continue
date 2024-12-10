@@ -70,8 +70,8 @@ async function resolveEditorContent({
       } else if (p.type === "codeBlock") {
         if (!p.attrs.item.editing) {
           let meta = p.attrs.item.description.split(" ");
-          let relativePath = meta[0] || "";
-          let extName = relativePath.split(".").slice(-1)[0];
+          let relativeFilepath = meta[0] || "";
+          let extName = relativeFilepath.split(".").slice(-1)[0];
           const text =
             "\n\n" +
             "```" +
