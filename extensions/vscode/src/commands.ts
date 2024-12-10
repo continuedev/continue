@@ -765,8 +765,6 @@ const getCommandsMap: (
         null,
         extensionContext.subscriptions,
       );
-
-      vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
     },
     "continue.openConfig": () => {
       core.invoke("config/openProfile", {
