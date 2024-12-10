@@ -97,7 +97,10 @@ class DFSWalker {
       },
       ignoreContexts: [
         {
-          ignore: ignore().add(defaultIgnoreDir).add(defaultIgnoreFile).add(globalIgnoreFile),
+          ignore: ignore()
+            .add(defaultIgnoreDir)
+            .add(defaultIgnoreFile)
+            .add(globalIgnoreFile),
           dirname: "",
         },
       ],

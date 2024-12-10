@@ -19,30 +19,79 @@ export function getRelativePath(
   const fullPath = getFullPath(fileUri);
 }
 
-export function getLastNPathParts(path: string, n: number): string {
-  if (n < 1) {
-    return "";
-  }
-  const pathParts = path.split("/").filter(Boolean);
-  if (pathParts.length <= n) {
-    return path;
-  }
-  return pathParts.slice(-n).join("/");
-}
-
 export function getLastNUriRelativePathParts(
   workspaceDirs: string[],
   uri: string,
   n: number,
 ): string {
   const path = getRelativePath(uri, workspaceDirs);
-  return getLastNPathParts(path, n);
+  return getLastN(path, n);
 }
 
-export function getFileName(uri: string): string {
+export function getUriPathBasename(uri: string): string {
   return getPath();
 }
 
 export function join(uri: string, pathSegment: string) {
   return uri.replace(/\/*$/, "") + "/" + segment.replace(/^\/*/, "");
+}
+
+export function groupByLastNPathParts(
+  uris: string[],
+  n: number,
+): Record<string, string[]> {
+  return [];
+}
+
+export function getUniqueUriPath(
+  item: string,
+  itemGroups: Record<string, string[]>,
+): string {
+  return "hi";
+}
+
+export function shortestRelativeUriPaths(uris: string[]): string[] {
+  if (uris.length === 0) {
+    return [];
+  }
+
+  const partsLengths = uris.map((x) => x.split("/").length);
+  const currentRelativeUris = uris.map(getB);
+  const currentNumParts = uris.map(() => 1);
+  const isDuplicated = currentRelativeUris.map(
+    (x, i) =>
+      currentRelativeUris.filter((y, j) => y === x && paths[i] !== paths[j])
+        .length > 1,
+  );
+
+  while (isDuplicated.some(Boolean)) {
+    const firstDuplicatedPath = currentRelativeUris.find(
+      (x, i) => isDuplicated[i],
+    );
+    if (!firstDuplicatedPath) {
+      break;
+    }
+
+    currentRelativeUris.forEach((x, i) => {
+      if (x === firstDuplicatedPath) {
+        currentNumParts[i] += 1;
+        currentRelativeUris[i] = getLastNUriRelativePathParts(
+          paths[i],
+          currentNumParts[i],
+        );
+      }
+    });
+
+    isDuplicated.forEach((x, i) => {
+      if (x) {
+        isDuplicated[i] =
+          // Once we've used up all the parts, we can't make it longer
+          currentNumParts[i] < partsLengths[i] &&
+          currentRelativeUris.filter((y) => y === currentRelativeUris[i])
+            .length > 1;
+      }
+    });
+  }
+
+  return currentRelativeUris;
 }

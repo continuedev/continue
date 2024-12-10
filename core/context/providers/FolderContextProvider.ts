@@ -6,10 +6,10 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import {
-  getBasename,
+  getUniqueUriPath,
+  getUriPathBasename,
   groupByLastNPathParts,
-  getUniqueFilePath,
-} from "../../util/index.js";
+} from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
 class FolderContextProvider extends BaseContextProvider {
@@ -39,8 +39,8 @@ class FolderContextProvider extends BaseContextProvider {
     return folders.map((folder) => {
       return {
         id: folder,
-        title: getBasename(folder),
-        description: getUniqueFilePath(folder, folderGroups),
+        title: getUriPathBasename(folder),
+        description: getUniqueUriPath(folder, folderGroups),
       };
     });
   }

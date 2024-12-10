@@ -13,7 +13,7 @@ import { updateFileSymbolsFromContextItems } from "../../util/symbols";
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
 import { setIsGatheringContext } from "../slices/sessionSlice";
-import { getFileName, getRelativePath } from "core/util/uri";
+import { getBasename, getRelativePath } from "core/util/uri";
 
 export const gatherContext = createAsyncThunk<
   {
@@ -85,7 +85,7 @@ export const gatherContext = createAsyncThunk<
               currentFile.path,
               await extra.ideMessenger.ide.getWorkspaceDirs(),
             )}\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getFileName(currentFile.path)}`,
+            name: `Active file: ${getBasename(currentFile.path)}`,
             description: currentFile.path,
             id: {
               itemId: currentFile.path,

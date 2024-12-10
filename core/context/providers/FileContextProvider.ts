@@ -8,10 +8,10 @@ import {
 } from "../../";
 import { walkDir } from "../../indexing/walkDir";
 import {
-  getBasename,
-  getUniqueFilePath,
+  getUniqueUriPath,
+  getUriPathBasename,
   groupByLastNPathParts,
-} from "../../util/";
+} from "../../util/uri";
 
 const MAX_SUBMENU_ITEMS = 10_000;
 
@@ -58,8 +58,8 @@ class FileContextProvider extends BaseContextProvider {
     return files.map((file) => {
       return {
         id: file,
-        title: getBasename(file),
-        description: getUniqueFilePath(file, fileGroups),
+        title: getUriPathBasename(file),
+        description: getUniqueUriPath(file, fileGroups),
       };
     });
   }

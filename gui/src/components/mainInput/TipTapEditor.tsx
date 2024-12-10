@@ -71,7 +71,7 @@ import {
   selectIsInEditMode,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
-import { getFileName, getRelativePath } from "core/util/uri";
+import { getBasename, getRelativePath } from "core/util/uri";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -733,7 +733,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       const rif: RangeInFile & { contents: string } =
         data.rangeInFileWithContents;
-      const basename = getFileName(rif.filepath);
+      const basename = getBasename(rif.filepath);
       const relativePath = getRelativePath(
         rif.filepath,
         await ideMessenger.ide.getWorkspaceDirs(),
