@@ -88,7 +88,7 @@ jobs:
           npx tsc --noEmit
           npm run lint
 
-      - name: Install Xvfb for Linux and run e2e tests
+      - name: Install Xvfb for Linux and run end to end tests
         run: |
           sudo apt-get install -y xvfb # Install Xvfb
           Xvfb :99 & # Start Xvfb
