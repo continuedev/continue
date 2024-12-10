@@ -202,14 +202,11 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Install and setup Xvfb
+      - name: Install Xvfb for Linux and run e2e tests
         run: |
-          sudo apt-get install -y xvfb
-          Xvfb :99 &
-          export DISPLAY=:99
-
-      - name: Run VSCode e2e tests
-        run: |
+          sudo apt-get install -y xvfb # Install Xvfb
+          Xvfb :99 & # Start Xvfb
+          export DISPLAY=:99 # Export the display number to the environment
           cd extensions/vscode
           npm run package
           npm run e2e:ci
