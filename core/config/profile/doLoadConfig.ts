@@ -1,3 +1,5 @@
+import fs from "fs";
+
 import {
   ContinueConfig,
   ContinueRcJson,
@@ -10,9 +12,12 @@ import { ControlPlaneClient } from "../../control-plane/client.js";
 import { controlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { ConfigResult, loadFullConfigNode } from "../load";
+import { ConfigValidationError } from "../validation";
+import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -28,20 +33,42 @@ export default async function doLoadConfig(
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
-  let {
-    config: newConfig,
-    errors,
-    configLoadInterrupted,
-  } = await loadFullConfigNode(
-    ide,
-    workspaceConfigs,
-    ideSettings,
-    ideInfo.ideType,
-    uniqueId,
-    writeLog,
-    workOsAccessToken,
-    overrideConfigJson,
-  );
+  const configYamlPath = getConfigYamlPath(ideInfo.ideType);
+
+  let newConfig: ContinueConfig | undefined;
+  let errors: ConfigValidationError[] | undefined;
+  let configLoadInterrupted = false;
+
+  if (fs.existsSync(configYamlPath)) {
+    const result = await loadContinueConfigFromYaml(
+      ide,
+      workspaceConfigs.map((c) => JSON.stringify(c)),
+      ideSettings,
+      ideInfo.ideType,
+      uniqueId,
+      writeLog,
+      workOsAccessToken,
+      undefined,
+      // overrideConfigYaml, TODO
+    );
+    newConfig = result.config;
+    errors = result.errors;
+    configLoadInterrupted = result.configLoadInterrupted;
+  } else {
+    const result = await loadFullConfigNode(
+      ide,
+      workspaceConfigs,
+      ideSettings,
+      ideInfo.ideType,
+      uniqueId,
+      writeLog,
+      workOsAccessToken,
+      overrideConfigJson,
+    );
+    newConfig = result.config;
+    errors = result.errors;
+    configLoadInterrupted = result.configLoadInterrupted;
+  }
 
   if (configLoadInterrupted || !newConfig) {
     return { errors, config: newConfig, configLoadInterrupted: true };

@@ -8,12 +8,49 @@ import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import MCPContextProvider from "../providers/MCPContextProvider";
 
-class MCPConnectionSingleton {
-  private static instance: MCPConnectionSingleton;
+export class MCPManagerSingleton {
+  private static instance: MCPManagerSingleton;
+
+  private connections: Map<string, MCPConnection> = new Map();
+
+  private constructor() {}
+
+  public static getInstance(): MCPManagerSingleton {
+    if (!MCPManagerSingleton.instance) {
+      MCPManagerSingleton.instance = new MCPManagerSingleton();
+    }
+    return MCPManagerSingleton.instance;
+  }
+
+  createConnection(id: string, options: MCPOptions): MCPConnection | undefined {
+    if (!this.connections.has(id)) {
+      const connection = new MCPConnection(options);
+      this.connections.set(id, connection);
+      return connection;
+    } else {
+      return this.connections.get(id);
+    }
+  }
+
+  getConnection(id: string) {
+    return this.connections.get(id);
+  }
+
+  async removeConnection(id: string) {
+    const connection = this.connections.get(id);
+    if (connection) {
+      await connection.client.close();
+    }
+
+    this.connections.delete(id);
+  }
+}
+
+class MCPConnection {
   public client: Client;
   private transport: Transport;
 
-  private constructor(private readonly options: MCPOptions) {
+  constructor(private readonly options: MCPOptions) {
     this.transport = this.constructTransport(options);
 
     this.client = new Client(
@@ -25,17 +62,6 @@ class MCPConnectionSingleton {
         capabilities: {},
       },
     );
-  }
-
-  public static getInstance(options: MCPOptions): MCPConnectionSingleton {
-    if (!MCPConnectionSingleton.instance) {
-      MCPConnectionSingleton.instance = new MCPConnectionSingleton(options);
-    }
-    return MCPConnectionSingleton.instance;
-  }
-
-  public static getExistingInstance(): MCPConnectionSingleton | null {
-    return MCPConnectionSingleton.instance;
   }
 
   private constructTransport(options: MCPOptions): Transport {
@@ -87,38 +113,46 @@ class MCPConnectionSingleton {
     }
   }
 
-  async modifyConfig(config: ContinueConfig): Promise<ContinueConfig> {
+  async modifyConfig(
+    config: ContinueConfig,
+    mcpId: string,
+    signal: AbortSignal,
+  ): Promise<void> {
     try {
-      await this.connectClient();
+      await Promise.race([
+        this.connectClient(),
+        new Promise((_, reject) => {
+          signal.addEventListener("abort", () =>
+            reject(new Error("Connection aborted")),
+          );
+        }),
+      ]);
     } catch (error: any) {
+      if (signal.aborted) {
+        throw new Error("Operation aborted");
+      }
       if (!error.message.startsWith("StdioClientTransport already started")) {
         console.error("Failed to connect client:", error);
-        return config;
       }
     }
 
     // Resources <—> Context Provider
-    const { resources } = await this.client.listResources();
+    const { resources } = await this.client.listResources({}, { signal });
 
     const submenuItems = resources.map((resource: any) => ({
       title: resource.name,
       description: resource.description,
-      id: resource.uri,
+      id: MCPContextProvider.encodeMCPResourceId(mcpId, resource.uri),
     }));
 
     if (!config.contextProviders) {
       config.contextProviders = [];
     }
 
-    config.contextProviders!.push(
-      new MCPContextProvider({
-        submenuItems,
-        client: this.client,
-      }),
-    );
+    config.contextProviders!.push(new MCPContextProvider({ submenuItems }));
 
     // Tools <—> Tools
-    const { tools } = await this.client.listTools();
+    const { tools } = await this.client.listTools({}, { signal });
     const continueTools: Tool[] = tools.map((tool) => ({
       displayTitle: tool.name,
       function: {
@@ -129,13 +163,13 @@ class MCPConnectionSingleton {
       readonly: false,
       type: "function",
       wouldLikeTo: `use the ${tool.name} tool`,
-      uri: `mcp://${tool.name}`,
+      uri: `mcp://${encodeURIComponent(mcpId)}/${tool.name}`,
     }));
 
     config.tools = [...config.tools, ...continueTools];
 
     // Prompts <—> Slash commands
-    const { prompts } = await this.client.listPrompts();
+    const { prompts } = await this.client.listPrompts({}, { signal });
     if (!config.slashCommands) {
       config.slashCommands = [];
     }
@@ -149,9 +183,7 @@ class MCPConnectionSingleton {
       );
     });
     config.slashCommands!.push(...slashCommands);
-
-    return config;
   }
 }
 
-export default MCPConnectionSingleton;
+export default MCPConnection;
