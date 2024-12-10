@@ -3,8 +3,6 @@ import { TextDecoder, TextEncoder } from "util";
 import { jest } from "@jest/globals";
 import fetch, { Request, Response } from "node-fetch";
 
-console.log("Process debug", process.env.DEBUG);
-
 if (process.env.DEBUG === "jest") {
   jest.setTimeout(5 * 60 * 1000);
 }
