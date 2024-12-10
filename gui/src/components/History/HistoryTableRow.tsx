@@ -3,15 +3,15 @@ import { SessionMetadata } from "core";
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   deleteSession,
   getSession,
   loadSession,
   updateSession,
 } from "../../redux/thunks/session";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -88,7 +88,6 @@ export function HistoryTableRow({
           }}
         >
           <div className="flex-1 cursor-pointer space-y-1">
-            {`history-row-${index}`}
             {editing ? (
               <div className="text-md">
                 <Input
