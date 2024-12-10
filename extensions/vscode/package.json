@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.242",
+  "version": "0.9.248",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -602,6 +602,7 @@
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "esbuild:visualize": "esbuild-visualizer --metadata ./build/meta.json --filename ./build/stats.html --open",
     "tsc": "tsc -p ./",
     "tsc:check": "tsc -p ./ --noEmit",
     "tsc-watch": "tsc -watch -p ./",
@@ -619,6 +620,7 @@
     "build-debug:rust": "npm run build:rust --",
     "build-release:rust": "npm run build:rust -- --release",
     "e2e:compile": "tsc -p ./tsconfig.e2e.json",
+    "e2e:build": "npm --prefix ../../gui run build && npm run package",
     "e2e:create-storage": "mkdir -p ./e2e/storage",
     "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage",
     "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage",
@@ -627,7 +629,7 @@
     "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:test": "extest run-tests './e2e/_output/tests/*.test.js' --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:clean": "rm -rf ./e2e/_output",
-    "e2e:all": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
+    "e2e:all": "npm run e2e:build && npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
     "e2e:quick": "npm run e2e:compile && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test && npm run e2e:clean",
     "e2e:ci": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && CONTINUE_GLOBAL_DIR=e2e/test-continue npm run e2e:test"
   },
@@ -651,6 +653,7 @@
     "cargo-cp-artifact": "^0.1",
     "chai": "^4.5.0",
     "esbuild": "0.17.19",
+    "esbuild-visualizer": "^0.6.0",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",

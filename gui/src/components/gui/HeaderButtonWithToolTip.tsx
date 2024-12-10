@@ -18,6 +18,7 @@ interface HeaderButtonWithToolTipProps {
   backgroundColor?: string;
   hoverBackgroundColor?: string;
   tooltipPlacement?: PlacesType;
+  testId?: string;
 }
 
 const HeaderButtonWithToolTip = React.forwardRef<
@@ -33,6 +34,7 @@ const HeaderButtonWithToolTip = React.forwardRef<
         hoverBackgroundColor={props.hoverBackgroundColor}
         backgroundColor={props.backgroundColor}
         data-tooltip-id={tooltipId}
+        data-testid={props.testId}
         inverted={props.inverted}
         disabled={props.disabled}
         onClick={props.onClick}

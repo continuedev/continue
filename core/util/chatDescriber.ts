@@ -2,7 +2,7 @@ import { ILLM, LLMFullCompletionOptions } from "..";
 
 import { removeQuotesAndEscapes, removeCodeBlocksAndTrim } from ".";
 
-import type { IMessenger } from "./messenger";
+import type { IMessenger } from "../protocol/messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 
 export class ChatDescriber {

@@ -1,6 +1,6 @@
 import { SymbolWithRange } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -26,11 +26,15 @@ import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
+import { selectUIConfig } from "../../redux/slices/configSlice";
+
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
+  whiteSpace: string;
 }>`
   pre {
+    white-space: ${(props) => props.whiteSpace};
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
@@ -160,20 +164,35 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
-  const contextItems = useAppSelector(
-    (state) => state.session.history[props.itemIndex - 1]?.contextItems,
-  );
-  const contextItemsRef = useUpdatingRef(contextItems);
 
-  const symbols = useAppSelector((state) => state.session.symbols);
+  // Grab context items that are this one or further back
+  const history = useAppSelector((state) => state.session.history);
+  const previousFileContextItems = useMemo(() => {
+    const index = props.itemIndex;
+    if (index === undefined) {
+      return [];
+    }
+    const previousItems = history.flatMap((item, i) =>
+      i <= index ? item.contextItems : [],
+    );
+    return previousItems.filter(
+      (item) => item.uri?.type === "file" && item?.uri?.value,
+    );
+  }, [props.itemIndex, history]);
+  const previousFileContextItemsRef = useUpdatingRef(previousFileContextItems);
 
-  const symbolsRef = useRef<SymbolWithRange[]>([]);
-  useEffect(() => {
-    // Note, before I was only looking for symbols that matched
-    // Context item files on current history item
-    // but in practice global symbols for session makes way more sense
-    symbolsRef.current = Object.values(symbols).flat();
-  }, [symbols]);
+  // Extract global symbols for files matching previous context items
+  const allSymbols = useAppSelector((state) => state.session.symbols);
+  const previousFileContextItemSymbols = useMemo(() => {
+    const uniqueUris = new Set(
+      previousFileContextItems.map((item) => item.uri!.value!),
+    );
+    return Object.entries(allSymbols)
+      .filter((e) => uniqueUris.has(e[0]))
+      .map((f) => f[1])
+      .flat();
+  }, [allSymbols, previousFileContextItems]);
+  const symbolsRef = useUpdatingRef(previousFileContextItemSymbols);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -265,18 +284,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (content && contextItemsRef.current) {
-            const ctxItem = contextItemsRef.current.find(
-              (ctxItem) =>
-                ctxItem.uri?.value.includes(content) &&
-                ctxItem.uri.type === "file",
+          if (content && previousFileContextItemsRef.current) {
+            // Insert file links for matching previous context items
+            const ctxItem = previousFileContextItemsRef.current.find((item) =>
+              item.uri!.value!.includes(content),
             );
-
             if (ctxItem) {
               const rif = ctxItemToRifWithContents(ctxItem);
               return <FilenameLink rif={rif} />;
             }
 
+            // Insert symbols for exact matches
             const exactSymbol = symbolsRef.current.find(
               (s) => s.name === content,
             );
@@ -284,7 +302,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               return <SymbolLink content={content} symbol={exactSymbol} />;
             }
 
-            // PARTIAL - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
+            // Partial matches - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
             const partialSymbol = symbolsRef.current.find((s) =>
               content.startsWith(s.name),
             );
@@ -303,10 +321,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // some patches to source markdown are applied here:
       fixDoubleDollarNewLineLatex(patchNestedMarkdown(props.source ?? "")),
     );
-  }, [props.source]);
+  }, [props.source, allSymbols]);
 
+  const uiConfig = useAppSelector(selectUIConfig);
+  const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
-    <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>{reactContent}</StyledMarkdown>
   );
 });
 

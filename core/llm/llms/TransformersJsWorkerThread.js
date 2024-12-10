@@ -1,10 +1,12 @@
 import path from "node:path";
+import { parentPort } from "node:worker_threads";
+
 import {
   env,
   pipeline,
 } from "../../vendor/node_modules/@xenova/transformers/types/transformers";
+
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider";
-const { parentPort } = require("node:worker_threads");
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;

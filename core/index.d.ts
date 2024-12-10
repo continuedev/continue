@@ -390,6 +390,7 @@ export interface InputModifiers {
 export interface SymbolWithRange extends RangeInFile {
   name: string;
   type: Parser.SyntaxNode["type"];
+  content: string;
 }
 
 export type FileSymbolMap = Record<string, SymbolWithRange[]>;
@@ -968,6 +969,7 @@ export interface ContinueUIConfig {
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
   getChatTitles?: boolean;
+  codeWrap?: boolean;
 }
 
 interface ContextMenuConfig {
