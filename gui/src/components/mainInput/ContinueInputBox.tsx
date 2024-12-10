@@ -93,7 +93,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
   const filteredContextProviders = useMemo(() => {
     if (!props.isEditMode) {
-      availableContextProviders;
+      return availableContextProviders ?? [];
     }
 
     return (
