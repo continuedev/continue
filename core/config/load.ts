@@ -21,6 +21,7 @@ import {
   IdeSettings,
   IdeType,
   ILLM,
+  LLMOptions,
   ModelDescription,
   RerankerDescription,
   SerializedContinueConfig,
@@ -454,8 +455,12 @@ async function intermediateToFinalConfig(
       ) {
         config.embeddingsProvider = new embeddingsProviderClass();
       } else {
+        const llmOptions: LLMOptions = {
+          ...options,
+          model: "UNSPECIFIED",
+        };
         config.embeddingsProvider = new embeddingsProviderClass(
-          options,
+          llmOptions,
           (url: string | URL, init: any) =>
             fetchwithRequestOptions(url, init, {
               ...config.requestOptions,
@@ -483,7 +488,11 @@ async function intermediateToFinalConfig(
         config.reranker = new LLMReranker(llm);
       }
     } else if (rerankerClass) {
-      config.reranker = new rerankerClass(params);
+      const llmOptions: LLMOptions = {
+        ...params,
+        model: "rerank-2",
+      };
+      config.reranker = new rerankerClass(llmOptions);
     }
   }
 
