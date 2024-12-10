@@ -87,6 +87,15 @@ class MCPConnectionSingleton {
     }
   }
 
+  async checkClientAttribute(func: () => Promise<any>): Promise<any> {
+    try {
+      const result = await func();
+      return result;
+    } catch (e) {
+      return null;
+    }
+  }
+
   async modifyConfig(config: ContinueConfig): Promise<ContinueConfig> {
     try {
       await this.connectClient();
@@ -97,58 +106,66 @@ class MCPConnectionSingleton {
       }
     }
 
+    const capabilities = this.client.getServerCapabilities();
+
     // Resources <—> Context Provider
-    const { resources } = await this.client.listResources();
+    if (capabilities?.resources) {
+      const { resources } = await this.client.listResources();
+      const submenuItems = resources.map((resource: any) => ({
+        title: resource.name,
+        description: resource.description,
+        id: resource.uri,
+      }));
 
-    const submenuItems = resources.map((resource: any) => ({
-      title: resource.name,
-      description: resource.description,
-      id: resource.uri,
-    }));
+      if (!config.contextProviders) {
+        config.contextProviders = [];
+      }
 
-    if (!config.contextProviders) {
-      config.contextProviders = [];
+      config.contextProviders.push(
+        new MCPContextProvider({
+          submenuItems,
+          client: this.client,
+        }),
+      );
     }
-
-    config.contextProviders!.push(
-      new MCPContextProvider({
-        submenuItems,
-        client: this.client,
-      }),
-    );
 
     // Tools <—> Tools
-    const { tools } = await this.client.listTools();
-    const continueTools: Tool[] = tools.map((tool) => ({
-      displayTitle: tool.name,
-      function: {
-        description: tool.description,
-        name: tool.name,
-        parameters: tool.inputSchema,
-      },
-      readonly: false,
-      type: "function",
-      wouldLikeTo: `use the ${tool.name} tool`,
-      uri: `mcp://${tool.name}`,
-    }));
+    if (capabilities?.tools) {
+      const { tools } = await this.client.listTools();
+      const continueTools: Tool[] = tools.map((tool: any) => ({
+        displayTitle: tool.name,
+        function: {
+          description: tool.description,
+          name: tool.name,
+          parameters: tool.inputSchema,
+        },
+        readonly: false,
+        type: "function",
+        wouldLikeTo: `use the ${tool.name} tool`,
+        uri: `mcp://${tool.name}`,
+      }));
 
-    config.tools = [...config.tools, ...continueTools];
-
-    // Prompts <—> Slash commands
-    const { prompts } = await this.client.listPrompts();
-    if (!config.slashCommands) {
-      config.slashCommands = [];
+      config.tools = [...config.tools, ...continueTools];
     }
 
-    const slashCommands: SlashCommand[] = prompts.map((prompt) => {
-      return constructMcpSlashCommand(
-        this.client,
-        prompt.name,
-        prompt.description,
-        prompt.arguments?.map((a) => a.name),
+    // Prompts <—> Slash commands
+    if (capabilities?.prompts) {
+      const { prompts } = await this.client.listPrompts();
+      if (!config.slashCommands) {
+        config.slashCommands = [];
+      }
+
+      const slashCommands: SlashCommand[] = prompts.map((prompt: any) =>
+        constructMcpSlashCommand(
+          this.client,
+          prompt.name,
+          prompt.description,
+          prompt.arguments?.map((a: any) => a.name),
+        ),
       );
-    });
-    config.slashCommands!.push(...slashCommands);
+
+      config.slashCommands.push(...slashCommands);
+    }
 
     return config;
   }
