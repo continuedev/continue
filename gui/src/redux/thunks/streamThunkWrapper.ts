@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { clearLastEmptyResponse, setInactive } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
+import { saveCurrentSession } from "./session";
 
 export const streamThunkWrapper = createAsyncThunk<
   void,
@@ -15,6 +16,10 @@ export const streamThunkWrapper = createAsyncThunk<
     dispatch(clearLastEmptyResponse());
   } finally {
     dispatch(setInactive());
-    // triggerSave(!save); TODO
+    await dispatch(
+      saveCurrentSession({
+        openNewSession: false,
+      }),
+    );
   }
 });
