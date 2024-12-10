@@ -374,7 +374,9 @@ Example:
   "ui": {
     "codeBlockToolbarPosition": "bottom",
     "fontSize": 14,
-    "displayRawMarkdown": false
+    "displayRawMarkdown": false,
+    "showScrollBar": false,
+    "codeWrap": false
   }
 }
 ```
