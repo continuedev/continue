@@ -11,24 +11,38 @@ on:
       - ".github/workflows**"
 
 jobs:
-  vscode-checks:
+  install-root:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-
+      
       - uses: actions/cache@v3
         with:
-          path: |
-            node_modules
-            extensions/vscode/node_modules
-          key: ${{ runner.os }}-node-vscode-${{ hashFiles('package-lock.json', 'extensions/vscode/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Install dependencies
+      - name: Install root dependencies
+        run: npm ci
+
+  vscode-checks:
+    needs: install-root
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+      
+      - uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install vscode dependencies
         run: |
-          npm ci
           cd extensions/vscode
           npm ci
         env:
@@ -41,23 +55,21 @@ jobs:
           npm run lint
 
   core-checks:
+    needs: install-root
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-
+      
       - uses: actions/cache@v3
         with:
-          path: |
-            node_modules
-            core/node_modules
-          key: ${{ runner.os }}-node-core-${{ hashFiles('package-lock.json', 'core/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Install dependencies
+      - name: Install core dependencies
         run: |
-          npm ci
           cd core
           npm ci
 
@@ -70,23 +82,21 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   gui-checks:
+    needs: install-root
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-
+      
       - uses: actions/cache@v3
         with:
-          path: |
-            node_modules
-            gui/node_modules
-          key: ${{ runner.os }}-node-gui-${{ hashFiles('package-lock.json', 'gui/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Install dependencies
+      - name: Install gui dependencies
         run: |
-          npm ci
           cd gui
           npm ci
 
@@ -96,23 +106,21 @@ jobs:
           npx tsc --noEmit
 
   binary-checks:
+    needs: install-root
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-
+      
       - uses: actions/cache@v3
         with:
-          path: |
-            node_modules
-            binary/node_modules
-          key: ${{ runner.os }}-node-binary-${{ hashFiles('package-lock.json', 'binary/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Install dependencies
+      - name: Install binary dependencies
         run: |
-          npm ci
           cd binary
           npm ci
 
@@ -129,19 +137,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-
+      
       - uses: actions/cache@v3
         with:
-          path: |
-            node_modules
-            extensions/vscode/node_modules
-            core/node_modules
-            gui/node_modules
-          key: ${{ runner.os }}-node-tests-${{ hashFiles('package-lock.json', '**/package-lock.json') }}
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Install dependencies
+      - name: Install all test dependencies
         run: |
-          npm ci
           cd extensions/vscode && npm ci
           cd ../core && npm ci
           cd ../gui && npm ci
