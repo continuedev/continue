@@ -67,6 +67,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://localhost:10000", config);
     case "nvidia":
       return openAICompatible("https://integrate.api.nvidia.com/v1/", config);
+    case "scaleway":
+        return openAICompatible("https://api.scaleway.ai/v1/", config);      
     case "fireworks":
       return openAICompatible("https://api.fireworks.ai/inference/v1/", config);
     case "together":

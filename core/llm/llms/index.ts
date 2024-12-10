@@ -42,6 +42,7 @@ import OpenRouter from "./OpenRouter";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
+import Scaleway from "./Scaleway";
 import ContinueProxy from "./stubs/ContinueProxy";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
