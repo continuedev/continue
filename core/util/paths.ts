@@ -1,9 +1,9 @@
-import * as fs from "fs";
-import * as os from "os";
-import { pathToFileURL } from "url";
-import * as path from "path";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { pathToFileURL } from "url";
 
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
@@ -102,6 +102,18 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
       fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
     }
   }
+  return p;
+}
+
+export function getConfigYamlPath(ideType: IdeType): string {
+  const p = path.join(getContinueGlobalPath(), "config.yaml");
+  // if (!fs.existsSync(p)) {
+  //   if (ideType === "jetbrains") {
+  //     fs.writeFileSync(p, YAML.stringify(defaultConfigYamlJetBrains));
+  //   } else {
+  //     fs.writeFileSync(p, YAML.stringify(defaultConfigYaml));
+  //   }
+  // }
   return p;
 }
 

@@ -31,7 +31,7 @@ import {
   slashFromCustomCommand,
 } from "../commands/index.js";
 import { AllRerankers } from "../context/allRerankers";
-import MCPConnectionSingleton from "../context/mcp";
+import { MCPManagerSingleton } from "../context/mcp";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
@@ -498,22 +498,36 @@ async function intermediateToFinalConfig(
   };
 
   // Apply MCP if specified
-  if (config.experimental?.modelContextProtocolServer) {
-    const mcpConnection = await MCPConnectionSingleton.getInstance(
-      config.experimental.modelContextProtocolServer,
-    );
-    continueConfig = await Promise.race<ContinueConfig>([
-      mcpConnection.modifyConfig(continueConfig),
-      new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("MCP connection timed out after 2000ms")),
+  const mcpManager = MCPManagerSingleton.getInstance();
+  if (config.experimental?.modelContextProtocolServers) {
+    config.experimental.modelContextProtocolServers?.forEach(
+      async (server, index) => {
+        const mcpId = index.toString();
+        const mcpConnection = mcpManager.createConnection(mcpId, server);
+        if (!mcpConnection) {
+          return;
+        }
+
+        const abortController = new AbortController();
+        const mcpConnectionTimeout = setTimeout(
+          () => abortController.abort(),
           2000,
-        ),
-      ),
-    ]).catch((error) => {
-      console.warn("MCP connection error:", error);
-      return continueConfig; // Return original config if timeout occurs
-    });
+        );
+
+        try {
+          await mcpConnection.modifyConfig(
+            continueConfig,
+            mcpId,
+            abortController.signal,
+          );
+        } catch (e: any) {
+          if (e.name !== "AbortError") {
+            throw e;
+          }
+        }
+        clearTimeout(mcpConnectionTimeout);
+      },
+    );
   }
 
   return continueConfig;

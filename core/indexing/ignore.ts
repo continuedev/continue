@@ -68,6 +68,7 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.gitkeep",
   "*.continueignore",
   "config.json",
+  "config.yaml",
   "*.csv",
   "*.uasset",
   "*.pdb",
