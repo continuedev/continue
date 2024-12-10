@@ -279,6 +279,12 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
     apiKey: process.env.NEBIUS_API_KEY!,
     chatOnly: true,
   },
+  {
+    provider: "scaleway",
+    model: "llama3.1-8b",
+    apiKey: process.env.SCALEWAY_API_KEY!,
+    chatOnly: true,
+  },  
 ];
 
 const FIM_TESTS: LlmApiConfig[] = [
@@ -322,6 +328,11 @@ const EMBEDDINGS_TESTS: LlmApiConfig[] = [
     model: "BAAI/bge-en-icl",
     apiKey: process.env.NEBIUS_API_KEY!,
   },
+  {
+    provider: "scaleway",
+    model: "bge-multilingual-gemma2",
+    apiKey: process.env.SCALEWAY_API_KEY!,
+  },  
 ];
 
 const RERANK_TESTS: LlmApiConfig[] = [

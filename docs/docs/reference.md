@@ -365,6 +365,7 @@ Customizable UI settings to control interface appearance and behavior.
 - `fontSize`: Specifies font size for UI elements.
 - `displayRawMarkdown`: If `true`, shows raw markdown in responses.
 - `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
+- `codeWrap`: If `true`, enables text wrapping in code blocks.
 
 Example:
 
@@ -373,7 +374,9 @@ Example:
   "ui": {
     "codeBlockToolbarPosition": "bottom",
     "fontSize": 14,
-    "displayRawMarkdown": false
+    "displayRawMarkdown": false,
+    "showChatScrollbar": false,
+    "codeWrap": false
   }
 }
 ```

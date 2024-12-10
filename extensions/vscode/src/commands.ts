@@ -456,13 +456,16 @@ const getCommandsMap: (
           hideGUI();
         } else {
           void sidebar.webviewProtocol?.request(
-            "focusContinueInput",
+            "focusContinueInputWithNewSession",
             undefined,
           );
         }
       } else {
         focusGUI();
-        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+        sidebar.webviewProtocol?.request(
+          "focusContinueInputWithNewSession",
+          undefined,
+        );
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },

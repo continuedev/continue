@@ -1,9 +1,7 @@
 import { SessionMetadata } from "core";
 import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
 
-import useHistory from "../../hooks/useHistory";
 import { getFontSize, getMetaKeyLabel } from "../../util";
 import { HistoryTableRow } from "./HistoryTableRow";
 import { XMarkIcon } from "@heroicons/react/24/solid";
@@ -21,12 +19,7 @@ const HEADER_CLASS =
   "flex user-select-none pt-2 pb-3 opacity-75 text-center font-bold items-center justify-center sticky h-6";
 
 export function History() {
-  const [sessions, setSessions] = useState<SessionMetadata[]>([]);
-
   const searchInputRef = React.useRef<HTMLInputElement>(null);
-
-  const dispatch = useDispatch();
-  const { getHistory, lastSessionId } = useHistory(dispatch);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -39,47 +32,24 @@ export function History() {
     }),
   ).current;
 
+  const allSessionMetadata = useAppSelector(
+    (state) => state.session.allSessionMetadata,
+  );
+
   useEffect(() => {
-    const fetchSessions = async () => {
-      const sessions = await getHistory();
-      setSessions(sessions);
-
-      try {
-        // Consider adding just last session to existing instead of clearing/adding all
-        minisearch.removeAll();
-        minisearch.addAll(
-          sessions.map((session) => ({
-            title: session.title,
-            sessionId: session.sessionId,
-            id: session.sessionId,
-          })),
-        );
-      } catch (e) {
-        console.log("error adding sessions to minisearch", e);
-      }
-    };
-    fetchSessions();
-  }, [lastSessionId, sessionTitle]);
-
-  const deleteSessionInUI = async (sessionId: string) => {
-    setSessions((prev) =>
-      prev.filter((session) => session.sessionId !== sessionId),
-    );
-    minisearch.discard(sessionId);
-  };
-
-  const updateSessionInUI = async (session: SessionMetadata) => {
-    setSessions((prev) =>
-      prev.map((sess) =>
-        sess.sessionId === session.sessionId ? session : sess,
-      ),
-    );
-    minisearch.replace({
-      title: session.title,
-      sessionId: session.sessionId,
-      id: session.sessionId,
-    });
-  };
+    try {
+      minisearch.removeAll();
+      minisearch.addAll(
+        allSessionMetadata.map((session) => ({
+          title: session.title,
+          sessionId: session.sessionId,
+          id: session.sessionId,
+        })),
+      );
+    } catch (e) {
+      console.log("error adding sessions to minisearch", e);
+    }
+  }, [allSessionMetadata]);
 
   const filteredAndSortedSessions: SessionMetadata[] = useMemo(() => {
     const sessionIds = minisearch
@@ -88,7 +58,7 @@ export function History() {
       })
       .map((result) => result.id);
 
-    return sessions
+    return allSessionMetadata
       .filter((session) => {
         return searchTerm === "" || sessionIds.includes(session.sessionId);
       })
@@ -97,7 +67,7 @@ export function History() {
           parseDate(b.dateCreated).getTime() -
           parseDate(a.dateCreated).getTime(),
       );
-  }, [sessions, searchTerm, minisearch]);
+  }, [allSessionMetadata, searchTerm, minisearch]);
 
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
   const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
@@ -173,8 +143,7 @@ export function History() {
                 <HistoryTableRow
                   sessionMetadata={session}
                   date={date}
-                  onDelete={deleteSessionInUI}
-                  onEdit={updateSessionInUI}
+                  index={index}
                 />
               </Fragment>
             );

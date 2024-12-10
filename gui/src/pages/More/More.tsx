@@ -1,29 +1,26 @@
 import {
-  ArrowLeftIcon,
   ArrowTopRightOnSquareIcon,
   DocumentArrowUpIcon,
   TableCellsIcon,
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { vscBackground } from "../../components";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { useDispatch } from "react-redux";
 import { setOnboardingCard } from "../../redux/slices/uiSlice";
-import useHistory from "../../hooks/useHistory";
 import MoreHelpRow from "./MoreHelpRow";
 import IndexingProgress from "./IndexingProgress";
 import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses";
 import PageHeader from "../../components/PageHeader";
+import { useAppDispatch } from "../../redux/hooks";
+import { saveCurrentSession } from "../../redux/thunks/session";
 
 function MorePage() {
   useNavigationListener();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { saveSession } = useHistory(dispatch);
 
   return (
     <div className="overflow-y-scroll">
@@ -87,10 +84,14 @@ function MorePage() {
               title="Quickstart"
               description="Reopen the quickstart and tutorial file"
               Icon={DocumentArrowUpIcon}
-              onClick={() => {
+              onClick={async () => {
                 navigate("/");
                 // Used to clear the chat panel before showing onboarding card
-                saveSession();
+                await dispatch(
+                  saveCurrentSession({
+                    openNewSession: true,
+                  }),
+                );
                 dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
                 ideMessenger.post("showTutorial", undefined);
               }}
