@@ -18,11 +18,13 @@ describe("GUI Test", () => {
   let driver: WebDriver;
 
   before(async function () {
-    this.timeout(10000000);
+    this.timeout(DEFAULT_TIMEOUT);
     await VSBrowser.instance.openResources(path.join("e2e/test-continue"));
   });
 
   beforeEach(async function () {
+    this.timeout(DEFAULT_TIMEOUT);
+
     await GUIActions.openGui();
 
     view = new WebView();
@@ -36,7 +38,9 @@ describe("GUI Test", () => {
     // });
   });
 
-  afterEach(async () => {
+  afterEach(async function () {
+    this.timeout(DEFAULT_TIMEOUT);
+
     await view.switchBack();
     await new EditorView().closeAllEditors();
   });
