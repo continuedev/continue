@@ -78,6 +78,11 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
+      - uses: actions/cache@v3
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
       - name: Install gui dependencies
         run: |
           cd gui
@@ -107,6 +112,11 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
+      - uses: actions/cache@v3
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
+
       - name: Install binary dependencies
         run: |
           cd binary
@@ -135,6 +145,11 @@ jobs:
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v3
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Install vscode dependencies
         run: |
