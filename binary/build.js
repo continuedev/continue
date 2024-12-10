@@ -118,9 +118,6 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 }
 
 (async () => {
-  fs.mkdirSync("out/node_modules", { recursive: true });
-  fs.mkdirSync("bin/node_modules", { recursive: true });
-
   console.log("[info] Downloading prebuilt lancedb...");
   for (const target of targets) {
     if (targetToLanceDb[target]) {
