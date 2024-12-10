@@ -6,8 +6,16 @@ export class GUISelectors {
     return view.findWebElement(By.xpath("//*[contains(text(), 'Quickly')]"));
   }
 
-  public static getTipTapEditor(view: WebView) {
+  public static getMessageInputFields(view: WebView) {
     return view.findWebElements(By.className("tiptap"));
+  }
+
+  public static async getMessageInputFieldAtIndex(
+    view: WebView,
+    index: number,
+  ) {
+    const elements = await view.findWebElements(By.className("tiptap"));
+    return elements[index];
   }
 
   public static getAllIframes(driver: WebDriver) {

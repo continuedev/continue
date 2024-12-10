@@ -53,41 +53,107 @@ describe("GUI Test", () => {
 
   describe("Chat", () => {
     it("Can submit message by pressing enter", async () => {
-      const [tiptap] = await GUISelectors.getTipTapEditor(view);
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
       const messagePair = TestUtils.generateTestMessagePair();
-      await tiptap.sendKeys(messagePair.userMessage);
-      await tiptap.sendKeys(Key.ENTER);
+      await messageInput.sendKeys(messagePair.userMessage);
+      await messageInput.sendKeys(Key.ENTER);
       await TestUtils.waitForElement(() =>
         GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
       );
     });
 
     it("Can submit message by button click", async () => {
-      const [tiptap] = await GUISelectors.getTipTapEditor(view);
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
       const messagePair = TestUtils.generateTestMessagePair();
-      await tiptap.sendKeys(messagePair.userMessage);
+      await messageInput.sendKeys(messagePair.userMessage);
       (await GUISelectors.getSubmitInputButton(view)).click();
       await TestUtils.waitForElement(() =>
         GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
       );
     });
+
+    it("Can edit messages", async () => {
+      const { userMessage: userMessage0, llmResponse: llmResponse0 } =
+        TestUtils.generateTestMessagePair(0);
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage0,
+        inputFieldIndex: 0,
+      });
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse0),
+      );
+
+      const { userMessage: userMessage1, llmResponse: llmResponse1 } =
+        TestUtils.generateTestMessagePair(1);
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage1,
+        inputFieldIndex: 1,
+      });
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse1),
+      );
+
+      const { userMessage: userMessage2, llmResponse: llmResponse2 } =
+        TestUtils.generateTestMessagePair(2);
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage2,
+        inputFieldIndex: 2,
+      });
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse2),
+      );
+
+      const secondInputField = await GUISelectors.getMessageInputFieldAtIndex(
+        view,
+        1,
+      );
+      await secondInputField.clear();
+
+      const { userMessage: userMessage3, llmResponse: llmResponse3 } =
+        TestUtils.generateTestMessagePair(3);
+
+      await GUIActions.sendMessage({
+        view,
+        message: userMessage3,
+        inputFieldIndex: 1,
+      });
+      await GUISelectors.getThreadMessageByText(view, llmResponse0);
+
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse3),
+      );
+      await Promise.all([
+        TestUtils.expectNoElement(() =>
+          GUISelectors.getThreadMessageByText(view, llmResponse1),
+        ),
+        TestUtils.expectNoElement(() =>
+          GUISelectors.getThreadMessageByText(view, llmResponse2),
+        ),
+      ]);
+    }).timeout(DEFAULT_TIMEOUT);
   });
 
   describe("Chat Paths", () => {
     it("chat → history → chat", async () => {
-      const [tiptap] = await GUISelectors.getTipTapEditor(view);
-
       const messagePair1 = TestUtils.generateTestMessagePair(1);
-      await tiptap.sendKeys(messagePair1.userMessage);
-      (await GUISelectors.getSubmitInputButton(view)).click();
-
+      await GUIActions.sendMessage({
+        view,
+        message: messagePair1.userMessage,
+        inputFieldIndex: 0,
+      });
       await TestUtils.waitForElement(() =>
         GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
       );
 
       const messagePair2 = TestUtils.generateTestMessagePair(2);
-      await tiptap.sendKeys(messagePair2.userMessage);
-      await tiptap.sendKeys(Key.ENTER);
+      await GUIActions.sendMessage({
+        view,
+        message: messagePair2.userMessage,
+        inputFieldIndex: 1,
+      });
       await TestUtils.waitForElement(() =>
         GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
       );
@@ -101,7 +167,7 @@ describe("GUI Test", () => {
       await view.switchBack();
       await (await GUISelectors.getHistoryNavButton(view)).click();
       await GUIActions.switchToReactIframe(driver);
-      
+
       await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
 
       await view.switchBack();
@@ -112,36 +178,19 @@ describe("GUI Test", () => {
 
       await GUIActions.switchToReactIframe(driver);
       await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
-      await TestUtils.waitForElement(() =>
-        GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
-      );
-      await TestUtils.waitForElement(() =>
-        GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
-      );
 
-      const [, , tiptapNew] = await GUISelectors.getTipTapEditor(view);
+      await GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse);
+      await GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse);
+
       const messagePair3 = TestUtils.generateTestMessagePair(3);
-      await tiptapNew.sendKeys(messagePair3.userMessage);
-      await tiptapNew.sendKeys(Key.ENTER);
-      await TestUtils.waitForElement(() =>
-        GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
-      );
-      await TestUtils.waitForElement(() =>
-        GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
-      );
+      await GUIActions.sendMessage({
+        view,
+        message: messagePair3.userMessage,
+        inputFieldIndex: 2,
+      });
       await TestUtils.waitForElement(() =>
         GUISelectors.getThreadMessageByText(view, messagePair3.llmResponse),
       );
     }).timeout(DEFAULT_TIMEOUT);
-
-    it("message → edit message", async () => {
-      const [tiptap] = await GUISelectors.getTipTapEditor(view);
-      const messagePair2 = TestUtils.generateTestMessagePair(2);
-      await tiptap.sendKeys(messagePair2.userMessage);
-      await tiptap.sendKeys(Key.ENTER);
-      await TestUtils.waitForElement(() =>
-        GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
-      );
-    });
   });
 });
