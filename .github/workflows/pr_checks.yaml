@@ -4,125 +4,149 @@ on:
   pull_request:
     branches:
       - main
-
     paths:
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
-      - ".github/workflows**"
-
 jobs:
-  tsc-check:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      node-version: ${{ steps.node-setup.outputs.node-version }}
 
     steps:
-      # 1. Check-out repository
       - name: Check-out repository
         uses: actions/checkout@v4
 
-      # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
+        id: node-setup
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
 
-      - name: Cache root node_modules
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+  test-extension:
+    runs-on: ubuntu-latest
+    needs: setup
 
-      - name: Cache extension node_modules
-        uses: actions/cache@v3
-        with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v4
 
-      - name: Cache core node_modules
-        uses: actions/cache@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: core/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
-
-      - name: Cache gui node_modules
+          node-version-file: ".nvmrc"
+      - name: Cache extension dependencies
         uses: actions/cache@v3
+        id: cache-extension
         with:
-          path: gui/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+          path: |
+            node_modules
+            extensions/vscode/node_modules
+          key: ${{ runner.os }}-ext-${{ hashFiles('package-lock.json', 'extensions/vscode/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-ext-
 
-      - name: Cache binary node_modules
-        uses: actions/cache@v3
-        with:
-          path: binary/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
-
-      - name: root install
+      - name: Install dependencies
+        if: steps.cache-extension.outputs.cache-hit != 'true'
         run: |
           npm ci
-
-      - name: extensions/vscode install
-        run: |
-          cd extensions/vscode
-          npm ci
+          cd extensions/vscode && npm ci
         env:
-          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: core install
-        run: |
-          cd core
-          npm ci
-
-      - name: gui install
-        run: |
-          cd gui
-          npm ci
-
-      - name: binary install
-        run: |
-          cd binary
-          npm ci
-
-      - name: extensions/vscode checks
+      - name: Run checks
         run: |
           cd extensions/vscode
           npx tsc --noEmit
           npm run lint
 
-      - name: Install Xvfb for Linux and run end to end tests
+      - name: Run e2e tests
         run: |
-          sudo apt-get install -y xvfb # Install Xvfb
-          Xvfb :99 & # Start Xvfb
-          export DISPLAY=:99 # Export the display number to the environment
+          sudo apt-get install -y xvfb
+          Xvfb :99 &
+          export DISPLAY=:99
           cd extensions/vscode
           npm run package
           npm run e2e:ci
 
-      - name: core checks
+  test-core:
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Cache core dependencies
+        uses: actions/cache@v3
+        id: cache-core
+        with:
+          path: |
+            node_modules
+            core/node_modules
+          key: ${{ runner.os }}-core-${{ hashFiles('package-lock.json', 'core/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-core-
+
+      - name: Install dependencies
+        if: steps.cache-core.outputs.cache-hit != 'true'
+        run: |
+          npm ci
+          cd core && npm ci
+      - name: Run checks
         run: |
           cd core
-          npm ci
           npx tsc --noEmit
           npm run lint
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-      - name: gui checks
-        run: |
-          cd gui
-          npx tsc --noEmit
-
-      - name: binary checks
-        run: |
-          cd binary
-          npx tsc --noEmit
-
-      - name: Run core tests
+      - name: Run tests
         run: |
           cd core
           npm test
 
-      - name: Run gui tests
+  test-gui:
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: Check-out repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Cache GUI dependencies
+        uses: actions/cache@v3
+        id: cache-gui
+        with:
+          path: |
+            node_modules
+            gui/node_modules
+          key: ${{ runner.os }}-gui-${{ hashFiles('package-lock.json', 'gui/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-gui-
+
+      - name: Install dependencies
+        if: steps.cache-gui.outputs.cache-hit != 'true'
+        run: |
+          npm ci
+          cd gui && npm ci
+
+      - name: Run checks
+        run: |
+          cd gui
+          npx tsc --noEmit
+
+      - name: Run tests
         run: |
           cd gui
           npm test
