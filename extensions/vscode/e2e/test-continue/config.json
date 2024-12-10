@@ -1,0 +1,44 @@
+{
+  "ui": {
+    "displayRawMarkdown": false
+  },
+  "models": [
+    {
+      "title": "TEST LLM",
+      "provider": "test",
+      "model": "this field is not used"
+    },
+    {
+      "title": "Mock",
+      "provider": "mock",
+      "model": "this field is not used"
+    }
+  ],
+  "analytics": {
+    "provider": "continue-proxy"
+  },
+  "tabAutocompleteModel": {
+    "title": "Qwen",
+    "provider": "mistral",
+    "model": "codestral-latest",
+    "apiKey": ""
+  },
+  "tabAutocompleteOptions": {
+    "useCache": false
+  },
+  "contextProviders": [
+    {
+      "name": "docs"
+    },
+    {
+      "name": "diff"
+    },
+    {
+      "name": "url"
+    },
+    {
+      "name": "folder"
+    }
+  ],
+  "docs": []
+}

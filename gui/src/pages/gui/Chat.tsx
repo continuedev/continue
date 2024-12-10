@@ -57,6 +57,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
+import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
@@ -203,7 +204,7 @@ export function Chat() {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        // dispatch(cancelGeneration()); TODO!!!
+        dispatch(cancelStream());
       }
     };
     window.addEventListener("keydown", listener);
@@ -258,8 +259,6 @@ export function Chat() {
         return;
       }
 
-      editor.commands.clearContent(true);
-
       const promptPreamble = isInEditMode
         ? getMultifileEditPrompt(codeToEdit)
         : undefined;
@@ -267,6 +266,8 @@ export function Chat() {
       dispatch(
         streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
       );
+
+      editor.commands.clearContent(true);
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");

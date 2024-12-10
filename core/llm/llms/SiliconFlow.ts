@@ -1,11 +1,11 @@
-import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
+import { CompletionOptions, LLMOptions } from "../../index.js";
 import { streamSse } from "../stream.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
 
 import OpenAI from "./OpenAI.js";
 
 class SiliconFlow extends OpenAI {
-  static providerName: ModelProvider = "siliconflow";
+  static providerName = "siliconflow";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.siliconflow.cn/v1/",
     model: "Qwen/Qwen2.5-Coder-32B-Instruct",
@@ -46,13 +46,12 @@ class SiliconFlow extends OpenAI {
         Accept: "application/json",
         Authorization: `Bearer ${this.apiKey}`,
       },
-      signal
+      signal,
     });
     for await (const chunk of streamSse(resp)) {
       yield chunk.choices[0].text;
     }
   }
-  
 }
 
 export default SiliconFlow;

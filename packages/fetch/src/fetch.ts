@@ -1,11 +1,12 @@
-import { RequestOptions } from "@continuedev/config-types/src/index.js";
-import * as followRedirects from "follow-redirects";
-import { HttpProxyAgent } from "http-proxy-agent";
 import { globalAgent } from "https";
-import { HttpsProxyAgent } from "https-proxy-agent";
-import fetch, { RequestInit, Response } from "node-fetch";
 import * as fs from "node:fs";
 import tls from "node:tls";
+
+import { RequestOptions } from "@continuedev/config-types";
+import * as followRedirects from "follow-redirects";
+import { HttpProxyAgent } from "http-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
+import fetch, { RequestInit, Response } from "node-fetch";
 
 const { http, https } = (followRedirects as any).default;
 
