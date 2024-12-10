@@ -18,7 +18,7 @@ If you have any problems, see the [troubleshooting guide](troubleshooting.md) or
 
 ## JetBrains
 
-1. Open your JetBrains IDE and open **Settings** using <kbd>cmd/ctrl</kbd> + <kbd>,</kbd>
+1. Open your JetBrains IDE and open **Settings** using <kbd>Ctrl</kbd> + <kbd>+Alt</kbd> + <kbd>S</kbd>
 2. Select **Plugins** on the sidebar and search for "Continue" in the marketplace
 3. Click `Install`, which will cause the Continue logo to show up on the right toolbar
 
