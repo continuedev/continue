@@ -95,6 +95,11 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
+      - name: Install core dependencies
+        run: |
+          cd core
+          npm ci
+
       - name: Install gui dependencies
         run: |
           cd gui
