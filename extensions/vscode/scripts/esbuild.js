@@ -20,6 +20,7 @@ const esbuildConfig = {
   inject: ["./scripts/importMetaUrl.js"],
   define: { "import.meta.url": "importMetaUrl" },
   supported: { "dynamic-import": false },
+  metafile: true,
   plugins: [
     {
       name: "on-end-plugin",
@@ -29,6 +30,15 @@ const esbuildConfig = {
             console.error("Build failed with errors:", result.errors);
             throw new Error(result.errors);
           } else {
+            try {
+              const fs = require("fs");
+              fs.writeFileSync(
+                "./build/meta.json",
+                JSON.stringify(result.metafile, null, 2),
+              );
+            } catch (e) {
+              console.error("Failed to write esbuild meta file", e);
+            }
             console.log("VS Code Extension esbuild complete"); // used verbatim in vscode tasks to detect completion
           }
         });
