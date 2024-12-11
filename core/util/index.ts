@@ -72,12 +72,12 @@ const SEP_REGEX = /[\\/]/;
 //   return filepath.split(SEP_REGEX).pop() ?? "";
 // }
 
-// export function getLastNPathParts(filepath: string, n: number): string {
-//   if (n <= 0) {
-//     return "";
-//   }
-//   return filepath.split(SEP_REGEX).slice(-n).join("/");
-// }
+export function getLastNPathParts(filepath: string, n: number): string {
+  if (n <= 0) {
+    return "";
+  }
+  return filepath.split(SEP_REGEX).slice(-n).join("/");
+}
 
 // export function groupByLastNPathParts(
 //   filepaths: string[],

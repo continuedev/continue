@@ -349,7 +349,7 @@ class VsCodeIde implements IDE {
           filename === ".continuerc.json"
         ) {
           const contents = await this.readFile(
-            vscode.Uri.joinPath(workspaceDir, filename).fsPath,
+            vscode.Uri.joinPath(workspaceDir, filename).toString(),
           );
           configs.push(JSON.parse(contents));
         }
@@ -509,7 +509,7 @@ class VsCodeIde implements IDE {
 
     return tabArray
       .filter((t) => t.isPinned)
-      .map((t) => (t.input as vscode.TabInputText).uri.fsPath);
+      .map((t) => (t.input as vscode.TabInputText).uri.toString());
   }
 
   private async _searchDir(query: string, dir: string): Promise<string> {
@@ -572,7 +572,7 @@ class VsCodeIde implements IDE {
     }
     return vscode.languages.getDiagnostics(uri).map((d) => {
       return {
-        filepath: uri.fsPath,
+        filepath: uri.toString(),
         range: {
           start: {
             line: d.range.start.line,
@@ -607,7 +607,7 @@ class VsCodeIde implements IDE {
   }
 
   async listDir(dir: string): Promise<[string, FileType][]> {
-    return vscode.workspace.fs.readDirectory(uriFromFilePath(dir)) as any;
+    return vscode.workspace.fs.readDirectory(vscode.Uri.parse(dir)) as any;
   }
 
   getIdeSettingsSync(): IdeSettings {

@@ -10,16 +10,16 @@ import { getMetaKeyLabel, getPlatform } from "../util/util";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 interface DiffInfo {
-  originalFilepath: string;
-  newFilepath: string;
+  originalUri: string;
+  newUri: string;
   editor?: vscode.TextEditor;
   step_index: number;
   range: vscode.Range;
 }
 
-async function readFile(path: string): Promise<string> {
+async function readFile(uri: vscode.Uri): Promise<string> {
   return await vscode.workspace.fs
-    .readFile(uriFromFilePath(path))
+    .readFile(uri)
     .then((bytes) => new TextDecoder().decode(bytes));
 }
 

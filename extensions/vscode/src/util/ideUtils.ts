@@ -14,7 +14,7 @@ import {
 
 import { getUniqueId, openEditorAndRevealRange } from "./vscode";
 
-import type { FileEdit, Range, RangeInFile, Thread } from "core";
+import type { Range, RangeInFile, Thread } from "core";
 import { isUriWithinDirectory } from "core/util/uri";
 
 const util = require("node:util");
@@ -217,11 +217,11 @@ export class VsCodeIdeUtils {
       .filter((uri) => this.documentIsCode(uri)); // Filter out undesired documents
   }
 
-  getVisibleFiles(): string[] {
+  getVisibleFiles(): vscode.Uri[] {
     return vscode.window.visibleTextEditors
       .filter((editor) => this.documentIsCode(editor.document.uri))
       .map((editor) => {
-        return editor.document.uri.fsPath;
+        return editor.document.uri;
       });
   }
 
