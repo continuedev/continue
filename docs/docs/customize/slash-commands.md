@@ -124,3 +124,6 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
   }
 }
 ```
+
+### Build your own Slash Command
+You can build your own slash command by following [this tutorial](/customize/tutorials/build-your-own-slash-command).
