@@ -102,6 +102,7 @@ export const DEFAULT_IGNORE_DIRS = [
   "__pycache__/",
   "site-packages/",
   ".gradle/",
+  ".mvn/",
   ".cache/",
   "gems/",
   "vendor/",
