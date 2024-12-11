@@ -1,16 +1,16 @@
 import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
+import { useMemo } from "react";
 import { useDispatch } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import ContextItemsPeek from "./ContextItemsPeek";
-import TipTapEditor from "./TipTapEditor";
 import { useAppSelector } from "../../redux/hooks";
+import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import { newSession, setMessageAtIndex } from "../../redux/slices/sessionSlice";
+import ContextItemsPeek from "./ContextItemsPeek";
 import { ToolbarOptions } from "./InputToolbar";
-import { useMemo } from "react";
+import TipTapEditor from "./TipTapEditor";
 
 interface ContinueInputBoxProps {
   isEditMode?: boolean;
@@ -93,7 +93,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
   const filteredContextProviders = useMemo(() => {
     if (!props.isEditMode) {
-      availableContextProviders;
+      return availableContextProviders ?? [];
     }
 
     return (
