@@ -53,6 +53,10 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
+  streamError?: {
+    statusCode: number;
+    message: string;
+  };
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -348,6 +352,15 @@ export const sessionSlice = createSlice({
         }
       }
     },
+    setStreamError: (
+      state,
+      { payload }: PayloadAction<{ statusCode: number; message: string }>,
+    ) => {
+      state.streamError = payload;
+    },
+    clearStreamError: (state) => {
+      state.streamError = undefined;
+    },
     newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
       state.lastSessionId = state.id;
 
@@ -369,7 +382,6 @@ export const sessionSlice = createSlice({
         state.curCheckpointIndex = 0;
       }
     },
-
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
       state.title = payload;
     },

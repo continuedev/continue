@@ -75,6 +75,7 @@ import {
   loadLastSession,
   saveCurrentSession,
 } from "../../redux/thunks/session";
+import StreamError from "./StreamError";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -550,6 +551,9 @@ export function Chat() {
             </>
           )}
         </div>
+      </div>
+      <div className="flex flex-col">
+        <StreamError />
       </div>
       <div
         className={`${history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
