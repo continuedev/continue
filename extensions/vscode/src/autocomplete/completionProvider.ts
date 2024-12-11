@@ -21,6 +21,7 @@ import {
 
 import type { IDE } from "core";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { getContinueWorkspaceConfig } from "../util/workspaceConfig";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -62,12 +63,15 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private recentlyEditedTracker = new RecentlyEditedTracker();
+  private loadingSpinnerDecorationType: vscode.TextEditorDecorationType;
+  private loadingSpinnerManager: LoadingSpinnerManager;
 
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly tabAutocompleteModel: TabAutocompleteModel,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
+    context: vscode.ExtensionContext,
   ) {
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -82,6 +86,27 @@ export class ContinueCompletionProvider
         // console.log("updating completion");
       }
     });
+
+    this.loadingSpinnerDecorationType =
+      vscode.window.createTextEditorDecorationType({
+        backgroundColor: "transparent",
+
+        gutterIconPath: context.asAbsolutePath("media/loading.gif"),
+        gutterIconSize: "cover",
+      });
+    this.loadingSpinnerManager = new LoadingSpinnerManager(
+      () => {
+        const editor = vscode.window.activeTextEditor;
+        return editor?.setDecorations(this.loadingSpinnerDecorationType, [
+          new vscode.Range(editor.selection.end, editor.selection.end),
+        ]);
+      },
+      () =>
+        vscode.window.activeTextEditor?.setDecorations(
+          this.loadingSpinnerDecorationType,
+          [],
+        ),
+    );
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
@@ -151,6 +176,7 @@ export class ContinueCompletionProvider
     };
     const selectedCompletionInfo = context.selectedCompletionInfo;
     this._lastVsCodeCompletionInput = newVsCodeInput;
+    const editor = vscode.window.activeTextEditor;
 
     try {
       const abortController = new AbortController();
@@ -207,6 +233,16 @@ export class ContinueCompletionProvider
       };
 
       setupStatusBar(undefined, true);
+
+      if (
+        editor &&
+        getContinueWorkspaceConfig().get<boolean>(
+          "enableTabAutocompleteLineSpinner",
+        )
+      ) {
+        this.loadingSpinnerManager.setLoading(true);
+      }
+
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           input,
@@ -267,6 +303,7 @@ export class ContinueCompletionProvider
       return [completionItem];
     } finally {
       stopStatusBarLoading();
+      this.loadingSpinnerManager.setLoading(false);
     }
   }
 
@@ -292,5 +329,49 @@ export class ContinueCompletionProvider
     }
 
     return true;
+  }
+}
+
+/** Manages the loading spinner. It is only shown after a delay, and
+ * is visible for a minimum amount of time */
+class LoadingSpinnerManager {
+  private timer?: NodeJS.Timeout;
+  private loading = false;
+  private spinnerShown = false;
+  private spinnerShownTime?: number;
+  constructor(
+    private showSpinner: () => void,
+    private hideSpinner: () => void,
+  ) {}
+
+  public setLoading(newValue: boolean) {
+    if (this.loading == newValue) return;
+    this.loading = newValue;
+
+    if (newValue) {
+      clearTimeout(this.timer);
+      if (!this.spinnerShown)
+        this.timer = setTimeout(() => {
+          this.showSpinner();
+          this.spinnerShown = true;
+          this.spinnerShownTime = Date.now();
+        }, 200);
+    } else {
+      clearTimeout(this.timer);
+      if (this.spinnerShown) {
+        const minTimeRemaining = 250 - (Date.now() - this.spinnerShownTime!);
+        if (minTimeRemaining > 0) {
+          setTimeout(() => {
+            this.hideSpinner();
+            this.spinnerShown = false;
+            this.spinnerShownTime = undefined;
+          }, minTimeRemaining);
+        } else {
+          this.hideSpinner();
+          this.spinnerShown = false;
+          this.spinnerShownTime = undefined;
+        }
+      }
+    }
   }
 }
