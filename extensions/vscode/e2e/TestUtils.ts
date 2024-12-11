@@ -2,11 +2,11 @@ import { expect } from "chai";
 import { WebElement } from "vscode-extension-tester";
 
 export class TestUtils {
-  public static async waitForElement(
-    locatorFn: () => Promise<WebElement>,
+  public static async waitForElement<T>(
+    locatorFn: () => Promise<T>,
     timeout: number = 5000,
     interval: number = 500,
-  ): Promise<WebElement> {
+  ): Promise<T> {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
