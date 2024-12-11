@@ -29,18 +29,8 @@ dependencies {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
     }
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
-    implementation("io.ktor:ktor-server-core:2.3.7") {
-        exclude(group = "org.slf4j", module = "slf4j-api")
-    }
-    implementation("io.ktor:ktor-server-netty:2.3.7") {
-        exclude(group = "org.slf4j", module = "slf4j-api")
-    }
-    implementation("io.ktor:ktor-server-cors:2.3.7") {
-        exclude(group = "org.slf4j", module = "slf4j-api")
-    }
     implementation("com.posthog.java:posthog:1.+")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
-    //    implementation("com.jetbrains.jsonSchema")
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for

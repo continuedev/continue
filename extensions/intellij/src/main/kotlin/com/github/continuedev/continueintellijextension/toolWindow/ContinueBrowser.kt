@@ -100,15 +100,13 @@ class ContinueBrowser(val project: Project, url: String) {
 
 
             val respond = fun(data: Any?) {
+
                 // This matches the way that we expect receive messages in IdeMessenger.ts (gui)
                 // and the way they are sent in VS Code (webviewProtocol.ts)
-                var result: Map<String, Any?>?
-
-                // TODO: Not sure how to map this right now
-                if (MessageTypes.generatorTypes.contains(messageType)) {
-                    result = data as? Map<String, Any?>
+                var result: Map<String, Any?>? = if (MessageTypes.generatorTypes.contains(messageType)) {
+                    data as? Map<String, Any?>
                 } else {
-                    result = mutableMapOf(
+                    mutableMapOf(
                         "status" to "success",
                         "done" to false,
                         "content" to data

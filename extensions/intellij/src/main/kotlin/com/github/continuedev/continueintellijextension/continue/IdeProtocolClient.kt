@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 import IntelliJIDE
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
+import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.protocol.*
@@ -10,6 +11,7 @@ import com.github.continuedev.continueintellijextension.services.*
 import com.github.continuedev.continueintellijextension.utils.*
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -28,9 +30,7 @@ class IdeProtocolClient(
     workspacePath: String?,
     private val project: Project
 ) : DumbAware {
-
-    val diffManager = DiffManager(project)
-    private val ide: IDE = IntelliJIDE(project, workspacePath)
+    private val ide: IDE = IntelliJIDE(project, workspacePath, continuePluginService)
 
     init {
         // Setup config.json / config.ts save listeners
@@ -52,6 +52,31 @@ class IdeProtocolClient(
 
             try {
                 when (messageType) {
+                    "showTutorial" -> {
+                        showTutorial(project)
+                    }
+
+                    "jetbrains/isOSREnabled" -> {
+                        val isOSREnabled =
+                            ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+                        respond(isOSREnabled)
+                    }
+
+                    "jetbrains/getColors" -> {
+                        val colors = GetTheme().getTheme();
+                        respond(colors)
+                    }
+
+                    "jetbrains/onLoad" -> {
+                        val jsonData = mutableMapOf(
+                            "windowId" to continuePluginService.windowId,
+                            "workspacePaths" to continuePluginService.workspacePaths,
+                            "vscMachineId" to getMachineUniqueID(),
+                            "vscMediaUrl" to "http://continue",
+                        )
+                        respond(jsonData)
+                    }
+
                     "getIdeSettings" -> {
                         val settings = ide.getIdeSettings()
                         respond(settings)
@@ -108,7 +133,7 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             ShowDiffParams::class.java
                         )
-                        diffManager.showDiff(params.filepath, params.newContents, params.stepIndex)
+                        ide.showDiff(params.filepath, params.newContents, params.stepIndex)
                         respond(null)
                     }
 
@@ -278,11 +303,7 @@ class IdeProtocolClient(
                     }
 
                     "runCommand" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            RunCommandParams::class.java
-                        )
-                        ide.runCommand(params.command)
+                        // Running commands not yet supported in JetBrains
                         respond(null)
                     }
 

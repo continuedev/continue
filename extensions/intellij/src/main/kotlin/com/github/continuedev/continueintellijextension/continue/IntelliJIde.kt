@@ -1,6 +1,8 @@
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.`continue`.DiffManager
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.utils.getOS
@@ -15,7 +17,6 @@ import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
@@ -24,6 +25,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
@@ -40,9 +42,10 @@ import java.nio.file.Paths
 
 class IntelliJIDE(
     private val project: Project,
-    private val workspacePath: String?
-) : IDE {
+    private val workspacePath: String?,
+    private val continuePluginService: ContinuePluginService,
 
+    ) : IDE {
     private val ripgrep: String
 
     init {
@@ -187,8 +190,28 @@ class IntelliJIDE(
     }
 
     override suspend fun getWorkspaceConfigs(): List<ContinueRcJson> {
-        // Implementation depends on your definition of ContinueRcJson
-        throw NotImplementedError("getWorkspaceConfigs not implemented yet")
+        val workspaceDirs = workspaceDirectories()
+
+        val configs = mutableListOf<String>()
+
+        for (workspaceDir in workspaceDirs) {
+            val workspacePath = File(workspaceDir)
+            val dir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
+            if (dir != null) {
+                val contents = dir.children.map { it.name }
+
+                // Find any .continuerc.json files
+                for (file in contents) {
+                    if (file.endsWith(".continuerc.json")) {
+                        val filePath = workspacePath.resolve(file)
+                        val fileContent = File(filePath.toString()).readText()
+                        configs.add(fileContent)
+                    }
+                }
+            }
+        }
+
+        return configs as List<ContinueRcJson>
     }
 
     override suspend fun fileExists(filepath: String): Boolean {
@@ -298,8 +321,7 @@ class IntelliJIDE(
     }
 
     override suspend fun showDiff(filepath: String, newContents: String, stepIndex: Int) {
-        // Implement based on your DiffManager
-        throw NotImplementedError("showDiff not implemented yet")
+        continuePluginService.diffManager?.showDiff(filepath, newContents, stepIndex)
     }
 
     override suspend fun getOpenFiles(): List<String> {
@@ -545,5 +567,17 @@ class IntelliJIDE(
                 }
             }
         }
+    }
+
+    private fun workspaceDirectories(): Array<String> {
+        val dirs = this.continuePluginService.workspacePaths
+        if (dirs?.isNotEmpty() == true) {
+            return dirs
+        }
+
+        if (this.workspacePath != null) {
+            return arrayOf(this.workspacePath)
+        }
+        return arrayOf()
     }
 }

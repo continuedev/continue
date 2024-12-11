@@ -1,10 +1,8 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
 import com.intellij.ide.plugins.PluginManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
@@ -22,9 +20,6 @@ class CoreMessengerManager(
 
     init {
         coroutineScope.launch {
-            val continuePluginService =
-                ServiceManager.getService(project, ContinuePluginService::class.java)
-
             val myPluginId = "com.github.continuedev.continueintellijextension"
             val pluginDescriptor =
                 PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
@@ -60,7 +55,7 @@ class CoreMessengerManager(
         }
     }
 
-    private fun setupCoreMessenger(continueCorePath: String): Unit {
+    private fun setupCoreMessenger(continueCorePath: String) {
         coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
 
         coreMessenger?.request("config/getSerializedProfileInfo", null, null) { resp ->
