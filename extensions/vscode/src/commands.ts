@@ -69,7 +69,7 @@ function addCodeToContextFromRange(
   }
 
   const rangeInFileWithContents = {
-    filepath: document.uri.fsPath,
+    filepath: document.uri.toString(),
     contents: document.getText(range),
     range: {
       start: {
@@ -99,7 +99,7 @@ function getRangeInFileWithContents(
 
   if (editor) {
     const selection = editor.selection;
-    const filepath = editor.document.uri.fsPath;
+    const filepath = editor.document.uri.toString();
 
     if (range) {
       const contents = editor.document.getText(range);
@@ -130,7 +130,7 @@ function getRangeInFileWithContents(
     const contents = editor.document.getText(selectionRange);
 
     return {
-      filepath: editor.document.uri.fsPath,
+      filepath,
       contents,
       range: {
         start: {
@@ -181,7 +181,7 @@ async function addEntireFileToContext(
   // Get the contents of the file
   const contents = (await vscode.workspace.fs.readFile(filepath)).toString();
   const rangeInFileWithContents = {
-    filepath: filepath.fsPath,
+    filepath: filepath.toString(),
     contents: contents,
     range: {
       start: {
@@ -230,39 +230,33 @@ async function processDiff(
   diffManager: DiffManager,
   ide: VsCodeIde,
   verticalDiffManager: VerticalDiffManager,
-  newFilepath?: vscode.Uri,
+  newFileUri?: vscode.Uri,
   streamId?: string,
 ) {
   captureCommandTelemetry(`${action}Diff`);
 
-  let fullPath = newFilepath;
-
-  if (fullPath instanceof vscode.Uri) {
-    fullPath = fullPath.fsPath;
-  } else if (fullPath) {
-    fullPath = resolveF(ide, fullPath);
-  } else {
-    const curFile = await ide.getCurrentFile();
-    fullPath = curFile?.path;
+  let newOrCurrentUri = newFileUri?.toString();
+  if (!newOrCurrentUri) {
+    const currentFile = await ide.getCurrentFile();
+    newOrCurrentUri = currentFile?.path;
   }
-
-  if (!fullPath) {
+  if (!newOrCurrentUri) {
     console.warn(
-      `Unable to resolve filepath while attempting to resolve diff: ${newFilepath}`,
+      `No file provided or current file open while attempting to resolve diff`,
     );
     return;
   }
 
-  await ide.openFile(fullPath);
+  await ide.openFile(newOrCurrentUri);
 
   // Clear vertical diffs depending on action
-  verticalDiffManager.clearForFilepath(fullPath, action === "accept");
+  verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
 
   // Accept or reject the diff
   if (action === "accept") {
-    await diffManager.acceptDiff(fullPath);
+    await diffManager.acceptDiff(newOrCurrentUri);
   } else {
-    await diffManager.rejectDiff(fullPath);
+    await diffManager.rejectDiff(newOrCurrentUri);
   }
 
   void sidebar.webviewProtocol.request("setEditStatus", {
@@ -270,11 +264,11 @@ async function processDiff(
   });
 
   if (streamId) {
-    const fileContent = await ide.readFile(fullPath);
+    const fileContent = await ide.readFile(newOrCurrentUri);
 
     await sidebar.webviewProtocol.request("updateApplyState", {
       fileContent,
-      filepath: fullPath,
+      filepath: newOrCurrentUri,
       streamId,
       status: "closed",
       numDiffs: 0,
@@ -376,13 +370,13 @@ const getCommandsMap: (
         newFilepath,
         streamId,
       ),
-    "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
+    "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
-      verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
+      verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
     },
-    "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
+    "continue.rejectVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("rejectVerticalDiffBlock");
-      verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
+      verticalDiffManager.acceptRejectVerticalDiffBlock(false, fileUri, index);
     },
     "continue.quickFix": async (
       range: vscode.Range,
@@ -571,11 +565,10 @@ const getCommandsMap: (
           rangeInFileWithContents,
         );
       } else {
-        const filepath = document.uri.fsPath;
         const contents = document.getText();
 
         sidebar.webviewProtocol?.request("addCodeToEdit", {
-          filepath,
+          filepath: document.uri.toString(),
           contents,
         });
       }
@@ -790,9 +783,9 @@ const getCommandsMap: (
           .stat(uri)
           ?.then((stat) => stat.type === vscode.FileType.Directory);
         if (isDirectory) {
-          for await (const filepath of walkDirAsync(uri.fsPath, ide)) {
+          for await (const filepath of walkDirAsync(uri.toString(), ide)) {
             addEntireFileToContext(
-              uriFromFilePath(filepath),
+              vscode.Uri.parse(filepath),
               sidebar.webviewProtocol,
             );
           }

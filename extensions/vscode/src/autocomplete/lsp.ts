@@ -360,7 +360,7 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
     const results: RangeInFileWithContents[] = [];
     for (const node of treePath.reverse()) {
       const definitions = await getDefinitionsForNode(
-        filepath,
+        vscode.Uri.parse(filepath),
         node,
         ide,
         lang,
