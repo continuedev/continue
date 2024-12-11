@@ -1,9 +1,7 @@
-import path from "node:path";
-
 import { EXTENSION_NAME } from "core/control-plane/env";
 import _ from "lodash";
 import * as vscode from "vscode";
-
+import URI from "uri-js";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
@@ -26,48 +24,47 @@ export class VsCodeIdeUtils {
   visibleMessages: Set<string> = new Set();
 
   async gotoDefinition(
-    uri: string,
+    uri: vscode.Uri,
     position: vscode.Position,
   ): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = await vscode.commands.executeCommand(
       "vscode.executeDefinitionProvider",
-      uriFromFilePath(filepath),
+      uri,
       position,
     );
     return locations;
   }
 
-  async documentSymbol(filepath: string): Promise<vscode.DocumentSymbol[]> {
+  async documentSymbol(uri: vscode.Uri): Promise<vscode.DocumentSymbol[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeDocumentSymbolProvider",
-      uriFromFilePath(filepath),
+      uri,
     );
   }
 
   async references(
-    filepath: string,
+    uri: vscode.Uri,
     position: vscode.Position,
   ): Promise<vscode.Location[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeReferenceProvider",
-      uriFromFilePath(filepath),
+      uri,
       position,
     );
   }
 
-  async foldingRanges(filepath: string): Promise<vscode.FoldingRange[]> {
+  async foldingRanges(uri: vscode.Uri): Promise<vscode.FoldingRange[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeFoldingRangeProvider",
-      uriFromFilePath(filepath),
+      uri,
     );
   }
 
-  private _workspaceDirectories: string[] | undefined = undefined;
-  getWorkspaceDirectories(): string[] {
+  private _workspaceDirectories: vscode.Uri[] | undefined = undefined;
+  getWorkspaceDirectories(): vscode.Uri[] {
     if (this._workspaceDirectories === undefined) {
       this._workspaceDirectories =
-        vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ||
-        [];
+        vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
     }
 
     return this._workspaceDirectories;
@@ -135,37 +132,19 @@ export class VsCodeIdeUtils {
     );
   }
 
-  async resolveAbsFilepathInWorkspace(filepath: string): Promise<string> {
-    // If the filepath is already absolute, return it as is
-    if (this.path.isAbsolute(filepath)) {
-      return filepath;
-    }
-
-    // Try to resolve for each workspace directory
-    const workspaceDirectories = this.getWorkspaceDirectories();
-    for (const dir of workspaceDirectories) {
-      const resolvedPath = this.path.resolve(dir, filepath);
-      if (await this.fileExists(resolvedPath)) {
-        return resolvedPath;
-      }
-    }
-
-    return filepath;
-  }
-
-  async openFile(filepath: string, range?: vscode.Range) {
+  async openFile(uri: vscode.Uri, range?: vscode.Range) {
     // vscode has a builtin open/get open files
     return await openEditorAndRevealRange(
-      await this.resolveAbsFilepathInWorkspace(filepath),
+      uri,
       range,
       vscode.ViewColumn.One,
       false,
     );
   }
 
-  async fileExists(filepath: string): Promise<boolean> {
+  async fileExists(uri: vscode.Uri): Promise<boolean> {
     try {
-      await vscode.workspace.fs.stat(uriFromFilePath(filepath));
+      await vscode.workspace.fs.stat(uri);
       return true;
     } catch {
       return false;
@@ -184,11 +163,6 @@ export class VsCodeIdeUtils {
       .then((doc) => {
         vscode.window.showTextDocument(doc, { preview: false });
       });
-  }
-
-  setSuggestionsLocked(filepath: string, locked: boolean) {
-    editorSuggestionsLocked.set(filepath, locked);
-    // TODO: Rerender?
   }
 
   async getUserSecret(key: string) {
@@ -243,7 +217,7 @@ export class VsCodeIdeUtils {
       .flat()
       .filter(Boolean) // filter out undefined values
       .filter((uri) => this.documentIsCode(uri)) // Filter out undesired documents
-      .map((uri) => uri.fsPath);
+      .map((uri) => uri.toString());
   }
 
   getVisibleFiles(): string[] {
@@ -254,11 +228,11 @@ export class VsCodeIdeUtils {
       });
   }
 
-  saveFile(filepath: string) {
+  saveFile(uri: vscode.Uri) {
     vscode.window.visibleTextEditors
       .filter((editor) => this.documentIsCode(editor.document.uri))
       .forEach((editor) => {
-        if (editor.document.uri.fsPath === filepath) {
+        if (URI.equal(editor.document.uri, uri.toString())) {
           editor.document.save();
         }
       });

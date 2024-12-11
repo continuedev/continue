@@ -100,7 +100,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     ControlPlaneSessionInfo | undefined,
   ];
   logoutOfControlPlane: [undefined, void];
-  pathSep: [undefined, string];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {

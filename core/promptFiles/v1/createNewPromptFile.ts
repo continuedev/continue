@@ -1,8 +1,7 @@
-import path from "path";
-
 import { IDE } from "../..";
 
 import { DEFAULT_PROMPTS_FOLDER } from ".";
+import { joinPathsToUri } from "../../util/uri";
 
 const DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
 # It is used to define and reuse prompts within Continue
@@ -48,7 +47,7 @@ export async function createNewPromptFile(
       "No workspace directories found. Make sure you've opened a folder in your IDE.",
     );
   }
-  const promptFilePath = path.join(
+  const promptFilePath = joinPathsToUri(
     workspaceDirs[0],
     promptPath ?? DEFAULT_PROMPTS_FOLDER,
     "new-prompt-file.prompt",

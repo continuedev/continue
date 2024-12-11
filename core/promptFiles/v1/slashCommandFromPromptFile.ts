@@ -1,7 +1,6 @@
 import * as YAML from "yaml";
 
 import { ContinueSDK, SlashCommand } from "../..";
-import { getBasename } from "../../util/index";
 import { renderChatMessage } from "../../util/messageContent";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";

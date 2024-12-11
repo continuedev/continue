@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
 
 import {
   ContinueRcJson,
@@ -27,9 +26,6 @@ class FileSystemIde implements IDE {
     ...otherParams: any[]
   ): Promise<void> {
     return Promise.resolve();
-  }
-  pathSep(): Promise<string> {
-    return Promise.resolve(path.sep);
   }
   fileExists(filepath: string): Promise<boolean> {
     return Promise.resolve(fs.existsSync(filepath));

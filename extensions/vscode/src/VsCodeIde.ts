@@ -17,12 +17,9 @@ import { executeGotoProvider } from "./autocomplete/lsp";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
-import {
-  getExtensionUri,
-  openEditorAndRevealRange,
-  uriFromFilePath,
-} from "./util/vscode";
+import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import URI from "uri-js";
 
 import type {
   ContinueRcJson,
@@ -48,12 +45,8 @@ class VsCodeIde implements IDE {
     this.ideUtils = new VsCodeIdeUtils();
   }
 
-  pathSep(): Promise<string> {
-    return Promise.resolve(this.ideUtils.path.sep);
-  }
-  async fileExists(filepath: string): Promise<boolean> {
-    const absPath = await this.ideUtils.resolveAbsFilepathInWorkspace(filepath);
-    return vscode.workspace.fs.stat(uriFromFilePath(absPath)).then(
+  async fileExists(uri: string): Promise<boolean> {
+    return vscode.workspace.fs.stat(vscode.Uri.parse(uri)).then(
       () => true,
       () => false,
     );
@@ -437,7 +430,7 @@ class VsCodeIde implements IDE {
 
   private static MAX_BYTES = 100000;
 
-  async readFile(filepath: string): Promise<string> {
+  async readFile(fileUri: string): Promise<string> {
     try {
       filepath = this.ideUtils.getAbsolutePath(filepath);
       const uri = uriFromFilePath(filepath);
@@ -445,8 +438,8 @@ class VsCodeIde implements IDE {
       // First, check whether it's a notebook document
       // Need to iterate over the cells to get full contents
       const notebook =
-        vscode.workspace.notebookDocuments.find(
-          (doc) => doc.uri.toString() === uri.toString(),
+        vscode.workspace.notebookDocuments.find((doc) =>
+          URI.equal(doc.uri.toString(), uri.toString()),
         ) ??
         (uri.fsPath.endsWith("ipynb")
           ? await vscode.workspace.openNotebookDocument(uri)
@@ -507,7 +500,7 @@ class VsCodeIde implements IDE {
     }
     return {
       isUntitled: vscode.window.activeTextEditor.document.isUntitled,
-      path: vscode.window.activeTextEditor.document.uri.fsPath,
+      path: vscode.window.activeTextEditor.document.uri.toString(),
       contents: vscode.window.activeTextEditor.document.getText(),
     };
   }

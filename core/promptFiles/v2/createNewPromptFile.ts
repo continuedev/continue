@@ -1,5 +1,6 @@
 import { IDE } from "../..";
 import { GlobalContext } from "../../util/GlobalContext";
+import { joinPathsToUri } from "../../util/uri";
 // import { getPathModuleForIde } from "../../util/pathModule";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
@@ -45,11 +46,10 @@ export async function createNewPromptFileV2(
       "No workspace directories found. Make sure you've opened a folder in your IDE.",
     );
   }
-  const pathModule = await getPathModuleForIde(ide);
 
-  const baseDir = pathModule.join(
+  const baseDiruri = joinPathsToUri(
     workspaceDirs[0],
-    promptPath ?? pathModule.join(".continue", "prompts"),
+    promptPath ?? ".continue/prompts",
   );
 
   // Find the first available filename
@@ -57,7 +57,10 @@ export async function createNewPromptFileV2(
   let promptFileUri: string;
   do {
     const suffix = counter === 0 ? "" : `-${counter}`;
-    promptFileUri = pathModule.join(baseDir, `new-prompt-file${suffix}.prompt`);
+    promptFileUri = joinPathsToUri(
+      baseDiruri,
+      `new-prompt-file${suffix}.prompt`,
+    );
     counter++;
   } while (await ide.fileExists(promptFileUri));
 

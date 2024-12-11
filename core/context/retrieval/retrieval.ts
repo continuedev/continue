@@ -112,13 +112,12 @@ export async function retrieveContextItemsFromEmbeddings(
     ...results
       .sort((a, b) => a.filepath.localeCompare(b.filepath))
       .map((r) => {
-        const name = `${getUriPathBasename(r.filepath)} (${r.startLine}-${
-          r.endLine
-        })`;
+        const basename = getUriPathBasename(r.filepath);
+        const name = `${basename} (${r.startLine}-${r.endLine})`;
         const description = `${r.filepath}`;
 
-        if (r.filepath.includes("package.json")) {
-          console.log();
+        if (basename === "package.json") {
+          console.warn("Retrieval pipeline: package.json detected");
         }
 
         return {

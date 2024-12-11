@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 
 import { openEditorAndRevealRange, translate } from "./util/vscode";
+import URI from "uri-js"
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
@@ -58,7 +59,7 @@ export function rerenderDecorations(editorUri: string) {
   const suggestions = editorToSuggestions.get(editorUri);
   const idx = currentSuggestion.get(editorUri);
   const editor = vscode.window.visibleTextEditors.find(
-    (editor) => editor.document.uri.toString() === editorUri,
+    (editor) => URI.equal(editor.document.uri.toString(), editorUri)
   );
   if (!suggestions || !editor) {
     return;
@@ -299,7 +300,7 @@ export async function rejectSuggestionCommand(
 }
 
 export async function showSuggestion(
-  editorFilename: string,
+  editorUri: string,
   range: vscode.Range,
   suggestion: string,
 ): Promise<boolean> {
@@ -312,7 +313,7 @@ export async function showSuggestion(
     return Promise.resolve(false);
   }
 
-  const editor = await openEditorAndRevealRange(editorFilename, range);
+  const editor = await openEditorAndRevealRange(editorUri, range);
   if (!editor) {
     return Promise.resolve(false);
   }
@@ -339,19 +340,19 @@ export async function showSuggestion(
             );
             const content = editor!.document.getText(suggestionRange);
 
-            const filename = editor!.document.uri.toString();
-            if (editorToSuggestions.has(filename)) {
-              const suggestions = editorToSuggestions.get(filename)!;
+            const uriString = editor!.document.uri.toString();
+            if (editorToSuggestions.has(uriString)) {
+              const suggestions = editorToSuggestions.get(uriString)!;
               suggestions.push({
                 oldRange: range,
                 newRange: suggestionRange,
                 newSelected: true,
                 newContent: content,
               });
-              editorToSuggestions.set(filename, suggestions);
-              currentSuggestion.set(filename, suggestions.length - 1);
+              editorToSuggestions.set(uriString, suggestions);
+              currentSuggestion.set(uriString, suggestions.length - 1);
             } else {
-              editorToSuggestions.set(filename, [
+              editorToSuggestions.set(uriString, [
                 {
                   oldRange: range,
                   newRange: suggestionRange,
@@ -359,10 +360,10 @@ export async function showSuggestion(
                   newContent: content,
                 },
               ]);
-              currentSuggestion.set(filename, 0);
+              currentSuggestion.set(uriString, 0);
             }
 
-            rerenderDecorations(filename);
+            rerenderDecorations(uriString);
           }
           resolve(success);
         },

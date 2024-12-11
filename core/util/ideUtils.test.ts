@@ -13,7 +13,6 @@ describe("resolveRelativePathInWorkspace", () => {
 
   it("should return the full path if the path is already absolute", async () => {
     const mockPath = "/absolute/path/to/file.txt";
-    jest.spyOn(mockIde, "pathSep").mockResolvedValue("/");
 
     const result = await resolveRelativePathInWorkspace(mockPath, mockIde);
     expect(result).toBe(mockPath);
@@ -24,7 +23,6 @@ describe("resolveRelativePathInWorkspace", () => {
     const workspaces = ["/workspace/one", "/workspace/two"];
     const expectedFullPath = `/workspace/one/${relativePath}`;
 
-    jest.spyOn(mockIde, "pathSep").mockResolvedValue("/");
     jest.spyOn(mockIde, "getWorkspaceDirs").mockResolvedValue(workspaces);
     jest
       .spyOn(mockIde, "fileExists")
@@ -38,7 +36,6 @@ describe("resolveRelativePathInWorkspace", () => {
     const relativePath = "non/existent/path.txt";
     const workspaces = ["/workspace/one", "/workspace/two"];
 
-    jest.spyOn(mockIde, "pathSep").mockResolvedValue("/");
     jest.spyOn(mockIde, "getWorkspaceDirs").mockResolvedValue(workspaces);
     jest.spyOn(mockIde, "fileExists").mockResolvedValue(false);
 

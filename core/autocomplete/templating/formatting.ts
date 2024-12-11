@@ -1,4 +1,4 @@
-import { getLastNPathParts } from "../../util";
+import { getLastNUriRelativePathParts } from "../../util/uri";
 import {
   AutocompleteClipboardSnippet,
   AutocompleteCodeSnippet,
@@ -39,7 +39,7 @@ const formatCodeSnippet = (
 ): AutocompleteCodeSnippet => {
   return {
     ...snippet,
-    content: `Path: ${getLastNPathParts(snippet.filepath, 2)}\n${snippet.content}`,
+    content: `Path: ${getLastNUriRelativePathParts(snippet.filepath, 2)}\n${snippet.content}`,
   };
 };
 
@@ -47,10 +47,6 @@ const formatDiffSnippet = (
   snippet: AutocompleteDiffSnippet,
 ): AutocompleteDiffSnippet => {
   return snippet;
-};
-
-const getCurrentFilepath = (helper: HelperVars) => {
-  return getLastNPathParts(helper.filepath, 2);
 };
 
 const commentifySnippet = (
@@ -68,7 +64,7 @@ export const formatSnippets = (
   snippets: AutocompleteSnippet[],
 ): string => {
   const currentFilepathComment = addCommentMarks(
-    getCurrentFilepath(helper),
+    getLastNUriRelativePathParts(helper.filepath, 2),
     helper,
   );
 

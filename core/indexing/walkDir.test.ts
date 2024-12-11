@@ -25,13 +25,6 @@ async function expectPaths(
   toNotExist: string[],
   options?: WalkerOptions,
 ) {
-  // Convert to Windows paths
-  const pathSep = await ide.pathSep();
-  if (pathSep === "\\") {
-    toExist = toExist.map((p) => p.replace(/\//g, "\\"));
-    toNotExist = toNotExist.map((p) => p.replace(/\//g, "\\"));
-  }
-
   const result = await walkTestDir(options);
 
   for (const p of toExist) {

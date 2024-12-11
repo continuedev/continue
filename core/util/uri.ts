@@ -9,6 +9,17 @@ export function getFullPath(uri: string): string {
   }
 }
 
+export function pathToUriPathSegment(path: string) {
+  // Converts any OS path to cleaned up URI path segment format with no leading/trailing slashes
+  // e.g. \path\to\folder\ -> path/to/folder
+  //      \this\is\afile.ts -> this/is/afile.ts
+  //      is/already/clean -> is/already/clean
+  let clean = path.replace(/[\\]/g, "/"); // backslashes -> forward slashes
+  clean = clean.replace(/^\//, ""); // remove start slash
+  clean = clean.replace(/\/$/, ""); // remove end slash
+  return clean;
+}
+
 // Whenever working with partial URIs
 // Should always first get the path relative to the workspaces
 // If a matching workspace is not found, ONLY the file name should be used
@@ -41,8 +52,11 @@ export function getUriPathBasename(uri: string): string {
   return getPath();
 }
 
-export function join(uri: string, pathSegment: string) {
-  return uri.replace(/\/*$/, "") + "/" + segment.replace(/^\/*/, "");
+export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
+  const components = URI.parse(uri);
+  const segments = pathSegments.map((segment) => pathToUriPathSegment(segment));
+  components.path = `${components.path}/${segments.join("/")}`;
+  return URI.serialize(components);
 }
 
 export function groupByLastNPathParts(
@@ -59,7 +73,10 @@ export function getUniqueUriPath(
   return "hi";
 }
 
-export function shortestRelativeUriPaths(uris: string[]): string[] {
+export function shortestRelativeUriPaths(
+  uris: string[],
+  directory: string,
+): string[] {
   if (uris.length === 0) {
     return [];
   }
