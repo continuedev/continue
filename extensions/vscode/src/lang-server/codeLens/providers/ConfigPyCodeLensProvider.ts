@@ -9,10 +9,7 @@ export class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
 
-    if (
-      !document.uri.fsPath.endsWith(".continue/config.json") &&
-      !document.uri.fsPath.endsWith(".continue\\config.json")
-    ) {
+    if (!document.uri.path.endsWith(".continue/config.json")) {
       return codeLenses;
     }
 

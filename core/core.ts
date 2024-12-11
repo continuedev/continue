@@ -729,6 +729,7 @@ export class Core {
       if (data?.uris?.length) {
         for (const uri of data.uris) {
           // Listen for file changes in the workspace
+          // URI TODO is this equality statement valid?
           const filePath = getFullPath(uri);
           if (filePath === getConfigJsonPath()) {
             // Trigger a toast notification to provide UI feedback that config

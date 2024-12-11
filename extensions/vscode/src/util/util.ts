@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
 
-import { VsCodeIde } from "../VsCodeIde";
-
 const os = require("node:os");
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
