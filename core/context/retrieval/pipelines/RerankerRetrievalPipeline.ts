@@ -91,4 +91,4 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   }
 }
 
-// TODO expand snippets with code graph - see
+// TODO expand snippets with code graph - see https://github.com/continuedev/continue/pull/3307
