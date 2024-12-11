@@ -7,7 +7,7 @@ if (process.env.DEBUG === "jest") {
   jest.setTimeout(5 * 60 * 1000);
 }
 
-const globalThis = global as any;
+const globalThis = global;
 
 globalThis.jest = jest;
 
