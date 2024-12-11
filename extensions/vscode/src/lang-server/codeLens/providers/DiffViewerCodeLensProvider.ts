@@ -15,7 +15,9 @@ export class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
     if (path.dirname(document.uri.fsPath) === DIFF_DIRECTORY) {
       const codeLenses: vscode.CodeLens[] = [];
       let range = new vscode.Range(0, 0, 1, 0);
-      const diffInfo = this.diffManager.diffAtNewFilepath(document.uri.fsPath);
+      const diffInfo = this.diffManager.diffAtNewFilepath(
+        document.uri.toString(),
+      );
       if (diffInfo) {
         range = diffInfo.range;
       }
@@ -23,12 +25,12 @@ export class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
         new vscode.CodeLens(range, {
           title: `Accept All ✅ (${getMetaKeyLabel()}⇧⏎)`,
           command: "continue.acceptDiff",
-          arguments: [document.uri.fsPath],
+          arguments: [document.uri.toString()],
         }),
         new vscode.CodeLens(range, {
           title: `Reject All ❌ (${getMetaKeyLabel()}⇧⌫)`,
           command: "continue.rejectDiff",
-          arguments: [document.uri.fsPath],
+          arguments: [document.uri.toString()],
         }),
       );
       return codeLenses;

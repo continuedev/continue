@@ -29,7 +29,6 @@ import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
-import { arePathsEqual } from "../util/arePathsEqual";
 import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -37,7 +36,6 @@ import { VsCodeIde } from "../VsCodeIde";
 
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
-import { SYSTEM_PROMPT_DOT_FILE } from "core/config/getSystemPromptDotFile";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -265,57 +263,20 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
-      // Listen for file changes in the workspace
-      const filepath = event.uri.fsPath;
-
-      if (arePathsEqual(filepath, getConfigJsonPath())) {
-        // Trigger a toast notification to provide UI feedback that config
-        // has been updated
-        const showToast = context.globalState.get<boolean>(
-          "showConfigUpdateToast",
-          true,
-        );
-
-        if (showToast) {
-          vscode.window
-            .showInformationMessage("Config updated", "Don't show again")
-            .then((selection) => {
-              if (selection === "Don't show again") {
-                context.globalState.update("showConfigUpdateToast", false);
-              }
-            });
-        }
-      }
-
-      if (
-        filepath.endsWith(".continuerc.json") ||
-        filepath.endsWith(".prompt") ||
-        filepath.endsWith(SYSTEM_PROMPT_DOT_FILE)
-      ) {
-        this.configHandler.reloadConfig();
-      } else if (
-        filepath.endsWith(".continueignore") ||
-        filepath.endsWith(".gitignore")
-      ) {
-        // Reindex the workspaces
-        this.core.invoke("index/forceReIndex", undefined);
-      } else {
-        // Reindex the file
-        this.core.invoke("index/forceReIndexFiles", {
-          files: [filepath],
-        });
-      }
+      this.core.invoke("files/changed", {
+        uris: [event.uri.toString()]
+      })
     });
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
-      this.core.invoke("index/forceReIndexFiles", {
-        files: event.files.map((file) => file.fsPath),
+      this.core.invoke("files/deleted", {
+        uris: event.files.map((uri) => uri.toString()),
       });
     });
 
     vscode.workspace.onDidCreateFiles(async (event) => {
-      this.core.invoke("index/forceReIndexFiles", {
-        files: event.files.map((file) => file.fsPath),
+      this.core.invoke("files/created", {
+        uris: event.files.map((uri) => uri.toString()),
       });
     });
 

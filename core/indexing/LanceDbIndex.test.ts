@@ -26,13 +26,11 @@ describe.skip("ChunkCodebaseIndex", () => {
   }
 
   beforeAll(async () => {
-    const pathSep = await testIde.pathSep();
     const mockConfig = await testConfigHandler.loadConfig();
 
     index = new LanceDbIndex(
       mockConfig.embeddingsProvider,
       testIde.readFile.bind(testIde),
-      pathSep,
       testContinueServerClient,
     );
 

@@ -8,7 +8,6 @@ import {
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
 import { GUISelectors } from "../selectors/GUI.selectors";
-import * as path from "path";
 import { TestUtils } from "../TestUtils";
 
 const DEFAULT_TIMEOUT = 30_000;
@@ -19,7 +18,7 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT);
-    await VSBrowser.instance.openResources(path.join("e2e/test-continue"));
+    await VSBrowser.instance.openResources("e2e/test-continue");
   });
 
   beforeEach(async function () {

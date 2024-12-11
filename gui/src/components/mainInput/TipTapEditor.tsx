@@ -13,7 +13,6 @@ import {
   RangeInFile,
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { getBasename, getRelativePath } from "core/util";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
 import {
@@ -72,6 +71,7 @@ import {
   setMainEditorContentTrigger,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
+import { getUriPathBasename, getRelativePath } from "core/util/uri";
 import {
   loadLastSession,
   loadSession,
@@ -753,10 +753,10 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       const rif: RangeInFile & { contents: string } =
         data.rangeInFileWithContents;
-      const basename = getBasename(rif.filepath);
+      const basename = getUriPathBasename(rif.filepath);
       const relativePath = getRelativePath(
         rif.filepath,
-        await ideMessenger.ide.getWorkspaceDirs(),
+        window.workspacePaths ?? [],
       );
       const rangeStr = `(${rif.range.start.line + 1}-${
         rif.range.end.line + 1

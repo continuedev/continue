@@ -24,8 +24,8 @@ export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    const filepath = document.uri.fsPath;
-    const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    const uri = document.uri.toString();
+    const blocks = this.editorToVerticalDiffCodeLens.get(uri);
 
     if (!blocks) {
       return [];
@@ -45,12 +45,12 @@ export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
         new vscode.CodeLens(range, {
           title: `Accept`,
           command: "continue.acceptVerticalDiffBlock",
-          arguments: [filepath, i],
+          arguments: [uri, i],
         }),
         new vscode.CodeLens(range, {
           title: `Reject`,
           command: "continue.rejectVerticalDiffBlock",
-          arguments: [filepath, i],
+          arguments: [uri, i],
         }),
       );
 

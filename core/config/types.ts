@@ -488,7 +488,6 @@ declare global {
 
     // Callbacks
     onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
-    pathSep(): Promise<string>;
   }
 
   // Slash Commands

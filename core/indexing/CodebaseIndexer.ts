@@ -17,6 +17,7 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
+import { getUriPathBasename } from "../util/uri.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -75,19 +76,15 @@ export class CodebaseIndexer {
 
   protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
-    const pathSep = await this.ide.pathSep();
-
     const indexes = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
-        pathSep,
         this.continueServerClient,
         config.embeddingsProvider.maxEmbeddingChunkSize,
       ), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
         this.ide.readFile.bind(this.ide),
-        pathSep,
         this.continueServerClient,
       ),
       new FullTextSearchCodebaseIndex(),
@@ -224,7 +221,7 @@ export class CodebaseIndexer {
     const beginTime = Date.now();
 
     for (const directory of dirs) {
-      const dirBasename = await this.basename(directory);
+      const dirBasename = getUriPathBasename(directory);
       yield {
         progress,
         desc: `Discovering files in ${dirBasename}...`,
@@ -455,11 +452,5 @@ export class CodebaseIndexer {
       }
     }
     return undefined;
-  }
-
-  private async basename(filepath: string): Promise<string> {
-    const pathSep = await this.ide.pathSep();
-    const path = filepath.split(pathSep);
-    return path[path.length - 1];
   }
 }

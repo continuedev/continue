@@ -18,20 +18,20 @@ import { AutocompleteSnippetDeprecated } from "../../types";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 
-function getSyntaxTreeString(
-  node: Parser.SyntaxNode,
-  indent: string = "",
-): string {
-  let result = "";
-  const nodeInfo = `${node.type} [${node.startPosition.row}:${node.startPosition.column} - ${node.endPosition.row}:${node.endPosition.column}]`;
-  result += `${indent}${nodeInfo}\n`;
+// function getSyntaxTreeString(
+//   node: Parser.SyntaxNode,
+//   indent: string = "",
+// ): string {
+//   let result = "";
+//   const nodeInfo = `${node.type} [${node.startPosition.row}:${node.startPosition.column} - ${node.endPosition.row}:${node.endPosition.column}]`;
+//   result += `${indent}${nodeInfo}\n`;
 
-  for (const child of node.children) {
-    result += getSyntaxTreeString(child, indent + "  ");
-  }
+//   for (const child of node.children) {
+//     result += getSyntaxTreeString(child, indent + "  ");
+//   }
 
-  return result;
-}
+//   return result;
+// }
 
 export class RootPathContextService {
   private cache = new LRUCache<string, AutocompleteSnippetDeprecated[]>({

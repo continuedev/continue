@@ -3,7 +3,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { getBasename } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
 const HIGHLIGHTS_TOKEN_BUDGET = 2000;
@@ -26,16 +25,16 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
     // );
     const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
-    const allFiles: { name: string; absPath: string; content: string }[] =
-      await Promise.all(
-        openFiles.map(async (filepath: string) => {
-          return {
-            name: getBasename(filepath),
-            absPath: filepath,
-            content: `${await ide.readFile(filepath)}`,
-          };
-        }),
-      );
+    // const allFiles: { name: string; absPath: string; content: string }[] =
+    //   await Promise.all(
+    //     openFiles.map(async (filepath: string) => {
+    //       return {
+    //         name: getBasename(filepath),
+    //         absPath: filepath,
+    //         content: `${await ide.readFile(filepath)}`,
+    //       };
+    //     }),
+    //   );
     // const contextSizer = {
     //   fits(content: string): boolean {
     //     return countTokens(content, "") < HIGHLIGHTS_TOKEN_BUDGET;

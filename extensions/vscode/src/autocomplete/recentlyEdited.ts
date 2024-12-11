@@ -23,9 +23,6 @@ export class RecentlyEditedTracker {
 
   constructor() {
     vscode.workspace.onDidChangeTextDocument((event) => {
-      if (event.document.uri.scheme !== "file") {
-        return;
-      }
       event.contentChanges.forEach((change) => {
         const editedRange = {
           uri: event.document.uri,
@@ -123,7 +120,7 @@ export class RecentlyEditedTracker {
     return this.recentlyEditedRanges.map((entry) => {
       return {
         ...entry,
-        filepath: entry.uri.fsPath,
+        filepath: entry.uri.toString(),
       };
     });
   }
@@ -140,7 +137,7 @@ export class RecentlyEditedTracker {
           const lines = contents.split("\n");
 
           return {
-            filepath: entry.uri.fsPath,
+            filepath: entry.uri.toString(),
             contents,
             range: {
               start: { line: 0, character: 0 },

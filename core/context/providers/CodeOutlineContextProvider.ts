@@ -3,7 +3,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { getBasename } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
 class CodeOutlineContextProvider extends BaseContextProvider {
@@ -21,16 +20,16 @@ class CodeOutlineContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
-    const allFiles: { name: string; absPath: string; content: string }[] =
-      await Promise.all(
-        openFiles.map(async (filepath: string) => {
-          return {
-            name: getBasename(filepath),
-            absPath: filepath,
-            content: `${await ide.readFile(filepath)}`,
-          };
-        }),
-      );
+    // const allFiles: { name: string; absPath: string; content: string }[] =
+    //   await Promise.all(
+    //     openFiles.map(async (filepath: string) => {
+    //       return {
+    //         name: getBasename(filepath),
+    //         absPath: filepath,
+    //         content: `${await ide.readFile(filepath)}`,
+    //       };
+    //     }),
+    //   );
     // const outlines = await getOutlines(
     //   allFiles
     //     .filter((file) => file.content.length > 0)

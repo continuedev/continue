@@ -6,12 +6,12 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
-import {
-  getBasename,
-  getUniqueFilePath,
-  groupByLastNPathParts,
-} from "../../util";
 import generateRepoMap from "../../util/generateRepoMap";
+import {
+  getUniqueUriPath,
+  getUriPathBasename,
+  groupByLastNPathParts,
+} from "../../util/uri";
 
 const ENTIRE_PROJECT_ITEM: ContextSubmenuItem = {
   id: "entire-codebase",
@@ -52,8 +52,8 @@ class RepoMapContextProvider extends BaseContextProvider {
       ENTIRE_PROJECT_ITEM,
       ...folders.map((folder) => ({
         id: folder,
-        title: getBasename(folder),
-        description: getUniqueFilePath(folder, folderGroups),
+        title: getUriPathBasename(folder),
+        description: getUniqueUriPath(folder, folderGroups),
       })),
     ];
   }

@@ -1,7 +1,8 @@
 import { ContextItem, ContextProviderExtras } from "../..";
 import { contextProviderClassFromName } from "../../context/providers";
 import URLContextProvider from "../../context/providers/URLContextProvider";
-import { getBasename } from "../../util";
+import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
+import { getUriPathBasename } from "../../util/uri";
 import { getPreambleAndBody } from "./parse";
 
 async function resolveAttachment(
@@ -25,9 +26,19 @@ async function resolveAttachment(
   }
 
   // Files
-  if (await extras.ide.fileExists(name)) {
-    const content = `\`\`\`${name}\n${await extras.ide.readFile(name)}\n\`\`\``;
-    return [{ name: getBasename(name), content, description: name }];
+  const resolvedFileUri = await resolveRelativePathInWorkspace(
+    name,
+    extras.ide,
+  );
+  if (resolvedFileUri) {
+    const content = `\`\`\`${name}\n${await extras.ide.readFile(resolvedFileUri)}\n\`\`\``;
+    return [
+      {
+        name: getUriPathBasename(resolvedFileUri),
+        content,
+        description: resolvedFileUri,
+      },
+    ];
   }
 
   // URLs

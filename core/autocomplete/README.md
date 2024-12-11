@@ -28,11 +28,10 @@ Example:
 ```json title="config.json"
 {
   "tabAutocompleteModel": {
-      "title": "Qwen2.5-Coder 1.5b",
-      "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
-      "provider": "lmstudio",
-  },
-  ...
+    "title": "Qwen2.5-Coder 1.5b",
+    "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
+    "provider": "lmstudio"
+  }
 }
 ```
 

@@ -29,11 +29,8 @@ describe("ChunkCodebaseIndex", () => {
   }
 
   beforeAll(async () => {
-    const pathSep = await testIde.pathSep();
-
     index = new ChunkCodebaseIndex(
       testIde.readFile.bind(testIde),
-      pathSep,
       testContinueServerClient,
       1000,
     );

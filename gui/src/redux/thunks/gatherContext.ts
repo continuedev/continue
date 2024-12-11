@@ -6,13 +6,13 @@ import {
   MessageContent,
   RangeInFile,
 } from "core";
-import { getBasename, getRelativePath } from "core/util";
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
 } from "../../components/mainInput/resolveInput";
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
 import { setIsGatheringContext } from "../slices/sessionSlice";
+import { getRelativePath, getUriPathBasename } from "core/util/uri";
 import { updateFileSymbolsFromNewContextItems } from "./updateFileSymbols";
 
 export const gatherContext = createAsyncThunk<
@@ -85,7 +85,7 @@ export const gatherContext = createAsyncThunk<
               currentFile.path,
               await extra.ideMessenger.ide.getWorkspaceDirs(),
             )}\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getBasename(currentFile.path)}`,
+            name: `Active file: ${getUriPathBasename(currentFile.path)}`,
             description: currentFile.path,
             id: {
               itemId: currentFile.path,

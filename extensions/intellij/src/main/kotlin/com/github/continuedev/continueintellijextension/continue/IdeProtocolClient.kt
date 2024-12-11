@@ -391,7 +391,6 @@ class IdeProtocolClient(
                         respond(null)
                     }
 
-                    "setSuggestionsLocked" -> {}
                     "getSessionId" -> {}
 
                     "getLastModified" -> {
@@ -764,10 +763,6 @@ class IdeProtocolClient(
                         val url = data as String
                         java.awt.Desktop.getDesktop().browse(java.net.URI(url))
                         respond(null)
-                    }
-
-                    "pathSep" -> {
-                        respond(File.separator)
                     }
 
                     else -> {}

@@ -55,7 +55,7 @@ function startPythonLanguageServer(context: ExtensionContext): LanguageClient {
   const command = `cd ${path.join(
     extensionPath,
     "scripts",
-  )} && source env/bin/activate.fish && python -m pyls`;
+  )} && source ${path.join("env", "bin", "activate.fish")} && python -m pyls`;
   const serverOptions: ServerOptions = {
     command: command,
     args: ["-vv"],
@@ -113,4 +113,3 @@ async function startPylance(context: ExtensionContext) {
   );
   return client;
 }
-

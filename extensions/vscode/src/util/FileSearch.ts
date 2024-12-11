@@ -4,19 +4,23 @@ import { walkDir } from "core/indexing/walkDir";
 import MiniSearch from "minisearch";
 import * as vscode from "vscode";
 
-type FileMiniSearchResult = { filename: string };
+type FileMiniSearchResult = { relativePath: string; id: string };
 
+/*
+  id = file URI
+*/
 export class FileSearch {
   constructor(private readonly ide: IDE) {
     this.initializeFileSearchState();
   }
 
   private miniSearch = new MiniSearch<FileMiniSearchResult>({
-    fields: ["filename"],
-    storeFields: ["filename"],
+    fields: ["relativePath", "id"],
+    storeFields: ["relativePath", "id"],
     searchOptions: {
       prefix: true,
       fuzzy: 2,
+      fields: ["relativePath"],
     },
   });
   private async initializeFileSearchState() {
@@ -28,12 +32,12 @@ export class FileSearch {
       }),
     );
 
-    const filenames = results.flat().map((file) => ({
-      id: file,
-      filename: vscode.workspace.asRelativePath(file),
-    }));
-
-    this.miniSearch.addAll(filenames);
+    this.miniSearch.addAll(
+      results.flat().map((file) => ({
+        id: file,
+        relativePath: vscode.workspace.asRelativePath(file),
+      })),
+    );
   }
 
   public search(query: string): FileMiniSearchResult[] {

@@ -1,8 +1,7 @@
-import path from "path";
-
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
+import { getUriPathBasename } from "../../util/uri";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 
 import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline";
@@ -83,7 +82,6 @@ export async function retrieveContextItemsFromEmbeddings(
     nFinal,
     nRetrieve,
     tags,
-    pathSep: await extras.ide.pathSep(),
     filterDirectory,
     ide: extras.ide,
     input: extras.fullInput,
@@ -114,13 +112,12 @@ export async function retrieveContextItemsFromEmbeddings(
     ...results
       .sort((a, b) => a.filepath.localeCompare(b.filepath))
       .map((r) => {
-        const name = `${path.basename(r.filepath)} (${r.startLine}-${
-          r.endLine
-        })`;
+        const basename = getUriPathBasename(r.filepath);
+        const name = `${basename} (${r.startLine}-${r.endLine})`;
         const description = `${r.filepath}`;
 
-        if (r.filepath.includes("package.json")) {
-          console.log();
+        if (basename === "package.json") {
+          console.warn("Retrieval pipeline: package.json detected");
         }
 
         return {

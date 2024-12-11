@@ -1,5 +1,5 @@
 import { ToolImpl } from ".";
-import { getBasename } from "../../util";
+import { getUriPathBasename } from "../../util/uri";
 
 export const readCurrentlyOpenFileImpl: ToolImpl = async (args, extras) => {
   const result = await extras.ide.getCurrentFile();
@@ -8,7 +8,7 @@ export const readCurrentlyOpenFileImpl: ToolImpl = async (args, extras) => {
     return [];
   }
 
-  const basename = getBasename(result.path);
+  const basename = getUriPathBasename(result.path);
 
   return [
     {

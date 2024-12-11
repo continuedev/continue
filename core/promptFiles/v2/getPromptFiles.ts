@@ -1,7 +1,7 @@
 import { IDE } from "../..";
 import { walkDir } from "../../indexing/walkDir";
-import { getPathModuleForIde } from "../../util/pathModule";
 import { readAllGlobalPromptFiles } from "../../util/paths";
+import { joinPathsToUri } from "../../util/uri";
 
 async function getPromptFilesFromDir(
   ide: IDE,
@@ -15,7 +15,8 @@ async function getPromptFilesFromDir(
     }
 
     const paths = await walkDir(dir, ide, { ignoreFiles: [] });
-    const results = paths.map(async (path) => {
+    const promptFilePaths = paths.filter((p) => p.endsWith(".prompt"));
+    const results = promptFilePaths.map(async (path) => {
       const content = await ide.readFile(path); // make a try catch
       return { path, content };
     });
@@ -32,23 +33,17 @@ export async function getAllPromptFilesV2(
 ): Promise<{ path: string; content: string }[]> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   let promptFiles: { path: string; content: string }[] = [];
-  const pathModule = await getPathModuleForIde(ide);
 
   promptFiles = (
     await Promise.all(
       workspaceDirs.map((dir) =>
         getPromptFilesFromDir(
           ide,
-          pathModule.join(
-            dir,
-            overridePromptFolder ?? pathModule.join(".continue", "prompts"),
-          ),
+          joinPathsToUri(dir, overridePromptFolder ?? ".continue/prompts"),
         ),
       ),
     )
-  )
-    .flat()
-    .filter(({ path }) => path.endsWith(".prompt"));
+  ).flat();
 
   // Also read from ~/.continue/.prompts
   promptFiles.push(...readAllGlobalPromptFiles());

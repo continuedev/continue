@@ -4,7 +4,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../";
-import { getBasename } from "../../util/";
+import { getBasename } from "../../util/uri";
 
 class CurrentFileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -19,8 +19,7 @@ class CurrentFileContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const ide = extras.ide;
-    const currentFile = await ide.getCurrentFile();
+    const currentFile = await extras.ide.getCurrentFile();
     if (!currentFile) {
       return [];
     }

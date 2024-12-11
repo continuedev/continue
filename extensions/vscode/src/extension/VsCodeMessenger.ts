@@ -16,7 +16,6 @@ import {
   CORE_TO_WEBVIEW_PASS_THROUGH,
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
-import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/protocol/messenger";
 import * as vscode from "vscode";
 
@@ -27,10 +26,10 @@ import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
-import { getFullyQualifiedPath } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { getUriPathBasename } from "core/util/uri";
 
 /**
  * A shared messenger class between Core and Webview
@@ -246,7 +245,7 @@ export class VsCodeMessenger {
       const [instant, diffLines] = await applyCodeBlock(
         editor.document.getText(),
         data.text,
-        getBasename(editor.document.fileName),
+        getUriPathBasename(editor.document.uri.toString()),
         llm,
         fastLlm,
       );

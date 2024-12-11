@@ -15,6 +15,7 @@ export type GlobalContextType = {
   curEmbeddingsProviderId: string;
   hasDismissedConfigTsNoticeJetBrains: boolean;
   hasAlreadyCreatedAPromptFile: boolean;
+  showConfigUpdateToast: boolean;
 };
 
 /**

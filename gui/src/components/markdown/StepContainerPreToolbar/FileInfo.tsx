@@ -1,8 +1,7 @@
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { getBasename } from "core/util";
 import FileIcon from "../../FileIcon";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { getBasename } from "core/util/uri";
 
 export interface FileInfoProps {
   filepath: string;

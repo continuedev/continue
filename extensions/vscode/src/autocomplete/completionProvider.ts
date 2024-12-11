@@ -18,6 +18,7 @@ import {
   setupStatusBar,
   stopStatusBarLoading,
 } from "./statusBar";
+import URI from "uri-js";
 
 import type { IDE } from "core";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -76,12 +77,6 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
-
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      if (event.document.uri.fsPath === this._lastShownCompletion?.filepath) {
-        // console.log("updating completion");
-      }
-    });
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
@@ -167,7 +162,9 @@ export class ContinueCompletionProvider
         const notebook = vscode.workspace.notebookDocuments.find((notebook) =>
           notebook
             .getCells()
-            .some((cell) => cell.document.uri === document.uri),
+            .some((cell) =>
+              URI.equal(cell.document.uri.toString(), document.uri.toString()),
+            ),
         );
         if (notebook) {
           const cells = notebook.getCells();
@@ -182,7 +179,9 @@ export class ContinueCompletionProvider
             })
             .join("\n\n");
           for (const cell of cells) {
-            if (cell.document.uri === document.uri) {
+            if (
+              URI.equal(cell.document.uri.toString(), document.uri.toString())
+            ) {
               break;
             } else {
               pos.line += cell.document.getText().split("\n").length + 1;
@@ -195,7 +194,7 @@ export class ContinueCompletionProvider
 
       const input: AutocompleteInput = {
         completionId: uuidv4(),
-        filepath: document.uri.fsPath,
+        filepath: document.uri.toString(),
         pos,
         recentlyEditedFiles: [],
         recentlyEditedRanges:
