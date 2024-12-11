@@ -489,6 +489,9 @@ export interface LLMOptions {
 
   // IBM watsonx Options
   deploymentId?: string;
+
+  // Portkey Options
+  portkeyConfigId?: string;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<

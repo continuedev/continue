@@ -592,6 +592,7 @@ declare global {
     | "deepinfra"
     | "flowise"
     | "groq"
+    | "portkey"
     | "continue-proxy"
     | "fireworks"
     | "custom"

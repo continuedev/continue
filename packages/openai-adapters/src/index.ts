@@ -77,6 +77,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.studio.nebius.ai/v1/", config);
     case "function-network":
       return openAICompatible("https://api.function.network/v1/", config);
+    case "portkey":
+      return openAICompatible("https://api.portkey.ai/v1/", config);
     case "llama.cpp":
     case "llamafile":
       return openAICompatible("http://localhost:8000/", config);

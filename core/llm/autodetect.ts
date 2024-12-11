@@ -66,6 +66,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "vertexai",
   "azure",
   "scaleway",
+  "portkey",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [

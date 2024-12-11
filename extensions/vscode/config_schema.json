@@ -191,6 +191,7 @@
             "mistral",
             "deepinfra",
             "groq",
+            "portkey",
             "fireworks",
             "cloudflare",
             "deepseek",
@@ -235,6 +236,7 @@
             "### Mistral API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
             "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
+            "### Portkey\nPortkey provides observability and routing for OpenAI requests. Get your API key and config ID from [their dashboard](https://app.portkey.ai/).",
             "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
             "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
             "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
@@ -1240,6 +1242,22 @@
                   "AUTODETECT"
                 ]
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["portkey"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "required": ["apiKey", "portkeyConfigId"],
+            "model": {
+              "enum": ["AUTODETECT"]
             }
           }
         },
