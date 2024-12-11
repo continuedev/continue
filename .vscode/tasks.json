@@ -28,6 +28,9 @@
         "vscode-extension:continue-ui:build",
         // // To bundle the code the same way we do for publishing
         "vscode-extension:esbuild",
+        // To ensure extension.js is regenerated even if
+        // vscode-extension:esbuild was already running in background
+        "vscode-extension:esbuild-notify",
         // Start the React app that is used in the extension
         "gui:dev"
       ],
@@ -35,6 +38,13 @@
         "kind": "build",
         "isDefault": true
       }
+    },
+    {
+      "label": "vscode-extension:esbuild-notify",
+      "dependsOn": ["vscode-extension:esbuild"],
+      "type": "npm",
+      "script": "esbuild-notify",
+      "path": "extensions/vscode"
     },
     {
       "label": "vscode-extension:esbuild",
