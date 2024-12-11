@@ -1,4 +1,4 @@
-import { getLastNUriRelativePathParts } from "../../util/uri";
+import { getLastNUriRelativePathParts, getRelativePath } from "../../util/uri";
 import {
   AutocompleteClipboardSnippet,
   AutocompleteCodeSnippet,
@@ -14,14 +14,11 @@ const getCommentMark = (helper: HelperVars) => {
 
 const addCommentMarks = (text: string, helper: HelperVars) => {
   const commentMark = getCommentMark(helper);
-  const lines = [
-    ...text
-      .trim()
-      .split("\n")
-      .map((line) => `${commentMark} ${line}`),
-  ];
-
-  return lines.join("\n");
+  return text
+    .trim()
+    .split("\n")
+    .map((line) => `${commentMark} ${line}`)
+    .join("\n");
 };
 
 const formatClipboardSnippet = (
@@ -62,7 +59,9 @@ const commentifySnippet = (
 export const formatSnippets = (
   helper: HelperVars,
   snippets: AutocompleteSnippet[],
+  workspaceDirs: string[],
 ): string => {
+  const relativeFilePath = getRelativePath(helper.filepath, workspaceDirs);
   const currentFilepathComment = addCommentMarks(
     getLastNUriRelativePathParts(helper.filepath, 2),
     helper,

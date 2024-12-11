@@ -44,7 +44,7 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
 export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
   language: string;
-  filepath: string;
+  fileUri: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
   range?: string;
@@ -84,7 +84,7 @@ export default function StepContainerPreToolbar(
     : props.isGeneratingCodeBlock;
 
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
-  const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
+  const hasFileExtension = /\.[0-9a-z]+$/i.test(props.fileUri);
 
   const defaultModel = useAppSelector(selectDefaultModel);
 
@@ -94,7 +94,7 @@ export default function StepContainerPreToolbar(
     }
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
-      filepath: props.filepath,
+      filepath: props.fileUri,
       text: codeBlockContent,
       curSelectedModelTitle: defaultModel.title,
     });
@@ -139,14 +139,14 @@ export default function StepContainerPreToolbar(
 
   function onClickAcceptApply() {
     ideMessenger.post("acceptDiff", {
-      filepath: props.filepath,
+      filepath: props.fileUri,
       streamId: streamIdRef.current,
     });
   }
 
   function onClickRejectApply() {
     ideMessenger.post("rejectDiff", {
-      filepath: props.filepath,
+      filepath: props.fileUri,
       streamId: streamIdRef.current,
     });
   }
@@ -172,7 +172,7 @@ export default function StepContainerPreToolbar(
             }`}
           />
           <div className="w-full min-w-0">
-            <FileInfo filepath={props.filepath} range={props.range} />
+            <FileInfo filepath={props.fileUri} range={props.range} />
           </div>
         </div>
 

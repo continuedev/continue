@@ -6,12 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
-import {
-  ContextItemWithId,
-  ContextProviderDescription,
-  InputModifiers,
-  RangeInFile,
-} from "core";
+import { ContextProviderDescription, InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
@@ -24,7 +19,6 @@ import {
   useState,
 } from "react";
 import styled from "styled-components";
-import { v4 } from "uuid";
 import {
   defaultBorderRadius,
   lightGray,
@@ -71,12 +65,12 @@ import {
   setMainEditorContentTrigger,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
-import { getUriPathBasename, getRelativePath } from "core/util/uri";
 import {
   loadLastSession,
   loadSession,
   saveCurrentSession,
 } from "../../redux/thunks/session";
+import { rifWithContentsToContextItem } from "core/commands/util";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -750,38 +744,13 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput || !editor) {
         return;
       }
-
-      const rif: RangeInFile & { contents: string } =
-        data.rangeInFileWithContents;
-      const basename = getUriPathBasename(rif.filepath);
-      const relativePath = getRelativePath(
-        rif.filepath,
-        window.workspacePaths ?? [],
+      const contextItem = rifWithContentsToContextItem(
+        data.rangeInFileWithContents,
       );
-      const rangeStr = `(${rif.range.start.line + 1}-${
-        rif.range.end.line + 1
-      })`;
-
-      const itemName = `${basename} ${rangeStr}`;
-      const item: ContextItemWithId = {
-        content: rif.contents,
-        name: itemName,
-        // Description is passed on to the LLM to give more context on file path
-        description: `${relativePath} ${rangeStr}`,
-        id: {
-          providerTitle: "code",
-          itemId: v4(),
-        },
-        uri: {
-          type: "file",
-          value: rif.filepath,
-        },
-      };
-
       let index = 0;
-      for (const el of editor.getJSON().content) {
-        if (el.attrs?.item?.name === itemName) {
-          return; // Prevent duplicate code blocks
+      for (const el of editor.getJSON()?.content ?? []) {
+        if (el.attrs?.item?.name === contextItem.name) {
+          return; // Prevent exact duplicate code blocks
         }
         if (el.type === "codeBlock") {
           index += 2;
@@ -794,7 +763,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         .insertContentAt(index, {
           type: "codeBlock",
           attrs: {
-            item,
+            item: contextItem,
           },
         })
         .run();

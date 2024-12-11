@@ -1,5 +1,5 @@
 import { IDE } from "..";
-import { pathToUriPathSegment } from "./uri";
+import { isUriWithinDirectory, joinPathsToUri } from "./uri";
 
 /*
   This function takes a relative filepath
@@ -10,10 +10,9 @@ export async function resolveRelativePathInWorkspace(
   path: string,
   ide: IDE,
 ): Promise<string | undefined> {
-  const cleanPath = pathToUriPathSegment(path);
   const workspaces = await ide.getWorkspaceDirs();
-  for (const workspace of workspaces) {
-    const fullUri = `${workspace}/${cleanPath}`;
+  for (const workspaceUri of workspaces) {
+    const fullUri = joinPathsToUri(workspaceUri, path);
     if (await ide.fileExists(fullUri)) {
       return fullUri;
     }
@@ -34,16 +33,13 @@ export async function inferResolvedUriFromRelativePath(
   path: string,
   ide: IDE,
 ): Promise<string> {
-  const cleanPath = pathToUriPathSegment(path);
-
-  const 
-  const workspaces = await ide.getWorkspaceDirs();
-  for (const workspace of workspaces) {
-    const fullUri = `${workspace}/${cleanPath}`;
+  for (const workspaceUri of workspaceDirs) {
+    if (isUriWithinDirectory(path))
+      const fullUri = joinPathsToUri(workspaceUri, path);
     if (await ide.fileExists(fullUri)) {
       return fullUri;
     }
   }
   // console.warn("No meaninful filepath inferred from relative path " + path)
-  return `${workspaces[0]}/${cleanPath}`
+  return `${workspaces[0]}/${cleanPath}`;
 }

@@ -81,7 +81,7 @@ export function renderPrompt({
       snippets,
     );
   } else {
-    const formattedSnippets = formatSnippets(helper, snippets);
+    const formattedSnippets = formatSnippets(helper, snippets, workspaceDirs);
     prefix = [formattedSnippets, prefix].join("\n");
   }
 

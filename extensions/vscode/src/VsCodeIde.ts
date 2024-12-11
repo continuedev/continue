@@ -1,6 +1,5 @@
 import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
-import * as path from "node:path";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
@@ -513,16 +512,13 @@ class VsCodeIde implements IDE {
   }
 
   private async _searchDir(query: string, dir: string): Promise<string> {
+    const relativeDir = vscode.workspace.asRelativePath(dir);
+    const ripGrepUri = vscode.Uri.joinPath(
+      getExtensionUri(),
+      "out/node_modules/@vscode/ripgrep/bin/rg",
+    );
     const p = child_process.spawn(
-      path.join(
-        getExtensionUri().fsPath,
-        "out",
-        "node_modules",
-        "@vscode",
-        "ripgrep",
-        "bin",
-        "rg",
-      ),
+      ripGrepUri.fsPath,
       [
         "-i", // Case-insensitive search
         "-C",
@@ -531,7 +527,7 @@ class VsCodeIde implements IDE {
         query, // Pattern to search for
         ".", // Directory to search in
       ],
-      { cwd: dir },
+      { cwd: relativeDir },
     );
     let output = "";
 
