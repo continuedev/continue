@@ -37,7 +37,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "myers-diff": "^2.1.0",
     "onnxruntime-common": "1.14.0",
-    "onnxruntime-web": "1.14.0",
+    "onnxruntime-web": "^1.14.0",
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
