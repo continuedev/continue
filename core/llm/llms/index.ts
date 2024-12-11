@@ -97,6 +97,7 @@ const LLMs = [
   VertexAI,
   xAI,
   SiliconFlow,
+  Scaleway,
 ];
 
 export async function llmFromDescription(

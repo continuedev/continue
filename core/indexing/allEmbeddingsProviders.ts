@@ -13,6 +13,7 @@ import Nvidia from "../llm/llms/Nvidia.js";
 import Ollama from "../llm/llms/Ollama.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import SageMaker from "../llm/llms/SageMaker.js";
+import Scaleway from "../llm/llms/Scaleway.js";
 import SiliconFlow from "../llm/llms/SiliconFlow.js";
 import ContinueProxy from "../llm/llms/stubs/ContinueProxy.js";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider.js";
@@ -46,4 +47,5 @@ export const allEmbeddingsProviders: Record<
   watsonx: WatsonX,
   lmstudio: LMStudio,
   siliconflow: SiliconFlow,
+  scaleway: Scaleway,
 };

@@ -605,7 +605,8 @@ declare global {
     | "sambanova"
     | "nvidia"
     | "nebius"
-    | "siliconflow";
+    | "siliconflow"
+    | "scaleway";
 
   export type ModelName =
     | "AUTODETECT"
@@ -663,6 +664,7 @@ declare global {
     | "gemma2-2b-it"
     | "gemma2-9b-it"
     | "olmo-7b"
+    | "qwen25-coder-32b"
     // Anthropic
     | "claude-3-5-sonnet-latest"
     | "claude-3-5-sonnet-20240620"
