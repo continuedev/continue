@@ -65,6 +65,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openrouter",
   "vertexai",
   "azure",
+  "scaleway",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [

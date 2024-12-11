@@ -42,6 +42,7 @@ import OpenRouter from "./OpenRouter";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
+import Scaleway from "./Scaleway";
 import SiliconFlow from "./SiliconFlow";
 import ContinueProxy from "./stubs/ContinueProxy";
 import TestLLM from "./Test";
@@ -96,6 +97,7 @@ export const LLMClasses = [
   VertexAI,
   xAI,
   SiliconFlow,
+  Scaleway,
 ];
 
 export async function llmFromDescription(

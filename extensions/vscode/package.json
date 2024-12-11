@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.248",
+  "version": "0.9.243",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -602,6 +602,7 @@
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "esbuild-notify": "npm run esbuild-base -- --sourcemap --notify",
     "esbuild:visualize": "esbuild-visualizer --metadata ./build/meta.json --filename ./build/stats.html --open",
     "tsc": "tsc -p ./",
     "tsc:check": "tsc -p ./ --noEmit",
