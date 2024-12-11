@@ -54,7 +54,7 @@ class VsCodeIde implements IDE {
 
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     const result = await executeGotoProvider({
-      uri: location.filepath,
+      uri: vscode.Uri.parse(location.filepath),
       line: location.position.line,
       character: location.position.character,
       name: "vscode.executeDefinitionProvider",
@@ -63,10 +63,10 @@ class VsCodeIde implements IDE {
     return result;
   }
 
-  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+  onDidChangeActiveTextEditor(callback: (uri: string) => void): void {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor) {
-        callback(editor.document.uri.fsPath);
+        callback(editor.document.uri.toString());
       }
     });
   }
@@ -220,7 +220,7 @@ class VsCodeIde implements IDE {
   };
 
   async getRepoName(dir: string): Promise<string | undefined> {
-    const repo = await this.getRepo(vscode.Uri.file(dir));
+    const repo = await this.getRepo(dir);
     const remotes = repo?.state.remotes;
     if (!remotes) {
       return undefined;
@@ -267,7 +267,7 @@ class VsCodeIde implements IDE {
 
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return this.ideUtils.readRangeInFile(
-      filepath,
+      vscode.Uri.parse(filepath),
       new vscode.Range(
         new vscode.Position(range.start.line, range.start.character),
         new vscode.Position(range.end.line, range.end.character),
@@ -279,7 +279,7 @@ class VsCodeIde implements IDE {
     const pathToLastModified: { [path: string]: number } = {};
     await Promise.all(
       files.map(async (file) => {
-        const stat = await vscode.workspace.fs.stat(uriFromFilePath(file));
+        const stat = await vscode.workspace.fs.stat(vscode.Uri.parse(file));
         pathToLastModified[file] = stat.mtime;
       }),
     );
@@ -287,8 +287,8 @@ class VsCodeIde implements IDE {
     return pathToLastModified;
   }
 
-  async getRepo(dir: vscode.Uri): Promise<Repository | undefined> {
-    return this.ideUtils.getRepo(dir);
+  async getRepo(dir: string): Promise<Repository | undefined> {
+    return this.ideUtils.getRepo(vscode.Uri.parse(dir));
   }
 
   async isTelemetryEnabled(): Promise<boolean> {
@@ -371,7 +371,7 @@ class VsCodeIde implements IDE {
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
-    return this.ideUtils.getWorkspaceDirectories();
+    return this.ideUtils.getWorkspaceDirectories().map((uri) => uri.toString());
   }
 
   async getContinueDir(): Promise<string> {
@@ -380,7 +380,7 @@ class VsCodeIde implements IDE {
 
   async writeFile(path: string, contents: string): Promise<void> {
     await vscode.workspace.fs.writeFile(
-      vscode.Uri.file(path),
+      vscode.Uri.parse(path),
       Buffer.from(contents),
     );
   }
@@ -390,7 +390,7 @@ class VsCodeIde implements IDE {
   }
 
   async openFile(path: string): Promise<void> {
-    await this.ideUtils.openFile(path);
+    await this.ideUtils.openFile(vscode.Uri.parse(path));
   }
 
   async showLines(
@@ -402,13 +402,15 @@ class VsCodeIde implements IDE {
       new vscode.Position(startLine, 0),
       new vscode.Position(endLine, 0),
     );
-    openEditorAndRevealRange(filepath, range).then((editor) => {
-      // Select the lines
-      editor.selection = new vscode.Selection(
-        new vscode.Position(startLine, 0),
-        new vscode.Position(endLine, 0),
-      );
-    });
+    openEditorAndRevealRange(vscode.Uri.parse(filepath), range).then(
+      (editor) => {
+        // Select the lines
+        editor.selection = new vscode.Selection(
+          new vscode.Position(startLine, 0),
+          new vscode.Position(endLine, 0),
+        );
+      },
+    );
   }
 
   async runCommand(command: string): Promise<void> {
@@ -425,15 +427,14 @@ class VsCodeIde implements IDE {
   }
 
   async saveFile(filepath: string): Promise<void> {
-    await this.ideUtils.saveFile(filepath);
+    await this.ideUtils.saveFile(vscode.Uri.parse(filepath));
   }
 
   private static MAX_BYTES = 100000;
 
   async readFile(fileUri: string): Promise<string> {
     try {
-      filepath = this.ideUtils.getAbsolutePath(filepath);
-      const uri = uriFromFilePath(filepath);
+      const uri = vscode.Uri.parse(fileUri);
 
       // First, check whether it's a notebook document
       // Need to iterate over the cells to get full contents
@@ -452,16 +453,14 @@ class VsCodeIde implements IDE {
       }
 
       // Check whether it's an open document
-      const openTextDocument = vscode.workspace.textDocuments.find(
-        (doc) => doc.uri.fsPath === uri.fsPath,
+      const openTextDocument = vscode.workspace.textDocuments.find((doc) =>
+        URI.equal(doc.uri.toString(), uri.toString()),
       );
       if (openTextDocument !== undefined) {
         return openTextDocument.getText();
       }
 
-      const fileStats = await vscode.workspace.fs.stat(
-        uriFromFilePath(filepath),
-      );
+      const fileStats = await vscode.workspace.fs.stat(uri);
       if (fileStats.size > 10 * VsCodeIde.MAX_BYTES) {
         return "";
       }
@@ -491,7 +490,7 @@ class VsCodeIde implements IDE {
   }
 
   async getOpenFiles(): Promise<string[]> {
-    return await this.ideUtils.getOpenFiles();
+    return this.ideUtils.getOpenFiles().map((uri) => uri.toString());
   }
 
   async getCurrentFile() {
@@ -599,11 +598,12 @@ class VsCodeIde implements IDE {
   }
 
   async getBranch(dir: string): Promise<string> {
-    return this.ideUtils.getBranch(vscode.Uri.file(dir));
+    return this.ideUtils.getBranch(vscode.Uri.parse(dir));
   }
 
-  getGitRootPath(dir: string): Promise<string | undefined> {
-    return this.ideUtils.getGitRoot(dir);
+  async getGitRootPath(dir: string): Promise<string | undefined> {
+    const root = await this.ideUtils.getGitRoot(vscode.Uri.parse(dir));
+    return root?.toString();
   }
 
   async listDir(dir: string): Promise<[string, FileType][]> {

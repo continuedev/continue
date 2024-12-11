@@ -6,7 +6,6 @@ import { devDataPath } from "core/util/paths";
 import * as vscode from "vscode";
 
 import { getMetaKeyLabel, getPlatform } from "../util/util";
-import { uriFromFilePath } from "../util/vscode";
 
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 
 import { openEditorAndRevealRange, translate } from "./util/vscode";
-import URI from "uri-js"
+import URI from "uri-js";
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
@@ -15,7 +15,6 @@ export const editorToSuggestions: Map<
   string, // URI of file
   SuggestionRanges[]
 > = new Map();
-export const editorSuggestionsLocked: Map<string, boolean> = new Map(); // Map from editor URI to whether the suggestions are locked
 export const currentSuggestion: Map<string, number> = new Map(); // Map from editor URI to index of current SuggestionRanges in editorToSuggestions
 
 // When tab is reopened, rerender the decorations:
@@ -58,8 +57,8 @@ const oldSelDecorationType = vscode.window.createTextEditorDecorationType({
 export function rerenderDecorations(editorUri: string) {
   const suggestions = editorToSuggestions.get(editorUri);
   const idx = currentSuggestion.get(editorUri);
-  const editor = vscode.window.visibleTextEditors.find(
-    (editor) => URI.equal(editor.document.uri.toString(), editorUri)
+  const editor = vscode.window.visibleTextEditors.find((editor) =>
+    URI.equal(editor.document.uri.toString(), editorUri),
   );
   if (!suggestions || !editor) {
     return;
@@ -141,6 +140,7 @@ export function suggestionDownCommand() {
     return;
   }
   const editorUri = editor.document.uri.toString();
+  const uriString = editorUri.toString();
   const suggestions = editorToSuggestions.get(editorUri);
   const idx = currentSuggestion.get(editorUri);
   if (!suggestions || idx === undefined) {
@@ -300,7 +300,7 @@ export async function rejectSuggestionCommand(
 }
 
 export async function showSuggestion(
-  editorUri: string,
+  editorUri: vscode.Uri,
   range: vscode.Range,
   suggestion: string,
 ): Promise<boolean> {
