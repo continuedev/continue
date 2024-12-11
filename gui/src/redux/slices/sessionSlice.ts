@@ -354,12 +354,11 @@ export const sessionSlice = createSlice({
     },
     setStreamError: (
       state,
-      { payload }: PayloadAction<{ statusCode: number; message: string }>,
+      {
+        payload,
+      }: PayloadAction<{ statusCode: number; message: string } | undefined>,
     ) => {
       state.streamError = payload;
-    },
-    clearStreamError: (state) => {
-      state.streamError = undefined;
     },
     newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
       state.lastSessionId = state.id;
@@ -652,6 +651,7 @@ export const {
   addSessionMetadata,
   updateSessionMetadata,
   deleteSessionMetadata,
+  setStreamError,
 } = sessionSlice.actions;
 
 export const {

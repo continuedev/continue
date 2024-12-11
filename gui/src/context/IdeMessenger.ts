@@ -76,8 +76,7 @@ export class IdeMessenger implements IIdeMessenger {
           );
           throw new Error("postIntellijMessage is undefined");
         }
-        messageId = messageId ?? uuidv4();
-        window.postIntellijMessage?.(messageType, data, messageId);
+        window.postIntellijMessage?.(messageType, data, messageId ?? uuidv4());
         return;
       } else {
         console.log(
@@ -235,6 +234,7 @@ export class IdeMessenger implements IIdeMessenger {
     }
 
     if (next.value.error) {
+      console.log("FROM IDEMESS", next.value);
       throw new Error(next.value.error);
     }
 

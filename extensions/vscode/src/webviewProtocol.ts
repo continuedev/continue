@@ -103,15 +103,20 @@ export class VsCodeWebviewProtocol
             respond({ done: true, content: response || {}, status: "success" });
           }
         } catch (e: any) {
-          respond({ done: true, error: e, status: "error" });
+          respond({ done: true, error: e.message, status: "error" });
 
+          const stringified = JSON.stringify({ msg }, null, 2);
           console.error(
-            `Error handling webview message: ${JSON.stringify(
-              { msg },
-              null,
-              2,
-            )}\n\n${e}`,
+            `Error handling webview message: ${stringified}\n\n${e}`,
           );
+
+          if (
+            stringified.includes("llm/streamChat") ||
+            stringified.includes("chatDescriber/describe")
+          ) {
+            // handle these errors in the GUI
+            return;
+          }
 
           let message = e.message;
           if (e.cause) {

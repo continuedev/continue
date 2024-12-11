@@ -454,7 +454,11 @@ export function Chat() {
           trackVisibility={isStreaming}
         />
       </StepsDiv>
-
+      {history.length > 0 ? (
+        <div className="flex flex-col">
+          <StreamError slideDirection="up" />
+        </div>
+      ) : null}
       <div className={`relative`}>
         <div className="absolute -top-8 right-2 z-30">
           {ttsActive && (
@@ -535,8 +539,12 @@ export function Chat() {
               }}
             />
           )}
+
           {history.length === 0 && (
             <>
+              <div className="flex flex-col">
+                <StreamError slideDirection="down" />
+              </div>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
                   <OnboardingCard activeTab={onboardingCard.activeTab} />
@@ -552,9 +560,7 @@ export function Chat() {
           )}
         </div>
       </div>
-      <div className="flex flex-col">
-        <StreamError />
-      </div>
+
       <div
         className={`${history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
       >
