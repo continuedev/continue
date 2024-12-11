@@ -63,8 +63,8 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private recentlyEditedTracker = new RecentlyEditedTracker();
-  private loadingSpinnerTimeout?: NodeJS.Timeout;
   private loadingSpinnerDecorationType: vscode.TextEditorDecorationType;
+  private loadingSpinnerManager: LoadingSpinnerManager;
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -94,6 +94,19 @@ export class ContinueCompletionProvider
         gutterIconPath: context.asAbsolutePath("media/loading.gif"),
         gutterIconSize: "cover",
       });
+    this.loadingSpinnerManager = new LoadingSpinnerManager(
+      () => {
+        const editor = vscode.window.activeTextEditor;
+        return editor?.setDecorations(this.loadingSpinnerDecorationType, [
+          new vscode.Range(editor.selection.end, editor.selection.end),
+        ]);
+      },
+      () =>
+        vscode.window.activeTextEditor?.setDecorations(
+          this.loadingSpinnerDecorationType,
+          [],
+        ),
+    );
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
@@ -227,14 +240,7 @@ export class ContinueCompletionProvider
           "enableTabAutocompleteLineSpinner",
         )
       ) {
-        clearTimeout(this.loadingSpinnerTimeout);
-        this.loadingSpinnerTimeout = setTimeout(
-          () =>
-            editor.setDecorations(this.loadingSpinnerDecorationType, [
-              new vscode.Range(editor.selection.end, editor.selection.end),
-            ]),
-          250,
-        );
+        this.loadingSpinnerManager.setLoading(true);
       }
 
       const outcome =
@@ -297,8 +303,7 @@ export class ContinueCompletionProvider
       return [completionItem];
     } finally {
       stopStatusBarLoading();
-      clearTimeout(this.loadingSpinnerTimeout);
-      editor?.setDecorations(this.loadingSpinnerDecorationType, []);
+      this.loadingSpinnerManager.setLoading(false);
     }
   }
 
@@ -324,5 +329,49 @@ export class ContinueCompletionProvider
     }
 
     return true;
+  }
+}
+
+/** Manages the loading spinner. It is only shown after a delay, and
+ * is visible for a minimum amount of time */
+class LoadingSpinnerManager {
+  private timer?: NodeJS.Timeout;
+  private loading = false;
+  private spinnerShown = false;
+  private spinnerShownTime?: number;
+  constructor(
+    private showSpinner: () => void,
+    private hideSpinner: () => void,
+  ) {}
+
+  public setLoading(newValue: boolean) {
+    if (this.loading == newValue) return;
+    this.loading = newValue;
+
+    if (newValue) {
+      clearTimeout(this.timer);
+      if (!this.spinnerShown)
+        this.timer = setTimeout(() => {
+          this.showSpinner();
+          this.spinnerShown = true;
+          this.spinnerShownTime = Date.now();
+        }, 200);
+    } else {
+      clearTimeout(this.timer);
+      if (this.spinnerShown) {
+        const minTimeRemaining = 250 - (Date.now() - this.spinnerShownTime!);
+        if (minTimeRemaining > 0) {
+          setTimeout(() => {
+            this.hideSpinner();
+            this.spinnerShown = false;
+            this.spinnerShownTime = undefined;
+          }, minTimeRemaining);
+        } else {
+          this.hideSpinner();
+          this.spinnerShown = false;
+          this.spinnerShownTime = undefined;
+        }
+      }
+    }
   }
 }
