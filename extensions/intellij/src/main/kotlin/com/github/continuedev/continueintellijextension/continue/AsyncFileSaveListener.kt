@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.intellij.openapi.vfs.AsyncFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 
+// TODO: Uncertain if this is needed/used when we already have listener logic in core
 class AsyncFileSaveListener(private val continuePluginService: ContinuePluginService) : AsyncFileListener {
     override fun prepareChange(events: MutableList<out VFileEvent>): AsyncFileListener.ChangeApplier? {
         for (event in events) {
