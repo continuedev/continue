@@ -207,7 +207,7 @@ class CoreMessenger(
                 try {
                     while (true) {
                         val line = reader?.readLine()
-                        if (!line.isNullOrEmpty()) {
+                        if (line != null && line.isNotEmpty()) {
                             try {
                                 handleMessage(line)
                             } catch (e: Exception) {

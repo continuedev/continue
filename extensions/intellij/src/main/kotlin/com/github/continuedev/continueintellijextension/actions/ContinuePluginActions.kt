@@ -9,15 +9,7 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
-import java.awt.Dimension
-import javax.swing.*
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
-import com.intellij.ui.components.JBScrollPane
-import java.awt.BorderLayout
 
 fun getPluginService(project: Project?): ContinuePluginService? {
     if (project == null) {

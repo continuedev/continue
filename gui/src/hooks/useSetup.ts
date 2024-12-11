@@ -17,7 +17,6 @@ import {
   addContextItemsAtIndex,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import useUpdatingRef from "./useUpdatingRef";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 

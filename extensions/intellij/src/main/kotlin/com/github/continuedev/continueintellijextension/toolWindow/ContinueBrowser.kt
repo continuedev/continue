@@ -26,7 +26,6 @@ class ContinueBrowser(val project: Project, url: String) {
         "history/load",
         "history/save",
         "devdata/log",
-        "config/addOpenAiKey",
         "config/addModel",
         "config/ideSettingsUpdate",
         "config/getSerializedProfileInfo",
@@ -100,7 +99,6 @@ class ContinueBrowser(val project: Project, url: String) {
 
 
             val respond = fun(data: Any?) {
-
                 // This matches the way that we expect receive messages in IdeMessenger.ts (gui)
                 // and the way they are sent in VS Code (webviewProtocol.ts)
                 var result: Map<String, Any?>? = if (MessageTypes.generatorTypes.contains(messageType)) {
