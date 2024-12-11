@@ -76,7 +76,7 @@ class IntelliJIDE(
         val extensionVersion = plugin?.version ?: "Unknown"
 
         return IdeInfo(
-            ideType = IdeType.JetBrains,
+            ideType = IdeType.JETBRAINS,
             name = ideName,
             version = ideVersion,
             remoteName = remoteName,
@@ -98,7 +98,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getDiff(includeUnstaged: Boolean): List<String> {
-        val workspaceDirs = getWorkspaceDirs()
+        val workspaceDirs = workspaceDirectories()
         val diffs = mutableListOf<String>()
 
         for (workspaceDir in workspaceDirs) {
@@ -182,11 +182,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getWorkspaceDirs(): List<String> {
-        return if (this.workspacePath != null) {
-            listOf(this.workspacePath)
-        } else {
-            emptyList()
-        }
+        return workspaceDirectories().toList()
     }
 
     override suspend fun getWorkspaceConfigs(): List<ContinueRcJson> {
@@ -353,21 +349,26 @@ class IntelliJIDE(
         return ExecUtil.execAndGetOutput(command).stdout
     }
 
-    override suspend fun subprocess(command: String, cwd: String?): Pair<String, String> {
+    override suspend fun subprocess(command: String, cwd: String?): List<Any> {
         val commandList = command.split(" ")
         val builder = ProcessBuilder(commandList)
+
         if (cwd != null) {
             builder.directory(File(cwd))
         }
+
         val process = withContext(Dispatchers.IO) {
             builder.start()
         }
+
         val stdout = process.inputStream.bufferedReader().readText()
         val stderr = process.errorStream.bufferedReader().readText()
+
         withContext(Dispatchers.IO) {
             process.waitFor()
         }
-        return Pair(stdout, stderr)
+
+        return listOf(stdout, stderr)
     }
 
     override suspend fun getProblems(filepath: String?): List<Problem> {
@@ -434,7 +435,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getTags(artifactId: String): List<IndexTag> {
-        val workspaceDirs = getWorkspaceDirs()
+        val workspaceDirs = workspaceDirectories()
 
         // Collect branches concurrently using Kotlin coroutines
         val branches = withContext(Dispatchers.IO) {
@@ -456,6 +457,7 @@ class IntelliJIDE(
             val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
             builder.directory(targetDir)
             var output: String?
+
             try {
                 val process = builder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
@@ -464,6 +466,7 @@ class IntelliJIDE(
             } catch (e: Exception) {
                 output = null
             }
+
             output
         }
     }
@@ -471,8 +474,8 @@ class IntelliJIDE(
     override suspend fun showToast(type: ToastType, message: String, vararg otherParams: Any): Any {
         return withContext(Dispatchers.Default) {
             val notificationType = when (type) {
-                ToastType.Error -> NotificationType.ERROR
-                ToastType.Warning -> NotificationType.WARNING
+                ToastType.ERROR -> NotificationType.ERROR
+                ToastType.WARNING -> NotificationType.WARNING
                 else -> NotificationType.INFORMATION
             }
 
@@ -523,10 +526,11 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun listDir(dir: String): List<Pair<String, FileType>> {
+    override suspend fun listDir(dir: String): List<List<Any>> {
         val files = File(dir).listFiles()?.map {
-            Pair(it.name, if (it.isDirectory) FileType.DIRECTORY else FileType.FILE)
+            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY else FileType.FILE)
         } ?: emptyList()
+
         return files
     }
 
@@ -571,6 +575,7 @@ class IntelliJIDE(
 
     private fun workspaceDirectories(): Array<String> {
         val dirs = this.continuePluginService.workspacePaths
+
         if (dirs?.isNotEmpty() == true) {
             return dirs
         }
@@ -578,6 +583,7 @@ class IntelliJIDE(
         if (this.workspacePath != null) {
             return arrayOf(this.workspacePath)
         }
+
         return arrayOf()
     }
 }

@@ -19,7 +19,6 @@ data class OpenFileParams(val path: String)
 
 data class OpenUrlParams(val url: String)
 
-data class RunCommandParams(val command: String)
 
 data class GetSearchResultsParams(val query: String)
 
@@ -53,12 +52,6 @@ data class GetDiffParams(val includeUnstaged: Boolean)
 data class GetBranchParams(val dir: String)
 
 data class GetRepoNameParams(val dir: String)
-
-data class ShowToastParams(
-    val type: ToastType,
-    val message: String,
-    val otherParams: Array<String>
-)
 
 data class GetGitRootPathParams(val dir: String)
 

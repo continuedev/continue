@@ -2,15 +2,15 @@ package com.github.continuedev.continueintellijextension
 
 import com.google.gson.JsonElement
 
-sealed class IdeType(val value: String) {
-    object JetBrains : IdeType("jetbrains")  // Fix: Extend IdeType, not ToastType
-    object VsCode : IdeType("vscode")
+enum class IdeType(val value: String) {
+    JETBRAINS("jetbrains"),
+    VSCODE("vscode"),
 }
 
-sealed class ToastType(val value: String) {
-    object Info : ToastType("info")
-    object Error : ToastType("error")
-    object Warning : ToastType("warning")
+enum class ToastType(val value: String) {
+    INFO("info"),
+    ERROR("error"),
+    WARNING("warning"),
 }
 
 enum class FileType(val value: Int) {
@@ -161,7 +161,9 @@ interface IDE {
 
     suspend fun getSearchResults(query: String): String
 
-    suspend fun subprocess(command: String, cwd: String? = null): Pair<String, String>
+    // Note: This should be a `Pair<String, String>` but we use `List<Any>` because the keys of `Pair`
+    // will serialize to `first and `second` rather than `0` and `1` like in JavaScript
+    suspend fun subprocess(command: String, cwd: String? = null): List<Any>
 
     suspend fun getProblems(filepath: String? = null): List<Problem>
 
@@ -179,7 +181,9 @@ interface IDE {
 
     suspend fun getGitRootPath(dir: String): String?
 
-    suspend fun listDir(dir: String): List<Pair<String, FileType>>
+    // Note: This should be a `List<Pair<String, FileType>>` but we use `List<Any>` because the keys of `Pair`
+    // will serialize to `first and `second` rather than `0` and `1` like in JavaScript
+    suspend fun listDir(dir: String): List<List<Any>>
 
     suspend fun getLastModified(files: List<String>): Map<String, Long>
 

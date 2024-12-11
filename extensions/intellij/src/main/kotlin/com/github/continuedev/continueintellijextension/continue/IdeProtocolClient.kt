@@ -6,11 +6,14 @@ import com.github.continuedev.continueintellijextension.activities.ContinuePlugi
 import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
+import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
+import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.protocol.*
 import com.github.continuedev.continueintellijextension.services.*
 import com.github.continuedev.continueintellijextension.utils.*
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.SelectionModel
@@ -18,10 +21,12 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import kotlin.coroutines.resume
 
 
 class IdeProtocolClient(
@@ -44,9 +49,9 @@ class IdeProtocolClient(
         continuePluginService.sendToWebview(messageType, data, id)
     }
 
-    fun handleMessage(text: String, respond: (Any?) -> Unit) {
+    fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
-            val message = Gson().fromJson(text, Message::class.java)
+            val message = Gson().fromJson(msg, Message::class.java)
             val messageType = message.messageType
             val dataElement = message.data
 
@@ -225,7 +230,9 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             ListDirParams::class.java
                         )
+
                         val files = ide.listDir(params.dir)
+
                         respond(files)
                     }
 
@@ -308,11 +315,23 @@ class IdeProtocolClient(
                     }
 
                     "showToast" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            ShowToastParams::class.java
-                        )
-                        val result = ide.showToast(params.type, params.message, *params.otherParams)
+                        val jsonArray = dataElement.asJsonArray
+
+                        // Get toast type from first element, default to INFO if invalid
+                        val typeStr = if (jsonArray.size() > 0) jsonArray[0].asString else ToastType.INFO.value
+                        val type = ToastType.values().find { it.value == typeStr } ?: ToastType.INFO
+
+                        // Get message from second element
+                        val message = if (jsonArray.size() > 1) jsonArray[1].asString else ""
+
+                        // Get remaining elements as otherParams
+                        val otherParams = if (jsonArray.size() > 2) {
+                            jsonArray.drop(2).map { it.asString }.toTypedArray()
+                        } else {
+                            emptyArray()
+                        }
+
+                        val result = ide.showToast(type, message, *otherParams)
                         respond(result)
                     }
 
@@ -386,12 +405,134 @@ class IdeProtocolClient(
                         respond(sep)
                     }
 
+                    "insertAtCursor" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            InsertAtCursorParams::class.java
+                        )
+
+                        ApplicationManager.getApplication().invokeLater {
+                            val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+                            val selectionModel: SelectionModel = editor.selectionModel
+
+                            val document = editor.document
+                            val startOffset = selectionModel.selectionStart
+                            val endOffset = selectionModel.selectionEnd
+
+                            WriteCommandAction.runWriteCommandAction(project) {
+                                document.replaceString(startOffset, endOffset, params.text)
+                            }
+                        }
+                    }
+
+                    "applyToFile" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            ApplyToFileParams::class.java
+                        )
+
+                        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+
+                        if (editor == null) {
+                            ide.showToast(ToastType.ERROR, "No active editor to apply edits to")
+                            respond(null)
+                            return@launch
+                        }
+
+                        if (editor.document.text.trim().isEmpty()) {
+                            WriteCommandAction.runWriteCommandAction(project) {
+                                editor.document.insertString(0, msg)
+                            }
+                            respond(null)
+                            return@launch
+                        }
+
+
+                        val llm: Any = try {
+                            suspendCancellableCoroutine { continuation ->
+                                continuePluginService.coreMessenger?.request(
+                                    "config/getSerializedProfileInfo",
+                                    null,
+                                    null
+                                ) { response ->
+                                    val config = (response as Map<String, Any>)["config"] as Map<String, Any>
+                                    val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
+
+                                    if (applyCodeBlockModel != null) {
+                                        continuation.resume(applyCodeBlockModel)
+                                    }
+
+                                    val models =
+                                        config["models"] as List<Map<String, Any>>
+                                    val curSelectedModel = models.find { it["title"] == params.curSelectedModelTitle }
+
+//                                    continuation.resume(curSelectedModel)
+                                    if (curSelectedModel == null) {
+                                        return@request
+                                    } else {
+                                        continuation.resume(curSelectedModel)
+                                    }
+                                }
+                            }
+                        } catch (e: Exception) {
+                            launch {
+                                ide.showToast(
+                                    ToastType.ERROR, "Failed to fetch model configuration"
+                                )
+                            }
+                            respond(null)
+                            return@launch
+                        }
+
+
+                        val llmTitle = (llm as? Map<*, *>)?.get("title") as? String ?: ""
+
+                        val prompt =
+                            "The following code was suggested as an edit:\n```\n${params.text}\n```\nPlease apply it to the previous code."
+
+                        val rif = getHighlightedCode()
+
+                        val (prefix, highlighted, suffix) = if (rif == null) {
+                            // If no highlight, use the whole document as highlighted
+                            Triple("", editor.document.text, "")
+                        } else {
+                            val prefix = editor.document.getText(TextRange(0, rif.range.start.character))
+                            val highlighted = rif.contents
+                            val suffix =
+                                editor.document.getText(TextRange(rif.range.end.character, editor.document.textLength))
+
+                            // Remove the selection after processing
+                            ApplicationManager.getApplication().invokeLater {
+                                editor.selectionModel.removeSelection()
+                            }
+
+                            Triple(prefix, highlighted, suffix)
+                        }
+
+                        val diffStreamHandler =
+                            DiffStreamHandler(
+                                project,
+                                editor,
+                                rif?.range?.start?.line ?: 0,
+                                rif?.range?.end?.line ?: (editor.document.lineCount - 1),
+                                {}, {})
+
+                        val diffStreamService = project.service<DiffStreamService>()
+                        diffStreamService.register(diffStreamHandler, editor)
+
+                        diffStreamHandler.streamDiffLinesToEditor(
+                            prompt, prefix, highlighted, suffix, llmTitle
+                        )
+
+                        respond(null)
+                    }
+
                     else -> {
                         println("Unknown message type: $messageType")
                     }
                 }
             } catch (error: Exception) {
-                ide.showToast(ToastType.Error, "Error handling message of type $messageType: $error")
+                ide.showToast(ToastType.ERROR, " Error handling message of type $messageType: $error")
             }
         }
     }
@@ -451,5 +592,20 @@ class IdeProtocolClient(
 
     fun deleteAtIndex(index: Int) {
         send("deleteAtIndex", DeleteAtIndex(index), uuid())
+    }
+
+    private fun getModelByRole(
+        config: Any,
+        role: Any
+    ): Any? {
+        val experimental = (config as? Map<*, *>)?.get("experimental") as? Map<*, *>
+        val roleTitle = (experimental?.get("modelRoles") as? Map<*, *>)?.get(role) as? String ?: return null
+
+        val models = (config as? Map<*, *>)?.get("models") as? List<*>
+        val matchingModel = models?.find { model ->
+            (model as? Map<*, *>)?.get("title") == roleTitle
+        }
+
+        return matchingModel
     }
 }
