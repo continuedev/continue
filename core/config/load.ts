@@ -457,7 +457,7 @@ async function intermediateToFinalConfig(
       } else {
         const llmOptions: LLMOptions = {
           ...options,
-          model: "UNSPECIFIED",
+          model: options.model ?? "UNSPECIFIED"
         };
         config.embeddingsProvider = new embeddingsProviderClass(
           llmOptions,
