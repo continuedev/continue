@@ -141,6 +141,7 @@ async function configYamlToContinueConfig(
   const continueConfig: ContinueConfig = {
     slashCommands: await slashCommandsFromV1PromptFiles(ide),
     models: [],
+    tabAutocompleteModels: [],
     tools: [],
     embeddingsProvider: new TransformersJsEmbeddingsProvider(),
     experimental: {
@@ -150,14 +151,31 @@ async function configYamlToContinueConfig(
 
   // Models
   for (const model of config.models ?? []) {
-    const llms = await llmsFromModelConfig(
-      model,
-      ide,
-      uniqueId,
-      ideSettings,
-      writeLog,
-    );
-    continueConfig.models.push(...llms);
+    if (
+      ["chat", "summarize", "apply", "edit"].some((role: any) =>
+        model.roles?.includes(role),
+      )
+    ) {
+      // Main model array
+      const llms = await llmsFromModelConfig(
+        model,
+        ide,
+        uniqueId,
+        ideSettings,
+        writeLog,
+      );
+      continueConfig.models.push(...llms);
+    } else if (model.roles?.includes("autocomplete")) {
+      // Autocomplete models array
+      const llms = await llmsFromModelConfig(
+        model,
+        ide,
+        uniqueId,
+        ideSettings,
+        writeLog,
+      );
+      continueConfig.tabAutocompleteModels?.push(...llms);
+    }
   }
 
   if (allowFreeTrial) {
