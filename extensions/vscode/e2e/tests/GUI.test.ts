@@ -1,17 +1,10 @@
-import {
-  EditorView,
-  WebView,
-  WebDriver,
-  VSBrowser,
-  Key,
-} from "vscode-extension-tester";
+import { EditorView, WebView, WebDriver, Key } from "vscode-extension-tester";
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
 import { GUISelectors } from "../selectors/GUI.selectors";
-import * as path from "path";
 import { TestUtils } from "../TestUtils";
-
-const DEFAULT_TIMEOUT = 30_000;
+import { DEFAULT_TIMEOUT } from "../constants";
+import { GlobalActions } from "../actions/Global.actions";
 
 describe("GUI Test", () => {
   let view: WebView;
@@ -19,7 +12,7 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT);
-    await VSBrowser.instance.openResources(path.join("e2e/test-continue"));
+    await GlobalActions.openTestWorkspace();
   });
 
   beforeEach(async function () {
@@ -76,7 +69,7 @@ describe("GUI Test", () => {
       );
     });
 
-    it.only("Can delete messages", async () => {
+    it("Can delete messages", async () => {
       const { userMessage: userMessage0, llmResponse: llmResponse0 } =
         TestUtils.generateTestMessagePair(0);
       await GUIActions.sendMessage({
