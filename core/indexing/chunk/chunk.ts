@@ -3,7 +3,7 @@ import { countTokensAsync } from "../../llm/countTokens.js";
 import { extractMinimalStackTraceInfo } from "../../util/extractMinimalStackTraceInfo.js";
 import { Telemetry } from "../../util/posthog.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
-import { getUriPathBasename } from "../../util/uri.js";
+import { getUriFileExtension, getUriPathBasename } from "../../util/uri.js";
 
 import { basicChunker } from "./basic.js";
 import { codeChunker } from "./code.js";
@@ -16,25 +16,23 @@ export type ChunkDocumentParam = {
 };
 
 async function* chunkDocumentWithoutId(
-  filepath: string,
+  fileUri: string,
   contents: string,
   maxChunkSize: number,
 ): AsyncGenerator<ChunkWithoutID> {
   if (contents.trim() === "") {
     return;
   }
-
-  const segs = filepath.split(".");
-  const ext = segs[segs.length - 1];
-  if (ext in supportedLanguages) {
+  const extension = getUriFileExtension(fileUri);
+  if (extension in supportedLanguages) {
     try {
-      for await (const chunk of codeChunker(filepath, contents, maxChunkSize)) {
+      for await (const chunk of codeChunker(fileUri, contents, maxChunkSize)) {
         yield chunk;
       }
       return;
     } catch (e: any) {
-      Telemetry.capture("code_chunker_error", {
-        fileExtension: ext,
+      void Telemetry.capture("code_chunker_error", {
+        fileExtension: extension,
         stack: extractMinimalStackTraceInfo(e.stack),
       });
       // falls back to basicChunker

@@ -32,7 +32,6 @@ import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
-import { getFullyQualifiedPath } from "./util/util";
 import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -231,7 +230,7 @@ async function processDiff(
   diffManager: DiffManager,
   ide: VsCodeIde,
   verticalDiffManager: VerticalDiffManager,
-  newFilepath?: string | vscode.Uri,
+  newFilepath?: vscode.Uri,
   streamId?: string,
 ) {
   captureCommandTelemetry(`${action}Diff`);
@@ -241,7 +240,7 @@ async function processDiff(
   if (fullPath instanceof vscode.Uri) {
     fullPath = fullPath.fsPath;
   } else if (fullPath) {
-    fullPath = getFullyQualifiedPath(ide, fullPath);
+    fullPath = resolveF(ide, fullPath);
   } else {
     const curFile = await ide.getCurrentFile();
     fullPath = curFile?.path;
