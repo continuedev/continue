@@ -57,6 +57,7 @@ export const modelDescriptionSchema = z.object({
     "azure",
     "continue-proxy",
     "nebius",
+    "portkey"
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
