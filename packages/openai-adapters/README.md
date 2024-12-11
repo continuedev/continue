@@ -13,6 +13,8 @@ They are purely a translation layer, and are not concerned with:
 - Batching embeddings (yes, it requires some knowledge of max batch size, but it's more important to maintain 1 req = 1 req)
 - Using streamChat for streamComplete and vice-versa if one isn't defined
 
+The goal is for this to change as infrequently as possible. It should only require updating when the actual API format changes.
+
 They are concerned with:
 
 - Converting model aliases
