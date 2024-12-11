@@ -1,4 +1,5 @@
 import URI from "uri-js";
+import { fileURLToPath, pathToFileURL } from "url";
 
 export function getFullPath(uri: string): string {
   try {
@@ -7,6 +8,11 @@ export function getFullPath(uri: string): string {
     console.error(`Invalid URI: ${uri}`, error);
     return "";
   }
+}
+
+export function localPathToUri(path: string) {
+  const url = pathToFileURL(path);
+  return URI.normalize(url.toString());
 }
 
 export function pathToUriPathSegment(path: string) {
@@ -28,6 +34,37 @@ export function getRelativePath(
   workspaceUris: string[],
 ): string {
   const fullPath = getFullPath(fileUri);
+}
+
+/*
+  
+*/
+export function localPathOrUriToPath(localPathOrUri: string): string {
+  try {
+    return fileURLToPath(localPathOrUri);
+  } catch (e) {
+    console.log("Converted url to path");
+    return localPathOrUri;
+  }
+}
+
+/*
+  To smooth out the transition from path to URI will use this function to warn when path is used
+*/
+export function pathOrUriToUri(
+  pathOrUri: string,
+  workspaceDirUris: string[],
+  showTraceOnPath = true,
+): string {
+  try {
+    // URI.parse(pathOrUri);
+
+    return pathOrUri;
+  } catch (e) {
+    if (showTraceOnPath) {
+      console.trace("Received relative path", e);
+    }
+  }
 }
 
 export function splitUriPath(uri: string): string[] {

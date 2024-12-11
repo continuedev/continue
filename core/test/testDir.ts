@@ -1,20 +1,27 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
+import {
+  localPathOrUriToPath,
+  localPathToUri,
+  pathOrUriToUri,
+} from "../util/uri";
+import { fileURLToPath } from "url";
 
 // Want this outside of the git repository so we can change branches in tests
-export const TEST_DIR = path.join(os.tmpdir(), "testWorkspaceDir");
+const TEST_DIR_PATH = path.join(os.tmpdir(), "testWorkspaceDir");
+export const TEST_DIR = localPathToUri(TEST_DIR_PATH); // URI
 
 export function setUpTestDir() {
-  if (fs.existsSync(TEST_DIR)) {
-    fs.rmSync(TEST_DIR, { recursive: true });
+  if (fs.existsSync(TEST_DIR_PATH)) {
+    fs.rmSync(TEST_DIR_PATH, { recursive: true });
   }
-  fs.mkdirSync(TEST_DIR);
+  fs.mkdirSync(TEST_DIR_PATH);
 }
 
 export function tearDownTestDir() {
-  if (fs.existsSync(TEST_DIR)) {
-    fs.rmSync(TEST_DIR, { recursive: true });
+  if (fs.existsSync(TEST_DIR_PATH)) {
+    fs.rmSync(TEST_DIR_PATH, { recursive: true });
   }
 }
 
@@ -24,9 +31,18 @@ export function tearDownTestDir() {
   "index/index.ts" creates an empty index/index.ts
   ["index/index.ts", "hello"] creates index/index.ts with contents "hello"
 */
-export function addToTestDir(paths: (string | string[])[]) {
+export function addToTestDir(pathsOrUris: (string | string[])[]) {
+  // Allow tests to use URIs or local paths
+  const paths = pathsOrUris.map((val) => {
+    if (Array.isArray(val)) {
+      return [localPathOrUriToPath(val[0]), val[1]];
+    } else {
+      return localPathOrUriToPath(val);
+    }
+  });
+
   for (const p of paths) {
-    const filepath = path.join(TEST_DIR, Array.isArray(p) ? p[0] : p);
+    const filepath = path.join(TEST_DIR_PATH, Array.isArray(p) ? p[0] : p);
     fs.mkdirSync(path.dirname(filepath), { recursive: true });
 
     if (Array.isArray(p)) {

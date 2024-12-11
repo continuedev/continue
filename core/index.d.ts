@@ -611,7 +611,7 @@ export interface IDE {
 
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
 
-  fileExists(filepath: string): Promise<boolean>;
+  fileExists(fileUri: string): Promise<boolean>;
 
   writeFile(path: string, contents: string): Promise<void>;
 
@@ -625,20 +625,16 @@ export interface IDE {
 
   runCommand(command: string): Promise<void>;
 
-  saveFile(filepath: string): Promise<void>;
+  saveFile(fileUri: string): Promise<void>;
 
-  readFile(filepath: string): Promise<string>;
+  readFile(fileUri: string): Promise<string>;
 
-  readRangeInFile(filepath: string, range: Range): Promise<string>;
+  readRangeInFile(fileUri: string, range: Range): Promise<string>;
 
-  showLines(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-  ): Promise<void>;
+  showLines(fileUri: string, startLine: number, endLine: number): Promise<void>;
 
   showDiff(
-    filepath: string,
+    fileUri: string,
     newContents: string,
     stepIndex: number,
   ): Promise<void>;
@@ -660,7 +656,7 @@ export interface IDE {
 
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
-  getProblems(filepath?: string | undefined): Promise<Problem[]>;
+  getProblems(fileUri?: string | undefined): Promise<Problem[]>;
 
   getBranch(dir: string): Promise<string>;
 
@@ -686,7 +682,7 @@ export interface IDE {
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
 
   // Callbacks
-  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
+  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void;
 }
 
 // Slash Commands

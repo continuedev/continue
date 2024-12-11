@@ -3,9 +3,9 @@ import path from "node:path";
 import ignore from "ignore";
 
 import { IDE } from "../..";
-import { getBasename } from "../../util";
 import { getConfigJsonPath } from "../../util/paths";
 import { HelperVars } from "../util/HelperVars";
+import { getRelativePath } from "../../util/uri";
 
 async function isDisabledForFile(
   currentFilepath: string,
@@ -15,26 +15,11 @@ async function isDisabledForFile(
   if (disableInFiles) {
     // Relative path needed for `ignore`
     const workspaceDirs = await ide.getWorkspaceDirs();
-    let filepath = currentFilepath;
-    for (const workspaceDir of workspaceDirs) {
-      const relativePath = path.relative(workspaceDir, filepath);
-      const relativePathBase = relativePath.split(path.sep).at(0);
-      const isInWorkspace =
-        !path.isAbsolute(relativePath) && relativePathBase !== "..";
-      if (isInWorkspace) {
-        filepath = path.relative(workspaceDir, filepath);
-        break;
-      }
-    }
-
-    // Worst case we can check filetype glob patterns
-    if (filepath === currentFilepath) {
-      filepath = getBasename(filepath);
-    }
+    const relativePath = getRelativePath(currentFilepath, workspaceDirs);
 
     // @ts-ignore
     const pattern = ignore.default().add(disableInFiles);
-    if (pattern.ignores(filepath)) {
+    if (pattern.ignores(relativePath)) {
       return true;
     }
   }

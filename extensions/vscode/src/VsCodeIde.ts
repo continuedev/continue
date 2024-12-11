@@ -265,9 +265,9 @@ class VsCodeIde implements IDE {
     });
   }
 
-  readRangeInFile(filepath: string, range: Range): Promise<string> {
+  readRangeInFile(fileUri: string, range: Range): Promise<string> {
     return this.ideUtils.readRangeInFile(
-      vscode.Uri.parse(filepath),
+      vscode.Uri.parse(fileUri),
       new vscode.Range(
         new vscode.Position(range.start.line, range.start.character),
         new vscode.Position(range.end.line, range.end.character),
@@ -378,9 +378,9 @@ class VsCodeIde implements IDE {
     return getContinueGlobalPath();
   }
 
-  async writeFile(path: string, contents: string): Promise<void> {
+  async writeFile(fileUri: string, contents: string): Promise<void> {
     await vscode.workspace.fs.writeFile(
-      vscode.Uri.parse(path),
+      vscode.Uri.parse(fileUri),
       Buffer.from(contents),
     );
   }
@@ -389,12 +389,12 @@ class VsCodeIde implements IDE {
     this.ideUtils.showVirtualFile(title, contents);
   }
 
-  async openFile(path: string): Promise<void> {
-    await this.ideUtils.openFile(vscode.Uri.parse(path));
+  async openFile(fileUri: string): Promise<void> {
+    await this.ideUtils.openFile(vscode.Uri.parse(fileUri));
   }
 
   async showLines(
-    filepath: string,
+    fileUri: string,
     startLine: number,
     endLine: number,
   ): Promise<void> {
@@ -402,7 +402,7 @@ class VsCodeIde implements IDE {
       new vscode.Position(startLine, 0),
       new vscode.Position(endLine, 0),
     );
-    openEditorAndRevealRange(vscode.Uri.parse(filepath), range).then(
+    openEditorAndRevealRange(vscode.Uri.parse(fileUri), range).then(
       (editor) => {
         // Select the lines
         editor.selection = new vscode.Selection(
@@ -426,8 +426,8 @@ class VsCodeIde implements IDE {
     }
   }
 
-  async saveFile(filepath: string): Promise<void> {
-    await this.ideUtils.saveFile(vscode.Uri.parse(filepath));
+  async saveFile(fileUri: string): Promise<void> {
+    await this.ideUtils.saveFile(vscode.Uri.parse(fileUri));
   }
 
   private static MAX_BYTES = 100000;
@@ -482,11 +482,11 @@ class VsCodeIde implements IDE {
   }
 
   async showDiff(
-    filepath: string,
+    fileUri: string,
     newContents: string,
     stepIndex: number,
   ): Promise<void> {
-    await this.diffManager.writeDiff(filepath, newContents, stepIndex);
+    await this.diffManager.writeDiff(fileUri, newContents, stepIndex);
   }
 
   async getOpenFiles(): Promise<string[]> {
@@ -563,9 +563,9 @@ class VsCodeIde implements IDE {
     return results.join("\n\n");
   }
 
-  async getProblems(filepath?: string | undefined): Promise<Problem[]> {
-    const uri = filepath
-      ? vscode.Uri.file(filepath)
+  async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
+    const uri = fileUri
+      ? vscode.Uri.parse(fileUri)
       : vscode.window.activeTextEditor?.document.uri;
     if (!uri) {
       return [];
