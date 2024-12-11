@@ -84,47 +84,6 @@ export class VsCodeIdeUtils {
   // ------------------------------------ //
   // On message handlers
 
-  private _lastDecorationType: vscode.TextEditorDecorationType | null = null;
-  async highlightCode(rangeInFile: RangeInFile, color: string) {
-    const range = new vscode.Range(
-      rangeInFile.range.start.line,
-      rangeInFile.range.start.character,
-      rangeInFile.range.end.line,
-      rangeInFile.range.end.character,
-    );
-    const editor = await openEditorAndRevealRange(
-      rangeInFile.filepath,
-      range,
-      vscode.ViewColumn.One,
-    );
-    if (editor) {
-      const decorationType = vscode.window.createTextEditorDecorationType({
-        backgroundColor: color,
-        isWholeLine: true,
-      });
-      editor.setDecorations(decorationType, [range]);
-
-      const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
-        (event) => {
-          if (event.textEditor.document.uri.fsPath === rangeInFile.filepath) {
-            cursorDisposable.dispose();
-            editor.setDecorations(decorationType, []);
-          }
-        },
-      );
-
-      setTimeout(() => {
-        cursorDisposable.dispose();
-        editor.setDecorations(decorationType, []);
-      }, 2500);
-
-      if (this._lastDecorationType) {
-        editor.setDecorations(this._lastDecorationType, []);
-      }
-      this._lastDecorationType = decorationType;
-    }
-  }
-
   showSuggestion(edit: FileEdit) {
     // showSuggestion already exists
     showSuggestionInEditor(
@@ -248,14 +207,6 @@ export class VsCodeIdeUtils {
       .filter(Boolean) // filter out undefined values
       .filter((uri) => this.documentIsCode(uri)) // Filter out undesired documents
       .map((uri) => uri.fsPath);
-  }
-
-  getVisibleFiles(): string[] {
-    return vscode.window.visibleTextEditors
-      .filter((editor) => this.documentIsCode(editor.document.uri))
-      .map((editor) => {
-        return editor.document.uri.fsPath;
-      });
   }
 
   saveFile(filepath: string) {

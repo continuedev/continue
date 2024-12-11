@@ -37,7 +37,7 @@ class AcceptDiffAction : AnAction() {
 
     private fun acceptHorizontalDiff(e: AnActionEvent) {
         val continuePluginService = getPluginService(e.project) ?: return
-        continuePluginService.ideProtocolClient?.diffManager?.acceptDiff(null)
+        continuePluginService?.diffManager?.acceptDiff(null)
     }
 
     private fun acceptVerticalDiff(e: AnActionEvent) {
@@ -57,7 +57,7 @@ class RejectDiffAction : AnAction() {
 
     private fun rejectHorizontalDiff(e: AnActionEvent) {
         val continuePluginService = getPluginService(e.project) ?: return
-        continuePluginService.ideProtocolClient?.diffManager?.rejectDiff(null)
+        continuePluginService.diffManager?.rejectDiff(null)
     }
 
     private fun rejectVerticalDiff(e: AnActionEvent) {

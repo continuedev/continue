@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.activities
 
+import IntelliJIDE
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.auth.ControlPlaneSessionInfo
@@ -133,6 +134,9 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 project
             )
 
+            val diffManager = DiffManager(project)
+
+            continuePluginService.diffManager = diffManager
             continuePluginService.ideProtocolClient = ideProtocolClient
 
             // Listen to changes to settings so the core can reload remote configuration
