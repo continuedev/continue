@@ -312,7 +312,6 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       models.llama3170bChat,
       models.llama318bChat,
       { ...models.mixtralTrial, title: "Mixtral" },
-      models.llama270bChat,
       {
         ...models.AUTODETECT,
         params: {
