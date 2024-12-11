@@ -43,7 +43,7 @@ export default class Cloudflare extends BaseLLM {
       if (value.choices?.[0]?.delta?.content) {
         yield {
           role: "assistant",
-          content: value.choices[0].delta,
+          content: value.choices[0].delta.content,
         };
       }
     }
