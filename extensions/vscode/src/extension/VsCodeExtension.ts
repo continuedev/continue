@@ -159,7 +159,7 @@ export class VsCodeExtension {
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.diffManager,
-        this.verticalDiffManager.filepathToCodeLens,
+        this.verticalDiffManager.fileUriToCodeLens,
         config,
       );
 
@@ -182,7 +182,7 @@ export class VsCodeExtension {
           registerAllCodeLensProviders(
             context,
             this.diffManager,
-            this.verticalDiffManager.filepathToCodeLens,
+            this.verticalDiffManager.fileUriToCodeLens,
             newConfig,
           );
         }
@@ -264,8 +264,8 @@ export class VsCodeExtension {
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
       this.core.invoke("files/changed", {
-        uris: [event.uri.toString()]
-      })
+        uris: [event.uri.toString()],
+      });
     });
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
@@ -317,7 +317,7 @@ export class VsCodeExtension {
     // Refresh index when branch is changed
     this.ide.getWorkspaceDirs().then((dirs) =>
       dirs.forEach(async (dir) => {
-        const repo = await this.ide.getRepo(vscode.Uri.file(dir));
+        const repo = await this.ide.getRepo(dir);
         if (repo) {
           repo.state.onDidChange(() => {
             // args passed to this callback are always undefined, so keep track of previous branch

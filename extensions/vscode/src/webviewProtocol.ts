@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "path";
-
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
 import { WebviewMessengerResult } from "core/protocol/util";
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
@@ -12,25 +9,6 @@ import * as vscode from "vscode";
 import { IMessenger } from "../../../core/protocol/messenger";
 
 import { showFreeTrialLoginMessage } from "./util/messages";
-import { getExtensionUri } from "./util/vscode";
-
-export async function showTutorial() {
-  const tutorialPath = path.join(
-    getExtensionUri().fsPath,
-    "continue_tutorial.py",
-  );
-  // Ensure keyboard shortcuts match OS
-  if (process.platform !== "darwin") {
-    let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
-    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
-    fs.writeFileSync(tutorialPath, tutorialContent);
-  }
-
-  const doc = await vscode.workspace.openTextDocument(
-    vscode.Uri.file(tutorialPath),
-  );
-  await vscode.window.showTextDocument(doc, { preview: false });
-}
 
 export class VsCodeWebviewProtocol
   implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>

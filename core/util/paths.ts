@@ -321,6 +321,15 @@ export function getLogsDirPath(): string {
   return logsPath;
 }
 
+export function getLogFilePath(): string {
+  const logFilePath = path.join(getContinueGlobalPath(), "continue.log");
+  // Make sure the file/directory exist
+  if (!fs.existsSync(logFilePath)) {
+    fs.writeFileSync(logFilePath, "");
+  }
+  return logFilePath;
+}
+
 export function getCoreLogsPath(): string {
   return path.join(getLogsDirPath(), "core.log");
 }
@@ -378,4 +387,14 @@ export function setupInitialDotContinueDirectory() {
       fs.writeFileSync(devDataPath, "");
     }
   });
+}
+
+export function getDiffsDirectoryPath(): string {
+  const diffsPath = path.join(getContinueGlobalPath(), ".diffs"); // .replace(/^C:/, "c:"); ??
+  if (!fs.existsSync(diffsPath)) {
+    fs.mkdirSync(diffsPath, {
+      recursive: true,
+    });
+  }
+  return diffsPath;
 }

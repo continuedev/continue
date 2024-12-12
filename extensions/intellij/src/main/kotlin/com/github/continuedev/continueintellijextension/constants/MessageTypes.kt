@@ -19,7 +19,6 @@ class MessageTypes {
             "getWorkspaceDirs",
             "showLines",
             "listFolders",
-            "getContinueDir",
             "writeFile",
             "fileExists",
             "showVirtualFile",

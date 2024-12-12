@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
 
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
@@ -30,6 +29,7 @@ import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { getUriPathBasename } from "core/util/uri";
+import { showTutorial } from "../util/tutorial";
 
 /**
  * A shared messenger class between Core and Webview
@@ -86,22 +86,16 @@ export class VsCodeMessenger {
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
-      const fullPath = getFullyQualifiedPath(this.ide, msg.data.filepath);
-
-      if (fullPath) {
-        this.ide.openFile(fullPath);
-      }
+      this.ide.openFile(msg.data.filepath);
     });
 
     this.onWebview("vscode/openMoveRightMarkdown", (msg) => {
       vscode.commands.executeCommand(
         "markdown.showPreview",
-        vscode.Uri.file(
-          path.join(
-            getExtensionUri().fsPath,
-            "media",
-            "move-chat-panel-right.md",
-          ),
+        vscode.Uri.joinPath(
+          getExtensionUri(),
+          "media",
+          "move-chat-panel-right.md",
         ),
       );
     });
@@ -175,25 +169,14 @@ export class VsCodeMessenger {
         fileContent: data.text,
       });
 
-      let filepath = data.filepath;
-
-      // If there is a filepath, verify it exists and then open the file
-      if (filepath) {
-        const fullPath = getFullyQualifiedPath(ide, filepath);
-
-        if (!fullPath) {
-          return;
-        }
-
-        const fileExists = await this.ide.fileExists(fullPath);
-
-        // If there is no existing file at the path, create it
+      if (data.filepath) {
+        const fileExists = await this.ide.fileExists(data.filepath);
         if (!fileExists) {
-          await this.ide.writeFile(fullPath, "");
-          await this.ide.openFile(fullPath);
+          await this.ide.writeFile(data.filepath, "");
+          await this.ide.openFile(data.filepath);
         }
 
-        await this.ide.openFile(fullPath);
+        await this.ide.openFile(data.filepath);
       }
 
       // Get active text editor
@@ -282,25 +265,7 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("showTutorial", async (msg) => {
-      const tutorialPath = path.join(
-        getExtensionUri().fsPath,
-        "continue_tutorial.py",
-      );
-      // Ensure keyboard shortcuts match OS
-      if (process.platform !== "darwin") {
-        let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
-        tutorialContent = tutorialContent
-          .replace("⌘", "^")
-          .replace("Cmd", "Ctrl");
-        fs.writeFileSync(tutorialPath, tutorialContent);
-      }
-
-      const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(tutorialPath),
-      );
-      await vscode.window.showTextDocument(doc, {
-        preview: false,
-      });
+      await showTutorial(this.ide);
     });
 
     this.onWebview("openUrl", (msg) => {
@@ -465,9 +430,6 @@ export class VsCodeMessenger {
     });
     this.onWebviewOrCore("showVirtualFile", async (msg) => {
       return ide.showVirtualFile(msg.data.name, msg.data.content);
-    });
-    this.onWebviewOrCore("getContinueDir", async (msg) => {
-      return ide.getContinueDir();
     });
     this.onWebviewOrCore("openFile", async (msg) => {
       return ide.openFile(msg.data.path);

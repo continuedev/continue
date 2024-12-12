@@ -617,8 +617,6 @@ export interface IDE {
 
   showVirtualFile(title: string, contents: string): Promise<void>;
 
-  getContinueDir(): Promise<string>;
-
   openFile(path: string): Promise<void>;
 
   openUrl(url: string): Promise<void>;

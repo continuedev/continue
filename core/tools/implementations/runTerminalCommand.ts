@@ -2,6 +2,7 @@ import childProcess from "node:child_process";
 import util from "node:util";
 
 import { ToolImpl } from ".";
+import { fileURLToPath } from "node:url";
 
 const asyncExec = util.promisify(childProcess.exec);
 
@@ -11,7 +12,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   if (ideInfo.remoteName === "local" || ideInfo.remoteName === "") {
     try {
       const output = await asyncExec(args.command, {
-        cwd: (await extras.ide.getWorkspaceDirs())[0],
+        cwd: fileURLToPath((await extras.ide.getWorkspaceDirs())[0]),
       });
       return [
         {

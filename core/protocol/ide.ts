@@ -26,7 +26,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
   showVirtualFile: [{ name: string; content: string }, void];
-  getContinueDir: [undefined, string];
   openFile: [{ path: string }, void];
   openUrl: [string, void];
   runCommand: [{ command: string }, void];

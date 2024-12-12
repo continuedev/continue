@@ -6,6 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
+import { getAllPromptFilesV2 } from "../../promptFiles/v2/getPromptFiles";
 import { parsePreamble } from "../../promptFiles/v2/parse";
 import { renderPromptFileV2 } from "../../promptFiles/v2/renderPromptFile";
 
@@ -37,7 +38,7 @@ class PromptFilesContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const promptFiles = await getAllPromptFiles(
+    const promptFiles = await getAllPromptFilesV2(
       args.ide,
       args.config.experimental?.promptPath,
     );

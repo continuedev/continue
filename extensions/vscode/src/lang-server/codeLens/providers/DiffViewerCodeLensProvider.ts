@@ -2,8 +2,9 @@ import path from "path";
 
 import * as vscode from "vscode";
 
-import { DiffManager, DIFF_DIRECTORY } from "../../../diff/horizontal";
+import { DiffManager } from "../../../diff/horizontal";
 import { getMetaKeyLabel } from "../../../util/util";
+import { getDiffsDirectoryPath } from "core/util/paths";
 
 export class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
   constructor(private diffManager: DiffManager) {}
@@ -12,7 +13,7 @@ export class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
     document: vscode.TextDocument,
     _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
-    if (path.dirname(document.uri.fsPath) === DIFF_DIRECTORY) {
+    if (path.dirname(document.uri.fsPath) === getDiffsDirectoryPath()) {
       const codeLenses: vscode.CodeLens[] = [];
       let range = new vscode.Range(0, 0, 1, 0);
       const diffInfo = this.diffManager.diffAtNewFilepath(

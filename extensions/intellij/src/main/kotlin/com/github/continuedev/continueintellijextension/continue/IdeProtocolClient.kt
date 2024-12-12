@@ -560,10 +560,6 @@ class IdeProtocolClient(
                         respond(file.exists())
                     }
 
-                    "getContinueDir" -> {
-                        respond(getContinueGlobalPath())
-                    }
-
                     "openFile" -> {
                         setFileOpen((data as Map<String, Any>)["path"] as String)
                         respond(null)

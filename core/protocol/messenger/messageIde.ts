@@ -138,17 +138,6 @@ export class MessageIde implements IDE {
     return await this.request("listFolders", undefined);
   }
 
-  _continueDir: string | null = null;
-
-  async getContinueDir(): Promise<string> {
-    if (this._continueDir) {
-      return this._continueDir;
-    }
-    const dir = await this.request("getContinueDir", undefined);
-    this._continueDir = dir;
-    return dir;
-  }
-
   async writeFile(fileUri: string, contents: string): Promise<void> {
     await this.request("writeFile", { path: fileUri, contents });
   }

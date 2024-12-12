@@ -15,7 +15,7 @@ export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
     prefix: string,
     suffix: string,
-    directoryUri: string,
+    filepath: string,
     reponame: string,
     snippets: AutocompleteSnippet[],
   ) => [string, string];
@@ -24,7 +24,7 @@ export interface AutocompleteTemplate {
     | ((
         prefix: string,
         suffix: string,
-        directoryUri: string,
+        filepath: string,
         reponame: string,
         language: string,
         snippets: AutocompleteSnippet[],
@@ -85,7 +85,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
         return [
-          `+++++ ${getLastNUriRelativePathParts(filepath, 2)}\n${prefix}`,
+          `+++++ ${getLastNUriRelativePathParts(workspaceDirs, filepath, 2)}\n${prefix}`,
           suffix,
         ];
       }

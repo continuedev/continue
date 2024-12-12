@@ -4,12 +4,13 @@ import {
   ChevronRightIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
 import { CodeToEdit } from "core";
-import { getLastNPathParts } from "core/util/uri";
+import { rifWithContentsToContextItem } from "core/commands/util";
+import { getUriPathBasename } from "core/util/uri";
 
 export interface CodeToEditListItemProps {
   code: CodeToEdit;
@@ -36,7 +37,15 @@ export default function CodeToEditListItem({
 }: CodeToEditListItemProps) {
   const [showCodeSnippet, setShowCodeSnippet] = useState(false);
 
-  const filepath = code.filepath.split("/").pop() || code.filepath;
+  const context = useMemo(() => {
+    return rifWithContentsToContextItem({
+      contents: code.contents,
+      range: {
+        start: {},
+      },
+    });
+  }, []);
+  const basename = getUriPathBasename(code.filepath);
   const fileSubpath = getLastNPathParts(code.filepath, 2);
 
   let isInsertion = false;

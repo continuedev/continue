@@ -1,10 +1,9 @@
-import * as fs from "node:fs";
 import { homedir } from "node:os";
-import path from "path";
 
 import { languageForFilepath } from "../../autocomplete/constants/AutocompleteLanguageInfo.js";
 import { SlashCommand } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
+import { getContinueGlobalPath } from "../../util/paths.js";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
 function getOffsetDatetime(date: Date): Date {
@@ -62,10 +61,7 @@ const ShareSlashCommand: SlashCommand = {
       }\n\n${msgText}`;
     }
 
-    let outputDir: string = params?.outputDir;
-    if (!outputDir) {
-      outputDir = await ide.getContinueDir();
-    }
+    let outputDir: string = params?.outputDir ?? getContinueGlobalPath();
 
     if (outputDir.startsWith("~")) {
       outputDir = outputDir.replace(/^~/, homedir);

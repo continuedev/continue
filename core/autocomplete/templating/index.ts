@@ -1,7 +1,6 @@
 import Handlebars from "handlebars";
 
 import { CompletionOptions } from "../..";
-import { getBasename } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
@@ -13,6 +12,7 @@ import { getStopTokens } from "./getStopTokens";
 import { SnippetPayload } from "../snippets";
 import { formatSnippets } from "./formatting";
 import { getSnippets } from "./filtering";
+import { getUriPathBasename } from "../../util/uri";
 
 function getTemplate(helper: HelperVars): AutocompleteTemplate {
   if (helper.options.template) {
@@ -33,7 +33,7 @@ function renderStringTemplate(
   filepath: string,
   reponame: string,
 ) {
-  const filename = getBasename(filepath);
+  const filename = getUriPathBasename(filepath);
   const compiledTemplate = Handlebars.compile(template);
 
   return compiledTemplate({
@@ -63,7 +63,7 @@ export function renderPrompt({
   let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
   let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
 
-  const reponame = getBasename(workspaceDirs[0] ?? "myproject");
+  const reponame = getUriPathBasename(workspaceDirs[0] ?? "myproject");
 
   const { template, compilePrefixSuffix, completionOptions } =
     getTemplate(helper);

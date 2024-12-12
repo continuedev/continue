@@ -71,6 +71,7 @@ This is the question that you should select relevant files for: "${input}"`;
       return [];
     }
 
+    const subDirPrefix = filterDirectory ? filterDirectory + pathSep : "";
     const files =
       content
         .split("<results>")[1]

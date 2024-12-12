@@ -186,10 +186,6 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  getContinueDir(): Promise<string> {
-    return Promise.resolve(getContinueGlobalPath());
-  }
-
   openFile(path: string): Promise<void> {
     return Promise.resolve();
   }

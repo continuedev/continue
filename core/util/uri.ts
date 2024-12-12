@@ -89,6 +89,10 @@ export function getUriPathBasename(uri: string): string {
   return getPath();
 }
 
+export function getFileExtensionFromBasename(filename: string) {
+  return filename.split(".").pop() ?? "";
+}
+
 export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
   const components = URI.parse(uri);
   const segments = pathSegments.map((segment) => pathToUriPathSegment(segment));

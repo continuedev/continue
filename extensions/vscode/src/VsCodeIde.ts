@@ -373,10 +373,6 @@ class VsCodeIde implements IDE {
     return this.ideUtils.getWorkspaceDirectories().map((uri) => uri.toString());
   }
 
-  async getContinueDir(): Promise<string> {
-    return getContinueGlobalPath();
-  }
-
   async writeFile(fileUri: string, contents: string): Promise<void> {
     await vscode.workspace.fs.writeFile(
       vscode.Uri.parse(fileUri),
@@ -441,7 +437,7 @@ class VsCodeIde implements IDE {
         vscode.workspace.notebookDocuments.find((doc) =>
           URI.equal(doc.uri.toString(), uri.toString()),
         ) ??
-        (uri.fsPath.endsWith("ipynb")
+        (uri.path.endsWith("ipynb")
           ? await vscode.workspace.openNotebookDocument(uri)
           : undefined);
       if (notebook) {

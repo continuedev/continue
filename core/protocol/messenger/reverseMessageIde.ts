@@ -126,10 +126,6 @@ export class ReverseMessageIde {
       return undefined;
     });
 
-    this.on("getContinueDir", () => {
-      return this.ide.getContinueDir();
-    });
-
     this.on("writeFile", (data) => {
       return this.ide.writeFile(data.path, data.contents);
     });

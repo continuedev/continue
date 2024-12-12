@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import * as fs from "node:fs";
 import * as os from "node:os";
-import * as path from "node:path";
 
 import { ContextMenuConfig, RangeInFileWithContents } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
@@ -12,7 +10,11 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import {
+  getConfigJsonPath,
+  getDevDataFilePath,
+  getLogFilePath,
+} from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
@@ -160,17 +162,17 @@ async function addHighlightedCodeToContext(
 }
 
 async function addEntireFileToContext(
-  filepath: vscode.Uri,
+  uri: vscode.Uri,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   // If a directory, add all files in the directory
-  const stat = await vscode.workspace.fs.stat(filepath);
+  const stat = await vscode.workspace.fs.stat(uri);
   if (stat.type === vscode.FileType.Directory) {
-    const files = await vscode.workspace.fs.readDirectory(filepath);
+    const files = await vscode.workspace.fs.readDirectory(uri);
     for (const [filename, type] of files) {
       if (type === vscode.FileType.File) {
         addEntireFileToContext(
-          vscode.Uri.joinPath(filepath, filename),
+          vscode.Uri.joinPath(uri, filename),
           webviewProtocol,
         );
       }
@@ -179,9 +181,9 @@ async function addEntireFileToContext(
   }
 
   // Get the contents of the file
-  const contents = (await vscode.workspace.fs.readFile(filepath)).toString();
+  const contents = (await vscode.workspace.fs.readFile(uri)).toString();
   const rangeInFileWithContents = {
-    filepath: filepath.toString(),
+    filepath: uri.toString(),
     contents: contents,
     range: {
       start: {
@@ -230,12 +232,12 @@ async function processDiff(
   diffManager: DiffManager,
   ide: VsCodeIde,
   verticalDiffManager: VerticalDiffManager,
-  newFileUri?: vscode.Uri,
+  newFileUri?: string,
   streamId?: string,
 ) {
   captureCommandTelemetry(`${action}Diff`);
 
-  let newOrCurrentUri = newFileUri?.toString();
+  let newOrCurrentUri = newFileUri;
   if (!newOrCurrentUri) {
     const currentFile = await ide.getCurrentFile();
     newOrCurrentUri = currentFile?.path;
@@ -343,24 +345,18 @@ const getCommandsMap: (
     );
   }
   return {
-    "continue.acceptDiff": async (
-      newFilepath?: string | vscode.Uri,
-      streamId?: string,
-    ) =>
+    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
       processDiff(
         "accept",
         sidebar,
         diffManager,
         ide,
         verticalDiffManager,
-        newFilepath,
+        newFileUri,
         streamId,
       ),
 
-    "continue.rejectDiff": async (
-      newFilepath?: string | vscode.Uri,
-      streamId?: string,
-    ) =>
+    "continue.rejectDiff": async (newFilepath?: string, streamId?: string) =>
       processDiff(
         "reject",
         sidebar,
@@ -626,17 +622,8 @@ const getCommandsMap: (
     },
     "continue.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
-
-      // Open ~/.continue/continue.log
-      const logFile = path.join(os.homedir(), ".continue", "continue.log");
-      // Make sure the file/directory exist
-      if (!fs.existsSync(logFile)) {
-        fs.mkdirSync(path.dirname(logFile), { recursive: true });
-        fs.writeFileSync(logFile, "");
-      }
-
-      const uri = vscode.Uri.file(logFile);
-      await vscode.window.showTextDocument(uri);
+      const logFilePath = getLogFilePath();
+      await vscode.window.showTextDocument(vscode.Uri.file(logFilePath));
     },
     "continue.debugTerminal": async () => {
       captureCommandTelemetry("debugTerminal");
@@ -783,9 +770,9 @@ const getCommandsMap: (
           .stat(uri)
           ?.then((stat) => stat.type === vscode.FileType.Directory);
         if (isDirectory) {
-          for await (const filepath of walkDirAsync(uri.toString(), ide)) {
+          for await (const fileUri of walkDirAsync(uri.toString(), ide)) {
             addEntireFileToContext(
-              vscode.Uri.parse(filepath),
+              vscode.Uri.parse(fileUri),
               sidebar.webviewProtocol,
             );
           }
@@ -917,7 +904,7 @@ const getCommandsMap: (
         } else if (
           selectedOption === "$(gear) Configure autocomplete options"
         ) {
-          ide.openFile(getConfigJsonPath());
+          ide.openFile(vscode.Uri.file(getConfigJsonPath()).toString());
         } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {

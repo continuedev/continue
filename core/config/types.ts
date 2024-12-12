@@ -446,7 +446,6 @@ declare global {
     fileExists(filepath: string): Promise<boolean>;
     writeFile(path: string, contents: string): Promise<void>;
     showVirtualFile(title: string, contents: string): Promise<void>;
-    getContinueDir(): Promise<string>;
     openFile(path: string): Promise<void>;
     runCommand(command: string): Promise<void>;
     saveFile(filepath: string): Promise<void>;

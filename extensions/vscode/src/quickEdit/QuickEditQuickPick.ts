@@ -248,7 +248,7 @@ export class QuickEdit {
 
   private setActiveEditorAndPrevInput(editor: vscode.TextEditor) {
     const existingHandler = this.verticalDiffManager.getHandlerForFile(
-      editor.document.uri.fsPath ?? "",
+      editor.document.uri.toString(),
     );
 
     this.editorWhenOpened = editor;
@@ -447,8 +447,8 @@ export class QuickEdit {
 
           if (searchResults.length > 0) {
             quickPick.items = searchResults
-              .map(({ filename }) => ({
-                label: filename,
+              .map(({ relativePath }) => ({
+                label: relativePath,
                 alwaysShow: true,
               }))
               .slice(0, QuickEdit.maxFileSearchResults);

@@ -1,7 +1,3 @@
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-
 import { devDataPath } from "core/util/paths";
 import * as vscode from "vscode";
 
@@ -17,47 +13,34 @@ interface DiffInfo {
   range: vscode.Range;
 }
 
-async function readFile(uri: vscode.Uri): Promise<string> {
+async function readFile(fileUri: string): Promise<string> {
   return await vscode.workspace.fs
-    .readFile(uri)
+    .readFile(vscode.Uri.parse(fileUri))
     .then((bytes) => new TextDecoder().decode(bytes));
 }
 
-async function writeFile(uri: vscode.Uri, contents: string) {
-  await vscode.workspace.fs.writeFile(uri, new TextEncoder().encode(contents));
+async function writeFile(fileUri: string, contents: string) {
+  await vscode.workspace.fs.writeFile(
+    vscode.Uri.parse(fileUri),
+    new TextEncoder().encode(contents),
+  );
 }
-
-// THIS IS LOCAL
-export const DIFF_DIRECTORY = path
-  .join(os.homedir(), ".continue", ".diffs")
-  .replace(/^C:/, "c:");
 
 export class DiffManager {
   // Create a temporary file in the global .continue directory which displays the updated version
   // Doing this because virtual files are read-only
   private diffs: Map<string, DiffInfo> = new Map();
 
-  diffAtNewFilepath(newFilepath: string): DiffInfo | undefined {
-    return this.diffs.get(newFilepath);
-  }
-
-  private async setupDirectory() {
-    // Make sure the diff directory exists
-    if (!fs.existsSync(DIFF_DIRECTORY)) {
-      fs.mkdirSync(DIFF_DIRECTORY, {
-        recursive: true,
-      });
-    }
+  diffAtNewFilepath(newFileUri: string): DiffInfo | undefined {
+    return this.diffs.get(newFileUri);
   }
 
   webviewProtocol: VsCodeWebviewProtocol | undefined;
 
   constructor(private readonly extensionContext: vscode.ExtensionContext) {
-    this.setupDirectory();
-
     // Listen for file closes, and if it's a diff file, clean up
     vscode.workspace.onDidCloseTextDocument((document) => {
-      const newFilepath = document.uri.fsPath;
+      const newFilepath = document.uri.toString();
       const diffInfo = this.diffs.get(newFilepath);
       if (diffInfo) {
         this.cleanUpDiff(diffInfo, false);
@@ -73,15 +56,15 @@ export class DiffManager {
   }
 
   private remoteTmpDir = "/tmp/continue";
-  private getNewFilepath(originalFilepath: string): string {
+  private getNewFileUri(originalFileUri: string): vscode.Uri {
     if (vscode.env.remoteName) {
       // If we're in a remote, use the remote's temp directory
       // Doing this because there's no easy way to find the home directory,
       // and there aren't write permissions to the root directory
       // and writing these to local causes separate issues
       // because the vscode.diff command will always try to read from remote
-      vscode.workspace.fs.createDirectory(uriFromFilePath(this.remoteTmpDir));
-      return path.join(
+      vscode.workspace.fs.createDirectory(vscode.Uri.file(this.remoteTmpDir));
+      return vscode.Uri.j.join(
         this.remoteTmpDir,
         this.escapeFilepath(originalFilepath),
       );
@@ -160,8 +143,6 @@ export class DiffManager {
     newContent: string,
     step_index: number,
   ): Promise<string> {
-    await this.setupDirectory();
-
     // Create or update existing diff
     const newFilepath = this.getNewFilepath(originalFilepath);
     await writeFile(uriFromFilePath(newFilepath), newContent);
