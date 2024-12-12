@@ -13,10 +13,6 @@ export interface RepoMapOptions {
   dirs?: string[];
 }
 
-/*
-Generates repo map from workspace files
-Saves it to local file in Continue global directory
-  */
 class RepoMapGenerator {
   private maxRepoMapTokens: number;
 
