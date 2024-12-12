@@ -2,6 +2,7 @@ import { Chunk, ContinueConfig, IDE, ILLM } from "../..";
 import { getModelByRole } from "../../config/util";
 import generateRepoMap from "../../util/generateRepoMap";
 import { renderChatMessage } from "../../util/messageContent";
+import { getUriPathBasename } from "../../util/uri";
 
 const SUPPORTED_MODEL_TITLE_FAMILIES = [
   "claude-3",
@@ -35,7 +36,7 @@ export async function requestFilesFromRepoMap(
   config: ContinueConfig,
   ide: IDE,
   input: string,
-  filterDirectory?: string,
+  filterDirUri?: string,
 ): Promise<Chunk[]> {
   const llm = getModelByRole(config, "repoMapFileSelection") ?? defaultLlm;
 
@@ -47,7 +48,7 @@ export async function requestFilesFromRepoMap(
   try {
     const repoMap = await generateRepoMap(llm, ide, {
       includeSignatures: false,
-      dirs: filterDirectory ? [filterDirectory] : undefined,
+      dirs: filterDirUri ? [filterDirUri] : undefined,
     });
 
     const prompt = `${repoMap}
@@ -71,7 +72,9 @@ This is the question that you should select relevant files for: "${input}"`;
       return [];
     }
 
-    const subDirPrefix = filterDirectory ? filterDirectory + pathSep : "";
+    const subDirPrefix = filterDirUri
+      ? getUriPathBasename(filterDirUri) + "/"
+      : "";
     const files =
       content
         .split("<results>")[1]

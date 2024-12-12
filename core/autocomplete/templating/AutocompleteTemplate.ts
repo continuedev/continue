@@ -2,10 +2,6 @@
 
 import { CompletionOptions } from "../../index.js";
 import {
-  getLastNUriRelativePathParts,
-  shortestRelativeUriPaths,
-} from "../../util/uri.js";
-import {
   AutocompleteCodeSnippet,
   AutocompleteSnippet,
   AutocompleteSnippetType,
@@ -18,6 +14,7 @@ export interface AutocompleteTemplate {
     filepath: string,
     reponame: string,
     snippets: AutocompleteSnippet[],
+    workspaceDirs: string[],
   ) => [string, string];
   template:
     | string
@@ -28,6 +25,7 @@ export interface AutocompleteTemplate {
         reponame: string,
         language: string,
         snippets: AutocompleteSnippet[],
+        workspaceDirs: [],
       ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
@@ -67,32 +65,30 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
   },
 };
 
-// const codestralFimTemplate: AutocompleteTemplate = {
-//   template: "[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
-//   completionOptions: {
-//     stop: ["[PREFIX]", "[SUFFIX]"],
-//   },
-// };
+const codestralFimTemplate: AutocompleteTemplate = {
+  template: "[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
+  completionOptions: {
+    stop: ["[PREFIX]", "[SUFFIX]"],
+  },
+};
 
 const codestralMultifileFimTemplate: AutocompleteTemplate = {
   compilePrefixSuffix: (
-    prefix: string,
-    suffix: string,
-    filepath: string,
-    reponame: string,
-    snippets: AutocompleteSnippet[],
+    prefix,
+    suffix,
+    filepath,
+    reponame,
+    snippets,
+    workspaceDirs,
   ): [string, string] => {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
-        return [
-          `+++++ ${getLastNUriRelativePathParts(workspaceDirs, filepath, 2)}\n${prefix}`,
-          suffix,
-        ];
+        return [`+++++ ${getLastNPathParts(filepath, 2)}\n${prefix}`, suffix];
       }
       return [prefix, suffix];
     }
 
-    const relativePaths = shortestRelativeUriPaths([
+    const relativePaths = shortestRelativePaths([
       ...snippets.map((snippet) =>
         "filepath" in snippet ? snippet.filepath : "Untitled.txt",
       ),
@@ -139,38 +135,39 @@ const codegemmaFimTemplate: AutocompleteTemplate = {
   },
 };
 
-// // https://arxiv.org/pdf/2402.19173.pdf section 5.1
-// const starcoder2FimTemplate: AutocompleteTemplate = {
-//   template: (
-//     prefix: string,
-//     suffix: string,
-//     filename: string,
-//     reponame: string,
-//     language: string,
-//     snippets: AutocompleteSnippet[],
-//   ): string => {
-//     const otherFiles =
-//       snippets.length === 0
-//         ? ""
-//         : `<file_sep>${snippets
-//             .map((snippet) => {
-//               return snippet.content;
-//             })
-//             .join("<file_sep>")}<file_sep>`;
+// https://arxiv.org/pdf/2402.19173.pdf section 5.1
+const starcoder2FimTemplate: AutocompleteTemplate = {
+  template: (
+    prefix,
+    suffix,
+    filename,
+    reponame,
+    language,
+    snippets,
+    workspaceDirs,
+  ): string => {
+    const otherFiles =
+      snippets.length === 0
+        ? ""
+        : `<file_sep>${snippets
+            .map((snippet) => {
+              return snippet.content;
+            })
+            .join("<file_sep>")}<file_sep>`;
 
-//     const prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
-//     return prompt;
-//   },
-//   completionOptions: {
-//     stop: [
-//       "<fim_prefix>",
-//       "<fim_suffix>",
-//       "<fim_middle>",
-//       "<file_sep>",
-//       "<|endoftext|>",
-//     ],
-//   },
-// };
+    const prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
+    return prompt;
+  },
+  completionOptions: {
+    stop: [
+      "<fim_prefix>",
+      "<fim_suffix>",
+      "<fim_middle>",
+      "<file_sep>",
+      "<|endoftext|>",
+    ],
+  },
+};
 
 const codeLlamaFimTemplate: AutocompleteTemplate = {
   template: "<PRE> {{{prefix}}} <SUF>{{{suffix}}} <MID>",
@@ -195,21 +192,22 @@ const deepseekFimTemplate: AutocompleteTemplate = {
 // https://github.com/THUDM/CodeGeeX4/blob/main/guides/Infilling_guideline.md
 const codegeexFimTemplate: AutocompleteTemplate = {
   template: (
-    prefix: string,
-    suffix: string,
-    directoryUri: string,
-    reponame: string,
-    language: string,
-    allSnippets: AutocompleteSnippet[],
+    prefix,
+    suffix,
+    filepath,
+    reponame,
+    language,
+    allSnippets,
+    workspaceDirs,
   ): string => {
     const snippets = allSnippets.filter(
       (snippet) => snippet.type === AutocompleteSnippetType.Code,
     ) as AutocompleteCodeSnippet[];
 
-    const relativePaths = shortestRelativeUriPaths(
-      [...snippets.map((snippet) => snippet.filepath)],
-      directoryUri,
-    );
+    const relativePaths = shortestRelativePaths([
+      ...snippets.map((snippet) => snippet.filepath),
+      filepath,
+    ]);
     const baseTemplate = `###PATH:${
       relativePaths[relativePaths.length - 1]
     }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;

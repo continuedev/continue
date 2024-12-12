@@ -15,7 +15,7 @@ async function walkTestDir(
   options?: WalkerOptions,
 ): Promise<string[] | undefined> {
   return walkDir(TEST_DIR, ide, {
-    returnRelativePaths: true,
+    returnRelativeUris: true,
     ...options,
   });
 }
@@ -259,7 +259,7 @@ describe("walkDir", () => {
       [path.join(TEST_DIR, "a.txt"), path.join(TEST_DIR, "b", "c.txt")],
       [],
       {
-        returnRelativePaths: false,
+        returnRelativeUris: false,
       },
     );
   });
