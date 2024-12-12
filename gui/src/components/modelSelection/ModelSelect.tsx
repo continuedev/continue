@@ -251,26 +251,6 @@ function ModelSelect() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "'" && isMetaEquivalentKeyPressed(event as any)) {
-        const direction = event.shiftKey ? -1 : 1;
-        const currentIndex = options.findIndex(
-          (option) => option.value === defaultModel?.title,
-        );
-        let nextIndex = (currentIndex + 1 * direction) % options.length;
-        if (nextIndex < 0) nextIndex = options.length - 1;
-        const newModelTitle = options[nextIndex].value;
-        dispatch(setDefaultModel({ title: newModelTitle }));
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [options, defaultModel]);
-
   function calculatePosition() {
     if (!buttonRef.current) {
       return;
@@ -344,14 +324,6 @@ function ModelSelect() {
                 showMissingApiKeyMsg={option.apiKey === ""}
               />
             ))}
-          </div>
-
-          <div className="mt-auto">
-            <Divider className="!my-0" />
-
-            <span className="block px-3 py-3" style={{ color: lightGray }}>
-              <code>{getMetaKeyLabel()} + '</code> to toggle
-            </span>
           </div>
         </StyledListboxOptions>
       </div>
