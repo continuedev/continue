@@ -173,7 +173,7 @@ class IdeProtocolClient(
                     "getTags" -> {
                         val artifactId = Gson().fromJson(
                             dataElement.toString(),
-                            String::class.java
+                            getTagsParams::class.java
                         )
                         val tags = ide.getTags(artifactId)
                         respond(tags)
@@ -392,11 +392,11 @@ class IdeProtocolClient(
                     }
 
                     "openUrl" -> {
-                        val params = Gson().fromJson(
+                        val url = Gson().fromJson(
                             dataElement.toString(),
-                            OpenUrlParams::class.java
+                            OpenUrlParam::class.java
                         )
-                        ide.openUrl(params.url)
+                        ide.openUrl(url)
                         respond(null)
                     }
 

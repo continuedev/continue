@@ -17,8 +17,9 @@ data class ShowVirtualFileParams(
 
 data class OpenFileParams(val path: String)
 
-data class OpenUrlParams(val url: String)
+typealias OpenUrlParam = String
 
+typealias getTagsParams = String
 
 data class GetSearchResultsParams(val query: String)
 
