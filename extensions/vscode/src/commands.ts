@@ -472,10 +472,12 @@ const getCommandsMap: (
       const historyLength = await sidebar.webviewProtocol.request(
         "getWebviewHistoryLength",
         undefined,
+        false,
       );
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
+        false,
       );
 
       if (isContinueInputFocused) {
@@ -485,6 +487,7 @@ const getCommandsMap: (
           void sidebar.webviewProtocol?.request(
             "focusContinueInputWithNewSession",
             undefined,
+            false,
           );
         }
       } else {
@@ -492,6 +495,7 @@ const getCommandsMap: (
         sidebar.webviewProtocol?.request(
           "focusContinueInputWithNewSession",
           undefined,
+          false,
         );
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
