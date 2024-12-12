@@ -531,26 +531,6 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@3",
-          "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.openConfigPage",
-          "group": "navigation@4",
-          "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.signInToControlPlane",
-          "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && !continue.isSignedInToControlPlane"
-        },
-        {
-          "command": "continue.openAccountDialog",
-          "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && continue.isSignedInToControlPlane"
-        },
-        {
           "command": "continue.openMorePage",
           "group": "navigation@6",
           "when": "view == continue.continueGUIView"
