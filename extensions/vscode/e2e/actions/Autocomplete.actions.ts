@@ -1,0 +1,32 @@
+import { TextEditor, VSBrowser, WebView } from "vscode-extension-tester";
+import * as path from "path";
+import { TestUtils } from "../TestUtils";
+import { AutocompleteSelectors } from "../selectors/Autocomplete.selectors";
+import { DEFAULT_TIMEOUT } from "../constants";
+import { expect } from "chai";
+
+export class AutocompleteActions {
+  public static async testCompletions(editor: TextEditor) {
+    const driver = editor.getDriver();
+
+    const messagePair0 = TestUtils.generateTestMessagePair(0);
+    await editor.typeTextAt(1, 1, messagePair0.userMessage);
+    await editor.typeTextAt(1, messagePair0.userMessage.length + 1, " ");
+    const ghostText0 = await TestUtils.waitForElement(
+      () => AutocompleteSelectors.getGhostTextContent(driver),
+      // The first completion takes longer because Continue needs to load
+      DEFAULT_TIMEOUT,
+    );
+    expect(ghostText0).to.equal(messagePair0.llmResponse);
+
+    await editor.clearText();
+
+    const messagePair1 = TestUtils.generateTestMessagePair(1);
+    await editor.typeTextAt(1, 1, messagePair1.userMessage);
+    await editor.typeTextAt(1, messagePair1.userMessage.length + 1, " ");
+    const ghostText1 = await TestUtils.waitForElement(() =>
+      AutocompleteSelectors.getGhostTextContent(driver),
+    );
+    expect(ghostText1).to.equal(messagePair1.llmResponse);
+  }
+}
