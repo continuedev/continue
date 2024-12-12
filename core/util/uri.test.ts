@@ -1,3 +1,4 @@
+import { getLastNPathParts } from ".";
 import {
   getLastNUriRelativePathParts,
   getRelativePath,
@@ -156,7 +157,7 @@ describe("getRelativePath", () => {
 describe("getLastNPathParts", () => {
   test("returns the last N parts of a filepath with forward slashes", () => {
     const filepath = "home/user/documents/project/file.txt";
-    expect(getLastNUriRelativePathParts(filepath, 2)).toBe("project/file.txt");
+    expect(getLastNPathParts(filepath, 2)).toBe("project/file.txt");
   });
 
   test("returns the last N parts of a filepath with backward slashes", () => {

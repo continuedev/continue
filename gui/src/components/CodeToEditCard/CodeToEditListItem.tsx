@@ -37,6 +37,7 @@ export default function CodeToEditListItem({
 }: CodeToEditListItemProps) {
   const [showCodeSnippet, setShowCodeSnippet] = useState(false);
 
+  const x = useMemo(() => {}, [code.contents, code.filepath]);
   const context = useMemo(() => {
     return rifWithContentsToContextItem({
       contents: code.contents,
