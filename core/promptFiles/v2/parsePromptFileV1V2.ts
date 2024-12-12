@@ -1,5 +1,5 @@
 import * as YAML from "yaml";
-import { getLastNPathParts } from "../../util";
+import { getLastNPathParts } from "../../util/uri";
 
 export function parsePromptFileV1V2(path: string, content: string) {
   let [preambleRaw, prompt] = content.split("\n---\n");

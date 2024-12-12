@@ -1,6 +1,6 @@
 import { ContinueSDK, SlashCommand } from "../..";
-import { getLastNPathParts } from "../../util";
 import { renderChatMessage } from "../../util/messageContent";
+import { getLastNPathParts } from "../../util/uri";
 import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";

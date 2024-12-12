@@ -1,6 +1,5 @@
-import { getLastNPathParts } from ".";
 import {
-  getLastNUriRelativePathParts,
+  getLastNPathParts,
   getRelativePath,
   getUniqueUriPath,
   getUriPathBasename,

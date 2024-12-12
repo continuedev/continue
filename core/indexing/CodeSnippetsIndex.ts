@@ -1,6 +1,5 @@
 import Parser from "web-tree-sitter";
 
-import { getBasename, getLastNPathParts } from "../util/";
 import { migrate } from "../util/paths";
 import {
   getFullLanguageName,
@@ -29,6 +28,7 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../";
+import { getLastNPathParts, getUriPathBasename } from "../util/uri";
 
 type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 
@@ -250,7 +250,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       }
 
       yield {
-        desc: `Indexing ${getBasename(compute.path)}`,
+        desc: `Indexing ${getUriPathBasename(compute.path)}`,
         progress: i / results.compute.length,
         status: "indexing",
       };
@@ -353,7 +353,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     return {
       name: row.title,
       description: getLastNPathParts(row.path, 2),
-      content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
+      content: `\`\`\`${getUriPathBasename(row.path)}\n${row.content}\n\`\`\``,
       uri: {
         type: "file",
         value: row.path,

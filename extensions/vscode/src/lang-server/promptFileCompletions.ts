@@ -2,8 +2,7 @@ import { IDE } from "core";
 import vscode from "vscode";
 
 import { FileSearch } from "../util/FileSearch";
-import { getUriPathBasename } from "core/util/uri";
-import { getLastNPathParts } from "core/util";
+import { getUriPathBasename, getLastNPathParts } from "core/util/uri";
 
 class PromptFilesCompletionItemProvider
   implements vscode.CompletionItemProvider
