@@ -10,7 +10,10 @@ import { getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
 import { CodeToEdit } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
-import { getUriPathBasename } from "core/util/uri";
+import {
+  getLastNUriRelativePathParts,
+  getUriPathBasename,
+} from "core/util/uri";
 
 export interface CodeToEditListItemProps {
   code: CodeToEdit;
@@ -37,20 +40,15 @@ export default function CodeToEditListItem({
 }: CodeToEditListItemProps) {
   const [showCodeSnippet, setShowCodeSnippet] = useState(false);
 
-  const x = useMemo(() => {}, [code.contents, code.filepath]);
-  const context = useMemo(() => {
-    return rifWithContentsToContextItem({
-      contents: code.contents,
-      range: {
-        start: {},
-      },
-    });
-  }, []);
-  const basename = getUriPathBasename(code.filepath);
-  const fileSubpath = getLastNPathParts(code.filepath, 2);
+  const fileName = getUriPathBasename(code.filepath);
+  const last2Parts = getLastNUriRelativePathParts(
+    window.workspacePaths ?? [],
+    code.filepath,
+    2,
+  );
 
   let isInsertion = false;
-  let title = filepath;
+  let title = fileName;
 
   if ("range" in code) {
     const start = code.range.start.line + 1;
@@ -96,7 +94,7 @@ export default function CodeToEditListItem({
               {title}
             </span>
             <span className="text-lightgray invisible flex-grow truncate text-xs group-hover:visible">
-              {fileSubpath}
+              {last2Parts}
             </span>
           </div>
         </div>
