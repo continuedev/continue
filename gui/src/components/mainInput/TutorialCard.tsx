@@ -83,7 +83,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <li className="flex items-start">
           <Cog6ToothIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Click the gear icon in the bottom right to configure Continue
+            Click the gear icon in the bottom right to configure Granite.Code
           </span>
         </li>
         <li className="flex items-start">
