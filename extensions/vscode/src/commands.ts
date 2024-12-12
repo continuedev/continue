@@ -754,9 +754,10 @@ const getCommandsMap: (
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.toggleFullScreen": () => {
+    "continue.toggleFullScreen": async () => {
       focusGUI();
 
+      const sessionId = await sidebar.webviewProtocol.request("getCurrentSessionId", undefined);
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
@@ -777,6 +778,7 @@ const getCommandsMap: (
         vscode.ViewColumn.One,
         {
           retainContextWhenHidden: true,
+          enableScripts: true,
         },
       );
       fullScreenPanel = panel;
@@ -789,6 +791,13 @@ const getCommandsMap: (
         undefined,
         true,
       );
+      
+      panel.onDidChangeViewState(() => {
+        vscode.commands.executeCommand("continue.newSession");
+        if(sessionId){
+          vscode.commands.executeCommand("continue.focusContinueSessionId", sessionId);
+        }
+      });
 
       // When panel closes, reset the webview and focus
       panel.onDidDispose(
