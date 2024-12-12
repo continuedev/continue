@@ -410,7 +410,7 @@ export abstract class BaseLLM implements ILLM {
             e.message.includes("http://127.0.0.1:11434")
           ) {
             throw new Error(
-              "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
+              "Failed to connect to local Ollama instance, please ensure Ollama is both installed and running. You can download Ollama from https://ollama.ai.",
             );
           }
         }
