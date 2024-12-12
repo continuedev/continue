@@ -351,18 +351,6 @@ class VsCodeIde implements IDE {
     return configs;
   }
 
-  async listFolders(): Promise<string[]> {
-    const allDirs: string[] = [];
-
-    const workspaceDirs = await this.getWorkspaceDirs();
-    for (const directory of workspaceDirs) {
-      const dirs = await walkDir(directory, this, { onlyDirs: true });
-      allDirs.push(...dirs);
-    }
-
-    return allDirs;
-  }
-
   async getWorkspaceDirs(): Promise<string[]> {
     return this.ideUtils.getWorkspaceDirectories().map((uri) => uri.toString());
   }

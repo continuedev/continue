@@ -6,6 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
+import { walkDirInWorkspaces } from "../../indexing/walkDir";
 import generateRepoMap from "../../util/generateRepoMap";
 import {
   getUniqueUriPath,
@@ -45,7 +46,9 @@ class RepoMapContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const folders = await args.ide.listFolders();
+    const folders = await walkDirInWorkspaces(args.ide, {
+      onlyDirs: true,
+    });
     const folderGroups = groupByLastNPathParts(folders, 2);
 
     return [

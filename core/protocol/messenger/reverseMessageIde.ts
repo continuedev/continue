@@ -117,10 +117,6 @@ export class ReverseMessageIde {
       return this.ide.showLines(data.filepath, data.startLine, data.endLine);
     });
 
-    this.on("listFolders", () => {
-      return this.ide.listFolders();
-    });
-
     this.on("getControlPlaneSessionInfo", async (msg) => {
       // Not supported in testing
       return undefined;

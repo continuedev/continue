@@ -582,21 +582,6 @@ class IdeProtocolClient(
                         respond(result)
                     }
 
-                    "listFolders" -> {
-                        val workspacePath = workspacePath ?: return@launch
-                        val folders = mutableListOf<String>()
-                        fun findNestedFolders(dirPath: String) {
-                            val dir = File(dirPath)
-                            val nestedFolders =
-                                dir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath }
-                                    ?: emptyList()
-                            folders.addAll(nestedFolders);
-                            nestedFolders.forEach { folder -> findNestedFolders(folder) }
-                        }
-                        findNestedFolders(workspacePath)
-                        respond(folders)
-                    }
-
                     "getSearchResults" -> {
                         val query = (data as Map<String, Any>)["query"] as String
                         respond(search(query))

@@ -79,6 +79,7 @@ export function renderPrompt({
       helper.filepath,
       reponame,
       snippets,
+      helper.workspaceUris,
     );
   } else {
     const formattedSnippets = formatSnippets(helper, snippets, workspaceDirs);
@@ -103,6 +104,7 @@ export function renderPrompt({
           reponame,
           helper.lang.name,
           snippets,
+          helper.workspaceUris,
         );
 
   const stopTokens = getStopTokens(

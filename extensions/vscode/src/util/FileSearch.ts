@@ -1,5 +1,5 @@
 import { IDE } from "core";
-import { walkDir } from "core/indexing/walkDir";
+import { walkDirInWorkspaces } from "core/indexing/walkDir";
 // @ts-ignore
 import MiniSearch from "minisearch";
 import * as vscode from "vscode";
@@ -24,18 +24,11 @@ export class FileSearch {
     },
   });
   private async initializeFileSearchState() {
-    const workspaceDirs = await this.ide.getWorkspaceDirs();
-
-    const results = await Promise.all(
-      workspaceDirs.map((dir) => {
-        return walkDir(dir, this.ide);
-      }),
-    );
-
+    const results = await walkDirInWorkspaces(this.ide);
     this.miniSearch.addAll(
-      results.flat().map((file) => ({
-        id: file,
-        relativePath: vscode.workspace.asRelativePath(file),
+      results.flat().map((uri) => ({
+        id: uri,
+        relativePath: vscode.workspace.asRelativePath(uri),
       })),
     );
   }

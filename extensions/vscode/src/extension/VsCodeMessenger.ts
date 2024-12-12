@@ -413,9 +413,6 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getWorkspaceDirs", async (msg) => {
       return ide.getWorkspaceDirs();
     });
-    this.onWebviewOrCore("listFolders", async (msg) => {
-      return ide.listFolders();
-    });
     this.onWebviewOrCore("writeFile", async (msg) => {
       return ide.writeFile(msg.data.path, msg.data.contents);
     });

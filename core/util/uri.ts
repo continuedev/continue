@@ -82,7 +82,7 @@ export function getLastNUriRelativePathParts(
   n: number,
 ): string {
   const path = getRelativePath(uri, workspaceDirs);
-  return getLastN(path, n);
+  return getLastNPathParts(path, n);
 }
 
 export function getUriPathBasename(uri: string): string {
@@ -116,7 +116,7 @@ export function getUniqueUriPath(
 
 export function shortestRelativeUriPaths(
   uris: string[],
-  directory: string,
+  workspaceUris: string[],
 ): string[] {
   if (uris.length === 0) {
     return [];

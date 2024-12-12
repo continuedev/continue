@@ -5,12 +5,14 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../index.js";
+import { walkDirInWorkspaces } from "../../indexing/walkDir.js";
 import {
   getUniqueUriPath,
   getUriPathBasename,
   groupByLastNPathParts,
 } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
+import { retrieveContextItemsFromEmbeddings } from "../retrieval/retrieval.js";
 
 class FolderContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -25,15 +27,14 @@ class FolderContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const { retrieveContextItemsFromEmbeddings } = await import(
-      "../retrieval/retrieval.js"
-    );
     return retrieveContextItemsFromEmbeddings(extras, this.options, query);
   }
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const folders = await args.ide.listFolders();
+    const folders = await walkDirInWorkspaces(args.ide, {
+      onlyDirs: true,
+    });
     const folderGroups = groupByLastNPathParts(folders, 2);
 
     return folders.map((folder) => {

@@ -134,10 +134,6 @@ export class MessageIde implements IDE {
     });
   }
 
-  async listFolders(): Promise<string[]> {
-    return await this.request("listFolders", undefined);
-  }
-
   async writeFile(fileUri: string, contents: string): Promise<void> {
     await this.request("writeFile", { path: fileUri, contents });
   }

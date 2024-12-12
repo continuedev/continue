@@ -2,6 +2,10 @@
 
 import { CompletionOptions } from "../../index.js";
 import {
+  getLastNUriRelativePathParts,
+  shortestRelativeUriPaths,
+} from "../../util/uri.js";
+import {
   AutocompleteCodeSnippet,
   AutocompleteSnippet,
   AutocompleteSnippetType,
@@ -14,7 +18,7 @@ export interface AutocompleteTemplate {
     filepath: string,
     reponame: string,
     snippets: AutocompleteSnippet[],
-    workspaceDirs: string[],
+    workspaceUris: string[],
   ) => [string, string];
   template:
     | string
@@ -25,7 +29,7 @@ export interface AutocompleteTemplate {
         reponame: string,
         language: string,
         snippets: AutocompleteSnippet[],
-        workspaceDirs: [],
+        workspaceUris: string[],
       ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
@@ -79,21 +83,27 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     filepath,
     reponame,
     snippets,
-    workspaceDirs,
+    workspaceUris,
   ): [string, string] => {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
-        return [`+++++ ${getLastNPathParts(filepath, 2)}\n${prefix}`, suffix];
+        return [
+          `+++++ ${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n${prefix}`,
+          suffix,
+        ];
       }
       return [prefix, suffix];
     }
 
-    const relativePaths = shortestRelativePaths([
-      ...snippets.map((snippet) =>
-        "filepath" in snippet ? snippet.filepath : "Untitled.txt",
-      ),
-      filepath,
-    ]);
+    const relativePaths = shortestRelativeUriPaths(
+      [
+        ...snippets.map((snippet) =>
+          "filepath" in snippet ? snippet.filepath : "Untitled.txt",
+        ),
+        filepath,
+      ],
+      workspaceUris,
+    );
 
     const otherFiles = snippets
       .map((snippet, i) => {
@@ -144,7 +154,7 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
     reponame,
     language,
     snippets,
-    workspaceDirs,
+    workspaceUris,
   ): string => {
     const otherFiles =
       snippets.length === 0
@@ -198,16 +208,16 @@ const codegeexFimTemplate: AutocompleteTemplate = {
     reponame,
     language,
     allSnippets,
-    workspaceDirs,
+    workspaceUris,
   ): string => {
     const snippets = allSnippets.filter(
       (snippet) => snippet.type === AutocompleteSnippetType.Code,
     ) as AutocompleteCodeSnippet[];
 
-    const relativePaths = shortestRelativePaths([
-      ...snippets.map((snippet) => snippet.filepath),
-      filepath,
-    ]);
+    const relativePaths = shortestRelativeUriPaths(
+      [...snippets.map((snippet) => snippet.filepath), filepath],
+      workspaceUris,
+    );
     const baseTemplate = `###PATH:${
       relativePaths[relativePaths.length - 1]
     }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;

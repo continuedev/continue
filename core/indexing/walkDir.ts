@@ -15,7 +15,7 @@ import { joinPathsToUri } from "../util/uri.js";
 export interface WalkerOptions {
   ignoreFiles?: string[];
   onlyDirs?: boolean;
-  returnRelativeUris?: boolean;
+  returnRelativeUrisPaths?: boolean;
   additionalIgnoreRules?: string[];
 }
 
@@ -23,7 +23,7 @@ type Entry = [string, FileType];
 
 // helper struct used for the DFS walk
 type WalkableEntry = {
-  relPath: string;
+  relativeUriPath: string;
   uri: string;
   type: FileType;
   entry: Entry;
@@ -72,11 +72,19 @@ class DFSWalker {
           });
           if (this.options.onlyDirs) {
             // when onlyDirs is enabled the walker will only return directory names
-            yield w.relPath + "/";
+            if (this.options.returnRelativeUrisPaths) {
+              yield w.relativeUriPath;
+            } else {
+              yield w.uri;
+            }
           }
         } else {
           // Note that shouldInclude handles skipping files if options.onlyDirs is true
-          yield w.relPath;
+          if (this.options.returnRelativeUrisPaths) {
+            yield w.relativeUriPath;
+          } else {
+            yield w.uri;
+          }
         }
       }
     }
@@ -86,7 +94,7 @@ class DFSWalker {
     const globalIgnoreFile = getGlobalContinueIgArray();
     return {
       walkableEntry: {
-        relPath: "",
+        relativeUriPath: "",
         uri: this.uri,
         type: 2 as FileType.Directory,
         entry: ["", 2 as FileType.Directory],
@@ -108,7 +116,7 @@ class DFSWalker {
   ): Promise<WalkableEntry[]> {
     const entries = await this.ide.listDir(walkableEntry.uri);
     return entries.map((e) => ({
-      relPath: `${walkableEntry.relPath}/${e[0]}`,
+      relativeUriPath: `${walkableEntry.relativeUriPath}/${e[0]}`,
       uri: joinPathsToUri(walkableEntry.uri, e[0]),
       type: e[1],
       entry: e,
@@ -126,7 +134,7 @@ class DFSWalker {
     const patterns = ignoreFilesInDir.map((c) => gitIgArrayFromFile(c)).flat();
     const newIgnoreContext = {
       ignore: ignore().add(patterns),
-      dirname: curDir.walkableEntry.relPath,
+      dirname: curDir.walkableEntry.relativeUriPath,
     };
     return [...curDir.ignoreContexts, newIgnoreContext];
   }
@@ -151,7 +159,7 @@ class DFSWalker {
       // we do not want to index it
       return false;
     }
-    let relPath = walkableEntry.relPath;
+    let relPath = walkableEntry.relativeUriPath;
     if (this.entryIsDirectory(walkableEntry.entry)) {
       relPath = `${relPath}/`;
     } else {
@@ -192,7 +200,7 @@ const defaultOptions: WalkerOptions = {
   ignoreFiles: [".gitignore", ".continueignore"],
   additionalIgnoreRules: [...DEFAULT_IGNORE_DIRS, ...DEFAULT_IGNORE_FILETYPES],
   onlyDirs: false,
-  returnRelativeUris: false,
+  returnRelativeUrisPaths: false,
 };
 
 export async function walkDir(
@@ -214,4 +222,15 @@ export async function* walkDirAsync(
 ): AsyncGenerator<string> {
   const options = { ...defaultOptions, ..._optionOverrides };
   yield* new DFSWalker(path, ide, options).walk();
+}
+
+export async function walkDirInWorkspaces(
+  ide: IDE,
+  _optionOverrides?: WalkerOptions,
+): Promise<string[]> {
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  const results = await Promise.all(
+    workspaceDirs.map((dir) => walkDir(dir, ide, _optionOverrides)),
+  );
+  return results.flat();
 }

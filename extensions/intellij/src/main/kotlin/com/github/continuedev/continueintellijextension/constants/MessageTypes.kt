@@ -18,7 +18,6 @@ class MessageTypes {
             "getTerminalContents",
             "getWorkspaceDirs",
             "showLines",
-            "listFolders",
             "writeFile",
             "fileExists",
             "showVirtualFile",

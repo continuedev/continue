@@ -6,7 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
-import { walkDir } from "../../indexing/walkDir";
+import { walkDirInWorkspaces } from "../../indexing/walkDir";
 import {
   getUniqueUriPath,
   getUriPathBasename,
@@ -46,20 +46,15 @@ class FileContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const workspaceDirs = await args.ide.getWorkspaceDirs();
-    const results = await Promise.all(
-      workspaceDirs.map((dir) => {
-        return walkDir(dir, args.ide);
-      }),
-    );
+    const results = await walkDirInWorkspaces(args.ide);
     const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
     const fileGroups = groupByLastNPathParts(files, 2);
 
-    return files.map((file) => {
+    return files.map((uri) => {
       return {
-        id: file,
-        title: getUriPathBasename(file),
-        description: getUniqueUriPath(file, fileGroups),
+        id: uri,
+        title: getUriPathBasename(uri),
+        description: getUniqueUriPath(uri, fileGroups),
       };
     });
   }

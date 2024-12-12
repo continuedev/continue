@@ -607,8 +607,6 @@ declare global {
   
     getAvailableThreads(): Promise<Thread[]>;
   
-    listFolders(): Promise<string[]>;
-  
     getWorkspaceDirs(): Promise<string[]>;
   
     getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
