@@ -456,8 +456,8 @@ async function intermediateToFinalConfig(
         config.embeddingsProvider = new embeddingsProviderClass();
       } else {
         const llmOptions: LLMOptions = {
+          model: options.model ?? "UNSPECIFIED",
           ...options,
-          model: options.model ?? "UNSPECIFIED"
         };
         config.embeddingsProvider = new embeddingsProviderClass(
           llmOptions,
@@ -489,8 +489,8 @@ async function intermediateToFinalConfig(
       }
     } else if (rerankerClass) {
       const llmOptions: LLMOptions = {
-        ...params,
         model: "rerank-2",
+        ...params,
       };
       config.reranker = new rerankerClass(llmOptions);
     }
