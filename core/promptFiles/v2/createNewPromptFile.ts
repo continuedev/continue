@@ -1,7 +1,6 @@
 import { IDE } from "../..";
 import { GlobalContext } from "../../util/GlobalContext";
 import { joinPathsToUri } from "../../util/uri";
-// import { getPathModuleForIde } from "../../util/pathModule";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
 # It is used to define and reuse prompts within Continue
@@ -47,7 +46,7 @@ export async function createNewPromptFileV2(
     );
   }
 
-  const baseDiruri = joinPathsToUri(
+  const baseDirUri = joinPathsToUri(
     workspaceDirs[0],
     promptPath ?? ".continue/prompts",
   );
@@ -58,7 +57,7 @@ export async function createNewPromptFileV2(
   do {
     const suffix = counter === 0 ? "" : `-${counter}`;
     promptFileUri = joinPathsToUri(
-      baseDiruri,
+      baseDirUri,
       `new-prompt-file${suffix}.prompt`,
     );
     counter++;

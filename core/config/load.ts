@@ -58,7 +58,6 @@ import {
   getConfigTsPath,
   getContinueDotEnv,
   getEsbuildBinaryPath,
-  readAllGlobalPromptFiles,
 } from "../util/paths";
 
 import {
@@ -68,12 +67,9 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import {
-  DEFAULT_PROMPTS_FOLDER,
-  getPromptFiles,
-  slashCommandFromPromptFile,
-} from "./promptFile.js";
 import { ConfigValidationError, validateConfig } from "./validation.js";
+import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
+import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
 
 export interface ConfigResult<T> {
   config: T | undefined;
@@ -183,8 +179,8 @@ function loadSerializedConfig(
 async function serializedToIntermediateConfig(
   initial: SerializedContinueConfig,
   ide: IDE,
-  loadPromptFiles: boolean = true,
 ): Promise<Config> {
+  // DEPRECATED - load custom slash commands
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = slashCommandFromDescription(command);
@@ -196,33 +192,18 @@ async function serializedToIntermediateConfig(
     slashCommands.push(slashFromCustomCommand(command));
   }
 
-  const workspaceDirs = await ide.getWorkspaceDirs();
-  const promptFolder = initial.experimental?.promptPath;
+  // DEPRECATED - load slash commands from v1 prompt files
+  // NOTE: still checking the v1 default .prompts folder for slash commands
+  const promptFiles = await getAllPromptFiles(
+    ide,
+    initial.experimental?.promptPath,
+    true,
+  );
 
-  if (loadPromptFiles) {
-    // v1 prompt files
-    let promptFiles: { path: string; content: string }[] = [];
-    promptFiles = (
-      await Promise.all(
-        workspaceDirs.map((dir) =>
-          getPromptFiles(
-            ide,
-            path.join(dir, promptFolder ?? DEFAULT_PROMPTS_FOLDER),
-          ),
-        ),
-      )
-    )
-      .flat()
-      .filter(({ path }) => path.endsWith(".prompt"));
-
-    // Also read from ~/.continue/.prompts
-    promptFiles.push(...readAllGlobalPromptFiles());
-
-    for (const file of promptFiles) {
-      const slashCommand = slashCommandFromPromptFile(file.path, file.content);
-      if (slashCommand) {
-        slashCommands.push(slashCommand);
-      }
+  for (const file of promptFiles) {
+    const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
+    if (slashCommand) {
+      slashCommands.push(slashCommand);
     }
   }
 
@@ -842,6 +823,5 @@ export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadFullConfigNode,
-  serializedToIntermediateConfig,
   type BrowserSerializedContinueConfig,
 };

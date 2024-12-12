@@ -2,8 +2,10 @@ import { IDE } from "../..";
 import { walkDir } from "../../indexing/walkDir";
 import { readAllGlobalPromptFiles } from "../../util/paths";
 import { joinPathsToUri } from "../../util/uri";
+import { DEFAULT_PROMPTS_FOLDER_V1 } from "../v1";
 
-async function getPromptFilesFromDir(
+export const DEFAULT_PROMPTS_FOLDER_V2 = ".continue/prompts";
+export async function getPromptFilesFromDir(
   ide: IDE,
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
@@ -27,22 +29,28 @@ async function getPromptFilesFromDir(
   }
 }
 
-export async function getAllPromptFilesV2(
+export async function getAllPromptFiles(
   ide: IDE,
   overridePromptFolder?: string,
+  checkV1DefaultFolder: boolean = false,
 ): Promise<{ path: string; content: string }[]> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   let promptFiles: { path: string; content: string }[] = [];
 
+  let dirsToCheck = [DEFAULT_PROMPTS_FOLDER_V2];
+  if (checkV1DefaultFolder) {
+    dirsToCheck.push(DEFAULT_PROMPTS_FOLDER_V1);
+  }
+  if (overridePromptFolder) {
+    dirsToCheck = [overridePromptFolder];
+  }
+
+  const fullDirs = workspaceDirs
+    .map((dir) => dirsToCheck.map((d) => joinPathsToUri(dir, d)))
+    .flat();
+
   promptFiles = (
-    await Promise.all(
-      workspaceDirs.map((dir) =>
-        getPromptFilesFromDir(
-          ide,
-          joinPathsToUri(dir, overridePromptFolder ?? ".continue/prompts"),
-        ),
-      ),
-    )
+    await Promise.all(fullDirs.map((dir) => getPromptFilesFromDir(ide, dir)))
   ).flat();
 
   // Also read from ~/.continue/.prompts

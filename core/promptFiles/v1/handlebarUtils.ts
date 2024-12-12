@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 
-export function convertToLetter(num: number): string {
+function convertToLetter(num: number): string {
   let result = "";
   while (num > 0) {
     const remainder = (num - 1) % 26;
@@ -15,7 +15,7 @@ export function convertToLetter(num: number): string {
  *  We replace filepaths with alphabetic characters to handle
  *  escaping issues.
  */
-export const replaceFilepaths = (
+const replaceFilepaths = (
   value: string,
   ctxProviderNames: string[],
 ): [string, { [key: string]: string }] => {
@@ -95,7 +95,10 @@ export async function prepareTemplateAndData(
   return [newTemplate, data];
 }
 
-export function compileAndRenderTemplate(template: string, data: Record<string, string>): string {
+export function compileAndRenderTemplate(
+  template: string,
+  data: Record<string, string>,
+): string {
   const templateFn = Handlebars.compile(template);
   return templateFn(data);
 }
