@@ -8,7 +8,7 @@ on:
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
-      - ".github/workflows**"
+      - ".github/workflows/**"
 
 jobs:
   install-root:
@@ -19,12 +19,14 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: root-cache
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - name: Install root dependencies
+        if: steps.root-cache.outputs.cache-hit != 'true'
         run: npm ci
 
   core-checks:
@@ -36,17 +38,20 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: root-cache
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: core-cache
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Install core dependencies
+        if: steps.core-cache.outputs.cache-hit != 'true'
         run: |
           cd core
           npm ci
@@ -68,22 +73,24 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: gui-cache
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
       - name: Install gui dependencies
+        if: steps.gui-cache.outputs.cache-hit != 'true'
         run: |
           cd gui
           npm ci
@@ -102,22 +109,24 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: binary-cache
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
       - name: Install binary dependencies
+        if: steps.binary-cache.outputs.cache-hit != 'true'
         run: |
           cd binary
           npm ci
@@ -136,22 +145,24 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: vscode-cache
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Install vscode dependencies
+        if: steps.vscode-cache.outputs.cache-hit != 'true'
         run: |
           cd extensions/vscode
           npm ci
@@ -173,7 +184,7 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
@@ -192,12 +203,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
@@ -220,17 +231,19 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
+        id: gui-cache
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Install GUI dependencies
+        if: steps.gui-cache.outputs.cache-hit != 'true'
         run: cd gui && npm ci
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}

@@ -110,11 +110,6 @@ export function registerAllCodeLensProviders(
     new providers.SuggestionsCodeLensProvider(),
   );
 
-  configPyCodeLensDisposable = registerCodeLensProvider(
-    "*",
-    new providers.ConfigPyCodeLensProvider(),
-  );
-
   registerQuickActionsProvider(config, context);
 
   subscribeToVSCodeQuickActionsSettings(() =>
@@ -123,9 +118,6 @@ export function registerAllCodeLensProviders(
 
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
-
-  // was opening config UI from config.json. Not currently applicable.
-  // context.subscriptions.push(configPyCodeLensDisposable);
 
   return { verticalDiffCodeLens };
 }

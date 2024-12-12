@@ -1,6 +1,10 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
-import { BaseLlmApi, constructLlmApi } from "@continuedev/openai-adapters";
+import {
+  BaseLlmApi,
+  ChatCompletionCreateParams,
+  constructLlmApi,
+} from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
 import {
@@ -406,7 +410,7 @@ export abstract class BaseLLM implements ILLM {
             e.message.includes("http://127.0.0.1:11434")
           ) {
             throw new Error(
-              "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
+              "Failed to connect to local Ollama instance, please ensure Ollama is both installed and running. You can download Ollama from https://ollama.ai.",
             );
           }
         }
@@ -659,6 +663,12 @@ export abstract class BaseLLM implements ILLM {
     return { role: "assistant" as const, content: completion };
   }
 
+  protected modifyChatBody(
+    body: ChatCompletionCreateParams,
+  ): ChatCompletionCreateParams {
+    return body;
+  }
+
   async *streamChat(
     _messages: ChatMessage[],
     signal: AbortSignal,
@@ -695,9 +705,11 @@ export abstract class BaseLLM implements ILLM {
         }
       } else {
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
+          let body = toChatBody(messages, completionOptions);
+          body = this.modifyChatBody(body);
           const stream = this.openaiAdapter.chatCompletionStream(
             {
-              ...toChatBody(messages, completionOptions),
+              ...body,
               stream: true,
             },
             signal,

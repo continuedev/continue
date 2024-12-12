@@ -21,6 +21,7 @@ import {
   IdeSettings,
   IdeType,
   ILLM,
+  LLMOptions,
   ModelDescription,
   RerankerDescription,
   SerializedContinueConfig,
@@ -31,7 +32,7 @@ import {
   slashFromCustomCommand,
 } from "../commands/index.js";
 import { AllRerankers } from "../context/allRerankers";
-import MCPConnectionSingleton from "../context/mcp";
+import { MCPManagerSingleton } from "../context/mcp";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
@@ -435,8 +436,12 @@ async function intermediateToFinalConfig(
       ) {
         config.embeddingsProvider = new embeddingsProviderClass();
       } else {
+        const llmOptions: LLMOptions = {
+          model: options.model ?? "UNSPECIFIED",
+          ...options,
+        };
         config.embeddingsProvider = new embeddingsProviderClass(
-          options,
+          llmOptions,
           (url: string | URL, init: any) =>
             fetchwithRequestOptions(url, init, {
               ...config.requestOptions,
@@ -464,7 +469,11 @@ async function intermediateToFinalConfig(
         config.reranker = new LLMReranker(llm);
       }
     } else if (rerankerClass) {
-      config.reranker = new rerankerClass(params);
+      const llmOptions: LLMOptions = {
+        model: "rerank-2",
+        ...params,
+      };
+      config.reranker = new rerankerClass(llmOptions);
     }
   }
 
@@ -479,22 +488,36 @@ async function intermediateToFinalConfig(
   };
 
   // Apply MCP if specified
-  if (config.experimental?.modelContextProtocolServer) {
-    const mcpConnection = await MCPConnectionSingleton.getInstance(
-      config.experimental.modelContextProtocolServer,
-    );
-    continueConfig = await Promise.race<ContinueConfig>([
-      mcpConnection.modifyConfig(continueConfig),
-      new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("MCP connection timed out after 2000ms")),
+  const mcpManager = MCPManagerSingleton.getInstance();
+  if (config.experimental?.modelContextProtocolServers) {
+    config.experimental.modelContextProtocolServers?.forEach(
+      async (server, index) => {
+        const mcpId = index.toString();
+        const mcpConnection = mcpManager.createConnection(mcpId, server);
+        if (!mcpConnection) {
+          return;
+        }
+
+        const abortController = new AbortController();
+        const mcpConnectionTimeout = setTimeout(
+          () => abortController.abort(),
           2000,
-        ),
-      ),
-    ]).catch((error) => {
-      console.warn("MCP connection error:", error);
-      return continueConfig; // Return original config if timeout occurs
-    });
+        );
+
+        try {
+          await mcpConnection.modifyConfig(
+            continueConfig,
+            mcpId,
+            abortController.signal,
+          );
+        } catch (e: any) {
+          if (e.name !== "AbortError") {
+            throw e;
+          }
+        }
+        clearTimeout(mcpConnectionTimeout);
+      },
+    );
   }
 
   return continueConfig;

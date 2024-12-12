@@ -76,12 +76,20 @@ async function getEntriesFilteredByIgnore(dir: string, ide: IDE) {
 
   const workspaceDirs = await ide.getWorkspaceDirs();
 
-  const withRelativePaths = entries.map((entry) => ({
-    uri: entry[0],
-    type: entry[1],
-    basename: getUriPathBasename(entry[0]),
-    relativePath: getRelativePath(entry[0], workspaceDirs),
-  }));
+  const withRelativePaths = entries
+    .filter(
+      (entry) => entry[1] === FileType.File || entry[1] === FileType.Directory,
+    )
+    .map((entry) => {
+      const relativePath = getRelativePath(entry[0], workspaceDirs);
+      return {
+        uri: entry[0],
+        type: entry[1],
+        basename: getUriPathBasename(entry[0]),
+        relativePath:
+          relativePath + (entry[1] === FileType.Directory ? "/" : ""),
+      };
+    });
 
   return withRelativePaths.filter((entry) => !ig.ignores(entry.relativePath));
 }
@@ -121,7 +129,7 @@ async function gatherProjectContext(
 
 function createOnboardingPrompt(context: string): string {
   return `
-    As a helpful AI assistant, your task is to onboard a new developer to this project. 
+    As a helpful AI assistant, your task is to onboard a new developer to this project.
     Use the following context about the project structure, READMEs, and dependency files to create a comprehensive overview:
 
     ${context}
