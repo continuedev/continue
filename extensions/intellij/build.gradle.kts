@@ -4,14 +4,17 @@ fun properties(key: String) = providers.gradleProperty(key)
 
 fun environment(key: String) = providers.environmentVariable(key)
 
+val remoteRobotVersion = "0.11.23"
+
 plugins {
     id("java") // Java support
     alias(libs.plugins.kotlin) // Kotlin support
-    alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
+//    alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
     kotlin("plugin.serialization") version "1.8.0"
+    id("org.jetbrains.intellij") version "1.17.4"
 }
 
 group = properties("pluginGroup").get()
@@ -19,7 +22,10 @@ group = properties("pluginGroup").get()
 version = properties("pluginVersion").get()
 
 // Configure project's dependencies
-repositories { mavenCentral() }
+repositories {
+    mavenCentral()
+    maven { url = uri("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies") }
+}
 
 // Dependencies are managed with Gradle version catalog - read more:
 // https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
@@ -31,6 +37,10 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
     implementation("com.posthog.java:posthog:1.+")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+    testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
+    testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for
@@ -70,6 +80,10 @@ qodana {
 koverReport { defaults { xml { onCheck = true } } }
 
 tasks {
+    downloadRobotServerPlugin {
+        version.set(remoteRobotVersion)
+    }
+
     prepareSandbox {
         from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
         from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
@@ -108,10 +122,9 @@ tasks {
     // Configure UI tests plugin
     // Read more: https://github.com/JetBrains/intellij-ui-test-robot
     runIdeForUiTests {
-        systemProperty("robot-server.port", "8082")
-        systemProperty("ide.mac.message.dialogs.as.sheets", "false")
-        systemProperty("jb.privacy.policy.text", "<!--999.999-->")
-        systemProperty("jb.consents.confirmation.enabled", "false")
+//        systemProperty("robot-server.port", "8082")
+        systemProperty("ide.browser.jcef.jsQueryPoolSize", "10000")
+
     }
 
     signPlugin {
@@ -140,5 +153,9 @@ tasks {
             "${rootProject.projectDir.parentFile.parentFile}/manual-testing-sandbox",
             "${rootProject.projectDir.parentFile.parentFile}/manual-testing-sandbox/test.kt"
         ).map { file(it).absolutePath }
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }

@@ -1,3 +1,5 @@
+package com.github.continuedev.continueintellijextension
+
 import com.github.continuedev.continueintellijextension.editor.VerticalDiffBlock
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
@@ -34,10 +36,6 @@ class VerticalDiffBlockTest : BasePlatformTestCase() {
         val textToAdd = "This is a new line"
         val startLine = 0
 
-        // Ensure the editor's colorsScheme is initialized
-//        val globalScheme = EditorColorsManager.getInstance().globalScheme
-//        editor.setScheme(globalScheme) // Use setScheme() instead of setColorsScheme()
-
         // Create an instance of VerticalDiffBlock
         val verticalDiffBlock = VerticalDiffBlock(
             editor = editor,
@@ -53,6 +51,7 @@ class VerticalDiffBlockTest : BasePlatformTestCase() {
 
         // Assert
         val documentText = editor.document.text
+
         // We expect a newline to be inserted in addition to our line
         val expectedText = "$textToAdd\n\n"
         assertEquals(expectedText, documentText)
