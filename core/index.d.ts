@@ -631,12 +631,6 @@ export interface IDE {
 
   showLines(fileUri: string, startLine: number, endLine: number): Promise<void>;
 
-  showDiff(
-    fileUri: string,
-    newContents: string,
-    stepIndex: number,
-  ): Promise<void>;
-
   getOpenFiles(): Promise<string[]>;
 
   getCurrentFile(): Promise<

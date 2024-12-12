@@ -5,15 +5,10 @@ import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { walkDir } from "core/indexing/walkDir";
 import { GetGhTokenArgs } from "core/protocol/ide";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  getContinueGlobalPath,
-} from "core/util/paths";
+import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import * as vscode from "vscode";
 
 import { executeGotoProvider } from "./autocomplete/lsp";
-import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
@@ -37,7 +32,6 @@ class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
 
   constructor(
-    private readonly diffManager: DiffManager,
     private readonly vscodeWebviewProtocolPromise: Promise<VsCodeWebviewProtocol>,
     private readonly context: vscode.ExtensionContext,
   ) {
@@ -474,14 +468,6 @@ class VsCodeIde implements IDE {
 
   async openUrl(url: string): Promise<void> {
     await vscode.env.openExternal(vscode.Uri.parse(url));
-  }
-
-  async showDiff(
-    fileUri: string,
-    newContents: string,
-    stepIndex: number,
-  ): Promise<void> {
-    await this.diffManager.writeDiff(fileUri, newContents, stepIndex);
   }
 
   async getOpenFiles(): Promise<string[]> {

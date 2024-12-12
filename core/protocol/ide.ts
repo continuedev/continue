@@ -34,10 +34,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
-  showDiff: [
-    { filepath: string; newContents: string; stepIndex: number },
-    void,
-  ];
   diffLine: [
     {
       diffLine: DiffLine;

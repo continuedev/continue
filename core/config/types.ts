@@ -456,11 +456,6 @@ declare global {
       startLine: number,
       endLine: number,
     ): Promise<void>;
-    showDiff(
-      filepath: string,
-      newContents: string,
-      stepIndex: number,
-    ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
     getCurrentFile(): Promise<undefined | {
       isUntitled: boolean

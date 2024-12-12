@@ -18,7 +18,6 @@ import {
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
-import { DiffManager } from "../diff/horizontal";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { registerAllPromptFilesCompletionProviders } from "../lang-server/promptFileCompletions";
@@ -47,7 +46,6 @@ export class VsCodeExtension {
   private tabAutocompleteModel: TabAutocompleteModel;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
-  private diffManager: DiffManager;
   private editDecorationManager: EditDecorationManager;
   private verticalDiffManager: VerticalDiffManager;
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
@@ -70,12 +68,7 @@ export class VsCodeExtension {
         resolveWebviewProtocol = resolve;
       },
     );
-    this.diffManager = new DiffManager(context);
-    this.ide = new VsCodeIde(
-      this.diffManager,
-      this.webviewProtocolPromise,
-      context,
-    );
+    this.ide = new VsCodeIde(this.webviewProtocolPromise, context);
     this.extensionContext = context;
     this.windowId = uuidv4();
 
@@ -152,13 +145,9 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig.bind(this.configHandler),
     );
 
-    // Indexing + pause token
-    this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
-
     this.configHandler.loadConfig().then((config) => {
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
-        this.diffManager,
         this.verticalDiffManager.fileUriToCodeLens,
         config,
       );
@@ -181,7 +170,6 @@ export class VsCodeExtension {
 
           registerAllCodeLensProviders(
             context,
-            this.diffManager,
             this.verticalDiffManager.fileUriToCodeLens,
             newConfig,
           );
@@ -240,7 +228,6 @@ export class VsCodeExtension {
       context,
       this.sidebar,
       this.configHandler,
-      this.diffManager,
       this.verticalDiffManager,
       this.core.continueServerClientPromise,
       this.battery,

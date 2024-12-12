@@ -164,17 +164,6 @@ export class MessageIde implements IDE {
   async readFile(fileUri: string): Promise<string> {
     return await this.request("readFile", { filepath: fileUri });
   }
-  async showDiff(
-    fileUri: string,
-    newContents: string,
-    stepIndex: number,
-  ): Promise<void> {
-    await this.request("showDiff", {
-      filepath: fileUri,
-      newContents,
-      stepIndex,
-    });
-  }
 
   getOpenFiles(): Promise<string[]> {
     return this.request("getOpenFiles", undefined);

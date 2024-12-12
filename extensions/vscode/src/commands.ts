@@ -29,7 +29,7 @@ import {
   setupStatusBar,
 } from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
-import { DiffManager } from "./diff/horizontal";
+
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
@@ -229,7 +229,6 @@ function hideGUI() {
 async function processDiff(
   action: "accept" | "reject",
   sidebar: ContinueGUIWebviewViewProvider,
-  diffManager: DiffManager,
   ide: VsCodeIde,
   verticalDiffManager: VerticalDiffManager,
   newFileUri?: string,
@@ -254,13 +253,6 @@ async function processDiff(
   // Clear vertical diffs depending on action
   verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
 
-  // Accept or reject the diff
-  if (action === "accept") {
-    await diffManager.acceptDiff(newOrCurrentUri);
-  } else {
-    await diffManager.rejectDiff(newOrCurrentUri);
-  }
-
   void sidebar.webviewProtocol.request("setEditStatus", {
     status: "done",
   });
@@ -284,7 +276,6 @@ const getCommandsMap: (
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
-  diffManager: DiffManager,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
@@ -296,7 +287,6 @@ const getCommandsMap: (
   extensionContext,
   sidebar,
   configHandler,
-  diffManager,
   verticalDiffManager,
   continueServerClientPromise,
   battery,
@@ -349,7 +339,6 @@ const getCommandsMap: (
       processDiff(
         "accept",
         sidebar,
-        diffManager,
         ide,
         verticalDiffManager,
         newFileUri,
@@ -360,7 +349,6 @@ const getCommandsMap: (
       processDiff(
         "reject",
         sidebar,
-        diffManager,
         ide,
         verticalDiffManager,
         newFilepath,
@@ -995,7 +983,6 @@ export function registerAllCommands(
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
-  diffManager: DiffManager,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
@@ -1011,7 +998,6 @@ export function registerAllCommands(
       extensionContext,
       sidebar,
       configHandler,
-      diffManager,
       verticalDiffManager,
       continueServerClientPromise,
       battery,

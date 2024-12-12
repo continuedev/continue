@@ -218,14 +218,6 @@ class FileSystemIde implements IDE {
     return Promise.resolve(undefined);
   }
 
-  showDiff(
-    fileUri: string,
-    newContents: string,
-    stepIndex: number,
-  ): Promise<void> {
-    return Promise.resolve();
-  }
-
   getBranch(dir: string): Promise<string> {
     return Promise.resolve("");
   }

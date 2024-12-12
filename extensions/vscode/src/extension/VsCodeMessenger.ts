@@ -132,13 +132,6 @@ export class VsCodeMessenger {
     this.onWebview("readFile", async (msg) => {
       return await ide.readFile(msg.data.filepath);
     });
-    this.onWebview("showDiff", async (msg) => {
-      return await ide.showDiff(
-        msg.data.filepath,
-        msg.data.newContents,
-        msg.data.stepIndex,
-      );
-    });
 
     webviewProtocol.on(
       "acceptDiff",
