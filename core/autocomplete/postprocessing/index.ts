@@ -90,6 +90,17 @@ export function postprocessCompletion({
         completion = completion.slice(1);
       }
     }
+
+    // When there is no suffix, Codestral tends to begin with a new line
+    // We do this to avoid double new lines
+    if (
+      suffix.length === 0 &&
+      prefix.endsWith("\n\n") &&
+      completion.startsWith("\n")
+    ) {
+      // Remove a single leading \n from the completion
+      completion = completion.slice(1);
+    }
   }
 
   if (llm.model.includes("granite")) {
