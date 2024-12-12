@@ -1,5 +1,6 @@
 import {
   ContextProviderWithParams,
+  ContinueRcJson,
   ModelDescription,
   SerializedContinueConfig,
   SlashCommandDescription,
@@ -99,9 +100,48 @@ export const defaultConfig: SerializedContinueConfig = {
   slashCommands: defaultSlashCommandsVscode,
 };
 
+export const defaultOverrideConfig: Partial<SerializedContinueConfig> = {};
+
 export const defaultConfigJetBrains: SerializedContinueConfig = {
   models: [DEFAULT_CHAT_MODEL_CONFIG],
   tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
 };
+
+const DEFAULT_CONTEXT_LENGTH = 4096;
+
+const BASE_GRANITE_CONFIG: Partial<ModelDescription> = {
+  contextLength: DEFAULT_CONTEXT_LENGTH,
+  completionOptions: {
+    maxTokens: DEFAULT_CONTEXT_LENGTH / 2,
+    temperature: 0,
+    topP: 0.9,
+    topK: 40,
+    presencePenalty: 0.0,
+    frequencyPenalty: 0.1
+  },
+  systemMessage: `\
+You are Granite, an AI language model developed by IBM. \
+You are a cautious assistant. You carefully follow instructions. \
+You are helpful and harmless and you follow ethical guidelines and promote positive behavior.
+`,
+};
+
+const DEFAULT_MODEL_GRANITE: ModelDescription = {
+    title: "granite3-dense:8b",
+    provider: "ollama",
+    model: "granite3-dense:8b",
+    ...BASE_GRANITE_CONFIG,
+}
+
+export const defaultConfigGranite: SerializedContinueConfig = {
+  models: [DEFAULT_MODEL_GRANITE],
+  tabAutocompleteModel: DEFAULT_MODEL_GRANITE,
+  embeddingsProvider: {
+    "provider": "ollama",
+    "model": "nomic-embed-text"
+  },
+  contextProviders: defaultContextProvidersVsCode,
+  slashCommands: defaultSlashCommandsVscode,
+}

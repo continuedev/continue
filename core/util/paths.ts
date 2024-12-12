@@ -6,7 +6,10 @@ import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 
 import { IdeType, SerializedContinueConfig } from "../";
-import { defaultConfig, defaultConfigJetBrains } from "../config/default";
+import {
+  defaultOverrideConfig,
+  defaultConfigJetBrains,
+} from "../config/default";
 import Types from "../config/types";
 
 dotenv.config();
@@ -96,7 +99,7 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
     if (ideType === "jetbrains") {
       fs.writeFileSync(p, JSON.stringify(defaultConfigJetBrains, null, 2));
     } else {
-      fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
+      fs.writeFileSync(p, JSON.stringify(defaultOverrideConfig, null, 2));
     }
   }
   return p;

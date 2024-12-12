@@ -18,7 +18,9 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
   const currentSharedConfig = globalContext.getSharedConfig(); // for merging security concerns
 
   try {
-    let config = resolveSerializedConfig(filepath);
+    // resolveSerializedConfig is also used to load partial configs, but
+    // here we assume we have a complete one
+    let config = resolveSerializedConfig(filepath) as SerializedContinueConfig;
     const shareConfigUpdates: SharedConfigSchema = {};
 
     let effected = false;

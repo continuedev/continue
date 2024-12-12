@@ -64,6 +64,7 @@ import {
 
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import {
+  defaultConfigGranite,
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
@@ -77,9 +78,9 @@ import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
   filepath: string,
-): SerializedContinueConfig {
+): Partial<SerializedContinueConfig> {
   let content = fs.readFileSync(filepath, "utf8");
-  const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
+  const config = JSONC.parse(content) as unknown as Partial<SerializedContinueConfig>;
   if (config.env && Array.isArray(config.env)) {
     const env = {
       ...process.env,
@@ -96,7 +97,7 @@ export function resolveSerializedConfig(
     });
   }
 
-  return JSONC.parse(content) as unknown as SerializedContinueConfig;
+  return JSONC.parse(content) as unknown as Partial<SerializedContinueConfig>;
 }
 
 const configMergeKeys = {
@@ -115,10 +116,15 @@ function loadSerializedConfig(
 ): ConfigResult<SerializedContinueConfig> {
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
+    config = defaultConfigGranite;
+
+    const configPath = getConfigJsonPath(ideType);
     try {
-      config = resolveSerializedConfig(getConfigJsonPath(ideType));
+      const configJson = resolveSerializedConfig(getConfigJsonPath(ideType));
+      config = mergeJson(config, configJson, "merge", configMergeKeys);
+
     } catch (e) {
-      throw new Error(`Failed to parse config.json: ${e}`);
+      console.warn("Error loading remote config: ", e);
     }
   }
 
