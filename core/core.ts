@@ -732,21 +732,18 @@ export class Core {
           // URI TODO is this equality statement valid?
           const filePath = getFullPath(uri);
           if (filePath === getConfigJsonPath()) {
-            // Trigger a toast notification to provide UI feedback that config
-            // has been updated
+            // Trigger a toast notification to provide UI feedback that config has been updated
             const showToast =
               this.globalContext.get("showConfigUpdateToast") ?? true;
             if (showToast) {
-              void this.ide.showToast("info", "Config updated");
-
-              // URI TODO - this is a small regression - add core -> toast functionality that handles responses to update global context here
-              // vscode.window
-              // .showInformationMessage("Config updated", "Don't show again")
-              // .then((selection) => {
-              //   if (selection === "Don't show again") {
-              //     this.globalContext.update("showConfigUpdateToast", false);
-              //   }
-              // });
+              const selection = await this.ide.showToast(
+                "info",
+                "Config updated",
+                "Don't show again",
+              );
+              if (selection === "Don't show again") {
+                this.globalContext.update("showConfigUpdateToast", false);
+              }
             }
           }
 

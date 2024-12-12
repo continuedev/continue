@@ -1,4 +1,7 @@
+import fs from "fs";
 import { homedir } from "node:os";
+import { fileURLToPath } from "node:url";
+import path from "path";
 
 import { languageForFilepath } from "../../autocomplete/constants/AutocompleteLanguageInfo.js";
 import { SlashCommand } from "../../index.js";
@@ -77,7 +80,7 @@ const ShareSlashCommand: SlashCommand = {
       // folders are included. We default to using the first item in the list, if
       // it exists.
       const workspaceDirectory = workspaceDirs?.[0] || "";
-      outputDir = outputDir.replace(/^./, workspaceDirectory);
+      outputDir = outputDir.replace(/^./, fileURLToPath(workspaceDirectory));
     }
 
     if (!fs.existsSync(outputDir)) {
