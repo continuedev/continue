@@ -17,7 +17,7 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
-import { getUriPathBasename } from "../util/uri.js";
+import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -94,23 +94,26 @@ export class CodebaseIndexer {
     return indexes;
   }
 
-  public async refreshFile(file: string): Promise<void> {
+  public async refreshFile(
+    file: string,
+    workspaceDirs: string[],
+  ): Promise<void> {
     if (this.pauseToken.paused) {
       // NOTE: by returning here, there is a chance that while paused a file is modified and
       // then after unpausing the file is not reindexed
       return;
     }
-    const workspaceDir = await this.getWorkspaceDir(file);
-    if (!workspaceDir) {
+    const { foundInDir } = findUriInDirs(file, workspaceDirs);
+    if (!foundInDir) {
       return;
     }
-    const branch = await this.ide.getBranch(workspaceDir);
-    const repoName = await this.ide.getRepoName(workspaceDir);
+    const branch = await this.ide.getBranch(foundInDir);
+    const repoName = await this.ide.getRepoName(foundInDir);
     const indexesToBuild = await this.getIndexesToBuild();
     const stats = await this.ide.getLastModified([file]);
     for (const index of indexesToBuild) {
       const tag = {
-        directory: workspaceDir,
+        directory: foundInDir,
         branch,
         artifactId: index.artifactId,
       };
@@ -151,6 +154,8 @@ export class CodebaseIndexer {
       };
     }
 
+    const workspaceDirs = await this.ide.getWorkspaceDirs();
+
     const progressPer = 1 / files.length;
     try {
       for (const file of files) {
@@ -159,7 +164,7 @@ export class CodebaseIndexer {
           desc: `Indexing file ${file}...`,
           status: "indexing",
         };
-        await this.refreshFile(file);
+        await this.refreshFile(file, workspaceDirs);
 
         progress += progressPer;
 
@@ -442,15 +447,5 @@ export class CodebaseIndexer {
       await markComplete(lastUpdated, IndexResultType.UpdateLastUpdated);
       completedIndexCount += 1;
     }
-  }
-
-  private async getWorkspaceDir(filepath: string): Promise<string | undefined> {
-    const workspaceDirs = await this.ide.getWorkspaceDirs();
-    for (const workspaceDir of workspaceDirs) {
-      if (filepath.startsWith(workspaceDir)) {
-        return workspaceDir;
-      }
-    }
-    return undefined;
   }
 }

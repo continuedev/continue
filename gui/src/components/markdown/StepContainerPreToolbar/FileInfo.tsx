@@ -1,7 +1,7 @@
 import FileIcon from "../../FileIcon";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { getBasename } from "core/util/uri";
+import { getUriPathBasename } from "core/util/uri";
 
 export interface FileInfoProps {
   filepath: string;
@@ -25,7 +25,7 @@ const FileInfo = ({ filepath, range }: FileInfoProps) => {
       >
         <FileIcon height="20px" width="20px" filename={filepath} />
         <span className="w-full truncate hover:underline">
-          {getBasename(filepath)}
+          {getUriPathBasename(filepath)}
           {range && ` ${range}`}
         </span>
       </div>

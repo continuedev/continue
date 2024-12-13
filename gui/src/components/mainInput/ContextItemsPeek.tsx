@@ -5,7 +5,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { getBasename } from "core/util";
 import { useContext, useMemo, useState } from "react";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -14,6 +13,7 @@ import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { getIconFromDropdownItem } from "./MentionList";
+import { getUriPathBasename } from "core/util/uri";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -119,7 +119,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
             className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
           >
             {contextItem.uri?.type === "file"
-              ? getBasename(contextItem.description)
+              ? getUriPathBasename(contextItem.description)
               : contextItem.description}
           </div>
         </div>

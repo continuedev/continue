@@ -4,7 +4,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../";
-import { getBasename } from "../../util/uri";
+import { getUriPathBasename } from "../../util/uri";
 
 class CurrentFileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -23,7 +23,7 @@ class CurrentFileContextProvider extends BaseContextProvider {
     if (!currentFile) {
       return [];
     }
-    const baseName = getBasename(currentFile.path);
+    const baseName = getUriPathBasename(currentFile.path);
     return [
       {
         description: currentFile.path,

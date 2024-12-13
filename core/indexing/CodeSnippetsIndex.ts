@@ -190,6 +190,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const ast = parser.parse(contents);
 
     const language = getFullLanguageName(filepath);
+    if (!language) {
+      return [];
+    }
     const query = await getQueryForFile(
       filepath,
       `code-snippet-queries/${language}.scm`,
