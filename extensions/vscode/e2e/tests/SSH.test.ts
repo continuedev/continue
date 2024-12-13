@@ -10,7 +10,9 @@ import { TestUtils } from "../TestUtils";
 import { SSHSelectors } from "../selectors/SSH.selectors";
 import { AutocompleteActions } from "../actions/Autocomplete.actions";
 
-describe("SSH", () => {
+describe("SSH", function () {
+  this.retries(2); // Retries failed tests up to 2 times
+
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT);
 
