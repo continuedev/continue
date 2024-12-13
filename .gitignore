@@ -152,7 +152,6 @@ Icon
 Icon?
 
 .continuerc.json
-.prompts/
 .aider*
 
 notes.md
@@ -168,5 +167,3 @@ extensions/intellij/bin
 extensions/.continue-debug/
 
 *.vsix
-
-binary/.continue

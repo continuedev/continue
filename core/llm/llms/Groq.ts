@@ -1,9 +1,9 @@
-import { LLMOptions, ModelProvider } from "../../index.js";
+import { LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
 class Groq extends OpenAI {
-  static providerName: ModelProvider = "groq";
+  static providerName = "groq";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.groq.com/openai/v1/",
   };

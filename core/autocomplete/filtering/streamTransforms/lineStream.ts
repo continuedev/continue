@@ -277,11 +277,23 @@ export async function* stopAtLines(
   linesToStopAt: string[] = LINES_TO_STOP_AT,
 ): LineStream {
   for await (const line of stream) {
-    const stopPattern = linesToStopAt.find((stopAt) =>
-      line.trim().includes(stopAt),
-    );
-    if (stopPattern !== undefined) {
-      await fullStop?.(line, stopPattern);
+    const stopAt = linesToStopAt.find((stopAt) => line.trim().includes(stopAt));
+    if (stopAt !== undefined) {
+      fullStop?.(line, stopAt);
+      break;
+    }
+    yield line;
+  }
+}
+
+export async function* stopAtLinesExact(
+  stream: LineStream,
+  fullStop: (line: string) => void,
+  linesToStopAt: string[],
+): LineStream {
+  for await (const line of stream) {
+    if (linesToStopAt.some((stopAt) => line === stopAt)) {
+      fullStop(line);
       break;
     }
     yield line;

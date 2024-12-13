@@ -3,7 +3,7 @@ import os from "node:os";
 
 import { removeCodeBlocksAndTrim } from ".";
 
-import type { IMessenger } from "./messenger";
+import type { IMessenger } from "../protocol/messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 
 // The amount of time before a process is declared

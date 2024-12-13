@@ -30,7 +30,7 @@ function constructPrompt(
   });
 }
 
-async function* addIndentation(
+export async function* addIndentation(
   diffLineGenerator: AsyncGenerator<DiffLine>,
   indentation: string,
 ): AsyncGenerator<DiffLine> {

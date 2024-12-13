@@ -9,6 +9,7 @@ import {
   showWhateverWeHaveAtXMs,
   skipPrefixes,
   stopAtLines,
+  stopAtLinesExact,
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
@@ -58,6 +59,21 @@ export class StreamTransformPipeline {
         );
       fullStop();
     });
+
+    const lineBelowCursor = this.getLineBelowCursor(ctx);
+    if (lineBelowCursor.trim() !== "") {
+      lineGenerator = stopAtLinesExact(
+        lineGenerator,
+        (line) => {
+          if (ctx.options.logCompletionStop)
+            ctx.writeLog(
+              `CompletionStop: Completion stopped due to the completion containing exactly the line below the cursor:\n${line}`,
+            );
+          fullStop();
+        },
+        [lineBelowCursor],
+      );
+    }
     lineGenerator = stopAtRepeatingLines(
       lineGenerator,
       () => {

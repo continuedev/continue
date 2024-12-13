@@ -1,9 +1,9 @@
-import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
+import { CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 class LlamaCpp extends BaseLLM {
-  static providerName: ModelProvider = "llama.cpp";
+  static providerName = "llama.cpp";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://127.0.0.1:8080/",
   };
@@ -43,7 +43,7 @@ class LlamaCpp extends BaseLLM {
         stream: true,
         ...this._convertArgs(options, prompt),
       }),
-      signal
+      signal,
     });
 
     for await (const value of streamSse(resp)) {

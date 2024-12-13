@@ -15,9 +15,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@continuedev/config-yaml": "^1.0.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
-    "@monaco-editor/react": "^4.6.0",
     "@reduxjs/toolkit": "^2.3.0",
     "@tiptap/core": "^2.3.2",
     "@tiptap/extension-document": "^2.3.2",

@@ -5,8 +5,12 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { InProcessMessenger } from "core/util/messenger";
-import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
+import { InProcessMessenger } from "core/protocol/messenger";
+import {
+  getConfigJsonPath,
+  getConfigTsPath,
+  getConfigYamlPath,
+} from "core/util/paths";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
@@ -255,6 +259,14 @@ export class VsCodeExtension {
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
       await this.configHandler.reloadConfig();
     });
+
+    fs.watchFile(
+      getConfigYamlPath("vscode"),
+      { interval: 1000 },
+      async (stats) => {
+        await this.configHandler.reloadConfig();
+      },
+    );
 
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();

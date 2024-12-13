@@ -51,7 +51,7 @@ Many [context provider](../context-providers.md) can be referenced by typing "@"
 
 - `@terminal` - The contents of the terminal
 - `@https://github.com/continuedev/continue` - The contents of a URL
-- `@src/index.ts` - The contents of a file
+- `@src/index.ts` - The contents of a file (VS Code only)
 
 ## Feedback
 

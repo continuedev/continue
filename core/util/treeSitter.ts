@@ -230,6 +230,7 @@ export async function getSymbolsForFile(
               line: node.endPosition.row + 1,
             },
           },
+          content: node.text,
         });
       }
     }

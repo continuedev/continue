@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,8 @@
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/fetch": "^1.0.3",
     "node-fetch": "^3.3.2",
-    "openai": "^4.67.0"
+    "openai": "^4.76.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",

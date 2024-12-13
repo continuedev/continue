@@ -502,13 +502,15 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 ```json
 {
   "experimental": {
-    "modelContextProtocolServer": {
-      "transport": {
-        "type": "stdio",
-        "command": "uvx",
-        "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
       }
-    }
+    ]
   }
 }
 ```

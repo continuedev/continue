@@ -11,14 +11,20 @@ export interface Parameter {
   defaultValue?: any;
 }
 
+export enum ChatTemplate {
+  None = "none",
+  // TODO
+}
+
 export interface LlmInfo {
   model: string;
-  provider: string;
+  // providers: string[]; // TODO: uncomment and deal with the consequences
   displayName?: string;
   description?: string;
   contextLength?: number;
   maxCompletionTokens?: number;
   regex?: RegExp;
+  chatTemplate?: ChatTemplate;
 
   /** If not set, assumes "text" only */
   mediaTypes?: MediaType[];
@@ -52,12 +58,17 @@ export interface ApiProviderInfo {
   handlesTemplating: boolean;
 }
 
-export type ModelProviderCapability = "stream" | "fim" | "image";
+export type ModelProviderCapability =
+  | "stream"
+  | "fim"
+  | "image"
+  | "template_chat"
+  | "tools";
 
 export interface ModelProvider {
   id: string;
   displayName: string;
-  // capabilities: ModelProviderCapability[];
+  // capabilities: ModelProviderCapability[]; // TODO: uncomment and deal with the consequences
   models: Omit<LlmInfo, "provider">[];
 
   /** Any additional parameters required to configure the model

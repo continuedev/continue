@@ -9,7 +9,6 @@ import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
-import MonacoPage from "./pages/monaco";
 import MorePage from "./pages/More";
 import Stats from "./pages/stats";
 import { ROUTES } from "./util/navigation";
@@ -54,10 +53,6 @@ const router = createMemoryRouter([
         element: <ConfigErrorPage />,
       },
       {
-        path: "/monaco",
-        element: <MonacoPage />,
-      },
-      {
         path: "/migration",
         element: <MigrationPage />,
       },
@@ -70,9 +65,7 @@ const router = createMemoryRouter([
   TODO - look into a more redux-esque way to do this
 */
 function SetupListeners() {
-  const dispatch = useDispatch();
-
-  useSetup(dispatch);
+  useSetup();
   return <></>;
 }
 

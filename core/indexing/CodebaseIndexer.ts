@@ -17,7 +17,6 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
-import { getBasename } from "../util/index.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -83,7 +82,7 @@ export class CodebaseIndexer {
         this.ide.readFile.bind(this.ide),
         pathSep,
         this.continueServerClient,
-        config.embeddingsProvider.maxChunkSize,
+        config.embeddingsProvider.maxEmbeddingChunkSize,
       ), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
