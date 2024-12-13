@@ -199,12 +199,20 @@ export class ContinueCompletionProvider
           }
         }
       }
+
+      // Manually pass file contents for unsaved, untitled files
+      let filepath = document.uri.fsPath;
+      if (document.isUntitled) {
+        manuallyPassFileContents = document.getText();
+      }
+
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
 
       const input: AutocompleteInput = {
+        isUntitledFile: document.isUntitled,
         completionId: uuidv4(),
-        filepath: document.uri.fsPath,
+        filepath,
         pos,
         recentlyEditedFiles: [],
         recentlyEditedRanges:
