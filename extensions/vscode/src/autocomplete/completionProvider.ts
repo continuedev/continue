@@ -21,7 +21,6 @@ import {
 } from "./statusBar";
 
 import type { IDE } from "core";
-import { findLastIndex } from "core/util/findLast";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 
 interface DiffType {
@@ -279,8 +278,6 @@ export class ContinueCompletionProvider
           currentText,
           lastLineOfCompletionText,
         );
-        console.log(currentText + "\n" + lastLineOfCompletionText);
-        console.log(diffs);
 
         if (diffPatternMatches(diffs, ["+"])) {
           // Just insert, we're already at the end of the line
@@ -293,35 +290,32 @@ export class ContinueCompletionProvider
             startPos,
             document.lineAt(startPos).range.end,
           );
-        } else if (diffPatternMatches(diffs, ["+", "-"])) {
+        } else if (
+          diffPatternMatches(diffs, ["+", "-"]) ||
+          diffPatternMatches(diffs, ["-", "+"])
+        ) {
           // We are midline and the model just inserted without repeating to the end of the line
           // We want to move the cursor to the end of the line
-          range = new vscode.Range(
-            startPos,
-            document.lineAt(startPos).range.end,
-          );
-          // Find the last removed part of the diff
-          const lastRemovedIndex = findLastIndex(
-            diffs,
-            (diff) => diff.removed === true,
-          );
-
-          const lastRemovedContent = diffs[lastRemovedIndex].value;
-          completionText += lastRemovedContent;
+          // range = new vscode.Range(
+          //   startPos,
+          //   document.lineAt(startPos).range.end,
+          // );
+          // // Find the last removed part of the diff
+          // const lastRemovedIndex = findLastIndex(
+          //   diffs,
+          //   (diff) => diff.removed === true,
+          // );
+          // const lastRemovedContent = diffs[lastRemovedIndex].value;
+          // completionText += lastRemovedContent;
         } else {
-          // Diff is too complicated, just insert.
+          // Diff is too complicated, just insert the first added part of the diff
           // This is the safe way to ensure that it is displayed
-          const truncatedInsertion = diffs.find((d) => d.added === true);
-          const removedWords = diffs.find((d) => d.removed === true);
-
-          if (!truncatedInsertion || !removedWords) {
-            // Honestly not sure how we got here, but let's just insert to be safe
+          if (diffs[0]?.added) {
+            completionText = diffs[0].value;
           } else {
-            completionText = truncatedInsertion.value;
-            range = new vscode.Range(
-              startPos,
-              startPos.translate(0, removedWords.count),
-            );
+            // If the first part of the diff isn't an insertion, then the model is
+            // probably rewriting other parts of the line
+            return undefined;
           }
         }
       } else {
