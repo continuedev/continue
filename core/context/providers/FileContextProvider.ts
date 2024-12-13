@@ -8,9 +8,8 @@ import {
 } from "../../";
 import { walkDirInWorkspaces } from "../../indexing/walkDir";
 import {
-  getUniqueUriPath,
   getUriPathBasename,
-  groupByLastNPathParts,
+  getShortestUniqueRelativeUriPaths,
 } from "../../util/uri";
 
 const MAX_SUBMENU_ITEMS = 10_000;
@@ -53,13 +52,16 @@ class FileContextProvider extends BaseContextProvider {
       workspaceDirs,
     );
     const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
-    const fileGroups = groupByLastNPathParts(workspaceDirs, files, 2);
+    const withUniquePaths = getShortestUniqueRelativeUriPaths(
+      files,
+      workspaceDirs,
+    );
 
-    return files.map((uri) => {
+    return withUniquePaths.map((file) => {
       return {
-        id: uri,
-        title: getUriPathBasename(uri),
-        description: getUniqueUriPath(uri, fileGroups),
+        id: file.uri,
+        title: getUriPathBasename(file.uri),
+        description: file.uniquePath,
       };
     });
   }

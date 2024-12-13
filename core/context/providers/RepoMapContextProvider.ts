@@ -9,9 +9,8 @@ import {
 import { walkDirInWorkspaces } from "../../indexing/walkDir";
 import generateRepoMap from "../../util/generateRepoMap";
 import {
-  getUniqueUriPath,
+  getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
-  groupByLastNPathParts,
 } from "../../util/uri";
 
 const ENTIRE_PROJECT_ITEM: ContextSubmenuItem = {
@@ -54,14 +53,17 @@ class RepoMapContextProvider extends BaseContextProvider {
       },
       workspaceDirs,
     );
-    const folderGroups = groupByLastNPathParts(workspaceDirs, folders, 2);
+    const withUniquePaths = getShortestUniqueRelativeUriPaths(
+      folders,
+      workspaceDirs,
+    );
 
     return [
       ENTIRE_PROJECT_ITEM,
-      ...folders.map((folder) => ({
-        id: folder,
-        title: getUriPathBasename(folder),
-        description: getUniqueUriPath(folder, folderGroups),
+      ...withUniquePaths.map((folder) => ({
+        id: folder.uri,
+        title: getUriPathBasename(folder.uri),
+        description: folder.uniquePath,
       })),
     ];
   }

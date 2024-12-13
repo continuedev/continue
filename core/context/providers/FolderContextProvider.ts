@@ -7,9 +7,8 @@ import {
 } from "../../index.js";
 import { walkDirInWorkspaces } from "../../indexing/walkDir.js";
 import {
-  getUniqueUriPath,
+  getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
-  groupByLastNPathParts,
 } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 import { retrieveContextItemsFromEmbeddings } from "../retrieval/retrieval.js";
@@ -40,13 +39,16 @@ class FolderContextProvider extends BaseContextProvider {
       },
       workspaceDirs,
     );
-    const folderGroups = groupByLastNPathParts(workspaceDirs, folders, 2);
+    const withUniquePaths = getShortestUniqueRelativeUriPaths(
+      folders,
+      workspaceDirs,
+    );
 
-    return folders.map((folder) => {
+    return withUniquePaths.map((folder) => {
       return {
-        id: folder,
-        title: getUriPathBasename(folder),
-        description: getUniqueUriPath(folder, folderGroups),
+        id: folder.uri,
+        title: getUriPathBasename(folder.uri),
+        description: folder.uniquePath,
       };
     });
   }

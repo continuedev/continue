@@ -15,9 +15,8 @@ import { selectContextProviderDescriptions } from "../redux/selectors";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
 import {
-  getUniqueUriPath,
+  getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
-  groupByLastNPathParts,
 } from "core/util/uri";
 
 const MINISEARCH_OPTIONS = {
@@ -90,12 +89,15 @@ export const SubmenuContextProvidersProvider = ({
   const getOpenFilesItems = useCallback(async () => {
     const openFiles = await ideMessenger.ide.getOpenFiles();
     const workspaceDirs = await ideMessenger.ide.getWorkspaceDirs();
-    const openFileGroups = groupByLastNPathParts(workspaceDirs, openFiles, 2);
+    const withUniquePaths = getShortestUniqueRelativeUriPaths(
+      openFiles,
+      workspaceDirs,
+    );
 
-    return openFiles.map((file) => ({
-      id: file,
-      title: getUriPathBasename(file),
-      description: getUniqueUriPath(file, openFileGroups),
+    return withUniquePaths.map((file) => ({
+      id: file.uri,
+      title: getUriPathBasename(file.uri),
+      description: file.uniquePath,
       providerTitle: "file",
     }));
   }, [ideMessenger]);

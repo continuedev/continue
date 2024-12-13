@@ -33,6 +33,7 @@ export function findUriInDirs(
   uri: string,
   dirUriCandidates: string[],
 ): {
+  uri: string;
   relativePathOrBasename: string;
   foundInDir: string | null;
 } {
@@ -72,6 +73,7 @@ export function findUriInDirs(
     }
     if (allDirPartsMatch) {
       return {
+        uri,
         relativePathOrBasename: uriPathParts
           .slice(dirPathParts.length)
           .join("/"),
@@ -82,6 +84,7 @@ export function findUriInDirs(
   // Not found
   console.warn("Directory not found for uri", uri, dirUriCandidates);
   return {
+    uri,
     relativePathOrBasename: getUriPathBasename(uri),
     foundInDir: null,
   };
@@ -138,112 +141,51 @@ export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
   return URI.serialize(components);
 }
 
-// Note, will show workspace
-export function groupByLastNPathParts(
-  workspaceDirs: string[],
-  uris: string[],
-  n: number,
-): Record<string, string[]> {
-  return uris.reduce(
-    (groups, uri) => {
-      const lastNParts = getLastNUriRelativePathParts(workspaceDirs, uri, n);
-      if (!groups[lastNParts]) {
-        groups[lastNParts] = [];
-      }
-      groups[lastNParts].push(uri);
-      return groups;
-    },
-    {} as Record<string, string[]>,
-  );
-}
-
-export function getUniqueUriPath(
-  item: string,
-  itemGroups: Record<string, string[]>,
-): string {
-  return "hi";
-}
-
-export function shortestRelativeUriPaths(
+export function getShortestUniqueRelativeUriPaths(
   uris: string[],
   dirUriCandidates: string[],
-): string[] {
-  if (uris.length === 0) {
-    return [];
-  }
-  const relativeUris;
+): {
+  uri: string;
+  uniquePath: string;
+}[] {
+  // Split all URIs into segments and count occurrences of each suffix combination
+  const segmentCombinationsMap = new Map<string, number>();
+  const segmentsInfo = uris.map((uri) => {
+    const { relativePathOrBasename } = findUriInDirs(uri, dirUriCandidates);
+    const segments = relativePathOrBasename.split("/");
+    const suffixes: string[] = [];
 
-  const partsLengths = uris.map((x) => x.split("/").length);
-  const currentRelativeUris = uris.map(getB);
-  const currentNumParts = uris.map(() => 1);
-  const isDuplicated = currentRelativeUris.map(
-    (x, i) =>
-      currentRelativeUris.filter((y, j) => y === x && paths[i] !== paths[j])
-        .length > 1,
-  );
+    // Generate all possible suffix combinations
+    for (let i = segments.length - 1; i >= 0; i--) {
+      const suffix = segments.slice(i).join("/");
+      suffixes.unshift(suffix);
 
-  while (isDuplicated.some(Boolean)) {
-    const firstDuplicatedPath = currentRelativeUris.find(
-      (x, i) => isDuplicated[i],
-    );
-    if (!firstDuplicatedPath) {
-      break;
+      // Count occurrences of each suffix
+      segmentCombinationsMap.set(
+        suffix,
+        (segmentCombinationsMap.get(suffix) || 0) + 1,
+      );
     }
 
-    currentRelativeUris.forEach((x, i) => {
-      if (x === firstDuplicatedPath) {
-        currentNumParts[i] += 1;
-        currentRelativeUris[i] = getLastNUriRelativePathParts(
-          paths[i],
-          currentNumParts[i],
-        );
-      }
-    });
+    return { uri, segments, suffixes, relativePathOrBasename };
+  });
 
-    isDuplicated.forEach((x, i) => {
-      if (x) {
-        isDuplicated[i] =
-          // Once we've used up all the parts, we can't make it longer
-          currentNumParts[i] < partsLengths[i] &&
-          currentRelativeUris.filter((y) => y === currentRelativeUris[i])
-            .length > 1;
-      }
-    });
-  }
+  // Find shortest unique path for each URI
+  return segmentsInfo.map(({ uri, suffixes, relativePathOrBasename }) => {
+    // Find the first (shortest) unique suffix
+    const uniquePath =
+      suffixes.find((suffix) => segmentCombinationsMap.get(suffix) === 1) ??
+      relativePathOrBasename; // case where not unique - perhaps basename
 
-  return currentRelativeUris;
+    return { uri, uniquePath };
+  });
 }
 
-// export function getBasename(filepath: string): string {
-//   return filepath.split(SEP_REGEX).pop() ?? "";
-// }
-
+// Only used when working with system paths and relative paths
+// Since doesn't account for URI segements before workspace
 export function getLastNPathParts(filepath: string, n: number): string {
   if (n <= 0) {
     return "";
   }
   return filepath.split(/[\\/]/).slice(-n).join("/");
 }
-
-// export function getUniqueFilePath(
-//   item: string,
-//   itemGroups: Record<string, string[]>,
-// ): string {
-//   const lastTwoParts = getLastNPathParts(item, 2);
-//   const group = itemGroups[lastTwoParts];
-
-//   let n = 2;
-//   if (group.length > 1) {
-//     while (
-//       group.some(
-//         (otherItem) =>
-//           otherItem !== item &&
-//           getLastNPathParts(otherItem, n) === getLastNPathParts(item, n),
-//       )
-//     ) {
-//       n++;
-//     }
-//   }
-
-//   return getLastNPathParts(item, n);
-// }
