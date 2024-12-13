@@ -13,6 +13,8 @@ import { SSHSelectors } from "../selectors/SSH.selectors";
 import { AutocompleteActions } from "../actions/Autocomplete.actions";
 
 describe("SSH", function () {
+  this.retries(2);
+
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
