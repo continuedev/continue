@@ -11,12 +11,12 @@ describe("GUI Test", () => {
   let driver: WebDriver;
 
   before(async function () {
-    this.timeout(DEFAULT_TIMEOUT);
+    this.timeout(DEFAULT_TIMEOUT.XL);
     await GlobalActions.openTestWorkspace();
   });
 
   beforeEach(async function () {
-    this.timeout(DEFAULT_TIMEOUT);
+    this.timeout(DEFAULT_TIMEOUT.XL);
 
     await GUIActions.openGui();
 
@@ -25,14 +25,10 @@ describe("GUI Test", () => {
 
     await GUIActions.switchToReactIframe(driver);
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
-
-    // await new Promise((res) => {
-    //   setTimeout(res, DEFAULT_TIMEOUT);
-    // });
   });
 
   afterEach(async function () {
-    this.timeout(DEFAULT_TIMEOUT);
+    this.timeout(DEFAULT_TIMEOUT.XL);
 
     await view.switchBack();
     await new EditorView().closeAllEditors();
@@ -45,7 +41,7 @@ describe("GUI Test", () => {
       expect(await description.getText()).has.string(
         "Quickly get up and running using our API keys.",
       );
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
   describe("Chat", () => {
@@ -54,7 +50,7 @@ describe("GUI Test", () => {
       const messagePair = TestUtils.generateTestMessagePair();
       await messageInput.sendKeys(messagePair.userMessage);
       await messageInput.sendKeys(Key.ENTER);
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
       );
     });
@@ -64,7 +60,7 @@ describe("GUI Test", () => {
       const messagePair = TestUtils.generateTestMessagePair();
       await messageInput.sendKeys(messagePair.userMessage);
       (await GUISelectors.getSubmitInputButton(view)).click();
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
       );
     });
@@ -77,7 +73,7 @@ describe("GUI Test", () => {
         message: userMessage0,
         inputFieldIndex: 0,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse0),
       );
 
@@ -88,7 +84,7 @@ describe("GUI Test", () => {
         message: userMessage1,
         inputFieldIndex: 1,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
@@ -99,7 +95,7 @@ describe("GUI Test", () => {
         message: userMessage2,
         inputFieldIndex: 2,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
 
@@ -120,7 +116,7 @@ describe("GUI Test", () => {
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
 
     it("Can edit messages", async () => {
       const { userMessage: userMessage0, llmResponse: llmResponse0 } =
@@ -130,7 +126,7 @@ describe("GUI Test", () => {
         message: userMessage0,
         inputFieldIndex: 0,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse0),
       );
 
@@ -141,7 +137,7 @@ describe("GUI Test", () => {
         message: userMessage1,
         inputFieldIndex: 1,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
@@ -152,7 +148,7 @@ describe("GUI Test", () => {
         message: userMessage2,
         inputFieldIndex: 2,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
 
@@ -172,7 +168,7 @@ describe("GUI Test", () => {
       });
       await GUISelectors.getThreadMessageByText(view, llmResponse0);
 
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse3),
       );
       await Promise.all([
@@ -183,7 +179,7 @@ describe("GUI Test", () => {
           GUISelectors.getThreadMessageByText(view, llmResponse2),
         ),
       ]);
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
   describe("Chat Paths", () => {
@@ -194,7 +190,7 @@ describe("GUI Test", () => {
         message: messagePair1.userMessage,
         inputFieldIndex: 0,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
       );
 
@@ -204,7 +200,7 @@ describe("GUI Test", () => {
         message: messagePair2.userMessage,
         inputFieldIndex: 1,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
       );
 
@@ -238,9 +234,9 @@ describe("GUI Test", () => {
         message: messagePair3.userMessage,
         inputFieldIndex: 2,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair3.llmResponse),
       );
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 });
