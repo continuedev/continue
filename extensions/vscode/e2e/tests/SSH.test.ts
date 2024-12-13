@@ -30,7 +30,7 @@ describe("SSH", () => {
 
     await new Workbench().executeCommand("File: Open Folder...");
     await new Promise((res) => {
-      setTimeout(res, 1000);
+      setTimeout(res, 4000);
     });
 
     const inputBox = await TestUtils.waitForElement(
@@ -39,18 +39,18 @@ describe("SSH", () => {
     );
     await inputBox.selectQuickPick("test-folder");
     await new Promise((res) => {
-      setTimeout(res, 3000);
+      setTimeout(res, 4000);
     });
     await inputBox.confirm();
 
     await new Promise((res) => {
-      setTimeout(res, 3000);
+      setTimeout(res, 4000);
     });
 
     await new Workbench().executeCommand("File: Open File...");
     await (await InputBox.create(5000)).selectQuickPick("main.py");
     await new Promise((res) => {
-      setTimeout(res, 3000);
+      setTimeout(res, 4000);
     });
   });
 
