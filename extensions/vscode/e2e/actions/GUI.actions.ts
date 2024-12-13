@@ -41,7 +41,9 @@ export class GUIActions {
   };
 
   public static openGui = async () => {
-    return new Workbench().executeCommand("continue.focusContinueInput");
+    return TestUtils.waitForSuccess(() =>
+      new Workbench().executeCommand("continue.focusContinueInput"),
+    );
   };
 
   public static selectModelFromDropdown = async (

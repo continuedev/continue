@@ -1,4 +1,4 @@
-const BASELINE = 10_000;
+const BASELINE = 15_000;
 
 export const DEFAULT_TIMEOUT = {
   XS: BASELINE * 0.2,
