@@ -5,14 +5,14 @@ import { getBasename } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
+import { SnippetPayload } from "../snippets";
 import {
   AutocompleteTemplate,
   getTemplateForModel,
 } from "./AutocompleteTemplate";
-import { getStopTokens } from "./getStopTokens";
-import { SnippetPayload } from "../snippets";
-import { formatSnippets } from "./formatting";
 import { getSnippets } from "./filtering";
+import { formatSnippets } from "./formatting";
+import { getStopTokens } from "./getStopTokens";
 
 function getTemplate(helper: HelperVars): AutocompleteTemplate {
   if (helper.options.template) {
@@ -62,6 +62,9 @@ export function renderPrompt({
   // If prefix is manually passed
   let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
   let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
+  if (suffix === "") {
+    suffix = "\n";
+  }
 
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
 
