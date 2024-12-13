@@ -1,1 +1,8 @@
-export const DEFAULT_TIMEOUT = 30_000;
+const BASELINE = 10_000;
+
+export const DEFAULT_TIMEOUT = {
+  XS: BASELINE * 0.2,
+  SM: BASELINE * 0.5,
+  MD: BASELINE,
+  XL: BASELINE * 5,
+};

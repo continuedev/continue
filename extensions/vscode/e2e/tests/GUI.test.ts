@@ -11,12 +11,12 @@ describe("GUI Test", () => {
   let driver: WebDriver;
 
   before(async function () {
-    this.timeout(DEFAULT_TIMEOUT);
+    this.timeout(DEFAULT_TIMEOUT.XL);
     await GlobalActions.openTestWorkspace();
   });
 
   beforeEach(async function () {
-    this.timeout(DEFAULT_TIMEOUT);
+    this.timeout(DEFAULT_TIMEOUT.XL);
 
     await GUIActions.openGui();
 
@@ -25,14 +25,10 @@ describe("GUI Test", () => {
 
     await GUIActions.switchToReactIframe(driver);
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
-
-    // await new Promise((res) => {
-    //   setTimeout(res, DEFAULT_TIMEOUT);
-    // });
   });
 
   afterEach(async function () {
-    this.timeout(DEFAULT_TIMEOUT);
+    this.timeout(DEFAULT_TIMEOUT.XL);
 
     await view.switchBack();
     await new EditorView().closeAllEditors();
@@ -45,7 +41,7 @@ describe("GUI Test", () => {
       expect(await description.getText()).has.string(
         "Quickly get up and running using our API keys.",
       );
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
   describe("Chat", () => {
@@ -120,7 +116,7 @@ describe("GUI Test", () => {
       await TestUtils.expectNoElement(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
 
     it("Can edit messages", async () => {
       const { userMessage: userMessage0, llmResponse: llmResponse0 } =
@@ -183,7 +179,7 @@ describe("GUI Test", () => {
           GUISelectors.getThreadMessageByText(view, llmResponse2),
         ),
       ]);
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
   describe("Chat Paths", () => {
@@ -241,6 +237,6 @@ describe("GUI Test", () => {
       await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair3.llmResponse),
       );
-    }).timeout(DEFAULT_TIMEOUT);
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 });

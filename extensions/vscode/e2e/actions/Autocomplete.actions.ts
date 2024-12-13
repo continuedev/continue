@@ -1,9 +1,8 @@
-import { TextEditor, VSBrowser, WebView } from "vscode-extension-tester";
-import * as path from "path";
+import { TextEditor } from "vscode-extension-tester";
 import { TestUtils } from "../TestUtils";
 import { AutocompleteSelectors } from "../selectors/Autocomplete.selectors";
-import { DEFAULT_TIMEOUT } from "../constants";
 import { expect } from "chai";
+import { DEFAULT_TIMEOUT } from "../constants";
 
 export class AutocompleteActions {
   public static async testCompletions(editor: TextEditor) {
@@ -15,7 +14,7 @@ export class AutocompleteActions {
     const ghostText0 = await TestUtils.waitForSuccess(
       () => AutocompleteSelectors.getGhostTextContent(driver),
       // The first completion takes longer because Continue needs to load
-      DEFAULT_TIMEOUT,
+      DEFAULT_TIMEOUT.XL,
     );
     expect(ghostText0).to.equal(messagePair0.llmResponse);
 

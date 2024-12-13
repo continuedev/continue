@@ -1,10 +1,11 @@
 import { expect } from "chai";
 import { WebElement } from "vscode-extension-tester";
+import { DEFAULT_TIMEOUT } from "./constants";
 
 export class TestUtils {
   public static async waitForSuccess<T>(
     locatorFn: () => Promise<T>,
-    timeout: number = 5000,
+    timeout: number = DEFAULT_TIMEOUT.MD,
     interval: number = 500,
   ): Promise<T> {
     const startTime = Date.now();
