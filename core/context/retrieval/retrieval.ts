@@ -1,6 +1,5 @@
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
-import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
 import { getUriPathBasename } from "../../util/uri";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 
@@ -69,14 +68,6 @@ export async function retrieveContextItemsFromEmbeddings(
   const pipelineType = useReranking
     ? RerankerRetrievalPipeline
     : NoRerankerRetrievalPipeline;
-
-  if (filterDirectory) {
-    // Handle relative paths
-    filterDirectory = await resolveRelativePathInWorkspace(
-      filterDirectory,
-      extras.ide,
-    );
-  }
 
   const pipelineOptions: RetrievalPipelineOptions = {
     nFinal,

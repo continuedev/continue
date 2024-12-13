@@ -1,11 +1,11 @@
 import generateRepoMap from "../../util/generateRepoMap";
-import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 
 import { ToolImpl } from ".";
 
 export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   const { directory_path } = args;
-  const absoluteUri = await resolveRelativePathInWorkspace(
+  const absoluteUri = await resolveRelativePathInDir(
     directory_path,
     extras.ide,
   );

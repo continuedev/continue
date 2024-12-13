@@ -40,6 +40,11 @@ class RepoMapGenerator {
       llm.contextLength * this.REPO_MAX_CONTEXT_LENGTH_RATIO;
   }
 
+  /*
+    Note, the repo map is usually USED as relative file paths (passed to LLM)
+    So for now, using URIs INPUTS to generate the map, but OUTPUTing relative paths
+    The exception if requestFilesFromRepoMap, which now converts the relative paths back to URIs
+  */
   async generate(): Promise<string> {
     this.repoMapDirs = this.options.dirs ?? (await this.ide.getWorkspaceDirs());
     this.allPathsInDirs = await this.getAllPathsInDirs();

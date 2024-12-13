@@ -11,7 +11,6 @@ import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { Dispatch } from "@reduxjs/toolkit";
 import { setIsGatheringContext } from "../../redux/slices/sessionSlice";
-import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriFileExtension } from "core/util/uri";
 
