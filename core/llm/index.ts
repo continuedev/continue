@@ -476,7 +476,7 @@ export abstract class BaseLLM implements ILLM {
   ): AsyncGenerator<string> {
     const { completionOptions, log } = this._parseCompletionOptions(options);
 
-    const madeUpFimPrompt = `${prefix}<FIM>${suffix}`;
+    const madeUpFimPrompt = `<|fim_prefix|>${prefix}<|fim_suffix|>${suffix}<|fim_middle|>`;
     if (log) {
       if (this.writeLog) {
         await this.writeLog(

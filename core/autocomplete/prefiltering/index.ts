@@ -58,6 +58,14 @@ export async function shouldPrefilter(
     return true;
   }
 
+  // Don't offer completions when we have no information (untitled file and no file contents)
+  if (
+    helper.filepath.includes("Untitled") &&
+    helper.fileContents.trim() === ""
+  ) {
+    return true;
+  }
+
   // if (
   //   helper.options.transform &&
   //   (await shouldLanguageSpecificPrefilter(helper))

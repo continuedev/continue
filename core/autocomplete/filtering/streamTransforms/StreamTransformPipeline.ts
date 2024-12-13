@@ -16,6 +16,8 @@ import {
   streamWithNewLines,
 } from "./lineStream";
 
+const STOP_AT_PATTERNS = ["diff --git"];
+
 export class StreamTransformPipeline {
   async *transform(
     generator: AsyncGenerator<string>,
@@ -28,7 +30,10 @@ export class StreamTransformPipeline {
   ): AsyncGenerator<string> {
     let charGenerator = generator;
 
-    charGenerator = stopAtStopTokens(generator, stopTokens);
+    charGenerator = stopAtStopTokens(generator, [
+      ...stopTokens,
+      ...STOP_AT_PATTERNS,
+    ]);
     charGenerator = stopAtStartOf(charGenerator, suffix);
     for (const charFilter of helper.lang.charFilters ?? []) {
       charGenerator = charFilter({

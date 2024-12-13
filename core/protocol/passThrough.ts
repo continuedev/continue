@@ -72,6 +72,7 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "didChangeAvailableProfiles",
     "setTTSActive",
     "getWebviewHistoryLength",
+    "getCurrentSessionId",
     "signInToControlPlane",
     "openDialogMessage",
     "docs/suggestions",

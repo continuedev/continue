@@ -449,7 +449,6 @@ class VsCodeIde implements IDE {
       const contents = new TextDecoder().decode(truncatedBytes);
       return contents;
     } catch (e) {
-      console.warn("Error reading file", e);
       return "";
     }
   }
