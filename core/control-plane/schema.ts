@@ -53,6 +53,8 @@ const modelDescriptionSchema = z.object({
       presencePenalty: z.number().optional(),
       frequencyPenalty: z.number().optional(),
       mirostat: z.number().optional(),
+      mirostatEta: z.number().optional(),
+      mirostatTau: z.number().optional(),
       stop: z.array(z.string()).optional(),
       maxTokens: z.number().optional(),
       numThreads: z.number().optional(),

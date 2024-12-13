@@ -43,6 +43,16 @@
           "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, and llama.cpp providers",
           "type": "number"
         },
+        "mirostatEta": {
+          "title": "Mirostat Eta",
+          "description": "The Mirostat eta value, which controls how quickly the model converges to its optimal perplexity. A higher value means faster convergence but may result in less accurate results. Only enabled when `mirostat` is also enabled. (default: 0.1)",
+          "type": "number"
+        },
+        "mirostatTau": {
+          "title": "Mirostat Tau",
+          "description": "The Mirostat tau value, which controls how quickly the model converges to its optimal perplexity. A higher value means faster convergence but may result in less accurate results. Only enabled when `mirostat` is also enabled. (default: 5.0)",
+          "type": "number"
+        },
         "stop": {
           "title": "Stop",
           "description": "The stop tokens of the completion.",

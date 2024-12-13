@@ -152,6 +152,8 @@ Parameters that control the behavior of text generation and completion settings.
 - `presencePenalty`: Discourages the model from generating tokens that have already appeared in the output.
 - `frequencePenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
 - `mirostat`: Enables Mirostat sampling, which controls the perplexity during text generation. Supported by Ollama, LM Studio, and llama.cpp providers (default: `0`, where `0` = disabled, `1` = Mirostat, and `2` = Mirostat 2.0).
+- `mirostatEta`: Influences how quickly the algorithm responds to feedback from the generated text. A lower learning rate will result in slower adjustments, while a higher learning rate will make the algorithm more responsive. (Default: 0.1)
+- `mirostatTau`: Controls the balance between coherence and diversity of the output. A lower value will result in more focused and coherent text. (Default: 5.0)
 - `stop`: An array of stop tokens that, when encountered, will terminate the completion. Allows specifying multiple end conditions.
 - `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
 - `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.

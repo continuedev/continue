@@ -182,6 +182,8 @@ class Ollama extends BaseLLM {
       stop: options.stop,
       num_ctx: this.contextLength,
       mirostat: options.mirostat,
+      mirostat_eta: options.mirostatEta,
+      mirostat_tau: options.mirostatTau,
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
       min_p: options.minP,
