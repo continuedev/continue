@@ -98,10 +98,7 @@ export const getAllSnippets = async (
     return result[0];
   }
 
-  const recentlyEditedRangeSnippets = ctx.langOptions
-    .enableRecentlyEditedRangeSnippets
-    ? getSnippetsFromRecentlyEditedRanges(ctx)
-    : [];
+  const recentlyEditedRangeSnippets = getSnippetsFromRecentlyEditedRanges(ctx);
 
   const empty = Promise.resolve([]);
 

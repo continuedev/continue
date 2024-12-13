@@ -2,6 +2,7 @@ import { longestCommonSubsequence } from "../../util/lcs.js";
 import { lineIsRepeated } from "../filtering/streamTransforms/lineStream.js";
 
 import type { ILLM } from "../../index.js";
+import { AutocompleteContext } from "../util/AutocompleteContext.js";
 
 function rewritesLineAbove(completion: string, prefix: string): boolean {
   const lineAbove = prefix
@@ -57,29 +58,39 @@ export function postprocessCompletion({
   llm,
   prefix,
   suffix,
+  ctx,
 }: {
   completion: string;
   llm: ILLM;
   prefix: string;
   suffix: string;
+  ctx: AutocompleteContext;
 }): string | undefined {
   // Don't return empty
   if (isBlank(completion)) {
+    if (ctx.options.logPostprocessing)
+      ctx.writeLog("Postprocessing: completion is blank");
     return undefined;
   }
 
   // Don't return whitespace
   if (isOnlyWhitespace(completion)) {
+    if (ctx.options.logPostprocessing)
+      ctx.writeLog("Postprocessing: completion is only whitespace");
     return undefined;
   }
 
   // Dont return if it's just a repeat of the line above
   if (rewritesLineAbove(completion, prefix)) {
+    if (ctx.options.logPostprocessing)
+      ctx.writeLog("Postprocessing: completion repeats last line");
     return undefined;
   }
 
   // Filter out repetitions of many lines in a row
   if (isExtremeRepetition(completion)) {
+    if (ctx.options.logPostprocessing)
+      ctx.writeLog("Postprocessing: completion is extreme repetition");
     return undefined;
   }
 

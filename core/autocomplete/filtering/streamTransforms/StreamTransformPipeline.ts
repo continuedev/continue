@@ -26,8 +26,16 @@ export class StreamTransformPipeline {
   ): AsyncGenerator<string> {
     let charGenerator = generator;
 
-    charGenerator = stopAtStopTokens(generator, stopTokens);
-    charGenerator = stopAtStartOf(charGenerator, suffix);
+    charGenerator = stopAtStopTokens(generator, stopTokens, (token) => {
+      if (ctx.options.logCompletionStop)
+        ctx.writeLog(`CompletionStop: Completion stopped at token: ${token}`);
+    });
+    charGenerator = stopAtStartOf(charGenerator, suffix, 20, () => {
+      if (ctx.options.logCompletionStop)
+        ctx.writeLog(
+          `CompletionStop: Completion stopped at suffix: \n---\n${suffix}\n---`,
+        );
+    });
     for (const charFilter of ctx.lang.charFilters ?? []) {
       charGenerator = charFilter({
         chars: charGenerator,
@@ -66,28 +74,64 @@ export class StreamTransformPipeline {
       lineGenerator,
       ctx.lang.singleLineComment,
       (line) => {
-        if (ctx.options.logEmptySingleLineCommentFilter)
-          ctx.writeLog(`EmptySingleLineCommentFilter:removed line ${line}`);
+        if (ctx.options.logDroppedLinesFilter)
+          ctx.writeLog(`EmptySingleLineCommentFilter: removed line ${line}`);
       },
     );
 
-    lineGenerator = avoidPathLine(lineGenerator, ctx.lang.singleLineComment);
-    lineGenerator = skipPrefixes(lineGenerator);
-    lineGenerator = noDoubleNewLine(lineGenerator);
+    lineGenerator = avoidPathLine(
+      lineGenerator,
+      ctx.lang.singleLineComment,
+      (droppedLine) => {
+        if (ctx.options.logDroppedLinesFilter) {
+          ctx.writeLog(`PathLineFilter:removed line ${droppedLine}`);
+        }
+      },
+    );
+    lineGenerator = skipPrefixes(lineGenerator, (prefix, line) => {
+      if (ctx.options.logDroppedLinesFilter) {
+        ctx.writeLog(
+          `PathLineFilter: removed prefix ${prefix} from line ${line}`,
+        );
+      }
+    });
+    lineGenerator = noDoubleNewLine(lineGenerator, () => {
+      if (ctx.options.logCompletionStop) {
+        ctx.writeLog(`Completion Stop: stopped due to double new line`);
+      }
+    });
 
     for (const lineFilter of ctx.lang.lineFilters ?? []) {
-      lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
+      lineGenerator = lineFilter({
+        lines: lineGenerator,
+        fullStop,
+        options: ctx.options,
+        langOptions: ctx.langOptions,
+        writeLog: ctx.writeLog,
+      });
     }
 
     lineGenerator = stopAtSimilarLine(
       lineGenerator,
       this.getLineBelowCursor(ctx),
-      fullStop,
+      (inputLine, compareLine) => {
+        if (ctx.options.logCompletionStop)
+          ctx.writeLog(
+            `CompletionStop: Stopped at line "${inputLine}" because it is similar to ${compareLine}`,
+          );
+        fullStop();
+      },
     );
 
     lineGenerator = showWhateverWeHaveAtXMs(
       lineGenerator,
       ctx.options.showWhateverWeHaveAtXMs,
+      () => {
+        if (ctx.options.logCompletionStop)
+          ctx.writeLog(
+            `CompletionStop: Stopped after ${ctx.options.showWhateverWeHaveAtXMs}ms`,
+          );
+      },
     );
 
     const finalGenerator = streamWithNewLines(lineGenerator);

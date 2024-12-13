@@ -199,6 +199,8 @@ export class CompletionProvider {
         // Cache
         cacheHit = true;
         completion = cachedCompletion;
+        if (ctx.options.logCompletionCache)
+          ctx.writeLog("Using cached completion");
       } else {
         const multiline =
           !ctx.options.transform || shouldCompleteMultiline(ctx);
@@ -230,10 +232,15 @@ export class CompletionProvider {
               prefix: ctx.prunedPrefix,
               suffix: ctx.prunedSuffix,
               llm,
+              ctx,
             })
           : completion;
 
         completion = processedCompletion;
+      }
+
+      if (ctx.options.logCompletionOutcome) {
+        ctx.writeLog("Completion Outcome: \n---\n" + completion + "\n---");
       }
 
       if (!completion) {

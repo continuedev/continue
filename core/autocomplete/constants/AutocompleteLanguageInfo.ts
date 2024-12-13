@@ -281,11 +281,15 @@ const languageInfos: AutocompleteLanguageInfo[] = [
     endOfLine: [],
     lineFilters: [
       // Only display one list item at a time
-      async function* ({ lines, fullStop }) {
+      async function* ({ lines, fullStop, options, writeLog }) {
         let seenListItem = false;
         for await (const line of lines) {
           if (line.trim().startsWith("- ")) {
             if (seenListItem) {
+              if (options.logCompletionStop)
+                writeLog(
+                  `CompletionStop: YAML: stopped on the second list item`,
+                );
               fullStop();
               break;
             } else {
@@ -296,12 +300,16 @@ const languageInfos: AutocompleteLanguageInfo[] = [
         }
       },
       // Don't allow consecutive lines of same key
-      async function* ({ lines }) {
+      async function* ({ lines, options, writeLog }) {
         let lastKey = undefined;
         for await (const line of lines) {
           if (line.includes(":")) {
             const key = line.split(":")[0];
             if (key === lastKey) {
+              if (options.logCompletionStop)
+                writeLog(
+                  `CompletionStop: YAML: stopped on repeated object key`,
+                );
               break;
             } else {
               yield line;

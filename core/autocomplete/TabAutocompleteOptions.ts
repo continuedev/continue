@@ -5,7 +5,6 @@ export interface TabAutocompleteLanguageOptions {
   enableImportSnippets: boolean;
   enableDiffSnippets: boolean;
   enableClipboardSnippets: boolean;
-  enableRecentlyEditedRangeSnippets: boolean;
   outlineNodeReplacements: { [key: string]: string };
   filterMaxRepeatingLines: number;
 }
@@ -29,12 +28,18 @@ export interface TabAutocompleteOptions {
   logDisableInFiles: boolean;
   useImports?: boolean;
   showWhateverWeHaveAtXMs: number;
+
+  logCompletionCache: boolean;
+
   logSnippetLimiting: boolean;
   logSnippetTimeouts: boolean;
   logOutlineCreation: boolean;
-  logCompletionStop: boolean;
 
-  logEmptySingleLineCommentFilter: boolean;
+  logCompletionStop: boolean;
+  logDroppedLinesFilter: boolean;
+
+  logPostprocessing: any;
+  logCompletionOutcome: any;
 
   logRootPathSnippets: boolean;
   logImportSnippets: boolean;
@@ -67,6 +72,9 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useImports: true,
   transform: true,
   showWhateverWeHaveAtXMs: 300,
+
+  logCompletionCache: false,
+
   logSnippetLimiting: false,
   logSnippetTimeouts: false,
   logOutlineCreation: false,
@@ -77,14 +85,15 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   logClipboardSnippets: false,
   logCompletionStop: false,
 
-  logEmptySingleLineCommentFilter: false,
+  logDroppedLinesFilter: false,
+  logPostprocessing: false,
+  logCompletionOutcome: false,
 
   defaultLanguageOptions: {
     enableRootPathSnippets: true,
     enableImportSnippets: true,
     enableDiffSnippets: true,
     enableClipboardSnippets: true,
-    enableRecentlyEditedRangeSnippets: true,
     outlineNodeReplacements: {
       statement_block: "{...}",
     },

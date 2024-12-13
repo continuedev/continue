@@ -2897,13 +2897,20 @@
               "type": "boolean",
               "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
             },
-            "useRecentlyEdited": {},
+            "useRecentlyEdited": {
+              "type": "boolean",
+              "description": "If set to true, Continue will use recently edited files when generating completions."
+            },
             "disableInFiles": {
               "description": "A list of files / glob patterns in which to disable tab autocomplete. (.gitignore syntax) For example, *.csv if you'd like to disable autocomplete in .csv files.",
               "type": "array",
               "items": {
                 "type": "string"
               }
+            },
+            "logDisableInFiles": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log when it disables autocomplete in a file due to `disableInFiles` patterns"
             },
             "useImports": {
               "type": "boolean",
@@ -2913,6 +2920,63 @@
               "type": "number",
               "description": "Truncate the response of the LLM after X milliseconds, even if it's not finished. This can be useful to speed up completions, but may result in incomplete results.",
               "default": 500
+            },
+            "logCompletionCache": {
+              "type": "boolean",
+              "description": "If set to true, Continue will logs the cache hits for completions"
+            },
+            "logSnippetLimiting": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log when it limits the number of snippets used in a completion due to the `maxPromptTokens`"
+            },
+            "logSnippetTimeouts": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log when it times out while fetching snippets"
+            },
+            "logOutlineCreation": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log how it creates an outline for a snippet"
+            },
+            "logCompletionStop": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log why it stops using the response from the LLM as completion"
+            },
+            "logDroppedLinesFilter": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log how it drops lines from the LLM result"
+            },
+            "logPostprocessing": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log how it postprocesses completion after the whole completion has been collected"
+            },
+            "logCompletionOutcome": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log the final completion which is sent to the editor"
+            },
+            "logRootPathSnippets": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log how it finds snippets by looking at the syntactical context of the completion location"
+            },
+            "logImportSnippets": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log how it finds snippets by looking at the imports of the file at the completion location"
+            },
+            "logDiffSnippets": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log the snippets it finds in the source control (GIT) diff"
+            },
+            "logClipboardSnippets": {
+              "type": "boolean",
+              "description": "If set to true, Continue will log the snippets it finds in the clipboard"
+            },
+            "defaultLanguageOptions": {
+              "$ref": "#/$defs/TabAutocompleteLanguageOptions"
+            },
+            "languageOptions": {
+              "type": "object",
+              "additionalProperties": {
+                "$ref": "#/$defs/TabAutocompleteLanguageOptions"
+              }
             }
           },
           "required": []
@@ -3155,6 +3219,38 @@
               "required": ["transport"]
             }
           }
+        }
+      }
+    },
+    "TabAutocompleteLanguageOptions": {
+      "type": "object",
+      "properties": {
+        "enableRootPathSnippets": {
+          "type": "boolean",
+          "description": "Enable root path snippets. If enabled, the syntactical context of the autocomplete location will be searched for type references"
+        },
+        "enableImportSnippets": {
+          "type": "boolean",
+          "description": "Enable import snippets. If enabled, imports of the file will be searched for snippets"
+        },
+        "enableDiffSnippets": {
+          "type": "boolean",
+          "description": "Enable diff snippets. If enabled, the diffs from the source control system (GIT) will be used as context for the LLM"
+        },
+        "enableClipboardSnippets": {
+          "type": "boolean",
+          "description": "Enable clipboard snippets. If enabled, the clipboard will be used as context for the LLM"
+        },
+        "outlineNodeReplacements": {
+          "type": "object",
+          "description": "When creating outlines for autocompletion context, replace the nodes in this map with the given replacement string",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "filterMaxRepeatingLines": {
+          "type": "number",
+          "description": "Stop the completion when a line is repeated more than this many time. Set to -1 to disable"
         }
       }
     }
