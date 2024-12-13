@@ -4,11 +4,7 @@ import {
   ContextProviderExtras,
 } from "../../index.js";
 import { walkDir } from "../../indexing/walkDir.js";
-import {
-  findUriInDirs,
-  getRelativePath,
-  getUriPathBasename,
-} from "../../util/uri.js";
+import { findUriInDirs, getUriPathBasename } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
 interface Directory {
