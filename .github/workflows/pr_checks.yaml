@@ -202,16 +202,24 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-
       - uses: actions/cache@v4
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
       - uses: actions/cache@v4
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+    - name: Set up SSH
+      env:
+        SSH_KEY: ${{ secrets.GH_ACTIONS_SSH_TEST_KEY_PEM }}
+        SSH_HOST: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+        echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
 
       - name: Install Xvfb for Linux and run e2e tests
         run: |
