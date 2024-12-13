@@ -51,7 +51,7 @@ export class GUIActions {
     const dropdownButton = await GUISelectors.getModelDropdownButton(view);
     await dropdownButton.click();
 
-    const dropdownOption = await TestUtils.waitForElement(() => {
+    const dropdownOption = await TestUtils.waitForSuccess(() => {
       return GUISelectors.getModelDropdownOption(view, option);
     });
 

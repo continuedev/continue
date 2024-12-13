@@ -54,7 +54,7 @@ describe("GUI Test", () => {
       const messagePair = TestUtils.generateTestMessagePair();
       await messageInput.sendKeys(messagePair.userMessage);
       await messageInput.sendKeys(Key.ENTER);
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
       );
     });
@@ -64,7 +64,7 @@ describe("GUI Test", () => {
       const messagePair = TestUtils.generateTestMessagePair();
       await messageInput.sendKeys(messagePair.userMessage);
       (await GUISelectors.getSubmitInputButton(view)).click();
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
       );
     });
@@ -77,7 +77,7 @@ describe("GUI Test", () => {
         message: userMessage0,
         inputFieldIndex: 0,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse0),
       );
 
@@ -88,7 +88,7 @@ describe("GUI Test", () => {
         message: userMessage1,
         inputFieldIndex: 1,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
@@ -99,7 +99,7 @@ describe("GUI Test", () => {
         message: userMessage2,
         inputFieldIndex: 2,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
 
@@ -130,7 +130,7 @@ describe("GUI Test", () => {
         message: userMessage0,
         inputFieldIndex: 0,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse0),
       );
 
@@ -141,7 +141,7 @@ describe("GUI Test", () => {
         message: userMessage1,
         inputFieldIndex: 1,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse1),
       );
 
@@ -152,7 +152,7 @@ describe("GUI Test", () => {
         message: userMessage2,
         inputFieldIndex: 2,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse2),
       );
 
@@ -172,7 +172,7 @@ describe("GUI Test", () => {
       });
       await GUISelectors.getThreadMessageByText(view, llmResponse0);
 
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, llmResponse3),
       );
       await Promise.all([
@@ -194,7 +194,7 @@ describe("GUI Test", () => {
         message: messagePair1.userMessage,
         inputFieldIndex: 0,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
       );
 
@@ -204,7 +204,7 @@ describe("GUI Test", () => {
         message: messagePair2.userMessage,
         inputFieldIndex: 1,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
       );
 
@@ -238,7 +238,7 @@ describe("GUI Test", () => {
         message: messagePair3.userMessage,
         inputFieldIndex: 2,
       });
-      await TestUtils.waitForElement(() =>
+      await TestUtils.waitForSuccess(() =>
         GUISelectors.getThreadMessageByText(view, messagePair3.llmResponse),
       );
     }).timeout(DEFAULT_TIMEOUT);
