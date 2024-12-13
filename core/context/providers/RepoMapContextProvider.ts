@@ -6,7 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
-import { walkDirInWorkspaces } from "../../indexing/walkDir";
+import { walkDirs } from "../../indexing/walkDir";
 import generateRepoMap from "../../util/generateRepoMap";
 import {
   getShortestUniqueRelativeUriPaths,
@@ -36,7 +36,9 @@ class RepoMapContextProvider extends BaseContextProvider {
         name: "Repository Map",
         description: "Overview of the repository structure",
         content: await generateRepoMap(extras.llm, extras.ide, {
-          dirs: query === ENTIRE_PROJECT_ITEM.id ? undefined : [query],
+          dirUris: query === ENTIRE_PROJECT_ITEM.id ? undefined : [query],
+          outputRelativeUriPaths: true,
+          includeSignatures: false,
         }),
       },
     ];
@@ -46,7 +48,7 @@ class RepoMapContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const workspaceDirs = await args.ide.getWorkspaceDirs();
-    const folders = await walkDirInWorkspaces(
+    const folders = await walkDirs(
       args.ide,
       {
         onlyDirs: true,

@@ -47,8 +47,9 @@ export async function requestFilesFromRepoMap(
 
   try {
     const repoMap = await generateRepoMap(llm, ide, {
+      dirUris: filterDirUri ? [filterDirUri] : undefined,
       includeSignatures: false,
-      dirs: filterDirUri ? [filterDirUri] : undefined,
+      outputRelativeUriPaths: false,
     });
 
     const prompt = `${repoMap}
@@ -72,26 +73,26 @@ This is the question that you should select relevant files for: "${input}"`;
       return [];
     }
 
-    const subDirPrefix = filterDirUri
-      ? getUriPathBasename(filterDirUri) + "/"
-      : "";
-    const files =
-      content
-        .split("<results>")[1]
-        ?.split("</results>")[0]
-        ?.split("\n")
-        .filter(Boolean)
-        .map((file) => file.trim())
-        .map((file) => subDirPrefix + file) ?? [];
+    // IMPORANT
+
+    // const subDirPrefix = filterDirUri
+    //   ? getUriPathBasename(filterDirUri) + "/"
+    //   : "";
+    const fileUris = content
+      .split("<results>")[1]
+      ?.split("</results>")[0]
+      ?.split("\n")
+      .filter(Boolean)
+      .map((uri) => uri.trim());
 
     const chunks = await Promise.all(
-      files.map(async (file) => {
-        const content = await ide.readFile(file);
+      fileUris.map(async (uri) => {
+        const content = await ide.readFile(uri);
         const lineCount = content.split("\n").length;
         const chunk: Chunk = {
-          digest: file,
+          digest: uri,
           content,
-          filepath: file,
+          filepath: uri,
           endLine: lineCount - 1,
           startLine: 0,
           index: 0,

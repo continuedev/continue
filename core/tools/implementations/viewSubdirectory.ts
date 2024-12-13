@@ -5,18 +5,18 @@ import { ToolImpl } from ".";
 
 export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   const { directory_path } = args;
-  const absoluteUri = await resolveRelativePathInDir(
-    directory_path,
-    extras.ide,
-  );
+  const uri = await resolveRelativePathInDir(directory_path, extras.ide);
 
-  if (!absoluteUri) {
+  if (!uri) {
     throw new Error(`Directory path "${directory_path}" does not exist.`);
   }
 
   const repoMap = await generateRepoMap(extras.llm, extras.ide, {
-    dirs: [absoluteUri],
+    dirUris: [uri],
+    outputRelativeUriPaths: true,
+    includeSignatures: false,
   });
+
   return [
     {
       name: "Repo map",

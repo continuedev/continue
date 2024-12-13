@@ -224,7 +224,7 @@ export async function* walkDirAsync(
   yield* new DFSWalker(path, ide, options).walk();
 }
 
-export async function walkDirInWorkspaces(
+export async function walkDirs(
   ide: IDE,
   _optionOverrides?: WalkerOptions,
   dirs?: string[], // Can pass dirs to prevent duplicate calls

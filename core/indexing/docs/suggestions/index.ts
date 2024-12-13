@@ -7,7 +7,7 @@ import {
   ParsedPackageInfo,
 } from "../../..";
 import { getUriPathBasename } from "../../../util/uri";
-import { walkDir, walkDirInWorkspaces } from "../../walkDir";
+import { walkDir, walkDirs } from "../../walkDir";
 
 import { PythonPackageCrawler } from "./packageCrawlers/Python";
 import { NodePackageCrawler } from "./packageCrawlers/TsJs";
@@ -25,7 +25,7 @@ export interface PackageCrawler {
 }
 
 export async function getAllSuggestedDocs(ide: IDE) {
-  const allFileUris = await walkDirInWorkspaces(ide);
+  const allFileUris = await walkDirs(ide);
   const allFiles = allFileUris.map((uri) => ({
     path: uri,
     name: getUriPathBasename(uri),

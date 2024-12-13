@@ -5,7 +5,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../index.js";
-import { walkDirInWorkspaces } from "../../indexing/walkDir.js";
+import { walkDirs } from "../../indexing/walkDir.js";
 import {
   getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
@@ -32,7 +32,7 @@ class FolderContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const workspaceDirs = await args.ide.getWorkspaceDirs();
-    const folders = await walkDirInWorkspaces(
+    const folders = await walkDirs(
       args.ide,
       {
         onlyDirs: true,

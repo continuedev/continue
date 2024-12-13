@@ -390,7 +390,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     offset: number = 0,
     batchSize: number = 100,
   ): Promise<{
-    groupedByPath: { [path: string]: string[] };
+    groupedByUri: { [path: string]: string[] };
     hasMore: boolean;
   }> {
     const db = await SqliteDb.get();
@@ -411,17 +411,17 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     const rows = await db.all(query, [...likePatterns, batchSize, offset]);
 
-    const groupedByPath: { [path: string]: string[] } = {};
+    const groupedByUri: { [path: string]: string[] } = {};
 
     for (const { path, signature } of rows) {
-      if (!groupedByPath[path]) {
-        groupedByPath[path] = [];
+      if (!groupedByUri[path]) {
+        groupedByUri[path] = [];
       }
-      groupedByPath[path].push(signature);
+      groupedByUri[path].push(signature);
     }
 
     const hasMore = rows.length === batchSize;
 
-    return { groupedByPath, hasMore };
+    return { groupedByUri, hasMore };
   }
 }
