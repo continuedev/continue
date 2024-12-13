@@ -6,6 +6,7 @@ import {
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
+const Diff = require("diff");
 
 import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -21,6 +22,13 @@ import {
 
 import type { IDE } from "core";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+
+interface DiffType {
+  count: number;
+  added: boolean;
+  removed: boolean;
+  value: string;
+}
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -102,6 +110,12 @@ export class ContinueCompletionProvider
     }
 
     if (document.uri.scheme === "vscode-scm") {
+      return null;
+    }
+
+    // Don't autocomplete with multi-cursor
+    const editor = vscode.window.activeTextEditor;
+    if (editor && editor.selections.length > 1) {
       return null;
     }
 
@@ -190,12 +204,20 @@ export class ContinueCompletionProvider
           }
         }
       }
+
+      // Manually pass file contents for unsaved, untitled files
+      let filepath = document.uri.fsPath;
+      if (document.isUntitled) {
+        manuallyPassFileContents = document.getText();
+      }
+
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
 
       const input: AutocompleteInput = {
+        isUntitledFile: document.isUntitled,
         completionId: uuidv4(),
-        filepath: document.uri.fsPath,
+        filepath,
         pos,
         recentlyEditedFiles: [],
         recentlyEditedRanges:
@@ -249,13 +271,67 @@ export class ContinueCompletionProvider
 
       // Construct the range/text to show
       const startPos = selectedCompletionInfo?.range.start ?? position;
-      const completionRange = new vscode.Range(
-        startPos,
-        startPos.translate(0, outcome.completion.length),
-      );
+      let range = new vscode.Range(startPos, startPos);
+      let completionText = outcome.completion;
+      const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
+
+      if (isSingleLineCompletion) {
+        const lastLineOfCompletionText = completionText.split("\n").pop();
+        const currentText = document
+          .lineAt(startPos)
+          .text.substring(startPos.character);
+        const diffs: DiffType[] = Diff.diffWords(
+          currentText,
+          lastLineOfCompletionText,
+        );
+
+        if (diffPatternMatches(diffs, ["+"])) {
+          // Just insert, we're already at the end of the line
+        } else if (
+          diffPatternMatches(diffs, ["+", "="]) ||
+          diffPatternMatches(diffs, ["+", "=", "+"])
+        ) {
+          // The model repeated the text after the cursor to the end of the line
+          range = new vscode.Range(
+            startPos,
+            document.lineAt(startPos).range.end,
+          );
+        } else if (
+          diffPatternMatches(diffs, ["+", "-"]) ||
+          diffPatternMatches(diffs, ["-", "+"])
+        ) {
+          // We are midline and the model just inserted without repeating to the end of the line
+          // We want to move the cursor to the end of the line
+          // range = new vscode.Range(
+          //   startPos,
+          //   document.lineAt(startPos).range.end,
+          // );
+          // // Find the last removed part of the diff
+          // const lastRemovedIndex = findLastIndex(
+          //   diffs,
+          //   (diff) => diff.removed === true,
+          // );
+          // const lastRemovedContent = diffs[lastRemovedIndex].value;
+          // completionText += lastRemovedContent;
+        } else {
+          // Diff is too complicated, just insert the first added part of the diff
+          // This is the safe way to ensure that it is displayed
+          if (diffs[0]?.added) {
+            completionText = diffs[0].value;
+          } else {
+            // If the first part of the diff isn't an insertion, then the model is
+            // probably rewriting other parts of the line
+            return undefined;
+          }
+        }
+      } else {
+        // Extend the range to the end of the line for multiline completions
+        range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
+      }
+
       const completionItem = new vscode.InlineCompletionItem(
-        outcome.completion,
-        completionRange,
+        completionText,
+        range,
         {
           title: "Log Autocomplete Outcome",
           command: "continue.logAutocompleteOutcome",
@@ -293,4 +369,27 @@ export class ContinueCompletionProvider
 
     return true;
   }
+}
+
+type DiffPartType = "+" | "-" | "=";
+
+function diffPatternMatches(
+  diffs: DiffType[],
+  pattern: DiffPartType[],
+): boolean {
+  if (diffs.length !== pattern.length) {
+    return false;
+  }
+
+  for (let i = 0; i < diffs.length; i++) {
+    const diff = diffs[i];
+    const diffPartType: DiffPartType =
+      !diff.added && !diff.removed ? "=" : diff.added ? "+" : "-";
+
+    if (diffPartType !== pattern[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }

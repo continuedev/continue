@@ -13,6 +13,7 @@ export type RecentlyEditedRange = RangeInFile & {
 };
 
 export interface AutocompleteInput {
+  isUntitledFile: boolean;
   completionId: string;
   filepath: string;
   pos: Position;
