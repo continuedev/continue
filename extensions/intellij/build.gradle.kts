@@ -1,4 +1,5 @@
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.tasks.PrepareSandboxTask
 
 fun properties(key: String) = providers.gradleProperty(key)
 
@@ -9,12 +10,11 @@ val remoteRobotVersion = "0.11.23"
 plugins {
     id("java") // Java support
     alias(libs.plugins.kotlin) // Kotlin support
-//    alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
+    alias(libs.plugins.gradleIntelliJPlugin) // Gradle IntelliJ Plugin
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
     kotlin("plugin.serialization") version "1.8.0"
-    id("org.jetbrains.intellij") version "1.17.4"
 }
 
 group = properties("pluginGroup").get()
@@ -41,6 +41,7 @@ dependencies {
     testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for
@@ -84,14 +85,15 @@ tasks {
         version.set(remoteRobotVersion)
     }
 
-    prepareSandbox {
-        from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
-        from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
-    }
-
-    prepareTestingSandbox {
-        from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
-        from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
+    listOf("prepareSandbox", "prepareTestingSandbox", "prepareUiTestingSandbox").forEach { taskName ->
+        tasks.named<PrepareSandboxTask>(taskName) {
+            from("../../binary/bin") {
+                into("${intellij.pluginName.get()}/core/")
+            }
+            from("../vscode/node_modules/@vscode/ripgrep") {
+                into("${intellij.pluginName.get()}/ripgrep/")
+            }
+        }
     }
 
     wrapper { gradleVersion = properties("gradleVersion").get() }
@@ -122,7 +124,15 @@ tasks {
     // Configure UI tests plugin
     // Read more: https://github.com/JetBrains/intellij-ui-test-robot
     runIdeForUiTests {
-//        systemProperty("robot-server.port", "8082")
+        systemProperty("robot-server.port", "8082")
+        systemProperty("ide.mac.message.dialogs.as.sheets", "false")
+        systemProperty("jb.privacy.policy.text", "<!--999.999-->")
+        systemProperty("jb.consents.confirmation.enabled", "false")
+        systemProperty("ide.mac.file.chooser.native", "false")
+        systemProperty("jbScreenMenuBar.enabled", "false")
+        systemProperty("apple.laf.useScreenMenuBar", "false")
+        systemProperty("idea.trust.all.projects", "true")
+        systemProperty("ide.show.tips.on.startup.default.value", "false")
         systemProperty("ide.browser.jcef.jsQueryPoolSize", "10000")
 
     }
