@@ -1,12 +1,12 @@
 import { ContextItemWithId, RangeInFileWithContents } from "../";
-import { getRelativePath, getUriPathBasename } from "../util/uri";
+import { findUriInDirs, getUriPathBasename } from "../util/uri";
 import { v4 as uuidv4 } from "uuid";
 
 export function rifWithContentsToContextItem(
   rif: RangeInFileWithContents,
 ): ContextItemWithId {
   const basename = getUriPathBasename(rif.filepath);
-  const relativePath = getRelativePath(
+  const { relativePathOrBasename } = findUriInDirs(
     rif.filepath,
     window.workspacePaths ?? [],
   );
@@ -16,7 +16,7 @@ export function rifWithContentsToContextItem(
   return {
     content: rif.contents,
     name: itemName,
-    description: `${relativePath} ${rangeStr}`, // This is passed to the LLM - do not pass full URI
+    description: `${relativePathOrBasename} ${rangeStr}`, // This is passed to the LLM - do not pass full URI
     id: {
       providerTitle: "code",
       itemId: uuidv4(),

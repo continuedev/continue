@@ -5,7 +5,7 @@ import ignore from "ignore";
 import { IDE } from "../..";
 import { getConfigJsonPath } from "../../util/paths";
 import { HelperVars } from "../util/HelperVars";
-import { getRelativePath } from "../../util/uri";
+import { findUriInDirs } from "../../util/uri";
 
 async function isDisabledForFile(
   currentFilepath: string,
@@ -15,11 +15,14 @@ async function isDisabledForFile(
   if (disableInFiles) {
     // Relative path needed for `ignore`
     const workspaceDirs = await ide.getWorkspaceDirs();
-    const relativePath = getRelativePath(currentFilepath, workspaceDirs);
+    const { relativePathOrBasename } = findUriInDirs(
+      currentFilepath,
+      workspaceDirs,
+    );
 
     // @ts-ignore
     const pattern = ignore.default().add(disableInFiles);
-    if (pattern.ignores(relativePath)) {
+    if (pattern.ignores(relativePathOrBasename)) {
       return true;
     }
   }

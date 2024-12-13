@@ -9,7 +9,7 @@ import {
 } from "../../indexing/ignore";
 import { renderChatMessage } from "../../util/messageContent";
 import {
-  getRelativePath,
+  findUriInDirs,
   getUriPathBasename,
   joinPathsToUri,
 } from "../../util/uri";
@@ -81,13 +81,13 @@ async function getEntriesFilteredByIgnore(dir: string, ide: IDE) {
       (entry) => entry[1] === FileType.File || entry[1] === FileType.Directory,
     )
     .map((entry) => {
-      const relativePath = getRelativePath(entry[0], workspaceDirs);
+      const { relativePathOrBasename } = findUriInDirs(entry[0], workspaceDirs);
       return {
         uri: entry[0],
         type: entry[1],
         basename: getUriPathBasename(entry[0]),
         relativePath:
-          relativePath + (entry[1] === FileType.Directory ? "/" : ""),
+          relativePathOrBasename + (entry[1] === FileType.Directory ? "/" : ""),
       };
     });
 

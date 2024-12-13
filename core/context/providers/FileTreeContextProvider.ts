@@ -4,7 +4,11 @@ import {
   ContextProviderExtras,
 } from "../../index.js";
 import { walkDir } from "../../indexing/walkDir.js";
-import { getRelativePath, getUriPathBasename } from "../../util/uri.js";
+import {
+  findUriInDirs,
+  getRelativePath,
+  getUriPathBasename,
+} from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
 interface Directory {
@@ -51,8 +55,8 @@ class FileTreeContextProvider extends BaseContextProvider {
       };
 
       const uris = await walkDir(workspaceDir, extras.ide);
-      const relativePaths = uris.map((uri) =>
-        getRelativePath(uri, [workspaceDir]),
+      const relativePaths = uris.map(
+        (uri) => findUriInDirs(uri, [workspaceDir]).relativePathOrBasename,
       );
 
       for (const path of relativePaths) {

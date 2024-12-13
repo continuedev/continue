@@ -1,12 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import {
-  localPathOrUriToPath,
-  localPathToUri,
-  pathOrUriToUri,
-} from "../util/uri";
-import { fileURLToPath } from "url";
+import { localPathOrUriToPath, localPathToUri } from "../util/uri";
 
 // Want this outside of the git repository so we can change branches in tests
 const TEST_DIR_PATH = path.join(os.tmpdir(), "testWorkspaceDir");

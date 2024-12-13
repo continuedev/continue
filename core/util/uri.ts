@@ -1,96 +1,110 @@
 import URI from "uri-js";
 import { fileURLToPath, pathToFileURL } from "url";
 
-export function getFullPath(uri: string): string {
-  try {
-    return URI.parse(uri).path ?? "";
-  } catch (error) {
-    console.error(`Invalid URI: ${uri}`, error);
-    return "";
-  }
-}
-
+// Converts a local path to a file:// URI
 export function localPathToUri(path: string) {
   const url = pathToFileURL(path);
   return URI.normalize(url.toString());
 }
 
-export function pathToUriPathSegment(path: string) {
-  // Converts any OS path to cleaned up URI path segment format with no leading/trailing slashes
-  // e.g. \path\to\folder\ -> path/to/folder
-  //      \this\is\afile.ts -> this/is/afile.ts
-  //      is/already/clean -> is/already/clean
-  let clean = path.replace(/[\\]/g, "/"); // backslashes -> forward slashes
-  clean = clean.replace(/^\//, ""); // remove start slash
-  clean = clean.replace(/\/$/, ""); // remove end slash
-  return clean;
-}
-
-// Whenever working with partial URIs
-// Should always first get the path relative to the workspaces
-// If a matching workspace is not found, ONLY the file name should be used
-export function getRelativePath(
-  fileUri: string,
-  workspaceUris: string[],
-): string {
-  const fullPath = getFullPath(fileUri);
-}
-
-/*
-  
-*/
 export function localPathOrUriToPath(localPathOrUri: string): string {
   try {
     return fileURLToPath(localPathOrUri);
   } catch (e) {
-    console.log("Converted url to path");
+    console.log("Received local filepath", localPathOrUri);
+
     return localPathOrUri;
   }
 }
 
+/** Converts any OS path to cleaned up URI path segment format with no leading/trailing slashes
+   e.g. \path\to\folder\ -> path/to/folder
+        \this\is\afile.ts -> this/is/afile.ts
+        is/already/clean -> is/already/clean
+  **/
+export function pathToUriPathSegment(path: string) {
+  let clean = path.replace(/[\\]/g, "/"); // backslashes -> forward slashes
+  clean = clean.replace(/^\//, ""); // remove start slash
+  clean = clean.replace(/\/$/, ""); // remove end slash
+  return encodeURIComponent(clean);
+}
+
+export function findUriInDirs(
+  uri: string,
+  dirUriCandidates: string[],
+): {
+  relativePathOrBasename: string;
+  foundInDir: string | null;
+} {
+  const uriComps = URI.parse(uri);
+  if (!uriComps.scheme) {
+    throw new Error(`Invalid uri: ${uri}`);
+  }
+  for (const dir of dirUriCandidates) {
+    const dirComps = URI.parse(dir);
+
+    if (!dirComps.scheme) {
+      throw new Error(`Invalid uri: ${dir}`);
+    }
+
+    if (uriComps.scheme !== dirComps.scheme) {
+      continue;
+    }
+    if (uriComps.path === dirComps.path) {
+      continue;
+    }
+    // Can't just use starts with because e.g.
+    // file:///folder/file is not within file:///fold
+    return uriComps.path.startsWith(dirComps.path);
+  }
+  return {
+    relativePathOrBasename: getUriPathBasename(uri),
+    foundInDir: null,
+  };
+}
+
 /*
   To smooth out the transition from path to URI will use this function to warn when path is used
+  This will NOT work consistently with full OS paths like c:\blah\blah or ~/Users/etc
 */
-export function pathOrUriToUri(
-  pathOrUri: string,
-  workspaceDirUris: string[],
-  showTraceOnPath = true,
+export function relativePathOrUriToUri(
+  relativePathOrUri: string,
+  defaultDirUri: string,
 ): string {
-  try {
-    // URI.parse(pathOrUri);
-
-    return pathOrUri;
-  } catch (e) {
-    if (showTraceOnPath) {
-      console.trace("Received relative path", e);
-    }
+  const out = URI.parse(relativePathOrUri);
+  if (out.scheme) {
+    return relativePathOrUri;
   }
+  console.trace("Received path with no scheme");
+  return joinPathsToUri(defaultDirUri, out.path ?? "");
 }
 
-export function splitUriPath(uri: string): string[] {
-  let parts = path.includes("/") ? path.split("/") : path.split("\\");
-  if (withRoot !== undefined) {
-    const rootParts = splitPath(withRoot);
-    parts = parts.slice(rootParts.length - 1);
-  }
-  return parts;
-}
-
-export function getLastNUriRelativePathParts(
-  workspaceDirs: string[],
-  uri: string,
-  n: number,
-): string {
-  const path = getRelativePath(uri, workspaceDirs);
-  return getLastNPathParts(path, n);
-}
-
+/*
+  Returns just the file or folder name of a URI
+*/
 export function getUriPathBasename(uri: string): string {
-  return getPath();
+  return URI.parse(uri).path?.split("/")?.pop() || "";
+}
+
+/*
+  Returns the file extension of a URI
+*/
+export function getUriFileExtension(uri: string) {
+  const baseName = getUriPathBasename(uri);
+  return baseName.split(".")[-1] ?? "";
 }
 
 export function getFileExtensionFromBasename(filename: string) {
   return filename.split(".").pop() ?? "";
+}
+
+export function getLastNUriRelativePathParts(
+  dirUriCandidates: string[],
+  uri: string,
+  n: number,
+): string {
+  const { relativePathOrBasename } = findUriInDirs(uri, dirUriCandidates);
+  return getLastNPathParts(relativePathOrBasename, n);
 }
 
 export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
@@ -116,11 +130,12 @@ export function getUniqueUriPath(
 
 export function shortestRelativeUriPaths(
   uris: string[],
-  workspaceUris: string[],
+  dirUriCandidates: string[],
 ): string[] {
   if (uris.length === 0) {
     return [];
   }
+  const relativeUris;
 
   const partsLengths = uris.map((x) => x.split("/").length);
   const currentRelativeUris = uris.map(getB);
@@ -162,25 +177,6 @@ export function shortestRelativeUriPaths(
 
   return currentRelativeUris;
 }
-export function isUriWithinDirectory(
-  uri: string,
-  directoryUri: string,
-): boolean {
-  const uriPath = getFullPath(uri);
-  const directoryPath = getFullPath(directoryUri);
-
-  if (uriPath === directoryPath) {
-    return false;
-  }
-  return uriPath.startsWith(directoryPath);
-}
-
-export function getUriFileExtension(uri: string) {
-  const baseName = getUriPathBasename(uri);
-  return baseName.split(".")[-1] ?? "";
-}
-
-const SEP_REGEX = /[\\/]/;
 
 // export function getBasename(filepath: string): string {
 //   return filepath.split(SEP_REGEX).pop() ?? "";
@@ -190,7 +186,7 @@ export function getLastNPathParts(filepath: string, n: number): string {
   if (n <= 0) {
     return "";
   }
-  return filepath.split(SEP_REGEX).slice(-n).join("/");
+  return filepath.split(/[\\/]/).slice(-n).join("/");
 }
 
 // export function groupByLastNPathParts(
@@ -240,21 +236,4 @@ export function getLastNPathParts(filepath: string, n: number): string {
 //     parts = parts.slice(rootParts.length - 1);
 //   }
 //   return parts;
-// }
-
-// export function getRelativePath(
-//   filepath: string,
-//   workspaceDirs: string[],
-// ): string {
-//   for (const workspaceDir of workspaceDirs) {
-//     const filepathParts = splitPath(filepath);
-//     const workspaceDirParts = splitPath(workspaceDir);
-//     if (
-//       filepathParts.slice(0, workspaceDirParts.length).join("/") ===
-//       workspaceDirParts.join("/")
-//     ) {
-//       return filepathParts.slice(workspaceDirParts.length).join("/");
-//     }
-//   }
-//   return splitPath(filepath).pop() ?? ""; // If the file is not in any of the workspaces, return the plain filename
 // }

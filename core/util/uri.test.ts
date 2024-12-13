@@ -4,7 +4,6 @@ import {
   getUniqueUriPath,
   getUriPathBasename,
   groupByLastNPathParts,
-  splitUriPath,
 } from "./uri";
 
 describe("getUriPathBasename", () => {
@@ -87,69 +86,6 @@ describe("getUniqueUriPath", () => {
     };
     const output = getUniqueUriPath(item, itemGroups);
     expect(output).toBe("d/e/file.txt");
-  });
-});
-
-describe("splitUriPath", () => {
-  it("should split Unix-style paths", () => {
-    const path = "/a/b/c/d/e.txt";
-    const output = splitUriPath(path);
-    expect(output).toEqual(["", "a", "b", "c", "d", "e.txt"]);
-  });
-
-  it("should split Windows-style paths", () => {
-    const path = "C:\\Users\\User\\Documents\\file.txt";
-    const output = splitUriPath(path);
-    expect(output).toEqual(["C:", "Users", "User", "Documents", "file.txt"]);
-  });
-
-  it("should handle empty path", () => {
-    const path = "";
-    const output = splitUriPath(path);
-    expect(output).toEqual([""]);
-  });
-
-  it("should handle paths with multiple consecutive separators", () => {
-    const path = "/a//b/c/d/e.txt";
-    const output = splitUriPath(path);
-    expect(output).toEqual(["", "a", "", "b", "c", "d", "e.txt"]);
-  });
-});
-
-describe("getRelativePath", () => {
-  it("should return the relative path with respect to workspace directories", () => {
-    const filepath = "/workspace/project/src/file.ts";
-    const workspaceDirs = ["/workspace/project"];
-    const output = getRelativePath(filepath, workspaceDirs);
-    expect(output).toBe("src/file.ts");
-  });
-
-  it("should return the filename if not in any workspace", () => {
-    const filepath = "/other/place/file.ts";
-    const workspaceDirs = ["/workspace/project"];
-    const output = getRelativePath(filepath, workspaceDirs);
-    expect(output).toBe("file.ts");
-  });
-
-  it("should handle multiple workspace directories", () => {
-    const filepath = "/workspace2/project/src/file.ts";
-    const workspaceDirs = ["/workspace/project", "/workspace2/project"];
-    const output = getRelativePath(filepath, workspaceDirs);
-    expect(output).toBe("src/file.ts");
-  });
-
-  it("should handle Windows-style paths", () => {
-    const filepath = "C:\\workspace\\project\\src\\file.ts";
-    const workspaceDirs = ["C:\\workspace\\project"];
-    const output = getRelativePath(filepath, workspaceDirs);
-    expect(output).toBe("src/file.ts");
-  });
-
-  it("should handle paths with spaces or special characters", () => {
-    const filepath = "/workspace/project folder/src/file.ts";
-    const workspaceDirs = ["/workspace/project folder"];
-    const output = getRelativePath(filepath, workspaceDirs);
-    expect(output).toBe("src/file.ts");
   });
 });
 

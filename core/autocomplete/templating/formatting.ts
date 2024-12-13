@@ -23,20 +23,25 @@ const addCommentMarks = (text: string, helper: HelperVars) => {
 
 const formatClipboardSnippet = (
   snippet: AutocompleteClipboardSnippet,
+  workspaceDirs: string[],
 ): AutocompleteCodeSnippet => {
-  return formatCodeSnippet({
-    filepath: "Untitled.txt",
-    content: snippet.content,
-    type: AutocompleteSnippetType.Code,
-  });
+  return formatCodeSnippet(
+    {
+      filepath: "Untitled.txt",
+      content: snippet.content,
+      type: AutocompleteSnippetType.Code,
+    },
+    workspaceDirs,
+  );
 };
 
 const formatCodeSnippet = (
   snippet: AutocompleteCodeSnippet,
+  workspaceDirs: string[],
 ): AutocompleteCodeSnippet => {
   return {
     ...snippet,
-    content: `Path: ${getLastNUriRelativePathParts(snippet.filepath, 2)}\n${snippet.content}`,
+    content: `Path: ${getLastNUriRelativePathParts(workspaceDirs, snippet.filepath, 2)}\n${snippet.content}`,
   };
 };
 
@@ -61,9 +66,8 @@ export const formatSnippets = (
   snippets: AutocompleteSnippet[],
   workspaceDirs: string[],
 ): string => {
-  const relativeFilePath = getRelativePath(helper.filepath, workspaceDirs);
   const currentFilepathComment = addCommentMarks(
-    getLastNUriRelativePathParts(helper.filepath, 2),
+    getLastNUriRelativePathParts(workspaceDirs, helper.filepath, 2),
     helper,
   );
 
@@ -72,11 +76,11 @@ export const formatSnippets = (
       .map((snippet) => {
         switch (snippet.type) {
           case AutocompleteSnippetType.Code:
-            return formatCodeSnippet(snippet);
+            return formatCodeSnippet(snippet, workspaceDirs);
           case AutocompleteSnippetType.Diff:
             return formatDiffSnippet(snippet);
           case AutocompleteSnippetType.Clipboard:
-            return formatClipboardSnippet(snippet);
+            return formatClipboardSnippet(snippet, workspaceDirs);
         }
       })
       .map((item) => {

@@ -44,7 +44,8 @@ import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { getFullPath } from "./util/uri";
+import URI from "uri-js";
+import { localPathToUri } from "./util/uri";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -730,8 +731,7 @@ export class Core {
         for (const uri of data.uris) {
           // Listen for file changes in the workspace
           // URI TODO is this equality statement valid?
-          const filePath = getFullPath(uri);
-          if (filePath === getConfigJsonPath()) {
+          if (URI.equal(uri, localPathToUri(getConfigJsonPath()))) {
             // Trigger a toast notification to provide UI feedback that config has been updated
             const showToast =
               this.globalContext.get("showConfigUpdateToast") ?? true;

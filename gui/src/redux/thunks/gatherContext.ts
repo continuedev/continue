@@ -12,7 +12,7 @@ import resolveEditorContent, {
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
 import { setIsGatheringContext } from "../slices/sessionSlice";
-import { getRelativePath, getUriPathBasename } from "core/util/uri";
+import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { updateFileSymbolsFromNewContextItems } from "./updateFileSymbols";
 
 export const gatherContext = createAsyncThunk<
@@ -81,10 +81,12 @@ export const gatherContext = createAsyncThunk<
         ) {
           // don't add the file if it's already in the context items
           selectedContextItems.unshift({
-            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
-              currentFile.path,
-              await extra.ideMessenger.ide.getWorkspaceDirs(),
-            )}\n${currentFileContents}\n\`\`\``,
+            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${
+              findUriInDirs(
+                currentFile.path,
+                await extra.ideMessenger.ide.getWorkspaceDirs(),
+              ).relativePathOrBasename
+            }\n${currentFileContents}\n\`\`\``,
             name: `Active file: ${getUriPathBasename(currentFile.path)}`,
             description: currentFile.path,
             id: {

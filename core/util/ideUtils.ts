@@ -1,5 +1,5 @@
 import { IDE } from "..";
-import { isUriWithinDirectory, joinPathsToUri } from "./uri";
+import { findUriInDirs, joinPathsToUri } from "./uri";
 
 /*
   This function takes a relative filepath
@@ -33,13 +33,13 @@ export async function inferResolvedUriFromRelativePath(
   path: string,
   ide: IDE,
 ): Promise<string> {
-  for (const workspaceUri of workspaceDirs) {
-    if (isUriWithinDirectory(path))
-      const fullUri = joinPathsToUri(workspaceUri, path);
-    if (await ide.fileExists(fullUri)) {
-      return fullUri;
-    }
-  }
-  // console.warn("No meaninful filepath inferred from relative path " + path)
-  return `${workspaces[0]}/${cleanPath}`;
+  // for (const workspaceUri of workspaceDirs) {
+  //   if (isUriWithinDirectory(path))
+  //     const fullUri = joinPathsToUri(workspaceUri, path);
+  //   if (await ide.fileExists(fullUri)) {
+  //     return fullUri;
+  //   }
+  // }
+  // // console.warn("No meaninful filepath inferred from relative path " + path)
+  // return `${workspaces[0]}/${cleanPath}`;
 }

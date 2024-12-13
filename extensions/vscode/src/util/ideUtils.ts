@@ -15,7 +15,7 @@ import {
 import { getUniqueId, openEditorAndRevealRange } from "./vscode";
 
 import type { Range, RangeInFile, Thread } from "core";
-import { isUriWithinDirectory } from "core/util/uri";
+import { findUriInDirs } from "core/util/uri";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
@@ -450,13 +450,16 @@ export class VsCodeIdeUtils {
   private static secondsToWaitForGitToLoad =
     process.env.NODE_ENV === "test" ? 1 : 20;
   async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
-    const workspaceDirs = this.getWorkspaceDirectories();
-    const parentDir = workspaceDirs.find((dir) =>
-      isUriWithinDirectory(forDirectory.toString(), dir.toString()),
+    const workspaceDirs = this.getWorkspaceDirectories().map((dir) =>
+      dir.toString(),
     );
-    if (parentDir) {
+    const { foundInDir } = findUriInDirs(
+      forDirectory.toString(),
+      workspaceDirs,
+    );
+    if (foundInDir) {
       // Check if the repository is already cached
-      const cachedRepo = this.repoCache.get(parentDir.toString());
+      const cachedRepo = this.repoCache.get(foundInDir);
       if (cachedRepo) {
         return cachedRepo;
       }
@@ -479,9 +482,9 @@ export class VsCodeIdeUtils {
       repo = await this._getRepo(forDirectory);
     }
 
-    if (parentDir) {
+    if (foundInDir) {
       // Cache the repository for the parent directory
-      this.repoCache.set(parentDir.toString(), repo);
+      this.repoCache.set(foundInDir, repo);
     }
 
     return repo;
