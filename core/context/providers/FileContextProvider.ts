@@ -46,9 +46,14 @@ class FileContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const results = await walkDirInWorkspaces(args.ide);
+    const workspaceDirs = await args.ide.getWorkspaceDirs();
+    const results = await walkDirInWorkspaces(
+      args.ide,
+      undefined,
+      workspaceDirs,
+    );
     const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
-    const fileGroups = groupByLastNPathParts(files, 2);
+    const fileGroups = groupByLastNPathParts(workspaceDirs, files, 2);
 
     return files.map((uri) => {
       return {

@@ -46,10 +46,15 @@ class RepoMapContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const folders = await walkDirInWorkspaces(args.ide, {
-      onlyDirs: true,
-    });
-    const folderGroups = groupByLastNPathParts(folders, 2);
+    const workspaceDirs = await args.ide.getWorkspaceDirs();
+    const folders = await walkDirInWorkspaces(
+      args.ide,
+      {
+        onlyDirs: true,
+      },
+      workspaceDirs,
+    );
+    const folderGroups = groupByLastNPathParts(workspaceDirs, folders, 2);
 
     return [
       ENTIRE_PROJECT_ITEM,

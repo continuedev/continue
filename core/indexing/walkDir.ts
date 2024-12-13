@@ -227,8 +227,9 @@ export async function* walkDirAsync(
 export async function walkDirInWorkspaces(
   ide: IDE,
   _optionOverrides?: WalkerOptions,
+  dirs?: string[], // Can pass dirs to prevent duplicate calls
 ): Promise<string[]> {
-  const workspaceDirs = await ide.getWorkspaceDirs();
+  const workspaceDirs = dirs ?? (await ide.getWorkspaceDirs());
   const results = await Promise.all(
     workspaceDirs.map((dir) => walkDir(dir, ide, _optionOverrides)),
   );

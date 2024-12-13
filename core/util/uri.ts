@@ -50,13 +50,37 @@ export function findUriInDirs(
     if (uriComps.scheme !== dirComps.scheme) {
       continue;
     }
-    if (uriComps.path === dirComps.path) {
+    // Can't just use startsWith because e.g.
+    // file:///folder/file is not within file:///fold
+
+    // At this point we break the path up and check if each dir path part matches
+    const dirPathParts = (dirComps.path ?? "")
+      .split("/")
+      .map((part) => encodeURIComponent(part));
+    const uriPathParts = (uriComps.path ?? "")
+      .split("/")
+      .map((part) => encodeURIComponent(part));
+
+    if (uriPathParts.length > dirPathParts.length - 1) {
       continue;
     }
-    // Can't just use starts with because e.g.
-    // file:///folder/file is not within file:///fold
-    return uriComps.path.startsWith(dirComps.path);
+    let allDirPartsMatch = true;
+    for (let i = 0; i < dirPathParts.length; i++) {
+      if (dirPathParts[i] !== uriPathParts[i]) {
+        allDirPartsMatch = false;
+      }
+    }
+    if (allDirPartsMatch) {
+      return {
+        relativePathOrBasename: uriPathParts
+          .slice(dirPathParts.length)
+          .join("/"),
+        foundInDir: dir,
+      };
+    }
   }
+  // Not found
+  console.warn("Directory not found for uri", uri, dirUriCandidates);
   return {
     relativePathOrBasename: getUriPathBasename(uri),
     foundInDir: null,
@@ -91,7 +115,7 @@ export function getUriPathBasename(uri: string): string {
 */
 export function getUriFileExtension(uri: string) {
   const baseName = getUriPathBasename(uri);
-  return baseName.split(".")[-1] ?? "";
+  return (baseName.split(".")[-1] ?? "").toLowerCase();
 }
 
 export function getFileExtensionFromBasename(filename: string) {
@@ -114,11 +138,23 @@ export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
   return URI.serialize(components);
 }
 
+// Note, will show workspace
 export function groupByLastNPathParts(
+  workspaceDirs: string[],
   uris: string[],
   n: number,
 ): Record<string, string[]> {
-  return [];
+  return uris.reduce(
+    (groups, uri) => {
+      const lastNParts = getLastNUriRelativePathParts(workspaceDirs, uri, n);
+      if (!groups[lastNParts]) {
+        groups[lastNParts] = [];
+      }
+      groups[lastNParts].push(uri);
+      return groups;
+    },
+    {} as Record<string, string[]>,
+  );
 }
 
 export function getUniqueUriPath(
@@ -189,23 +225,6 @@ export function getLastNPathParts(filepath: string, n: number): string {
   return filepath.split(/[\\/]/).slice(-n).join("/");
 }
 
-// export function groupByLastNPathParts(
-//   filepaths: string[],
-//   n: number,
-// ): Record<string, string[]> {
-//   return filepaths.reduce(
-//     (groups, item) => {
-//       const lastNParts = getLastNPathParts(item, n);
-//       if (!groups[lastNParts]) {
-//         groups[lastNParts] = [];
-//       }
-//       groups[lastNParts].push(item);
-//       return groups;
-//     },
-//     {} as Record<string, string[]>,
-//   );
-// }
-
 // export function getUniqueFilePath(
 //   item: string,
 //   itemGroups: Record<string, string[]>,
@@ -227,13 +246,4 @@ export function getLastNPathParts(filepath: string, n: number): string {
 //   }
 
 //   return getLastNPathParts(item, n);
-// }
-
-// export function splitPath(path: string, withRoot?: string): string[] {
-//   let parts = path.includes("/") ? path.split("/") : path.split("\\");
-//   if (withRoot !== undefined) {
-//     const rootParts = splitPath(withRoot);
-//     parts = parts.slice(rootParts.length - 1);
-//   }
-//   return parts;
 // }

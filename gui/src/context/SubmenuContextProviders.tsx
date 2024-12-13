@@ -89,7 +89,8 @@ export const SubmenuContextProvidersProvider = ({
 
   const getOpenFilesItems = useCallback(async () => {
     const openFiles = await ideMessenger.ide.getOpenFiles();
-    const openFileGroups = groupByLastNPathParts(openFiles, 2);
+    const workspaceDirs = await ideMessenger.ide.getWorkspaceDirs();
+    const openFileGroups = groupByLastNPathParts(workspaceDirs, openFiles, 2);
 
     return openFiles.map((file) => ({
       id: file,

@@ -1,6 +1,6 @@
+import { TEST_DIR } from "../test/testDir";
 import {
   getLastNPathParts,
-  getRelativePath,
   getUniqueUriPath,
   getUriPathBasename,
   groupByLastNPathParts,
@@ -33,13 +33,14 @@ describe("getUriPathBasename", () => {
 });
 
 describe("groupByLastNPathParts", () => {
+  const workspaceDirs = [TEST_DIR];
   it("should group filepaths by their last N parts", () => {
     const filepaths = [
       "/a/b/c/d/file1.txt",
       "/x/y/z/file1.txt",
       "/a/b/c/d/file2.txt",
     ];
-    const output = groupByLastNPathParts(filepaths, 2);
+    const output = groupByLastNPathParts(workspaceDirs, filepaths, 2);
     expect(output).toEqual({
       "d/file1.txt": ["/a/b/c/d/file1.txt"],
       "z/file1.txt": ["/x/y/z/file1.txt"],
@@ -49,13 +50,13 @@ describe("groupByLastNPathParts", () => {
 
   it("should handle an empty array", () => {
     const filepaths: string[] = [];
-    const output = groupByLastNPathParts(filepaths, 2);
+    const output = groupByLastNPathParts(workspaceDirs, filepaths, 2);
     expect(output).toEqual({});
   });
 
   it("should handle N greater than path parts", () => {
     const filepaths = ["/file.txt"];
-    const output = groupByLastNPathParts(filepaths, 5);
+    const output = groupByLastNPathParts(workspaceDirs, filepaths, 5);
     expect(output).toEqual({ "/file.txt": ["/file.txt"] });
   });
 });

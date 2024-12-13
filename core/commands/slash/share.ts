@@ -1,6 +1,6 @@
 import fs from "fs";
 import { homedir } from "node:os";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "path";
 
 import { languageForFilepath } from "../../autocomplete/constants/AutocompleteLanguageInfo.js";
@@ -90,8 +90,9 @@ const ShareSlashCommand: SlashCommand = {
     const dtString = asBasicISOString(getOffsetDatetime(now));
     const outPath = path.join(outputDir, `${dtString}_session.md`); //TODO: more flexible naming?
 
-    await ide.writeFile(outPath, content);
-    await ide.openFile(outPath);
+    const fileUrl = pathToFileURL(outPath).toString(); // TODO switch from path to URI above ^
+    await ide.writeFile(fileUrl, content);
+    await ide.openFile(fileUrl);
 
     yield `The session transcript has been saved to a markdown file at \`${outPath}\`.`;
   },
