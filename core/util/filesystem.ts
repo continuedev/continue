@@ -15,8 +15,6 @@ import {
   ToastType,
 } from "../index.d.js";
 import { GetGhTokenArgs } from "../protocol/ide.js";
-
-import { getContinueGlobalPath } from "./paths.js";
 import { fileURLToPath } from "node:url";
 
 class FileSystemIde implements IDE {

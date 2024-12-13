@@ -45,7 +45,7 @@ import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import type { IMessenger, Message } from "./protocol/messenger";
 import URI from "uri-js";
-import { localPathToUri } from "./util/uri";
+import { localPathToUri } from "./util/pathToUri";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>

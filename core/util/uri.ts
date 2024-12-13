@@ -1,21 +1,4 @@
 import URI from "uri-js";
-import { fileURLToPath, pathToFileURL } from "url";
-
-// Converts a local path to a file:// URI
-export function localPathToUri(path: string) {
-  const url = pathToFileURL(path);
-  return URI.normalize(url.toString());
-}
-
-export function localPathOrUriToPath(localPathOrUri: string): string {
-  try {
-    return fileURLToPath(localPathOrUri);
-  } catch (e) {
-    console.log("Received local filepath", localPathOrUri);
-
-    return localPathOrUri;
-  }
-}
 
 /** Converts any OS path to cleaned up URI path segment format with no leading/trailing slashes
    e.g. \path\to\folder\ -> path/to/folder
