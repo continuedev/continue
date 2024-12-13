@@ -2,6 +2,7 @@ import {
   ArrowTopRightOnSquareIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  ClipboardIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
@@ -133,6 +134,7 @@ function ContextItemsPeek({
   isCurrentContextPeek,
 }: ContextItemsPeekProps) {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const ctxItems = useMemo(() => {
     return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
@@ -141,6 +143,19 @@ function ContextItemsPeek({
   const isGatheringContext = useAppSelector(selectIsGatheringContext);
 
   const indicateIsGathering = isCurrentContextPeek && isGatheringContext;
+
+  const copyContextToClipboard = () => {
+    if (!ctxItems || ctxItems.length === 0) return;
+    
+    const contextText = ctxItems.map(item => {
+      return `### ${item.name}\n${item.content}`;
+    }).join('\n\n');
+    
+    navigator.clipboard.writeText(contextText).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   if ((!ctxItems || ctxItems.length === 0) && !indicateIsGathering) {
     return null;
@@ -153,34 +168,46 @@ function ContextItemsPeek({
         backgroundColor: vscBackground,
       }}
     >
-      <div
-        className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
-        onClick={() => setOpen((prev) => !prev)}
-      >
-        <div className="relative mr-1 h-4 w-4">
-          <ChevronRightIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-              open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
-            }`}
-          />
-          <ChevronDownIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-              open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
-            }`}
-          />
+      <div className="flex items-center justify-between">
+        <div
+          className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
+          onClick={() => setOpen((prev) => !prev)}
+        >
+          <div className="relative mr-1 h-4 w-4">
+            <ChevronRightIcon
+              className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+                open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
+              }`}
+            />
+            <ChevronDownIcon
+              className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+                open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
+              }`}
+            />
+          </div>
+          <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
+            {isGatheringContext ? (
+              <>
+                Gathering context
+                <AnimatedEllipsis />
+              </>
+            ) : (
+              `${ctxItems.length} context ${
+                ctxItems.length > 1 ? "items" : "item"
+              }`
+            )}
+          </span>
         </div>
-        <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
-          {isGatheringContext ? (
-            <>
-              Gathering context
-              <AnimatedEllipsis />
-            </>
-          ) : (
-            `${ctxItems.length} context ${
-              ctxItems.length > 1 ? "items" : "item"
-            }`
-          )}
-        </span>
+        {!isGatheringContext && ctxItems.length > 0 && (
+          <button
+            onClick={copyContextToClipboard}
+            className="mr-4 flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-400 hover:bg-white/10"
+            title="Copy context to clipboard"
+          >
+            <ClipboardIcon className="h-4 w-4" />
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        )}
       </div>
 
       <div
