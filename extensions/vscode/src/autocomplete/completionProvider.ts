@@ -105,6 +105,12 @@ export class ContinueCompletionProvider
       return null;
     }
 
+    // Don't autocomplete with multi-cursor
+    const editor = vscode.window.activeTextEditor;
+    if (editor && editor.selections.length > 1) {
+      return null;
+    }
+
     // If the text at the range isn't a prefix of the intellisense text,
     // no completion will be displayed, regardless of what we return
     if (
