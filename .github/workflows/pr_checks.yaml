@@ -228,6 +228,12 @@ jobs:
           cd extensions/vscode
           npm run package
           npm run e2e:ci
+      - name: Upload e2e test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
     needs: [gui-checks, core-checks]
