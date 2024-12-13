@@ -810,6 +810,7 @@ const getCommandsMap: (
       );
 
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
+      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.openConfig": () => {
       core.invoke("config/openProfile", {
