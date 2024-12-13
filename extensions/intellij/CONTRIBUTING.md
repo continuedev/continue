@@ -1,30 +1,31 @@
 # Contributing to Continue (JetBrains extension) <!-- omit in toc -->
 
-This file is for contribution guidelines specific to the JetBrains extension. See the root [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
+This file is for contribution guidelines specific to the JetBrains extension. See the root [
+`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
 
 ## Table of Contents <!-- omit in toc -->
 
 - [Architecture Overview](#architecture-overview)
 - [Environment Setup](#environment-setup)
-  - [IDE Installation](#ide-installation)
-  - [IDE configuration](#ide-configuration)
-  - [Node.js Requirements](#nodejs-requirements)
-  - [Install all dependencies](#install-all-dependencies)
-  - [Misc](#misc)
+    - [IDE Installation](#ide-installation)
+    - [IDE configuration](#ide-configuration)
+    - [Node.js Requirements](#nodejs-requirements)
+    - [Install all dependencies](#install-all-dependencies)
+    - [Misc](#misc)
 - [Development Workflow](#development-workflow)
-  - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
-  - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
-  - [Viewing logs](#viewing-logs)
-  - [Reloading changes](#reloading-changes)
-  - [Setting breakpoints](#setting-breakpoints)
-  - [Available Gradle tasks](#available-gradle-tasks)
-  - [Packaging](#packaging)
-    - [Testing the packaged extension](#testing-the-packaged-extension)
+    - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
+    - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
+    - [Viewing logs](#viewing-logs)
+    - [Reloading changes](#reloading-changes)
+    - [Setting breakpoints](#setting-breakpoints)
+    - [Available Gradle tasks](#available-gradle-tasks)
+    - [Packaging](#packaging)
+        - [Installing the packaged extension](#installing-the-packaged-extension)
 - [Testing](#testing)
-  - [e2e testing](#e2e-testing)
-    - [Overview](#overview)
-    - [Setup](#setup)
-    - [Running the tests](#running-the-tests)
+    - [e2e testing](#e2e-testing)
+        - [Overview](#overview)
+        - [Setup](#setup)
+        - [Running the tests](#running-the-tests)
 
 ## Architecture Overview
 
@@ -72,7 +73,8 @@ This project requires Node.js version 20.11.0 (LTS) or higher. You have two opti
 Select the `Run Continue` task in the top right corner of the IDE and then select the "Debug" option.
 
 > In community edition, use `Run Continue (CE)` instead, which uses shell scripts instead of Ultimate-only node configs.
-> If you want to debug the core in CE, you'll need to quit the `Start Core Dev Server (CE)` process and run the core in a
+> If you want to debug the core in CE, you'll need to quit the `Start Core Dev Server (CE)` process and run the core in
+> a
 > different environment that supports debugging, such as VS Code (Launch "Core Binary").
 
 ![run-extension-screenshot](../../media/run-continue-intellij.png)
@@ -89,13 +91,14 @@ allow for changes to your `config.json` and other files during development, with
 
 When using the `Run Continue` task, we automatically run a script that outputs logs into the "Prompt Logs" terminal tab.
 
-Alternatively, you can view logs for a particular IDE instance by selecting `Help` -> `Open Log in Editor` in the window toolbar.
+Alternatively, you can view logs for a particular IDE instance by selecting `Help` -> `Open Log in Editor` in the window
+toolbar.
 
 ### Reloading changes
 
 - `extensions/intellij`: Attempt to reload changed classes by selecting
   _Run | Debugging Actions | Reload Changed Classes`_
-  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
+    - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
 - `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Core Dev Server` task)
 
@@ -128,9 +131,10 @@ verifyPluginConfiguration - Checks if Java and Kotlin compilers configuration me
 - Unix: `./gradlew buildPlugin`
 - Windows: `./gradlew.bat buildPlugin`
 
-This will generate a .zip file in `./build/distributions` with the version defined in [`./gradle.properties`](./gradle.properties)
+This will generate a .zip file in `./build/distributions` with the version defined in [
+`./gradle.properties`](./gradle.properties)
 
-#### Testing the packaged extension
+#### Installing the packaged extension
 
 - Navigate to the Plugins settings page (_Settings | Plugins_)
 - Click on the gear icon
@@ -146,7 +150,8 @@ The e2e tests are written using [intellij-ui-test-robot](`https://github.com/Jet
 
 #### Setup
 
-If you are on MacOS, you'll need to give IntelliJ permission to control your computer in order to run the e2e tests. Open _System Settings_ and select `Privacy & Security` -> `Accessibility` and toggle the switch for IntelliJ.
+If you are on macOS, you'll need to give IntelliJ permission to control your computer in order to run the e2e tests.
+Open _System Settings_ and select `Privacy & Security` -> `Accessibility` and toggle the switch for IntelliJ.
 
 #### Running the tests
 
@@ -156,7 +161,8 @@ Instantiate the test IDE as a background task:
 ./gradlew clean runIdeForUiTests &
 ```
 
-Then, run the tests. Note that you need to have the test IDE focused in order for the tests to run.
+Once the IDE has loaded, you can run the tests. Note that you need to have the test IDE focused in order for the tests
+to run.
 
 ```sh
 ./gradlew test

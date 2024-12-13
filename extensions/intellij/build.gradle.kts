@@ -1,9 +1,13 @@
 import org.jetbrains.changelog.markdownToHTML
-import org.jetbrains.intellij.tasks.PrepareSandboxTask
 
 fun properties(key: String) = providers.gradleProperty(key)
 
 fun environment(key: String) = providers.environmentVariable(key)
+
+fun Sync.prepareSandbox() {
+    from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
+    from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
+}
 
 val remoteRobotVersion = "0.11.23"
 
@@ -85,15 +89,16 @@ tasks {
         version.set(remoteRobotVersion)
     }
 
-    listOf("prepareSandbox", "prepareTestingSandbox", "prepareUiTestingSandbox").forEach { taskName ->
-        tasks.named<PrepareSandboxTask>(taskName) {
-            from("../../binary/bin") {
-                into("${intellij.pluginName.get()}/core/")
-            }
-            from("../vscode/node_modules/@vscode/ripgrep") {
-                into("${intellij.pluginName.get()}/ripgrep/")
-            }
-        }
+    prepareSandbox {
+        prepareSandbox()
+    }
+
+    prepareTestingSandbox {
+        prepareSandbox()
+    }
+
+    prepareUiTestingSandbox {
+        prepareSandbox()
     }
 
     wrapper { gradleVersion = properties("gradleVersion").get() }
