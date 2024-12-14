@@ -58,9 +58,6 @@ export const vscInputBackground = `var(${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45
 export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, ${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
 export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
-export const vscForegroundMuted = `var(${VSC_FOREGROUND_MUTED_VAR}, #999)`;
-export const vscDescriptionForeground = `var(${VSC_DESCRIPTION_FOREGROUND}, #999)`;
-export const vscInputPlaceholderForeground = `var(${VSC_INPUT_PLACEHOLDER_FOREGROUND}, #999)`;
 export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
 export const vscButtonForeground = `var(${VSC_BUTTON_FOREGROUND_VAR}, #ffffff)`;
 export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
@@ -70,10 +67,6 @@ export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, $
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
 export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGray})`;
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
-export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #fff)`;
-export const vscSidebarBorder = `var(${VSC_SIDEBAR_BORDER_VAR}, transparent)`;
-export const vscDiffRemovedLineBackground = `var(${VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR}, #808080)`;
-export const vscDiffInsertedLineBackground = `var(${VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR}, #28a745)`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
@@ -181,6 +174,26 @@ export const SecondaryButton = styled.button`
   }
 `;
 
+export const GhostButton = styled.button`
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: ${defaultBorderRadius};
+
+  border: none;
+  color: ${vscForeground};
+  background-color: transparent;
+
+  &:disabled {
+    color: gray;
+    pointer-events: none;
+  }
+
+  &:hover:enabled {
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.08); /* Subtle hover effect */
+  }
+`;
+
 export const InputSubtext = styled.span`
   font-size: 0.75rem;
   line-height: 1rem;
@@ -216,64 +229,6 @@ export const CustomScrollbarDiv = styled.div`
   }
 `;
 
-export const TextArea = styled.textarea`
-  padding: 8px;
-  font-family: inherit;
-  border-radius: ${defaultBorderRadius};
-  margin: 16px auto;
-  height: auto;
-  width: calc(100% - 32px);
-  background-color: ${vscInputBackground};
-  color: ${vscForeground};
-  z-index: 1;
-  border: 1px solid transparent;
-
-  resize: vertical;
-
-  &:focus {
-    outline: 1px solid ${lightGray};
-    border: 1px solid transparent;
-  }
-
-  &::placeholder {
-    color: ${lightGray}80;
-  }
-`;
-
-export const Pre = styled.pre`
-  border-radius: ${defaultBorderRadius};
-  padding: 8px;
-  max-height: 150px;
-  overflow-y: scroll;
-  margin: 0;
-  background-color: ${vscBackground};
-  border: none;
-
-  /* text wrapping */
-  white-space: pre-wrap; /* Since CSS 2.1 */
-  white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
-  white-space: -pre-wrap; /* Opera 4-6 */
-  white-space: -o-pre-wrap; /* Opera 7 */
-  word-wrap: break-word; /* Internet Explorer 5.5+ */
-`;
-
-export const H3 = styled.h3`
-  background-color: ${vscInputBackground};
-  border-radius: ${defaultBorderRadius};
-  padding: 4px 8px;
-  width: fit-content;
-`;
-
-export const Hr = styled.hr`
-  border: 0.5px solid ${lightGray};
-`;
-
-export const HelperText = styled.p`
-  margin-top: 2.5px;
-  font-size: ${getFontSize() - 2}px;
-  color: ${lightGray};
-`;
-
 export const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
@@ -295,21 +250,6 @@ export const Input = styled.input`
   }
 `;
 
-export const NumberInput = styled.input.attrs({ type: "number" })`
-  padding: 8px 12px;
-  margin: 8px 4px;
-  box-sizing: border-box;
-  border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${lightGray};
-  border: none;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
-
-  &:focus {
-    background: ${vscInputBackground};
-  }
-`;
-
 export const Select = styled.select`
   padding: 8px 12px;
   margin: 8px 0;
@@ -323,43 +263,6 @@ export const Select = styled.select`
 
 export const Label = styled.label<{ fontSize?: number }>`
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-`;
-
-const spin = keyframes`
-    from {
-        -webkit-transform: rotate(0deg);
-    }
-    to {
-        -webkit-transform: rotate(360deg);
-    }
-`;
-
-export const Loader = styled.div`
-  border: 4px solid transparent;
-  border-radius: 50%;
-  border-top: 4px solid white;
-  width: 36px;
-  height: 36px;
-  -webkit-animation: ${spin} 1s ease-in-out infinite;
-  animation: ${spin} 1s ease-in-out infinite;
-  margin: auto;
-`;
-
-export const MainContainerWithBorder = styled.div<{ borderWidth?: string }>`
-  border-radius: ${defaultBorderRadius};
-  padding: ${(props) => props.borderWidth || "1px"};
-  background-color: white;
-`;
-
-export const appear = keyframes`
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0px);
-    }
 `;
 
 export const HeaderButton = styled.button<{

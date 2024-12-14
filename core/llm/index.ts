@@ -1,6 +1,10 @@
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
-import { BaseLlmApi, constructLlmApi } from "@continuedev/openai-adapters";
+import {
+  BaseLlmApi,
+  ChatCompletionCreateParams,
+  constructLlmApi,
+} from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
 import {
@@ -406,7 +410,7 @@ export abstract class BaseLLM implements ILLM {
             e.message.includes("http://127.0.0.1:11434")
           ) {
             throw new Error(
-              "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
+              "Failed to connect to local Ollama instance, please ensure Ollama is both installed and running. You can download Ollama from https://ollama.ai.",
             );
           }
         }
@@ -472,15 +476,13 @@ export abstract class BaseLLM implements ILLM {
   ): AsyncGenerator<string> {
     const { completionOptions, log } = this._parseCompletionOptions(options);
 
-    const madeUpFimPrompt = `${prefix}<FIM>${suffix}`;
+    const fimLog = `Prefix: ${prefix}\nSuffix: ${suffix}`;
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(
-          this._compileLogMessage(madeUpFimPrompt, completionOptions),
-        );
+        await this.writeLog(this._compileLogMessage(fimLog, completionOptions));
       }
       if (this.llmRequestHook) {
-        this.llmRequestHook(completionOptions.model, madeUpFimPrompt);
+        this.llmRequestHook(completionOptions.model, fimLog);
       }
     }
 
@@ -511,18 +513,14 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    this._logTokensGenerated(
-      completionOptions.model,
-      madeUpFimPrompt,
-      completion,
-    );
+    this._logTokensGenerated(completionOptions.model, fimLog, completion);
 
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return {
-      prompt: madeUpFimPrompt,
+      prompt: fimLog,
       completion,
       completionOptions,
     };
@@ -659,6 +657,12 @@ export abstract class BaseLLM implements ILLM {
     return { role: "assistant" as const, content: completion };
   }
 
+  protected modifyChatBody(
+    body: ChatCompletionCreateParams,
+  ): ChatCompletionCreateParams {
+    return body;
+  }
+
   async *streamChat(
     _messages: ChatMessage[],
     signal: AbortSignal,
@@ -695,9 +699,11 @@ export abstract class BaseLLM implements ILLM {
         }
       } else {
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
+          let body = toChatBody(messages, completionOptions);
+          body = this.modifyChatBody(body);
           const stream = this.openaiAdapter.chatCompletionStream(
             {
-              ...toChatBody(messages, completionOptions),
+              ...body,
               stream: true,
             },
             signal,

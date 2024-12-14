@@ -1,6 +1,5 @@
 import { Listbox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
-import { UserCircleIcon } from "@heroicons/react/24/solid";
 import { Fragment, useContext } from "react";
 import styled from "styled-components";
 import {
@@ -14,6 +13,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../context/Auth";
 import { setSelectedProfileId } from "../redux/slices/sessionSlice";
 import { useDispatch } from "react-redux";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
   background-color: ${({ selected }) =>
@@ -137,9 +137,18 @@ export default function AccountDialog() {
         </Listbox>
       </div>
 
-      <div className="flex w-full justify-end">
-        <Button className="w-auto" onClick={logout}>
+      <div className="flex w-full justify-end gap-2">
+        <SecondaryButton className="w-auto" onClick={logout}>
           Sign out
+        </SecondaryButton>
+        <Button
+          className="w-auto"
+          onClick={() => {
+            dispatch(setDialogMessage(undefined));
+            dispatch(setShowDialog(false));
+          }}
+        >
+          Done
         </Button>
       </div>
     </div>

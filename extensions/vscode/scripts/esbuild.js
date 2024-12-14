@@ -1,4 +1,5 @@
 const esbuild = require("esbuild");
+const fs = require("fs");
 
 const flags = process.argv.slice(2);
 
@@ -31,7 +32,6 @@ const esbuildConfig = {
             throw new Error(result.errors);
           } else {
             try {
-              const fs = require("fs");
               fs.writeFileSync(
                 "./build/meta.json",
                 JSON.stringify(result.metafile, null, 2),
@@ -52,6 +52,28 @@ const esbuildConfig = {
   if (flags.includes("--watch")) {
     const ctx = await esbuild.context(esbuildConfig);
     await ctx.watch();
+  } else if (flags.includes("--notify")) {
+    const inFile = esbuildConfig.entryPoints[0];
+    const outFile = esbuildConfig.outfile;
+
+    // The watcher automatically notices changes to source files
+    // so the only thing it needs to be notified about is if the
+    // output file gets removed.
+    if (fs.existsSync (outFile)) {
+        console.log("VS Code Extension esbuild up to date");
+        return;
+    }
+
+    fs.watchFile(outFile, (current, previous) => {
+      if (current.size > 0) {
+        console.log("VS Code Extension esbuild rebuild complete");
+        fs.unwatchFile(outFile);
+        process.exit(0);
+      }
+    });
+
+    console.log("Triggering VS Code Extension esbuild rebuild...");
+    fs.utimesSync(inFile, new Date(), new Date());
   } else {
     await esbuild.build(esbuildConfig);
   }

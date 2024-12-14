@@ -1,5 +1,6 @@
 import { streamLines } from "../../../diff/util";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../../util/parameters";
+import { PosthogFeatureFlag, Telemetry } from "../../../util/posthog";
 import { HelperVars } from "../../util/HelperVars";
 
 import { stopAtStartOf, stopAtStopTokens } from "./charStream";
@@ -16,6 +17,8 @@ import {
   streamWithNewLines,
 } from "./lineStream";
 
+const STOP_AT_PATTERNS = ["diff --git"];
+
 export class StreamTransformPipeline {
   async *transform(
     generator: AsyncGenerator<string>,
@@ -28,7 +31,10 @@ export class StreamTransformPipeline {
   ): AsyncGenerator<string> {
     let charGenerator = generator;
 
-    charGenerator = stopAtStopTokens(generator, stopTokens);
+    charGenerator = stopAtStopTokens(generator, [
+      ...stopTokens,
+      ...STOP_AT_PATTERNS,
+    ]);
     charGenerator = stopAtStartOf(charGenerator, suffix);
     for (const charFilter of helper.lang.charFilters ?? []) {
       charGenerator = charFilter({
@@ -68,11 +74,14 @@ export class StreamTransformPipeline {
       fullStop,
     );
 
-    lineGenerator = showWhateverWeHaveAtXMs(
-      lineGenerator,
+    const timeoutValue =
       helper.options.showWhateverWeHaveAtXMs ??
-        (DEFAULT_AUTOCOMPLETE_OPTS.showWhateverWeHaveAtXMs as number),
-    );
+      (await Telemetry.getValueForFeatureFlag(
+        PosthogFeatureFlag.AutocompleteTimeout,
+      )) ??
+      DEFAULT_AUTOCOMPLETE_OPTS.showWhateverWeHaveAtXMs;
+
+    lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, timeoutValue!);
 
     const finalGenerator = streamWithNewLines(lineGenerator);
     for await (const update of finalGenerator) {

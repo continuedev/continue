@@ -68,7 +68,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
     case "nvidia":
       return openAICompatible("https://integrate.api.nvidia.com/v1/", config);
     case "scaleway":
-        return openAICompatible("https://api.scaleway.ai/v1/", config);      
+      return openAICompatible("https://api.scaleway.ai/v1/", config);
     case "fireworks":
       return openAICompatible("https://api.fireworks.ai/inference/v1/", config);
     case "together":
@@ -99,4 +99,5 @@ export {
   type CompletionCreateParamsStreaming,
 } from "openai/resources/index";
 
+// export
 export type { BaseLlmApi } from "./apis/base.js";
