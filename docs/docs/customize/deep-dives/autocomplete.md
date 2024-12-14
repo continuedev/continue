@@ -59,15 +59,49 @@ This is just another object like the ones in the `"models"` array of `config.jso
 This object allows you to customize the behavior of tab-autocomplete. The available options are shown below, and you can find their default values [here](https://github.com/continuedev/continue/blob/fbeb2e4fe15d4b434a30a136f74b672485c852d9/core/util/parameters.ts).
 
 - `disable`: Disable autocomplete (can also be done from IDE settings)
-- `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
-- `useFileSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
 - `maxPromptTokens`: The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context. (Number)
-- `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
-- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
 - `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number)
+- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
+- `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
+- `transform`: Whether LLM output should be transformed to correct common model pitfalls.
+- `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
 - `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
 - `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes.
+- `onlyMyCode`: If set to true, Continue will not include any snippets from go to definition unless they are within your repository
+- `useRecentlyEdited`: If set to true, Continue will use recently edited files when generating completions.
 - `disableInFiles`: A list of glob patterns for files in which you want to disable tab autocomplete.
+- `logDisableInFiles`: If set to true, Continue will log when it disables autocomplete in a file due to `disableInFiles` patterns
+- `useImports`: If set to true, Continue will use imports from the current file when generating completions.
+- `showWhateverWeHaveAtXMs`: Truncate the response of the LLM after X milliseconds, even if it's not finished. This can be useful to speed up completions, but may result in incomplete results.
+- `logCompletionCache`: If set to true, Continue will logs the cache hits for completions
+- `logSnippetLimiting`: If set to true, Continue will log when it limits the number of snippets used in a completion due to the `maxPromptTokens`
+- `logSnippetTimeouts`: If set to true, Continue will log when it times out while fetching snippets
+- `logOutlineCreation`: If set to true, Continue will log how it creates an outline for a snippet
+- `logCompletionStop`: If set to true, Continue will log why it stops using the response from the LLM as completion
+- `logDroppedLinesFilter`: If set to true, Continue will log how it drops lines from the LLM result
+- `logPostprocessing`: If set to true, Continue will log how it postprocesses completion after the whole completion has been collected
+- `logCompletionOutcome`: If set to true, Continue will log the final completion which is sent to the editor
+- `logRootPathSnippets`: If set to true, Continue will log how it finds snippets by looking at the syntactical context of the completion location
+- `logImportSnippets`: If set to true, Continue will log how it finds snippets by looking at the imports of the file at the completion location
+- `logDiffSnippets`: If set to true, Continue will log the snippets it finds in the source control (GIT) diff
+- `logClipboardSnippets`: If set to true, Continue will log the snippets it finds in the clipboard
+- `defaultLanguageOptions`: Default language options for all languages
+- `languageOptions`: Override of language options per language. Will be combined with the default language options
+
+The following options are supported for both `defaultLanguageOptions` and `languageOptions`:
+
+- `enableRootPathSnippets`: Enable root path snippets. If enabled, the syntactical context of the autocomplete location will be searched for type references
+- `enableImportSnippets`: Enable import snippets. If enabled, imports of the file will be searched for snippets
+- `enableDiffSnippets`: Enable diff snippets. If enabled, the diffs from the source control system (GIT) will be used as context for the LLM
+- `enableClipboardSnippets`: Enable clipboard snippets. If enabled, the clipboard will be used as context for the LLM
+- `outlineNodeReplacements`: When creating outlines for autocompletion context, replace the nodes in this map with the given replacement string
+- `filterMaxRepeatingLines`: Stop the completion when a line is repeated more than this many time. Set to -1 to disable
+
+## FAQs
+
+### I want better completions, should I use GPT-4?
+
+No, you should not. GPT-4 is not a good model for tab-autocomplete. It is too slow and too expensive. Instead, we recommend using a small model made for tab-autocomplete, such as `deep
 
 ### Full example
 

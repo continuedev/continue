@@ -2892,10 +2892,6 @@
               "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
               "default": false
             },
-            "useFileSuffix": {
-              "type": "boolean",
-              "description": "Determines whether to use the file suffix in the prompt."
-            },
             "maxPromptTokens": {
               "type": "number",
               "description": "The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context."
@@ -3013,10 +3009,12 @@
               "description": "If set to true, Continue will log the snippets it finds in the clipboard"
             },
             "defaultLanguageOptions": {
+              "description": "Default language options for all languages",
               "$ref": "#/$defs/TabAutocompleteLanguageOptions"
             },
             "languageOptions": {
               "type": "object",
+              "description": "Override of language options per language. Will be combined with the default language options",
               "additionalProperties": {
                 "$ref": "#/$defs/TabAutocompleteLanguageOptions"
               }

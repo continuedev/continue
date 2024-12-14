@@ -11,7 +11,6 @@ export interface TabAutocompleteLanguageOptions {
 
 export interface TabAutocompleteOptions {
   disable: boolean;
-  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;
@@ -54,7 +53,6 @@ export interface TabAutocompleteOptions {
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
-  useFileSuffix: true,
   maxPromptTokens: 1024,
   prefixPercentage: 0.3,
   maxSuffixPercentage: 0.2,
