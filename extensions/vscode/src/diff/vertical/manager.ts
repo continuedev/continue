@@ -9,7 +9,7 @@ import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 export interface VerticalDiffCodeLens {
   start: number;

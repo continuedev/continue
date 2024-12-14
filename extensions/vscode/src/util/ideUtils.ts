@@ -1,7 +1,7 @@
 import { EXTENSION_NAME } from "core/control-plane/env";
 import _ from "lodash";
 import * as vscode from "vscode";
-import URI from "uri-js";
+import * as URI from "uri-js";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";

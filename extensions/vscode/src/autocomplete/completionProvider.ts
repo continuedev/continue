@@ -19,7 +19,7 @@ import {
   setupStatusBar,
   stopStatusBarLoading,
 } from "./statusBar";
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 import type { IDE } from "core";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";

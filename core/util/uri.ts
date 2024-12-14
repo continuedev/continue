@@ -1,4 +1,4 @@
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 /** Converts any OS path to cleaned up URI path segment format with no leading/trailing slashes
    e.g. \path\to\folder\ -> path/to/folder
@@ -45,7 +45,7 @@ export function findUriInDirs(
       .split("/")
       .map((part) => encodeURIComponent(part));
 
-    if (uriPathParts.length > dirPathParts.length - 1) {
+    if (uriPathParts.length < dirPathParts.length) {
       continue;
     }
     let allDirPartsMatch = true;
@@ -65,7 +65,7 @@ export function findUriInDirs(
     }
   }
   // Not found
-  console.warn("Directory not found for uri", uri, dirUriCandidates);
+  console.trace("Directory not found for uri", uri, dirUriCandidates);
   return {
     uri,
     relativePathOrBasename: getUriPathBasename(uri),

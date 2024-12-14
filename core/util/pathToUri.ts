@@ -1,6 +1,6 @@
 import { fileURLToPath, pathToFileURL } from "url";
 
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 // CAN ONLY BE USED IN CORE
 

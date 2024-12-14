@@ -1,6 +1,6 @@
 import { machineIdSync } from "node-machine-id";
 import * as vscode from "vscode";
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
   return new vscode.Range(

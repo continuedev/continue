@@ -13,7 +13,7 @@ import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 import type {
   ContinueRcJson,

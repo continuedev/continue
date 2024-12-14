@@ -14,7 +14,7 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "core/autocomplete/snippets/types";
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 type GotoProviderName =
   | "vscode.executeDefinitionProvider"

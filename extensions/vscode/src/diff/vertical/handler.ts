@@ -10,7 +10,7 @@ import {
 
 import type { VerticalDiffCodeLens } from "./manager";
 import type { ApplyState, DiffLine } from "core";
-import URI from "uri-js";
+import * as URI from "uri-js";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
