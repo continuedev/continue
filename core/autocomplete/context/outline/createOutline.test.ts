@@ -12,7 +12,7 @@ describe("createSummary", () => {
     "test",
   );
 
-  it("should return a summary of the test results", async () => {
+  it("should return an outline of the test file", async () => {
     const fileContents = fs.readFileSync(
       path.join(folderPath, "typescript.ts"),
       "utf8",
