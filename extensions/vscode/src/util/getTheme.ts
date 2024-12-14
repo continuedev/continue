@@ -2,10 +2,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 import mergeJson from "core/util/merge";
-import {
-  convertTheme,
-  IVSCodeTheme,
-} from "monaco-vscode-textmate-theme-converter/lib/cjs";
+import { convertTheme } from "monaco-vscode-textmate-theme-converter/lib/cjs";
 import * as vscode from "vscode";
 
 /**
@@ -61,7 +58,6 @@ export function getTheme() {
       );
       break;
     default:
-      console.log("unknown color theme kind", activeColorTheme);
       colorTheme =
         workbenchConfig.get<string>("workbench.colorTheme") ??
         "Default Dark Modern";
