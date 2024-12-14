@@ -39,7 +39,6 @@ class VsCodeIde implements IDE {
   }
 
   async fileExists(uri: string): Promise<boolean> {
-    console.log("VSCODE FILE EXISTS");
     try {
       await vscode.workspace.fs.stat(vscode.Uri.parse(uri));
       return true;

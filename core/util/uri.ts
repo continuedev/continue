@@ -42,9 +42,11 @@ export function findUriInDirs(
 
     // At this point we break the path up and check if each dir path part matches
     const dirPathParts = (dirComps.path ?? "")
+      .replace(/^\//, "")
       .split("/")
       .map((part) => encodeURIComponent(part));
     const uriPathParts = (uriComps.path ?? "")
+      .replace(/^\//, "")
       .split("/")
       .map((part) => encodeURIComponent(part));
 
@@ -58,11 +60,10 @@ export function findUriInDirs(
       }
     }
     if (allDirPartsMatch) {
+      const relativePath = uriPathParts.slice(dirPathParts.length).join("/");
       return {
         uri,
-        relativePathOrBasename: uriPathParts
-          .slice(dirPathParts.length)
-          .join("/"),
+        relativePathOrBasename: relativePath,
         foundInDir: dir,
       };
     }

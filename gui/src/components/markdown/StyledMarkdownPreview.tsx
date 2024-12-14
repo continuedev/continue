@@ -1,4 +1,3 @@
-import { SymbolWithRange } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useContext, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
@@ -27,7 +26,6 @@ import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 const StyledMarkdown = styled.div<{
@@ -169,8 +167,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       .flat();
   }, [allSymbols, previousFileContextItems]);
   const symbolsRef = useUpdatingRef(previousFileContextItemSymbols);
-
-  const ideMessenger = useContext(IdeMessengerContext);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [

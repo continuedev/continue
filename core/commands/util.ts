@@ -6,7 +6,7 @@ export function rifWithContentsToContextItem(
   rif: RangeInFileWithContents,
 ): ContextItemWithId {
   const basename = getUriPathBasename(rif.filepath);
-  const { relativePathOrBasename } = findUriInDirs(
+  const { relativePathOrBasename, foundInDir, uri } = findUriInDirs(
     rif.filepath,
     window.workspacePaths ?? [],
   );

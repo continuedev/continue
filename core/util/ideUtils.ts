@@ -34,6 +34,7 @@ export async function inferResolvedUriFromRelativePath(
   dirCandidates?: string[],
 ): Promise<string> {
   const dirs = dirCandidates ?? (await ide.getWorkspaceDirs());
+  console.log(path, dirs);
   if (dirs.length === 0) {
     throw new Error("inferResolvedUriFromRelativePath: no dirs provided");
   }
@@ -50,7 +51,6 @@ export async function inferResolvedUriFromRelativePath(
       dir,
       partialUri: joinPathsToUri(dir, suffix),
     }));
-    console.log("here");
     const promises = uris.map(async ({ partialUri, dir }) => {
       const exists = await ide.fileExists(partialUri);
       return {
@@ -59,7 +59,6 @@ export async function inferResolvedUriFromRelativePath(
         exists,
       };
     });
-    console.log("INFERRING", suffix, promises);
     const existenceChecks = await Promise.all(promises);
 
     const existingUris = existenceChecks.filter(({ exists }) => exists);
