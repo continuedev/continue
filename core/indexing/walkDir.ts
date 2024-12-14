@@ -189,7 +189,10 @@ class DFSWalker {
   }
 
   private entryIsIgnoreFile(e: Entry): boolean {
-    if (e[1] === FileType.Directory || e[1] === FileType.SymbolicLink) {
+    if (
+      e[1] === (2 as FileType.Directory) ||
+      e[1] === (64 as FileType.SymbolicLink)
+    ) {
       return false;
     }
     return this.ignoreFileNames.has(e[0]);

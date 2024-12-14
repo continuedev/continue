@@ -78,7 +78,9 @@ async function getEntriesFilteredByIgnore(dir: string, ide: IDE) {
 
   const withRelativePaths = entries
     .filter(
-      (entry) => entry[1] === FileType.File || entry[1] === FileType.Directory,
+      (entry) =>
+        entry[1] === (1 as FileType.File) ||
+        entry[1] === (2 as FileType.Directory),
     )
     .map((entry) => {
       const { relativePathOrBasename } = findUriInDirs(entry[0], workspaceDirs);
@@ -87,7 +89,8 @@ async function getEntriesFilteredByIgnore(dir: string, ide: IDE) {
         type: entry[1],
         basename: getUriPathBasename(entry[0]),
         relativePath:
-          relativePathOrBasename + (entry[1] === FileType.Directory ? "/" : ""),
+          relativePathOrBasename +
+          (entry[1] === (2 as FileType.Directory) ? "/" : ""),
       };
     });
 
@@ -107,7 +110,7 @@ async function gatherProjectContext(
     const entries = await getEntriesFilteredByIgnore(dir, ide);
 
     for (const entry of entries) {
-      if (entry.type === FileType.Directory) {
+      if (entry.type === (2 as FileType.Directory)) {
         context += `\nFolder: ${entry.relativePath}\n`;
         await exploreDirectory(entry.uri, currentDepth + 1);
       } else {
