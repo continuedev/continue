@@ -403,7 +403,7 @@ export interface PromptLog {
   completion: string;
 }
 
-type MessageModes = "chat" | "edit";
+export type MessageModes = "chat" | "edit";
 
 export type ToolStatus =
   | "generating"
@@ -492,7 +492,7 @@ export interface LLMOptions {
   deploymentId?: string;
 }
 
-type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
+export type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
   Exclude<keyof T, Keys>
 > &
@@ -700,7 +700,7 @@ export interface SlashCommand {
 
 // Config
 
-type StepName =
+export type StepName =
   | "AnswerQuestionChroma"
   | "GenerateShellCommandStep"
   | "EditHighlightedCodeStep"
@@ -712,7 +712,7 @@ type StepName =
   | "GenerateShellCommandStep"
   | "DraftIssueStep";
 
-type ContextProviderName =
+export type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
@@ -743,7 +743,7 @@ type ContextProviderName =
   | "url"
   | string;
 
-type TemplateType =
+export type TemplateType =
   | "llama2"
   | "alpaca"
   | "zephyr"
@@ -806,7 +806,7 @@ export interface CustomCommand {
   description: string;
 }
 
-interface Prediction {
+export interface Prediction {
   type: "content";
   content:
     | string
@@ -837,7 +837,7 @@ export interface Tool {
   uri?: string;
 }
 
-interface BaseCompletionOptions {
+export interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
   topK?: number;
@@ -926,23 +926,23 @@ export interface TabAutocompleteOptions {
   showWhateverWeHaveAtXMs?: number;
 }
 
-interface StdioOptions {
+export interface StdioOptions {
   type: "stdio";
   command: string;
   args: string[];
 }
 
-interface WebSocketOptions {
+export interface WebSocketOptions {
   type: "websocket";
   url: string;
 }
 
-interface SSEOptions {
+export interface SSEOptions {
   type: "sse";
   url: string;
 }
 
-type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
 
 export interface MCPOptions {
   transport: TransportOptions;
@@ -957,7 +957,7 @@ export interface ContinueUIConfig {
   codeWrap?: boolean;
 }
 
-interface ContextMenuConfig {
+export interface ContextMenuConfig {
   comment?: string;
   docstring?: string;
   fix?: string;
@@ -965,7 +965,7 @@ interface ContextMenuConfig {
   fixGrammar?: string;
 }
 
-interface ModelRoles {
+export interface ModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
   repoMapFileSelection?: string;
@@ -1006,7 +1006,7 @@ export type CodeToEdit = RangeInFileWithContents | FileWithContents;
  * Represents the configuration for a quick action in the Code Lens.
  * Quick actions are custom commands that can be added to function and class declarations.
  */
-interface QuickActionConfig {
+export interface QuickActionConfig {
   /**
    * The title of the quick action that will display in the Code Lens.
    */
@@ -1031,7 +1031,7 @@ export type DefaultContextProvider = ContextProviderWithParams & {
   query?: string;
 };
 
-interface ExperimentalConfig {
+export interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
   defaultContext?: DefaultContextProvider[];
@@ -1058,7 +1058,7 @@ interface ExperimentalConfig {
   modelContextProtocolServers?: MCPOptions[];
 }
 
-interface AnalyticsConfig {
+export interface AnalyticsConfig {
   type: string;
   url?: string;
   clientKey?: string;
