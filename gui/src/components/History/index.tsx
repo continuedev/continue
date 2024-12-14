@@ -23,8 +23,6 @@ export function History() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const sessionTitle = useAppSelector((state) => state.session.title);
-
   const minisearch = useRef<MiniSearch>(
     new MiniSearch({
       fields: ["title"],

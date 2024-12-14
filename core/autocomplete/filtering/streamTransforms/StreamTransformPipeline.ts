@@ -1,4 +1,6 @@
 import { streamLines } from "../../../diff/util";
+import { PosthogFeatureFlag, Telemetry } from "../../../util/posthog";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../TabAutocompleteOptions";
 import { AutocompleteContext } from "../../util/AutocompleteContext";
 
 import { stopAtStartOf, stopAtStopTokens } from "./charStream";
@@ -15,6 +17,8 @@ import {
   streamWithNewLines,
 } from "./lineStream";
 
+const STOP_AT_PATTERNS = ["diff --git"];
+
 export class StreamTransformPipeline {
   async *transform(
     generator: AsyncGenerator<string>,
@@ -27,10 +31,14 @@ export class StreamTransformPipeline {
   ): AsyncGenerator<string> {
     let charGenerator = generator;
 
-    charGenerator = stopAtStopTokens(generator, stopTokens, (token) => {
-      if (ctx.options.logCompletionStop)
-        ctx.writeLog(`CompletionStop: Completion stopped at token: ${token}`);
-    });
+    charGenerator = stopAtStopTokens(
+      generator,
+      [...stopTokens, ...STOP_AT_PATTERNS],
+      (token) => {
+        if (ctx.options.logCompletionStop)
+          ctx.writeLog(`CompletionStop: Completion stopped at token: ${token}`);
+      },
+    );
     charGenerator = stopAtStartOf(charGenerator, suffix, 20, () => {
       if (ctx.options.logCompletionStop)
         ctx.writeLog(
@@ -139,9 +147,16 @@ export class StreamTransformPipeline {
       },
     );
 
+    const timeoutValue =
+      ctx.options.showWhateverWeHaveAtXMs ??
+      (await Telemetry.getValueForFeatureFlag(
+        PosthogFeatureFlag.AutocompleteTimeout,
+      )) ??
+      DEFAULT_AUTOCOMPLETE_OPTS.showWhateverWeHaveAtXMs;
+
     lineGenerator = showWhateverWeHaveAtXMs(
       lineGenerator,
-      ctx.options.showWhateverWeHaveAtXMs,
+      timeoutValue!,
       () => {
         if (ctx.options.logCompletionStop)
           ctx.writeLog(

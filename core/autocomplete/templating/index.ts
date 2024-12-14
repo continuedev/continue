@@ -6,10 +6,12 @@ import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo"
 import { AutocompleteContext } from "../util/AutocompleteContext";
 
 import { AutocompleteSnippet } from "../snippets/types";
+import { SnippetPayload } from "../snippets";
 import {
   AutocompleteTemplate,
   getTemplateForModel,
 } from "./AutocompleteTemplate";
+import { getStopTokens } from "./getStopTokens";
 import { formatSnippets } from "./formatting";
 import { getStopTokens } from "./getStopTokens";
 
@@ -61,6 +63,9 @@ export function renderPrompt({
   // If prefix is manually passed
   let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
   let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
+  if (suffix === "") {
+    suffix = "\n";
+  }
 
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
 

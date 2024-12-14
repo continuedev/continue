@@ -62,6 +62,14 @@ export async function shouldPrefilter(
   if (await isDisabledForFile(ctx, ide)) {
     return true;
   }
+  // Don't offer completions when we have no information (untitled file and no file contents)
+  if (
+    helper.filepath.includes("Untitled") &&
+    helper.fileContents.trim() === ""
+  ) {
+    return true;
+  }
+
 
   return false;
 }

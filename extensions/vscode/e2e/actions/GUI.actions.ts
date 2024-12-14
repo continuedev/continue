@@ -41,7 +41,9 @@ export class GUIActions {
   };
 
   public static openGui = async () => {
-    return new Workbench().executeCommand("continue.focusContinueInput");
+    return TestUtils.waitForSuccess(() =>
+      new Workbench().executeCommand("continue.focusContinueInput"),
+    );
   };
 
   public static selectModelFromDropdown = async (
@@ -51,7 +53,7 @@ export class GUIActions {
     const dropdownButton = await GUISelectors.getModelDropdownButton(view);
     await dropdownButton.click();
 
-    const dropdownOption = await TestUtils.waitForElement(() => {
+    const dropdownOption = await TestUtils.waitForSuccess(() => {
       return GUISelectors.getModelDropdownOption(view, option);
     });
 

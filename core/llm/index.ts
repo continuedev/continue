@@ -476,7 +476,7 @@ export abstract class BaseLLM implements ILLM {
   ): AsyncGenerator<string> {
     const { completionOptions, log } = this._parseCompletionOptions(options);
 
-    const madeUpFimPrompt = `${prefix}<FIM>${suffix}`;
+    const fimLog = `Prefix: ${prefix}\nSuffix: ${suffix}`;
     if (log) {
       if (this.writeLog) {
         this.writeLog(
@@ -484,7 +484,7 @@ export abstract class BaseLLM implements ILLM {
         );
       }
       if (this.llmRequestHook) {
-        this.llmRequestHook(completionOptions.model, madeUpFimPrompt);
+        this.llmRequestHook(completionOptions.model, fimLog);
       }
     }
 
@@ -515,18 +515,14 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    this._logTokensGenerated(
-      completionOptions.model,
-      madeUpFimPrompt,
-      completion,
-    );
+    this._logTokensGenerated(completionOptions.model, fimLog, completion);
 
     if (log && this.writeLog) {
       this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return {
-      prompt: madeUpFimPrompt,
+      prompt: fimLog,
       completion,
       completionOptions,
     };

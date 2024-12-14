@@ -5,7 +5,7 @@ import { IdeInfo } from "../index.js";
 import type { PostHog as PostHogType } from "posthog-node";
 
 export enum PosthogFeatureFlag {
-  AutocompleteTemperature = "autocomplete-temperature",
+  AutocompleteTimeout = "autocomplete-timeout",
 }
 
 export const EXPERIMENTS: {
@@ -13,11 +13,11 @@ export const EXPERIMENTS: {
     [key: string]: { value: number };
   };
 } = {
-  [PosthogFeatureFlag.AutocompleteTemperature]: {
-    control: { value: 0.01 },
-    "0_33": { value: 0.33 },
-    "0_66": { value: 0.66 },
-    "0_99": { value: 0.99 },
+  [PosthogFeatureFlag.AutocompleteTimeout]: {
+    control: { value: 150 },
+    "250": { value: 250 },
+    "350": { value: 350 },
+    "450": { value: 450 },
   },
 };
 

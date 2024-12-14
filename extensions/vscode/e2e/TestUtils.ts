@@ -1,20 +1,19 @@
 import { expect } from "chai";
 import { WebElement } from "vscode-extension-tester";
+import { DEFAULT_TIMEOUT } from "./constants";
 
 export class TestUtils {
-  public static async waitForElement<T>(
+  public static async waitForSuccess<T>(
     locatorFn: () => Promise<T>,
-    timeout: number = 5000,
+    timeout: number = DEFAULT_TIMEOUT.MD,
     interval: number = 500,
   ): Promise<T> {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
       try {
-        const element = await locatorFn();
-        if (element) {
-          return element;
-        }
+        const result = await locatorFn();
+        return result;
       } catch (e) {
         if (Date.now() - startTime >= timeout) {
           throw new Error(`Element not found after ${timeout}ms timeout`);
