@@ -116,7 +116,7 @@ class DFSWalker {
   ): Promise<WalkableEntry[]> {
     const entries = await this.ide.listDir(walkableEntry.uri);
     return entries.map((e) => ({
-      relativeUriPath: `${walkableEntry.relativeUriPath}/${e[0]}`,
+      relativeUriPath: `${walkableEntry.relativeUriPath}${walkableEntry.relativeUriPath ? "/" : ""}${e[0]}`,
       uri: joinPathsToUri(walkableEntry.uri, e[0]),
       type: e[1],
       entry: e,
@@ -170,7 +170,6 @@ class DFSWalker {
     for (const ig of ignoreContexts) {
       // remove the directory name and path seperator from the match path, unless this an ignore file
       // in the root directory
-      console.log("IGNORE", ig, relPath);
       const prefixLength = ig.dirname.length === 0 ? 0 : ig.dirname.length + 1;
       // The ignore library expects a path relative to the ignore file location
       const matchPath = relPath.substring(prefixLength);

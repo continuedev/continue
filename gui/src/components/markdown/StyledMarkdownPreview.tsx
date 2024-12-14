@@ -201,10 +201,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           if (node.meta) {
             let meta = node.meta.split(" ");
-            node.data.hProperties.fileUri = inferResolvedUriFromRelativePath(
-              meta[0],
-              ideMessenger.ide,
-            );
+            node.data.hProperties["data-fileuri"] =
+              inferResolvedUriFromRelativePath(meta[0], ideMessenger.ide);
             node.data.hProperties.range = meta[1]; // E.g
           }
         });
@@ -244,8 +242,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         },
         pre: ({ node, ...preProps }) => {
           const preChildProps = preProps?.children?.[0]?.props;
-          const { className, fileUri, range } = preProps?.children?.[0]?.props;
-
+          const { className, range } = preChildProps ?? {};
+          const fileUri = preChildProps["data-fileuri"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
           const isGeneratingCodeBlock =
             preChildProps["data-isgeneratingcodeblock"];
