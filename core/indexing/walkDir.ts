@@ -1,6 +1,6 @@
 import ignore, { Ignore } from "ignore";
 
-import { FileType, IDE } from "../index.d.js";
+import { FileType, IDE } from "..";
 
 import {
   DEFAULT_IGNORE_DIRS,
@@ -9,8 +9,8 @@ import {
   defaultIgnoreFile,
   getGlobalContinueIgArray,
   gitIgArrayFromFile,
-} from "./ignore.js";
-import { joinPathsToUri } from "../util/uri.js";
+} from "./ignore";
+import { joinPathsToUri } from "../util/uri";
 
 export interface WalkerOptions {
   ignoreFiles?: string[];

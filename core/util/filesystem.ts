@@ -13,7 +13,7 @@ import {
   RangeInFile,
   Thread,
   ToastType,
-} from "../index.d.js";
+} from "../index.js";
 import { GetGhTokenArgs } from "../protocol/ide.js";
 import { fileURLToPath } from "node:url";
 

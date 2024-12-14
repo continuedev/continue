@@ -1,5 +1,6 @@
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -535,13 +536,13 @@ export interface DiffLine {
   line: string;
 }
 
-export class Problem {
+export interface Problem {
   filepath: string;
   range: Range;
   message: string;
 }
 
-export class Thread {
+export interface Thread {
   name: string;
   id: number;
 }

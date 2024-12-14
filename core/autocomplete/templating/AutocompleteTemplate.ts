@@ -3,7 +3,7 @@
 import { CompletionOptions } from "../../index.js";
 import {
   getLastNUriRelativePathParts,
-  shortestRelativeUriPaths,
+  getShortestUniqueRelativeUriPaths,
 } from "../../util/uri.js";
 import {
   AutocompleteCodeSnippet,
@@ -95,7 +95,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       return [prefix, suffix];
     }
 
-    const relativePaths = shortestRelativeUriPaths(
+    const relativePaths = getShortestUniqueRelativeUriPaths(
       [
         ...snippets.map((snippet) =>
           "filepath" in snippet ? snippet.filepath : "Untitled.txt",
@@ -214,7 +214,7 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       (snippet) => snippet.type === AutocompleteSnippetType.Code,
     ) as AutocompleteCodeSnippet[];
 
-    const relativePaths = shortestRelativeUriPaths(
+    const relativePaths = getShortestUniqueRelativeUriPaths(
       [...snippets.map((snippet) => snippet.filepath), filepath],
       workspaceUris,
     );
