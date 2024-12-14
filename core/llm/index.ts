@@ -479,9 +479,7 @@ export abstract class BaseLLM implements ILLM {
     const fimLog = `Prefix: ${prefix}\nSuffix: ${suffix}`;
     if (log) {
       if (this.writeLog) {
-        this.writeLog(
-          this._compileLogMessage(madeUpFimPrompt, completionOptions),
-        );
+        this.writeLog(this._compileLogMessage(fimLog, completionOptions));
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, fimLog);
