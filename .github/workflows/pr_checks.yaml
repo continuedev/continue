@@ -216,19 +216,13 @@ jobs:
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - uses: actions/cache@v4
-        id: chromedriver-cache
+        id: storage-cache
         with:
-          path: ~/.cache/chromedriver
-          key: ${{ runner.os }}-chromedriver-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - uses: actions/cache@v4
-        id: vscode-cache
-        with:
-          path: ~/.vscode-test
+          path: extensions/vscode/e2e/storage
           key: ${{ runner.os }}-vscode-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Download Dependencies if Cache Miss
-        if: steps.chromedriver-cache.outputs.cache-hit != 'true' || steps.vscode-cache.outputs.cache-hit != 'true'
+        if: steps.storage.outputs.cache-hit != 'true'
         run: |
           cd extensions/vscode
           npm run e2e:ci:download
