@@ -6,12 +6,10 @@ import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo"
 import { AutocompleteContext } from "../util/AutocompleteContext";
 
 import { AutocompleteSnippet } from "../snippets/types";
-import { SnippetPayload } from "../snippets";
 import {
   AutocompleteTemplate,
   getTemplateForModel,
 } from "./AutocompleteTemplate";
-import { getStopTokens } from "./getStopTokens";
 import { formatSnippets } from "./formatting";
 import { getStopTokens } from "./getStopTokens";
 
