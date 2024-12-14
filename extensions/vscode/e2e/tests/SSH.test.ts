@@ -13,11 +13,7 @@ import { SSHSelectors } from "../selectors/SSH.selectors";
 import { AutocompleteActions } from "../actions/Autocomplete.actions";
 
 describe("SSH", function () {
-  this.retries(2);
-
-  beforeEach(async function () {
-    this.timeout(DEFAULT_TIMEOUT.XL);
-
+  it("Should display completions", async () => {
     await TestUtils.waitForSuccess(async () => {
       await new Workbench().executeCommand(
         "Remote-SSH: Connect Current Window to Host...",
@@ -32,13 +28,6 @@ describe("SSH", function () {
       DEFAULT_TIMEOUT.XL,
     );
 
-    // await TestUtils.waitForSuccess(async () => {
-    //   await new Workbench().executeCommand("File: Open Folder...");
-    //   const inputBox = await InputBox.create(DEFAULT_TIMEOUT.MD);
-    //   await inputBox.setText("/home/ec2-user/test-folder");
-    //   await inputBox.sendKeys(Key.ENTER);
-    // });
-
     await TestUtils.waitForSuccess(async () => {
       await new Workbench().executeCommand("File: Open File...");
       const inputBox = await InputBox.create(DEFAULT_TIMEOUT.MD);
@@ -46,9 +35,7 @@ describe("SSH", function () {
       await inputBox.selectQuickPick("main.py");
       await inputBox.sendKeys(Key.ENTER);
     }, DEFAULT_TIMEOUT.XL);
-  });
 
-  it("Should display completions", async () => {
     const editor = await TestUtils.waitForSuccess(
       async () => (await new EditorView().openEditor("main.py")) as TextEditor,
     );
@@ -57,5 +44,7 @@ describe("SSH", function () {
     await editor.clearText();
     await AutocompleteActions.testCompletions(editor);
     await editor.setText(text);
-  }).timeout(DEFAULT_TIMEOUT.XL);
+  })
+    .timeout(DEFAULT_TIMEOUT.XL)
+    .retries(2);
 });
