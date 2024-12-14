@@ -1,13 +1,13 @@
 ---
-title: Azure OpenAI
+title: Azure AI Foundry
 slug: ../azure
 ---
 
-Azure OpenAI is a cloud-based service that provides access to OpenAI's models, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure OpenAI resource in the [Azure portal](https://portal.azure.com).
+Azure AI Foundry is a cloud-based service that provides access to models from OpenAI, Mistral AI, and others, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure AI Foundry resource in the [Azure portal](https://portal.azure.com).
 
 :::info
 
-For details on model setup, see [General model configuration](#general-model-configuration).
+For details on OpenAI model setup, see [Azure OpenAI Service configuration](#general-model-configuration).
 
 :::
 
@@ -28,13 +28,17 @@ We recommend configuring **GPT-4o** as your chat model.
 
 ## Autocomplete model
 
-Azure OpenAI currently does not offer any autocomplete models.
+We recommend configuring **Codestral** as your autocomplete model.
 
-[Click here](../../model-types/autocomplete.md) to see a list of autocomplete models.
-
-:::info
-**Codestral** will be available on Azure in the near future.
-:::
+```json title="config.json"
+{
+  "tabAutocompleteModel": {
+    "title": "Codestral",
+    "provider": "mistral",
+    "model": "codestral-latest"
+  }
+}
+```
 
 ## Embeddings model
 
@@ -67,11 +71,11 @@ You need to apply for access to the Azure OpenAI service. Response times are typ
 **[Click here to apply for access to the Azure OpenAI service](https://azure.microsoft.com/en-us/products/ai-services/openai-service)**
 :::
 
-## General model configuration
+## Azure OpenAI Service configuration
 
-Azure OpenAI requires a handful of additional parameters to be configured, such as a deployment name and API base URL.
+Azure OpenAI Service requires a handful of additional parameters to be configured, such as a deployment name and API base URL.
 
-To find this information in _Azure AI Studio_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
+To find this information in _Azure AI Foundry_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
 
 For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
