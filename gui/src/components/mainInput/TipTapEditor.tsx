@@ -782,13 +782,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         editor.commands.focus("end");
       }, 20);
     },
-    [
-      editor,
-      props.isMainInput,
-      historyLength,
-      props.isMainInput,
-      onEnterRef.current,
-    ],
+    [editor, props.isMainInput, historyLength, onEnterRef.current],
   );
 
   useWebviewListener(

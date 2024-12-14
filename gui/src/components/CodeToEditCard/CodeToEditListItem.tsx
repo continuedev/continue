@@ -4,12 +4,11 @@ import {
   ChevronRightIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
 import { CodeToEdit } from "core";
-import { rifWithContentsToContextItem } from "core/commands/util";
 import {
   getLastNUriRelativePathParts,
   getUriPathBasename,

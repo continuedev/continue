@@ -201,9 +201,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           if (node.meta) {
             let meta = node.meta.split(" ");
-            node.data.hProperties["data-fileuri"] =
-              inferResolvedUriFromRelativePath(meta[0], ideMessenger.ide);
-            node.data.hProperties.range = meta[1]; // E.g
+            node.data.hProperties["data-relativefilepath"] = meta[0];
+            node.data.hProperties.range = meta[1];
           }
         });
       },
@@ -224,7 +223,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         return (tree) => {
           visit(tree, { tagName: "pre" }, (node: any) => {
             // Add an index (0, 1, 2, etc...) to each code block.
-            node.properties = { codeBlockIndex };
+            node.properties = { "data-codeblockindex": codeBlockIndex };
             codeBlockIndex++;
           });
         };
@@ -241,9 +240,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const preChildProps = preProps?.children?.[0]?.props;
-          const { className, range } = preChildProps ?? {};
-          const fileUri = preChildProps["data-fileuri"];
+          const codeBlockIndex = preProps["data-codeblockindex"];
+
+          const preChildProps = preProps?.children?.[0]?.props ?? {};
+          const { className, range } = preChildProps;
+          const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
           const isGeneratingCodeBlock =
             preChildProps["data-isgeneratingcodeblock"];
@@ -258,12 +259,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           // that is just action buttons on hover.
           // We also use this in JB since we haven't yet implemented
           // the logic forfileUri lazy apply.
-          if (!fileUri || isJetBrains()) {
+          if (!relativeFilePath || isJetBrains()) {
             return (
               <StepContainerPreActionButtons
                 language={language}
                 codeBlockContent={codeBlockContent}
-                codeBlockIndex={preProps.codeBlockIndex}
+                codeBlockIndex={codeBlockIndex}
               >
                 <SyntaxHighlightedPre {...preProps} />
               </StepContainerPreActionButtons>
@@ -274,9 +275,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
-              codeBlockIndex={preProps.codeBlockIndex}
+              codeBlockIndex={codeBlockIndex}
               language={language}
-              fileUri={fileUri}
+              relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
             >

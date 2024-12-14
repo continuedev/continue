@@ -39,10 +39,16 @@ class VsCodeIde implements IDE {
   }
 
   async fileExists(uri: string): Promise<boolean> {
-    return vscode.workspace.fs.stat(vscode.Uri.parse(uri)).then(
-      () => true,
-      () => false,
-    );
+    console.log("VSCODE FILE EXISTS");
+    try {
+      await vscode.workspace.fs.stat(vscode.Uri.parse(uri));
+      return true;
+    } catch (error) {
+      if (error instanceof vscode.FileSystemError) {
+        return false;
+      }
+      throw error;
+    }
   }
 
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {

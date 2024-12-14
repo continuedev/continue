@@ -9,7 +9,10 @@ export function pathToUriPathSegment(path: string) {
   let clean = path.replace(/[\\]/g, "/"); // backslashes -> forward slashes
   clean = clean.replace(/^\//, ""); // remove start slash
   clean = clean.replace(/\/$/, ""); // remove end slash
-  return encodeURIComponent(clean);
+  return clean
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
 }
 
 export function findUriInDirs(

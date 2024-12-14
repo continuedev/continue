@@ -98,18 +98,6 @@ export class VsCodeMessenger {
       );
     });
 
-    this.onWebview("readRangeInFile", async (msg) => {
-      return await vscode.workspace
-        .openTextDocument(msg.data.filepath)
-        .then((document) => {
-          const start = new vscode.Position(0, 0);
-          const end = new vscode.Position(5, 0);
-          const range = new vscode.Range(start, end);
-
-          const contents = document.getText(range);
-          return contents;
-        });
-    });
     this.onWebview("toggleDevTools", (msg) => {
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
       vscode.commands.executeCommand("continue.viewLogs");
@@ -123,35 +111,22 @@ export class VsCodeMessenger {
     this.onWebview("toggleFullScreen", (msg) => {
       vscode.commands.executeCommand("continue.toggleFullScreen");
     });
-    // History
-    this.onWebview("saveFile", async (msg) => {
-      return await ide.saveFile(msg.data.filepath);
-    });
-    this.onWebview("readFile", async (msg) => {
-      return await ide.readFile(msg.data.filepath);
+
+    this.onWebview("acceptDiff", async ({ data: { filepath, streamId } }) => {
+      await vscode.commands.executeCommand(
+        "continue.acceptDiff",
+        filepath,
+        streamId,
+      );
     });
 
-    webviewProtocol.on(
-      "acceptDiff",
-      async ({ data: { filepath, streamId } }) => {
-        await vscode.commands.executeCommand(
-          "continue.acceptDiff",
-          filepath,
-          streamId,
-        );
-      },
-    );
-
-    webviewProtocol.on(
-      "rejectDiff",
-      async ({ data: { filepath, streamId } }) => {
-        await vscode.commands.executeCommand(
-          "continue.rejectDiff",
-          filepath,
-          streamId,
-        );
-      },
-    );
+    this.onWebview("rejectDiff", async ({ data: { filepath, streamId } }) => {
+      await vscode.commands.executeCommand(
+        "continue.rejectDiff",
+        filepath,
+        streamId,
+      );
+    });
 
     this.onWebview("applyToFile", async ({ data }) => {
       webviewProtocol.request("updateApplyState", {
@@ -257,10 +232,6 @@ export class VsCodeMessenger {
 
     this.onWebview("showTutorial", async (msg) => {
       await showTutorial(this.ide);
-    });
-
-    this.onWebview("openUrl", (msg) => {
-      vscode.env.openExternal(vscode.Uri.parse(msg.data));
     });
 
     this.onWebview(
@@ -389,6 +360,19 @@ export class VsCodeMessenger {
     // None right now
 
     /** BOTH CORE AND WEBVIEW **/
+    this.onWebviewOrCore("readRangeInFile", async (msg) => {
+      return await vscode.workspace
+        .openTextDocument(msg.data.filepath)
+        .then((document) => {
+          const start = new vscode.Position(0, 0);
+          const end = new vscode.Position(5, 0);
+          const range = new vscode.Range(start, end);
+
+          const contents = document.getText(range);
+          return contents;
+        });
+    });
+
     this.onWebviewOrCore("getIdeSettings", async (msg) => {
       return ide.getIdeSettings();
     });
@@ -470,6 +454,59 @@ export class VsCodeMessenger {
         "continue.isSignedInToControlPlane",
         false,
       );
+    });
+    this.onWebviewOrCore("saveFile", async (msg) => {
+      return await ide.saveFile(msg.data.filepath);
+    });
+    this.onWebviewOrCore("readFile", async (msg) => {
+      return await ide.readFile(msg.data.filepath);
+    });
+    this.onWebviewOrCore("openUrl", (msg) => {
+      vscode.env.openExternal(vscode.Uri.parse(msg.data));
+    });
+
+    this.onWebviewOrCore("fileExists", async (msg) => {
+      return await ide.fileExists(msg.data.filepath);
+    });
+
+    this.onWebviewOrCore("gotoDefinition", async (msg) => {
+      return await ide.gotoDefinition(msg.data.location);
+    });
+
+    this.onWebviewOrCore("getLastModified", async (msg) => {
+      return await ide.getLastModified(msg.data.files);
+    });
+
+    this.onWebviewOrCore("getGitRootPath", async (msg) => {
+      return await ide.getGitRootPath(msg.data.dir);
+    });
+
+    this.onWebviewOrCore("listDir", async (msg) => {
+      return await ide.listDir(msg.data.dir);
+    });
+
+    this.onWebviewOrCore("getRepoName", async (msg) => {
+      return await ide.getRepoName(msg.data.dir);
+    });
+
+    this.onWebviewOrCore("getTags", async (msg) => {
+      return await ide.getTags(msg.data);
+    });
+
+    this.onWebviewOrCore("getIdeInfo", async (msg) => {
+      return await ide.getIdeInfo();
+    });
+
+    this.onWebviewOrCore("isTelemetryEnabled", async (msg) => {
+      return await ide.isTelemetryEnabled();
+    });
+
+    this.onWebviewOrCore("getWorkspaceConfigs", async (msg) => {
+      return await ide.getWorkspaceConfigs();
+    });
+
+    this.onWebviewOrCore("getUniqueId", async (msg) => {
+      return await ide.getUniqueId();
     });
   }
 }

@@ -65,7 +65,11 @@ export class IdeMessenger implements IIdeMessenger {
     );
   }
 
-  private _postToIde(messageType: string, data: any, messageId?: string) {
+  private _postToIde(
+    messageType: string,
+    data: FromWebviewProtocol[T][0],
+    messageId?: string,
+  ) {
     if (typeof vscode === "undefined") {
       if (isJetBrains()) {
         if (window.postIntellijMessage === undefined) {
