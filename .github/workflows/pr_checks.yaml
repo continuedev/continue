@@ -229,7 +229,9 @@ jobs:
 
       - name: Download Dependencies if Cache Miss
         if: steps.chromedriver-cache.outputs.cache-hit != 'true' || steps.vscode-cache.outputs.cache-hit != 'true'
-        run: npm run e2e:ci:download
+        run: |
+          cd extensions/vscode
+          npm run e2e:ci:download
 
       - name: Set up SSH
         env:
