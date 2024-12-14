@@ -73,11 +73,6 @@ This is the question that you should select relevant files for: "${input}"`;
       return [];
     }
 
-    // IMPORANT
-
-    // const subDirPrefix = filterDirUri
-    //   ? getUriPathBasename(filterDirUri) + "/"
-    //   : "";
     const fileUris = content
       .split("<results>")[1]
       ?.split("</results>")[0]

@@ -1,6 +1,6 @@
 import ignore, { Ignore } from "ignore";
 
-import { FileType, IDE } from "..";
+import type { FileType, IDE } from "..";
 
 import {
   DEFAULT_IGNORE_DIRS,

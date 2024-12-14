@@ -1,6 +1,6 @@
 import ignore from "ignore";
 
-import { FileType, IDE, SlashCommand } from "../..";
+import type { FileType, IDE, SlashCommand } from "../..";
 import {
   defaultIgnoreDir,
   defaultIgnoreFile,
