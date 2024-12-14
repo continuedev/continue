@@ -75,7 +75,7 @@ export async function testRootPathContext(
 
   const treePath = await getTreePathAtCursor(ast, prefix.length);
   await service.getContextForPath(startPath, treePath, {
-    options: DEFAULT_AUTOCOMPLETE_OPTS,
+    options: { ...DEFAULT_AUTOCOMPLETE_OPTS, logRootPathSnippets: true },
     writeLog: async () => {},
     langOptions: DEFAULT_AUTOCOMPLETE_OPTS.defaultLanguageOptions,
   });
@@ -90,6 +90,8 @@ export async function testRootPathContext(
       expect.any(String), // filepath argument
       position,
       expect.any(String), // language argument
+      expect.anything(), // ctx
+      expect.anything(), // writelog
     );
   });
 }
