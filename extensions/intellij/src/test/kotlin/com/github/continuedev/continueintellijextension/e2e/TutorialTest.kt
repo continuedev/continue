@@ -7,6 +7,7 @@ import com.github.continuedev.continueintellijextension.utils.RemoteRobotExtensi
 import com.github.continuedev.continueintellijextension.utils.StepsLogger
 import com.intellij.remoterobot.RemoteRobot
 import com.intellij.remoterobot.fixtures.ComponentFixture
+import com.intellij.remoterobot.fixtures.JCefBrowserFixture
 import com.intellij.remoterobot.search.locators.Locator
 import com.intellij.remoterobot.search.locators.byXpath
 import com.intellij.remoterobot.steps.CommonSteps
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.awt.event.KeyEvent.*
+import java.time.Duration
 import java.time.Duration.ofMinutes
 import java.time.Duration.ofSeconds
 
@@ -53,65 +55,40 @@ class TutorialTest {
         // So we need to wait for that to occur, and then focus on "continue_tutorial.java"
         waitFor(ofSeconds(20)) {
             findAll<ComponentFixture>(
-                byXpath("//div[@accessiblename='Main.java' and @class='SingleHeightLabel']")
+                byXpath("//div[@accessiblename='Main.java' and @class='EditorTabLabel']")
             ).isNotEmpty()
         }
 
         val tutorialEditorTabLocator: Locator =
-            byXpath("//div[@accessiblename='continue_tutorial.java' and @class='SingleHeightLabel']")
+            byXpath("//div[@accessiblename='continue_tutorial.java' and @class='EditorTabLabel']")
         val tutorialEditorTab: ComponentFixture =
             remoteRobot.find(ComponentFixture::class.java, tutorialEditorTabLocator)
         tutorialEditorTab.click()
 
+        // Manually open the webview
+        find<ComponentFixture>(byXpath("//div[@text='Continue']")).click()
+
+        // Arbitrary sleep while we wait for the webview to load
+        Thread.sleep(10000)
+
+        val textToInsert = "Hello world!"
+
         idea {
-            waitFor(ofMinutes(5)) { isDumbMode().not() }
             with(textEditor()) {
-                editor.insertTextAtLine(0, 0, "Continue")
-                editor.selectText("Continue")
+                editor.insertTextAtLine(0, 0, textToInsert)
+                editor.selectText(textToInsert)
                 keyboard {
                     hotKey(VK_META, VK_J)
                 }
             }
         }
 
-        Thread.sleep(10000)
-//
-//        val textEditor = remoteRobot.find(
-//            TextEditorFixture::class.java,
-//            TextEditorFixture.locator
-//        )
-//
-//        val editor = textEditor.editor
-//        editor.text = "Continue"
-//        editor.selectText("Continue")
-//
-//        remoteRobot.keyboard {
-//            hotKey(Key.CMD, Key.J)
-//        }
+        // TODO: locator needs to be OS aware
+        // https://github.com/JetBrains/intellij-ui-test-robot/blob/139a05eb99e9a49f13605626b81ad9864be23c96/remote-fixtures/src/main/kotlin/com/intellij/remoterobot/fixtures/CommonContainerFixture.kt#L203
+        val jcefBrowser = find<JCefBrowserFixture>(JCefBrowserFixture.macLocator)
+        assert(jcefBrowser.getDom().isNotEmpty()) { "JCEF browser not found or empty" }
 
-
-//        welcomeFrame {
-//            createNewProjectLink.click()
-//            assert(createNewProjectLink.hasText(""));
-
-//            val loginToGitHub: JLabelFixture = remoteRobot.find(JLabelFixture::class.java)
-//
-//            assert(loginToGitHub.value.isNotEmpty()) { "Expected text not found on the screen." }
-
-//            dialog("New Project") {
-//                findText("Java").click()
-//                checkBox("Add sample code").select()
-//                button("Create").click()
-//            }
-//        }
-
-//        idea {
-//            waitFor(ofMinutes(5)) { isDumbMode().not() }
-//
-//            this@idea.find<CommonContainerFixture>(
-//                byXpath("//div[@accessiblename='continue_tutorial.java' and @class='SimpleColoredComponent']"),
-//                ofSeconds(5)
-//            ).click()
-//        }
+        val codeSnippetText = jcefBrowser.findElementByContainsText(textToInsert)
+        assert(codeSnippetText.html.isNotEmpty()) { "Failed to find code snippet in webview" }
     }
 }

@@ -26,6 +26,7 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
         - [Overview](#overview)
         - [Setup](#setup)
         - [Running the tests](#running-the-tests)
+        - [Identifying selectors](#identifying-selectors)
 
 ## Architecture Overview
 
@@ -146,7 +147,8 @@ This will generate a .zip file in `./build/distributions` with the version defin
 
 #### Overview
 
-The e2e tests are written using [intellij-ui-test-robot](`https://github.com/JetBrains/intellij-ui-test-robot`).
+The e2e tests are written using [intellij-ui-test-robot](`https://github.com/JetBrains/intellij-ui-test-robot`). The
+README for this project has a lot of helpful info on how to use the library.
 
 #### Setup
 
@@ -167,3 +169,10 @@ to run.
 ```sh
 ./gradlew test
 ```
+
+#### Identifying selectors
+
+While the `runIdeForUiTests` task is runnung, you can visit the following URL
+to view the UI hierarchy of the running IDE:
+
+http://127.0.0.1:8082/

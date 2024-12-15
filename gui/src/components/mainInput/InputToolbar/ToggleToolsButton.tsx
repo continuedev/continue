@@ -52,15 +52,11 @@ export default function ToolDropdown() {
         className={`-ml-1 -mt-1 flex flex-row items-center gap-1.5 rounded-md px-1 py-0.5 text-xs ${
           useTools || isHovered ? "bg-lightgray/30" : ""
         }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         <ToolsIcon
           className="h-4 w-4 text-gray-400"
-          style={{
-            color: useTools || isHovered ? vscForeground : undefined,
-            transition: "all 200ms",
-          }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         />
         {!useTools && (
           <ToolTip id="tools-tooltip" place="top-middle">
