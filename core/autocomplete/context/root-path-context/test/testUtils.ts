@@ -5,6 +5,7 @@ import path from "path";
 import Parser from "web-tree-sitter";
 import { Position } from "../../../..";
 import { testIde } from "../../../../test/fixtures";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../../TabAutocompleteOptions";
 import { getAst, getTreePathAtCursor } from "../../../util/ast";
 import { ImportDefinitionsService } from "../../ImportDefinitionsService";
 import { RootPathContextService } from "../RootPathContextService";
@@ -73,7 +74,11 @@ export async function testRootPathContext(
   }
 
   const treePath = await getTreePathAtCursor(ast, prefix.length);
-  await service.getContextForPath(startPath, treePath);
+  await service.getContextForPath(startPath, treePath, {
+    options: { ...DEFAULT_AUTOCOMPLETE_OPTS, logRootPathSnippets: true },
+    writeLog: async () => {},
+    langOptions: DEFAULT_AUTOCOMPLETE_OPTS.defaultLanguageOptions,
+  });
 
   expect(getSnippetsMock).toHaveBeenCalledTimes(
     expectedDefinitionPositions.length,
@@ -85,6 +90,8 @@ export async function testRootPathContext(
       expect.any(String), // filepath argument
       position,
       expect.any(String), // language argument
+      expect.anything(), // ctx
+      expect.anything(), // writelog
     );
   });
 }

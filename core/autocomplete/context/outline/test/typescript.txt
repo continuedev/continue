@@ -1,0 +1,20 @@
+// @ts-nocheck
+
+class Person {
+  name: string;
+  isMarried = false;
+  getAge(): number {...}
+}
+
+export const exportedLambda = (param: string) => {...};
+
+export const lambda = (param: string) => {...};
+
+export async function exportedFunction(
+  param1: string,
+  param2: string,
+): Promise<string | undefined> {...}
+
+const something = path.join("", "something");
+const somethingTyped: string = "foo";
+let foo: string;

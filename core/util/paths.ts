@@ -68,6 +68,13 @@ export function getSessionsFolderPath(): string {
   }
   return sessionsPath;
 }
+export function getUserTreeSitterFolderPath(): string {
+  const treeSitterPath = path.join(getContinueGlobalPath(), "tree-sitter");
+  if (!fs.existsSync(treeSitterPath)) {
+    fs.mkdirSync(treeSitterPath);
+  }
+  return treeSitterPath;
+}
 
 export function getIndexFolderPath(): string {
   const indexPath = path.join(getContinueGlobalPath(), "index");

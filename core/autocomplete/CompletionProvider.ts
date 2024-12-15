@@ -2,7 +2,6 @@ import { ConfigHandler } from "../config/ConfigHandler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 import { PosthogFeatureFlag, Telemetry } from "../util/posthog.js";
 
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
@@ -14,15 +13,16 @@ import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
 import { getAllSnippets } from "./snippets/index.js";
+import {
+  DEFAULT_AUTOCOMPLETE_OPTS,
+  TabAutocompleteOptions,
+} from "./TabAutocompleteOptions.js";
 import { renderPrompt } from "./templating/index.js";
-import { GetLspDefinitionsFunction } from "./types.js";
+import { AutocompleteContext } from "./util/AutocompleteContext.js";
 import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
 import { AutocompleteLoggingService } from "./util/AutocompleteLoggingService.js";
 import AutocompleteLruCache from "./util/AutocompleteLruCache.js";
-import { HelperVars } from "./util/HelperVars.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./util/types.js";
-
-const autocompleteCache = AutocompleteLruCache.get();
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
 // Not worth disrupting the user to tell them that a single autocomplete request didn't go through
@@ -44,16 +44,16 @@ export class CompletionProvider {
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly _injectedGetLlm: () => Promise<ILLM | undefined>,
-    private readonly _onError: (e: any) => void,
-    private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
+    private readonly injectedGetLlm: () => Promise<ILLM | undefined>,
+    private readonly onErrorCallback: (e: any) => void,
+    private readonly writeLog: (text: string) => void = () => {},
   ) {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
   }
 
-  private async _prepareLlm(): Promise<ILLM | undefined> {
-    const llm = await this._injectedGetLlm();
+  private async prepareLlm(): Promise<ILLM | undefined> {
+    const llm = await this.injectedGetLlm();
 
     if (!llm) {
       return undefined;
@@ -99,7 +99,7 @@ export class CompletionProvider {
     console.warn("Error generating autocompletion: ", e);
     if (!this.errorsShown.has(e.message)) {
       this.errorsShown.add(e.message);
-      this._onError(e);
+      this.onErrorCallback(e);
     }
   }
 
@@ -122,11 +122,19 @@ export class CompletionProvider {
     this.loggingService.markDisplayed(completionId, outcome);
   }
 
-  private async _getAutocompleteOptions() {
+  private async getAutocompleteOptions(): Promise<TabAutocompleteOptions> {
     const config = await this.configHandler.loadConfig();
-    const options = {
+    const options: TabAutocompleteOptions = {
       ...DEFAULT_AUTOCOMPLETE_OPTS,
       ...config.tabAutocompleteOptions,
+      defaultLanguageOptions: {
+        ...DEFAULT_AUTOCOMPLETE_OPTS.defaultLanguageOptions,
+        ...config.tabAutocompleteOptions?.defaultLanguageOptions,
+      },
+      languageOptions: {
+        ...DEFAULT_AUTOCOMPLETE_OPTS.languageOptions,
+        ...config.tabAutocompleteOptions?.languageOptions,
+      },
     };
     return options;
   }
@@ -137,26 +145,27 @@ export class CompletionProvider {
   ): Promise<AutocompleteOutcome | undefined> {
     try {
       const startTime = Date.now();
-      const options = await this._getAutocompleteOptions();
+      const options = await this.getAutocompleteOptions();
 
       // Debounce
       if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
       }
 
-      const llm = await this._prepareLlm();
+      const llm = await this.prepareLlm();
       if (!llm) {
         return undefined;
       }
 
-      const helper = await HelperVars.create(
+      const ctx = await AutocompleteContext.create(
         input,
         options,
         llm.model,
         this.ide,
+        this.writeLog,
       );
 
-      if (await shouldPrefilter(helper, this.ide)) {
+      if (await shouldPrefilter(ctx, this.ide)) {
         return undefined;
       }
 
@@ -168,37 +177,34 @@ export class CompletionProvider {
         token = controller.signal;
       }
 
-      const [snippetPayload, workspaceDirs] = await Promise.all([
-        getAllSnippets({
-          helper,
-          ide: this.ide,
-          getDefinitionsFromLsp: this.getDefinitionsFromLsp,
-          contextRetrievalService: this.contextRetrievalService,
-        }),
+      const [snippets, workspaceDirs] = await Promise.all([
+        getAllSnippets(ctx, this.ide, this.contextRetrievalService),
         this.ide.getWorkspaceDirs(),
       ]);
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
-        snippetPayload,
+        snippets,
         workspaceDirs,
-        helper,
+        helper: ctx,
       });
 
       // Completion
       let completion: string | undefined = "";
 
-      const cache = await autocompleteCache;
-      const cachedCompletion = helper.options.useCache
-        ? await cache.get(helper.prunedPrefix)
+      const cache = await this.autocompleteCache;
+      const cachedCompletion = ctx.options.useCache
+        ? await cache.get(ctx.prunedPrefix)
         : undefined;
       let cacheHit = false;
       if (cachedCompletion) {
         // Cache
         cacheHit = true;
         completion = cachedCompletion;
+        if (ctx.options.logCompletionCache)
+          ctx.writeLog("Using cached completion");
       } else {
         const multiline =
-          !helper.options.transform || shouldCompleteMultiline(helper);
+          !ctx.options.transform || shouldCompleteMultiline(ctx);
 
         const completionStream =
           this.completionStreamer.streamCompletionWithFilters(
@@ -209,7 +215,7 @@ export class CompletionProvider {
             prompt,
             multiline,
             completionOptions,
-            helper,
+            ctx,
           );
 
         for await (const update of completionStream) {
@@ -221,16 +227,21 @@ export class CompletionProvider {
           return undefined;
         }
 
-        const processedCompletion = helper.options.transform
+        const processedCompletion = ctx.options.transform
           ? postprocessCompletion({
               completion,
-              prefix: helper.prunedPrefix,
-              suffix: helper.prunedSuffix,
+              prefix: ctx.prunedPrefix,
+              suffix: ctx.prunedSuffix,
               llm,
+              ctx,
             })
           : completion;
 
         completion = processedCompletion;
+      }
+
+      if (ctx.options.logCompletionOutcome) {
+        ctx.writeLog("Completion Outcome: \n---\n" + completion + "\n---");
       }
 
       if (!completion) {
@@ -247,18 +258,18 @@ export class CompletionProvider {
         modelName: llm.model,
         completionOptions,
         cacheHit,
-        filepath: helper.filepath,
-        completionId: helper.input.completionId,
-        gitRepo: await this.ide.getRepoName(helper.filepath),
+        filepath: ctx.filepath,
+        completionId: ctx.input.completionId,
+        gitRepo: await this.ide.getRepoName(ctx.filepath),
         uniqueId: await this.ide.getUniqueId(),
         timestamp: Date.now(),
-        ...helper.options,
+        ...ctx.options,
       };
 
       //////////
 
       // Save to cache
-      if (!outcome.cacheHit && helper.options.useCache) {
+      if (!outcome.cacheHit && ctx.options.useCache) {
         (await this.autocompleteCache).put(outcome.prefix, outcome.completion);
       }
 

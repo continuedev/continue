@@ -2,11 +2,7 @@ import Parser from "web-tree-sitter";
 
 import { getBasename, getLastNPathParts } from "../util/";
 import { migrate } from "../util/paths";
-import {
-  getFullLanguageName,
-  getParserForFile,
-  getQueryForFile,
-} from "../util/treeSitter";
+import { getParserForFile, getQueryForFile } from "../util/treeSitter";
 
 import {
   DatabaseConnection,
@@ -29,6 +25,7 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../";
+import { languageForFilepath } from "../util/languageId";
 
 type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 
@@ -189,7 +186,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     const ast = parser.parse(contents);
 
-    const language = getFullLanguageName(filepath);
+    const language = languageForFilepath(filepath);
     const query = await getQueryForFile(
       filepath,
       `code-snippet-queries/${language}.scm`,

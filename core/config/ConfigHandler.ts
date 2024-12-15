@@ -41,12 +41,11 @@ export class ConfigHandler {
   constructor(
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
-    private readonly writeLog: (text: string) => Promise<void>,
+    private readonly writeLog: (text: string) => void,
     private controlPlaneClient: ControlPlaneClient,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
-    this.writeLog = writeLog;
 
     // Set local profile as default
     const localProfileLoader = new LocalProfileLoader(

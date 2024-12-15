@@ -108,7 +108,7 @@ export async function* streamDiffLines(
 
   lines = filterEnglishLinesAtStart(lines);
   lines = filterCodeBlockLines(lines);
-  lines = stopAtLines(lines, () => {});
+  lines = stopAtLines(lines);
   lines = skipLines(lines);
   if (inept) {
     // lines = fixCodeLlamaFirstLineIndentation(lines);

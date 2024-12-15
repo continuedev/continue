@@ -76,6 +76,7 @@ export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
 export async function* stopAtStopTokens(
   stream: AsyncGenerator<string>,
   stopTokens: string[],
+  foundToken: ((token: string) => void) | undefined = undefined,
 ): AsyncGenerator<string> {
   if (stopTokens.length === 0) {
     for await (const char of stream) {
@@ -97,6 +98,7 @@ export async function* stopAtStopTokens(
       for (const stopToken of stopTokens) {
         if (buffer.startsWith(stopToken)) {
           found = true;
+          foundToken?.(stopToken);
           return;
         }
       }
@@ -126,6 +128,7 @@ export async function* stopAtStartOf(
   stream: AsyncGenerator<string>,
   suffix: string,
   sequenceLength: number = 20,
+  onSuffixFound: (() => void) | undefined = undefined,
 ): AsyncGenerator<string> {
   if (suffix.length < sequenceLength) {
     for await (const chunk of stream) {
@@ -146,8 +149,10 @@ export async function* stopAtStartOf(
 
     // Check if the targetPart contains contains the buffer at any point
     if (buffer.length >= sequenceLength && targetPart.includes(buffer)) {
+      onSuffixFound?.();
       return; // Stop processing when the sequence is found
     }
+    suffix;
 
     // Yield chunk by chunk, ensuring not to exceed sequenceLength in the buffer
     while (buffer.length > sequenceLength) {

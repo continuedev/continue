@@ -2,10 +2,18 @@ import { distance } from "fastest-levenshtein";
 
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
+import {
+  TabAutocompleteLanguageOptions,
+  TabAutocompleteOptions,
+} from "../../TabAutocompleteOptions";
+import { LogWriter } from "../../util/AutocompleteContext";
 
 export type LineFilter = (args: {
   lines: LineStream;
   fullStop: () => void;
+  options: TabAutocompleteOptions;
+  langOptions: TabAutocompleteLanguageOptions;
+  writeLog: LogWriter;
 }) => LineStream;
 
 export type CharacterFilter = (args: {
@@ -14,6 +22,9 @@ export type CharacterFilter = (args: {
   suffix: string;
   filepath: string;
   multiline: boolean;
+  options: TabAutocompleteOptions;
+  langOptions: TabAutocompleteLanguageOptions;
+  writeLog: LogWriter;
 }) => AsyncGenerator<string>;
 
 function isBracketEnding(line: string): boolean {
@@ -133,11 +144,13 @@ export async function* noTopLevelKeywordsMidline(
 export async function* avoidPathLine(
   stream: LineStream,
   comment?: string,
+  lineDropped: ((line: string) => void) | undefined = undefined,
 ): LineStream {
   // Snippets are inserted as comments with a line at the start '// Path: <PATH>'.
   // Sometimes the model with copy this pattern, which is unwanted
   for await (const line of stream) {
     if (line.startsWith(`${comment} Path: `)) {
+      lineDropped?.(line);
       continue;
     }
     yield line;
@@ -154,12 +167,13 @@ export async function* avoidPathLine(
 export async function* avoidEmptyComments(
   stream: LineStream,
   comment?: string,
+  onLineRemoved?: (line: string) => void,
 ): LineStream {
   // Filter lines that are empty comments
   for await (const line of stream) {
     if (!comment || line.trim() !== comment) {
       yield line;
-    }
+    } else onLineRemoved?.(line);
   }
 }
 
@@ -219,7 +233,7 @@ export function lineIsRepeated(a: string, b: string): boolean {
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string,
-  fullStop: () => void,
+  fullStop: (inputLine: string, compareLine: string) => void,
 ): AsyncGenerator<string> {
   const trimmedLine = line.trim();
   const lineIsBracketEnding = isBracketEnding(trimmedLine);
@@ -236,12 +250,12 @@ export async function* stopAtSimilarLine(
     }
 
     if (nextLine === line) {
-      fullStop();
+      fullStop(nextLine, line);
       break;
     }
 
     if (lineIsRepeated(nextLine, trimmedLine)) {
-      fullStop();
+      fullStop(nextLine, trimmedLine);
       break;
     }
 
@@ -257,12 +271,15 @@ export async function* stopAtSimilarLine(
  */
 export async function* stopAtLines(
   stream: LineStream,
-  fullStop: () => void,
+  fullStop:
+    | undefined
+    | ((line: string, stopPattern: string) => void) = undefined,
   linesToStopAt: string[] = LINES_TO_STOP_AT,
 ): LineStream {
   for await (const line of stream) {
-    if (linesToStopAt.some((stopAt) => line.trim().includes(stopAt))) {
-      fullStop();
+    const stopAt = linesToStopAt.find((stopAt) => line.trim().includes(stopAt));
+    if (stopAt !== undefined) {
+      fullStop?.(line, stopAt);
       break;
     }
     yield line;
@@ -271,12 +288,12 @@ export async function* stopAtLines(
 
 export async function* stopAtLinesExact(
   stream: LineStream,
-  fullStop: () => void,
+  fullStop: (line: string) => void,
   linesToStopAt: string[],
 ): LineStream {
   for await (const line of stream) {
     if (linesToStopAt.some((stopAt) => line === stopAt)) {
-      fullStop();
+      fullStop(line);
       break;
     }
     yield line;
@@ -288,13 +305,19 @@ export async function* stopAtLinesExact(
  * @param {LineStream} lines - The input stream of lines.
  * @yields {string} Filtered lines with prefixes removed from the first line if applicable.
  */
-export async function* skipPrefixes(lines: LineStream): LineStream {
+export async function* skipPrefixes(
+  lines: LineStream,
+  prefixRemoved:
+    | ((prefix: string, line: string) => void)
+    | undefined = undefined,
+): LineStream {
   let isFirstLine = true;
   for await (const line of lines) {
     if (isFirstLine) {
       const match = PREFIXES_TO_SKIP.find((prefix) => line.startsWith(prefix));
       if (match) {
         yield line.slice(match.length);
+        prefixRemoved?.(match, line);
         continue;
       }
       isFirstLine = false;
@@ -509,15 +532,15 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
 export async function* stopAtRepeatingLines(
   lines: LineStream,
   fullStop: () => void,
+  maxRepeats: number = 3,
 ): LineStream {
   let previousLine: string | undefined;
   let repeatCount = 0;
-  const MAX_REPEATS = 3;
 
   for await (const line of lines) {
     if (line === previousLine) {
       repeatCount++;
-      if (repeatCount === MAX_REPEATS) {
+      if (repeatCount === maxRepeats) {
         fullStop();
         return;
       }
@@ -548,6 +571,7 @@ export async function* logLines(
 export async function* showWhateverWeHaveAtXMs(
   lines: LineStream,
   ms: number,
+  stopped: () => void,
 ): LineStream {
   const startTime = Date.now();
   let firstNonWhitespaceLineYielded = false;
@@ -561,16 +585,21 @@ export async function* showWhateverWeHaveAtXMs(
 
     const isTakingTooLong = Date.now() - startTime > ms;
     if (isTakingTooLong && firstNonWhitespaceLineYielded) {
+      stopped();
       break;
     }
   }
 }
 
-export async function* noDoubleNewLine(lines: LineStream): LineStream {
+export async function* noDoubleNewLine(
+  lines: LineStream,
+  onStopped: (() => void) | undefined = undefined,
+): LineStream {
   let isFirstLine = true;
 
   for await (const line of lines) {
     if (line.trim() === "" && !isFirstLine) {
+      onStopped?.();
       return;
     }
 

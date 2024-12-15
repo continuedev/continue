@@ -105,7 +105,7 @@ export async function llmFromDescription(
   readFile: (filepath: string) => Promise<string>,
   uniqueId: string,
   ideSettings: IdeSettings,
-  writeLog: (log: string) => Promise<void>,
+  writeLog: (log: string) => void,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {

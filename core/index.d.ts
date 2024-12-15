@@ -1,4 +1,5 @@
 import Parser from "web-tree-sitter";
+import { TabAutocompleteOptions } from "./autocomplete/TabAutocompleteOptions";
 import { GetGhTokenArgs } from "./protocol/ide";
 declare global {
   interface Window {
@@ -76,30 +77,8 @@ export type PromptTemplate = string | PromptTemplateFunction;
 
 export interface ILLM extends LLMOptions {
   get providerName(): string;
-
-  uniqueId: string;
-  model: string;
-
-  title?: string;
-  systemMessage?: string;
   contextLength: number;
-  maxStopWords?: number;
   completionOptions: CompletionOptions;
-  requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, PromptTemplate>;
-  templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
-  llmRequestHook?: (model: string, prompt: string) => any;
-  apiKey?: string;
-  apiBase?: string;
-  cacheBehavior?: CacheBehavior;
-
-  deployment?: string;
-  apiVersion?: string;
-  apiType?: string;
-  region?: string;
-  projectId?: string;
-
   // Embedding options
   embeddingId: string;
   maxEmbeddingChunkSize: number;
@@ -452,7 +431,7 @@ export interface LLMOptions {
   template?: TemplateType;
   promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
+  writeLog?: (str: string) => void;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   aiGatewaySlug?: string;
@@ -919,26 +898,6 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 export interface RerankerDescription {
   name: string;
   params?: { [key: string]: any };
-}
-
-export interface TabAutocompleteOptions {
-  disable: boolean;
-  useFileSuffix: boolean;
-  maxPromptTokens: number;
-  debounceDelay: number;
-  maxSuffixPercentage: number;
-  prefixPercentage: number;
-  transform?: boolean;
-  template?: string;
-  multilineCompletions: "always" | "never" | "auto";
-  slidingWindowPrefixPercentage: number;
-  slidingWindowSize: number;
-  useCache: boolean;
-  onlyMyCode: boolean;
-  useRecentlyEdited: boolean;
-  disableInFiles?: string[];
-  useImports?: boolean;
-  showWhateverWeHaveAtXMs?: number;
 }
 
 interface StdioOptions {

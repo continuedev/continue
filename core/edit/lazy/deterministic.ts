@@ -1,13 +1,11 @@
-import path from "path";
-
 import { distance } from "fastest-levenshtein";
 import Parser from "web-tree-sitter";
 
 import { DiffLine } from "../..";
-import { LANGUAGES } from "../../autocomplete/constants/AutocompleteLanguageInfo";
 import { myersDiff } from "../../diff/myers";
 import { getParserForFile } from "../../util/treeSitter";
 
+import { getAutocompleteLanguageInfoForFile } from "../../autocomplete/constants/AutocompleteLanguageInfo";
 import { findInAst } from "./findInAst";
 
 type AstReplacements = Array<{
@@ -125,8 +123,7 @@ export async function deterministicApplyLazyEdit(
     );
     if (firstSimilarNode?.parent?.equals(oldTree.rootNode)) {
       // If so, we tack lazy blocks to start and end, and run the usual algorithm
-      const ext = path.extname(filename).slice(1);
-      const language = LANGUAGES[ext];
+      const language = getAutocompleteLanguageInfoForFile(filename);
       if (language) {
         newLazyFile = `${language.singleLineComment} ... existing code ...\n\n${newLazyFile}\n\n${language.singleLineComment} ... existing code...`;
         newTree = parser.parse(newLazyFile);

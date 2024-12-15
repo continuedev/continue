@@ -4,6 +4,10 @@ export class AutocompleteDebouncer {
   private debouncing = false;
   private lastUUID: string | undefined = undefined;
 
+  /** When called the first time, this method returns false immediately. If the method is called afterwards within the debounce delay,
+   * the method waits for debounceDelay and checks if no other request has been made in the meantime. If no other request has been made,
+   * the method returns false. If another request has been made, the method returns true.
+   */
   async delayAndShouldDebounce(debounceDelay: number): Promise<boolean> {
     // Debounce
     const uuid = uuidv4();

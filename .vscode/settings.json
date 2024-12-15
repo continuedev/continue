@@ -37,5 +37,27 @@
     "gui/dist/**": true
     // "sync/**": true
   },
-  "eslint.workingDirectories": ["./core"]
+  "eslint.workingDirectories": ["./core"],
+  "cSpell.words": [
+    "aiohttp",
+    "cerebras",
+    "codellama",
+    "debouncer",
+    "deepseek",
+    "huggingface",
+    "ILLM",
+    "lancedb",
+    "llms",
+    "Ollama",
+    "posthog",
+    "Prefilter",
+    "prefiltering",
+    "qwen",
+    "rerank",
+    "Reranker",
+    "starcoder",
+    "vectordb",
+    "wasms",
+    "wizardcoder"
+  ]
 }

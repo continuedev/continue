@@ -1,3 +1,5 @@
+import { LogWriter } from "../util/AutocompleteContext";
+
 export const BRACKETS: { [key: string]: string } = {
   "(": ")",
   "{": "}",
@@ -44,6 +46,7 @@ export class BracketMatchingService {
     suffix: string,
     filepath: string,
     multiline: boolean, // Whether this is a multiline completion or not
+    writeLog?: LogWriter,
   ): AsyncGenerator<string> {
     let stack: string[] = [];
     if (multiline) {
@@ -113,6 +116,7 @@ export class BracketMatchingService {
           if (stack.length === 0 || BRACKETS[stack.pop()!] !== char) {
             // If the stack is empty or the top of the stack doesn't match the current closing bracket
             yield chunk.slice(0, i);
+            writeLog?.("Found closing bracket without matching open bracket");
             return; // Stop the generator if the closing bracket doesn't have a matching opening bracket in the stream
           }
         } else if (Object.keys(BRACKETS).includes(char)) {

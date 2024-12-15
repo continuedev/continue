@@ -1,10 +1,7 @@
 import { IDE, RangeInFileWithContents } from "../..";
+import { languageForFilepath } from "../../util/languageId";
 import { PrecalculatedLruCache } from "../../util/LruCache";
-import {
-  getFullLanguageName,
-  getParserForFile,
-  getQueryForFile,
-} from "../../util/treeSitter";
+import { getParserForFile, getQueryForFile } from "../../util/treeSitter";
 
 interface FileInfo {
   imports: { [key: string]: RangeInFileWithContents[] };
@@ -55,7 +52,7 @@ export class ImportDefinitionsService {
         },
       ],
     });
-    const language = getFullLanguageName(filepath);
+    const language = languageForFilepath(filepath);
     const query = await getQueryForFile(
       filepath,
       `import-queries/${language}.scm`,

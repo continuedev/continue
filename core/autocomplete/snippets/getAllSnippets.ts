@@ -1,59 +1,28 @@
 import { IDE } from "../../index";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
-import { GetLspDefinitionsFunction } from "../types";
-import { HelperVars } from "../util/HelperVars";
+import { AutocompleteContext } from "../util/AutocompleteContext";
+import {
+  filterSnippetsAlreadyInCaretWindow,
+  keepSnippetsFittingInMaxTokens,
+} from "./filtering";
 import {
   AutocompleteClipboardSnippet,
   AutocompleteCodeSnippet,
   AutocompleteDiffSnippet,
+  AutocompleteSnippet,
   AutocompleteSnippetType,
 } from "./types";
 
 export interface SnippetPayload {
   rootPathSnippets: AutocompleteCodeSnippet[];
   importDefinitionSnippets: AutocompleteCodeSnippet[];
-  ideSnippets: AutocompleteCodeSnippet[];
   recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
   diffSnippets: AutocompleteDiffSnippet[];
   clipboardSnippets: AutocompleteClipboardSnippet[];
 }
 
-function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
-  const timeoutPromise = new Promise<T[]>((resolve) => {
-    setTimeout(() => resolve([]), 100);
-  });
-
-  return Promise.race([promise, timeoutPromise]);
-}
-
-// Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
-// or they might separately track recently edited ranges)
-async function getIdeSnippets(
-  helper: HelperVars,
-  ide: IDE,
-  getDefinitionsFromLsp: GetLspDefinitionsFunction,
-): Promise<AutocompleteCodeSnippet[]> {
-  const ideSnippets = await getDefinitionsFromLsp(
-    helper.input.filepath,
-    helper.fullPrefix + helper.fullSuffix,
-    helper.fullPrefix.length,
-    ide,
-    helper.lang,
-  );
-
-  if (helper.options.onlyMyCode) {
-    const workspaceDirs = await ide.getWorkspaceDirs();
-
-    return ideSnippets.filter((snippet) =>
-      workspaceDirs.some((dir) => snippet.filepath.startsWith(dir)),
-    );
-  }
-
-  return ideSnippets;
-}
-
 function getSnippetsFromRecentlyEditedRanges(
-  helper: HelperVars,
+  helper: AutocompleteContext,
 ): AutocompleteCodeSnippet[] {
   if (helper.options.useRecentlyEdited === false) {
     return [];
@@ -70,8 +39,13 @@ function getSnippetsFromRecentlyEditedRanges(
 
 const getClipboardSnippets = async (
   ide: IDE,
+  ctx: AutocompleteContext,
 ): Promise<AutocompleteClipboardSnippet[]> => {
   const content = await ide.getClipboardContent();
+
+  if (ctx.options.logClipboardSnippets) {
+    await ctx.writeLog(`ClipboardSnippets: received ${content.text}`);
+  }
 
   return [content].map((item) => {
     return {
@@ -84,8 +58,12 @@ const getClipboardSnippets = async (
 
 const getDiffSnippets = async (
   ide: IDE,
+  ctx: AutocompleteContext,
 ): Promise<AutocompleteDiffSnippet[]> => {
   const diff = await ide.getDiff(true);
+  if (ctx.options.logDiffSnippets) {
+    await ctx.writeLog(`DiffSnippets: received\n${diff.join("\n\n")}\n----\n`);
+  }
 
   return diff.map((item) => {
     return {
@@ -95,42 +73,61 @@ const getDiffSnippets = async (
   });
 };
 
-export const getAllSnippets = async ({
-  helper,
-  ide,
-  getDefinitionsFromLsp,
-  contextRetrievalService,
-}: {
-  helper: HelperVars;
-  ide: IDE;
-  getDefinitionsFromLsp: GetLspDefinitionsFunction;
-  contextRetrievalService: ContextRetrievalService;
-}): Promise<SnippetPayload> => {
-  const recentlyEditedRangeSnippets =
-    getSnippetsFromRecentlyEditedRanges(helper);
+export const getAllSnippets = async (
+  ctx: AutocompleteContext,
+  ide: IDE,
+  contextRetrievalService: ContextRetrievalService,
+): Promise<AutocompleteSnippet[]> => {
+  async function racePromise<T>(
+    promise: Promise<T[]>,
+    name: string,
+  ): Promise<T[]> {
+    const timeoutPromise = new Promise<T[]>((resolve) => {
+      setTimeout(() => resolve([]), 100);
+    });
 
-  const [
-    rootPathSnippets,
-    importDefinitionSnippets,
-    ideSnippets,
-    diffSnippets,
-    clipboardSnippets,
-  ] = await Promise.all([
-    racePromise(contextRetrievalService.getRootPathSnippets(helper)),
-    racePromise(
-      contextRetrievalService.getSnippetsFromImportDefinitions(helper),
-    ),
-    racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)),
-    racePromise(getDiffSnippets(ide)),
-    racePromise(getClipboardSnippets(ide)),
-  ]);
+    const result = await Promise.race([
+      promise.then((t) => [t, "data"] as const),
+      timeoutPromise.then((t) => [t, "timeout"] as const),
+    ]);
 
-  return {
-    rootPathSnippets,
-    importDefinitionSnippets,
-    ideSnippets,
+    if (ctx.options.logSnippetTimeouts && result[1] === "timeout") {
+      ctx.writeLog(`Snippet ${name} timed out`);
+    }
+
+    return result[0];
+  }
+
+  const recentlyEditedRangeSnippets = getSnippetsFromRecentlyEditedRanges(ctx);
+
+  const empty = Promise.resolve([]);
+
+  const snippets: AutocompleteSnippet[][] = [
     recentlyEditedRangeSnippets,
-    diffSnippets,
-    clipboardSnippets,
-  };
+    ...(await Promise.all([
+      ctx.langOptions.enableRootPathSnippets
+        ? racePromise(
+            contextRetrievalService.getRootPathSnippets(ctx),
+            "rootPath",
+          )
+        : empty,
+      ctx.langOptions.enableImportSnippets
+        ? racePromise(
+            contextRetrievalService.getSnippetsFromImportDefinitions(ctx),
+            "imports",
+          )
+        : empty,
+      ctx.langOptions.enableDiffSnippets
+        ? racePromise(getDiffSnippets(ide, ctx), "diffs")
+        : empty,
+      ctx.langOptions.enableClipboardSnippets
+        ? racePromise(getClipboardSnippets(ide, ctx), "clipboardSnippets")
+        : empty,
+    ])),
+  ];
+
+  return keepSnippetsFittingInMaxTokens(
+    ctx,
+    filterSnippetsAlreadyInCaretWindow(snippets.flat(), ctx.prunedCaretWindow),
+  );
 };

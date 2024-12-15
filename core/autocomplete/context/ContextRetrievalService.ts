@@ -3,9 +3,10 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "../snippets/types";
-import { HelperVars } from "../util/HelperVars";
+import { AutocompleteContext } from "../util/AutocompleteContext";
 
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
+import { createOutline } from "./outline/createOutline";
 import { getSymbolsForSnippet } from "./ranking";
 import { RootPathContextService } from "./root-path-context/RootPathContextService";
 
@@ -22,33 +23,50 @@ export class ContextRetrievalService {
   }
 
   public async getSnippetsFromImportDefinitions(
-    helper: HelperVars,
+    ctx: AutocompleteContext,
   ): Promise<AutocompleteCodeSnippet[]> {
-    if (helper.options.useImports === false) {
+    if (ctx.options.useImports === false) {
       return [];
     }
 
     const importSnippets: AutocompleteCodeSnippet[] = [];
-    const fileInfo = this.importDefinitionsService.get(helper.filepath);
+    const fileInfo = this.importDefinitionsService.get(ctx.filepath);
     if (fileInfo) {
       const { imports } = fileInfo;
       // Look for imports of any symbols around the current range
       const textAroundCursor =
-        helper.fullPrefix.split("\n").slice(-5).join("\n") +
-        helper.fullSuffix.split("\n").slice(0, 3).join("\n");
+        ctx.fullPrefix.split("\n").slice(-5).join("\n") +
+        ctx.fullSuffix.split("\n").slice(0, 3).join("\n");
       const symbols = Array.from(getSymbolsForSnippet(textAroundCursor)).filter(
-        (symbol) => !helper.lang.topLevelKeywords.includes(symbol),
+        (symbol) => !ctx.lang.topLevelKeywords.includes(symbol),
       );
+      if (ctx.options.logImportSnippets)
+        ctx.writeLog(
+          `ImportDefinitionSnippets: Text around cursor:\n${textAroundCursor}\n extracted symbols: ${symbols}`,
+        );
       for (const symbol of symbols) {
-        const rifs = imports[symbol];
-        if (Array.isArray(rifs)) {
-          const snippets: AutocompleteCodeSnippet[] = rifs.map((rif) => {
-            return {
-              filepath: rif.filepath,
-              content: rif.contents,
-              type: AutocompleteSnippetType.Code,
-            };
-          });
+        const fileRanges = imports[symbol];
+        if (Array.isArray(fileRanges)) {
+          const snippets: AutocompleteCodeSnippet[] = await Promise.all(
+            fileRanges.map(async (rif) => {
+              if (ctx.options.logImportSnippets)
+                ctx.writeLog(
+                  `ImportDefinitionSnippets: found definition ${rif.filepath} ${rif.range.start.line}:${rif.range.start.character} - ${rif.range.end.line}:${rif.range.end.character}`,
+                );
+
+              const outline = await createOutline(
+                rif.filepath,
+                rif.contents,
+                rif.range,
+                ctx,
+              );
+              return {
+                filepath: rif.filepath,
+                content: outline ?? rif.contents,
+                type: AutocompleteSnippetType.Code,
+              };
+            }),
+          );
 
           importSnippets.push(...snippets);
         }
@@ -59,15 +77,16 @@ export class ContextRetrievalService {
   }
 
   public async getRootPathSnippets(
-    helper: HelperVars,
+    ctx: AutocompleteContext,
   ): Promise<AutocompleteCodeSnippet[]> {
-    if (!helper.treePath) {
+    if (!ctx.treePath) {
       return [];
     }
 
     return this.rootPathContextService.getContextForPath(
-      helper.filepath,
-      helper.treePath,
+      ctx.filepath,
+      ctx.treePath,
+      ctx,
     );
   }
 }

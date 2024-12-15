@@ -23,7 +23,7 @@ export default async function doLoadConfig(
   ide: IDE,
   ideSettingsPromise: Promise<IdeSettings>,
   controlPlaneClient: ControlPlaneClient,
-  writeLog: (message: string) => Promise<void>,
+  writeLog: (message: string) => void,
   overrideConfigJson: SerializedContinueConfig | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {
@@ -39,6 +39,11 @@ export default async function doLoadConfig(
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
+  const writeLogAsync = (message: string) => {
+    writeLog(message);
+    return Promise.resolve();
+  };
+
   if (fs.existsSync(configYamlPath)) {
     const result = await loadContinueConfigFromYaml(
       ide,
@@ -46,7 +51,7 @@ export default async function doLoadConfig(
       ideSettings,
       ideInfo.ideType,
       uniqueId,
-      writeLog,
+      writeLogAsync,
       workOsAccessToken,
       undefined,
       // overrideConfigYaml, TODO

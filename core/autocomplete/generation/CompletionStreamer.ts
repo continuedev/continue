@@ -1,6 +1,6 @@
 import { CompletionOptions, ILLM } from "../..";
 import { StreamTransformPipeline } from "../filtering/streamTransforms/StreamTransformPipeline";
-import { HelperVars } from "../util/HelperVars";
+import { AutocompleteContext } from "../util/AutocompleteContext";
 
 import { GeneratorReuseManager } from "./GeneratorReuseManager";
 
@@ -20,7 +20,7 @@ export class CompletionStreamer {
     prompt: string,
     multiline: boolean,
     completionOptions: Partial<CompletionOptions> | undefined,
-    helper: HelperVars,
+    ctx: AutocompleteContext,
   ) {
     // Try to reuse pending requests if what the user typed matches start of completion
     const generator = this.generatorReuseManager.getGenerator(
@@ -50,7 +50,7 @@ export class CompletionStreamer {
     };
 
     const initialGenerator = generatorWithCancellation();
-    const transformedGenerator = helper.options.transform
+    const transformedGenerator = ctx.options.transform
       ? this.streamTransformPipeline.transform(
           initialGenerator,
           prefix,
@@ -58,7 +58,7 @@ export class CompletionStreamer {
           multiline,
           completionOptions?.stop || [],
           fullStop,
-          helper,
+          ctx,
         )
       : initialGenerator;
 
