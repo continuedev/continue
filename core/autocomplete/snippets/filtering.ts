@@ -47,8 +47,7 @@ export function keepSnippetsFittingInMaxTokens(
   let remainingTokenCount =
     ctx.options.maxPromptTokens - tokenCountInCaretWindow;
 
-  while (remainingTokenCount > 0 && snippets.length > 0) {
-    const snippet = snippets.shift();
+  for (const snippet of snippets) {
     if (!snippet || !isValidSnippet(snippet)) {
       continue;
     }
@@ -59,20 +58,12 @@ export function keepSnippetsFittingInMaxTokens(
     if (remainingTokenCount >= snippetSize) {
       finalSnippets.push(snippet);
       remainingTokenCount -= snippetSize;
+    } else {
+      if (ctx.options.logSnippetLimiting)
+        ctx.writeLog(
+          `Snippet limiting: dropped ${snippet.type}\n${snippet.content}\n---\n`,
+        );
     }
-  }
-  if (ctx.options.logSnippetLimiting) {
-    const dropMessage =
-      snippets.length > finalSnippets.length
-        ? `dropped snippets due to maxPromptTokens:\n${snippets
-            .slice(finalSnippets.length)
-            .map((s) => s.content)
-            .join("\n\n")}`
-        : "no snippets dropped";
-
-    ctx.writeLog(
-      `Snippet limiting: maxPromptTokens: ${ctx.options.maxPromptTokens} tokenCountInCaretWindow: ${tokenCountInCaretWindow} ${dropMessage}`,
-    );
   }
 
   return finalSnippets;
