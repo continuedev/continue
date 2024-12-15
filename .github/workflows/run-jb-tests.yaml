@@ -108,7 +108,7 @@ jobs:
 
       - name: Copy logs
         if: ${{ failure() }}
-        run: mv build/idea-sandbox/system/log/ build/reports; ls build/reports; cat src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/TutorialTest.kt
+        run: mv build/idea-sandbox/system/log/ build/reports
 
       - name: Save fails report
         if: ${{ failure() }}
@@ -116,5 +116,4 @@ jobs:
         with:
           name: ${{ matrix.reportName }}
           path: |
-            build/reports/tests/test/**/*
-            build/reports/log/**/*
+            ${{ github.workspace }}/extensions/intellij/build/reports
