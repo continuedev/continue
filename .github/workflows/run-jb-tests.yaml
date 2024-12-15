@@ -50,7 +50,7 @@ jobs:
           java-version: 17
 
       - name: Setup FFmpeg
-        uses: FedericoCarboni/setup-ffmpeg@v2
+        uses: AnimMouse/setup-ffmpeg@v1
         with:
           # Not strictly necessary, but it may prevent rate limit
           # errors especially on GitHub-hosted macos machines.
