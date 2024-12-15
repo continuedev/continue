@@ -190,6 +190,12 @@ export class ContinueCompletionProvider
           }
         }
       }
+
+      // Manually pass file contents for unsaved, untitled files
+      if (document.isUntitled) {
+        manuallyPassFileContents = document.getText();
+      }
+
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
 
