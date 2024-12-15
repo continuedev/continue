@@ -49,6 +49,13 @@ jobs:
           distribution: zulu
           java-version: 17
 
+      - name: Setup FFmpeg
+        uses: FedericoCarboni/setup-ffmpeg@v2
+        with:
+          # Not strictly necessary, but it may prevent rate limit
+          # errors especially on GitHub-hosted macos machines.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -105,6 +112,10 @@ jobs:
 
       - name: Run tests
         run: ${{ matrix.runTests }}
+
+      - name: Move video
+        if: ${{ failure() }}
+        run: mv video build/reports
 
       - name: Copy logs
         if: ${{ failure() }}
