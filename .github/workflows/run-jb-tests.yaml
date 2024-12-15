@@ -93,10 +93,10 @@ jobs:
           cd ../../binary
           npm run build
 
-      - name: Run Idea
+      - name: Run IDE
         run: ${{ matrix.runIde }}
 
-      - name: Wait for Idea started
+      - name: Wait for JB connection
         uses: jtalk/url-health-check-action@v3
         with:
           url: ${{ matrix.url }}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Copy logs
         if: ${{ failure() }}
-        run: mv build/idea-sandbox/system/log/ build/reports; ls build/reports; cat
+        run: mv build/idea-sandbox/system/log/ build/reports; ls build/reports; cat src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/TutorialTest.kt
 
       - name: Save fails report
         if: ${{ failure() }}
@@ -116,4 +116,5 @@ jobs:
         with:
           name: ${{ matrix.reportName }}
           path: |
-            build/reports/tests/test/index.html
+            build/reports/tests/test/**/*
+            build/reports/log/**/*
