@@ -284,6 +284,28 @@ async function processDiff(
   }
 }
 
+function waitForSidebarReady(
+  sidebar: ContinueGUIWebviewViewProvider,
+  timeout: number,
+  interval: number,
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const startTime = Date.now();
+
+    const checkReadyState = () => {
+      if (sidebar.isReady) {
+        resolve(true);
+      } else if (Date.now() - startTime >= timeout) {
+        resolve(false); // Timed out
+      } else {
+        setTimeout(checkReadyState, interval);
+      }
+    };
+
+    checkReadyState();
+  });
+}
+
 // Copy everything over from extension.ts
 const getCommandsMap: (
   ide: VsCodeIde,
@@ -437,18 +459,23 @@ const getCommandsMap: (
       // This is a temporary fix—sidebar.webviewProtocol.request is blocking
       // when the GUI hasn't yet been setup and we should instead be
       // immediately throwing an error, or returning a Result object
+      focusGUI();
       if (!sidebar.isReady) {
-        focusGUI();
-        return;
+        const isReady = await waitForSidebarReady(sidebar, 5000, 100);
+        if (!isReady) {
+          return;
+        }
       }
 
       const historyLength = await sidebar.webviewProtocol.request(
         "getWebviewHistoryLength",
         undefined,
+        false,
       );
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
+        false,
       );
 
       if (isContinueInputFocused) {
@@ -458,6 +485,7 @@ const getCommandsMap: (
           void sidebar.webviewProtocol?.request(
             "focusContinueInputWithNewSession",
             undefined,
+            false,
           );
         }
       } else {
@@ -465,6 +493,7 @@ const getCommandsMap: (
         sidebar.webviewProtocol?.request(
           "focusContinueInputWithNewSession",
           undefined,
+          false,
         );
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
@@ -723,9 +752,10 @@ const getCommandsMap: (
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.toggleFullScreen": () => {
+    "continue.toggleFullScreen": async () => {
       focusGUI();
 
+      const sessionId = await sidebar.webviewProtocol.request("getCurrentSessionId", undefined);
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
@@ -746,6 +776,7 @@ const getCommandsMap: (
         vscode.ViewColumn.One,
         {
           retainContextWhenHidden: true,
+          enableScripts: true,
         },
       );
       fullScreenPanel = panel;
@@ -758,6 +789,13 @@ const getCommandsMap: (
         undefined,
         true,
       );
+      
+      panel.onDidChangeViewState(() => {
+        vscode.commands.executeCommand("continue.newSession");
+        if(sessionId){
+          vscode.commands.executeCommand("continue.focusContinueSessionId", sessionId);
+        }
+      });
 
       // When panel closes, reset the webview and focus
       panel.onDidDispose(
@@ -770,6 +808,7 @@ const getCommandsMap: (
       );
 
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
+      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     },
     "continue.openConfig": () => {
       core.invoke("config/openProfile", {

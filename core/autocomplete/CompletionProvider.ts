@@ -72,11 +72,7 @@ export class CompletionProvider {
 
     // Set temperature (but don't override)
     if (llm.completionOptions.temperature === undefined) {
-      const value = await Telemetry.getValueForFeatureFlag(
-        PosthogFeatureFlag.AutocompleteTemperature,
-      );
-
-      llm.completionOptions.temperature = value ?? 0.01;
+      llm.completionOptions.temperature = 0.01;
     }
 
     if (llm instanceof OpenAI) {
