@@ -6,7 +6,7 @@ export function getS3Filename(
   embeddingsProviderId: string,
   title: string,
 ): string {
-  return `${embeddingsProviderId}/${title}`;
+  return `_TransformersJsEmbeddingsProvider::all-MiniLM-L6-v2/${title}`;
 }
 
 export enum S3Buckets {
@@ -27,7 +27,7 @@ export async function downloadFromS3(
     });
     download.on("response", (response: any) => {
       if (response.statusCode !== 200) {
-        reject(new Error("No body returned when downloading from S3 bucket"));
+        reject(new Error("There was an error retreiving the pre-indexed doc"));
       }
     });
 
