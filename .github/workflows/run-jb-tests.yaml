@@ -1,0 +1,122 @@
+name: Run JB UI tests
+
+on:
+  push:
+    branches:
+      - pe/jb-integration-testing
+
+defaults:
+  run:
+    working-directory: extensions/intellij
+
+jobs:
+  run-ui-test:
+    name: run tests for ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          #          - os: ubuntu-latest
+          #            runIde: |
+          #              export DISPLAY=:99.0
+          #              Xvfb -ac :99 -screen 0 1920x1080x24 &
+          #              sleep 10
+          #              mkdir -p ui-test-example/build/reports
+          #              ./gradlew :ui-test-example:runIdeForUiTests > ui-test-example/build/reports/idea.log &
+          #            runTests: |
+          #              export DISPLAY=:99.0
+          #              ./gradlew :ui-test-example:test
+          #            url: http://127.0.0.1:8082
+          #            reportName: ui-test-fails-report-linux
+          - os: macOS-latest
+            runIde: ./gradlew runIdeForUiTests &
+            runTests: ./gradlew test
+            url: http://127.0.0.1:8082
+            reportName: ui-test-fails-report-mac
+    #          - os: windows-latest
+    #            runIde: start gradlew.bat :ui-test-example:runIdeForUiTests
+    #            runTests: ./gradlew :ui-test-example:test
+    #            url: http://localhost:8082
+    #            reportName: ui-test-fails-report-windows
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4.1.5
+
+      - name: Setup Java
+        uses: actions/setup-java@v4.5.0
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Install core node_modules
+        run: |
+          cd ../../core
+          npm ci
+
+      # npm install gui
+      - name: Install gui node_modules and build
+        run: |
+          cd ../../gui
+          npm ci
+          npm run build
+
+      # Run prepackage.js script
+      - name: Run prepackage script
+        run: |
+          cd ../../extensions/vscode
+          npm ci
+          npm run prepackage
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      # npm install binary
+      - name: Install binary node_modules
+        run: |
+          cd ../../binary
+          npm ci
+
+      # Build binaries
+      - name: Build the binaries
+        run: |
+          cd ../../binary
+          npm run build
+          
+      - name: Clean
+        run: ./gradlew clean
+
+      - name: Run Idea
+        run: ${{ matrix.runIde }}
+
+      - name: Wait for Idea started
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: ${{ matrix.url }}
+          max-attempts: 15
+          retry-delay: 30s
+
+      - name: Run tests
+        run: ${{ matrix.runTests }}
+
+      - name: Copy logs
+        if: ${{ failure() }}
+        run: mv build/idea-sandbox/system/log/ build/reports
+
+      - name: Save fails report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.reportName }}
+          path: |
+            build/reports
