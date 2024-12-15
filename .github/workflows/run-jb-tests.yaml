@@ -92,9 +92,6 @@ jobs:
         run: |
           cd ../../binary
           npm run build
-          
-      - name: Clean
-        run: ./gradlew clean
 
       - name: Run Idea
         run: ${{ matrix.runIde }}
@@ -111,7 +108,7 @@ jobs:
 
       - name: Copy logs
         if: ${{ failure() }}
-        run: mv build/idea-sandbox/system/log/ build/reports
+        run: mv build/idea-sandbox/system/log/ build/reports; ls build/reports; cat
 
       - name: Save fails report
         if: ${{ failure() }}
@@ -119,4 +116,4 @@ jobs:
         with:
           name: ${{ matrix.reportName }}
           path: |
-            build/reports
+            build/reports/tests/test/index.html

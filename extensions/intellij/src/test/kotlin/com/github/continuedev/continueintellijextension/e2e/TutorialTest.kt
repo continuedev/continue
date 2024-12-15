@@ -19,10 +19,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.awt.event.KeyEvent.*
-import java.time.Duration
 import java.time.Duration.ofMinutes
 import java.time.Duration.ofSeconds
-
 
 @ExtendWith(RemoteRobotExtension::class)
 class TutorialTest {
@@ -37,7 +35,6 @@ class TutorialTest {
 
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
-
 
     @Test
     fun completeTutorial(remoteRobot: RemoteRobot) = with(remoteRobot) {
