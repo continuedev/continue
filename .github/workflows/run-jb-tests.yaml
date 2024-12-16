@@ -100,16 +100,16 @@ jobs:
           cd ../../binary
           npm run build
 
-      - name: Enable Do Not Disturb
+      - name: Clear existing notifications and enable Do Not Disturb
         if: ${{ matrix.os == 'macOS-latest' }}
         run: |
           # Enable Do Not Disturb mode
-          defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true
-          defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturbDate -date "$(date +%s)"
-          
+          defaults -currentHost write com.apple.notificationcenterui doNotDisturb -boolean true
+          defaults -currentHost write com.apple.notificationcenterui doNotDisturbDate -date "$(date +%s)"
+
           # Remove existing notifications
           rm -rf ~/Library/Application\ Support/NotificationCenter/*
-          
+
           # Restart Notification Center to apply changes
           killall NotificationCenter || true
 
