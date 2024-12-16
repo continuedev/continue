@@ -55,11 +55,7 @@ class Mistral extends OpenAI {
 
           this.openaiAdapter = this.createOpenAiAdapter();
         })
-        .catch((err: any) => {
-          console.log(
-            `Error autodetecting API key type for Mistral: ${err.message}`,
-          );
-        });
+        .catch((err: any) => {});
     }
   }
 
