@@ -29,14 +29,8 @@ jobs:
           #            url: http://127.0.0.1:8082
           #            reportName: ui-test-fails-report-linux
           - os: macOS-latest
-            runIde: |
-              export DISPLAY=:99
-              Xvfb :99 -screen 0 1920x1080x24 &
-              sleep 3
-              ./gradlew runIdeForUiTests &
-            runTests: |
-              export DISPLAY=:99
-              ./gradlew test
+            runIde: ./gradlew runIdeForUiTests &
+            runTests: ./gradlew test
             url: http://127.0.0.1:8082
             reportName: ui-test-fails-report-mac
     #          - os: windows-latest
@@ -48,21 +42,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4.1.5
-
-      #      - name: Disable macOS notifications
-      #        if: runner.os == 'macOS'
-      #        run: |
-      #          defaults write com.apple.systempreferences AttentionPrefBundleIDs 0
-      #          defaults write com.apple.notificationcenterui bannerTime 0
-      #          defaults -currentHost write com.apple.notificationcenterui doNotDisturb -boolean true
-      #          defaults -currentHost write com.apple.notificationcenterui doNotDisturbDate -date "`date -u +\"%Y-%m-%d %H:%M:%S +000\"`"
-      #          killall NotificationCenter || true
-
-      - name: Install Xvfb on macOS
-        if: runner.os == 'macOS'
-        run: |
-          brew install xquartz
-          brew install xvfb
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
@@ -120,6 +99,19 @@ jobs:
         run: |
           cd ../../binary
           npm run build
+
+      - name: Enable Do Not Disturb
+        if: ${{ matrix.os == 'macOS-latest' }}
+        run: |
+          # Enable Do Not Disturb mode
+          defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true
+          defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturbDate -date "$(date +%s)"
+          
+          # Remove existing notifications
+          rm -rf ~/Library/Application\ Support/NotificationCenter/*
+          
+          # Restart Notification Center to apply changes
+          killall NotificationCenter || true
 
       - name: Run IDE
         run: ${{ matrix.runIde }}
