@@ -28,7 +28,7 @@ jobs:
           #              ./gradlew test
           #            url: http://127.0.0.1:8082
           #            reportName: ui-test-fails-report-linux
-          - os: macos-14
+          - os: macos-latest
             runIde: ./gradlew runIdeForUiTests &
             runTests: ./gradlew test
             url: http://127.0.0.1:8082
@@ -112,7 +112,10 @@ jobs:
 
       - name: Disable macOS Notifications
         if: runner.os == 'macOS'
-        run: launchctl unload -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist && killall NotificationCenter
+        run: |
+          sudo defaults write /Library/Preferences/weg.system.notifications.plist DoNotDisturb -boolean true
+          sudo killall usernoted || true
+          sudo killall NotificationCenter || true
 
       - name: Run tests
         run: ${{ matrix.runTests }}
