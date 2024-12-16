@@ -110,15 +110,12 @@ jobs:
           max-attempts: 15
           retry-delay: 30s
 
-      - name: Disable macOS Notifications
-        if: runner.os == 'macOS'
+      - name: Run tests
         run: |
           sudo defaults write /Library/Preferences/weg.system.notifications.plist DoNotDisturb -boolean true
           sudo killall usernoted || true
           sudo killall NotificationCenter || true
-
-      - name: Run tests
-        run: ${{ matrix.runTests }}
+          ${{ matrix.runTests }}
 
       - name: Move video
         if: ${{ failure() }}
