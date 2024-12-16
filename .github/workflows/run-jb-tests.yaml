@@ -16,32 +16,43 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            runIde: |
-              export DISPLAY=:99.0
-              Xvfb -ac :99 -screen 0 1920x1080x24 &
-              sleep 10
-              mkdir -p build/reports
-              ./gradlew runIdeForUiTests > build/reports/idea.log &
-            runTests: |
-              export DISPLAY=:99.0
-              ./gradlew test
+          #          - os: ubuntu-latest
+          #            runIde: |
+          #              export DISPLAY=:99.0
+          #              Xvfb -ac :99 -screen 0 1920x1080x24 &
+          #              sleep 10
+          #              mkdir -p build/reports
+          #              ./gradlew runIdeForUiTests > build/reports/idea.log &
+          #            runTests: |
+          #              export DISPLAY=:99.0
+          #              ./gradlew test
+          #            url: http://127.0.0.1:8082
+          #            reportName: ui-test-fails-report-linux
+          - os: macOS-latest
+            runIde: ./gradlew runIdeForUiTests &
+            runTests: ./gradlew test
             url: http://127.0.0.1:8082
-            reportName: ui-test-fails-report-linux
-    #          - os: macOS-latest
-    #            runIde: ./gradlew runIdeForUiTests &
-    #            runTests: ./gradlew test
-    #            url: http://127.0.0.1:8082
-    #            reportName: ui-test-fails-report-mac
+            reportName: ui-test-fails-report-mac
+          - os: windows-latest
+            runIde: start gradlew.bat :ui-test-example:runIdeForUiTests
+            runTests: ./gradlew :ui-test-example:test
+            url: http://localhost:8082
+            reportName: ui-test-fails-report-windows
     #          - os: windows-latest
-    #            runIde: start gradlew.bat :ui-test-example:runIdeForUiTests
-    #            runTests: ./gradlew :ui-test-example:test
+    #            runIde: start gradlew.bat runIdeForUiTests
+    #            runTests: ./gradlew test
     #            url: http://localhost:8082
     #            reportName: ui-test-fails-report-windows
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4.1.5
+
+      - name: Install and enable do not disturb for macOS
+        if: runner.os == 'macOS'
+        run: |
+          npm install --global do-not-disturb-cli
+          do-not-disturb on
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
