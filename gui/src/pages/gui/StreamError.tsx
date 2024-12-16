@@ -60,7 +60,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     <span>Error while streaming chat response.</span>
   );
 
-  if (statusCode === 49) {
+  if (statusCode === 429) {
     errorContent = (
       <div className="flex flex-col gap-2">
         <span>
