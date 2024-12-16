@@ -43,15 +43,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.5
 
-      - name: Disable macOS Notifications
-        if: runner.os == 'macOS'
-        run: |
-          defaults write com.apple.systemuiserver "NSStatusItem Visible DoNotDisturb" -bool true
-          defaults write com.apple.controlcenter "NSStatusItem Visible FocusModes" -bool true
-          launchctl disable gui/$UID/com.apple.notificationcenterui
-          killall NotificationCenter &>/dev/null || true
-          sudo launchctl bootout gui/$UID/com.apple.notificationcenterui &>/dev/null || true
-
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
         with:
@@ -118,6 +109,10 @@ jobs:
           url: ${{ matrix.url }}
           max-attempts: 15
           retry-delay: 30s
+
+      - name: Disable macOS Notifications
+        if: runner.os == 'macOS'
+        run: launchctl unload -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist && killall NotificationCenter
 
       - name: Run tests
         run: ${{ matrix.runTests }}
