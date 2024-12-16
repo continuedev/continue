@@ -47,9 +47,8 @@ jobs:
       - name: Disable notifications on macOS
         if: runner.os == 'macOS'
         run: |
-          sudo defaults write /System/Library/LaunchAgents/com.apple.notificationcenterui KeepAlive -bool false
-          killall NotificationCenter || true
-          launchctl unload -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist || true
+          osascript -e 'tell application "System Events" to set "do not disturb" to true'
+          defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
