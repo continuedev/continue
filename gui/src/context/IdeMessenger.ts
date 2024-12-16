@@ -76,8 +76,7 @@ export class IdeMessenger implements IIdeMessenger {
           );
           throw new Error("postIntellijMessage is undefined");
         }
-        messageId = messageId ?? uuidv4();
-        window.postIntellijMessage?.(messageType, data, messageId);
+        window.postIntellijMessage?.(messageType, data, messageId ?? uuidv4());
         return;
       } else {
         console.log(
