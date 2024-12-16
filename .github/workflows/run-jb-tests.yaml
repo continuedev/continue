@@ -29,8 +29,14 @@ jobs:
           #            url: http://127.0.0.1:8082
           #            reportName: ui-test-fails-report-linux
           - os: macOS-latest
-            runIde: ./gradlew runIdeForUiTests &
-            runTests: ./gradlew test
+            runIde: |
+              export DISPLAY=:99
+              Xvfb :99 -screen 0 1920x1080x24 &
+              sleep 3
+              ./gradlew runIdeForUiTests &
+            runTests: |
+              export DISPLAY=:99
+              ./gradlew test
             url: http://127.0.0.1:8082
             reportName: ui-test-fails-report-mac
     #          - os: windows-latest
@@ -40,22 +46,17 @@ jobs:
     #            reportName: ui-test-fails-report-windows
 
     runs-on: ${{ matrix.os }}
-
-    env:
-      DISABLE_NOTIFICATIONS: |
-        defaults write com.apple.notificationcenterui bannersEnabled -bool false
-        defaults write ~/Library/Preferences/com.apple.ncprefs.plist enabled -bool false
-        killall NotificationCenter || true
-        defaults write com.apple.systempreferences AttentionPrefBundleIDs 0
-              
-      # We need to disable notifications to prevent them from rendering on top of the IDE
-      pre: |
-        if [ "$RUNNER_OS" == "macOS" ]; then
-          eval "$DISABLE_NOTIFICATIONS"
-        fi
-
     steps:
       - uses: actions/checkout@v4.1.5
+
+      #      - name: Disable macOS notifications
+      #        if: runner.os == 'macOS'
+      #        run: |
+      #          defaults write com.apple.systempreferences AttentionPrefBundleIDs 0
+      #          defaults write com.apple.notificationcenterui bannerTime 0
+      #          defaults -currentHost write com.apple.notificationcenterui doNotDisturb -boolean true
+      #          defaults -currentHost write com.apple.notificationcenterui doNotDisturbDate -date "`date -u +\"%Y-%m-%d %H:%M:%S +000\"`"
+      #          killall NotificationCenter || true
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
