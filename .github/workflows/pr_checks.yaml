@@ -10,6 +10,15 @@ on:
       - "gui/**"
       - ".github/workflows/**"
 
+  push:
+    branches:
+      - main
+    paths:
+      - "extensions/vscode/**"
+      - "core/**"
+      - "gui/**"
+      - ".github/workflows/**"
+
 jobs:
   install-root:
     runs-on: ubuntu-latest
