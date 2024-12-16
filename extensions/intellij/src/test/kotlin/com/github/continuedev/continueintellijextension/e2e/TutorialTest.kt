@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.e2e
 
+import com.automation.remarks.junit5.Video
 import com.github.continuedev.continueintellijextension.pages.dialog
 import com.github.continuedev.continueintellijextension.pages.idea
 import com.github.continuedev.continueintellijextension.pages.welcomeFrame
@@ -37,6 +38,7 @@ class TutorialTest {
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
     @Test
+    @Video
     fun completeTutorial(remoteRobot: RemoteRobot) = with(remoteRobot) {
         welcomeFrame {
             createNewProjectLink.click()
