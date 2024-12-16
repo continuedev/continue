@@ -75,7 +75,6 @@ import {
   loadLastSession,
   saveCurrentSession,
 } from "../../redux/thunks/session";
-import StreamError from "./StreamError";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -454,11 +453,6 @@ export function Chat() {
           trackVisibility={isStreaming}
         />
       </StepsDiv>
-      {history.length > 0 ? (
-        <div className="flex flex-col">
-          <StreamError slideDirection="up" />
-        </div>
-      ) : null}
       <div className={`relative`}>
         <div className="absolute -top-8 right-2 z-30">
           {ttsActive && (
@@ -542,9 +536,6 @@ export function Chat() {
 
           {history.length === 0 && (
             <>
-              <div className="flex flex-col">
-                <StreamError slideDirection="down" />
-              </div>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
                   <OnboardingCard activeTab={onboardingCard.activeTab} />

@@ -234,7 +234,6 @@ export class IdeMessenger implements IIdeMessenger {
     }
 
     if (next.value.error) {
-      console.log("FROM IDEMESS", next.value);
       throw new Error(next.value.error);
     }
 
