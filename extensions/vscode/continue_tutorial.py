@@ -11,7 +11,7 @@
 # —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— #
 
 ## Highlight the code below
-## Press [Cmd/Ctrl + J] to add to Chat
+## Press [Cmd/Ctrl + L] to add to Chat
 ## Try asking Continue "what sorting algorithm is this?"
 def sorting_algorithm(x):
     for i in range(len(x)):
