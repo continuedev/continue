@@ -29,7 +29,12 @@ jobs:
           #            url: http://127.0.0.1:8082
           #            reportName: ui-test-fails-report-linux
           - os: macOS-latest
-            runIde: ./gradlew runIdeForUiTests &
+            # We need to disable notifications to prevent them from rendering on top of the IDE
+            runIde: |
+              sudo defaults write /Library/Preferences/com.apple.notificationcenterui.plist DoNotDisturb -boolean true
+              sudo killall NotificationCenter || true
+              sudo defaults write com.apple.systempreferences AttentionPrefBundleIDs 0
+              ./gradlew runIdeForUiTests &
             runTests: ./gradlew test
             url: http://127.0.0.1:8082
             reportName: ui-test-fails-report-mac

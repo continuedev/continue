@@ -86,8 +86,8 @@ class TutorialTest {
         // https://github.com/JetBrains/intellij-ui-test-robot/blob/139a05eb99e9a49f13605626b81ad9864be23c96/remote-fixtures/src/main/kotlin/com/intellij/remoterobot/fixtures/CommonContainerFixture.kt#L203
         val jcefBrowser = find<JCefBrowserFixture>(JCefBrowserFixture.macLocator)
         assert(jcefBrowser.getDom().isNotEmpty()) { "JCEF browser not found or empty" }
-//
-//        val codeSnippetText = jcefBrowser.findElementByContainsText(textToInsert)
-//        assert(codeSnippetText.html.isNotEmpty()) { "Failed to find code snippet in webview" }
+
+        val codeSnippetText = jcefBrowser.findElementByContainsText(textToInsert)
+        assert(codeSnippetText.html.isNotEmpty()) { "Failed to find code snippet in webview" }
     }
 }
