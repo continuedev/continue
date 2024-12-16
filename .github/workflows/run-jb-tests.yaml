@@ -43,11 +43,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.5
 
-      - name: Install and enable do not disturb for macOS
+      - name: Disable macOS Notifications
         if: runner.os == 'macOS'
         run: |
-          npm install --global do-not-disturb-cli
-          do-not-disturb on
+          defaults write com.apple.systemuiserver "NSStatusItem Visible DoNotDisturb" -bool true
+          defaults write com.apple.controlcenter "NSStatusItem Visible FocusModes" -bool true
+          launchctl disable gui/$UID/com.apple.notificationcenterui
+          killall NotificationCenter &>/dev/null || true
+          sudo launchctl bootout gui/$UID/com.apple.notificationcenterui &>/dev/null || true
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
