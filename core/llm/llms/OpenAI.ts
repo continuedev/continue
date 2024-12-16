@@ -150,6 +150,8 @@ class OpenAI extends BaseLLM {
       finalOptions.max_completion_tokens = undefined;
 
       finalOptions.prediction = options.prediction;
+    } else {
+      finalOptions.prediction = undefined;
     }
 
     return finalOptions;
@@ -210,6 +212,38 @@ class OpenAI extends BaseLLM {
     )) {
       yield renderChatMessage(chunk);
     }
+  }
+
+  protected modifyChatBody(
+    body: ChatCompletionCreateParams,
+  ): ChatCompletionCreateParams {
+    body.stop = body.stop?.slice(0, this.getMaxStopWords());
+
+    // OpenAI o1-preview and o1-mini:
+    if (this.isO1Model(body.model)) {
+      // a) use max_completion_tokens instead of max_tokens
+      body.max_completion_tokens = body.max_tokens;
+      body.max_tokens = undefined;
+
+      // b) don't support system message
+      body.messages = body.messages?.filter(
+        (message: any) => message?.role !== "system",
+      );
+    }
+
+    if (body.prediction && this.supportsPrediction(body.model)) {
+      if (body.presence_penalty) {
+        // prediction doesn't support > 0
+        body.presence_penalty = undefined;
+      }
+      if (body.frequency_penalty) {
+        // prediction doesn't support > 0
+        body.frequency_penalty = undefined;
+      }
+      body.max_completion_tokens = undefined;
+    }
+
+    return body;
   }
 
   protected async *_legacystreamComplete(

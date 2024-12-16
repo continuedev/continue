@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Fixed
+body: Restored syntax highlighting
+time: 2024-12-13T09:15:19.485189-08:00

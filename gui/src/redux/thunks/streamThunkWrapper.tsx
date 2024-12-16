@@ -9,7 +9,7 @@ export const streamThunkWrapper = createAsyncThunk<
   void,
   () => Promise<void>,
   ThunkApiType
->("chat/streamWrapper", async (runStream, { dispatch, extra }) => {
+>("chat/streamWrapper", async (runStream, { dispatch, extra, getState }) => {
   try {
     await runStream();
   } catch (e: unknown) {
@@ -18,10 +18,13 @@ export const streamThunkWrapper = createAsyncThunk<
     dispatch(setShowDialog(true));
   } finally {
     dispatch(setInactive());
-    await dispatch(
-      saveCurrentSession({
-        openNewSession: false,
-      }),
-    );
+    const state = getState();
+    if (state.session.mode === "chat") {
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: false,
+        }),
+      );
+    }
   }
 });

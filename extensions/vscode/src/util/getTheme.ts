@@ -5,24 +5,34 @@ import mergeJson from "core/util/merge";
 import { convertTheme } from "monaco-vscode-textmate-theme-converter/lib/cjs";
 import * as vscode from "vscode";
 
-import { getExtensionUri } from "./vscode";
+/**
+ * Strip comments from theme
+ */
 
-const builtinThemes: any = {
-  "Default Dark Modern": "dark_modern",
-  "Dark+": "dark_plus",
-  "Default Dark+": "dark_plus",
-  "Dark (Visual Studio)": "dark_vs",
-  "Visual Studio Dark": "dark_vs",
-  "Dark High Contrast": "hc_black",
-  "Default High Contrast": "hc_black",
-  "Light High Contrast": "hc_light",
-  "Default High Contrast Light": "hc_light",
-  "Default Light Modern": "light_modern",
-  "Light+": "light_plus",
-  "Default Light+": "light_plus",
-  "Light (Visual Studio)": "light_vs",
-  "Visual Studio Light": "light_vs",
-};
+function stripInLineComment(line: string): string {
+  let inString = false;
+  let pCh = '';
+
+  for (let i = 0; i < line.length-1; i++) {
+    const ch = line[i];
+    const nCh = line[i + 1];
+
+    // If we're not in a string and we see '//' this is a comment.
+    if (!inString && ch === '/' && nCh === '/') {
+      // Stop processing this line from here.
+      return line.substring(0, i);
+    }
+
+    // Toggle inString state if we see a double quote not escaped by a backslash.
+    if (ch === '"' && pCh !== '\\') {
+      inString = !inString;
+    }
+
+    pCh = ch;
+  }
+
+  return line;
+}
 
 function parseThemeString(themeString: string | undefined): any {
   themeString = themeString
@@ -30,12 +40,13 @@ function parseThemeString(themeString: string | undefined): any {
     .filter((line) => {
       return !line.trim().startsWith("//");
     })
+    .map(stripInLineComment)
     .join("\n");
   return JSON.parse(themeString ?? "{}");
 }
 
 export function getTheme() {
-  let currentTheme = undefined;
+  let currentTheme: string | undefined = undefined;
   // Get color theme from settings
   // use user settings if available
   // otherwise use default
@@ -51,93 +62,114 @@ export function getTheme() {
   );
   const activeColorTheme = vscode.window.activeColorTheme.kind;
 
-  if (autoDetectHighContrast || autoDetectColorScheme) {
-    switch (activeColorTheme) {
-      case vscode.ColorThemeKind.Dark:
-        colorTheme = workbenchConfig.get<string>(
-          "workbench.preferredDarkColorTheme",
-        );
-        break;
-      case vscode.ColorThemeKind.Light:
-        colorTheme = workbenchConfig.get<string>(
-          "workbench.preferredLightColorTheme",
-        );
-        break;
-      case vscode.ColorThemeKind.HighContrast:
-        colorTheme = workbenchConfig.get<string>(
-          "workbench.preferredHighContrastColorTheme",
-        );
-        break;
-      case vscode.ColorThemeKind.HighContrastLight:
-        colorTheme = workbenchConfig.get<string>(
-          "workbench.preferredHighContrastLightColorTheme",
-        );
-        break;
-      default:
-        console.log("unknown color theme kind", activeColorTheme);
-        colorTheme = workbenchConfig.get<string>("workbench.colorTheme");
-        break;
-    }
+  // prettier-ignore
+  switch (true) {
+    case autoDetectColorScheme && vscode.ColorThemeKind.Dark === activeColorTheme:
+      colorTheme = workbenchConfig.get<string>(
+        "workbench.preferredDarkColorTheme",
+      );
+      break;
+    case autoDetectColorScheme && vscode.ColorThemeKind.Light === activeColorTheme:
+      colorTheme = workbenchConfig.get<string>(
+        "workbench.preferredLightColorTheme",
+      );
+      break;
+    case autoDetectHighContrast && vscode.ColorThemeKind.HighContrast === activeColorTheme:
+      colorTheme = workbenchConfig.get<string>(
+        "workbench.preferredHighContrastColorTheme",
+      );
+      break;
+    case autoDetectHighContrast && vscode.ColorThemeKind.HighContrastLight === activeColorTheme:
+      colorTheme = workbenchConfig.get<string>(
+        "workbench.preferredHighContrastLightColorTheme",
+      );
+      break;
+    default:
+      colorTheme =
+        workbenchConfig.get<string>("workbench.colorTheme") ??
+        "Default Dark Modern";
+      break;
   }
 
-  if (!colorTheme) {
-    colorTheme =
-      workbenchConfig.get<string>("workbench.colorTheme") ??
-      "Default Dark Modern";
-  }
-
+  let parsed;
   try {
     // Pass color theme to webview for syntax highlighting
     for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
-      if (currentTheme) {
-        break;
-      }
       const extension = vscode.extensions.all[i];
       if (extension.packageJSON?.contributes?.themes?.length > 0) {
+        if (currentTheme) {
+          break;
+        }
         for (const theme of extension.packageJSON.contributes.themes) {
-          if (theme.label === colorTheme) {
+          if (theme.id === colorTheme || theme.label === colorTheme) {
             const themePath = path.join(extension.extensionPath, theme.path);
             currentTheme = fs.readFileSync(themePath).toString();
+
+            parsed = parseThemeString(currentTheme);
+
+            // Handle nested includes
+            let currentParsedTheme = parsed;
+            let currentThemePath = themePath;
+            let mergedTheme = currentParsedTheme;
+
+            while (currentParsedTheme.include) {
+              const themeDir = path.dirname(currentThemePath);
+              const includeThemePath = path.join(
+                themeDir,
+                currentParsedTheme.include,
+              );
+
+              if (fs.existsSync(includeThemePath)) {
+                const includeThemeString = fs
+                  .readFileSync(includeThemePath)
+                  .toString();
+
+                const includeTheme = parseThemeString(includeThemeString);
+                // Merge with base theme taking precedence, then overlay current customizations
+                mergedTheme = mergeJson(
+                  mergeJson({}, includeTheme), // Start with base
+                  mergedTheme, // Overlay with customizations
+                );
+
+                // Update for next iteration - only update path and parsed theme for include checking
+                currentThemePath = includeThemePath;
+                currentParsedTheme = includeTheme;
+              } else {
+                console.log(
+                  `include theme not found for ${currentTheme} looked for ${currentParsedTheme.include} in ${themeDir}`,
+                  includeThemePath,
+                );
+                break;
+              }
+            }
+
+            parsed = mergedTheme;
             break;
           }
         }
       }
     }
 
-    if (currentTheme === undefined && builtinThemes[colorTheme]) {
-      const filename = `${builtinThemes[colorTheme]}.json`;
-      currentTheme = fs
-        .readFileSync(
-          path.join(getExtensionUri().fsPath, "builtin-themes", filename),
-        )
-        .toString();
+    if (!currentTheme) {
+      console.warn(`did not find any theme files for theme ${colorTheme}`);
+      return undefined;
     }
 
-    // Strip comments from theme
-    let parsed = parseThemeString(currentTheme);
+    let convertedTheme: { base: string; include?: string } & Record<
+      string,
+      any
+    > = convertTheme(parsed);
 
-    if (parsed.include) {
-      const includeThemeString = fs
-        .readFileSync(
-          path.join(getExtensionUri().fsPath, "builtin-themes", parsed.include),
-        )
-        .toString();
-      const includeTheme = parseThemeString(includeThemeString);
-      parsed = mergeJson(parsed, includeTheme);
-    }
-
-    const converted = convertTheme(parsed);
-
-    converted.base = (
-      ["vs", "hc-black"].includes(converted.base)
-        ? converted.base
+    convertedTheme.base = (
+      ["vs", "hc-black"].includes(convertedTheme.base)
+        ? convertedTheme.base
         : activeColorTheme === vscode.ColorThemeKind.Light ||
             activeColorTheme === vscode.ColorThemeKind.HighContrastLight
           ? "vs"
           : "vs-dark"
     ) as any;
 
-    return converted;
+    return convertedTheme;
   } catch (e) {
     console.log("Error loading color theme: ", e);
   }

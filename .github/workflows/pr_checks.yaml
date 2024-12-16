@@ -204,14 +204,39 @@ jobs:
           node-version-file: ".nvmrc"
 
       - uses: actions/cache@v4
+        id: vscode-node-modules-cache
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - uses: actions/cache@v4
+        id: core-node-modules-cache
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: storage-cache
+        with:
+          path: extensions/vscode/e2e/storage
+          key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - name: Download Dependencies if Cache Miss
+        if: steps.storage-cache.outputs.cache-hit != 'true'
+        run: |
+          cd extensions/vscode
+          npm run e2e:ci:download
+
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.GH_ACTIONS_SSH_TEST_KEY_PEM }}
+          SSH_HOST: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
 
       - name: Install Xvfb for Linux and run e2e tests
         run: |
@@ -220,7 +245,14 @@ jobs:
           export DISPLAY=:99 # Export the display number to the environment
           cd extensions/vscode
           npm run package
-          npm run e2e:ci
+          npm run e2e:ci:run
+
+      - name: Upload e2e test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
     needs: [gui-checks, core-checks]

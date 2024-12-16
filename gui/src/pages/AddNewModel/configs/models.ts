@@ -70,6 +70,7 @@ export const models: { [key: string]: ModelPackage } = {
       "sambanova",
       "cerebras",
       "nebius",
+      "scaleway"
     ],
     isOpenSource: true,
   },
@@ -379,7 +380,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "scaleway"],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -392,7 +393,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "scaleway"],
     isOpenSource: false,
   },
   llama31405bChat: {
@@ -1106,6 +1107,19 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     providerOptions: ["nebius"],
     isOpenSource: true,
+  },
+  Qwen25Coder32b: {
+    title: "Qwen 2.5 Coder 32b",
+    description:
+      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Qwen 2.5 Coder 32b",
+      model: "qwen2.5-coder-32b",
+      contextLength: 128_000,
+    },
+    icon: "qwen.png",
+    providerOptions: ["scaleway"],
+    isOpenSource: true,    
   },
   grokBeta: {
     title: "Grok Beta",
