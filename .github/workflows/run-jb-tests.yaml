@@ -29,12 +29,7 @@ jobs:
           #            url: http://127.0.0.1:8082
           #            reportName: ui-test-fails-report-linux
           - os: macOS-latest
-            # We need to disable notifications to prevent them from rendering on top of the IDE
-            runIde: |
-              sudo defaults write /Library/Preferences/com.apple.notificationcenterui.plist DoNotDisturb -boolean true
-              sudo killall NotificationCenter || true
-              sudo defaults write com.apple.systempreferences AttentionPrefBundleIDs 0
-              ./gradlew runIdeForUiTests &
+            runIde: ./gradlew runIdeForUiTests &
             runTests: ./gradlew test
             url: http://127.0.0.1:8082
             reportName: ui-test-fails-report-mac
@@ -47,6 +42,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4.1.5
+
+      # We need to disable notifications to prevent them from rendering on top of the IDE
+      - name: Disable notifications on macOS
+        if: runner.os == 'macOS'
+        run: |
+          sudo defaults write /System/Library/LaunchAgents/com.apple.notificationcenterui KeepAlive -bool false
+          killall NotificationCenter || true
+          launchctl unload -w /System/Library/LaunchAgents/com.apple.notificationcenterui.plist || true
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
