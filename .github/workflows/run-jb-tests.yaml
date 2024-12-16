@@ -58,6 +58,12 @@ jobs:
       #          defaults -currentHost write com.apple.notificationcenterui doNotDisturbDate -date "`date -u +\"%Y-%m-%d %H:%M:%S +000\"`"
       #          killall NotificationCenter || true
 
+      - name: Install Xvfb on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install xquartz
+          brew install xvfb
+
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
         with:
