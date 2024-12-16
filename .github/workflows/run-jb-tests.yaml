@@ -28,7 +28,7 @@ jobs:
           #              ./gradlew test
           #            url: http://127.0.0.1:8082
           #            reportName: ui-test-fails-report-linux
-          - os: macOS-latest
+          - os: macos-14
             runIde: ./gradlew runIdeForUiTests &
             runTests: ./gradlew test
             url: http://127.0.0.1:8082
