@@ -1,4 +1,7 @@
-import { ChatCompletionCreateParams } from "openai/resources/index";
+import {
+  ChatCompletionCreateParams,
+  ChatCompletionMessageParam,
+} from "openai/resources/index";
 
 import {
   ChatMessage,
@@ -47,6 +50,19 @@ const CHAT_ONLY_MODELS = [
   "o1-preview",
   "o1-mini",
 ];
+
+const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
+  return messages?.map((message: any) => {
+    if (message?.role === "system") {
+      return {
+        ...message,
+        role: "user",
+      };
+    }
+
+    return message;
+  });
+};
 
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
@@ -133,9 +149,7 @@ class OpenAI extends BaseLLM {
       finalOptions.max_tokens = undefined;
 
       // b) don't support system message
-      finalOptions.messages = finalOptions.messages?.filter(
-        (message: any) => message?.role !== "system",
-      );
+      finalOptions.messages = formatMessageForO1(finalOptions.messages);
     }
 
     if (options.prediction && this.supportsPrediction(options.model)) {
@@ -226,9 +240,7 @@ class OpenAI extends BaseLLM {
       body.max_tokens = undefined;
 
       // b) don't support system message
-      body.messages = body.messages?.filter(
-        (message: any) => message?.role !== "system",
-      );
+      body.messages = formatMessageForO1(body.messages);
     }
 
     if (body.prediction && this.supportsPrediction(body.model)) {
@@ -298,6 +310,7 @@ class OpenAI extends BaseLLM {
     }
 
     const body = this._convertArgs(options, messages);
+
     // Empty messages cause an error in LM Studio
     body.messages = body.messages.map((m: any) => ({
       ...m,
