@@ -16,23 +16,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          #          - os: ubuntu-latest
-          #            runIde: |
-          #              export DISPLAY=:99.0
-          #              Xvfb -ac :99 -screen 0 1920x1080x24 &
-          #              sleep 10
-          #              mkdir -p ui-test-example/build/reports
-          #              ./gradlew :ui-test-example:runIdeForUiTests > ui-test-example/build/reports/idea.log &
-          #            runTests: |
-          #              export DISPLAY=:99.0
-          #              ./gradlew :ui-test-example:test
-          #            url: http://127.0.0.1:8082
-          #            reportName: ui-test-fails-report-linux
-          - os: macOS-latest
-            runIde: ./gradlew runIdeForUiTests &
-            runTests: ./gradlew test
+          - os: ubuntu-latest
+            runIde: |
+              export DISPLAY=:99.0
+              Xvfb -ac :99 -screen 0 1920x1080x24 &
+              sleep 10
+              mkdir -p build/reports
+              ./gradlew runIdeForUiTests > build/reports/idea.log &
+            runTests: |
+              export DISPLAY=:99.0
+              ./gradlew test
             url: http://127.0.0.1:8082
-            reportName: ui-test-fails-report-mac
+            reportName: ui-test-fails-report-linux
+    #          - os: macOS-latest
+    #            runIde: ./gradlew runIdeForUiTests &
+    #            runTests: ./gradlew test
+    #            url: http://127.0.0.1:8082
+    #            reportName: ui-test-fails-report-mac
     #          - os: windows-latest
     #            runIde: start gradlew.bat :ui-test-example:runIdeForUiTests
     #            runTests: ./gradlew :ui-test-example:test
@@ -99,19 +99,6 @@ jobs:
         run: |
           cd ../../binary
           npm run build
-
-      - name: Clear existing notifications and enable Do Not Disturb
-        if: ${{ matrix.os == 'macOS-latest' }}
-        run: |
-          # Enable Do Not Disturb mode
-          defaults -currentHost write com.apple.notificationcenterui doNotDisturb -boolean true
-          defaults -currentHost write com.apple.notificationcenterui doNotDisturbDate -date "$(date +%s)"
-
-          # Remove existing notifications
-          rm -rf ~/Library/Application\ Support/NotificationCenter/*
-
-          # Restart Notification Center to apply changes
-          killall NotificationCenter || true
 
       - name: Run IDE
         run: ${{ matrix.runIde }}
