@@ -46,9 +46,7 @@ jobs:
       # We need to disable notifications to prevent them from rendering on top of the IDE
       - name: Disable notifications on macOS
         if: runner.os == 'macOS'
-        run: |
-          osascript -e 'tell application "System Events" to set "do not disturb" to true'
-          defaults -currentHost write ~/Library/Preferences/ByHost/com.apple.notificationcenterui doNotDisturb -boolean true
+        run: defaults write com.apple.systempreferences AttentionPrefBundleIDs 0
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
