@@ -112,9 +112,7 @@ jobs:
 
       - name: Run tests
         run: |
-          sudo defaults write /Library/Preferences/weg.system.notifications.plist DoNotDisturb -boolean true
-          sudo killall usernoted || true
-          sudo killall NotificationCenter || true
+          osascript -e 'tell application "System Events" to tell process "NotificationCenter" to set visible to false'
           ${{ matrix.runTests }}
 
       - name: Move video
