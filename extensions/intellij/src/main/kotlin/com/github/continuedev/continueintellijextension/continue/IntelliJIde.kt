@@ -107,7 +107,7 @@ class IntelliJIDE(
             } else {
                 ProcessBuilder("git", "diff", "--cached")
             }
-            builder.directory(File(workspaceDir))
+            builder.directory(File(URI(workspaceDir)))
             val process = withContext(Dispatchers.IO) {
                 builder.start()
             }
@@ -195,12 +195,12 @@ class IntelliJIDE(
     }
 
     override suspend fun fileExists(filepath: String): Boolean {
-        val file = File(filepath)
+        val file = File(URI(filepath))
         return file.exists()
     }
 
     override suspend fun writeFile(path: String, contents: String) {
-        val file = File(path)
+        val file = File(URI(path))
         file.writeText(contents)
     }
 
@@ -216,7 +216,7 @@ class IntelliJIDE(
     }
 
     override suspend fun openFile(path: String) {
-        val file = LocalFileSystem.getInstance().findFileByPath(path)
+        val file = LocalFileSystem.getInstance().findFileByPath(URI(path).path)
         file?.let {
             ApplicationManager.getApplication().invokeLater {
                 FileEditorManager.getInstance(project).openFile(it, true)
@@ -236,7 +236,7 @@ class IntelliJIDE(
 
     override suspend fun saveFile(filepath: String) {
         ApplicationManager.getApplication().invokeLater {
-            val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return@invokeLater
+            val file = LocalFileSystem.getInstance().findFileByPath(URI(filepath).path) ?: return@invokeLater
             val fileDocumentManager = FileDocumentManager.getInstance()
             val document = fileDocumentManager.getDocument(file)
 
@@ -249,7 +249,7 @@ class IntelliJIDE(
     override suspend fun readFile(filepath: String): String {
         return try {
             val content = ApplicationManager.getApplication().runReadAction<String?> {
-                val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
+                val virtualFile = LocalFileSystem.getInstance().findFileByPath(URI(filepath).path)
                 if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
                     return@runReadAction FileDocumentManager.getInstance().getDocument(virtualFile)?.text
                 }
@@ -259,7 +259,7 @@ class IntelliJIDE(
             if (content != null) {
                 content
             } else {
-                val file = File(filepath)
+                val file = File(URI(filepath))
                 if (!file.exists()) return ""
                 withContext(Dispatchers.IO) {
                     FileInputStream(file).use { fis ->
@@ -406,7 +406,7 @@ class IntelliJIDE(
         return withContext(Dispatchers.IO) {
             try {
                 val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-                builder.directory(File(dir))
+                builder.directory(File(URI(dir)))
                 val process = builder.start()
                 val reader = BufferedReader(InputStreamReader(process.inputStream))
                 val output = reader.readLine()
@@ -436,7 +436,7 @@ class IntelliJIDE(
 
     override suspend fun getRepoName(dir: String): String? {
         return withContext(Dispatchers.IO) {
-            val directory = File(dir)
+            val directory = File(URI(dir))
             val targetDir = if (directory.isFile) directory.parentFile else directory
             val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
             builder.directory(targetDir)
@@ -500,7 +500,7 @@ class IntelliJIDE(
     override suspend fun getGitRootPath(dir: String): String? {
         return withContext(Dispatchers.IO) {
             val builder = ProcessBuilder("git", "rev-parse", "--show-toplevel")
-            builder.directory(File(dir))
+            builder.directory(File(URI(dir)))
             val process = builder.start()
 
             val reader = BufferedReader(InputStreamReader(process.inputStream))
@@ -511,7 +511,7 @@ class IntelliJIDE(
     }
 
     override suspend fun listDir(dir: String): List<List<Any>> {
-        val files = File(dir).listFiles()?.map {
+        val files = File(URI(dir)).listFiles()?.map {
             listOf(it.name, if (it.isDirectory) FileType.DIRECTORY else FileType.FILE)
         } ?: emptyList()
 
@@ -520,7 +520,7 @@ class IntelliJIDE(
 
     override suspend fun getLastModified(files: List<String>): Map<String, Long> {
         return files.associateWith { file ->
-            File(file).lastModified()
+            File(URI(file)).lastModified()
         }
     }
 
