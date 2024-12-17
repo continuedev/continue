@@ -42,12 +42,12 @@ class ContinuePluginSelectionListener(
 
 
     private fun handleSelection(e: SelectionEvent) {
-        ApplicationManager.getApplication().runReadAction {
+        ApplicationManager.getApplication().invokeLater {
             val editor = e.editor
 
             if (!isFileEditor(editor)) {
                 removeAllTooltips()
-                return@runReadAction
+                return@invokeLater
             }
 
             // Fixes a bug where the tooltip isn't being disposed of when opening new files
@@ -61,7 +61,7 @@ class ContinuePluginSelectionListener(
 
             if (shouldRemoveTooltip(selectedText, editor)) {
                 removeExistingTooltips(editor)
-                return@runReadAction
+                return@invokeLater
             }
 
             updateTooltip(editor, model)

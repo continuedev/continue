@@ -7,19 +7,26 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
 
 - [Architecture Overview](#architecture-overview)
 - [Environment Setup](#environment-setup)
-  - [IDE Installation](#ide-installation)
-  - [IDE configuration](#ide-configuration)
-  - [Node.js Requirements](#nodejs-requirements)
-  - [Install all dependencies](#install-all-dependencies)
-  - [Misc](#misc)
+    - [IDE Installation](#ide-installation)
+    - [IDE configuration](#ide-configuration)
+    - [Node.js Requirements](#nodejs-requirements)
+    - [Install all dependencies](#install-all-dependencies)
+    - [Misc](#misc)
 - [Development Workflow](#development-workflow)
-  - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
-  - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
-  - [Reloading changes](#reloading-changes)
-  - [Setting breakpoints](#setting-breakpoints)
-  - [Available Gradle tasks](#available-gradle-tasks)
-  - [Packaging](#packaging)
-    - [Testing the packaged extension](#testing-the-packaged-extension)
+    - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
+    - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
+    - [Viewing logs](#viewing-logs)
+    - [Reloading changes](#reloading-changes)
+    - [Setting breakpoints](#setting-breakpoints)
+    - [Available Gradle tasks](#available-gradle-tasks)
+    - [Packaging](#packaging)
+        - [Installing the packaged extension](#installing-the-packaged-extension)
+- [Testing](#testing)
+    - [e2e testing](#e2e-testing)
+        - [Overview](#overview)
+        - [Setup](#setup)
+        - [Running the tests](#running-the-tests)
+        - [Identifying selectors](#identifying-selectors)
 
 ## Architecture Overview
 
@@ -30,11 +37,14 @@ packaging it in a binary in the `binary` directory. Communication occurs over st
 
 ### IDE Installation
 
-Continue is built with JDK version 17 (as specified in [`./build.gradle.kts`](./build.gradle.kts)), which can be downloaded from [Oracle](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html).
+Continue is built with JDK version 17 (as specified in [`./build.gradle.kts`](./build.gradle.kts)), which can be
+downloaded from [Oracle](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html).
 
-We recommend using IntelliJ IDEA, which you can download from the [JetBrains website](https://www.jetbrains.com/idea/download).
+We recommend using IntelliJ IDEA, which you can download from
+the [JetBrains website](https://www.jetbrains.com/idea/download).
 
-Both Ultimate and Community (free) editions are suitable for this project, although Ultimate has better debugging (see notes below).
+Both Ultimate and Community (free) editions are suitable for this project, although Ultimate has better debugging (see
+notes below).
 
 ### IDE configuration
 
@@ -63,7 +73,10 @@ This project requires Node.js version 20.11.0 (LTS) or higher. You have two opti
 
 Select the `Run Continue` task in the top right corner of the IDE and then select the "Debug" option.
 
-> In community edition, use `Run Continue (CE)` instead, which uses shell scripts instead of Ultimate-only node configs. If you want to debug the core in CE, you'll need to quit the `Start Core Dev Server (CE)` process and run the core in a different environment that supports debugging, such as VS Code (Launch "Core Binary").
+> In community edition, use `Run Continue (CE)` instead, which uses shell scripts instead of Ultimate-only node configs.
+> If you want to debug the core in CE, you'll need to quit the `Start Core Dev Server (CE)` process and run the core in
+> a
+> different environment that supports debugging, such as VS Code (Launch "Core Binary").
 
 ![run-extension-screenshot](../../media/run-continue-intellij.png)
 
@@ -71,14 +84,22 @@ This should open a new instance on IntelliJ with the extension installed.
 
 ### Accessing files in the `.continue` directory
 
-When running the `Start Core Dev Server` task, we set the location of your Continue directory to `./extensions/.continue-debug`. This is to
+When running the `Start Core Dev Server` task, we set the location of your Continue directory to
+`./extensions/.continue-debug`. This is to
 allow for changes to your `config.json` and other files during development, without affecting your actual configuration.
+
+### Viewing logs
+
+When using the `Run Continue` task, we automatically run a script that outputs logs into the "Prompt Logs" terminal tab.
+
+Alternatively, you can view logs for a particular IDE instance by selecting `Help` -> `Open Log in Editor` in the window
+toolbar.
 
 ### Reloading changes
 
 - `extensions/intellij`: Attempt to reload changed classes by selecting
   _Run | Debugging Actions | Reload Changed Classes`_
-  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
+    - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
 - `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Core Dev Server` task)
 
@@ -86,7 +107,7 @@ allow for changes to your `config.json` and other files during development, with
 
 - `extensions/intellij`: Breakpoints can be set in Intellij
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
-- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task)
+- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task
 
 ### Available Gradle tasks
 
@@ -114,8 +135,44 @@ verifyPluginConfiguration - Checks if Java and Kotlin compilers configuration me
 This will generate a .zip file in `./build/distributions` with the version defined in [
 `./gradle.properties`](./gradle.properties)
 
-#### Testing the packaged extension
+#### Installing the packaged extension
 
 - Navigate to the Plugins settings page (_Settings | Plugins_)
 - Click on the gear icon
 - Click _Install from disk_ and select the ZIP file in `./build/distributions`
+
+## Testing
+
+### e2e testing
+
+#### Overview
+
+The e2e tests are written using [intellij-ui-test-robot](`https://github.com/JetBrains/intellij-ui-test-robot`). The
+README for this project has a lot of helpful info on how to use the library.
+
+#### Setup
+
+If you are on macOS, you'll need to give IntelliJ permission to control your computer in order to run the e2e tests.
+Open _System Settings_ and select `Privacy & Security` -> `Accessibility` and toggle the switch for IntelliJ.
+
+#### Running the tests
+
+Instantiate the test IDE as a background task:
+
+```sh
+./gradlew clean runIdeForUiTests &
+```
+
+Once the IDE has loaded, you can run the tests. Note that you need to have the test IDE focused in order for the tests
+to run.
+
+```sh
+./gradlew test
+```
+
+#### Identifying selectors
+
+While the `runIdeForUiTests` task is runnung, you can visit the following URL
+to view the UI hierarchy of the running IDE:
+
+http://127.0.0.1:8082/
