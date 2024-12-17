@@ -18,6 +18,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.awt.Toolkit
 import java.io.File
+import java.net.URI
 import java.nio.file.Paths
 import javax.swing.Action
 import javax.swing.JComponent
@@ -61,7 +62,7 @@ class DiffManager(private val project: Project) : DumbAware {
             file.createNewFile()
         }
         file.writeText(replacement)
-        openDiffWindow(filepath, file.url, stepIndex)
+        openDiffWindow(URI(filepath).toString(), file.toURI().toString(), stepIndex)
     }
 
     private fun cleanUpFile(file2: String) {
