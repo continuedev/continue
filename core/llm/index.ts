@@ -138,7 +138,7 @@ export abstract class BaseLLM implements ILLM {
 
   private _llmOptions: LLMOptions;
 
-  private openaiAdapter?: BaseLlmApi;
+  protected openaiAdapter?: BaseLlmApi;
 
   constructor(_options: LLMOptions) {
     this._llmOptions = _options;
@@ -212,18 +212,22 @@ export abstract class BaseLLM implements ILLM {
     this.projectId = options.projectId;
     this.profile = options.profile;
 
-    this.openaiAdapter = constructLlmApi({
-      provider: this.providerName as any,
-      apiKey: this.apiKey ?? "",
-      apiBase: this.apiBase,
-      requestOptions: this.requestOptions,
-    });
+    this.openaiAdapter = this.createOpenAiAdapter();
 
     this.maxEmbeddingBatchSize =
       options.maxEmbeddingBatchSize ?? DEFAULT_MAX_BATCH_SIZE;
     this.maxEmbeddingChunkSize =
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
+  }
+
+  protected createOpenAiAdapter() {
+    return constructLlmApi({
+      provider: this.providerName as any,
+      apiKey: this.apiKey ?? "",
+      apiBase: this.apiBase,
+      requestOptions: this.requestOptions,
+    });
   }
 
   listModels(): Promise<string[]> {

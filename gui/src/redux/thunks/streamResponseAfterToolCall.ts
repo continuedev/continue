@@ -9,9 +9,9 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { streamThunkWrapper } from "./streamThunkWrapper";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
+import { streamThunkWrapper } from "./streamThunkWrapper";
 
 export const streamResponseAfterToolCall = createAsyncThunk<
   void,
@@ -26,6 +26,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
+        const useTools = state.ui.useTools;
         const initialHistory = state.session.history;
         const defaultModel = selectDefaultModel(state);
 
@@ -59,6 +60,8 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const messages = constructMessages(
           [...updatedHistory],
           defaultModel.model,
+          defaultModel.provider,
+          useTools,
         );
         unwrapResult(await dispatch(streamNormalInput(messages)));
       }),
