@@ -1,15 +1,12 @@
-import {
-  Key,
-  WebDriver,
-  WebElement,
-  WebView,
-  Workbench,
-} from "vscode-extension-tester";
+import { Key, WebElement, WebView, Workbench } from "vscode-extension-tester";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
 
 export class GUIActions {
-  public static switchToReactIframe = async (driver: WebDriver) => {
+  public static switchToReactIframe = async () => {
+    const view = new WebView();
+    const driver = view.getDriver();
+
     const iframes = await GUISelectors.getAllIframes(driver);
     let continueIFrame: WebElement | undefined = undefined;
     for (let i = 0; i < iframes.length; i++) {
@@ -38,6 +35,10 @@ export class GUIActions {
     }
 
     await driver.switchTo().frame(reactIFrame);
+    return {
+      view,
+      driver,
+    };
   };
 
   public static openGui = async () => {

@@ -1,8 +1,16 @@
 import { expect } from "chai";
-import { WebElement } from "vscode-extension-tester";
+import { WebElement, waitForAttributeValue } from "vscode-extension-tester";
 import { DEFAULT_TIMEOUT } from "./constants";
 
 export class TestUtils {
+  /**
+   * In many cases it might be more useful to use existing Selenium
+   * utilities. For example:
+   *
+   * await driver.wait(until.elementLocated(By.xpath(xpath)), 5000);
+   *
+   * There's also 'waitForAttributeValue'.
+   */
   public static async waitForSuccess<T>(
     locatorFn: () => Promise<T>,
     timeout: number = DEFAULT_TIMEOUT.MD,
