@@ -746,9 +746,27 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput || !editor) {
         return;
       }
+
+      // const rif: RangeInFile & { contents: string } =
+      //   data.rangeInFileWithContents;
+      // const basename = getBasename(rif.filepath);
+      // const relativePath = getRelativePath(
+      //   rif.filepath,
+      //   await ideMessenger.ide.getWorkspaceDirs(),
+      // const rangeStr = `(${rif.range.start.line + 1}-${
+      //   rif.range.end.line + 1
+      // })`;
+
+      // const itemName = `${basename} ${rangeStr}`;
+      // const item: ContextItemWithId = {
+      //   content: rif.contents,
+      //   name: itemName
+      // }
+
       const contextItem = rifWithContentsToContextItem(
         data.rangeInFileWithContents,
       );
+      console.log(contextItem);
       let index = 0;
       for (const el of editor.getJSON()?.content ?? []) {
         if (el.attrs?.item?.name === contextItem.name) {

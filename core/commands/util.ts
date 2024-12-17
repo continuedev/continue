@@ -12,10 +12,9 @@ export function rifWithContentsToContextItem(
   );
   const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1})`;
 
-  const itemName = `${basename} ${rangeStr}`;
   return {
     content: rif.contents,
-    name: itemName,
+    name: `${basename} ${rangeStr}`,
     description: `${relativePathOrBasename} ${rangeStr}`, // This is passed to the LLM - do not pass full URI
     id: {
       providerTitle: "code",
