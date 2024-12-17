@@ -66,4 +66,8 @@ export class TestUtils {
       llmResponse: `TEST_LLM_RESPONSE_${id}`,
     };
   }
+
+  public static get isMacOS(): boolean {
+    return process.platform === "darwin";
+  }
 }

@@ -47,7 +47,7 @@ describe("Cmd+L Shortcut Test", () => {
     // Simulate Cmd+L
     await driver
       .actions()
-      .keyDown(Key.CONTROL) // Use Key.CONTROL for Windows/Linux
+      .keyDown(TestUtils.isMacOS ? Key.META : Key.CONTROL)
       .sendKeys("l")
       .keyUp(Key.META)
       .perform();
