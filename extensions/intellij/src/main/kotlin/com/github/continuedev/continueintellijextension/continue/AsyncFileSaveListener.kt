@@ -4,23 +4,27 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.intellij.openapi.vfs.AsyncFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 
-// TODO: Uncertain if this is needed/used when we already have listener logic in core
 class AsyncFileSaveListener(private val continuePluginService: ContinuePluginService) : AsyncFileListener {
+    private val configFilePatterns = listOf(
+        ".continue/config.json",
+        ".continue/config.ts",
+        ".continue/config.yaml",
+        ".continuerc.json"
+    )
+
     override fun prepareChange(events: MutableList<out VFileEvent>): AsyncFileListener.ChangeApplier? {
-        for (event in events) {
-            if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(
-                    ".continue\\config.json"
-                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json") || event.path.endsWith(
-                    ".continuerc.json"
-                )
-            ) {
-                return object : AsyncFileListener.ChangeApplier {
-                    override fun afterVfsChange() {
-                        continuePluginService.coreMessenger?.request("config/reload", null, null) { _ -> }
-                    }
-                }
+        val isConfigFile = events.any { event ->
+            configFilePatterns.any { pattern ->
+                event.path.endsWith(pattern) || event.path.endsWith(pattern.replace("/", "\\"))
             }
         }
-        return null
+
+        return if (isConfigFile) {
+            object : AsyncFileListener.ChangeApplier {
+                override fun afterVfsChange() {
+                    continuePluginService.coreMessenger?.request("config/reload", null, null) { _ -> }
+                }
+            }
+        } else null
     }
 }
