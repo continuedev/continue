@@ -390,11 +390,6 @@ class IdeProtocolClient(
                         respond(null)
                     }
 
-                    "pathSep" -> {
-                        val sep = ide.pathSep()
-                        respond(sep)
-                    }
-
                     "insertAtCursor" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
