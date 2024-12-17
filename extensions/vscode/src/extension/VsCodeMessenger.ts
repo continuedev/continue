@@ -134,7 +134,7 @@ export class VsCodeMessenger {
         status: "streaming",
         fileContent: data.text,
       });
-
+      console.log("applyToFile", data);
       if (data.filepath) {
         const fileExists = await this.ide.fileExists(data.filepath);
         if (!fileExists) {

@@ -662,7 +662,9 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (!props.isMainInput || !mainInputContentTrigger) {
       return;
     }
-    editor.commands.setContent(mainInputContentTrigger);
+    queueMicrotask(() => {
+      editor.commands.setContent(mainInputContentTrigger);
+    });
     dispatch(setMainEditorContentTrigger(undefined));
   }, [editor, props.isMainInput, mainInputContentTrigger]);
 

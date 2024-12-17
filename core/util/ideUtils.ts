@@ -44,6 +44,7 @@ export async function inferResolvedUriFromRelativePath(
   for (let i = segments.length - 1; i >= 0; i--) {
     suffixes.push(segments.slice(i).join("/"));
   }
+  console.log(suffixes);
 
   // For each suffix, try to find a unique matching directory
   for (const suffix of suffixes) {
@@ -70,7 +71,7 @@ export async function inferResolvedUriFromRelativePath(
   }
 
   // If no unique match found, use the first directory
-  return joinPathsToUri(dirs[0], segments.join("/"));
+  return joinPathsToUri(dirs[0], path);
 }
 
 interface ResolveResult {
