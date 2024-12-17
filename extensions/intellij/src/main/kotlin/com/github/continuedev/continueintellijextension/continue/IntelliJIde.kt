@@ -306,7 +306,7 @@ class IntelliJIDE(
 
     override suspend fun getOpenFiles(): List<String> {
         val fileEditorManager = FileEditorManager.getInstance(project)
-        return fileEditorManager.openFiles.map { it.path }.toList()
+        return fileEditorManager.openFiles.map { it.url }.toList()
     }
 
     override suspend fun getCurrentFile(): Map<String, Any>? {
@@ -315,7 +315,7 @@ class IntelliJIDE(
         val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
         return virtualFile?.let {
             mapOf(
-                "path" to it.path,
+                "path" to it.url,
                 "contents" to editor.document.text,
                 "isUntitled" to false
             )
@@ -381,7 +381,7 @@ class IntelliJIDE(
 
                     problems.add(
                         Problem(
-                            filepath = psiFile.virtualFile?.path ?: "",
+                            filepath = psiFile.virtualFile?.url ?: "",
                             range = Range(
                                 start = Position(
                                     line = startLineNumber,
@@ -538,7 +538,7 @@ class IntelliJIDE(
     }
 
     private fun setFileOpen(filepath: String, open: Boolean = true) {
-        val file = LocalFileSystem.getInstance().findFileByPath(filepath)
+        val file = LocalFileSystem.getInstance().findFileByPath(URI(filepath).path)
 
         file?.let {
             if (open) {
