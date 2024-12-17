@@ -20,10 +20,7 @@ describe("GUI Test", () => {
 
     await GUIActions.openGui();
 
-    view = new WebView();
-    driver = view.getDriver();
-
-    await GUIActions.switchToReactIframe(driver);
+    ({ view, driver } = await GUIActions.switchToReactIframe());
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
   });
 
@@ -212,7 +209,7 @@ describe("GUI Test", () => {
        */
       await view.switchBack();
       await (await GUISelectors.getHistoryNavButton(view)).click();
-      await GUIActions.switchToReactIframe(driver);
+      await GUIActions.switchToReactIframe();
 
       await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
 
@@ -222,7 +219,7 @@ describe("GUI Test", () => {
        * END OF SWITCHING BACK AND FORTH
        */
 
-      await GUIActions.switchToReactIframe(driver);
+      await GUIActions.switchToReactIframe();
       await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
 
       await GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse);
