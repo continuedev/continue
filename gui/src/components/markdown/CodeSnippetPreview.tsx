@@ -89,7 +89,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
                 filepath: props.item.uri.value,
               });
             } else if (props.item.id.providerTitle === "code") {
-              const rif = ctxItemToRifWithContents(props.item);
+              const rif = ctxItemToRifWithContents(props.item, true);
               ideMessenger.ide.showLines(
                 rif.filepath,
                 rif.range.start.line,

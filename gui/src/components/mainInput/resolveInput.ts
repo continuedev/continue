@@ -72,7 +72,7 @@ async function resolveEditorContent({
       } else if (p.type === "codeBlock") {
         if (p.attrs?.item) {
           const contextItem = p.attrs.item as ContextItemWithId;
-          const rif = ctxItemToRifWithContents(contextItem);
+          const rif = ctxItemToRifWithContents(contextItem, true);
           // If not editing, include codeblocks in the prompt
           // If editing is handled by selectedCode below
           if (!contextItem.editing) {
