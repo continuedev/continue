@@ -292,14 +292,17 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      # npm install gui
-      - name: Install gui node_modules and build
+      - uses: actions/cache@v4
+        id: gui-cache
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
+      - name: Build GUI
         run: |
-          cd ../../gui
-          npm ci
+          cd gui
           npm run build
 
-      # Run prepackage.js script
       - name: Run prepackage script
         run: |
           cd ../../extensions/vscode
@@ -309,19 +312,18 @@ jobs:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      # npm install binary
-      - name: Install binary node_modules
-        run: |
-          cd ../../binary
-          npm ci
+      - uses: actions/cache@v4
+        id: binary-cache
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      # Build binaries
       - name: Build the binaries
         run: |
-          cd ../../binary
+          cd binary
           npm run build
 
-      - name: Run IDE
+      - name: Start test IDE
         run: |
           cd extensions/intellij
           ./gradlew runIdeForUiTests &
