@@ -931,7 +931,9 @@
                   "gemini-1.5-pro-latest",
                   "gemini-1.5-pro",
                   "gemini-1.5-flash-latest",
-                  "gemini-1.5-flash"
+                  "gemini-1.5-flash",
+                  "gemini-1.5-flash-8b",
+                  "gemini-2.0-flash-exp"
                 ]
               }
             }
@@ -2803,7 +2805,10 @@
                     "type": "object",
                     "properties": {
                       "model": {
-                        "enum": ["cohere.rerank-v3-5:0", "amazon.rerank-v1:0"]
+                        "enum": [
+                          "cohere.rerank-v3-5:0",
+                          "amazon.rerank-v1:0"
+                        ]
                       }
                     },
                     "required": ["model"]
@@ -3127,65 +3132,62 @@
               "description": "Allow tool use. Currently only supported with Claude 3.5 Sonnet",
               "default": true
             },
-            "modelContextProtocolServers": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "transport": {
-                    "oneOf": [
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "enum": ["stdio"]
-                          },
-                          "command": {
+            "modelContextProtocolServer": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["stdio"]
+                        },
+                        "command": {
+                          "type": "string"
+                        },
+                        "args": {
+                          "type": "array",
+                          "items": {
                             "type": "string"
-                          },
-                          "args": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
                           }
-                        },
-                        "required": ["type", "command", "args"]
+                        }
                       },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "enum": ["websocket"]
-                          },
-                          "url": {
-                            "type": "string",
-                            "format": "uri"
-                          }
+                      "required": ["type", "command", "args"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["websocket"]
                         },
-                        "required": ["type", "url"]
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
                       },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "type": {
-                            "type": "string",
-                            "enum": ["sse"]
-                          },
-                          "url": {
-                            "type": "string",
-                            "format": "uri"
-                          }
+                      "required": ["type", "url"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["sse"]
                         },
-                        "required": ["type", "url"]
-                      }
-                    ]
-                  }
-                },
-                "required": ["transport"]
-              }
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": ["type", "url"]
+                    }
+                  ]
+                }
+              },
+              "required": ["transport"]
             }
           }
         }
