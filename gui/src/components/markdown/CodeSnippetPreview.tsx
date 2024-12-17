@@ -124,11 +124,9 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         contentEditable={false}
         className={`m-0 ${collapsed ? "overflow-hidden" : "overflow-auto"}`}
         ref={codeBlockRef}
-        style={
-          {
-            // maxHeight: collapsed ? MAX_PREVIEW_HEIGHT : undefined, // Could switch to max-h-[33vh] but then chevron icon shows when height can't change
-          }
-        }
+        style={{
+          maxHeight: collapsed ? MAX_PREVIEW_HEIGHT : undefined, // Could switch to max-h-[33vh] but then chevron icon shows when height can't change
+        }}
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(props.item.name)} ${props.item.description}\n${content}\n${fence}`}
