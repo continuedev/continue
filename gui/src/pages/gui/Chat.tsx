@@ -453,7 +453,6 @@ export function Chat() {
           trackVisibility={isStreaming}
         />
       </StepsDiv>
-
       <div className={`relative`}>
         <div className="absolute -top-8 right-2 z-30">
           {ttsActive && (
@@ -534,6 +533,7 @@ export function Chat() {
               }}
             />
           )}
+
           {history.length === 0 && (
             <>
               {onboardingCard.show && (
@@ -551,6 +551,7 @@ export function Chat() {
           )}
         </div>
       </div>
+
       <div
         className={`${history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
       >

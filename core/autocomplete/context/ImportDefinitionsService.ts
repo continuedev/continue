@@ -30,6 +30,11 @@ export class ImportDefinitionsService {
   }
 
   private async _getFileInfo(filepath: string): Promise<FileInfo | null> {
+    if (filepath.endsWith(".ipynb")) {
+      // Commenting out this line was the solution to https://github.com/continuedev/continue/issues/1463
+      return null;
+    }
+
     const parser = await getParserForFile(filepath);
     if (!parser) {
       return {

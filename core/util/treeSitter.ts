@@ -78,7 +78,7 @@ export const supportedLanguages: { [key: string]: LanguageName } = {
   mjs: LanguageName.JAVASCRIPT,
   cjs: LanguageName.JAVASCRIPT,
   py: LanguageName.PYTHON,
-  ipynb: LanguageName.PYTHON,
+  // ipynb: LanguageName.PYTHON, // It contains Python, but the file format is a ton of JSON.
   pyw: LanguageName.PYTHON,
   pyi: LanguageName.PYTHON,
   el: LanguageName.ELISP,

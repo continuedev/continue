@@ -435,10 +435,8 @@ const getCommandsMap: (
       // This is a temporary fix—sidebar.webviewProtocol.request is blocking
       // when the GUI hasn't yet been setup and we should instead be
       // immediately throwing an error, or returning a Result object
-
+      focusGUI();
       if (!sidebar.isReady) {
-        focusGUI();
-
         const isReady = await waitForSidebarReady(sidebar, 5000, 100);
         if (!isReady) {
           return;

@@ -28,8 +28,19 @@ async function resolveAttachment(
   // Files
   const resolvedFileUri = await resolveRelativePathInDir(name, extras.ide);
   if (resolvedFileUri) {
+    let subItems: ContextItem[] = [];
+    if (name.endsWith(".prompt")) {
+      // Recurse
+      const [items, _] = await renderPromptFileV2(
+        await extras.ide.readFile(name),
+        extras,
+      );
+      subItems.push(...items);
+    }
+
     const content = `\`\`\`${name}\n${await extras.ide.readFile(resolvedFileUri)}\n\`\`\``;
     return [
+      ...subItems,
       {
         name: getUriPathBasename(resolvedFileUri),
         content,

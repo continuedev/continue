@@ -7,18 +7,14 @@
         <![CDATA[View the latest release notes on <a href="https://github.com/continuedev/continue/releases">GitHub</a>]]></change-notes>
 
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.json</depends>
+
+    <!-- See here for why this is optional:  https://github.com/continuedev/continue/issues/2775#issuecomment-2535620877-->
+    <depends optional="true" config-file="continueintellijextension-withJSON.xml">
+        com.intellij.modules.json
+    </depends>
+
     <!-- com.intellij.openapi.module.ModuleManager.Companion is only available since this build -->
     <idea-version since-build="223.7571.182"/>
-
-    <extensions defaultExtensionNs="JavaScript.JsonSchema">
-        <ProviderFactory
-                implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
-    </extensions>
-    <extensions defaultExtensionNs="JavaScript.JsonSchema">
-        <ProviderFactory
-                implementation="com.github.continuedev.continueintellijextension.continue.ConfigRcJsonSchemaProviderFactory"/>
-    </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
         <editorFactoryListener
