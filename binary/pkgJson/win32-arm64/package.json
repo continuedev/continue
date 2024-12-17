@@ -16,7 +16,8 @@
       "../../node_modules/win-ca/lib/roots.exe",
       "../../out/llamaTokenizer.mjs",
       "../../out/llamaTokenizerWorkerPool.mjs",
-      "../../out/tiktokenWorkerPool.mjs"
+      "../../out/tiktokenWorkerPool.mjs",
+      "../../out/package.json"
     ],
     "targets": [
       "node18-win-arm64"

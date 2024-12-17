@@ -4,6 +4,13 @@ fun properties(key: String) = providers.gradleProperty(key)
 
 fun environment(key: String) = providers.environmentVariable(key)
 
+fun Sync.prepareSandbox() {
+    from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
+    from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
+}
+
+val remoteRobotVersion = "0.11.23"
+
 plugins {
     id("java") // Java support
     alias(libs.plugins.kotlin) // Kotlin support
@@ -19,7 +26,10 @@ group = properties("pluginGroup").get()
 version = properties("pluginVersion").get()
 
 // Configure project's dependencies
-repositories { mavenCentral() }
+repositories {
+    mavenCentral()
+    maven { url = uri("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies") }
+}
 
 // Dependencies are managed with Gradle version catalog - read more:
 // https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
@@ -29,18 +39,14 @@ dependencies {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
     }
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
-    implementation("io.ktor:ktor-server-core:2.3.7") {
-        exclude(group = "org.slf4j", module = "slf4j-api")
-    }
-    implementation("io.ktor:ktor-server-netty:2.3.7") {
-        exclude(group = "org.slf4j", module = "slf4j-api")
-    }
-    implementation("io.ktor:ktor-server-cors:2.3.7") {
-        exclude(group = "org.slf4j", module = "slf4j-api")
-    }
     implementation("com.posthog.java:posthog:1.+")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
-    //    implementation("com.jetbrains.jsonSchema")
+    testImplementation("com.intellij.remoterobot:remote-robot:$remoteRobotVersion")
+    testImplementation("com.intellij.remoterobot:remote-fixtures:$remoteRobotVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+    implementation("com.automation-remarks:video-recorder-junit5:2.0")
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for
@@ -80,9 +86,20 @@ qodana {
 koverReport { defaults { xml { onCheck = true } } }
 
 tasks {
+    downloadRobotServerPlugin {
+        version.set(remoteRobotVersion)
+    }
+
     prepareSandbox {
-        from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
-        from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
+        prepareSandbox()
+    }
+
+    prepareTestingSandbox {
+        prepareSandbox()
+    }
+
+    prepareUiTestingSandbox {
+        prepareSandbox()
     }
 
     wrapper { gradleVersion = properties("gradleVersion").get() }
@@ -117,6 +134,19 @@ tasks {
         systemProperty("ide.mac.message.dialogs.as.sheets", "false")
         systemProperty("jb.privacy.policy.text", "<!--999.999-->")
         systemProperty("jb.consents.confirmation.enabled", "false")
+        systemProperty("ide.mac.file.chooser.native", "false")
+        systemProperty("jbScreenMenuBar.enabled", "false")
+        systemProperty("apple.laf.useScreenMenuBar", "false")
+        systemProperty("idea.trust.all.projects", "true")
+        systemProperty("ide.show.tips.on.startup.default.value", "false")
+        systemProperty("ide.browser.jcef.jsQueryPoolSize", "10000")
+
+        // This is to ensure we load the GUI with OSR enabled. We have logic that
+        // renders with OSR disabled below a particular IDE version.
+        // See ContinueExtensionSettingsService.kt for more info.
+        intellij {
+            version.set("2024.1")
+        }
     }
 
     signPlugin {
@@ -145,5 +175,9 @@ tasks {
             "${rootProject.projectDir.parentFile.parentFile}/manual-testing-sandbox",
             "${rootProject.projectDir.parentFile.parentFile}/manual-testing-sandbox/test.kt"
         ).map { file(it).absolutePath }
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }

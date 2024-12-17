@@ -167,7 +167,7 @@ export default function StepContainerPreToolbar(
         <div className="flex min-w-0 max-w-[45%] items-center">
           <ChevronDownIcon
             onClick={onClickExpand}
-            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 transition-colors hover:bg-white/10 ${
+            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
