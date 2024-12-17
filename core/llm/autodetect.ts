@@ -85,8 +85,9 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
 ];
 
-function modelSupportsTools(modelName: string) {
+function modelSupportsTools(modelName: string, provider: string) {
   return (
+    provider === "anthropic" &&
     modelName.includes("claude") &&
     (modelName.includes("3-5") || modelName.includes("3.5"))
   );

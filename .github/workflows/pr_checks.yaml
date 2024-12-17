@@ -14,6 +14,7 @@ on:
     branches:
       - main
     paths:
+      - "extensions/intellij/**"
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
@@ -293,3 +294,107 @@ jobs:
         run: |
           cd gui
           npm test
+
+  jetbrains-tests:
+    needs: [install-root, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4.5.0
+        with:
+          distribution: zulu
+          java-version: 17
+
+      - name: Setup FFmpeg
+        uses: AnimMouse/setup-ffmpeg@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: gui-cache
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
+      - name: Build GUI
+        run: |
+          cd gui
+          npm ci 
+          npm run build
+
+      - name: Run prepackage script
+        run: |
+          cd extensions/vscode
+          npm ci
+          npm run prepackage
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - uses: actions/cache@v4
+        id: binary-cache
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: Build the binaries
+        run: |
+          cd binary
+          npm run build
+
+      - name: Start test IDE
+        run: |
+          cd extensions/intellij
+          export DISPLAY=:99.0
+          Xvfb -ac :99 -screen 0 1920x1080x24 &
+          sleep 10
+          mkdir -p build/reports
+          ./gradlew runIdeForUiTests &
+
+      - name: Wait for JB connection
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: http://127.0.0.1:8082
+          max-attempts: 15
+          retry-delay: 30s
+
+      - name: Run tests
+        run: |
+          cd extensions/intellij
+          export DISPLAY=:99.0
+          ./gradlew test
+
+      - name: Move video
+        if: ${{ failure() }}
+        run: |
+          cd extensions/intellij
+          mv video build/reports
+
+      - name: Copy logs
+        if: ${{ failure() }}
+        run: |
+          cd extensions/intellij
+          mv build/idea-sandbox/system/log/ build/reports
+
+      - name: Save fails report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: jb-failure-report
+          path: |
+            ${{ github.workspace }}/extensions/intellij/build/reports

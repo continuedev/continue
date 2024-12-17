@@ -17,7 +17,6 @@ import {
   addContextItemsAtIndex,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import useUpdatingRef from "./useUpdatingRef";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 
@@ -64,7 +63,7 @@ function useSetup() {
         // Init to run on initial config load
         ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
-        dispatch(updateFileSymbolsFromHistory())
+        dispatch(updateFileSymbolsFromHistory());
         dispatch(refreshSessionMetadata({}));
 
         // This triggers sending pending status to the GUI for relevant docs indexes
@@ -98,21 +97,29 @@ function useSetup() {
     // Override persisted state
     dispatch(setInactive());
 
-    // Tell JetBrains the webview is ready
-    ideMessenger.request("onLoad", undefined).then((result) => {
-      if (result.status === "error") {
-        return;
-      }
-      const msg = result.content;
-      (window as any).windowId = msg.windowId;
-      (window as any).serverUrl = msg.serverUrl;
-      (window as any).workspacePaths = msg.workspacePaths;
-      (window as any).vscMachineId = msg.vscMachineId;
-      (window as any).vscMediaUrl = msg.vscMediaUrl;
-    });
-
-    // Save theme colors to local storage for immediate loading in JetBrains
     if (isJetBrains()) {
+      // Save theme colors to local storage for immediate loading in JetBrains
+      ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
+        Object.keys(result).forEach((key) => {
+          document.body.style.setProperty(key, result[key]);
+          document.documentElement.style.setProperty(key, result[key]);
+        });
+      });
+
+      // Tell JetBrains the webview is ready
+      ideMessenger.request("jetbrains/onLoad", undefined).then((result) => {
+        if (result.status === "error") {
+          return;
+        }
+
+        const msg = result.content;
+        (window as any).windowId = msg.windowId;
+        (window as any).serverUrl = msg.serverUrl;
+        (window as any).workspacePaths = msg.workspacePaths;
+        (window as any).vscMachineId = msg.vscMachineId;
+        (window as any).vscMediaUrl = msg.vscMediaUrl;
+      });
+
       for (const colorVar of VSC_THEME_COLOR_VARS) {
         if (document.body.style.getPropertyValue(colorVar)) {
           localStorage.setItem(
@@ -151,13 +158,6 @@ function useSetup() {
 
   useWebviewListener("setTTSActive", async (status) => {
     dispatch(setTTSActive(status));
-  });
-
-  useWebviewListener("setColors", async (colors) => {
-    Object.keys(colors).forEach((key) => {
-      document.body.style.setProperty(key, colors[key]);
-      document.documentElement.style.setProperty(key, colors[key]);
-    });
   });
 
   useWebviewListener("configError", async (error) => {

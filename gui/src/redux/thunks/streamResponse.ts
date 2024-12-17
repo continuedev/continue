@@ -4,18 +4,18 @@ import { InputModifiers, MessageContent, SlashCommandDescription } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderChatMessage } from "core/util/messageContent";
 import posthog from "posthog-js";
+import { v4 as uuidv4 } from "uuid";
+import { selectDefaultModel } from "../slices/configSlice";
 import {
   submitEditorAndInitAtIndex,
   updateHistoryItemAtIndex,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { gatherContext } from "./gatherContext";
-import { streamThunkWrapper } from "./streamThunkWrapper";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamSlashCommand } from "./streamSlashCommand";
-import { selectDefaultModel } from "../slices/configSlice";
-import { v4 as uuidv4 } from "uuid";
+import { streamThunkWrapper } from "./streamThunkWrapper";
 
 const getSlashCommandForInput = (
   input: MessageContent,
@@ -61,6 +61,7 @@ export const streamResponseThunk = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
+        const useTools = state.ui.useTools;
         const defaultModel = selectDefaultModel(state);
         const slashCommands = state.config.config.slashCommands || [];
         const inputIndex = index ?? state.session.history.length;
@@ -94,7 +95,12 @@ export const streamResponseThunk = createAsyncThunk<
 
         // Construct messages from updated history
         const updatedHistory = getState().session.history;
-        const messages = constructMessages(updatedHistory, defaultModel.model);
+        const messages = constructMessages(
+          updatedHistory,
+          defaultModel.model,
+          defaultModel.provider,
+          useTools,
+        );
 
         posthog.capture("step run", {
           step_name: "User Input",

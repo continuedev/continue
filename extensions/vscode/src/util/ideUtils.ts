@@ -74,49 +74,6 @@ export class VsCodeIdeUtils {
     return getUniqueId();
   }
 
-  private _lastDecorationType: vscode.TextEditorDecorationType | null = null;
-  async highlightCode(uri: vscode.Uri, range: Range, color: string) {
-    const vsCodeRange = new vscode.Range(
-      range.start.line,
-      range.start.character,
-      range.end.line,
-      range.end.character,
-    );
-    const editor = await openEditorAndRevealRange(
-      uri,
-      vsCodeRange,
-      vscode.ViewColumn.One,
-    );
-    if (editor) {
-      const decorationType = vscode.window.createTextEditorDecorationType({
-        backgroundColor: color,
-        isWholeLine: true,
-      });
-      editor.setDecorations(decorationType, [vsCodeRange]);
-
-      const cursorDisposable = vscode.window.onDidChangeTextEditorSelection(
-        (event) => {
-          if (
-            URI.equal(event.textEditor.document.uri.toString(), uri.toString())
-          ) {
-            cursorDisposable.dispose();
-            editor.setDecorations(decorationType, []);
-          }
-        },
-      );
-
-      setTimeout(() => {
-        cursorDisposable.dispose();
-        editor.setDecorations(decorationType, []);
-      }, 2500);
-
-      if (this._lastDecorationType) {
-        editor.setDecorations(this._lastDecorationType, []);
-      }
-      this._lastDecorationType = decorationType;
-    }
-  }
-
   showSuggestion(uri: vscode.Uri, range: Range, suggestion: string) {
     showSuggestionInEditor(
       uri,
@@ -215,14 +172,6 @@ export class VsCodeIdeUtils {
       .flat()
       .filter(Boolean) // filter out undefined values
       .filter((uri) => this.documentIsCode(uri)); // Filter out undesired documents
-  }
-
-  getVisibleFiles(): vscode.Uri[] {
-    return vscode.window.visibleTextEditors
-      .filter((editor) => this.documentIsCode(editor.document.uri))
-      .map((editor) => {
-        return editor.document.uri;
-      });
   }
 
   saveFile(uri: vscode.Uri) {
@@ -541,32 +490,5 @@ export class VsCodeIdeUtils {
     }
 
     return diffs.flatMap((diff) => this.splitDiff(diff));
-  }
-
-  getHighlightedCode(): RangeInFile[] {
-    // TODO
-    const rangeInFiles: RangeInFile[] = [];
-    vscode.window.visibleTextEditors
-      .filter((editor) => this.documentIsCode(editor.document.uri))
-      .forEach((editor) => {
-        editor.selections.forEach((selection) => {
-          // if (!selection.isEmpty) {
-          rangeInFiles.push({
-            filepath: editor.document.uri.toString(),
-            range: {
-              start: {
-                line: selection.start.line,
-                character: selection.start.character,
-              },
-              end: {
-                line: selection.end.line,
-                character: selection.end.character,
-              },
-            },
-          });
-          // }
-        });
-      });
-    return rangeInFiles;
   }
 }

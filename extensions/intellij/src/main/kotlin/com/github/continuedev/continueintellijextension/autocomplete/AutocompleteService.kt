@@ -1,9 +1,8 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
-import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.google.gson.Gson
+import com.github.continuedev.continueintellijextension.utils.uuid
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.application.*
 import com.intellij.openapi.components.Service

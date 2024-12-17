@@ -9,7 +9,15 @@ import {
   vscForeground,
   vscInputBackground,
 } from "..";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import {
+  selectHasCodeToEdit,
+  selectIsInEditMode,
+} from "../../redux/slices/sessionSlice";
+import { exitEditMode } from "../../redux/thunks";
+import { loadLastSession } from "../../redux/thunks/session";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -20,14 +28,6 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import HoverItem from "./InputToolbar/HoverItem";
 import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
-import {
-  selectHasCodeToEdit,
-  selectIsInEditMode,
-} from "../../redux/slices/sessionSlice";
-import { exitEditMode } from "../../redux/thunks";
-import { loadLastSession } from "../../redux/thunks/session";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -93,7 +93,7 @@ function InputToolbar(props: InputToolbarProps) {
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
   const shouldRenderToolsButton =
     defaultModel &&
-    modelSupportsTools(defaultModel.model) &&
+    modelSupportsTools(defaultModel.model, defaultModel.provider) &&
     !props.toolbarOptions?.hideTools;
 
   const supportsImages =
@@ -133,11 +133,15 @@ function InputToolbar(props: InputToolbarProps) {
                   />
                   <HoverItem>
                     <PhotoIcon
-                      className="h-4 w-4"
+                      className="h-4 w-4 hover:brightness-125"
+                      data-tooltip-id="image-tooltip"
                       onClick={(e) => {
                         fileInputRef.current?.click();
                       }}
                     />
+                    <ToolTip id="image-tooltip" place="top-middle">
+                      Attach an image
+                    </ToolTip>
                   </HoverItem>
                 </>
               ))}
@@ -145,10 +149,10 @@ function InputToolbar(props: InputToolbarProps) {
               <HoverItem onClick={props.onAddContextItem}>
                 <AtSymbolIcon
                   data-tooltip-id="add-context-item-tooltip"
-                  className="h-4 w-4"
+                  className="h-4 w-4 hover:brightness-125"
                 />
 
-                <ToolTip id="add-context-item-tooltip" place="top-start">
+                <ToolTip id="add-context-item-tooltip" place="top-middle">
                   Add context (files, docs, urls, etc.)
                 </ToolTip>
               </HoverItem>

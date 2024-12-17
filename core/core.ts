@@ -247,11 +247,6 @@ export class Core {
       void this.configHandler.reloadConfig();
     });
 
-    on("config/addOpenAiKey", (msg) => {
-      addOpenAIKey(msg.data);
-      void this.configHandler.reloadConfig();
-    });
-
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
       void this.configHandler.reloadConfig();

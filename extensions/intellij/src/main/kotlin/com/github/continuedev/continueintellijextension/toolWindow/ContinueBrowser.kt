@@ -1,13 +1,11 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
-import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.constants.MessageTypes
-import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
-import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.uuid
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -15,56 +13,60 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.*
-import kotlinx.coroutines.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 
 class ContinueBrowser(val project: Project, url: String) {
-    private val coroutineScope = CoroutineScope(
-        SupervisorJob() + Dispatchers.Default
-    )
-
-    private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
-
     private val PASS_THROUGH_TO_CORE = listOf(
-        "ping",
         "abort",
         "history/list",
         "history/delete",
         "history/load",
         "history/save",
         "devdata/log",
-        "config/addOpenAiKey",
         "config/addModel",
+        "config/newPromptFile",
         "config/ideSettingsUpdate",
         "config/getSerializedProfileInfo",
         "config/deleteModel",
-        "config/newPromptFile",
-        "config/reload",
+        "config/listProfiles",
+        "config/openProfile",
         "context/getContextItems",
+        "context/getSymbolsForFiles",
         "context/loadSubmenuItems",
         "context/addDocs",
+        "context/removeDocs",
+        "context/indexDocs",
         "autocomplete/complete",
         "autocomplete/cancel",
         "autocomplete/accept",
         "command/run",
+        "tts/kill",
         "llm/complete",
         "llm/streamComplete",
         "llm/streamChat",
         "llm/listModels",
         "streamDiffLines",
+        "chatDescriber/describe",
         "stats/getTokensPerDay",
         "stats/getTokensPerModel",
+        // Codebase
         "index/setPaused",
         "index/forceReIndex",
         "index/indexingProgressBarInitialized",
+        // Docs, etc.
+        "indexing/reindex",
+        "indexing/abort",
+        "indexing/setPaused",
+        "docs/getSuggestedDocs",
+        "docs/initStatuses",
+        //
         "completeOnboarding",
         "addAutocompleteModel",
-        "config/listProfiles",
         "profiles/switch",
         "didChangeSelectedProfile",
-        "context/getSymbolsForFiles",
+        "tools/call",
     )
 
     private fun registerAppSchemeHandler() {
@@ -93,6 +95,7 @@ class ContinueBrowser(val project: Project, url: String) {
 
         // Listen for events sent from browser
         val myJSQueryOpenInBrowser = JBCefJSQuery.create((browser as JBCefBrowserBase?)!!)
+
         myJSQueryOpenInBrowser.addHandler { msg: String? ->
             val parser = JsonParser()
             val json: JsonObject = parser.parse(msg).asJsonObject
@@ -105,16 +108,14 @@ class ContinueBrowser(val project: Project, url: String) {
                 ContinuePluginService::class.java
             )
 
-            val ide = continuePluginService.ideProtocolClient;
 
             val respond = fun(data: Any?) {
                 // This matches the way that we expect receive messages in IdeMessenger.ts (gui)
                 // and the way they are sent in VS Code (webviewProtocol.ts)
-                var result: Map<String, Any?>? = null
-                if (MessageTypes.generatorTypes.contains(messageType)) {
-                    result = data as? Map<String, Any?>
+                var result: Map<String, Any?>? = if (MessageTypes.generatorTypes.contains(messageType)) {
+                    data as? Map<String, Any?>
                 } else {
-                    result = mutableMapOf(
+                    mutableMapOf(
                         "status" to "success",
                         "done" to false,
                         "content" to data
@@ -129,97 +130,9 @@ class ContinueBrowser(val project: Project, url: String) {
                 return@addHandler null
             }
 
-            when (messageType) {
-                "jetbrains/editorInsetHeight" -> {
-                    val height = data.asJsonObject.get("height").asInt
-                    heightChangeListeners.forEach { it(height) }
-                }
-
-                "jetbrains/isOSREnabled" -> {
-                    respond(isOSREnabled)
-                }
-
-                "onLoad" -> {
-                    coroutineScope.launch {
-                        // Set the colors to match Intellij theme
-                        val colors = GetTheme().getTheme();
-                        sendToWebview("setColors", colors)
-
-                        val jsonData = mutableMapOf(
-                            "windowId" to continuePluginService.windowId,
-                            "workspacePaths" to continuePluginService.workspacePaths,
-                            "vscMachineId" to getMachineUniqueID(),
-                            "vscMediaUrl" to "http://continue",
-                        )
-                        respond(jsonData)
-                    }
-
-                }
-
-                "showLines" -> {
-                    val data = data.asJsonObject
-                    ide?.setFileOpen(data.get("filepath").asString)
-                    ide?.highlightCode(
-                        RangeInFile(
-                            data.get("filepath").asString,
-                            Range(
-                                Position(
-                                    data.get("start").asInt,
-                                    0
-                                ), Position(
-                                    data.get("end").asInt,
-                                    0
-                                )
-                            ),
-
-                            ), "#00ff0022"
-                    )
-                }
-
-                "showTutorial" -> {
-                    showTutorial(project)
-                }
-
-                "showVirtualFile" -> {
-                    val data = data.asJsonObject
-                    ide?.showVirtualFile(data.get("name").asString, data.get("content").asString)
-                }
-
-                "showFile" -> {
-                    val data = data.asJsonObject
-                    ide?.setFileOpen(data.get("filepath").asString)
-                }
-
-                "reloadWindow" -> {}
-
-                "readRangeInFile" -> {
-                    val data = data.asJsonObject
-                    ide?.readRangeInFile(
-                        RangeInFile(
-                            data.get("filepath").asString,
-                            Range(
-                                Position(
-                                    data.get("start").asInt,
-                                    0
-                                ), Position(
-                                    data.get("end").asInt + 1,
-                                    0
-                                )
-                            ),
-                        )
-                    )
-                }
-
-                "focusEditor" -> {}
-
-                // IDE //
-                else -> {
-                    if (msg != null) {
-                        ide?.handleMessage(msg, respond)
-                    }
-                }
+            if (msg != null) {
+                continuePluginService.ideProtocolClient?.handleMessage(msg, respond)
             }
-
 
             null
         }

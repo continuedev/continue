@@ -118,6 +118,22 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 }
 
 (async () => {
+  // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
+  // This is only needed for our `pkg` command
+  fs.writeFileSync(
+    "out/package.json",
+    JSON.stringify(
+      {
+        name: "binary",
+        version: "1.0.0",
+        author: "Continue Dev, Inc",
+        license: "Apache-2.0",
+      },
+      undefined,
+      2,
+    ),
+  );
+
   console.log("[info] Downloading prebuilt lancedb...");
   for (const target of targets) {
     if (targetToLanceDb[target]) {
@@ -236,21 +252,6 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     execCmdSync(`curl -L -o ${targetDir}/build.tar.gz ${downloadUrl}`);
     execCmdSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
 
-    // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
-    fs.writeFileSync(
-      `${targetDir}/package.json`,
-      JSON.stringify(
-        {
-          name: "binary",
-          version: "1.0.0",
-          author: "Continue Dev, Inc",
-          license: "Apache-2.0",
-        },
-        undefined,
-        2,
-      ),
-    );
-
     // Copy to build directory for testing
     try {
       const [platform, arch] = target.split("-");
@@ -274,6 +275,11 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       `${targetDir}/index.node`,
     );
   }
+
+  // Our dummy `package.json` is no longer needed so we can remove it.
+  // If it isn't removed, then running locally via `node out/index.js` will fail
+  // with a `Failed to locate bindings` error
+  fs.unlinkSync("out/package.json");
 
   const pathsToVerify = [];
   for (target of targets) {
