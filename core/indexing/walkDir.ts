@@ -168,7 +168,7 @@ class DFSWalker {
       }
     }
     for (const ig of ignoreContexts) {
-      // remove the directory name and path seperator from the match path, unless this an ignore file
+      // remove the directory name and path separator from the match path, unless this an ignore file
       // in the root directory
       const prefixLength = ig.dirname.length === 0 ? 0 : ig.dirname.length + 1;
       // The ignore library expects a path relative to the ignore file location

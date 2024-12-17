@@ -4,7 +4,7 @@ import path from "path";
 import { localPathToUri, localPathOrUriToPath } from "../util/pathToUri";
 
 // Want this outside of the git repository so we can change branches in tests
-const TEST_DIR_PATH = path.join(os.tmpdir(), "testWorkspaceDir");
+export const TEST_DIR_PATH = path.join(os.tmpdir(), "testWorkspaceDir");
 export const TEST_DIR = localPathToUri(TEST_DIR_PATH); // URI
 
 export function setUpTestDir() {
@@ -43,7 +43,7 @@ export function addToTestDir(pathsOrUris: (string | string[])[]) {
     if (Array.isArray(p)) {
       fs.writeFileSync(filepath, p[1]);
     } else if (p.endsWith("/")) {
-      fs.mkdirSync(filepath, { recursive: true });
+      fs.mkdirSync(p, { recursive: true });
     } else {
       fs.writeFileSync(filepath, "");
     }
