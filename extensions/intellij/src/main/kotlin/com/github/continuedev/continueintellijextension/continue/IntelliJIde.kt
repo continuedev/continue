@@ -1,6 +1,5 @@
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
-import com.github.continuedev.continueintellijextension.`continue`.DiffManager
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.OS
@@ -178,16 +177,14 @@ class IntelliJIDE(
         val configs = mutableListOf<String>()
 
         for (workspaceDir in workspaceDirs) {
-            val workspacePath = File(workspaceDir)
-            val dir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
+            val dir = VirtualFileManager.getInstance().findFileByUrl(workspaceDir)
             if (dir != null) {
-                val contents = dir.children.map { it.name }
+                val contents = dir.children.map { it.url }
 
                 // Find any .continuerc.json files
                 for (file in contents) {
                     if (file.endsWith(".continuerc.json")) {
-                        val filePath = workspacePath.resolve(file)
-                        val fileContent = File(filePath.toString()).readText()
+                        val fileContent = File(URI(file)).readText()
                         configs.add(fileContent)
                     }
                 }

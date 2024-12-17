@@ -173,7 +173,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                     // Collect all relevant URIs for content changes
                     val changedURIs = events.filterIsInstance<VFileContentChangeEvent>()
                         .map { event -> event.file.url }
-                    
+
                     // Send "files/changed" message if there are any content changes
                     if (changedURIs.isNotEmpty()) {
                         val data = mapOf("files" to changedURIs)
@@ -220,12 +220,10 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             // Reload the WebView
             continuePluginService?.let { pluginService ->
                 val allModulePaths = ModuleManager.getInstance(project).modules
-                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.path } }
-                    .map { Paths.get(it).normalize() }
+                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.url } }
 
                 val topLevelModulePaths = allModulePaths
                     .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
-                    .map { it.toString() }
 
                 pluginService.workspacePaths = topLevelModulePaths.toTypedArray()
             }

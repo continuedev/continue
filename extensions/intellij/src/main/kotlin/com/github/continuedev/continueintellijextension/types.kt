@@ -115,8 +115,6 @@ interface IDE {
 
     suspend fun getAvailableThreads(): List<Thread>
 
-    suspend fun listFolders(): List<String>
-
     suspend fun getWorkspaceDirs(): List<String>
 
     suspend fun getWorkspaceConfigs(): List<ContinueRcJson>
