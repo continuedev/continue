@@ -11,6 +11,8 @@ Pre-release Changes
 ### Fixed
 * Display more mid-line completions
 * Restored syntax highlighting
+* Fix tool use bug for models that don't support tools
+* Autodetect mistral API key type
 
 ## 0.8.62 - 2024-12-10
 ### Added
