@@ -326,6 +326,10 @@ jobs:
       - name: Start test IDE
         run: |
           cd extensions/intellij
+          export DISPLAY=:99.0
+          Xvfb -ac :99 -screen 0 1920x1080x24 &
+          sleep 10
+          mkdir -p build/reports
           ./gradlew runIdeForUiTests &
 
       - name: Wait for JB connection
@@ -338,6 +342,7 @@ jobs:
       - name: Run tests
         run: |
           cd extensions/intellij
+          export DISPLAY=:99.0
           ./gradlew test
 
       - name: Move video
