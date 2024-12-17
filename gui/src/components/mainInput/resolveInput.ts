@@ -194,7 +194,7 @@ async function resolveEditorContent({
   }
 
   if (shouldGatherContext) {
-    dispatch(setIsGatheringContext(true));
+    dispatch(setIsGatheringContext(false));
   }
 
   return [contextItems, selectedCode, parts];

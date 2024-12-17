@@ -44,13 +44,6 @@ export const gatherContext = createAsyncThunk<
     }
 
     // Resolve context providers and construct new history
-    const shouldGatherContext =
-      modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
-
-    if (shouldGatherContext) {
-      dispatch(setIsGatheringContext(true));
-    }
-
     let [selectedContextItems, selectedCode, content] =
       await resolveEditorContent({
         editorState,
