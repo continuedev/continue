@@ -540,10 +540,6 @@ class IntelliJIDE(
         throw NotImplementedError("onDidChangeActiveTextEditor not implemented yet")
     }
 
-    override suspend fun pathSep(): String {
-        return File.separator
-    }
-
     private fun setFileOpen(filepath: String, open: Boolean = true) {
         val file = LocalFileSystem.getInstance().findFileByPath(filepath)
 
