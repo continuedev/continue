@@ -5,6 +5,7 @@ import * as URI from "uri-js";
         \this\is\afile.ts -> this/is/afile.ts
         is/already/clean -> is/already/clean
   **/
+
 export function pathToUriPathSegment(path: string) {
   let clean = path.replace(/[\\]/g, "/"); // backslashes -> forward slashes
   clean = clean.replace(/^\//, ""); // remove start slash
@@ -13,6 +14,14 @@ export function pathToUriPathSegment(path: string) {
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
+}
+
+export function getCleanUriPath(uri: string) {
+  const path = URI.parse(uri).path;
+  if (!path) {
+    return "";
+  }
+  return pathToUriPathSegment(path);
 }
 
 export function findUriInDirs(
@@ -97,7 +106,16 @@ export function relativePathOrUriToUri(
   Returns just the file or folder name of a URI
 */
 export function getUriPathBasename(uri: string): string {
-  return URI.parse(uri).path?.split("/")?.pop() || "";
+  const cleanPath = getCleanUriPath(uri);
+  return cleanPath.split("/")?.pop() || "";
+}
+
+export function getFileExtensionFromBasename(basename: string) {
+  const parts = basename.split(".");
+  if (parts.length < 2) {
+    return "";
+  }
+  return (parts.slice(-1)[0] ?? "").toLowerCase();
 }
 
 /*
@@ -105,11 +123,7 @@ export function getUriPathBasename(uri: string): string {
 */
 export function getUriFileExtension(uri: string) {
   const baseName = getUriPathBasename(uri);
-  return (baseName.split(".").slice(-1)[0] ?? "").toLowerCase();
-}
-
-export function getFileExtensionFromBasename(filename: string) {
-  return filename.split(".").pop() ?? "";
+  return getFileExtensionFromBasename(baseName);
 }
 
 export function getLastNUriRelativePathParts(
@@ -139,14 +153,14 @@ export function getShortestUniqueRelativeUriPaths(
   const segmentCombinationsMap = new Map<string, number>();
   const segmentsInfo = uris.map((uri) => {
     const { relativePathOrBasename } = findUriInDirs(uri, dirUriCandidates);
-    const segments = relativePathOrBasename.split("/");
+    const cleanPath = pathToUriPathSegment(relativePathOrBasename);
+    const segments = cleanPath.split("/");
     const suffixes: string[] = [];
 
-    // Generate all possible suffix combinations
+    // Generate all possible suffix combinations, starting from the shortest (basename)
     for (let i = segments.length - 1; i >= 0; i--) {
       const suffix = segments.slice(i).join("/");
-      suffixes.unshift(suffix);
-
+      suffixes.push(suffix); // Now pushing in order from shortest to longest
       // Count occurrences of each suffix
       segmentCombinationsMap.set(
         suffix,
@@ -154,20 +168,18 @@ export function getShortestUniqueRelativeUriPaths(
       );
     }
 
-    return { uri, segments, suffixes, relativePathOrBasename };
+    return { uri, segments, suffixes, cleanPath };
   });
-
   // Find shortest unique path for each URI
-  return segmentsInfo.map(({ uri, suffixes, relativePathOrBasename }) => {
-    // Find the first (shortest) unique suffix
-    const uniquePath =
+  return segmentsInfo.map(({ uri, suffixes, cleanPath }) => {
+    // Since suffixes are now ordered from shortest to longest,
+    // the first unique one we find will be the shortest
+    const uniqueCleanPath =
       suffixes.find((suffix) => segmentCombinationsMap.get(suffix) === 1) ??
-      relativePathOrBasename; // case where not unique - perhaps basename
-
-    return { uri, uniquePath };
+      cleanPath; // fallback to full path if no unique suffix found
+    return { uri, uniquePath: decodeURIComponent(uniqueCleanPath) };
   });
 }
-
 // Only used when working with system paths and relative paths
 // Since doesn't account for URI segements before workspace
 export function getLastNPathParts(filepath: string, n: number): string {
