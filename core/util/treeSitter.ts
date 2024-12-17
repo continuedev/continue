@@ -228,7 +228,6 @@ export async function getSymbolsForFile(
   contents: string,
 ): Promise<SymbolWithRange[] | undefined> {
   const parser = await getParserForFile(filepath);
-
   if (!parser) {
     return;
   }
@@ -288,7 +287,6 @@ export async function getSymbolsForFile(
     node.children.forEach(findNamedNodesRecursive);
   }
   findNamedNodesRecursive(tree.rootNode);
-
   return symbols;
 }
 

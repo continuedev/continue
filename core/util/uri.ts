@@ -105,7 +105,7 @@ export function getUriPathBasename(uri: string): string {
 */
 export function getUriFileExtension(uri: string) {
   const baseName = getUriPathBasename(uri);
-  return (baseName.split(".")[-1] ?? "").toLowerCase();
+  return (baseName.split(".").slice(-1)[0] ?? "").toLowerCase();
 }
 
 export function getFileExtensionFromBasename(filename: string) {
