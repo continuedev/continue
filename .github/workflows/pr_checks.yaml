@@ -284,8 +284,6 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-home-cache-cleanup: true
 
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
@@ -298,9 +296,11 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
+      # TODO: Why do we need `npm ci` when we have the cache already?
       - name: Build GUI
         run: |
           cd gui
+          npm ci 
           npm run build
 
       - name: Run prepackage script
