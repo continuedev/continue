@@ -67,7 +67,7 @@ export function toChatBody(
     },
   }));
 
-  return {
+  const params: ChatCompletionCreateParams = {
     messages: messages.map(toChatMessage),
     model: options.model,
     max_tokens: options.maxTokens,
@@ -77,9 +77,12 @@ export function toChatBody(
     presence_penalty: options.presencePenalty,
     stream: options.stream ?? true,
     stop: options.stop,
-    tools,
     prediction: options.prediction,
   };
+  if (tools?.length) {
+    params.tools = tools;
+  }
+  return params;
 }
 
 export function toCompleteBody(
