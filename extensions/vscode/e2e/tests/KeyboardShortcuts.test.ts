@@ -44,8 +44,6 @@ describe("Cmd+L Shortcut Test", () => {
     await editor.setText(text);
     await editor.selectText(text);
 
-    // await driver.sleep(DEFAULT_TIMEOUT.XS);
-
     // Simulate Cmd+L
     await driver
       .actions()
@@ -55,9 +53,6 @@ describe("Cmd+L Shortcut Test", () => {
       .perform();
 
     const { view } = await GUIActions.switchToReactIframe();
-
-    // await GUIActions.selectModelFromDropdown(view, "TEST LLM");
-    // await driver.sleep(DEFAULT_TIMEOUT.SM);
 
     const codeBlock = await TestUtils.waitForSuccess(() =>
       GUISelectors.getInputBoxCodeBlockAtIndex(view, 0),
