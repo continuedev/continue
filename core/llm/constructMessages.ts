@@ -1,9 +1,9 @@
-import { ChatHistoryItem, ChatMessage, MessagePart } from "../index.js";
-import { normalizeToMessageParts } from "../util/messageContent.js";
+import { ChatHistoryItem, ChatMessage, MessagePart } from "../";
+import { normalizeToMessageParts } from "../util/messageContent";
 
-import { modelSupportsTools } from "./autodetect.js";
+import { modelSupportsTools } from "./autodetect";
 
-const CUSTOM_SYS_MSG_MODEL_FAMILIES = ["sonnet", "gpt-4o", "mistral-large"];
+const CUSTOM_SYS_MSG_MODEL_FAMILIES = ["sonnet"];
 
 const SYSTEM_MESSAGE = `When generating new code:
 
