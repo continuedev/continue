@@ -305,7 +305,7 @@ jobs:
 
       - name: Run prepackage script
         run: |
-          cd ../../extensions/vscode
+          cd extensions/vscode
           npm ci
           npm run prepackage
         env:
