@@ -98,7 +98,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     const relativePaths = getShortestUniqueRelativeUriPaths(
       [
         ...snippets.map((snippet) =>
-          "filepath" in snippet ? snippet.filepath : "Untitled.txt",
+          "filepath" in snippet ? snippet.filepath : "file:///Untitled.txt",
         ),
         filepath,
       ],

@@ -27,7 +27,7 @@ const formatClipboardSnippet = (
 ): AutocompleteCodeSnippet => {
   return formatCodeSnippet(
     {
-      filepath: "Untitled.txt",
+      filepath: "file:///Untitled.txt",
       content: snippet.content,
       type: AutocompleteSnippetType.Code,
     },
