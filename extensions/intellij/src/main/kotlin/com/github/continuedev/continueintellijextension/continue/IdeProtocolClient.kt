@@ -548,7 +548,7 @@ class IdeProtocolClient(
             val endChar = endOffset - document.getLineStartOffset(endLine)
 
             return@runReadAction RangeInFileWithContents(
-                virtualFile.path, Range(
+                virtualFile.url, Range(
                     Position(startLine, startChar),
                     Position(endLine, endChar)
                 ), selectedText
