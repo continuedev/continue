@@ -174,15 +174,19 @@ export const saveCurrentSession = createAsyncThunk<
           ?.message?.content?.toString();
 
         if (assistantResponse) {
-          const result = await extra.ideMessenger.request(
-            "chatDescriber/describe",
-            {
-              text: assistantResponse,
-              selectedModelTitle: state.config.defaultModelTitle,
-            },
-          );
-          if (result.status === "success" && result.content) {
-            title = result.content;
+          try {
+            const result = await extra.ideMessenger.request(
+              "chatDescriber/describe",
+              {
+                text: assistantResponse,
+                selectedModelTitle: state.config.defaultModelTitle,
+              },
+            );
+            if (result.status === "success" && result.content) {
+              title = result.content;
+            }
+          } catch (e) {
+            console.error("Error generating chat title", e);
           }
         }
       }

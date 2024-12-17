@@ -1,5 +1,5 @@
 import { ChatMessage, LLMOptions } from "../../index.js";
-import { gptEditPrompt } from "../templates/edit.js";
+import { codestralEditPrompt } from "../templates/edit/codestral.js";
 
 import OpenAI from "./OpenAI.js";
 
@@ -9,7 +9,7 @@ class Mistral extends OpenAI {
     apiBase: "https://api.mistral.ai/v1/",
     model: "codestral-latest",
     promptTemplates: {
-      edit: gptEditPrompt,
+      edit: codestralEditPrompt,
     },
     maxEmbeddingBatchSize: 128,
   };

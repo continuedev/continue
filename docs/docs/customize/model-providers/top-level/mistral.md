@@ -5,7 +5,7 @@ slug: ../mistral
 
 :::info
 
-You can get an API key from the [Mistral Dashboard](https://console.mistral.ai). Note that the API key for Codestral (codestral.mistral.ai) is different from for all other models (api.mistral.ai).
+You can get an API key from the [Mistral Dashboard](https://console.mistral.ai). Note that the API key for Codestral (codestral.mistral.ai) is different from for all other models (api.mistral.ai). If you are using a Codestral API key, you should set the `apiBase` to `https://codestral.mistral.ai/v1`. Otherwise, we will default to using `https://api.mistral.ai/v1`.
 
 :::
 
@@ -36,6 +36,7 @@ We recommend configuring **Codestral** as your autocomplete model.
     "title": "Codestral",
     "provider": "mistral",
     "model": "codestral-latest"
+    // "apiBase": "https://codestral.mistral.ai/v1"  // Do this if you are using a Codestral API key
   }
 }
 ```

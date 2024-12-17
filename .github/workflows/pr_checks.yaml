@@ -1,19 +1,24 @@
 name: PR checks
 
-# on:
-#   pull_request:
-#     branches:
-#       - main
-#     paths:
-#       - "extensions/vscode/**"
-#       - "core/**"
-#       - "gui/**"
-#       - ".github/workflows/**"
-
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "extensions/vscode/**"
+      - "core/**"
+      - "gui/**"
+      - ".github/workflows/**"
+
   push:
     branches:
-      - pe/jb-integration-testing
+      - main
+    paths:
+      - "extensions/intellij/**"
+      - "extensions/vscode/**"
+      - "core/**"
+      - "gui/**"
+      - ".github/workflows/**"
 
 jobs:
   install-root:
@@ -69,194 +74,226 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-  # gui-checks:
-  #   needs: [install-root, core-checks]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: ".nvmrc"
+  gui-checks:
+    needs: [install-root, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: node_modules
-  #         key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: core/node_modules
-  #         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-  #     - uses: actions/cache@v4
-  #       id: gui-cache
-  #       with:
-  #         path: gui/node_modules
-  #         key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+      - uses: actions/cache@v4
+        id: gui-cache
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-  #     - name: Install gui dependencies
-  #       if: steps.gui-cache.outputs.cache-hit != 'true'
-  #       run: |
-  #         cd gui
-  #         npm ci
+      - name: Install gui dependencies
+        if: steps.gui-cache.outputs.cache-hit != 'true'
+        run: |
+          cd gui
+          npm ci
 
-  #     - name: Type check
-  #       run: |
-  #         cd gui
-  #         npx tsc --noEmit
+      - name: Type check
+        run: |
+          cd gui
+          npx tsc --noEmit
 
-  # binary-checks:
-  #   needs: [install-root, core-checks]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: ".nvmrc"
+  binary-checks:
+    needs: [install-root, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: node_modules
-  #         key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: core/node_modules
-  #         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-  #     - uses: actions/cache@v4
-  #       id: binary-cache
-  #       with:
-  #         path: binary/node_modules
-  #         key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
+      - uses: actions/cache@v4
+        id: binary-cache
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-  #     - name: Install binary dependencies
-  #       if: steps.binary-cache.outputs.cache-hit != 'true'
-  #       run: |
-  #         cd binary
-  #         npm ci
+      - name: Install binary dependencies
+        if: steps.binary-cache.outputs.cache-hit != 'true'
+        run: |
+          cd binary
+          npm ci
 
-  #     - name: Type check
-  #       run: |
-  #         cd binary
-  #         npx tsc --noEmit
+      - name: Type check
+        run: |
+          cd binary
+          npx tsc --noEmit
 
-  # vscode-checks:
-  #   needs: [install-root, core-checks]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: ".nvmrc"
+  vscode-checks:
+    needs: [install-root, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: node_modules
-  #         key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: core/node_modules
-  #         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-  #     - uses: actions/cache@v4
-  #       id: vscode-cache
-  #       with:
-  #         path: extensions/vscode/node_modules
-  #         key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+      - uses: actions/cache@v4
+        id: vscode-cache
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-  #     - name: Install vscode dependencies
-  #       if: steps.vscode-cache.outputs.cache-hit != 'true'
-  #       run: |
-  #         cd extensions/vscode
-  #         npm ci
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      - name: Install vscode dependencies
+        if: steps.vscode-cache.outputs.cache-hit != 'true'
+        run: |
+          cd extensions/vscode
+          npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-  #     - name: Type check and lint
-  #       run: |
-  #         cd extensions/vscode
-  #         npx tsc --noEmit
-  #         npm run lint
+      - name: Type check and lint
+        run: |
+          cd extensions/vscode
+          npx tsc --noEmit
+          npm run lint
 
-  # core-tests:
-  #   needs: [core-checks]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: ".nvmrc"
+  core-tests:
+    needs: [core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: core/node_modules
-  #         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-  #     - name: Run core tests
-  #       run: |
-  #         cd core
-  #         npm test
+      - name: Run core tests
+        run: |
+          cd core
+          npm test
 
-  # vscode-tests:
-  #   needs: [vscode-checks, core-checks]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: ".nvmrc"
+  vscode-tests:
+    needs: [vscode-checks, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: extensions/vscode/node_modules
-  #         key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+      - uses: actions/cache@v4
+        id: vscode-node-modules-cache
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: core/node_modules
-  #         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - uses: actions/cache@v4
+        id: core-node-modules-cache
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-  #     - name: Install Xvfb for Linux and run e2e tests
-  #       run: |
-  #         sudo apt-get install -y xvfb # Install Xvfb
-  #         Xvfb :99 & # Start Xvfb
-  #         export DISPLAY=:99 # Export the display number to the environment
-  #         cd extensions/vscode
-  #         npm run package
-  #         npm run e2e:ci
+      - uses: actions/cache@v4
+        id: storage-cache
+        with:
+          path: extensions/vscode/e2e/storage
+          key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-  # gui-tests:
-  #   needs: [gui-checks, core-checks]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: ".nvmrc"
+      - name: Download Dependencies if Cache Miss
+        if: steps.storage-cache.outputs.cache-hit != 'true'
+        run: |
+          cd extensions/vscode
+          npm run e2e:ci:download
 
-  #     - uses: actions/cache@v4
-  #       id: gui-cache
-  #       with:
-  #         path: gui/node_modules
-  #         key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+      - name: Set up SSH
+        env:
+          SSH_KEY: ${{ secrets.GH_ACTIONS_SSH_TEST_KEY_PEM }}
+          SSH_HOST: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: core/node_modules
-  #         key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - name: Install Xvfb for Linux and run e2e tests
+        run: |
+          sudo apt-get install -y xvfb # Install Xvfb
+          Xvfb :99 & # Start Xvfb
+          export DISPLAY=:99 # Export the display number to the environment
+          cd extensions/vscode
+          npm run package
+          npm run e2e:ci:run
 
-  #     - name: Install GUI dependencies
-  #       if: steps.gui-cache.outputs.cache-hit != 'true'
-  #       run: cd gui && npm ci
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      - name: Upload e2e test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: extensions/vscode/e2e/storage/screenshots
 
-  #     - name: Run gui tests
-  #       run: |
-  #         cd gui
-  #         npm test
+  gui-tests:
+    needs: [gui-checks, core-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: gui-cache
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Install GUI dependencies
+        if: steps.gui-cache.outputs.cache-hit != 'true'
+        run: cd gui && npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - name: Run gui tests
+        run: |
+          cd gui
+          npm test
 
   jetbrains-tests:
     needs: [install-root, core-checks]
@@ -278,8 +315,6 @@ jobs:
       - name: Setup FFmpeg
         uses: AnimMouse/setup-ffmpeg@v1
         with:
-          # Not strictly necessary, but it may prevent rate limit
-          # errors especially on GitHub-hosted macos machines.
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Gradle
@@ -296,7 +331,6 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      # TODO: Why do we need `npm ci` when we have the cache already?
       - name: Build GUI
         run: |
           cd gui

@@ -18,10 +18,9 @@
     "provider": "continue-proxy"
   },
   "tabAutocompleteModel": {
-    "title": "Qwen",
-    "provider": "mistral",
-    "model": "codestral-latest",
-    "apiKey": ""
+    "title": "TEST LLM",
+    "provider": "test",
+    "model": "this field is not used"
   },
   "tabAutocompleteOptions": {
     "useCache": false

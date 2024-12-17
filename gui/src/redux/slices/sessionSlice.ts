@@ -369,7 +369,6 @@ export const sessionSlice = createSlice({
         state.curCheckpointIndex = 0;
       }
     },
-
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
       state.title = payload;
     },

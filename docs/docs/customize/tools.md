@@ -21,13 +21,15 @@ Currently custom tools can be configured using the [Model Context Protocol](http
 ```json title="~/.continue/config.json"
 {
   "experimental": {
-    "modelContextProtocolServer": {
-      "transport": {
-        "type": "stdio",
-        "command": "uvx",
-        "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
       }
-    }
+    ]
   }
 }
 ```

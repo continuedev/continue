@@ -144,6 +144,14 @@ function useSetup() {
     [history],
   );
 
+  useWebviewListener(
+    "getCurrentSessionId",
+    async () => {
+      return sessionId
+    },
+    [sessionId],
+  );
+
   useWebviewListener("setInactive", async () => {
     dispatch(setInactive());
   });

@@ -26,8 +26,21 @@ async function resolveAttachment(
 
   // Files
   if (await extras.ide.fileExists(name)) {
+    let subItems: ContextItem[] = [];
+    if (name.endsWith(".prompt")) {
+      // Recurse
+      const [items, _] = await renderPromptFileV2(
+        await extras.ide.readFile(name),
+        extras,
+      );
+      subItems.push(...items);
+    }
+
     const content = `\`\`\`${name}\n${await extras.ide.readFile(name)}\n\`\`\``;
-    return [{ name: getBasename(name), content, description: name }];
+    return [
+      ...subItems,
+      { name: getBasename(name), content, description: name },
+    ];
   }
 
   // URLs

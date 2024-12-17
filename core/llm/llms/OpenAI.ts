@@ -1,4 +1,7 @@
-import { ChatCompletionCreateParams } from "openai/resources/index";
+import {
+  ChatCompletionCreateParams,
+  ChatCompletionMessageParam,
+} from "openai/resources/index";
 
 import {
   ChatMessage,
@@ -47,6 +50,19 @@ const CHAT_ONLY_MODELS = [
   "o1-preview",
   "o1-mini",
 ];
+
+const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
+  return messages?.map((message: any) => {
+    if (message?.role === "system") {
+      return {
+        ...message,
+        role: "user",
+      };
+    }
+
+    return message;
+  });
+};
 
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
@@ -133,9 +149,7 @@ class OpenAI extends BaseLLM {
       finalOptions.max_tokens = undefined;
 
       // b) don't support system message
-      finalOptions.messages = finalOptions.messages?.filter(
-        (message: any) => message?.role !== "system",
-      );
+      finalOptions.messages = formatMessageForO1(finalOptions.messages);
     }
 
     if (options.prediction && this.supportsPrediction(options.model)) {
@@ -150,6 +164,8 @@ class OpenAI extends BaseLLM {
       finalOptions.max_completion_tokens = undefined;
 
       finalOptions.prediction = options.prediction;
+    } else {
+      finalOptions.prediction = undefined;
     }
 
     return finalOptions;
@@ -212,6 +228,36 @@ class OpenAI extends BaseLLM {
     }
   }
 
+  protected modifyChatBody(
+    body: ChatCompletionCreateParams,
+  ): ChatCompletionCreateParams {
+    body.stop = body.stop?.slice(0, this.getMaxStopWords());
+
+    // OpenAI o1-preview and o1-mini:
+    if (this.isO1Model(body.model)) {
+      // a) use max_completion_tokens instead of max_tokens
+      body.max_completion_tokens = body.max_tokens;
+      body.max_tokens = undefined;
+
+      // b) don't support system message
+      body.messages = formatMessageForO1(body.messages);
+    }
+
+    if (body.prediction && this.supportsPrediction(body.model)) {
+      if (body.presence_penalty) {
+        // prediction doesn't support > 0
+        body.presence_penalty = undefined;
+      }
+      if (body.frequency_penalty) {
+        // prediction doesn't support > 0
+        body.frequency_penalty = undefined;
+      }
+      body.max_completion_tokens = undefined;
+    }
+
+    return body;
+  }
+
   protected async *_legacystreamComplete(
     prompt: string,
     signal: AbortSignal,
@@ -264,6 +310,7 @@ class OpenAI extends BaseLLM {
     }
 
     const body = this._convertArgs(options, messages);
+
     // Empty messages cause an error in LM Studio
     body.messages = body.messages.map((m: any) => ({
       ...m,

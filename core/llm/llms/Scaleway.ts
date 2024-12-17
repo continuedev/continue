@@ -1,6 +1,7 @@
 import OpenAI from "./OpenAI";
 
-import { LLMOptions } from "../../index.js";
+import { LLMOptions, CompletionOptions, ChatMessage } from "../../index.js";
+import { ChatCompletionCreateParams } from "openai/resources/index";
 
 
 class Scaleway extends OpenAI {
@@ -21,6 +22,14 @@ class Scaleway extends OpenAI {
 
   protected _convertModelName(model: string) {
     return Scaleway.MODEL_IDS[model] || this.model;
+  }
+  protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]): ChatCompletionCreateParams {
+    // Convert model name in the options before passing to parent
+    const modifiedOptions = {
+      ...options,
+      model: this._convertModelName(options.model)
+    };
+    return super._convertArgs(modifiedOptions, messages);
   }
 }
 

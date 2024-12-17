@@ -133,6 +133,7 @@ const PARALLEL_PROVIDERS: string[] = [
   "nebius",
   "vertexai",
   "function-network",
+  "scaleway",
 ];
 
 function llmCanGenerateInParallel(provider: string, model: string): boolean {

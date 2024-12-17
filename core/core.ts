@@ -35,7 +35,7 @@ import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
-import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -72,7 +72,7 @@ export class Core {
     data: FromCoreProtocol[T][0],
     messageId?: string,
   ): string {
-    return this.messenger.send(messageType, data);
+    return this.messenger.send(messageType, data, messageId);
   }
 
   // TODO: It shouldn't actually need an IDE type, because this can happen
@@ -182,6 +182,8 @@ export class Core {
 
     const on = this.messenger.on.bind(this.messenger);
 
+    // Note, VsCode's in-process messenger doesn't do anything with this
+    // It will only show for jetbrains
     this.messenger.onError((err) => {
       console.error(err);
       void Telemetry.capture("core_messenger_error", {
