@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.pages.idea
 import com.github.continuedev.continueintellijextension.pages.welcomeFrame
 import com.github.continuedev.continueintellijextension.utils.RemoteRobotExtension
 import com.github.continuedev.continueintellijextension.utils.StepsLogger
+import com.github.continuedev.continueintellijextension.utils.getMetaKey
 import com.intellij.remoterobot.RemoteRobot
 import com.intellij.remoterobot.fixtures.ComponentFixture
 import com.intellij.remoterobot.fixtures.JCefBrowserFixture
@@ -77,7 +78,7 @@ class TutorialTest {
                 editor.insertTextAtLine(0, 0, textToInsert)
                 editor.selectText(textToInsert)
                 keyboard {
-                    hotKey(VK_META, VK_J)
+                    hotKey(getMetaKey(), VK_J)
                 }
             }
         }

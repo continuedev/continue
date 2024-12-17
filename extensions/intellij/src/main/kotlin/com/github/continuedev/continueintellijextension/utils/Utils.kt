@@ -2,9 +2,18 @@ package com.github.continuedev.continueintellijextension.utils
 
 import java.net.NetworkInterface
 import java.util.*
+import java.awt.event.KeyEvent.*
 
 enum class OS {
     MAC, WINDOWS, LINUX
+}
+
+fun getMetaKey(): Int {
+    return when (getOS()) {
+        OS.MAC -> VK_META
+        OS.WINDOWS -> VK_CONTROL
+        OS.LINUX -> VK_CONTROL
+    }
 }
 
 fun getOS(): OS {
