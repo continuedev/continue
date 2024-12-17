@@ -194,8 +194,6 @@ interface IDE {
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
-
-    suspend fun pathSep(): String
 }
 
 data class GetGhTokenArgs(

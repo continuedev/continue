@@ -168,19 +168,6 @@ class IntelliJIDE(
         throw NotImplementedError("getAvailableThreads not implemented yet")
     }
 
-    override suspend fun listFolders(): List<String> {
-        val workspacePath = this.workspacePath ?: return emptyList()
-        val folders = mutableListOf<String>()
-        fun findNestedFolders(dirPath: String) {
-            val dir = File(dirPath)
-            val nestedFolders = dir.listFiles { file -> file.isDirectory }?.map { it.absolutePath } ?: emptyList()
-            folders.addAll(nestedFolders)
-            nestedFolders.forEach { folder -> findNestedFolders(folder) }
-        }
-        findNestedFolders(workspacePath)
-        return folders
-    }
-
     override suspend fun getWorkspaceDirs(): List<String> {
         return workspaceDirectories().toList()
     }
