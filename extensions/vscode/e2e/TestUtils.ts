@@ -1,5 +1,9 @@
 import { expect } from "chai";
-import { WebElement, waitForAttributeValue } from "vscode-extension-tester";
+import {
+  Key,
+  WebElement,
+  waitForAttributeValue,
+} from "vscode-extension-tester";
 import { DEFAULT_TIMEOUT } from "./constants";
 
 export class TestUtils {
@@ -69,5 +73,9 @@ export class TestUtils {
 
   public static get isMacOS(): boolean {
     return process.platform === "darwin";
+  }
+
+  public static get osControlKey() {
+    return TestUtils.isMacOS ? Key.META : Key.CONTROL;
   }
 }

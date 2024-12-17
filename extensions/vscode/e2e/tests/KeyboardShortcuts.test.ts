@@ -1,29 +1,26 @@
 import {
   WebDriver,
-  Key,
   VSBrowser,
   EditorView,
   InputBox,
   TextEditor,
   Workbench,
-  waitForAttributeValue,
-  until,
+  WebView,
 } from "vscode-extension-tester";
 import { DEFAULT_TIMEOUT } from "../constants";
-import { GlobalActions } from "../actions/Global.actions";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { GUIActions } from "../actions/GUI.actions";
 import { expect } from "chai";
 import { TestUtils } from "../TestUtils";
-import { Test } from "mocha";
+import { KeyboardShortcutsActions } from "../actions/KeyboardShortcuts.actions";
 
 describe("Cmd+L Shortcut Test", () => {
   let driver: WebDriver;
+  let editor: TextEditor;
+  let view: WebView;
 
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
-
-    await GlobalActions.openTestWorkspace();
 
     await TestUtils.waitForSuccess(async () => {
       await new Workbench().executeCommand("Create: New File...");
@@ -33,26 +30,45 @@ describe("Cmd+L Shortcut Test", () => {
     });
 
     driver = VSBrowser.instance.driver;
+
+    editor = (await new EditorView().openEditor("Untitled-1")) as TextEditor;
   });
 
-  it("should select the current line with Cmd+L", async () => {
+  afterEach(async function () {
+    this.timeout(DEFAULT_TIMEOUT.XL * 1000);
+    await view.switchBack();
+    await editor.clearText();
+    await TestUtils.waitForSuccess(
+      async () => (await GUISelectors.getContinueExtensionBadge(view)).click(),
+      DEFAULT_TIMEOUT.XS,
+    );
+
+    await new EditorView().closeAllEditors();
+  });
+
+  it("Should not create a code block when Cmd+L is pressed without text highlighted", async () => {
     const text = "Hello, world!";
 
-    const editor = (await new EditorView().openEditor(
-      "Untitled-1",
-    )) as TextEditor;
+    await editor.setText(text);
+
+    await KeyboardShortcutsActions.executeFocusContinueInput(driver);
+
+    ({ view } = await GUIActions.switchToReactIframe());
+
+    await TestUtils.expectNoElement(async () => {
+      return GUISelectors.getInputBoxCodeBlockAtIndex(view, 0);
+    }, DEFAULT_TIMEOUT.XS);
+  }).timeout(DEFAULT_TIMEOUT.XL);
+
+  it("Should create a code block when Cmd+L is pressed with text highlighted", async () => {
+    const text = "Hello, world!";
+
     await editor.setText(text);
     await editor.selectText(text);
 
-    // Simulate Cmd+L
-    await driver
-      .actions()
-      .keyDown(TestUtils.isMacOS ? Key.META : Key.CONTROL)
-      .sendKeys("l")
-      .keyUp(Key.META)
-      .perform();
+    await KeyboardShortcutsActions.executeFocusContinueInput(driver);
 
-    const { view } = await GUIActions.switchToReactIframe();
+    ({ view } = await GUIActions.switchToReactIframe());
 
     const codeBlock = await TestUtils.waitForSuccess(() =>
       GUISelectors.getInputBoxCodeBlockAtIndex(view, 0),
