@@ -14,8 +14,8 @@ describe("ctxItemToRifWithContents", () => {
     const expected: RangeInFileWithContents = {
       filepath: "/path/to/file",
       range: {
-        start: { line: 9, character: 0 },
-        end: { line: 19, character: 0 },
+        start: { line: 10, character: 0 },
+        end: { line: 20, character: 0 },
       },
       contents: "function content",
     };
@@ -57,8 +57,8 @@ describe("ctxItemToRifWithContents", () => {
     const expected: RangeInFileWithContents = {
       filepath: "",
       range: {
-        start: { line: 9, character: 0 },
-        end: { line: 19, character: 0 },
+        start: { line: 10, character: 0 },
+        end: { line: 20, character: 0 },
       },
       contents: "function content",
     };
@@ -78,8 +78,8 @@ describe("ctxItemToRifWithContents", () => {
     const expected: RangeInFileWithContents = {
       filepath: "",
       range: {
-        start: { line: 9, character: 0 },
-        end: { line: 19, character: 0 },
+        start: { line: 10, character: 0 },
+        end: { line: 20, character: 0 },
       },
       contents: "function content",
     };
@@ -115,8 +115,8 @@ describe("ctxItemToRifWithContents", () => {
     const expected: RangeInFileWithContents = {
       filepath: "/path/to/file",
       range: {
-        start: { line: 9, character: 0 },
-        end: { line: 19, character: 0 },
+        start: { line: 10, character: 0 },
+        end: { line: 20, character: 0 },
       },
       contents: "function content",
     };
@@ -137,8 +137,8 @@ describe("ctxItemToRifWithContents", () => {
     const expected: RangeInFileWithContents = {
       filepath: "/path/to/file",
       range: {
-        start: { line: 9, character: 0 },
-        end: { line: 19, character: 0 },
+        start: { line: 10, character: 0 },
+        end: { line: 20, character: 0 },
       },
       contents: "function content",
     };
