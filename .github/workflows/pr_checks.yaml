@@ -437,18 +437,11 @@ jobs:
         env:
           DISPLAY: :99
 
-      - name: Set artifact name
-        id: set_artifact_name
-        shell: bash
-        run: |
-          ARTIFACT_NAME="e2e-screenshots-$(echo '${{ matrix.test_file }}' | tr '/' '_')"
-          echo "artifact_name=$ARTIFACT_NAME" >> $GITHUB_OUTPUT
-
       - name: Upload e2e test screenshots
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_artifact_name.outputs.artifact_name }}
+          name: e2e-failure-screenshots
           path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
