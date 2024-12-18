@@ -539,7 +539,7 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  <OnboardingCard activeTab={onboardingCard.activeTab} />
+                  <OnboardingCard />
                 </div>
               )}
 
