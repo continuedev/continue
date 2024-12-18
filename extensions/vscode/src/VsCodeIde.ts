@@ -27,6 +27,7 @@ import type {
   RangeInFile,
   Thread,
 } from "core";
+import { findUriInDirs } from "core/util/uri";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -486,7 +487,7 @@ class VsCodeIde implements IDE {
   }
 
   private async _searchDir(query: string, dir: string): Promise<string> {
-    const relativeDir = vscode.workspace.asRelativePath(dir);
+    const relativeDir = vscode.Uri.parse(dir).fsPath;
     const ripGrepUri = vscode.Uri.joinPath(
       getExtensionUri(),
       "out/node_modules/@vscode/ripgrep/bin/rg",
