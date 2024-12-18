@@ -3,6 +3,7 @@ import {
   clearCodeToEdit,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
+  setMainEditorContentTrigger,
   setMode,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -31,6 +32,7 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
 
     dispatch(clearCodeToEdit());
     dispatch(setEditDone());
+    dispatch(setMainEditorContentTrigger(undefined));
 
     extra.ideMessenger.post("edit/exit", {
       shouldFocusEditor: isSingleRangeEditOrInsertion,
