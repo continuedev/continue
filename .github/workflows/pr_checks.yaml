@@ -39,7 +39,7 @@ jobs:
         if: steps.root-cache.outputs.cache-hit != 'true'
         run: npm ci
 
-  core-checks:
+  install-core:
     needs: install-root
     runs-on: ubuntu-latest
     steps:
@@ -66,6 +66,27 @@ jobs:
           cd core
           npm ci
 
+  core-checks:
+    needs: install-core
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: root-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: core-cache
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
       - name: Type check and lint
         run: |
           cd core
@@ -74,8 +95,8 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-  gui-checks:
-    needs: [install-root, core-checks]
+  install-gui:
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -105,13 +126,38 @@ jobs:
           cd gui
           npm ci
 
+  gui-checks:
+    needs: install-gui
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: gui-cache
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
       - name: Type check
         run: |
           cd gui
           npx tsc --noEmit
 
   binary-checks:
-    needs: [install-root, core-checks]
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -146,8 +192,8 @@ jobs:
           cd binary
           npx tsc --noEmit
 
-  vscode-checks:
-    needs: [install-root, core-checks]
+  install-vscode:
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -179,6 +225,31 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
+  vscode-checks:
+    needs: install-vscode
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: vscode-cache
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
       - name: Type check and lint
         run: |
           cd extensions/vscode
@@ -186,7 +257,7 @@ jobs:
           npm run lint
 
   core-tests:
-    needs: [core-checks]
+    needs: install-core
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -204,9 +275,38 @@ jobs:
           cd core
           npm test
 
-  vscode-tests:
-    needs: [vscode-checks, core-checks]
+  vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
+    needs: [install-root, install-vscode]
+    outputs:
+      test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - name: Get test files
+        id: vscode-get-test-file-matrix
+        run: |
+          cd extensions/vscode
+          npm ci
+          npm run e2e:compile
+          FILES=$(ls -1 e2e/_output/tests/*.test.js | jq -R . | jq -s .)
+          echo "test_file_matrix<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Debug Outputs
+        run: |
+          echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
+
+  vscode-package-extension:
+    runs-on: ubuntu-latest
+    needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -225,17 +325,87 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
+      - name: Package extension
+        run: |
+          cd extensions/vscode
+          npm run package
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-extension-build
+          path: extensions/vscode/build
+
+  vscode-download-e2e-dependencies:
+    runs-on: ubuntu-latest
+    needs: [install-vscode, install-core]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
       - uses: actions/cache@v4
         id: storage-cache
         with:
           path: extensions/vscode/e2e/storage
           key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Download Dependencies if Cache Miss
+      - name: Download Dependencies
         if: steps.storage-cache.outputs.cache-hit != 'true'
         run: |
           cd extensions/vscode
           npm run e2e:ci:download
+
+      - name: Upload e2e dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: vscode-e2e-dependencies
+          path: extensions/vscode/e2e/storage
+
+  vscode-e2e-tests:
+    name: ${{ matrix.test_file }}"
+    needs:
+      [
+        vscode-download-e2e-dependencies,
+        vscode-get-test-file-matrix,
+        vscode-package-extension,
+        install-vscode,
+        install-core,
+      ]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        id: vscode-node-modules-cache
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vscode-extension-build
+          path: extensions/vscode/build
+
+      - name: Download e2e dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: vscode-e2e-dependencies
+          path: extensions/vscode/e2e/storage
+
+      - name: Fix VSCode binary permissions
+        run: |
+          chmod +x extensions/vscode/e2e/storage/VSCode-linux-x64/code
+          chmod +x extensions/vscode/e2e/storage/chromedriver-linux64/chromedriver
 
       - name: Set up SSH
         env:
@@ -248,24 +418,28 @@ jobs:
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
           echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
 
-      - name: Install Xvfb for Linux and run e2e tests
+      - name: Set up Xvfb
         run: |
-          sudo apt-get install -y xvfb # Install Xvfb
-          Xvfb :99 & # Start Xvfb
-          export DISPLAY=:99 # Export the display number to the environment
+          Xvfb :99 &
+          export DISPLAY=:99
+
+      - name: Run e2e tests
+        run: |
           cd extensions/vscode
-          npm run package
-          npm run e2e:ci:run
+          TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run
+
+        env:
+          DISPLAY: :99
 
       - name: Upload e2e test screenshots
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-screenshots
+          name: e2e-screenshots-${{ matrix.test_file }}
           path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
-    needs: [gui-checks, core-checks]
+    needs: [install-gui, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -296,7 +470,7 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [install-root, core-checks]
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -331,12 +505,7 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Build GUI
-        run: |
-          cd gui
-          npm ci 
-          npm run build
-
+      # We can shave off another minute off our CI script by finding a way to share this with vscode-tests
       - name: Run prepackage script
         run: |
           cd extensions/vscode
@@ -371,7 +540,7 @@ jobs:
         with:
           url: http://127.0.0.1:8082
           max-attempts: 15
-          retry-delay: 30s
+          retry-delay: 5s
 
       - name: Run tests
         run: |
