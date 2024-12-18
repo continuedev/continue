@@ -860,6 +860,8 @@ interface BaseCompletionOptions {
   presencePenalty?: number;
   frequencyPenalty?: number;
   mirostat?: number;
+  mirostatEta?: number;
+  mirostatTau?: number;
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;

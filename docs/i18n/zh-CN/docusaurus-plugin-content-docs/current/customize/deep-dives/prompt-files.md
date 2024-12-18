@@ -59,6 +59,8 @@ Write unit tests for the above selected code, following each of these instructio
 - `presencePenalty`
 - `frequencyPenalty`
 - `mirostat`
+- `mirostatEta`
+- `mirostatTau`
 - `stop`
 - `maxTokens`
 - `description`
