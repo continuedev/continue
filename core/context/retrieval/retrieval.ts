@@ -89,9 +89,17 @@ export async function retrieveContextItemsFromEmbeddings(
   });
 
   if (results.length === 0) {
-    throw new Error(
-      "Warning: No results found for @codebase context provider.",
-    );
+    if (extras.config.disableIndexing) {
+      void extras.ide.showToast("warning", "No embeddings results found.");
+      return [];
+    } else {
+      void extras.ide.showToast(
+        "warning",
+        "No embeddings results found. If you think this is an error, re-index your codebase.",
+      );
+      // TODO - add "re-index" option to warning message which clears and reindexes codebase
+    }
+    return [];
   }
 
   return [
