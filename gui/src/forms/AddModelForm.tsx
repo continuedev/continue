@@ -41,6 +41,27 @@ function AddModelForm({
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const popularProviderTitles = [
+    providers["openai"]?.title || "",
+    providers["anthropic"]?.title || "",
+    providers["mistral"]?.title || "",
+    providers["gemini"]?.title || "",
+    providers["azure"]?.title || "",
+    providers["ollama"]?.title || "",
+  ];
+
+  const allProviders = Object.entries(providers)
+    .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
+    .map(([, provider]) => provider);
+
+  const popularProviders = allProviders
+    .filter((provider) => popularProviderTitles.includes(provider.title))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+  const otherProviders = allProviders
+    .filter((provider) => !popularProviderTitles.includes(provider.title))
+    .sort((a, b) => a.title.localeCompare(b.title));
+
   const selectedProviderApiKeyUrl = selectedModel.params.model.startsWith(
     "codestral",
   )
@@ -127,11 +148,8 @@ function AddModelForm({
               <ModelSelectionListbox
                 selectedProvider={selectedProvider}
                 setSelectedProvider={setSelectedProvider}
-                options={Object.entries(providers)
-                  .filter(
-                    ([key]) => !["freetrial", "openai-aiohttp"].includes(key),
-                  )
-                  .map(([, provider]) => provider)}
+                topOptions={popularProviders}
+                otherOptions={otherProviders}
               />
               <InputSubtext className="mb-0">
                 Don't see your provider?{" "}
@@ -167,7 +185,7 @@ function AddModelForm({
               <ModelSelectionListbox
                 selectedProvider={selectedModel}
                 setSelectedProvider={setSelectedModel}
-                options={
+                otherOptions={
                   Object.entries(providers).find(
                     ([, provider]) => provider.title === selectedProvider.title,
                   )?.[1].packages

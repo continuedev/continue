@@ -1,4 +1,3 @@
-import { SymbolWithRange } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
@@ -27,7 +26,8 @@ import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-
+import { ToolTip } from "../gui/Tooltip";
+import { v4 as uuidv4 } from "uuid";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -231,10 +231,22 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypeReactOptions: {
       components: {
         a: ({ node, ...aProps }) => {
+          const tooltipId = uuidv4();
+
           return (
-            <a {...aProps} target="_blank">
-              {aProps.children}
-            </a>
+            <>
+              <a
+                href={aProps.href}
+                target="_blank"
+                className="hover:underline"
+                data-tooltip-id={tooltipId}
+              >
+                {aProps.children}
+              </a>
+              <ToolTip id={tooltipId} place="top" className="m-0 p-0">
+                {aProps.href}
+              </ToolTip>
+            </>
           );
         },
         pre: ({ node, ...preProps }) => {
@@ -326,7 +338,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
-    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>{reactContent}</StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>
+      {reactContent}
+    </StyledMarkdown>
   );
 });
 

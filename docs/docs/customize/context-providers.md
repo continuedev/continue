@@ -56,6 +56,20 @@ Reference all of the changes you've made to your current branch. This is useful 
 }
 ```
 
+### `@Current File`
+
+Reference the currently open file.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "currentFile"
+    }
+  ]
+}
+```
+
 ### `@Terminal`
 
 Reference the last command you ran in your IDE's terminal and its output.

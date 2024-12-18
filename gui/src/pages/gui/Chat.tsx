@@ -380,6 +380,7 @@ export function Chat() {
                 <>
                   {isInEditMode && index === 0 && <CodeToEditCard />}
                   <ContinueInputBox
+                    isEditMode={isInEditMode}
                     onEnter={(editorState, modifiers, editor) =>
                       sendInput(editorState, modifiers, editor, index)
                     }
@@ -538,7 +539,7 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  <OnboardingCard activeTab={onboardingCard.activeTab} />
+                  <OnboardingCard />
                 </div>
               )}
 
