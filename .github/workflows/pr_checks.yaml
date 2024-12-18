@@ -346,6 +346,12 @@ jobs:
           node-version-file: ".nvmrc"
 
       - uses: actions/cache@v4
+        id: vscode-node-modules-cache
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - uses: actions/cache@v4
         id: storage-cache
         with:
           path: extensions/vscode/e2e/storage
