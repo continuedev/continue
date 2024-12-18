@@ -44,6 +44,7 @@ describe("SSH", function () {
     await editor.clearText();
     await AutocompleteActions.testCompletions(editor);
     await editor.setText(text);
-  }).timeout(DEFAULT_TIMEOUT.XL);
-  // .retries(2);
+  })
+    .timeout(DEFAULT_TIMEOUT.XL)
+    .retries(2);
 });
