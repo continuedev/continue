@@ -42,7 +42,7 @@ function MorePage() {
 
         <div className="py-5">
           <h3 className="mb-4 mt-0 text-xl">Help center</h3>
-          <div className="flex flex-col gap-5">
+          <div className="-mx-4 flex flex-col">
             <MoreHelpRow
               title="Documentation"
               description="Learn how to configure and use Continue"
