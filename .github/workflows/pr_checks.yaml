@@ -441,7 +441,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-screenshots-${{ matrix.test_file }}
+          name: e2e-screenshots-${{ replace(matrix.test_file, '/', '_') }}
           path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
