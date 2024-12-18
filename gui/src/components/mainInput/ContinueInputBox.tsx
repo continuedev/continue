@@ -105,7 +105,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     ? "Describe how to modify the code - use '#' to add files"
     : undefined;
 
-  console.log("is in edit mode: ", props.isEditMode);
   const toolbarOptions: ToolbarOptions = props.isEditMode
     ? {
         hideAddContext: false,
