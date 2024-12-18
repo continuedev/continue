@@ -367,7 +367,7 @@ jobs:
           ./gradlew runIdeForUiTests &
 
       - name: Wait for JB connection
-        uses: jtalk/url-health-check-action@v3
+        uses: jtalk/url-health-check-action@v4
         with:
           url: http://127.0.0.1:8082
           max-attempts: 15
