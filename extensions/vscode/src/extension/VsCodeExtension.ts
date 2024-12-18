@@ -213,6 +213,7 @@ export class VsCodeExtension {
           this.ide,
           this.tabAutocompleteModel,
           this.sidebar.webviewProtocol,
+          context,
         ),
       ),
     );
