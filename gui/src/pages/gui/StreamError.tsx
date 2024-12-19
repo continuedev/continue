@@ -163,7 +163,13 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   ) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        <span>{`Most likely, the provider${selectedModel ? " " + selectedModel.provider : ""}'s servers are overloaded and streaming was interrupted. Try again later`}</span>
+        <span>{`Most likely, the provider's server(s) are overloaded and streaming was interrupted. Try again later`}</span>
+        {selectedModel ? (
+          <span>
+            {`Provider: `}
+            <code>{selectedModel.provider}</code>
+          </span>
+        ) : null}
         {/* TODO: status page links for providers? */}
       </div>
     );
