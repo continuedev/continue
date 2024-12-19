@@ -348,6 +348,11 @@ const preIndexedDocs: Record<
     rootUrl: "https://api.dart.dev",
     faviconUrl: "https://api.dart.dev/static-assets/favicon.png",
   },
+  "https://docs.asksage.ai/": {
+    title: "Ask Sage",
+    startUrl: "https://docs.asksage.ai/",
+    rootUrl: "https://docs.asksage.ai/",
+  },
 };
 
 export default preIndexedDocs;
