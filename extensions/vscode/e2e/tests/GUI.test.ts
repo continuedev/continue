@@ -28,6 +28,10 @@ describe("GUI Test", () => {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
     await view.switchBack();
+    await TestUtils.waitForSuccess(
+      async () => (await GUISelectors.getContinueExtensionBadge(view)).click(),
+      DEFAULT_TIMEOUT.XS,
+    );
     await new EditorView().closeAllEditors();
   });
 

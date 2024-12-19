@@ -27,6 +27,8 @@ import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { ToolTip } from "../gui/Tooltip";
+import { v4 as uuidv4 } from "uuid";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -229,10 +231,22 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypeReactOptions: {
       components: {
         a: ({ node, ...aProps }) => {
+          const tooltipId = uuidv4();
+
           return (
-            <a {...aProps} target="_blank">
-              {aProps.children}
-            </a>
+            <>
+              <a
+                href={aProps.href}
+                target="_blank"
+                className="hover:underline"
+                data-tooltip-id={tooltipId}
+              >
+                {aProps.children}
+              </a>
+              <ToolTip id={tooltipId} place="top" className="m-0 p-0">
+                {aProps.href}
+              </ToolTip>
+            </>
           );
         },
         pre: ({ node, ...preProps }) => {

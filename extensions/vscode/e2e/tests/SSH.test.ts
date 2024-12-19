@@ -25,7 +25,7 @@ describe("SSH", function () {
 
     await TestUtils.waitForSuccess(
       () => SSHSelectors.connectedToRemoteConfirmationMessage(),
-      DEFAULT_TIMEOUT.XL,
+      DEFAULT_TIMEOUT.MD,
     );
 
     await TestUtils.waitForSuccess(async () => {
@@ -34,7 +34,7 @@ describe("SSH", function () {
       await inputBox.setText("/home/ec2-user/test-folder/main.py");
       await inputBox.selectQuickPick("main.py");
       await inputBox.sendKeys(Key.ENTER);
-    }, DEFAULT_TIMEOUT.XL);
+    }, DEFAULT_TIMEOUT.MD);
 
     const editor = await TestUtils.waitForSuccess(
       async () => (await new EditorView().openEditor("main.py")) as TextEditor,

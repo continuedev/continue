@@ -163,7 +163,7 @@ function InputToolbar(props: InputToolbarProps) {
         </div>
 
         <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
-          {props.toolbarOptions?.hideUseCodebase || (
+          {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
               className={`${shouldRenderToolsButton ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
             >
