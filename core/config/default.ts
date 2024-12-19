@@ -109,12 +109,12 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
   slashCommands: defaultSlashCommandsJetBrains,
 };
 
-const DEFAULT_CONTEXT_LENGTH = 4096;
+const DEFAULT_CONTEXT_LENGTH = 131072;
 
 const BASE_GRANITE_CONFIG: Partial<ModelDescription> = {
   contextLength: DEFAULT_CONTEXT_LENGTH,
   completionOptions: {
-    maxTokens: DEFAULT_CONTEXT_LENGTH / 2,
+    maxTokens: DEFAULT_CONTEXT_LENGTH / 4,
     temperature: 0,
     topP: 0.9,
     topK: 40,
@@ -129,16 +129,16 @@ You are helpful and harmless and you follow ethical guidelines and promote posit
 };
 
 const DEFAULT_MODEL_GRANITE_SMALL: ModelDescription = {
-  title: "granite3-dense:2b",
+  title: "granite3.1-dense:2b",
   provider: "ollama",
-  model: "granite3-dense:2b",
+  model: "granite3.1-dense:2b",
   ...BASE_GRANITE_CONFIG,
 };
 
 const DEFAULT_MODEL_GRANITE_LARGE: ModelDescription = {
-  title: "granite3-dense:8b",
+  title: "granite3.1-dense:8b",
   provider: "ollama",
-  model: "granite3-dense:8b",
+  model: "granite3.1-dense:8b",
   ...BASE_GRANITE_CONFIG,
 };
 
