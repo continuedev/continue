@@ -2,6 +2,7 @@ import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
+  IdeSettings,
 } from "../index.js";
 
 import { ConfigResult, finalToBrowserConfig } from "./load.js";
@@ -41,15 +42,16 @@ export class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  async reloadConfig(): Promise<ConfigResult<ContinueConfig>> {
+  async reloadConfig(ideSettingsPromise: Promise<IdeSettings>): Promise<ConfigResult<ContinueConfig>> {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.profileLoader.doLoadConfig();
+    return this.profileLoader.doLoadConfig(ideSettingsPromise);
   }
 
   async loadConfig(
+    ideSettingsPromise: Promise<IdeSettings>,
     additionalContextProviders: IContextProvider[],
   ): Promise<ContinueConfig> {
     // If we already have a config, return it
@@ -62,7 +64,7 @@ export class ProfileLifecycleManager {
     // Set pending config promise
     this.pendingConfigPromise = new Promise(async (resolve, reject) => {
       const { config: newConfig, errors } =
-        await this.profileLoader.doLoadConfig();
+        await this.profileLoader.doLoadConfig(ideSettingsPromise);
 
       if (newConfig) {
         // Add registered context providers
@@ -86,10 +88,11 @@ export class ProfileLifecycleManager {
   }
 
   async getSerializedConfig(
+    ideSettingsPromise: Promise<IdeSettings>,
     additionalContextProviders: IContextProvider[],
   ): Promise<BrowserSerializedContinueConfig> {
     if (!this.savedBrowserConfig) {
-      const continueConfig = await this.loadConfig(additionalContextProviders);
+      const continueConfig = await this.loadConfig(ideSettingsPromise, additionalContextProviders);
       this.savedBrowserConfig = finalToBrowserConfig(continueConfig);
     }
     return this.savedBrowserConfig;
