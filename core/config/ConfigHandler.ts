@@ -51,7 +51,6 @@ export class ConfigHandler {
     // Set local profile as default
     const localProfileLoader = new LocalProfileLoader(
       ide,
-      ideSettingsPromise,
       controlPlaneClient,
       writeLog,
     );
@@ -111,7 +110,6 @@ export class ConfigHandler {
             workspace.name,
             this.controlPlaneClient,
             this.ide,
-            this.ideSettingsPromise,
             this.writeLog,
             this.reloadConfig.bind(this),
           );
@@ -210,7 +208,7 @@ export class ConfigHandler {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
 
     const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig();
+      await this.currentProfile.reloadConfig(this.ideSettingsPromise);
 
     if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
@@ -224,6 +222,7 @@ export class ConfigHandler {
     ConfigResult<BrowserSerializedContinueConfig>
   > {
     return this.currentProfile.getSerializedConfig(
+      this.ideSettingsPromise,
       this.additionalContextProviders,
     );
   }
@@ -233,7 +232,8 @@ export class ConfigHandler {
   }
 
   async loadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    return await this.currentProfile.loadConfig(
+    return this.currentProfile.loadConfig(
+      this.ideSettingsPromise,
       this.additionalContextProviders,
     );
   }

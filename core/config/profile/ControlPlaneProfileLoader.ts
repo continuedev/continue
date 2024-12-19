@@ -25,7 +25,6 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     private workspaceTitle: string,
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
     private writeLog: (message: string) => Promise<void>,
     private readonly onReload: () => void,
   ) {
@@ -39,7 +38,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     }, ControlPlaneProfileLoader.RELOAD_INTERVAL);
   }
 
-  async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
+  async doLoadConfig(ideSettingsPromise: Promise<IdeSettings>): Promise<ConfigResult<ContinueConfig>> {
     const settings =
       this.workspaceSettings ??
       ((await this.controlPlaneClient.getSettingsForWorkspace(
@@ -49,7 +48,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
 
     const results = await doLoadConfig(
       this.ide,
-      this.ideSettingsPromise,
+      ideSettingsPromise,
       this.controlPlaneClient,
       this.writeLog,
       serializedConfig,
