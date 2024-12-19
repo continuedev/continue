@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
-import { getFontSize } from "../../util";
-import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import ResponseActions from "./ResponseActions";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
+import { getFontSize } from "../../util";
+import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import ResponseActions from "./ResponseActions";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -48,6 +48,7 @@ export default function StepContainer(props: StepContainerProps) {
 
       // If not ending in punctuation or emoji, we assume the response got truncated
       if (
+        content.trim() !== "" &&
         !(
           endingPunctuation.some((p) => content.endsWith(p)) ||
           /\p{Emoji}/u.test(content.slice(-2))
