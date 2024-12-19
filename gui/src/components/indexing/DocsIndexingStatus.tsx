@@ -5,9 +5,9 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
+  ExclamationTriangleIcon,
   PauseCircleIcon,
   TrashIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
@@ -24,7 +24,7 @@ const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
   complete: CheckCircleIcon,
   aborted: null,
   pending: null,
-  failed: XMarkIcon, // Since we show an error message below
+  failed: ExclamationTriangleIcon, // Since we show an error message below
 };
 
 function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
