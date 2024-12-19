@@ -169,8 +169,8 @@ export class ContinueGUIWebviewViewProvider
         <script>window.fullColorTheme = ${JSON.stringify(currentTheme)}</script>
         <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
-          vscode.workspace.workspaceFolders?.map(
-            (folder) => folder.uri.fsPath,
+          vscode.workspace.workspaceFolders?.map((folder) =>
+            folder.uri.toString(),
           ) || [],
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>

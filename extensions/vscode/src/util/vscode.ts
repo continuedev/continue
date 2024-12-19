@@ -1,7 +1,6 @@
-import * as path from "node:path";
-
 import { machineIdSync } from "node-machine-id";
 import * as vscode from "vscode";
+import * as URI from "uri-js";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
   return new vscode.Range(
@@ -27,13 +26,13 @@ export function getExtensionUri(): vscode.Uri {
 }
 
 export function getViewColumnOfFile(
-  filepath: string,
+  uri: vscode.Uri,
 ): vscode.ViewColumn | undefined {
   for (const tabGroup of vscode.window.tabGroups.all) {
     for (const tab of tabGroup.tabs) {
       if (
         (tab?.input as any)?.uri &&
-        (tab.input as any).uri.fsPath === filepath
+        URI.equal((tab.input as any).uri, uri.toString())
       ) {
         return tabGroup.viewColumn;
       }
@@ -71,20 +70,13 @@ export function getRightViewColumn(): vscode.ViewColumn {
 let showTextDocumentInProcess = false;
 
 export function openEditorAndRevealRange(
-  editorFilename: string,
+  uri: vscode.Uri,
   range?: vscode.Range,
   viewColumn?: vscode.ViewColumn,
   preview?: boolean,
 ): Promise<vscode.TextEditor> {
   return new Promise((resolve, _) => {
-    let filename = editorFilename;
-    if (editorFilename.startsWith("~")) {
-      filename = path.join(
-        process.env.HOME || process.env.USERPROFILE || "",
-        editorFilename.slice(1),
-      );
-    }
-    vscode.workspace.openTextDocument(filename).then(async (doc) => {
+    vscode.workspace.openTextDocument(uri).then(async (doc) => {
       try {
         // An error is thrown mysteriously if you open two documents in parallel, hence this
         while (showTextDocumentInProcess) {
@@ -97,7 +89,7 @@ export function openEditorAndRevealRange(
         showTextDocumentInProcess = true;
         vscode.window
           .showTextDocument(doc, {
-            viewColumn: getViewColumnOfFile(editorFilename) || viewColumn,
+            viewColumn: getViewColumnOfFile(uri) || viewColumn,
             preview,
           })
           .then((editor) => {
@@ -112,47 +104,6 @@ export function openEditorAndRevealRange(
       }
     });
   });
-}
-
-function windowsToPosix(windowsPath: string): string {
-  let posixPath = windowsPath.split("\\").join("/");
-  if (posixPath[1] === ":") {
-    posixPath = posixPath.slice(2);
-  }
-  // posixPath = posixPath.replace(" ", "\\ ");
-  return posixPath;
-}
-
-function isWindowsLocalButNotRemote(): boolean {
-  return (
-    vscode.env.remoteName !== undefined &&
-    [
-      "wsl",
-      "ssh-remote",
-      "dev-container",
-      "attached-container",
-      "tunnel",
-    ].includes(vscode.env.remoteName) &&
-    process.platform === "win32"
-  );
-}
-
-export function getPathSep(): string {
-  return isWindowsLocalButNotRemote() ? "/" : path.sep;
-}
-
-export function uriFromFilePath(filepath: string): vscode.Uri {
-  let finalPath = filepath;
-  if (vscode.env.remoteName) {
-    if (isWindowsLocalButNotRemote()) {
-      finalPath = windowsToPosix(filepath);
-    }
-    return vscode.Uri.parse(
-      `vscode-remote://${vscode.env.remoteName}${finalPath}`,
-    );
-  } else {
-    return vscode.Uri.file(finalPath);
-  }
 }
 
 export function getUniqueId() {

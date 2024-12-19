@@ -4,7 +4,7 @@ import {
   ContextProviderExtras,
 } from "../../index.js";
 import { walkDir } from "../../indexing/walkDir.js";
-import { splitPath } from "../../util/index.js";
+import { findUriInDirs, getUriPathBasename } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
 interface Directory {
@@ -44,16 +44,19 @@ class FileTreeContextProvider extends BaseContextProvider {
     const trees = [];
 
     for (const workspaceDir of workspaceDirs) {
-      const contents = await walkDir(workspaceDir, extras.ide);
-
       const subDirTree: Directory = {
-        name: splitPath(workspaceDir).pop() ?? "",
+        name: getUriPathBasename(workspaceDir),
         files: [],
         directories: [],
       };
 
-      for (const file of contents) {
-        const parts = splitPath(file, workspaceDir);
+      const uris = await walkDir(workspaceDir, extras.ide);
+      const relativePaths = uris.map(
+        (uri) => findUriInDirs(uri, [workspaceDir]).relativePathOrBasename,
+      );
+
+      for (const path of relativePaths) {
+        const parts = path.split("/");
 
         let currentTree = subDirTree;
         for (const part of parts.slice(0, -1)) {

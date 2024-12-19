@@ -160,21 +160,24 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             // Handle file changes and deletions - reindex
             connection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
                 override fun after(events: List<VFileEvent>) {
-                    // Collect all relevant paths for deletions
-                    val deletedPaths = events.filterIsInstance<VFileDeleteEvent>()
-                        .map { event -> event.file.path.split("/").dropLast(1).joinToString("/") }
+                    // Collect all relevant URIs for deletions
+                    val deletedURIs = events.filterIsInstance<VFileDeleteEvent>()
+                        .map { event -> event.file.url }
 
-                    // Collect all relevant paths for content changes
-                    val changedPaths = events.filterIsInstance<VFileContentChangeEvent>()
-                        .map { event -> event.file.path.split("/").dropLast(1).joinToString("/") }
+                    // Send "files/deleted" message if there are any deletions
+                    if (deletedURIs.isNotEmpty()) {
+                        val data = mapOf("files" to deletedURIs)
+                        continuePluginService.coreMessenger?.request("files/deleted", data, null) { _ -> }
+                    }
 
-                    // Combine both lists of paths for re-indexing
-                    val allPaths = deletedPaths + changedPaths
+                    // Collect all relevant URIs for content changes
+                    val changedURIs = events.filterIsInstance<VFileContentChangeEvent>()
+                        .map { event -> event.file.url }
 
-                    // Create a data map if there are any paths to re-index
-                    if (allPaths.isNotEmpty()) {
-                        val data = mapOf("files" to allPaths)
-                        continuePluginService.coreMessenger?.request("index/forceReIndexFiles", data, null) { _ -> }
+                    // Send "files/changed" message if there are any content changes
+                    if (changedURIs.isNotEmpty()) {
+                        val data = mapOf("files" to changedURIs)
+                        continuePluginService.coreMessenger?.request("files/changed", data, null) { _ -> }
                     }
                 }
             })
@@ -217,12 +220,10 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             // Reload the WebView
             continuePluginService?.let { pluginService ->
                 val allModulePaths = ModuleManager.getInstance(project).modules
-                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.path } }
-                    .map { Paths.get(it).normalize() }
+                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.url } }
 
                 val topLevelModulePaths = allModulePaths
                     .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
-                    .map { it.toString() }
 
                 pluginService.workspacePaths = topLevelModulePaths.toTypedArray()
             }

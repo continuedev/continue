@@ -1,9 +1,9 @@
-import * as JSONC from "comment-json";
-import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { pathToFileURL } from "url";
+
+import * as JSONC from "comment-json";
+import dotenv from "dotenv";
 
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
@@ -45,9 +45,6 @@ export function getGlobalContinueIgnorePath(): string {
   return continueIgnorePath;
 }
 
-/*
-  Deprecated, replace with getContinueGlobalUri where possible
-*/
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
   const continuePath = CONTINUE_GLOBAL_DIR;
@@ -55,10 +52,6 @@ export function getContinueGlobalPath(): string {
     fs.mkdirSync(continuePath);
   }
   return continuePath;
-}
-
-export function getContinueGlobalUri(): string {
-  return pathToFileURL(CONTINUE_GLOBAL_DIR).href;
 }
 
 export function getSessionsFolderPath(): string {
@@ -341,6 +334,15 @@ export function getLogsDirPath(): string {
   return logsPath;
 }
 
+export function getLogFilePath(): string {
+  const logFilePath = path.join(getContinueGlobalPath(), "continue.log");
+  // Make sure the file/directory exist
+  if (!fs.existsSync(logFilePath)) {
+    fs.writeFileSync(logFilePath, "");
+  }
+  return logFilePath;
+}
+
 export function getCoreLogsPath(): string {
   return path.join(getLogsDirPath(), "core.log");
 }
@@ -398,4 +400,14 @@ export function setupInitialDotContinueDirectory() {
       fs.writeFileSync(devDataPath, "");
     }
   });
+}
+
+export function getDiffsDirectoryPath(): string {
+  const diffsPath = path.join(getContinueGlobalPath(), ".diffs"); // .replace(/^C:/, "c:"); ??
+  if (!fs.existsSync(diffsPath)) {
+    fs.mkdirSync(diffsPath, {
+      recursive: true,
+    });
+  }
+  return diffsPath;
 }

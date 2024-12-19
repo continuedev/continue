@@ -1,6 +1,7 @@
 import { logDevData } from "../../util/devdata";
 import { COUNT_COMPLETION_REJECTED_AFTER } from "../../util/parameters";
 import { Telemetry } from "../../util/posthog";
+import { getUriFileExtension } from "../../util/uri";
 
 import { AutocompleteOutcome } from "./types";
 
@@ -105,7 +106,7 @@ export class AutocompleteLoggingService {
         completionId: restOfOutcome.completionId,
         completionOptions: restOfOutcome.completionOptions,
         debounceDelay: restOfOutcome.debounceDelay,
-        fileExtension: restOfOutcome.filepath.split(".")?.slice(-1)[0],
+        fileExtension: getUriFileExtension(restOfOutcome.filepath),
         maxPromptTokens: restOfOutcome.maxPromptTokens,
         modelName: restOfOutcome.modelName,
         modelProvider: restOfOutcome.modelProvider,
