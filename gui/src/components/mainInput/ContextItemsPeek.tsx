@@ -5,6 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { getUriPathBasename } from "core/util/uri";
 import { useContext, useMemo, useState } from "react";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -13,7 +14,6 @@ import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { getIconFromDropdownItem } from "./MentionList";
-import { getUriPathBasename } from "core/util/uri";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -71,7 +71,8 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
     }
 
     // Heuristic to check if it's a file
-    const shouldShowFileIcon = contextItem.content.includes("```");
+    const shouldShowFileIcon =
+      contextItem.content.includes("```") || contextItem.uri?.type === "file";
 
     if (shouldShowFileIcon) {
       return (
