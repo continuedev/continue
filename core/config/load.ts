@@ -22,6 +22,7 @@ import {
   IdeType,
   ILLM,
   LLMOptions,
+  MCPOptions,
   ModelDescription,
   RerankerDescription,
   SerializedContinueConfig,
@@ -490,34 +491,36 @@ async function intermediateToFinalConfig(
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
   if (config.experimental?.modelContextProtocolServers) {
-    config.experimental.modelContextProtocolServers?.forEach(
-      async (server, index) => {
-        const mcpId = index.toString();
-        const mcpConnection = mcpManager.createConnection(mcpId, server);
-        if (!mcpConnection) {
-          return;
-        }
+    const mcpServers = config.experimental.modelContextProtocolServers;
+    for (const [index, server] of Object.entries(mcpServers)) {
+      const mcpId = index;
+      const mcpOptions: MCPOptions = {
+        transport: server
+      };
+      const mcpConnection = mcpManager.createConnection(mcpId, mcpOptions);
+      if (!mcpConnection) {
+        continue;
+      }
 
-        const abortController = new AbortController();
-        const mcpConnectionTimeout = setTimeout(
-          () => abortController.abort(),
-          2000,
+      const abortController = new AbortController();
+      const mcpConnectionTimeout = setTimeout(
+        () => abortController.abort(),
+        2000,
+      );
+
+      try {
+        await mcpConnection.modifyConfig(
+          continueConfig,
+          mcpId,
+          abortController.signal,
         );
-
-        try {
-          await mcpConnection.modifyConfig(
-            continueConfig,
-            mcpId,
-            abortController.signal,
-          );
-        } catch (e: any) {
-          if (e.name !== "AbortError") {
-            throw e;
-          }
+      } catch (e: any) {
+        if (e.name !== "AbortError") {
+          throw e;
         }
-        clearTimeout(mcpConnectionTimeout);
-      },
-    );
+      }
+      clearTimeout(mcpConnectionTimeout);
+    }
   }
 
   return continueConfig;

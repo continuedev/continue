@@ -1055,7 +1055,7 @@ export interface ExperimentalConfig {
    */
   useChromiumForDocsCrawling?: boolean;
   useTools?: boolean;
-  modelContextProtocolServers?: MCPOptions[];
+  modelContextProtocolServers?: TransportOptions[];
 }
 
 export interface AnalyticsConfig {
