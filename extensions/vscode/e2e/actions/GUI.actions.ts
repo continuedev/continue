@@ -1,8 +1,33 @@
-import { Key, WebElement, WebView, Workbench } from "vscode-extension-tester";
+import {
+  InputBox,
+  Key,
+  WebDriver,
+  WebElement,
+  WebView,
+  Workbench,
+} from "vscode-extension-tester";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
+import { DEFAULT_TIMEOUT } from "../constants";
 
 export class GUIActions {
+  public static moveContinueToSidebar = async (driver: WebDriver) => {
+    await GUIActions.toggleGui();
+    await TestUtils.waitForSuccess(async () => {
+      await new Workbench().executeCommand("View: Move View");
+      await (await InputBox.create(DEFAULT_TIMEOUT.MD)).selectQuickPick(4);
+      await (await InputBox.create(DEFAULT_TIMEOUT.MD)).selectQuickPick(14);
+    });
+
+    // first call focuses the input
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    // second call closes the gui
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+  };
+
   public static switchToReactIframe = async () => {
     const view = new WebView();
     const driver = view.getDriver();
@@ -19,7 +44,7 @@ export class GUIActions {
     }
 
     if (!continueIFrame) {
-      throw new Error("Could not find continue iframe");
+      throw new Error("Could not find Continue iframe");
     }
 
     await driver.switchTo().frame(continueIFrame);
@@ -41,7 +66,7 @@ export class GUIActions {
     };
   };
 
-  public static openGui = async () => {
+  public static toggleGui = async () => {
     return TestUtils.waitForSuccess(() =>
       new Workbench().executeCommand("continue.focusContinueInput"),
     );
@@ -76,5 +101,14 @@ export class GUIActions {
     );
     await editor.sendKeys(message);
     await editor.sendKeys(Key.ENTER);
+  }
+
+  public static async executeFocusContinueInputShortcut(driver: WebDriver) {
+    return driver
+      .actions()
+      .keyDown(TestUtils.osControlKey)
+      .sendKeys("l")
+      .keyUp(TestUtils.osControlKey)
+      .perform();
   }
 }
