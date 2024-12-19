@@ -6,7 +6,8 @@ import {
   PackageDetails,
   ParsedPackageInfo,
 } from "../../..";
-import { walkDir } from "../../walkDir";
+import { getUriPathBasename } from "../../../util/uri";
+import { walkDir, walkDirs } from "../../walkDir";
 
 import { PythonPackageCrawler } from "./packageCrawlers/Python";
 import { NodePackageCrawler } from "./packageCrawlers/TsJs";
@@ -24,16 +25,10 @@ export interface PackageCrawler {
 }
 
 export async function getAllSuggestedDocs(ide: IDE) {
-  const workspaceDirs = await ide.getWorkspaceDirs();
-  const results = await Promise.all(
-    workspaceDirs.map((dir) => {
-      return walkDir(dir, ide);
-    }),
-  );
-  const allPaths = results.flat(); // TODO only get files, not dirs. Not critical for now
-  const allFiles = allPaths.map((path) => ({
-    path,
-    name: path.split(/[\\/]/).pop()!,
+  const allFileUris = await walkDirs(ide);
+  const allFiles = allFileUris.map((uri) => ({
+    path: uri,
+    name: getUriPathBasename(uri),
   }));
 
   // Build map of language -> package files

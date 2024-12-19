@@ -12,11 +12,10 @@ import {
   updateSession,
 } from "../../redux/thunks/session";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-
-function lastPartOfPath(path: string): string {
-  const sep = path.includes("/") ? "/" : "\\";
-  return path.split(sep).pop() || path;
-}
+import {
+  getLastNUriRelativePathParts,
+  getUriPathBasename,
+} from "core/util/uri";
 
 export function HistoryTableRow({
   sessionMetadata,
@@ -108,7 +107,7 @@ export function HistoryTableRow({
 
             <div className="flex" style={{ color: "#9ca3af" }}>
               <span>
-                {lastPartOfPath(sessionMetadata.workspaceDirectory || "")}
+                {getUriPathBasename(sessionMetadata.workspaceDirectory || "")}
               </span>
               {/* Uncomment to show the date */}
               {/* <span className="inline-block ml-auto">

@@ -1,5 +1,4 @@
 import * as fs from "node:fs";
-import * as path from "node:path";
 
 import {
   ContinueRcJson,
@@ -14,10 +13,9 @@ import {
   RangeInFile,
   Thread,
   ToastType,
-} from "../index.d.js";
+} from "../index.js";
 import { GetGhTokenArgs } from "../protocol/ide.js";
-
-import { getContinueGlobalPath } from "./paths.js";
+import { fileURLToPath } from "node:url";
 
 class FileSystemIde implements IDE {
   constructor(private readonly workspaceDir: string) {}
@@ -28,17 +26,15 @@ class FileSystemIde implements IDE {
   ): Promise<void> {
     return Promise.resolve();
   }
-  pathSep(): Promise<string> {
-    return Promise.resolve(path.sep);
-  }
-  fileExists(filepath: string): Promise<boolean> {
+  fileExists(fileUri: string): Promise<boolean> {
+    const filepath = fileURLToPath(fileUri);
     return Promise.resolve(fs.existsSync(filepath));
   }
 
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return Promise.resolve([]);
   }
-  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     return;
   }
 
@@ -55,14 +51,17 @@ class FileSystemIde implements IDE {
   async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
     return undefined;
   }
-  async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
+  async getLastModified(
+    fileUris: string[],
+  ): Promise<{ [path: string]: number }> {
     const result: { [path: string]: number } = {};
-    for (const file of files) {
+    for (const uri of fileUris) {
       try {
-        const stats = fs.statSync(file);
-        result[file] = stats.mtimeMs;
+        const filepath = fileURLToPath(uri);
+        const stats = fs.statSync(filepath);
+        result[uri] = stats.mtimeMs;
       } catch (error) {
-        console.error(`Error getting last modified time for ${file}:`, error);
+        console.error(`Error getting last modified time for ${uri}:`, error);
       }
     }
     return result;
@@ -71,8 +70,9 @@ class FileSystemIde implements IDE {
     return Promise.resolve(dir);
   }
   async listDir(dir: string): Promise<[string, FileType][]> {
+    const filepath = fileURLToPath(dir);
     const all: [string, FileType][] = fs
-      .readdirSync(dir, { withFileTypes: true })
+      .readdirSync(filepath, { withFileTypes: true })
       .map((dirent: any) => [
         dirent.name,
         dirent.isDirectory()
@@ -109,7 +109,7 @@ class FileSystemIde implements IDE {
     });
   }
 
-  readRangeInFile(filepath: string, range: Range): Promise<string> {
+  readRangeInFile(fileUri: string, range: Range): Promise<string> {
     return Promise.resolve("");
   }
 
@@ -153,7 +153,7 @@ class FileSystemIde implements IDE {
   }
 
   showLines(
-    filepath: string,
+    fileUri: string,
     startLine: number,
     endLine: number,
   ): Promise<void> {
@@ -164,13 +164,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve([this.workspaceDir]);
   }
 
-  listFolders(): Promise<string[]> {
-    return Promise.resolve([]);
-  }
-
-  writeFile(path: string, contents: string): Promise<void> {
+  writeFile(fileUri: string, contents: string): Promise<void> {
+    const filepath = fileURLToPath(fileUri);
     return new Promise((resolve, reject) => {
-      fs.writeFile(path, contents, (err) => {
+      fs.writeFile(filepath, contents, (err) => {
         if (err) {
           reject(err);
         }
@@ -181,10 +178,6 @@ class FileSystemIde implements IDE {
 
   showVirtualFile(title: string, contents: string): Promise<void> {
     return Promise.resolve();
-  }
-
-  getContinueDir(): Promise<string> {
-    return Promise.resolve(getContinueGlobalPath());
   }
 
   openFile(path: string): Promise<void> {
@@ -199,11 +192,12 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  saveFile(filepath: string): Promise<void> {
+  saveFile(fileUri: string): Promise<void> {
     return Promise.resolve();
   }
 
-  readFile(filepath: string): Promise<string> {
+  readFile(fileUri: string): Promise<string> {
+    const filepath = fileURLToPath(fileUri);
     return new Promise((resolve, reject) => {
       fs.readFile(filepath, "utf8", (err, contents) => {
         if (err) {
@@ -216,14 +210,6 @@ class FileSystemIde implements IDE {
 
   getCurrentFile(): Promise<undefined> {
     return Promise.resolve(undefined);
-  }
-
-  showDiff(
-    filepath: string,
-    newContents: string,
-    stepIndex: number,
-  ): Promise<void> {
-    return Promise.resolve();
   }
 
   getBranch(dir: string): Promise<string> {
@@ -242,7 +228,7 @@ class FileSystemIde implements IDE {
     return "";
   }
 
-  async getProblems(filepath?: string | undefined): Promise<Problem[]> {
+  async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
     return Promise.resolve([]);
   }
 

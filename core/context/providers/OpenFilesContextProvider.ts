@@ -3,7 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { getRelativePath } from "../../util/index.js";
+import { findUriInDirs, getUriPathBasename } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
 class OpenFilesContextProvider extends BaseContextProvider {
@@ -28,11 +28,10 @@ class OpenFilesContextProvider extends BaseContextProvider {
       openFiles.map(async (filepath: string) => {
         return {
           description: filepath,
-          content: `\`\`\`${await getRelativePath(
-            filepath,
-            workspaceDirs,
-          )}\n${await ide.readFile(filepath)}\n\`\`\``,
-          name: (filepath.split("/").pop() ?? "").split("\\").pop() ?? "",
+          content: `\`\`\`${
+            findUriInDirs(filepath, workspaceDirs).relativePathOrBasename
+          }\n${await ide.readFile(filepath)}\n\`\`\``,
+          name: getUriPathBasename(filepath),
           uri: {
             type: "file",
             value: filepath,

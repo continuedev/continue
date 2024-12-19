@@ -39,7 +39,7 @@ describe.skip("generateRepoMap", () => {
       .mockImplementation(async (dirs, offset, limit) => {
         // Return test data
         return {
-          groupedByPath: {
+          groupedByUri: {
             [path.join(TEST_DIR, "file1.js")]: [
               "function foo() {}",
               "function bar() {}",
@@ -60,6 +60,7 @@ describe.skip("generateRepoMap", () => {
     // Act
     const repoMapContent = await generateRepoMap(testLLM, testIde, {
       includeSignatures: true,
+      outputRelativeUriPaths: true,
     });
 
     // Assert
@@ -103,7 +104,7 @@ describe.skip("generateRepoMap", () => {
       .mockImplementation(async (dirs, offset, limit) => {
         // Return test data
         return {
-          groupedByPath: {
+          groupedByUri: {
             [path.join(TEST_DIR, "file1.js")]: [],
             [path.join(TEST_DIR, "subdir/file2.py")]: [],
           },
@@ -118,6 +119,7 @@ describe.skip("generateRepoMap", () => {
     // Act
     const repoMapContent = await generateRepoMap(testLLM, testIde, {
       includeSignatures: false,
+      outputRelativeUriPaths: true,
     });
 
     // Assert
@@ -155,7 +157,7 @@ describe.skip("generateRepoMap", () => {
       .mockImplementation(async (dirs, offset, limit) => {
         // Return test data
         return {
-          groupedByPath: {
+          groupedByUri: {
             [path.join(TEST_DIR, "file1.js")]: ["function foo() {}"],
             [path.join(TEST_DIR, "subdir/file2.py")]: ["def foo():"],
           },
@@ -185,6 +187,7 @@ describe.skip("generateRepoMap", () => {
     // Act
     const repoMapContent = await generateRepoMap(testLLM, testIde, {
       includeSignatures: true,
+      outputRelativeUriPaths: true,
     });
 
     // Assert

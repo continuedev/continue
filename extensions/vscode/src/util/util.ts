@@ -1,7 +1,5 @@
 import * as vscode from "vscode";
 
-import { VsCodeIde } from "../VsCodeIde";
-
 const os = require("node:os");
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
@@ -123,14 +121,4 @@ export function getMetaKeyName() {
 export function getExtensionVersion(): string {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "0.1.0";
-}
-
-export function getFullyQualifiedPath(ide: VsCodeIde, filepath: string) {
-  if (ide.ideUtils.path.isAbsolute(filepath)) {return filepath;}
-
-  const workspaceFolders = vscode.workspace.workspaceFolders;
-
-  if (workspaceFolders && workspaceFolders.length > 0) {
-    return ide.ideUtils.path.join(workspaceFolders[0].uri.fsPath, filepath);
-  }
 }

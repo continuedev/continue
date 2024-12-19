@@ -83,7 +83,7 @@ export default function StepContainerPreActionButtons({
   const defaultModel = useAppSelector(selectDefaultModel);
 
   function onClickApply() {
-    if (!defaultModel) {
+    if (!defaultModel || !streamIdRef.current) {
       return;
     }
     ideMessenger.post("applyToFile", {

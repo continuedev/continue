@@ -31,6 +31,11 @@ function breakdownArticleComponent(
   let content = "";
   let index = 0;
 
+  const fullUrl = new URL(
+    `${subpath}#${cleanFragment(article.title)}`,
+    url,
+  ).toString();
+
   const createChunk = (
     chunkContent: string,
     chunkStartLine: number,
@@ -44,11 +49,8 @@ function breakdownArticleComponent(
         title: cleanHeader(article.title),
       },
       index: index++,
-      filepath: new URL(
-        `${subpath}#${cleanFragment(article.title)}`,
-        url,
-      ).toString(),
-      digest: subpath,
+      filepath: fullUrl,
+      digest: fullUrl,
     });
   };
 

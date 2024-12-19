@@ -1,8 +1,9 @@
 import fs from "node:fs";
-import * as path from "node:path";
+import path from "path";
 
 import Parser, { Language } from "web-tree-sitter";
 import { FileSymbolMap, IDE, SymbolWithRange } from "..";
+import { getUriFileExtension } from "./uri";
 
 export enum LanguageName {
   CPP = "cpp",
@@ -145,7 +146,7 @@ export async function getLanguageForFile(
 ): Promise<Language | undefined> {
   try {
     await Parser.init();
-    const extension = path.extname(filepath).slice(1);
+    const extension = getUriFileExtension(filepath);
 
     const languageName = supportedLanguages[extension];
     if (!languageName) {
@@ -165,7 +166,8 @@ export async function getLanguageForFile(
 }
 
 export const getFullLanguageName = (filepath: string) => {
-  return supportedLanguages[filepath.split(".").pop() ?? ""];
+  const extension = getUriFileExtension(filepath);
+  return supportedLanguages[extension];
 };
 
 export async function getQueryForFile(
@@ -226,7 +228,6 @@ export async function getSymbolsForFile(
   contents: string,
 ): Promise<SymbolWithRange[] | undefined> {
   const parser = await getParserForFile(filepath);
-
   if (!parser) {
     return;
   }
@@ -286,7 +287,6 @@ export async function getSymbolsForFile(
     node.children.forEach(findNamedNodesRecursive);
   }
   findNamedNodesRecursive(tree.rootNode);
-
   return symbols;
 }
 

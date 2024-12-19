@@ -1,7 +1,6 @@
 import Handlebars from "handlebars";
 
 import { CompletionOptions } from "../..";
-import { getBasename } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
@@ -11,6 +10,7 @@ import {
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getSnippets } from "./filtering";
+import { getUriPathBasename } from "../../util/uri";
 import { formatSnippets } from "./formatting";
 import { getStopTokens } from "./getStopTokens";
 
@@ -33,7 +33,7 @@ function renderStringTemplate(
   filepath: string,
   reponame: string,
 ) {
-  const filename = getBasename(filepath);
+  const filename = getUriPathBasename(filepath);
   const compiledTemplate = Handlebars.compile(template);
 
   return compiledTemplate({
@@ -66,7 +66,7 @@ export function renderPrompt({
     suffix = "\n";
   }
 
-  const reponame = getBasename(workspaceDirs[0] ?? "myproject");
+  const reponame = getUriPathBasename(workspaceDirs[0] ?? "myproject");
 
   const { template, compilePrefixSuffix, completionOptions } =
     getTemplate(helper);
@@ -82,9 +82,10 @@ export function renderPrompt({
       helper.filepath,
       reponame,
       snippets,
+      helper.workspaceUris,
     );
   } else {
-    const formattedSnippets = formatSnippets(helper, snippets);
+    const formattedSnippets = formatSnippets(helper, snippets, workspaceDirs);
     prefix = [formattedSnippets, prefix].join("\n");
   }
 
@@ -106,6 +107,7 @@ export function renderPrompt({
           reponame,
           helper.lang.name,
           snippets,
+          helper.workspaceUris,
         );
 
   const stopTokens = getStopTokens(
