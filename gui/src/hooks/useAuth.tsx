@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
 

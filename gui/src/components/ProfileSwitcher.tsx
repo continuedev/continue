@@ -18,7 +18,7 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from ".";
-import { useAuth } from "../context/Auth";
+import { useAuth } from "../hooks/useAuth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
