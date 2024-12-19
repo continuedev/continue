@@ -188,3 +188,20 @@ export function getLastNPathParts(filepath: string, n: number): string {
   }
   return filepath.split(/[\\/]/).slice(-n).join("/");
 }
+
+export function firstAbsUriMatch(
+  relativePath: string,
+  workspaceDirUris: string[],
+): string {
+  const cleanRelativePath = pathToUriPathSegment(relativePath);
+
+  return workspaceDirUris
+    .map((dirUri) => {
+      try {
+        return joinPathsToUri(dirUri, cleanRelativePath);
+      } catch {
+        return null;
+      }
+    })
+    .filter((uri): uri is string => uri !== null)[0];
+}

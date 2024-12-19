@@ -1,8 +1,13 @@
+import { firstAbsUriMatch, getUriPathBasename } from "../../util/uri";
+
 import { ToolImpl } from ".";
-import { getUriPathBasename } from "../../util/uri";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
-  const content = await extras.ide.readFile(args.filepath);
+  const firstUriMatch = await firstAbsUriMatch(
+    args.filepath,
+    await extras.ide.getWorkspaceDirs(),
+  );
+  const content = await extras.ide.readFile(firstUriMatch);
   return [
     {
       name: getUriPathBasename(args.filepath),
