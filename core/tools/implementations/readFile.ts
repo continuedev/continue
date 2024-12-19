@@ -1,12 +1,16 @@
-import { firstAbsUriMatch, getUriPathBasename } from "../../util/uri";
+import { getUriPathBasename } from "../../util/uri";
 
 import { ToolImpl } from ".";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
-  const firstUriMatch = await firstAbsUriMatch(
+  const firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
-    await extras.ide.getWorkspaceDirs(),
+    extras.ide,
   );
+  if (!firstUriMatch) {
+    throw new Error(`Could not find file ${args.filepath}`);
+  }
   const content = await extras.ide.readFile(firstUriMatch);
   return [
     {
