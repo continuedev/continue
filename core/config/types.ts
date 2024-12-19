@@ -566,12 +566,15 @@ declare global {
     SymbolicLink = 64,
   }
   
+  export type LocalModelSize = undefined | "small" | "large";
+  
   export interface IdeSettings {
     remoteConfigServerUrl: string | undefined;
     remoteConfigSyncPeriod: number;
     userToken: string;
     enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
+    localModelSize: LocalModelSize;
   }
   
   export interface IDE {

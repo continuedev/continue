@@ -119,7 +119,7 @@ const BASE_GRANITE_CONFIG: Partial<ModelDescription> = {
     topP: 0.9,
     topK: 40,
     presencePenalty: 0.0,
-    frequencyPenalty: 0.1
+    frequencyPenalty: 0.1,
   },
   systemMessage: `\
 You are Granite, an AI language model developed by IBM. \
@@ -128,20 +128,38 @@ You are helpful and harmless and you follow ethical guidelines and promote posit
 `,
 };
 
-const DEFAULT_MODEL_GRANITE: ModelDescription = {
-    title: "granite3-dense:8b",
-    provider: "ollama",
-    model: "granite3-dense:8b",
-    ...BASE_GRANITE_CONFIG,
-}
+const DEFAULT_MODEL_GRANITE_SMALL: ModelDescription = {
+  title: "granite3-dense:2b",
+  provider: "ollama",
+  model: "granite3-dense:2b",
+  ...BASE_GRANITE_CONFIG,
+};
 
-export const defaultConfigGranite: SerializedContinueConfig = {
-  models: [DEFAULT_MODEL_GRANITE],
-  tabAutocompleteModel: DEFAULT_MODEL_GRANITE,
+const DEFAULT_MODEL_GRANITE_LARGE: ModelDescription = {
+  title: "granite3-dense:8b",
+  provider: "ollama",
+  model: "granite3-dense:8b",
+  ...BASE_GRANITE_CONFIG,
+};
+
+const defaultConfigGranite: SerializedContinueConfig = {
+  models: [],
   embeddingsProvider: {
     "provider": "ollama",
-    "model": "nomic-embed-text"
+    "model": "nomic-embed-text",
   },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
-}
+};
+
+export const defaultConfigGraniteSmall: SerializedContinueConfig = {
+  ...defaultConfigGranite,
+  models: [DEFAULT_MODEL_GRANITE_SMALL],
+  tabAutocompleteModel: DEFAULT_MODEL_GRANITE_SMALL,
+};
+
+export const defaultConfigGraniteLarge: SerializedContinueConfig = {
+  ...defaultConfigGranite,
+  models: [DEFAULT_MODEL_GRANITE_LARGE],
+  tabAutocompleteModel: DEFAULT_MODEL_GRANITE_LARGE,
+};

@@ -145,6 +145,15 @@
           "type": "number",
           "default": 60,
           "description": "The period of time in minutes between automatic syncs."
+        },
+        "continue.localModelSize": {
+          "type": "string",
+          "enum": [
+            "small",
+            "large"
+          ],
+          "default": "large",
+          "description": "Whether to use a small or large local model. Small models are faster but less accurate."
         }
       }
     },

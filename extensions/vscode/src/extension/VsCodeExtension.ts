@@ -394,6 +394,9 @@ export class VsCodeExtension {
           await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
       }
+      if (event.affectsConfiguration("continue.localModelSize")) {
+        this.configHandler.updateIdeSettings(this.ide.getIdeSettingsSync());
+      }
     });
   }
 

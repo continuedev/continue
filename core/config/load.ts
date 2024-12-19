@@ -64,7 +64,8 @@ import {
 
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import {
-  defaultConfigGranite,
+  defaultConfigGraniteLarge,
+  defaultConfigGraniteSmall,
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
@@ -116,7 +117,10 @@ function loadSerializedConfig(
 ): ConfigResult<SerializedContinueConfig> {
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
-    config = defaultConfigGranite;
+    if (ideSettings.localModelSize == "small")
+      config = defaultConfigGraniteSmall;
+    else
+      config = defaultConfigGraniteLarge;
 
     const configPath = getConfigJsonPath(ideType);
     try {
