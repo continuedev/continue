@@ -290,7 +290,12 @@ export async function getSymbolsForManyFiles(
   const filesAndSymbols = await Promise.all(
     uris.map(async (uri): Promise<[string, SymbolWithRange[]]> => {
       const contents = await ide.readFile(uri);
-      const symbols = await getSymbolsForFile(uri, contents);
+      let symbols = undefined;
+      try {
+        symbols = await getSymbolsForFile(uri, contents);
+      } catch (e) {
+        console.error(`Failed to get symbols for ${uri}:`, e);
+      }
       return [uri, symbols ?? []];
     }),
   );

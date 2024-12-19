@@ -19,20 +19,18 @@ import { ControlPlaneClient } from "./control-plane/client";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
+import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
+import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  setupInitialDotContinueDirectory,
-} from "./util/paths";
+import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -58,14 +56,8 @@ export class Core {
 
   private abortedMessageIds: Set<string> = new Set();
 
-  private selectedModelTitle: string | undefined;
-
   private async config() {
     return this.configHandler.loadConfig();
-  }
-
-  private async getSelectedModel() {
-    return await this.configHandler.llmFromTitle(this.selectedModelTitle);
   }
 
   invoke<T extends keyof ToCoreProtocol>(
@@ -170,10 +162,10 @@ export class Core {
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
-        this.indexingPauseToken.paused = true;
         if (ideSettings.pauseCodebaseIndexOnStart) {
+          this.indexingPauseToken.paused = true;
           void this.messenger.request("indexProgress", {
-            progress: 1,
+            progress: 0,
             desc: "Initial Indexing Skipped",
             status: "paused",
           });
@@ -210,11 +202,6 @@ export class Core {
         stack: err.stack,
       });
       void this.ide.showToast("error", err.message);
-    });
-
-    // New
-    on("update/modelChange", (msg) => {
-      this.selectedModelTitle = msg.data;
     });
 
     on("update/selectTabAutocompleteModel", async (msg) => {
@@ -324,9 +311,10 @@ export class Core {
     });
 
     on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode } = msg.data;
+      const { name, query, fullInput, selectedCode, selectedModelTitle } =
+        msg.data;
       const config = await this.config();
-      const llm = await this.getSelectedModel();
+      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider = config.contextProviders?.find(
         (provider) => provider.description.title === name,
       );
@@ -398,6 +386,7 @@ export class Core {
       }
 
       const model = await configHandler.llmFromTitle(msg.data.title);
+
       const gen = model.streamChat(
         msg.data.messages,
         new AbortController().signal,
@@ -418,14 +407,27 @@ export class Core {
           });
           break;
         }
+
+        const chunk = next.value;
+
         // @ts-ignore
-        yield { content: next.value.content };
+        yield { content: chunk };
         next = await gen.next();
       }
 
       if (config.experimental?.readResponseTTS && "completion" in next.value) {
         void TTS.read(next.value?.completion);
       }
+
+      void Telemetry.capture(
+        "chat",
+        {
+          model: model.model,
+          provider: model.providerName,
+        },
+        true,
+      );
+
       return { done: true, content: next.value };
     }
 
@@ -487,7 +489,7 @@ export class Core {
         config.models.find((model) => model.title?.startsWith(msg.data.title));
       try {
         if (model) {
-          return model.listModels();
+          return await model.listModels();
         } else {
           if (msg.data.title === "Ollama") {
             const models = await new Ollama({ model: "" }).listModels();
@@ -511,8 +513,10 @@ export class Core {
     });
 
     on("chatDescriber/describe", async (msg) => {
-      const currentModel = await this.getSelectedModel();
-      return await ChatDescriber.describe(currentModel, {}, msg.data);
+      const currentModel = await this.configHandler.llmFromTitle(
+        msg.data.selectedModelTitle,
+      );
+      return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
 
     async function* runNodeJsSlashCommand(
@@ -747,8 +751,16 @@ export class Core {
         this.docsService.setPaused(msg.data.id, msg.data.paused);
       }
     });
-    on("indexing/initStatuses", async (msg) => {
-      return this.docsService.initStatuses();
+    on("docs/getSuggestedDocs", async (msg) => {
+      if (hasRequestedDocs) {
+        return;
+      } // TODO, remove, hack because of rerendering
+      hasRequestedDocs = true;
+      const suggestedDocs = await getAllSuggestedDocs(this.ide);
+      this.messenger.send("docs/suggestions", suggestedDocs);
+    });
+    on("docs/initStatuses", async (msg) => {
+      void this.docsService.initStatuses();
     });
     //
 
@@ -768,9 +780,43 @@ export class Core {
       const ignoreInstance = ignore().add(defaultIgnoreFile);
       let rootDirectory = await this.ide.getWorkspaceDirs();
       const relativeFilePath = path.relative(rootDirectory[0], filepath);
-      if (!ignoreInstance.ignores(relativeFilePath)) {
-        recentlyEditedFilesCache.set(filepath, filepath);
+      try {
+        if (!ignoreInstance.ignores(relativeFilePath)) {
+          recentlyEditedFilesCache.set(filepath, filepath);
+        }
+      } catch (e) {
+        if (e instanceof RangeError) {
+          // do nothing, this can happen when editing a file outside the workspace such as `../extensions/.continue-debug/config.json`
+        } else {
+          console.debug("unhandled ignores error", relativeFilePath, e);
+        }
       }
+    });
+
+    on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
+      const config = await this.configHandler.loadConfig();
+      const tool = config.tools.find(
+        (t) => t.function.name === toolCall.function.name,
+      );
+
+      if (!tool) {
+        throw new Error(`Tool ${toolCall.function.name} not found`);
+      }
+
+      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+
+      const contextItems = await callTool(
+        tool.uri ?? tool.function.name,
+        JSON.parse(toolCall.function.arguments || "{}"),
+        {
+          ide: this.ide,
+          llm,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        },
+      );
+
+      return { contextItems };
     });
   }
 
@@ -801,6 +847,8 @@ export class Core {
       this.indexingCancellationController.signal,
     )) {
       let updateToSend = { ...update };
+      // TODO reconsider this status overwrite?
+      // original goal was to not concern users with edge noncritical errors
       if (update.status === "failed") {
         updateToSend.status = "done";
         updateToSend.desc = "Indexing complete";
@@ -854,3 +902,5 @@ export class Core {
 
   // private
 }
+
+let hasRequestedDocs = false;

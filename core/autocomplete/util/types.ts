@@ -1,5 +1,10 @@
-import { Position, Range, RangeInFile, TabAutocompleteOptions } from "../..";
-import { RangeInFileWithContents } from "../../commands/util";
+import {
+  Position,
+  Range,
+  RangeInFile,
+  RangeInFileWithContents,
+  TabAutocompleteOptions,
+} from "../..";
 
 export type RecentlyEditedRange = RangeInFile & {
   timestamp: number;
@@ -13,7 +18,6 @@ export interface AutocompleteInput {
   pos: Position;
   recentlyEditedFiles: RangeInFileWithContents[];
   recentlyEditedRanges: RecentlyEditedRange[];
-  clipboardText: string;
   // Used for notebook files
   manuallyPassFileContents?: string;
   // Used for VS Code git commit input box

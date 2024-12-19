@@ -117,3 +117,47 @@ export async function* stopAtStopTokens(
     yield char;
   }
 }
+
+/**
+ * Asynchronously yields characters from the input stream.
+ * Stops if the beginning of the suffix is detected in the stream.
+ */
+export async function* stopAtStartOf(
+  stream: AsyncGenerator<string>,
+  suffix: string,
+  sequenceLength: number = 20,
+): AsyncGenerator<string> {
+  if (suffix.length < sequenceLength) {
+    for await (const chunk of stream) {
+      yield chunk;
+    }
+    return;
+  }
+  // We use sequenceLength * 1.5 as a heuristic to make sure we don't miss the sequence if the
+  // stream is not perfectly aligned with the sequence (small whitespace differences etc).
+  const targetPart = suffix
+    .trimStart()
+    .slice(0, Math.floor(sequenceLength * 1.5));
+
+  let buffer = "";
+
+  for await (const chunk of stream) {
+    buffer += chunk;
+
+    // Check if the targetPart contains contains the buffer at any point
+    if (buffer.length >= sequenceLength && targetPart.includes(buffer)) {
+      return; // Stop processing when the sequence is found
+    }
+
+    // Yield chunk by chunk, ensuring not to exceed sequenceLength in the buffer
+    while (buffer.length > sequenceLength) {
+      yield buffer[0];
+      buffer = buffer.slice(1);
+    }
+  }
+
+  // Yield the remaining buffer if it is not contained in the `targetPart`
+  if (buffer.length > 0) {
+    yield buffer;
+  }
+}

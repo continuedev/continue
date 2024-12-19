@@ -53,6 +53,7 @@ import java.net.NetworkInterface
 import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.util.*
+import kotlin.coroutines.resume
 
 
 fun uuid(): String {
@@ -108,7 +109,9 @@ class AsyncFileSaveListener(private val ideProtocolClient: IdeProtocolClient) : 
         for (event in events) {
             if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(
                     ".continue\\config.json"
-                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json") || event.path.endsWith(".continuerc.json")
+                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json") || event.path.endsWith(
+                    ".continuerc.json"
+                )
             ) {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
@@ -464,8 +467,10 @@ class IdeProtocolClient(
                     "getRepoName" -> {
                         // Get the current repository name
                         val dir = (data as Map<String, Any>)["dir"] as String
+                        val directory = File(dir)
+                        val targetDir = if (directory.isFile) directory.parentFile else directory
                         val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
-                        builder.directory(File(dir))
+                        builder.directory(targetDir)
                         var output = "NONE"
                         try {
                             val process = builder.start()
@@ -482,9 +487,10 @@ class IdeProtocolClient(
 
                     "getDiff" -> {
                         val workspaceDirs = workspaceDirectories()
-                        val output = StringBuilder()
+                        val diffs = mutableListOf<String>()
 
                         for (workspaceDir in workspaceDirs) {
+                            val output = StringBuilder()
                             val builder = ProcessBuilder("git", "diff")
                             builder.directory(File(workspaceDir))
                             val process = builder.start()
@@ -498,9 +504,10 @@ class IdeProtocolClient(
                             }
 
                             process.waitFor()
+                            diffs.add(output.toString())
                         }
 
-                        respond(output.toString())
+                        respond(diffs)
                     }
 
                     "getProblems" -> {
@@ -687,17 +694,40 @@ class IdeProtocolClient(
                         var llm = getModelByRole(config, "applyCodeBlock")
 
                         if (llm == null) {
-                            val models = (config as? Map<*, *>)?.get("models") as? List<Map<*, *>>
-                            llm = models?.find { model -> model["title"] == curSelectedModelTitle } as Map<String, Any>
+                            llm = try {
+                                suspendCancellableCoroutine { continuation ->
+                                    continuePluginService.coreMessenger?.request(
+                                        "config/getSerializedProfileInfo",
+                                        null,
+                                        null
+                                    ) { response ->
+                                        val models =
+                                            ((response as Map<String, Any>)["config"] as Map<String, Any>)["models"] as List<Map<String, Any>>
+                                        val foundModel = models.find { it["title"] == curSelectedModelTitle }
 
-                            if (llm == null) {
-                                showToast("error", "Model '$curSelectedModelTitle' not found in config.")
+                                        if (foundModel == null) {
+                                            launch {
+                                                showToast(
+                                                    "error",
+                                                    "Model '$curSelectedModelTitle' not found in config."
+                                                )
+                                            }
+                                            continuation.resume(null)
+                                        } else {
+                                            continuation.resume(foundModel)
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                launch { showToast("error", "Failed to fetch model configuration") }
                                 respond(null)
                                 return@launch
                             }
                         }
 
+
                         val llmTitle = (llm as? Map<*, *>)?.get("title") as? String ?: ""
+
 
                         val prompt =
                             "The following code was suggested as an edit:\n```\n${text}\n```\nPlease apply it to the previous code."

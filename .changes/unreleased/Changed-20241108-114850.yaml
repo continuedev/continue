@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Changed
-body: Many improvements to make autocomplete more eager
-time: 2024-11-08T11:48:50.486502-08:00

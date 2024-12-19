@@ -64,7 +64,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
-  getDiff: [{ includeUnstaged: boolean }, string];
+  getDiff: [{ includeUnstaged: boolean }, string[]];
   getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
   getDebugLocals: [{ threadIndex: number }, string];

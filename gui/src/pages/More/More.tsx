@@ -11,11 +11,12 @@ import KeyboardShortcuts from "./KeyboardShortcuts";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useDispatch } from "react-redux";
-import { setOnboardingCard } from "../../redux/slices/uiStateSlice";
+import { setOnboardingCard } from "../../redux/slices/uiSlice";
 import useHistory from "../../hooks/useHistory";
 import MoreHelpRow from "./MoreHelpRow";
 import IndexingProgress from "./IndexingProgress";
-import IndexingStatuses from "../../components/indexing/IndexingStatuses";
+import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses";
+import PageHeader from "../../components/PageHeader";
 
 function MorePage() {
   useNavigationListener();
@@ -26,20 +27,7 @@ function MorePage() {
 
   return (
     <div className="overflow-y-scroll">
-      <div
-        className="sticky top-0 m-0 flex items-center border-0 border-b border-solid border-b-zinc-700 bg-inherit p-0"
-        style={{
-          backgroundColor: vscBackground,
-        }}
-      >
-        <div
-          className="cursor-pointer transition-colors duration-200 hover:text-zinc-100"
-          onClick={() => navigate("/")}
-        >
-          <ArrowLeftIcon className="ml-3 inline-block h-3 w-3" />
-          <span className="m-2 inline-block text-base font-bold">Chat</span>
-        </div>
-      </div>
+      <PageHeader onClick={() => navigate("/")} title="Chat" />
 
       <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="py-5">
@@ -52,7 +40,7 @@ function MorePage() {
           <IndexingProgress />
         </div>
         <div className="flex flex-col py-5">
-          <IndexingStatuses />
+          <DocsIndexingStatuses />
         </div>
 
         <div className="py-5">

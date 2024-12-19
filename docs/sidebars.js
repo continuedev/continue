@@ -110,6 +110,7 @@ const sidebars = {
     },
     "customize/context-providers",
     "customize/slash-commands",
+    "customize/tools",
     "customize/development-data",
     {
       type: "category",

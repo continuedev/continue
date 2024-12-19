@@ -1,11 +1,11 @@
-import { useSelector } from "react-redux";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
+import { useAppSelector } from "../redux/hooks";
+import { selectDefaultModel } from "../redux/slices/configSlice";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
 import ProfileSwitcher from "./ProfileSwitcher";
 
 function Footer() {
-  const defaultModel = useSelector(defaultModelSelector);
+  const defaultModel = useAppSelector(selectDefaultModel);
 
     return (
       <footer className="flex h-7 items-center justify-between overflow-hidden border-0 border-t border-solid border-t-zinc-700 p-2">

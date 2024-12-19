@@ -1,12 +1,12 @@
 import { useContext, useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius } from "../components";
 import TipTapEditor from "../components/mainInput/TipTapEditor";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useSetup from "../hooks/useSetup";
-import { selectSlashCommands } from "../redux/selectors";
-import { RootState } from "../redux/store";
+import { selectSlashCommandComboBoxInputs } from "../redux/selectors";
+import { useAppSelector } from "../redux/hooks";
 
 const EditorInsetDiv = styled.div`
   max-width: 500px;
@@ -18,9 +18,11 @@ const EditorInsetDiv = styled.div`
 
 function EditorInset() {
   const dispatch = useDispatch();
-  const availableSlashCommands = useSelector(selectSlashCommands);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
+  const availableSlashCommands = useAppSelector(
+    selectSlashCommandComboBoxInputs,
+  );
+  const availableContextProviders = useAppSelector(
+    (store) => store.config.config.contextProviders,
   );
 
   useSetup(dispatch);

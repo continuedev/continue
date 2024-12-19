@@ -6,11 +6,11 @@ keywords: [重新加载, 删除, 手动, 日志, 服务器, 控制台]
 
 Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如果你有问题，请跟随下面的步骤。
 
-1. [检查日志](#check-the-logs)
-2. [尝试最新的预览版](#download-the-latest-pre-release)
-3. [下载较老的版本](#download-an-older-version)
-4. [解析快件键问题](#keyboard-shortcuts-not-resolving)
-5. [检查常见问题的 FAQ](#faqs)
+1. [检查日志](#检查日志)
+2. [尝试最新的预览版](#下载最新的预览版)
+3. [下载较老的版本](#下载一个较老的版本)
+4. [解析快件键问题](#快捷键无法解析)
+5. [检查常见问题的 FAQ](#常见问题)
 
 ## 检查日志
 
@@ -128,4 +128,4 @@ Continue 可以在 [code-server](https://coder.com/) 中使用，但是如果你
 
 ## 仍然有问题？
 
-你还可以 [在这里](https://discord.gg/vapESyrFmJ) 加入我们的 Discord 社区，获得更多的支持和讨论。另外，你可以 [在这里](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=) 创建一个 GitHub issue  ，提供你的问题的详情，我们将能更快的帮助你。
+你还可以 [在这里](https://discord.gg/vapESyrFmJ) 加入我们的 Discord 社区，获得更多的支持和讨论。另外，你可以 [在这里](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=) 创建一个 GitHub issue ，提供你的问题的详情，我们将能更快的帮助你。

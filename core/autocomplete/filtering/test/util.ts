@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import Mock from "../../../llm/llms/Mock";
-import { testConfigHandler, testIde } from "../../../test/util/fixtures";
+import { testConfigHandler, testIde } from "../../../test/fixtures";
 import { CompletionProvider } from "../../CompletionProvider";
 import { AutocompleteInput } from "../../util/types";
 
@@ -18,7 +18,7 @@ export interface AutocompleteFileringTestInput {
   filename: string;
   input: string;
   llmOutput: string;
-  expectedCompletion: string | null;
+  expectedCompletion: string | null | undefined;
   options?: {
     only?: boolean;
   };
@@ -54,7 +54,6 @@ export async function testAutocompleteFiltering(
   const line = prefix.split("\n").length - 1;
   const character = prefix.split("\n")[line].length;
   const autocompleteInput: AutocompleteInput = {
-    clipboardText: "",
     completionId: "test-completion-id",
     filepath,
     pos: {

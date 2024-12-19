@@ -37,14 +37,14 @@ export interface IIdeMessenger {
     messageType: T,
     data: FromWebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): FromWebviewProtocol[T][1];
+  ): AsyncGenerator<unknown[]>;
 
   llmStreamChat(
     modelTitle: string,
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<ChatMessage, PromptLog, unknown>;
+  ): AsyncGenerator<ChatMessage[], PromptLog, unknown>;
 
   ide: IDE;
 }
@@ -138,25 +138,34 @@ export class IdeMessenger implements IIdeMessenger {
       const handler = (event: any) => {
         if (event.data.messageId === messageId) {
           window.removeEventListener("message", handler);
-          resolve(event.data.data);
+          resolve(event.data.data as WebviewMessengerResult<T>);
         }
       };
       window.addEventListener("message", handler);
 
       this.post(messageType, data, messageId);
-    }) as any;
+    });
   }
 
+  /**
+   * Because of weird type stuff, we're actually yielding an array of the things
+   * that are streamed. For example, if the return type here says
+   * AsyncGenerator<ChatMessage>, then it's actually AsyncGenerator<ChatMessage[]>.
+   * This needs to be handled by the caller.
+   *
+   * Using unknown for now to make this more explicit
+   */
   async *streamRequest<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): FromWebviewProtocol[T][1] {
+  ): AsyncGenerator<unknown[]> {
+    // ): FromWebviewProtocol[T][1] {
     const messageId = uuidv4();
 
     this.post(messageType, data, messageId);
 
-    let buffer = "";
+    const buffer: any[] = [];
     let index = 0;
     let done = false;
     let returnVal = undefined;
@@ -169,7 +178,7 @@ export class IdeMessenger implements IIdeMessenger {
           done = true;
           returnVal = responseData;
         } else {
-          buffer += responseData.content;
+          buffer.push(responseData.content);
         }
       }
     };
@@ -181,17 +190,16 @@ export class IdeMessenger implements IIdeMessenger {
 
     while (!done) {
       if (buffer.length > index) {
-        const chunk = buffer.slice(index);
+        const chunks = buffer.slice(index);
         index = buffer.length;
-        yield chunk;
+        yield chunks;
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     if (buffer.length > index) {
-      const chunk = buffer.slice(index);
-      index = buffer.length;
-      yield chunk;
+      const chunks = buffer.slice(index);
+      yield chunks;
     }
 
     return returnVal;
@@ -202,7 +210,7 @@ export class IdeMessenger implements IIdeMessenger {
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
-  ): AsyncGenerator<ChatMessage, PromptLog> {
+  ): AsyncGenerator<ChatMessage[], PromptLog> {
     const gen = this.streamRequest(
       "llm/streamChat",
       {
@@ -215,7 +223,7 @@ export class IdeMessenger implements IIdeMessenger {
 
     let next = await gen.next();
     while (!next.done) {
-      yield { role: "user", content: next.value };
+      yield next.value;
       next = await gen.next();
     }
 

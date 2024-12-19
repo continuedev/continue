@@ -6,7 +6,6 @@ import {
 // Message types to pass through from webview to core
 export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
   [
-    "update/modelChange",
     "ping",
     "abort",
     "history/list",
@@ -48,15 +47,17 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "index/forceReIndexFiles",
     "index/indexingProgressBarInitialized",
     // Docs, etc.
-    "indexing/initStatuses",
     "indexing/reindex",
     "indexing/abort",
     "indexing/setPaused",
+    "docs/getSuggestedDocs",
+    "docs/initStatuses",
     //
     "completeOnboarding",
     "addAutocompleteModel",
     "profiles/switch",
     "didChangeSelectedProfile",
+    "tools/call",
   ];
 
 // Message types to pass through from core to webview
@@ -74,4 +75,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "getWebviewHistoryLength",
     "signInToControlPlane",
     "openDialogMessage",
+    "docs/suggestions",
   ];

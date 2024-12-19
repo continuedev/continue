@@ -74,7 +74,7 @@ class FreeTrial extends BaseLLM {
         prompt,
         ...args,
       }),
-      signal
+      signal,
     });
 
     let completion = "";
@@ -82,10 +82,18 @@ class FreeTrial extends BaseLLM {
       yield value;
       completion += value;
     }
-    this._countTokens(completion, args.model, false);
+    void this._countTokens(completion, args.model, false);
   }
 
   protected _convertMessage(message: ChatMessage) {
+    if (message.role === "tool") {
+      return {
+        role: "tool",
+        content: message.content,
+        tool_call_id: message.toolCallId,
+      };
+    }
+
     if (typeof message.content === "string") {
       return message;
     }
@@ -123,7 +131,7 @@ class FreeTrial extends BaseLLM {
         messages: messages.map(this._convertMessage),
         ...args,
       }),
-      signal
+      signal,
     });
 
     let completion = "";
@@ -158,7 +166,7 @@ class FreeTrial extends BaseLLM {
           suffix,
           ...args,
         }),
-        signal
+        signal,
       });
 
       let completion = "";

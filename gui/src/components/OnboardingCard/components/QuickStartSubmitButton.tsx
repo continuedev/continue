@@ -3,14 +3,11 @@ import { useContext } from "react";
 import { useDispatch } from "react-redux";
 import { Button, ButtonSubtext } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { setDefaultModel } from "../../../redux/slices/stateSlice";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { isJetBrains } from "../../../util";
 import { useSubmitOnboarding } from "../hooks";
 import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
+import { setDefaultModel } from "../../../redux/slices/configSlice";
 
 function QuickstartSubmitButton() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -22,9 +19,8 @@ function QuickstartSubmitButton() {
     submitOnboarding();
 
     // Set Sonnet as the default model
-    dispatch(
-      setDefaultModel({ title: FREE_TRIAL_MODELS[0].title, force: true }),
-    );
+    const title = FREE_TRIAL_MODELS[0].title;
+    dispatch(setDefaultModel({ title, force: true }));
   }
 
   function openJetBrainsDialog() {

@@ -2,7 +2,11 @@
 
 import { CompletionOptions } from "../../index.js";
 import { getLastNPathParts, shortestRelativePaths } from "../../util/index.js";
-import { AutocompleteSnippet } from "../context/ranking/index.js";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippet,
+  AutocompleteSnippetType,
+} from "../snippets/types.js";
 
 export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
@@ -81,13 +85,24 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       }
       return [prefix, suffix];
     }
+
     const relativePaths = shortestRelativePaths([
-      ...snippets.map((snippet) => snippet.filepath),
+      ...snippets.map((snippet) =>
+        "filepath" in snippet ? snippet.filepath : "Untitled.txt",
+      ),
       filepath,
     ]);
+
     const otherFiles = snippets
-      .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
+      .map((snippet, i) => {
+        if (snippet.type === AutocompleteSnippetType.Diff) {
+          return snippet.content;
+        }
+
+        return `+++++ ${relativePaths[i]}\n${snippet.content}`;
+      })
       .join("\n\n");
+
     return [
       `${otherFiles}\n\n+++++ ${
         relativePaths[relativePaths.length - 1]
@@ -95,14 +110,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       suffix,
     ];
   },
-  template: (
-    prefix: string,
-    suffix: string,
-    filepath: string,
-    reponame: string,
-    language: string,
-    snippets: AutocompleteSnippet[],
-  ): string => {
+  template: (prefix: string, suffix: string): string => {
     return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
   completionOptions: {
@@ -140,8 +148,7 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
         ? ""
         : `<file_sep>${snippets
             .map((snippet) => {
-              return snippet.contents;
-              // return `${getBasename(snippet.filepath)}\n${snippet.contents}`;
+              return snippet.content;
             })
             .join("<file_sep>")}<file_sep>`;
 
@@ -187,8 +194,12 @@ const codegeexFimTemplate: AutocompleteTemplate = {
     filepath: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippet[],
+    allSnippets: AutocompleteSnippet[],
   ): string => {
+    const snippets = allSnippets.filter(
+      (snippet) => snippet.type === AutocompleteSnippetType.Code,
+    ) as AutocompleteCodeSnippet[];
+
     const relativePaths = shortestRelativePaths([
       ...snippets.map((snippet) => snippet.filepath),
       filepath,
@@ -200,7 +211,7 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
     const references = `###REFERENCE:\n${snippets
-      .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.contents}\n`)
+      .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.content}\n`)
       .join("###REFERENCE:\n")}`;
     const prompt = `<|user|>\n${references}\n${baseTemplate}<|assistant|>\n`;
     return prompt;
@@ -227,14 +238,7 @@ Fill in the blank to complete the code block. Your response should include only 
 };
 
 const holeFillerTemplate: AutocompleteTemplate = {
-  template: (
-    prefix: string,
-    suffix: string,
-    filename: string,
-    reponame: string,
-    language: string,
-    snippets: AutocompleteSnippet[],
-  ) => {
+  template: (prefix: string, suffix: string) => {
     // From https://github.com/VictorTaelin/AI-scripts
     const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
 
@@ -376,7 +380,8 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
   if (
     lowerCaseModel.includes("gpt") ||
     lowerCaseModel.includes("davinci-002") ||
-    lowerCaseModel.includes("claude")
+    lowerCaseModel.includes("claude") ||
+    lowerCaseModel.includes("granite3")
   ) {
     return holeFillerTemplate;
   }

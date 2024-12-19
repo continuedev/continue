@@ -7,10 +7,10 @@ import {
   MessagePart,
   RangeInFile,
 } from "core";
-import { stripImages } from "core/llm/images";
+import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { Dispatch } from "@reduxjs/toolkit";
-import { setIsGatheringContext } from "../../redux/slices/stateSlice";
+import { setIsGatheringContext } from "../../redux/slices/sessionSlice";
 
 interface MentionAttrs {
   label: string;
@@ -19,113 +19,119 @@ interface MentionAttrs {
   query?: string;
 }
 
+interface ResolveEditorContentInput {
+  editorState: JSONContent;
+  modifiers: InputModifiers;
+  ideMessenger: IIdeMessenger;
+  defaultContextProviders: DefaultContextProvider[];
+  selectedModelTitle: string;
+  dispatch: Dispatch;
+}
+
 /**
  * This function converts the input from the editor to a string, resolving any context items
  * Context items are appended to the top of the prompt and then referenced within the input
- * @param editor
- * @returns string representation of the input
  */
-
-async function resolveEditorContent(
-  editorState: JSONContent,
-  modifiers: InputModifiers,
-  ideMessenger: IIdeMessenger,
-  defaultContextProviders: DefaultContextProvider[],
-  dispatch: Dispatch,
-): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
+async function resolveEditorContent({
+  editorState,
+  modifiers,
+  ideMessenger,
+  defaultContextProviders,
+  selectedModelTitle,
+  dispatch,
+}: ResolveEditorContentInput): Promise<
+  [ContextItemWithId[], RangeInFile[], MessageContent]
+> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
-  let slashCommand = undefined;
-  for (const p of editorState?.content) {
-    if (p.type === "paragraph") {
-      const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
+  let slashCommand: string | undefined = undefined;
+  if (editorState?.content) {
+    for (const p of editorState.content) {
+      if (p.type === "paragraph") {
+        const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
 
-      // Only take the first slash command\
-      if (foundSlashCommand && typeof slashCommand === "undefined") {
-        slashCommand = foundSlashCommand;
-      }
+        // Only take the first slash command\
+        if (foundSlashCommand && typeof slashCommand === "undefined") {
+          slashCommand = foundSlashCommand;
+        }
 
-      contextItemAttrs.push(...ctxItems);
+        contextItemAttrs.push(...ctxItems);
 
-      if (text === "") {
-        continue;
-      }
+        if (text === "") {
+          continue;
+        }
 
-      if (parts[parts.length - 1]?.type === "text") {
-        parts[parts.length - 1].text += "\n" + text;
-      } else {
-        parts.push({ type: "text", text });
-      }
-    } else if (p.type === "codeBlock") {
-      if (!p.attrs.item.editing) {
-        let meta = p.attrs.item.description.split(" ");
-        let relativePath = meta[0] || "";
-        let extName = relativePath.split(".").slice(-1)[0];
-        const text =
-          "\n\n" +
-          "```" +
-          extName +
-          " " +
-          p.attrs.item.description +
-          "\n" +
-          p.attrs.item.content +
-          "\n```";
         if (parts[parts.length - 1]?.type === "text") {
           parts[parts.length - 1].text += "\n" + text;
         } else {
-          parts.push({
-            type: "text",
-            text,
-          });
+          parts.push({ type: "text", text });
         }
+      } else if (p.type === "codeBlock") {
+        if (!p.attrs.item.editing) {
+          let meta = p.attrs.item.description.split(" ");
+          let relativePath = meta[0] || "";
+          let extName = relativePath.split(".").slice(-1)[0];
+          const text =
+            "\n\n" +
+            "```" +
+            extName +
+            " " +
+            p.attrs.item.description +
+            "\n" +
+            p.attrs.item.content +
+            "\n```";
+          if (parts[parts.length - 1]?.type === "text") {
+            parts[parts.length - 1].text += "\n" + text;
+          } else {
+            parts.push({
+              type: "text",
+              text,
+            });
+          }
+        }
+
+        const name: string = p.attrs.item.name;
+        let lines = name.substring(name.lastIndexOf("(") + 1);
+        lines = lines.substring(0, lines.lastIndexOf(")"));
+        const [start, end] = lines.split("-");
+
+        selectedCode.push({
+          filepath: p.attrs.item.description,
+          range: {
+            start: { line: parseInt(start) - 1, character: 0 },
+            end: { line: parseInt(end) - 1, character: 0 },
+          },
+        });
+      } else if (p.type === "image") {
+        parts.push({
+          type: "imageUrl",
+          imageUrl: {
+            url: p.attrs.src,
+          },
+        });
+      } else {
+        console.warn("Unexpected content type", p.type);
       }
-
-      const name: string = p.attrs.item.name;
-      let lines = name.substring(name.lastIndexOf("(") + 1);
-      lines = lines.substring(0, lines.lastIndexOf(")"));
-      const [start, end] = lines.split("-");
-
-      selectedCode.push({
-        filepath: p.attrs.item.description,
-        range: {
-          start: { line: parseInt(start) - 1, character: 0 },
-          end: { line: parseInt(end) - 1, character: 0 },
-        },
-      });
-    } else if (p.type === "image") {
-      parts.push({
-        type: "imageUrl",
-        imageUrl: {
-          url: p.attrs.src,
-        },
-      });
-    } else {
-      console.warn("Unexpected content type", p.type);
     }
   }
 
   const shouldGatherContext = modifiers.useCodebase || slashCommand;
 
   if (shouldGatherContext) {
-    dispatch(
-      setIsGatheringContext({
-        isGathering: true,
-        gatheringMessage: "Gathering context",
-      }),
-    );
+    dispatch(setIsGatheringContext(true));
   }
 
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
-    const data = {
+    const result = await ideMessenger.request("context/getContextItems", {
       name: item.itemType === "contextProvider" ? item.id : item.itemType,
       query: item.query,
       fullInput: stripImages(parts),
       selectedCode,
-    };
-    const result = await ideMessenger.request("context/getContextItems", data);
+      selectedModelTitle,
+    });
     if (result.status === "success") {
       const resolvedItems = result.content;
       contextItems.push(...resolvedItems);
@@ -142,6 +148,7 @@ async function resolveEditorContent(
       query: "",
       fullInput: stripImages(parts),
       selectedCode,
+      selectedModelTitle,
     });
 
     if (result.status === "success") {
@@ -161,6 +168,7 @@ async function resolveEditorContent(
         query: provider.query ?? "",
         fullInput: stripImages(parts),
         selectedCode,
+        selectedModelTitle,
       });
       if (result.status === "success") {
         return result.content;
@@ -186,12 +194,7 @@ async function resolveEditorContent(
   }
 
   if (shouldGatherContext) {
-    dispatch(
-      setIsGatheringContext({
-        isGathering: false,
-        gatheringMessage: "Gathering context",
-      }),
-    );
+    dispatch(setIsGatheringContext(true));
   }
 
   return [contextItems, selectedCode, parts];
@@ -209,10 +212,12 @@ function findLastIndex<T>(
   return -1; // if no element satisfies the predicate
 }
 
-function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
+function resolveParagraph(
+  p: JSONContent,
+): [string, MentionAttrs[], string | undefined] {
   let text = "";
   const contextItems = [];
-  let slashCommand = undefined;
+  let slashCommand: string | undefined = undefined;
   for (const child of p.content || []) {
     if (child.type === "text") {
       text += text === "" ? child.text.trimStart() : child.text;

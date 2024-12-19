@@ -1,17 +1,16 @@
 import { IndexingProgressUpdate } from "core";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
 import { isJetBrains } from "../../../util";
 import { XCircleIcon } from "@heroicons/react/24/outline";
+import { useAppSelector } from "../../../redux/hooks";
 
 export interface IndexingProgressErrorTextProps {
   update: IndexingProgressUpdate;
 }
 
 function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
-  const embeddingsProvider = useSelector(
-    (state: RootState) => state.state.config.embeddingsProvider,
+  const embeddingsProvider = useAppSelector(
+    (state) => state.config.config.embeddingsProvider,
   );
 
   const showJbError =

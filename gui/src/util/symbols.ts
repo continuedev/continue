@@ -1,6 +1,6 @@
 import { ContextItemWithId } from "core";
 import { IIdeMessenger } from "../context/IdeMessenger";
-import { updateFileSymbols } from "../redux/slices/stateSlice";
+import { updateFileSymbols } from "../redux/slices/sessionSlice";
 import { Dispatch } from "@reduxjs/toolkit";
 
 export async function updateFileSymbolsFromContextItems(
@@ -15,7 +15,7 @@ export async function updateFileSymbolsFromContextItems(
       new Set(
         contextItems
           .filter((item) => item.uri?.type === "file" && item?.uri?.value)
-          .map((item) => item.uri.value),
+          .map((item) => item.uri!.value),
       ),
     );
     // And then update symbols for those files

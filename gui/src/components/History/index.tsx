@@ -1,10 +1,10 @@
-import { SessionInfo } from "core";
+import { SessionMetadata } from "core";
 import MiniSearch from "minisearch";
-import React, { Fragment, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 
 import useHistory from "../../hooks/useHistory";
-import { getFontSize } from "../../util";
+import { getFontSize, getMetaKeyLabel } from "../../util";
 import { HistoryTableRow } from "./HistoryTableRow";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -20,13 +20,7 @@ const HEADER_CLASS =
   "flex user-select-none pt-2 pb-3 opacity-75 text-center font-bold items-center justify-center sticky h-6";
 
 export function History() {
-  const [sessions, setSessions] = useState<SessionInfo[]>([]);
-
-  const deleteSessionInUI = async (sessionId: string) => {
-    setSessions((prev) =>
-      prev.filter((session) => session.sessionId !== sessionId),
-    );
-  };
+  const [sessions, setSessions] = useState<SessionMetadata[]>([]);
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
@@ -35,12 +29,12 @@ export function History() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const minisearch = useMemo(() => {
-    return new MiniSearch({
+  const minisearch = useRef<MiniSearch>(
+    new MiniSearch({
       fields: ["title"],
       storeFields: ["title", "sessionId", "id"],
-    });
-  }, []);
+    }),
+  ).current;
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -64,7 +58,27 @@ export function History() {
     fetchSessions();
   }, [lastSessionId]);
 
-  const filteredAndSortedSessions: SessionInfo[] = useMemo(() => {
+  const deleteSessionInUI = async (sessionId: string) => {
+    setSessions((prev) =>
+      prev.filter((session) => session.sessionId !== sessionId),
+    );
+    minisearch.discard(sessionId);
+  };
+
+  const updateSessionInUI = async (session: SessionMetadata) => {
+    setSessions((prev) =>
+      prev.map((sess) =>
+        sess.sessionId === session.sessionId ? session : sess,
+      ),
+    );
+    minisearch.replace({
+      title: session.title,
+      sessionId: session.sessionId,
+      id: session.sessionId,
+    });
+  };
+
+  const filteredAndSortedSessions: SessionMetadata[] = useMemo(() => {
     const sessionIds = minisearch
       .search(searchTerm, {
         fuzzy: 0.1,
@@ -114,7 +128,9 @@ export function History() {
       {filteredAndSortedSessions.length === 0 && (
         <div className="m-4 text-center">
           No past sessions found. To start a new session, either click the "+"
-          button or use the keyboard shortcut: <b>Option + Command + N</b>
+          button or use the keyboard shortcut: <code>{getMetaKeyLabel()}</code>
+          {` `}
+          <code>L</code>
         </div>
       )}
 
@@ -129,25 +145,33 @@ export function History() {
             return (
               <Fragment key={index}>
                 {index === 0 && date > yesterday && (
-                  <tr className={HEADER_CLASS}>Today</tr>
+                  <tr className={HEADER_CLASS}>
+                    <td colSpan={3}>Today</td>
+                  </tr>
                 )}
                 {date < yesterday &&
                   date > lastWeek &&
                   prevDate > yesterday && (
-                    <tr className={HEADER_CLASS}>This Week</tr>
+                    <tr className={HEADER_CLASS}>
+                      <td colSpan={3}>This Week</td>
+                    </tr>
                   )}
                 {date < lastWeek && date > lastMonth && prevDate > lastWeek && (
-                  <tr className={HEADER_CLASS}>This Month</tr>
+                  <tr className={HEADER_CLASS}>
+                    <td colSpan={3}>This Month</td>
+                  </tr>
                 )}
                 {date < lastMonth && prevDate > lastMonth && (
-                  <tr className={HEADER_CLASS}>Older</tr>
+                  <tr className={HEADER_CLASS}>
+                    <td colSpan={3}>Older</td>
+                  </tr>
                 )}
 
                 <HistoryTableRow
-                  key={session.sessionId}
-                  session={session}
+                  sessionMetadata={session}
                   date={date}
-                  onDelete={() => deleteSessionInUI(session.sessionId)}
+                  onDelete={deleteSessionInUI}
+                  onEdit={updateSessionInUI}
                 />
               </Fragment>
             );

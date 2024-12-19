@@ -18,8 +18,8 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from ".";
+import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { RootState } from "../redux/store";
@@ -29,8 +29,9 @@ import LoginForm from "../forms/LoginForm";
 import {
   setDialogMessage,
   setShowDialog,
-} from "../redux/slices/uiStateSlice";
+} from "../redux/slices/uiSlice";
 import { useNavigate } from "react-router-dom";
+import { useAppSelector } from "../redux/hooks";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -136,12 +137,12 @@ function ProfileSwitcher() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const lastControlServerBetaEnabledStatus = useSelector(
-    (state: RootState) => state.misc.lastControlServerBetaEnabledStatus,
+  const lastControlServerBetaEnabledStatus = useAppSelector(
+    (state) => state.misc.lastControlServerBetaEnabledStatus,
   );
 
-  const selectedProfileId = useSelector(
-    (store: RootState) => store.state.selectedProfileId,
+  const selectedProfileId = useAppSelector(
+    (store) => store.session.selectedProfileId,
   );
 
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =

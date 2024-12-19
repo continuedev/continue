@@ -1,10 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { MessageContent } from "core";
-import { RangeInFileWithContents } from "core/commands/util";
-import { EditModeArgs, EditStatus } from "core/protocol/ideWebview";
+import { EditStatus, MessageContent } from "core";
 
-interface EditModeState {
-  highlightedCode?: RangeInFileWithContents;
+export interface EditModeState {
   editStatus: EditStatus;
   previousInputs: MessageContent[];
   fileAfterEdit?: string;
@@ -19,8 +16,7 @@ export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    startEditMode: (state, { payload }: PayloadAction<EditModeArgs>) => {
-      state.highlightedCode = payload.highlightedCode;
+    focusEdit: (state) => {
       state.editStatus = "not-started";
       state.previousInputs = [];
       state.fileAfterEdit = undefined;
@@ -77,10 +73,10 @@ export const editModeStateSlice = createSlice({
 });
 
 export const {
-  startEditMode,
   setEditStatus,
   addPreviousInput,
   setEditDone,
   submitEdit,
+  focusEdit,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

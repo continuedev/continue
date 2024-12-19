@@ -1,13 +1,11 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { PersistedSessionInfo, SessionInfo } from "core";
-
-import { stripImages } from "core/llm/images";
+import { Session, SessionMetadata } from "core";
+import { renderChatMessage } from "core/util/messageContent";
 import { useCallback, useContext } from "react";
-import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
-import { newSession } from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
+import { useAppSelector } from "../redux/hooks";
+import { newSession, updateSessionTitle } from "../redux/slices/sessionSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const MAX_TITLE_LENGTH = 100;
@@ -20,9 +18,15 @@ function truncateText(text: string, maxLength: number) {
 }
 
 function useHistory(dispatch: Dispatch) {
-  const state = useSelector((state: RootState) => state.state);
+  const sessionId = useAppSelector((store) => store.session.id);
+  const config = useAppSelector((store) => store.config.config);
+  const history = useAppSelector((store) => store.session.history);
+  const title = useAppSelector((store) => store.session.title);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
+  const selectedModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
 
   const updateLastSessionId = useCallback((sessionId: string) => {
     setLastSessionId(sessionId);
@@ -32,7 +36,7 @@ function useHistory(dispatch: Dispatch) {
   async function getHistory(
     offset?: number,
     limit?: number,
-  ): Promise<SessionInfo[]> {
+  ): Promise<SessionMetadata[]> {
     const result = await ideMessenger.request("history/list", {
       offset,
       limit,
@@ -41,32 +45,35 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function getChatTitle(message?: string): Promise<string | undefined> {
-    const result = await ideMessenger.request(
-      "chatDescriber/describe",
-      message,
-    );
+    if (!selectedModelTitle) {
+      console.error("Failed to get chat title");
+      return;
+    }
+    const result = await ideMessenger.request("chatDescriber/describe", {
+      text: message,
+      selectedModelTitle,
+    });
     return result.status === "success" ? result.content : undefined;
   }
 
   async function saveSession(openNewSession: boolean = true) {
-    if (state.history.length === 0) return;
+    if (history.length === 0) return;
 
-    const stateCopy = { ...state };
     if (openNewSession) {
       dispatch(newSession());
-      updateLastSessionId(stateCopy.sessionId);
+      updateLastSessionId(sessionId);
     }
-    await new Promise((resolve) => setTimeout(resolve, 10));
 
-    if (state.config?.ui?.getChatTitles && stateCopy.title === "New Session") {
+    let currentTitle = title;
+    if (config?.ui?.getChatTitles && currentTitle === "New Session") {
       try {
         // Check if we have first assistant response
-        let assistantResponse = stateCopy.history
+        let assistantResponse = history
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
 
         if (assistantResponse) {
-          stateCopy.title = await getChatTitle(assistantResponse);
+          currentTitle = await getChatTitle(assistantResponse);
         }
       } catch (e) {
         throw new Error("Unable to get chat title");
@@ -74,31 +81,34 @@ function useHistory(dispatch: Dispatch) {
     }
 
     // Fallback if we get an error above or if the user has not set getChatTitles
-    let title =
-      stateCopy.title === "New Session"
+    let newTitle =
+      currentTitle === "New Session"
         ? truncateText(
-            stripImages(stateCopy.history[0].message.content)
+            renderChatMessage(history[0].message)
               .split("\n")
               .filter((l) => l.trim() !== "")
               .slice(-1)[0] || "",
             MAX_TITLE_LENGTH,
           )
-        : stateCopy.title?.length > 0
-          ? stateCopy.title
-          : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
+        : currentTitle?.length > 0
+          ? currentTitle
+          : (await getSession(sessionId)).title; // to ensure titles are synced with updates from history page.
 
-    const sessionInfo: PersistedSessionInfo = {
-      history: stateCopy.history,
-      title: title,
-      sessionId: stateCopy.sessionId,
+    const session: Session = {
+      sessionId,
+      title: newTitle,
       workspaceDirectory: window.workspacePaths?.[0] || "",
-      checkpoints: stateCopy.checkpoints,
+      history,
     };
 
-    return await ideMessenger.request("history/save", sessionInfo);
+    await ideMessenger.request("history/save", session);
+
+    if (!openNewSession) {
+      dispatch(updateSessionTitle(newTitle));
+    }
   }
 
-  async function getSession(id: string): Promise<PersistedSessionInfo> {
+  async function getSession(id: string): Promise<Session> {
     const result = await ideMessenger.request("history/load", { id });
     if (result.status === "error") {
       throw new Error(result.error);
@@ -106,16 +116,16 @@ function useHistory(dispatch: Dispatch) {
     return result.content;
   }
 
-  async function updateSession(sessionInfo: PersistedSessionInfo) {
-    return await ideMessenger.request("history/save", sessionInfo);
+  async function updateSession(session: Session) {
+    return await ideMessenger.request("history/save", session);
   }
 
   async function deleteSession(id: string) {
     return await ideMessenger.request("history/delete", { id });
   }
 
-  async function loadSession(id: string): Promise<PersistedSessionInfo> {
-    updateLastSessionId(state.sessionId);
+  async function loadSession(id: string): Promise<Session> {
+    updateLastSessionId(sessionId);
     const result = await ideMessenger.request("history/load", { id });
     if (result.status === "error") {
       throw new Error(result.error);
@@ -126,7 +136,7 @@ function useHistory(dispatch: Dispatch) {
     return sessionContent;
   }
 
-  async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {
+  async function loadLastSession(): Promise<Session | undefined> {
     const lastSessionId = getLocalStorage("lastSessionId");
     if (lastSessionId) {
       return await loadSession(lastSessionId);

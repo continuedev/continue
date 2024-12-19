@@ -60,7 +60,6 @@ ollama run starcoder2:3b
 
 - `disable`: 禁用自动补全（也可以在 IDE 配置中完成）
 - `template`: 一个用来自动补全的可选的模板字符串。它使用 Mustache 模板语言渲染，并且传递 'prefix' 和 'suffix' 变量。（字符串）
-- `useCopyBuffer`: 决定 copy buffer 是否考虑为构建提示词。（布尔型）
 - `useFileSuffix`: 决定是否使用文件后缀在提示词中。（布尔型）
 - `maxPromptTokens`: 提示词使用的 token 的最大数量。一个较小的数字生成较快的补全，但是较少的上下文。（数字）
 - `prefixPercentage`: 输入专注于前缀的百分比。（数字）
@@ -69,7 +68,6 @@ ollama run starcoder2:3b
 - `debounceDelay`: 在按键之后触发自动补全的毫秒延迟。（数字）
 - `multilineCompletions`: 是否启用多行补全 ("always", "never" 或 "auto") 。默认情况下是 "auto" 。
 - `useCache`: 是否缓存和重新使用补全，当提示词与前一个相同时。对于测试的目的可能是有用的。
-- `useOtherFiles`: 是否包含当前文件之外的文件的上下文。关闭这个预期会减少补全的准确性，但是对于测试可能是有用的。
 - `disableInFiles`: 一个你想要禁用 tab 自动补全的 glob 模式的文件列表。
 
 ### 完整示例

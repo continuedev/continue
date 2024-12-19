@@ -1,9 +1,9 @@
-import { CheckIcon, XMarkIcon, PlayIcon } from "@heroicons/react/24/outline";
-import Spinner from "./Spinner";
-import { lightGray, vscForeground } from "../..";
-import { ApplyState } from "core/protocol/ideWebview";
+import { CheckIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ApplyState } from "core";
 import { useState } from "react";
+import { lightGray, vscForeground } from "../..";
 import { getMetaKeyLabel } from "../../../util";
+import Spinner from "../../gui/Spinner";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {

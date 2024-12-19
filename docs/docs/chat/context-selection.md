@@ -15,23 +15,23 @@ The highlighted code you’ve selected by pressing <kbd>cmd/ctrl</kbd> + <kbd>L<
 
 ## Active file
 
-You can include the currently open file as context by pressing <kbd>cmd/ctrl</kbd> + <kbd>opt</kbd> + <kbd>enter</kbd> when you send your request.
+You can include the currently open file as context by pressing <kbd>cmd</kbd> + <kbd>opt</kbd> + <kbd>enter</kbd> (Mac) or <kbd>ctrl</kbd> + <kbd>alt</kbd> + <kbd>enter</kbd> (Windows) when you send your request.
 
 ## Specific file
 
-You can include a specific file in your current workspace as context by typing [`@Files`](../customize/context-providers.md#files) and selecting the file.
+You can include a specific file in your current workspace as context by typing [`@Files`](../customize/context-providers.md#file) and selecting the file.
 
 ## Specific folder
 
-You can include a folder in your current workspace as context by typing [`@Folder`](../customize/context-providers.md#folders) and selecting the directory. It [works like `@Codebase`](../customize/deep-dives/codebase.md) but only includes the files in the selected folder.
+You can include a folder in your current workspace as context by typing [`@Folder`](../customize/context-providers.md#folder) and selecting the directory. It [works like `@Codebase`](../customize/deep-dives/codebase.md) but only includes the files in the selected folder.
 
 ## Entire codebase
 
-You can include your entire codebase as context by typing [`@Codebase`](../customize/context-providers.md#codebase-retrieval). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.md).
+You can include your entire codebase as context by typing [`@Codebase`](../customize/context-providers.md#codebase). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.md).
 
 ## Documentation site
 
-You can include a documentation site as context by typing [`@Docs`](../customize/context-providers.md#documentation) and selecting the documentation site. You can learn about how @Docs works [here](../customize/deep-dives/docs.md).
+You can include a documentation site as context by typing [`@Docs`](../customize/context-providers.md#docs) and selecting the documentation site. You can learn about how @Docs works [here](../customize/deep-dives/docs.md).
 
 ## Terminal contents
 

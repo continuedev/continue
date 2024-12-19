@@ -1,24 +1,9 @@
 import { ILLM, LLMFullCompletionOptions } from "..";
-import { stripImages } from "../llm/images";
 
-import { removeQuotesAndEscapes } from ".";
+import { removeQuotesAndEscapes, removeCodeBlocksAndTrim } from ".";
 
-import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "./messenger";
-
-/**
- * Removes code blocks from a message.
- *
- * Return modified message text.
- */
-function removeCodeBlocksAndTrim(msgText: string): string {
-  const codeBlockRegex = /```[\s\S]*?```/g;
-
-  // Remove code blocks from the message text
-  const textWithoutCodeBlocks = msgText.replace(codeBlockRegex, "");
-
-  return textWithoutCodeBlocks.trim();
-}
+import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 
 export class ChatDescriber {
   static prompt: string | undefined =
@@ -35,7 +20,6 @@ export class ChatDescriber {
     }
 
     // Clean up and distill the message we want to send to the LLM
-    message = stripImages(message);
     message = removeCodeBlocksAndTrim(message);
 
     if (!message) {

@@ -4,25 +4,22 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 let watsonxToken = {
-          expiration: 0,
-          token: ""
+  expiration: 0,
+  token: "",
 };
 
 class WatsonX extends BaseLLM {
-
   constructor(options: LLMOptions) {
     super(options);
   }
 
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
-    if (
-      this.apiBase?.includes("cloud.ibm.com")
-    ) {
+    if (this.apiBase?.includes("cloud.ibm.com")) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
@@ -82,11 +79,9 @@ class WatsonX extends BaseLLM {
   }
 
   getWatsonxEndpoint(): string {
-    return (
-      this.deploymentId ?
-      `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`:
-      `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`
-    );
+    return this.deploymentId
+      ? `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`
+      : `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`;
   }
 
   static providerName: ModelProvider = "watsonx";
@@ -94,6 +89,10 @@ class WatsonX extends BaseLLM {
   protected _convertMessage(message: ChatMessage) {
     if (typeof message.content === "string") {
       return message;
+    }
+
+    if (message.role === "tool") {
+      return null;
     }
 
     const parts = message.content.map((part) => {
@@ -119,7 +118,7 @@ class WatsonX extends BaseLLM {
 
   protected _convertArgs(options: any, messages: ChatMessage[]) {
     const finalOptions = {
-      messages: messages.map(this._convertMessage),
+      messages: messages.map(this._convertMessage).filter(Boolean),
       model: this._convertModelName(options.model),
       max_tokens: options.maxTokens,
       temperature: options.temperature,
@@ -133,8 +132,9 @@ class WatsonX extends BaseLLM {
   protected _getHeaders() {
     return {
       "Content-Type": "application/json",
-      Authorization: `${watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-        } ${watsonxToken.token}`,
+      Authorization: `${
+        watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+      } ${watsonxToken.token}`,
     };
   }
 
@@ -165,7 +165,7 @@ class WatsonX extends BaseLLM {
       signal,
       options,
     )) {
-      yield stripImages(chunk.content);
+      yield renderChatMessage(chunk);
     }
   }
 
@@ -183,7 +183,8 @@ class WatsonX extends BaseLLM {
       watsonxToken = await this.getBearerToken();
     } else {
       console.log(
-        `Reusing token (expires in ${(watsonxToken.expiration - now) / 60
+        `Reusing token (expires in ${
+          (watsonxToken.expiration - now) / 60
         } mins)`,
       );
     }
@@ -191,7 +192,8 @@ class WatsonX extends BaseLLM {
       throw new Error("Something went wrong. Check your credentials, please.");
     }
     const stopSequences =
-      options.stop?.slice(0,6) ?? (options.model?.includes("granite") ? ["Question:"] : []);
+      options.stop?.slice(0, 6) ??
+      (options.model?.includes("granite") ? ["Question:"] : []);
     const url = this.getWatsonxEndpoint();
     const headers = this._getHeaders();
 
@@ -224,7 +226,7 @@ class WatsonX extends BaseLLM {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
-      signal
+      signal,
     });
 
     if (!response.ok || response.body === null) {

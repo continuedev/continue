@@ -12,7 +12,7 @@ class ContinueAuthDialog(private val onTokenEntered: (String) -> Unit) : DialogW
 
     init {
         init()
-        title = "Enter Continue Authentication Token"
+        title = "Continue authentication"
     }
 
     override fun createCenterPanel(): JComponent {

@@ -1,4 +1,9 @@
-import { ChatHistory, ChatMessage, MessagePart } from "../index.js";
+import { ChatHistoryItem, ChatMessage, MessagePart } from "../index.js";
+import { normalizeToMessageParts } from "../util/messageContent.js";
+
+import { modelSupportsTools } from "./autodetect.js";
+
+const CUSTOM_SYS_MSG_MODEL_FAMILIES = ["sonnet", "gpt-4o", "mistral-large"];
 
 const SYSTEM_MESSAGE = `When generating new code:
 
@@ -58,52 +63,67 @@ function helloWorld() {
 
 Always follow these guidelines when generating code responses.`;
 
-function hasCodeBlockWithFilename(content: ChatMessage["content"]): boolean {
-  const contentStr = typeof content === "string" ? content : content[0].text;
+const TOOL_USE_RULES = `When using tools, follow the following guidelines:
+- Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
 
-  if (!contentStr) {
-    return false;
+function constructSystemPrompt(model: string): string | null {
+  if (CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))) {
+    return SYSTEM_MESSAGE + "\n\n" + TOOL_USE_RULES;
+  }
+  if (modelSupportsTools(model)) {
+    return TOOL_USE_RULES;
   }
 
-  const codeBlockRegex = /```[\w\W]*?\.[\w\W]*/;
-  return codeBlockRegex.test(contentStr);
+  return null;
 }
 
+const CANCELED_TOOL_CALL_MESSAGE =
+  "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
+
 export function constructMessages(
-  history: ChatHistory,
+  history: ChatHistoryItem[],
   model: string,
 ): ChatMessage[] {
-  const msgs = [];
+  const msgs: ChatMessage[] = [];
 
-  // Only using this system message with Sonnet right now
-  if (
-    // hasCodeBlockWithFilename(history[0].message.content) &&
-    model.includes("sonnet")
-  ) {
+  const systemMessage = constructSystemPrompt(model);
+  if (systemMessage) {
     msgs.push({
       role: "system" as const,
-      content: SYSTEM_MESSAGE,
+      content: systemMessage,
     });
   }
 
   for (let i = 0; i < history.length; i++) {
     const historyItem = history[i];
 
-    let content = Array.isArray(historyItem.message.content)
-      ? historyItem.message.content
-      : [{ type: "text", text: historyItem.message.content } as MessagePart];
+    if (historyItem.message.role === "user") {
+      // Gather context items for user messages
+      let content = normalizeToMessageParts(historyItem.message);
 
-    const ctxItems = historyItem.contextItems.map((ctxItem) => {
-      return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
-    });
+      const ctxItems = historyItem.contextItems.map((ctxItem) => {
+        return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
+      });
 
-    content = [...ctxItems, ...content];
-
-    msgs.push({
-      role: historyItem.message.role,
-      content,
-    });
+      content = [...ctxItems, ...content];
+      msgs.push({
+        ...historyItem.message,
+        content,
+      });
+    } else if (historyItem.toolCallState?.status === "canceled") {
+      // Canceled tool call
+      msgs.push({
+        ...historyItem.message,
+        content: CANCELED_TOOL_CALL_MESSAGE,
+      });
+    } else {
+      msgs.push(historyItem.message);
+    }
   }
 
-  return msgs;
+  // Remove the "id" from all of the messages
+  return msgs.map((msg) => {
+    const { id, ...rest } = msg as any;
+    return rest;
+  });
 }

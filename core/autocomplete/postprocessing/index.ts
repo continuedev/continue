@@ -43,9 +43,13 @@ function isExtremeRepetition(completion: string): boolean {
   }
   return false;
 }
-export function isOnlyWhitespace(completion: string): boolean {
+function isOnlyWhitespace(completion: string): boolean {
   const whitespaceRegex = /^[\s]+$/;
   return whitespaceRegex.test(completion);
+}
+
+function isBlank(completion: string): boolean {
+  return completion.trim().length === 0;
 }
 
 export function postprocessCompletion({
@@ -60,6 +64,11 @@ export function postprocessCompletion({
   suffix: string;
 }): string | undefined {
   // Don't return empty
+  if (isBlank(completion)) {
+    return undefined;
+  }
+
+  // Don't return whitespace
   if (isOnlyWhitespace(completion)) {
     return undefined;
   }
@@ -83,6 +92,24 @@ export function postprocessCompletion({
     }
   }
 
+  if (llm.model.includes("granite")) {
+    // Granite tends to repeat the start of the line in the completion output
+    let prefixEnd = prefix.split("\n").pop();
+    if (prefixEnd) {
+      if (completion.startsWith(prefixEnd)) {
+        completion = completion.slice(prefixEnd.length);
+      } else {
+        const trimmedPrefix = prefixEnd.trim();
+        const lastWord = trimmedPrefix.split(/\s+/).pop();
+        if (lastWord && completion.startsWith(lastWord)) {
+          completion = completion.slice(lastWord.length);
+        } else if (completion.startsWith(trimmedPrefix)) {
+          completion = completion.slice(trimmedPrefix.length);
+        }
+      }
+    }
+  }
+
   // // If completion starts with multiple whitespaces, but the cursor is at the end of the line
   // // then it should probably be on a new line
   // if (
@@ -94,17 +121,8 @@ export function postprocessCompletion({
   // }
 
   // If prefix ends with space and so does completion, then remove the space from completion
-  if (
-    prefix.split("\n").pop()?.trim() !== "" &&
-    prefix.endsWith(" ") &&
-    completion.startsWith(" ")
-  ) {
-    const test = prefix.split("\n").pop()?.trim() !== "";
-    completion = completion.slice(1);
-  }
 
-  // Qwen often adds an extra space to the start
-  if (llm.model.toLowerCase().includes("qwen") && completion.startsWith(" ")) {
+  if (prefix.endsWith(" ") && completion.startsWith(" ")) {
     completion = completion.slice(1);
   }
 

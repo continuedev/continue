@@ -8,12 +8,12 @@ import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import { hasPassedFTL } from "../../../util/freeTrial";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
+import { setDefaultModel } from "../../../redux/slices/configSlice";
 
 const OLLAMA_CHECK_INTERVAL_MS = 3000;
 
@@ -30,13 +30,17 @@ function OnboardingLocalTab() {
 
   const [isOllamaConnected, setIsOllamaConnected] = useState(false);
 
-  const hasDownloadedChatModel = downloadedOllamaModels.some((ollamaModel) =>
-    ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
-  );
+  const hasDownloadedChatModel = Array.isArray(downloadedOllamaModels)
+    ? downloadedOllamaModels.some((ollamaModel) =>
+        ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
+      )
+    : false;
 
-  const hasDownloadedAutocompleteModel = downloadedOllamaModels.some(
-    (ollamaModel) => ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
-  );
+  const hasDownloadedAutocompleteModel = Array.isArray(downloadedOllamaModels)
+    ? downloadedOllamaModels.some((ollamaModel) =>
+        ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
+      )
+    : false;
 
   /**
    * The first time we detect that a chat model has been loaded,
@@ -59,11 +63,17 @@ function OnboardingLocalTab() {
       try {
         const result = await ideMessenger.request("llm/listModels", {
           title: ONBOARDING_LOCAL_MODEL_TITLE,
-        })
-
+        });
         if (result.status === "success") {
-          setDownloadedOllamaModels(result.content);
-          setIsOllamaConnected(true);
+          // TODO - temporary fix, see notes
+          // https://github.com/continuedev/continue/pull/3059
+          if (Array.isArray(result.content)) {
+            setDownloadedOllamaModels(result.content);
+            setIsOllamaConnected(true);
+          } else {
+            setDownloadedOllamaModels([]);
+            setIsOllamaConnected(false);
+          }
         } else {
           throw new Error("Failed to fetch models");
         }

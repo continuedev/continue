@@ -6,6 +6,7 @@ import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider.js";
 import ContinueProxyEmbeddingsProvider from "./ContinueProxyEmbeddingsProvider.js";
 import DeepInfraEmbeddingsProvider from "./DeepInfraEmbeddingsProvider.js";
 import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider.js";
+import FunctionNetworkEmbeddingsProvider from "./FunctionNetworkEmbeddingsProvider.js";
 import GeminiEmbeddingsProvider from "./GeminiEmbeddingsProvider.js";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEIEmbeddingsProvider.js";
 import LMStudioEmbeddingsProvider from "./LMStudio.js";
@@ -15,6 +16,7 @@ import NvidiaEmbeddingsProvider from "./NvidiaEmbeddingsProvider.js";
 import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider.js";
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
 import SageMakerEmbeddingsProvider from "./SageMakerEmbeddingsProvider.js";
+import SiliconFlowEmbeddingsProvider from "./SiliconFlowEmbeddingsProvider.js";
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider.js";
 import VertexEmbeddingsProvider from "./VertexEmbeddingsProvider.js";
 import VoyageEmbeddingsProvider from "./VoyageEmbeddingsProvider.js";
@@ -35,6 +37,7 @@ export const allEmbeddingsProviders: Record<
   openai: OpenAIEmbeddingsProvider,
   cohere: CohereEmbeddingsProvider,
   "free-trial": FreeTrialEmbeddingsProvider,
+  "function-network": FunctionNetworkEmbeddingsProvider,
   "huggingface-tei": HuggingFaceTEIEmbeddingsProvider,
   gemini: GeminiEmbeddingsProvider,
   "continue-proxy": ContinueProxyEmbeddingsProvider,
@@ -45,5 +48,6 @@ export const allEmbeddingsProviders: Record<
   nebius: NebiusEmbeddingsProvider,
   vertexai: VertexEmbeddingsProvider,
   watsonx: WatsonxEmbeddingsProvider,
-  lmstudio: LMStudioEmbeddingsProvider
+  lmstudio: LMStudioEmbeddingsProvider,
+  siliconflow: SiliconFlowEmbeddingsProvider,
 };

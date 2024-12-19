@@ -1,4 +1,6 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { SymbolWithRange } from "core";
+import { ctxItemToRifWithContents } from "core/commands/util";
+import { memo, useEffect, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -12,18 +14,18 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize, isJetBrains } from "../../util";
+import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
-import { ctxItemToRifWithContents } from "core/commands/util";
-import FilenameLink from "./FilenameLink";
-import StepContainerPreToolbar from "./StepContainerPreToolbar";
-import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
-import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { RootState } from "../../redux/store";
-import { ContextItemWithId, SymbolWithRange } from "core";
+import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
-import { useSelector } from "react-redux";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { remarkTables } from "./utils/remarkTables";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
+import { useAppSelector } from "../../redux/hooks";
+import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -111,7 +113,7 @@ function getLanuageFromClassName(className: any): string | null {
     .find((word) => word.startsWith(HLJS_LANGUAGE_CLASSNAME_PREFIX))
     ?.split("-")[1];
 
-  return language;
+  return language ?? null;
 }
 
 function getCodeChildrenContent(children: any) {
@@ -141,8 +143,8 @@ function processCodeBlocks(tree: any) {
     node.data = node.data || {};
     node.data.hProperties = node.data.hProperties || {};
 
-    node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
-    node.data.hProperties.codeBlockContent = node.value;
+    node.data.hProperties["data-isgeneratingcodeblock"] = lastCodeNode === node;
+    node.data.hProperties["data-codeblockcontent"] = node.value;
 
     if (node.meta) {
       let meta = node.meta.split(" ");
@@ -155,21 +157,17 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
-  const contextItems = useSelector(
-    (state: RootState) =>
-      state.state.history[props.itemIndex - 1]?.contextItems,
-  );
-  const symbols = useSelector((state: RootState) => state.state.symbols);
-
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
+  const contextItems = useAppSelector(
+    (state) => state.session.history[props.itemIndex - 1]?.contextItems,
+  );
+  const contextItemsRef = useUpdatingRef(contextItems);
+
+  const symbols = useAppSelector((state) => state.session.symbols);
+
   const symbolsRef = useRef<SymbolWithRange[]>([]);
-  const contextItemsRef = useRef<ContextItemWithId[]>([]);
-  
-  useEffect(() => {
-    contextItemsRef.current = contextItems || [];
-  }, [contextItems]);
   useEffect(() => {
     // Note, before I was only looking for symbols that matched
     // Context item files on current history item
@@ -178,7 +176,16 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
-    remarkPlugins: [remarkMath, () => processCodeBlocks],
+    remarkPlugins: [
+      remarkTables,
+      [
+        remarkMath,
+        {
+          singleDollarTextMath: false,
+        },
+      ],
+      () => processCodeBlocks,
+    ],
     rehypePlugins: [
       rehypeKatex as any,
       {},
@@ -212,13 +219,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const {
-            className,
-            filepath,
-            isGeneratingCodeBlock,
-            codeBlockContent,
-            range,
-          } = preProps?.children?.[0]?.props;
+          const preChildProps = preProps?.children?.[0]?.props;
+          const { className, filepath, range } = preProps?.children?.[0]?.props;
+
+          const codeBlockContent = preChildProps["data-codeblockcontent"];
+          const isGeneratingCodeBlock =
+            preChildProps["data-isgeneratingcodeblock"];
 
           if (!props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;
@@ -260,9 +266,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           const content = getCodeChildrenContent(codeProps.children);
 
           if (content && contextItemsRef.current) {
-            const ctxItem = contextItemsRef.current.find((ctxItem) =>
-              ctxItem.uri?.value.includes(content),
+            const ctxItem = contextItemsRef.current.find(
+              (ctxItem) =>
+                ctxItem.uri?.value.includes(content) &&
+                ctxItem.uri.type === "file",
             );
+
             if (ctxItem) {
               const rif = ctxItemToRifWithContents(ctxItem);
               return <FilenameLink rif={rif} />;
@@ -290,7 +299,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   });
 
   useEffect(() => {
-    setMarkdownSource(patchNestedMarkdown(props.source ?? ""));
+    setMarkdownSource(
+      // some patches to source markdown are applied here:
+      fixDoubleDollarNewLineLatex(patchNestedMarkdown(props.source ?? "")),
+    );
   }, [props.source]);
 
   return (
