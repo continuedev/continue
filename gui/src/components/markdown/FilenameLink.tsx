@@ -2,7 +2,7 @@ import { RangeInFile } from "core";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import FileIcon from "../FileIcon";
-import { getUriPathBasename } from "core/util/uri";
+import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { ToolTip } from "../gui/Tooltip";
 import { v4 as uuidv4 } from "uuid";
 
@@ -23,6 +23,11 @@ function FilenameLink({ rif }: FilenameLinkProps) {
 
   const id = uuidv4();
 
+  const { relativePathOrBasename } = findUriInDirs(
+    rif.filepath,
+    window.workspacePaths ?? [],
+  );
+
   return (
     <>
       <span
@@ -36,7 +41,7 @@ function FilenameLink({ rif }: FilenameLinkProps) {
         </span>
       </span>
       <ToolTip id={id} place="top">
-        {rif.filepath}
+        {"/" + relativePathOrBasename}
       </ToolTip>
     </>
   );
