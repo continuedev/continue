@@ -1,7 +1,7 @@
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getUriPathBasename } from "../../util/uri";
 
 import { ToolImpl } from ".";
-import { resolveRelativePathInDir } from "../../util/ideUtils";
 
 export const readFileImpl: ToolImpl = async (args, extras) => {
   const firstUriMatch = await resolveRelativePathInDir(
@@ -17,6 +17,10 @@ export const readFileImpl: ToolImpl = async (args, extras) => {
       name: getUriPathBasename(args.filepath),
       description: args.filepath,
       content,
+      uri: {
+        type: "file",
+        value: firstUriMatch,
+      },
     },
   ];
 };
