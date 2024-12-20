@@ -286,7 +286,7 @@ export class Core {
     });
 
     on("context/indexDocs", async (msg) => {
-      await this.docsService.syncOrReindexAllDocsWithPrompt(msg.data.reIndex);
+      await this.docsService.syncDocsWithPrompt(msg.data.reIndex);
     });
 
     on("context/loadSubmenuItems", async (msg) => {
