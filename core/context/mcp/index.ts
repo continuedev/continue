@@ -105,9 +105,6 @@ class MCPConnection {
 
     try {
       await this.connectPromise;
-    } catch (error) {
-      // Handle connection error if needed
-      throw error;
     } finally {
       // Reset the promise so future attempts can try again if necessary
       this.connectPromise = null;
@@ -133,7 +130,6 @@ class MCPConnection {
         throw new Error("Operation aborted");
       }
       if (!error.message.startsWith("StdioClientTransport already started")) {
-        console.error("Failed to connect client:", error);
         return {
           fatal: false,
           message: `Failed to connect to MCP ${mcpId}: ${error.message}`,
