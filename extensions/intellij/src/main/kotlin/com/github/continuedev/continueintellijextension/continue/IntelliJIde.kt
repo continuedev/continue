@@ -22,11 +22,13 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
+import com.intellij.util.containers.toArray
 import kotlinx.coroutines.*
 import java.awt.Desktop
 import java.awt.Toolkit
@@ -41,7 +43,6 @@ import java.nio.file.Paths
 
 class IntelliJIDE(
     private val project: Project,
-    private val workspacePath: String?,
     private val continuePluginService: ContinuePluginService,
 
     ) : IDE {
@@ -560,10 +561,6 @@ class IntelliJIDE(
             return dirs
         }
 
-        if (this.workspacePath != null) {
-            return arrayOf(this.workspacePath)
-        }
-
-        return arrayOf()
+        return listOfNotNull(project.guessProjectDir()?.url).toTypedArray()
     }
 }
