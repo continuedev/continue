@@ -7,6 +7,7 @@ import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
+import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
@@ -34,7 +35,22 @@ import { useInputHistory } from "../../hooks/useInputHistory";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+  selectHasCodeToEdit,
+  selectIsInEditMode,
+  setMainEditorContentTrigger,
+} from "../../redux/slices/sessionSlice";
+import { exitEditMode } from "../../redux/thunks";
+import {
+  loadLastSession,
+  loadSession,
+  saveCurrentSession,
+} from "../../redux/thunks/session";
 import {
   getFontSize,
   isJetBrains,
@@ -55,22 +71,6 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
-import {
-  addCodeToEdit,
-  clearCodeToEdit,
-  selectHasCodeToEdit,
-  selectIsInEditMode,
-  setMainEditorContentTrigger,
-} from "../../redux/slices/sessionSlice";
-import { exitEditMode } from "../../redux/thunks";
-import {
-  loadLastSession,
-  loadSession,
-  saveCurrentSession,
-} from "../../redux/thunks/session";
-import { rifWithContentsToContextItem } from "core/commands/util";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -986,6 +986,12 @@ function TipTapEditor(props: TipTapEditorProps) {
             <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
           </>
         )}
+      <div
+        id="tippy-js-div"
+        style={{
+          position: "fixed",
+        }}
+      />
     </InputBoxDiv>
   );
 }
