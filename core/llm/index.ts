@@ -49,6 +49,7 @@ import {
 } from "./countTokens.js";
 import {
   fromChatCompletionChunk,
+  fromChatResponse,
   LlmApiRequestType,
   toChatBody,
   toCompleteBody,
@@ -572,16 +573,27 @@ export abstract class BaseLLM implements ILLM {
     let completion = "";
     try {
       if (this.shouldUseOpenAIAdapter("streamComplete") && this.openaiAdapter) {
-        for await (const chunk of this.openaiAdapter.completionStream(
-          {
-            ...toCompleteBody(prompt, completionOptions),
-            stream: true,
-          },
-          signal,
-        )) {
-          const content = chunk.choices[0]?.text ?? "";
-          completion += content;
-          yield content;
+        if (completionOptions.stream === false) {
+          // Stream false
+          const response = await this.openaiAdapter.completionNonStream(
+            { ...toCompleteBody(prompt, completionOptions), stream: false },
+            signal,
+          );
+          completion = response.choices[0]?.text ?? "";
+          yield completion;
+        } else {
+          // Stream true
+          for await (const chunk of this.openaiAdapter.completionStream(
+            {
+              ...toCompleteBody(prompt, completionOptions),
+              stream: true,
+            },
+            signal,
+          )) {
+            const content = chunk.choices[0]?.text ?? "";
+            completion += content;
+            yield content;
+          }
         }
       } else {
         for await (const chunk of this._streamComplete(
@@ -716,17 +728,30 @@ export abstract class BaseLLM implements ILLM {
         if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
           let body = toChatBody(messages, completionOptions);
           body = this.modifyChatBody(body);
-          const stream = this.openaiAdapter.chatCompletionStream(
-            {
-              ...body,
-              stream: true,
-            },
-            signal,
-          );
-          for await (const chunk of stream) {
-            const result = fromChatCompletionChunk(chunk);
-            if (result) {
-              yield result;
+
+          if (completionOptions.stream === false) {
+            // Stream false
+            const response = await this.openaiAdapter.chatCompletionNonStream(
+              { ...body, stream: false },
+              signal,
+            );
+            const msg = fromChatResponse(response);
+            yield msg;
+            completion = renderChatMessage(msg);
+          } else {
+            // Stream true
+            const stream = this.openaiAdapter.chatCompletionStream(
+              {
+                ...body,
+                stream: true,
+              },
+              signal,
+            );
+            for await (const chunk of stream) {
+              const result = fromChatCompletionChunk(chunk);
+              if (result) {
+                yield result;
+              }
             }
           }
         } else {
