@@ -1,3 +1,15 @@
+/**
+ * NOTE: The `--esbuild-only` flag is currently not working due to
+ * issues with sqlite bindings looking for a package.json
+ *
+ * Example usage
+ *
+ * node build.js                               # Full build
+ * node build.js --esbuild-only --os darwin    # Only runs esbuild step for darwin
+ * node build.js --os linux                    # Full build for linux only
+ * node build.js --esbuild-only                # Only runs esbuild step for all platforms
+ */
+
 const esbuild = require("esbuild");
 const fs = require("fs");
 const path = require("path");
@@ -38,12 +50,28 @@ const assetBackups = [
 ];
 
 let esbuildOnly = false;
-for (let i = 2; i < process.argv.length; i++) {
-  if (process.argv[i] === "--esbuild-only") {
+let specificOs = null;
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === "--esbuild-only") {
     esbuildOnly = true;
   }
-  if (process.argv[i - 1] === "--target") {
-    targets = [process.argv[i]];
+  if (args[i] === "--target" && args[i + 1]) {
+    targets = [args[i + 1]];
+    i++; // Skip the next argument since we've consumed it
+  }
+  if (args[i] === "--os" && args[i + 1]) {
+    const os = args[i + 1].toLowerCase();
+    specificOs = os;
+    targets = targets.filter((target) => target.startsWith(os));
+    if (targets.length === 0) {
+      console.error(`[error] No targets found for OS: ${os}`);
+      process.exit(1);
+    }
+    i++; // Skip the next argument since we've consumed it
   }
 }
 
@@ -282,7 +310,8 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   fs.unlinkSync("out/package.json");
 
   const pathsToVerify = [];
-  for (target of targets) {
+
+  for (const target of targets) {
     const exe = target.startsWith("win") ? ".exe" : "";
     const targetDir = `bin/${target}`;
     pathsToVerify.push(
