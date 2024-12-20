@@ -7,6 +7,7 @@ import {
   Workbench,
   WebView,
   WebElement,
+  until,
 } from "vscode-extension-tester";
 import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
@@ -112,6 +113,8 @@ describe("Cmd+L Shortcut Test", () => {
     expect(textInputHtml).to.equal(activeElementHtml);
 
     await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    await driver.wait(until.elementIsNotVisible(textInput), DEFAULT_TIMEOUT.XS);
     expect(await textInput.isDisplayed()).to.equal(false);
   }).timeout(DEFAULT_TIMEOUT.XL * 1000);
 
