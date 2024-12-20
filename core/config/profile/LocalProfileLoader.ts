@@ -12,15 +12,14 @@ export default class LocalProfileLoader implements IProfileLoader {
 
   constructor(
     private ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
     private controlPlaneClient: ControlPlaneClient,
     private writeLog: (message: string) => Promise<void>,
   ) {}
 
-  async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
+  async doLoadConfig(ideSettingsPromise: Promise<IdeSettings>): Promise<ConfigResult<ContinueConfig>> {
     return doLoadConfig(
       this.ide,
-      this.ideSettingsPromise,
+      ideSettingsPromise,
       this.controlPlaneClient,
       this.writeLog,
       undefined,
