@@ -24,7 +24,7 @@ export class MCPManagerSingleton {
 
   createConnection(id: string, options: MCPOptions): MCPConnection | undefined {
     if (!this.connections.has(id)) {
-      const connection = new MCPConnection(options);
+      const connection = new MCPConnection(id, options);
       this.connections.set(id, connection);
       return connection;
     } else {
@@ -49,8 +49,10 @@ export class MCPManagerSingleton {
 class MCPConnection {
   public client: Client;
   private transport: Transport;
+  private id: string;
 
-  constructor(private readonly options: MCPOptions) {
+  constructor(id: string, private readonly options: MCPOptions) {
+    this.id = id;
     this.transport = this.constructTransport(options);
 
     this.client = new Client(
@@ -171,7 +173,7 @@ class MCPConnection {
         readonly: false,
         type: "function",
         wouldLikeTo: `use the ${tool.name} tool`,
-        uri: `mcp://${tool.name}`,
+        uri: `mcp://${this.id}/${tool.name}`,
       }));
 
       config.tools = [...config.tools, ...continueTools];
