@@ -432,6 +432,12 @@ const getCommandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
+      const isContinueInputFocused = await sidebar.webviewProtocol.request(
+        "isContinueInputFocused",
+        undefined,
+        false,
+      );
+
       // This is a temporary fix—sidebar.webviewProtocol.request is blocking
       // when the GUI hasn't yet been setup and we should instead be
       // immediately throwing an error, or returning a Result object
@@ -445,11 +451,6 @@ const getCommandsMap: (
 
       const historyLength = await sidebar.webviewProtocol.request(
         "getWebviewHistoryLength",
-        undefined,
-        false,
-      );
-      const isContinueInputFocused = await sidebar.webviewProtocol.request(
-        "isContinueInputFocused",
         undefined,
         false,
       );
@@ -475,18 +476,22 @@ const getCommandsMap: (
       }
     },
     "continue.focusContinueInputWithoutClear": async () => {
-      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
-      // when the GUI hasn't yet been setup and we should instead be
-      // immediately throwing an error, or returning a Result object
-      if (!sidebar.isReady) {
-        focusGUI();
-        return;
-      }
-
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
+        false,
       );
+
+      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
+      // when the GUI hasn't yet been setup and we should instead be
+      // immediately throwing an error, or returning a Result object
+      focusGUI();
+      if (!sidebar.isReady) {
+        const isReady = await waitForSidebarReady(sidebar, 5000, 100);
+        if (!isReady) {
+          return;
+        }
+      }
 
       if (isContinueInputFocused) {
         hideGUI();
@@ -721,7 +726,10 @@ const getCommandsMap: (
     "continue.toggleFullScreen": async () => {
       focusGUI();
 
-      const sessionId = await sidebar.webviewProtocol.request("getCurrentSessionId", undefined);
+      const sessionId = await sidebar.webviewProtocol.request(
+        "getCurrentSessionId",
+        undefined,
+      );
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
@@ -755,11 +763,14 @@ const getCommandsMap: (
         undefined,
         true,
       );
-      
+
       panel.onDidChangeViewState(() => {
         vscode.commands.executeCommand("continue.newSession");
-        if(sessionId){
-          vscode.commands.executeCommand("continue.focusContinueSessionId", sessionId);
+        if (sessionId) {
+          vscode.commands.executeCommand(
+            "continue.focusContinueSessionId",
+            sessionId,
+          );
         }
       });
 

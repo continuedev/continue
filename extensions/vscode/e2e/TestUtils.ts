@@ -37,8 +37,8 @@ export class TestUtils {
     throw new Error(`Element not found after ${timeout}ms timeout`);
   }
 
-  public static async expectNoElement(
-    locatorFn: () => Promise<WebElement>,
+  public static async expectNoElement<T>(
+    locatorFn: () => Promise<T>,
     timeout: number = 1000,
     interval: number = 200,
   ): Promise<void> {
@@ -48,6 +48,7 @@ export class TestUtils {
     while (Date.now() - startTime < timeout) {
       try {
         const element = await locatorFn();
+        console.log("ELEMENT", element);
         if (element) {
           elementFound = true;
           break;
@@ -69,6 +70,10 @@ export class TestUtils {
       userMessage: `TEST_USER_MESSAGE_${id}`,
       llmResponse: `TEST_LLM_RESPONSE_${id}`,
     };
+  }
+
+  public static waitForTimeout(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   public static get isMacOS(): boolean {
