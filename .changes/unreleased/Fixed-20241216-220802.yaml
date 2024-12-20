@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Fixed
-body: Fix tool use bug for models that don't support tools
-time: 2024-12-16T22:08:02.399772-08:00
