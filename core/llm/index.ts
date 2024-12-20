@@ -445,11 +445,22 @@ export abstract class BaseLLM implements ILLM {
     const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
     for (const msg of msgsCopy) {
-      if ("content" in msg && Array.isArray(msg.content)) {
+      let contentToShow = "";
+      if (msg.role === "tool") {
+        contentToShow = msg.content;
+      } else if (msg.role === "assistant" && msg.toolCalls) {
+        contentToShow = msg.toolCalls
+          ?.map(
+            (toolCall) =>
+              `${toolCall.function?.name}(${toolCall.function?.arguments})`,
+          )
+          .join("\n");
+      } else if ("content" in msg && Array.isArray(msg.content)) {
         const content = renderChatMessage(msg);
         msg.content = content;
       }
-      formatted += `<${msg.role}>\n${msg.content || ""}\n\n`;
+
+      formatted += `<${msg.role}>\n${contentToShow}\n\n`;
     }
     return formatted;
   }

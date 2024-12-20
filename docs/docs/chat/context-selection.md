@@ -25,9 +25,9 @@ You can include a specific file in your current workspace as context by typing [
 
 You can include a folder in your current workspace as context by typing [`@Folder`](../customize/context-providers.md#folder) and selecting the directory. It [works like `@Codebase`](../customize/deep-dives/codebase.md) but only includes the files in the selected folder.
 
-## Entire codebase
+## Codebase search
 
-You can include your entire codebase as context by typing [`@Codebase`](../customize/context-providers.md#codebase). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.md).
+You can automatically include relevant files from your codebase as context by typing [`@Codebase`](../customize/context-providers.md#codebase). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.md).
 
 ## Documentation site
 

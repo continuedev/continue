@@ -4,14 +4,14 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { table } from "table";
 import { lightGray, vscBackground, vscInputBackground } from "../components";
+import { CopyIconButton } from "../components/gui/CopyIconButton";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-import { CopyIconButton } from "../components/gui/CopyIconButton";
 
 const Th = styled.th`
   padding: 0.5rem;
   text-align: left;
-  border: 1px solid ${vscInputBackground};
+  border: 1px solid ${lightGray};
 `;
 
 const Tr = styled.tr`
@@ -21,12 +21,12 @@ const Tr = styled.tr`
 
   overflow-wrap: anywhere;
 
-  border: 1px solid ${vscInputBackground};
+  border: 1px solid ${lightGray};
 `;
 
 const Td = styled.td`
   padding: 0.5rem;
-  border: 1px solid ${vscInputBackground};
+  border: 1px solid ${lightGray};
 `;
 
 function generateTable(data: unknown[][]) {
