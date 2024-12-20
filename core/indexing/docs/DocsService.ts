@@ -345,6 +345,10 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
   ): Promise<void> {
+    if (this.config.disableIndexing) {
+      console.warn("Attempting to add/index docs when indexing is disabled");
+      return;
+    }
     const { startUrl } = siteIndexingConfig;
 
     const canUsePreindexedDocs = await this.canUsePreindexedDocs();
@@ -352,7 +356,8 @@ export default class DocsService {
       const preIndexedDoc = preIndexedDocs[startUrl];
       const isPreIndexedDoc = !!preIndexedDoc;
       if (isPreIndexedDoc) {
-        console.warn("Can only use pre");
+        console.warn("Can not override pre-indexed start urls");
+        return;
       }
     }
 

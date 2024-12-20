@@ -4,11 +4,24 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 import { useAppSelector } from "../../redux/hooks";
+import { useContext, useMemo } from "react";
+import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 function DocsIndexingStatuses() {
   const dispatch = useDispatch();
   const config = useAppSelector((store) => store.config.config);
-  const configDocs = config.docs ?? [];
+  const ideMessenger = useContext(IdeMessengerContext);
+
+  const hasDocsProvider = useMemo(() => {
+    return !!config.contextProviders?.some(
+      (provider) => provider.title === "docs",
+    );
+  }, [config]);
+
+  const configDocs = useMemo(() => {
+    return config.docs ?? [];
+  }, [config]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -33,6 +46,29 @@ function DocsIndexingStatuses() {
           : "No docs yet"}
       </span>
       <div className="flex max-h-[170px] flex-col gap-1 overflow-x-hidden overflow-y-scroll pr-2">
+        {!hasDocsProvider && (
+          <div className="flex flex-col gap-1 text-xs">
+            <div className="flex flex-row gap-1">
+              <div>
+                <ExclamationTriangleIcon className="h-4 w-4 text-stone-500" />
+              </div>
+              <span className="text-stone-500">
+                @docs is not in your config
+              </span>
+            </div>
+            <span
+              className="cursor-pointer text-stone-500 underline"
+              onClick={() => {
+                ideMessenger.post("config/addContextProvider", {
+                  name: "docs",
+                  params: {},
+                });
+              }}
+            >
+              Add @docs to my config
+            </span>
+          </div>
+        )}
         <div>
           {configDocs.length === 0 && (
             <SecondaryButton

@@ -12,7 +12,12 @@ import {
   setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { addModel, addOpenAIKey, deleteModel } from "./config/util";
+import {
+  addContextProvider,
+  addModel,
+  addOpenAIKey,
+  deleteModel,
+} from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -274,6 +279,10 @@ export class Core {
     });
     on("config/listProfiles", (msg) => {
       return this.configHandler.listProfiles();
+    });
+
+    on("config/addContextProvider", async (msg) => {
+      addContextProvider(msg.data);
     });
 
     // Context providers
@@ -794,7 +803,7 @@ export class Core {
     });
     on("indexing/setPaused", async (msg) => {
       if (msg.data.type === "docs") {
-        // this.docsService.setPaused(msg.data.id, msg.data.paused);
+        // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
     });
     on("docs/getSuggestedDocs", async (msg) => {
