@@ -13,9 +13,9 @@ export interface ProfileDescription {
 }
 
 export class ProfileLifecycleManager {
-  private savedConfig: ContinueConfig | undefined;
+  private savedConfig: ConfigResult<ContinueConfig> | undefined;
   private savedBrowserConfig?: BrowserSerializedContinueConfig;
-  private pendingConfigPromise?: Promise<ContinueConfig>;
+  private pendingConfigPromise?: Promise<ConfigResult<ContinueConfig>>;
 
   constructor(private readonly profileLoader: IProfileLoader) {}
 
@@ -46,35 +46,37 @@ export class ProfileLifecycleManager {
     this.savedBrowserConfig = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.profileLoader.doLoadConfig();
+    return this.loadConfig([], true);
   }
 
   async loadConfig(
     additionalContextProviders: IContextProvider[],
-  ): Promise<ContinueConfig> {
+    forceReload: boolean = false,
+  ): Promise<ConfigResult<ContinueConfig>> {
     // If we already have a config, return it
-    if (this.savedConfig) {
-      return this.savedConfig;
-    } else if (this.pendingConfigPromise) {
-      return this.pendingConfigPromise;
+    if (!forceReload) {
+      if (this.savedConfig) {
+        return this.savedConfig;
+      } else if (this.pendingConfigPromise) {
+        return this.pendingConfigPromise;
+      }
     }
 
     // Set pending config promise
     this.pendingConfigPromise = new Promise(async (resolve, reject) => {
-      const { config: newConfig, errors } =
-        await this.profileLoader.doLoadConfig();
+      const result = await this.profileLoader.doLoadConfig();
 
-      if (newConfig) {
+      if (result.config) {
         // Add registered context providers
-        newConfig.contextProviders = (newConfig.contextProviders ?? []).concat(
-          additionalContextProviders,
-        );
+        result.config.contextProviders = (
+          result.config.contextProviders ?? []
+        ).concat(additionalContextProviders);
 
-        this.savedConfig = newConfig;
-        resolve(newConfig);
-      } else if (errors) {
+        this.savedConfig = result;
+        resolve(result);
+      } else if (result.errors) {
         reject(
-          `Error in config.json: ${errors.map((item) => item.message).join(" | ")}`,
+          `Error in config.json: ${result.errors.map((item) => item.message).join(" | ")}`,
         );
       }
     });
@@ -87,11 +89,21 @@ export class ProfileLifecycleManager {
 
   async getSerializedConfig(
     additionalContextProviders: IContextProvider[],
-  ): Promise<BrowserSerializedContinueConfig> {
+  ): Promise<ConfigResult<BrowserSerializedContinueConfig>> {
     if (!this.savedBrowserConfig) {
-      const continueConfig = await this.loadConfig(additionalContextProviders);
-      this.savedBrowserConfig = finalToBrowserConfig(continueConfig);
+      const result = await this.loadConfig(additionalContextProviders);
+      if (!result.config) {
+        return {
+          ...result,
+          config: undefined,
+        };
+      }
+      this.savedBrowserConfig = finalToBrowserConfig(result.config);
     }
-    return this.savedBrowserConfig;
+    return {
+      config: this.savedBrowserConfig,
+      errors: [],
+      configLoadInterrupted: false,
+    };
   }
 }

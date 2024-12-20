@@ -1,24 +1,24 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { AppDispatch } from "../redux/store";
 
-import { streamResponseThunk } from "../redux/thunks/streamResponse";
-import { isJetBrains } from "../util";
-import { setLocalStorage } from "../util/localStorage";
-import { useWebviewListener } from "./useWebviewListener";
+import { BrowserSerializedContinueConfig } from "core";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setConfig, setConfigError } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
-  setSelectedProfileId,
-  setInactive,
   addContextItemsAtIndex,
+  setInactive,
+  setSelectedProfileId,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { refreshSessionMetadata } from "../redux/thunks/session";
+import { streamResponseThunk } from "../redux/thunks/streamResponse";
+import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
+import { isJetBrains } from "../util";
+import { setLocalStorage } from "../util/localStorage";
+import { useWebviewListener } from "./useWebviewListener";
 
 function useSetup() {
   const dispatch = useAppDispatch();
@@ -29,16 +29,13 @@ function useSetup() {
   );
 
   const hasLoadedConfig = useRef(false);
-  const loadConfig = useCallback(
-    async (initial: boolean) => {
-      const result = await ideMessenger.request(
-        "config/getSerializedProfileInfo",
-        undefined,
-      );
-      if (result.status === "error") {
-        return;
-      }
-      const { config, profileId } = result.content;
+
+  const handleConfigUpdate = useCallback(
+    async (
+      initial: boolean,
+      result: { config: BrowserSerializedContinueConfig; profileId: string },
+    ) => {
+      const { config, profileId } = result;
       if (initial && hasLoadedConfig.current) {
         return;
       }
@@ -52,7 +49,21 @@ function useSetup() {
         document.body.style.fontSize = `${config.ui.fontSize}px`;
       }
     },
-    [dispatch, ideMessenger, hasLoadedConfig],
+    [dispatch, hasLoadedConfig],
+  );
+
+  const loadConfig = useCallback(
+    async (initial: boolean) => {
+      const result = await ideMessenger.request(
+        "config/getSerializedProfileInfo",
+        undefined,
+      );
+      if (result.status === "error") {
+        return;
+      }
+      await handleConfigUpdate(initial, result.content);
+    },
+    [ideMessenger, handleConfigUpdate],
   );
 
   // Load config from the IDE
@@ -78,8 +89,11 @@ function useSetup() {
 
   useWebviewListener(
     "configUpdate",
-    async () => {
-      await loadConfig(false);
+    async (update) => {
+      if (!update) {
+        return;
+      }
+      await handleConfigUpdate(false, update);
     },
     [loadConfig],
   );
@@ -147,7 +161,7 @@ function useSetup() {
   useWebviewListener(
     "getCurrentSessionId",
     async () => {
-      return sessionId
+      return sessionId;
     },
     [sessionId],
   );
