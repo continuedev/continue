@@ -647,6 +647,17 @@ function TipTapEditor(props: TipTapEditorProps) {
     [props.onEnter, editor, props.isMainInput],
   );
 
+  useEffect(() => {
+    if (props.isMainInput) {
+      /**
+       * I have a strong suspicion that many of the other focus
+       * commands are redundant, especially the ones inside
+       * useTimeout.
+       */
+      editor.commands.focus();
+    }
+  }, [props.isMainInput, editor]);
+
   // Re-focus main input after done generating
   useEffect(() => {
     if (editor && !isStreaming && props.isMainInput && document.hasFocus()) {

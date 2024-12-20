@@ -77,6 +77,8 @@ describe("Cmd+L Shortcut Test", () => {
     expect(await textInput.isDisplayed()).to.equal(true);
 
     await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    await driver.wait(until.elementIsNotVisible(textInput), DEFAULT_TIMEOUT.XS);
     expect(await textInput.isDisplayed()).to.equal(false);
   }).timeout(DEFAULT_TIMEOUT.XL);
 

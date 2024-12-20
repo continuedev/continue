@@ -432,6 +432,7 @@ const getCommandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
+      // debugger;
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
@@ -466,6 +467,7 @@ const getCommandsMap: (
           );
         }
       } else {
+        // debugger;
         focusGUI();
         sidebar.webviewProtocol?.request(
           "focusContinueInputWithNewSession",
