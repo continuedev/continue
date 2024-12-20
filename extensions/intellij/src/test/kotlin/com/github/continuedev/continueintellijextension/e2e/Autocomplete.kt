@@ -56,9 +56,9 @@ class Autocomplete {init {
 
         idea {
             with(textEditor()) {
-                val USER_MESSAGE = "TEST_USER_MESSAGE_0"
-                editor.insertTextAtLine(0, 0, USER_MESSAGE)
-                editor.clickOnOffset(USER_MESSAGE.length)
+                val userMsg = "TEST_USER_MESSAGE_0"
+                editor.insertTextAtLine(0, 0, userMsg)
+                editor.clickOnOffset(userMsg.length)
 
                 keyboard {
                     enterText(" ")

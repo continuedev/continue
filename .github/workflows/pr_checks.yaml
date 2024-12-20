@@ -536,11 +536,10 @@ jobs:
         run: |
           cd extensions/intellij
           export DISPLAY=:99.0
-          export CONTINUE_GLOBAL_DIR=${{ github.workspace }}/extensions/intellij/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue
           Xvfb -ac :99 -screen 0 1920x1080x24 &
           sleep 10
           mkdir -p build/reports
-          ./gradlew runIdeForUiTests  &
+          ./gradlew runIdeForUiTests &
 
       - name: Wait for JB connection
         uses: jtalk/url-health-check-action@v3
