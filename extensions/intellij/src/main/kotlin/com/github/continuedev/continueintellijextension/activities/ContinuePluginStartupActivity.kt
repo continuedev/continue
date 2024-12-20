@@ -30,6 +30,7 @@ import java.nio.file.Paths
 import javax.swing.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
@@ -130,7 +131,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             val ideProtocolClient = IdeProtocolClient(
                 continuePluginService,
                 coroutineScope,
-                project.basePath,
                 project
             )
 
