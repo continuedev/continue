@@ -127,11 +127,6 @@
           "default": false,
           "markdownDescription": "Pause Continue's codebase index on start."
         },
-        "continue.enableDebugLogs": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Enable Continue Debug Logs in the Output panel."
-        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
