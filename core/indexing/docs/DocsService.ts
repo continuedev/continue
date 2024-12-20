@@ -17,7 +17,6 @@ import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
-import { GlobalContext } from "../../util/GlobalContext";
 import { IMessenger } from "../../protocol/messenger";
 import {
   editConfigJson,
@@ -87,7 +86,6 @@ export default class DocsService {
   public isSyncing: boolean = false;
 
   private docsIndexingQueue = new Set<string>();
-  private globalContext = new GlobalContext();
   private lanceTableNamesSet = new Set<string>();
 
   private config!: ContinueConfig;
@@ -144,7 +142,7 @@ export default class DocsService {
 
     this.config.docs?.forEach((doc) => {
       if (!doc.startUrl) {
-        console.error("Invalid config docs entry, no start");
+        console.error("Invalid config docs entry, no start url", doc.title);
         return;
       }
 
@@ -396,11 +394,12 @@ export default class DocsService {
         return;
       }
     }
-    this.docsIndexingQueue.add(startUrl);
-
-    this.addToConfig(siteIndexingConfig);
 
     try {
+      this.docsIndexingQueue.add(startUrl);
+
+      this.addToConfig(siteIndexingConfig);
+
       this.handleStatusUpdate({
         ...fixedStatus,
         status: "indexing",
@@ -710,15 +709,10 @@ export default class DocsService {
       await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title STRING NOT NULL,
-            startUrl STRING NOT NULL UNIQUE,
-            favicon STRING
+            startUrl STRING NOT NULL,
+            favicon STRING,
             embeddingsProviderId STRING
         )`);
-
-      // embeddingsProviderId was added later
-      await db.exec(`ALTER TABLE ${DocsService.sqlitebTableName}
-        ADD COLUMN IF NOT EXISTS embeddingsProviderId STRING;
-      `);
 
       this.sqliteDb = db;
     }
@@ -756,6 +750,7 @@ export default class DocsService {
       const newConfigDocs = newConfig.docs || [];
       const newConfigStartUrls = newConfigDocs.map((doc) => doc.startUrl);
 
+      // NOTE since listMetadata filters by embeddings provider id embedding model changes are accounted for here
       const currentlyIndexedDocs = await this.listMetadata();
       const currentStartUrls = currentlyIndexedDocs.map((doc) => doc.startUrl);
 
@@ -955,7 +950,7 @@ export default class DocsService {
   private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
-    const doesDocExist = this.config.docs?.some(
+    const doesEquivalentDocExist = this.config.docs?.some(
       (doc) =>
         doc.startUrl === siteIndexingConfig.startUrl &&
         doc.faviconUrl === siteIndexingConfig.faviconUrl &&
@@ -964,7 +959,7 @@ export default class DocsService {
       // doc.rootUrl === siteIndexingConfig.rootUrl,
     );
 
-    if (!doesDocExist) {
+    if (!doesEquivalentDocExist) {
       editConfigJson((config) => ({
         ...config,
         docs: [

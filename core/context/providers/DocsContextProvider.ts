@@ -94,7 +94,7 @@ class DocsContextProvider extends BaseContextProvider {
       query,
       this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
     );
-    if(!chunks?.length) {
+    if (!chunks?.length) {
       return [];
     }
 
@@ -160,7 +160,7 @@ class DocsContextProvider extends BaseContextProvider {
     const docs = (await docsService.listMetadata()) ?? [];
     for (const { startUrl, title, favicon } of docs) {
       submenuItemsMap.set(startUrl, {
-        title,\
+        title,
         id: startUrl,
         description: new URL(startUrl).hostname,
         icon: favicon,
