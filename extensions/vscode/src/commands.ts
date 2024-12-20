@@ -998,6 +998,19 @@ const getCommandsMap: (
     "continue.openAccountDialog": () => {
       sidebar.webviewProtocol?.request("openDialogMessage", "account");
     },
+    "granite.writeContinueConfig": () => {
+      vscode.window
+        .showInformationMessage(
+          "Overwrite Continue extension configuration?",
+          "Overwrite",
+          "Cancel",
+        )
+        .then((answer) => {
+          if (answer === "Overwrite") {
+            core.invoke("config/writeContinueConfig", undefined);
+          }
+        });
+    },
   };
 };
 

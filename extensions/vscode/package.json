@@ -351,6 +351,12 @@
         "category": "Continue",
         "group": "Continue",
         "icon": "$(account)"
+      },
+      {
+        "command": "granite.writeContinueConfig",
+        "title": "Write Continue Config",
+        "category": "Granite.Code",
+        "group": "Granite.Code"
       }
     ],
     "keybindings": [

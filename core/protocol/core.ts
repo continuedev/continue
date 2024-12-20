@@ -73,6 +73,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, void];
+  "config/writeContinueConfig": [undefined, void];
   "context/getContextItems": [
     {
       name: string;
