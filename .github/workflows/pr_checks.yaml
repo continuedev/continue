@@ -75,7 +75,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   gui-checks:
-    needs: [install-root, core-checks]
+    needs: [ install-root, core-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,7 +111,7 @@ jobs:
           npx tsc --noEmit
 
   binary-checks:
-    needs: [install-root, core-checks]
+    needs: [ install-root, core-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -147,7 +147,7 @@ jobs:
           npx tsc --noEmit
 
   vscode-checks:
-    needs: [install-root, core-checks]
+    needs: [ install-root, core-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -186,7 +186,7 @@ jobs:
           npm run lint
 
   core-tests:
-    needs: [core-checks]
+    needs: [ core-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -205,7 +205,7 @@ jobs:
           npm test
 
   vscode-tests:
-    needs: [vscode-checks, core-checks]
+    needs: [ vscode-checks, core-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -265,7 +265,7 @@ jobs:
           path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
-    needs: [gui-checks, core-checks]
+    needs: [ gui-checks, core-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -296,7 +296,7 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [install-root, core-checks]
+    needs: [ install-root, core-checks ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -361,10 +361,11 @@ jobs:
         run: |
           cd extensions/intellij
           export DISPLAY=:99.0
+          export CONTINUE_GLOBAL_DIR=${{ github.workspace }}/extensions/intellij/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue
           Xvfb -ac :99 -screen 0 1920x1080x24 &
           sleep 10
           mkdir -p build/reports
-          ./gradlew runIdeForUiTests &
+          ./gradlew runIdeForUiTests  &
 
       - name: Wait for JB connection
         uses: jtalk/url-health-check-action@v3
