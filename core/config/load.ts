@@ -128,7 +128,7 @@ function loadSerializedConfig(
       config = mergeJson(config, configJson, "merge", configMergeKeys);
 
     } catch (e) {
-      console.warn("Error loading remote config: ", e);
+      throw new Error(`Failed to parse config.json: ${e}`);
     }
   }
 
