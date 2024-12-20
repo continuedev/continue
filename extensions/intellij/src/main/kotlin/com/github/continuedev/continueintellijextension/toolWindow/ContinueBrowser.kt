@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.toolWindow
 
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.constants.MessageTypes
+import com.github.continuedev.continueintellijextension.constants.MessageTypes.Companion.PASS_THROUGH_TO_CORE
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -18,58 +19,6 @@ import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 
 class ContinueBrowser(val project: Project, url: String) {
-    private val PASS_THROUGH_TO_CORE = listOf(
-        "abort",
-        "history/list",
-        "history/delete",
-        "history/load",
-        "history/save",
-        "devdata/log",
-        "config/addModel",
-        "config/newPromptFile",
-        "config/ideSettingsUpdate",
-        "config/getSerializedProfileInfo",
-        "config/deleteModel",
-        "config/listProfiles",
-        "config/openProfile",
-        "context/getContextItems",
-        "context/getSymbolsForFiles",
-        "context/loadSubmenuItems",
-        "context/addDocs",
-        "context/removeDocs",
-        "context/indexDocs",
-        "autocomplete/complete",
-        "autocomplete/cancel",
-        "autocomplete/accept",
-        "command/run",
-        "tts/kill",
-        "llm/complete",
-        "llm/streamComplete",
-        "llm/streamChat",
-        "llm/listModels",
-        "streamDiffLines",
-        "chatDescriber/describe",
-        "stats/getTokensPerDay",
-        "stats/getTokensPerModel",
-        // Codebase
-        "index/setPaused",
-        "index/forceReIndex",
-        "index/forceReIndexFiles",
-        "index/indexingProgressBarInitialized",
-        // Docs, etc.
-        "indexing/reindex",
-        "indexing/abort",
-        "indexing/setPaused",
-        "docs/getSuggestedDocs",
-        "docs/initStatuses",
-        //
-        "completeOnboarding",
-        "addAutocompleteModel",
-        "profiles/switch",
-        "didChangeSelectedProfile",
-        "tools/call",
-    )
-
     private fun registerAppSchemeHandler() {
         CefApp.getInstance().registerSchemeHandlerFactory(
             "http",
@@ -82,13 +31,8 @@ class ContinueBrowser(val project: Project, url: String) {
 
     init {
         val isOSREnabled = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+
         this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build()
-
-
-        browser.jbCefClient.setProperty(
-            JBCefClient.Properties.JS_QUERY_POOL_SIZE,
-            JS_QUERY_POOL_SIZE
-        )
 
         registerAppSchemeHandler()
         browser.loadURL(url);
