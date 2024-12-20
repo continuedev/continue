@@ -27,6 +27,7 @@ import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import WebContextProvider from "./WebContextProvider";
+import GitCommitContextProvider from "./GitCommitContextProvider"
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
@@ -62,6 +63,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   GreptileContextProvider,
   WebContextProvider,
   MCPContextProvider,
+  GitCommitContextProvider,
 ];
 
 export function contextProviderClassFromName(
