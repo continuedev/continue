@@ -6,6 +6,7 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
+import { ConfigValidationError } from "../../config/validation";
 import MCPContextProvider from "../providers/MCPContextProvider";
 
 export class MCPManagerSingleton {
@@ -117,7 +118,7 @@ class MCPConnection {
     config: ContinueConfig,
     mcpId: string,
     signal: AbortSignal,
-  ): Promise<void> {
+  ): Promise<ConfigValidationError | undefined> {
     try {
       await Promise.race([
         this.connectClient(),
@@ -133,6 +134,10 @@ class MCPConnection {
       }
       if (!error.message.startsWith("StdioClientTransport already started")) {
         console.error("Failed to connect client:", error);
+        return {
+          fatal: false,
+          message: `Failed to connect to MCP ${mcpId}: ${error.message}`,
+        };
       }
     }
 

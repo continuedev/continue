@@ -36,6 +36,7 @@ export function findUriInDirs(
   if (!uriComps.scheme) {
     throw new Error(`Invalid uri: ${uri}`);
   }
+
   for (const dir of dirUriCandidates) {
     const dirComps = URI.parse(dir);
 
@@ -78,7 +79,6 @@ export function findUriInDirs(
     }
   }
   // Not found
-  console.trace("Directory not found for uri", uri, dirUriCandidates);
   return {
     uri,
     relativePathOrBasename: getUriPathBasename(uri),
