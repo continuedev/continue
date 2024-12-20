@@ -71,10 +71,16 @@ function constructSystemPrompt(
   provider: string,
   useTools: boolean,
 ): string | null {
-  if (CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))) {
+  if (
+    useTools &&
+    CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))
+  ) {
     return SYSTEM_MESSAGE + "\n\n" + TOOL_USE_RULES;
-  }
-  if (useTools && modelSupportsTools(model, provider)) {
+  } else if (
+    CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))
+  ) {
+    return SYSTEM_MESSAGE;
+  } else if (useTools && modelSupportsTools(model, provider)) {
     return TOOL_USE_RULES;
   }
 

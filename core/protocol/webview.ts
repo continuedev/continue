@@ -1,6 +1,7 @@
 import { ConfigValidationError } from "../config/validation.js";
 
 import type {
+  BrowserSerializedContinueConfig,
   ContextItemWithId,
   IndexingProgressUpdate,
   IndexingStatus,
@@ -8,7 +9,10 @@ import type {
 } from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
-  configUpdate: [undefined, void];
+  configUpdate: [
+    { config: BrowserSerializedContinueConfig; profileId: string },
+    void,
+  ];
   configError: [ConfigValidationError[] | undefined, void];
   getDefaultModelTitle: [undefined, string];
   indexProgress: [IndexingProgressUpdate, void]; // Codebase
