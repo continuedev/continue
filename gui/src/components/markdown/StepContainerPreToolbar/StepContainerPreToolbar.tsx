@@ -19,6 +19,7 @@ import {
   selectApplyStateByStreamId,
   selectIsInEditMode,
 } from "../../../redux/slices/sessionSlice";
+import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 
 const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
@@ -44,7 +45,7 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
 export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
   language: string;
-  filepath: string;
+  relativeFilepath: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
   range?: string;
@@ -84,17 +85,23 @@ export default function StepContainerPreToolbar(
     : props.isGeneratingCodeBlock;
 
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
-  const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
+  const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
 
   const defaultModel = useAppSelector(selectDefaultModel);
 
-  function onClickApply() {
+  async function onClickApply() {
     if (!defaultModel) {
       return;
     }
+    console.log(props.relativeFilepath);
+    const fileUri = await inferResolvedUriFromRelativePath(
+      props.relativeFilepath,
+      ideMessenger.ide,
+    );
+    console.log(fileUri);
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
-      filepath: props.filepath,
+      filepath: fileUri,
       text: codeBlockContent,
       curSelectedModelTitle: defaultModel.title,
     });
@@ -137,16 +144,24 @@ export default function StepContainerPreToolbar(
     wasGeneratingRef.current = isGeneratingCodeBlock;
   }, [isGeneratingCodeBlock]);
 
-  function onClickAcceptApply() {
+  async function onClickAcceptApply() {
+    const fileUri = await inferResolvedUriFromRelativePath(
+      props.relativeFilepath,
+      ideMessenger.ide,
+    );
     ideMessenger.post("acceptDiff", {
-      filepath: props.filepath,
+      filepath: fileUri,
       streamId: streamIdRef.current,
     });
   }
 
-  function onClickRejectApply() {
+  async function onClickRejectApply() {
+    const fileUri = await inferResolvedUriFromRelativePath(
+      props.relativeFilepath,
+      ideMessenger.ide,
+    );
     ideMessenger.post("rejectDiff", {
-      filepath: props.filepath,
+      filepath: fileUri,
       streamId: streamIdRef.current,
     });
   }
@@ -172,7 +187,10 @@ export default function StepContainerPreToolbar(
             }`}
           />
           <div className="w-full min-w-0">
-            <FileInfo filepath={props.filepath} range={props.range} />
+            <FileInfo
+              relativeFilepath={props.relativeFilepath}
+              range={props.range}
+            />
           </div>
         </div>
 

@@ -18,6 +18,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.awt.Toolkit
 import java.io.File
+import java.net.URI
 import java.nio.file.Paths
 import javax.swing.Action
 import javax.swing.JComponent
@@ -61,7 +62,7 @@ class DiffManager(private val project: Project) : DumbAware {
             file.createNewFile()
         }
         file.writeText(replacement)
-        openDiffWindow(filepath, file.path, stepIndex)
+        openDiffWindow(URI(filepath).toString(), file.toURI().toString(), stepIndex)
     }
 
     private fun cleanUpFile(file2: String) {
@@ -79,7 +80,7 @@ class DiffManager(private val project: Project) : DumbAware {
         val diffInfo = diffInfoMap[file] ?: return
 
         // Write contents to original file
-        val virtualFile = LocalFileSystem.getInstance().findFileByPath(diffInfo.originalFilepath) ?: return
+        val virtualFile = LocalFileSystem.getInstance().findFileByPath(URI(diffInfo.originalFilepath).path) ?: return
         val document = FileDocumentManager.getInstance().getDocument(virtualFile) ?: return
         WriteCommandAction.runWriteCommandAction(project) {
             document.setText(File(file).readText())
@@ -118,8 +119,8 @@ class DiffManager(private val project: Project) : DumbAware {
         lastFile2 = file2
 
         // Create a DiffContent for each of the texts you want to compare
-        val content1: DiffContent = DiffContentFactory.getInstance().create(File(file1).readText())
-        val content2: DiffContent = DiffContentFactory.getInstance().create(File(file2).readText())
+        val content1: DiffContent = DiffContentFactory.getInstance().create(File(URI(file1)).readText())
+        val content2: DiffContent = DiffContentFactory.getInstance().create(File(URI(file2)).readText())
 
         // Create a SimpleDiffRequest and populate it with the DiffContents and titles
         val diffRequest = SimpleDiffRequest("Continue Diff", content1, content2, "Old", "New")

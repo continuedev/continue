@@ -1,9 +1,20 @@
 import Handlebars from "handlebars";
+import { ContextItem, ContinueSDK, IContextProvider } from "../..";
+
+function createContextItem(item: ContextItem, provider: IContextProvider) {
+  return {
+    ...item,
+    id: {
+      itemId: item.description,
+      providerTitle: provider.description.title,
+    },
+  };
+}
 
 export function getContextProviderHelpers(
-  context: any,
+  context: ContinueSDK,
 ): Array<[string, Handlebars.HelperDelegate]> | undefined {
-  return context.config.contextProviders?.map((provider: any) => [
+  return context.config.contextProviders?.map((provider: IContextProvider) => [
     provider.description.title,
     async (helperContext: any) => {
       const items = await provider.getContextItems(helperContext, {
@@ -17,21 +28,11 @@ export function getContextProviderHelpers(
         selectedCode: context.selectedCode,
       });
 
-      items.forEach((item: any) =>
+      items.forEach((item) =>
         context.addContextItem(createContextItem(item, provider)),
       );
 
-      return items.map((item: any) => item.content).join("\n\n");
+      return items.map((item) => item.content).join("\n\n");
     },
   ]);
-}
-
-function createContextItem(item: any, provider: any) {
-  return {
-    ...item,
-    id: {
-      itemId: item.description,
-      providerTitle: provider.description.title,
-    },
-  };
 }

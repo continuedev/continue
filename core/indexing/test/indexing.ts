@@ -4,7 +4,7 @@ import { IndexTag } from "../..";
 import { IContinueServerClient } from "../../continueServer/interface";
 import { ChunkCodebaseIndex } from "../chunk/ChunkCodebaseIndex";
 import { tagToString } from "../refreshIndex";
-import { CodebaseIndex, PathAndCacheKey, RefreshIndexResults } from "../types";
+import { CodebaseIndex, RefreshIndexResults } from "../types";
 
 import { testIde } from "../../test/fixtures";
 import { addToTestDir, TEST_DIR } from "../../test/testDir";
@@ -54,11 +54,8 @@ const mockMarkComplete = jest
   .mockImplementation(() => Promise.resolve()) as any;
 
 export async function insertMockChunks() {
-  const pathSep = await testIde.pathSep();
-
   const index = new ChunkCodebaseIndex(
     testIde.readFile.bind(testIde),
-    pathSep,
     mockContinueServerClient,
     1000,
   );

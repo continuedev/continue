@@ -11,6 +11,8 @@ import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { Dispatch } from "@reduxjs/toolkit";
 import { setIsGatheringContext } from "../../redux/slices/sessionSlice";
+import { ctxItemToRifWithContents } from "core/commands/util";
+import { getUriFileExtension } from "core/util/uri";
 
 interface MentionAttrs {
   label: string;
@@ -68,46 +70,41 @@ async function resolveEditorContent({
           parts.push({ type: "text", text });
         }
       } else if (p.type === "codeBlock") {
-        if (!p.attrs.item.editing) {
-          let meta = p.attrs.item.description.split(" ");
-          let relativePath = meta[0] || "";
-          let extName = relativePath.split(".").slice(-1)[0];
-          const text =
-            "\n\n" +
-            "```" +
-            extName +
-            " " +
-            p.attrs.item.description +
-            "\n" +
-            p.attrs.item.content +
-            "\n```";
-          if (parts[parts.length - 1]?.type === "text") {
-            parts[parts.length - 1].text += "\n" + text;
-          } else {
-            parts.push({
-              type: "text",
-              text,
-            });
+        if (p.attrs?.item) {
+          const contextItem = p.attrs.item as ContextItemWithId;
+          const rif = ctxItemToRifWithContents(contextItem, true);
+          // If not editing, include codeblocks in the prompt
+          // If editing is handled by selectedCode below
+          if (!contextItem.editing) {
+            const fileExtension = getUriFileExtension(rif.filepath);
+            // let extName = relativeFilepath.split(".").slice(-1)[0];
+            const text =
+              "\n\n" +
+              "```" +
+              fileExtension +
+              " " +
+              contextItem.description +
+              "\n" +
+              contextItem.content +
+              "\n```";
+            if (parts[parts.length - 1]?.type === "text") {
+              parts[parts.length - 1].text += "\n" + text;
+            } else {
+              parts.push({
+                type: "text",
+                text,
+              });
+            }
           }
+          selectedCode.push(rif);
+        } else {
+          console.warn("codeBlock has no item attribute");
         }
-
-        const name: string = p.attrs.item.name;
-        let lines = name.substring(name.lastIndexOf("(") + 1);
-        lines = lines.substring(0, lines.lastIndexOf(")"));
-        const [start, end] = lines.split("-");
-
-        selectedCode.push({
-          filepath: p.attrs.item.description,
-          range: {
-            start: { line: parseInt(start) - 1, character: 0 },
-            end: { line: parseInt(end) - 1, character: 0 },
-          },
-        });
       } else if (p.type === "image") {
         parts.push({
           type: "imageUrl",
           imageUrl: {
-            url: p.attrs.src,
+            url: p.attrs?.src,
           },
         });
       } else {
@@ -194,7 +191,7 @@ async function resolveEditorContent({
   }
 
   if (shouldGatherContext) {
-    dispatch(setIsGatheringContext(true));
+    dispatch(setIsGatheringContext(false));
   }
 
   return [contextItems, selectedCode, parts];

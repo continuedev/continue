@@ -1,5 +1,5 @@
 import { Chunk } from "../../index.js";
-import { getBasename } from "../../util/index.js";
+import { getUriPathBasename } from "../../util/uri.js";
 import { BaseLLM } from "../index.js";
 
 const RERANK_PROMPT = (
@@ -47,7 +47,7 @@ export class LLMReranker extends BaseLLM {
 
   async scoreChunk(chunk: Chunk, query: string): Promise<number> {
     const completion = await this.complete(
-      RERANK_PROMPT(query, getBasename(chunk.filepath), chunk.content),
+      RERANK_PROMPT(query, getUriPathBasename(chunk.filepath), chunk.content),
       new AbortController().signal,
       {
         maxTokens: 1,

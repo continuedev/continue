@@ -117,17 +117,9 @@ export class ReverseMessageIde {
       return this.ide.showLines(data.filepath, data.startLine, data.endLine);
     });
 
-    this.on("listFolders", () => {
-      return this.ide.listFolders();
-    });
-
     this.on("getControlPlaneSessionInfo", async (msg) => {
       // Not supported in testing
       return undefined;
-    });
-
-    this.on("getContinueDir", () => {
-      return this.ide.getContinueDir();
     });
 
     this.on("writeFile", (data) => {
@@ -158,10 +150,6 @@ export class ReverseMessageIde {
       return this.ide.readFile(data.filepath);
     });
 
-    this.on("showDiff", (data) => {
-      return this.ide.showDiff(data.filepath, data.newContents, data.stepIndex);
-    });
-
     this.on("getOpenFiles", () => {
       return this.ide.getOpenFiles();
     });
@@ -188,9 +176,6 @@ export class ReverseMessageIde {
 
     this.on("getBranch", (data) => {
       return this.ide.getBranch(data.dir);
-    });
-    this.on("pathSep", (data) => {
-      return this.ide.pathSep();
     });
   }
 }

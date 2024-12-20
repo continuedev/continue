@@ -1,16 +1,17 @@
 import fs from "node:fs";
-import path from "node:path";
 
 import { IDE, ILLM } from "..";
 import { CodeSnippetsCodebaseIndex } from "../indexing/CodeSnippetsIndex";
-import { walkDirAsync } from "../indexing/walkDir";
+import { walkDirs } from "../indexing/walkDir";
 import { pruneLinesFromTop } from "../llm/countTokens";
 
 import { getRepoMapFilePath } from "./paths";
+import { findUriInDirs } from "./uri";
 
 export interface RepoMapOptions {
   includeSignatures?: boolean;
-  dirs?: string[];
+  dirUris?: string[];
+  outputRelativeUriPaths: boolean;
 }
 
 class RepoMapGenerator {
@@ -19,8 +20,8 @@ class RepoMapGenerator {
   private repoMapPath: string = getRepoMapFilePath();
   private writeStream: fs.WriteStream = fs.createWriteStream(this.repoMapPath);
   private contentTokens: number = 0;
-  private repoMapDirs: string[] = [];
-  private allPathsInDirs: Set<string> = new Set();
+  private dirs: string[] = [];
+  private allUris: string[] = [];
   private pathsInDirsWithSnippets: Set<string> = new Set();
 
   private BATCH_SIZE = 100;
@@ -40,118 +41,100 @@ class RepoMapGenerator {
       llm.contextLength * this.REPO_MAX_CONTEXT_LENGTH_RATIO;
   }
 
+  private getUriForWrite(uri: string) {
+    if (this.options.outputRelativeUriPaths) {
+      return findUriInDirs(uri, this.dirs).relativePathOrBasename;
+    }
+    return uri;
+  }
+
   async generate(): Promise<string> {
-    this.repoMapDirs = this.options.dirs ?? (await this.ide.getWorkspaceDirs());
-    this.allPathsInDirs = await this.getAllPathsInDirs();
+    this.dirs = this.options.dirUris ?? (await this.ide.getWorkspaceDirs());
+    this.allUris = await walkDirs(this.ide, undefined, this.dirs);
 
-    await this.initializeWriteStream();
-    await this.processPathsAndSignatures();
-
-    this.writeStream.end();
-    this.logRepoMapGeneration();
-
-    return fs.readFileSync(this.repoMapPath, "utf8");
-  }
-
-  private async initializeWriteStream(): Promise<void> {
+    // Initialize
     await this.writeToStream(this.PREAMBLE);
-    this.contentTokens += this.llm.countTokens(this.PREAMBLE);
-  }
 
-  private async getAllPathsInDirs(): Promise<Set<string>> {
-    const paths = new Set<string>();
+    if (this.options.includeSignatures) {
+      // Process uris and signatures
+      let offset = 0;
+      while (true) {
+        const { groupedByUri, hasMore } =
+          await CodeSnippetsCodebaseIndex.getPathsAndSignatures(
+            this.allUris,
+            offset,
+            this.BATCH_SIZE,
+          );
+        // process batch
+        for (const [uri, signatures] of Object.entries(groupedByUri)) {
+          let fileContent: string;
 
-    for (const dir of this.repoMapDirs) {
-      for await (const filepath of walkDirAsync(dir, this.ide)) {
-        paths.add(filepath.replace(dir, "").slice(1));
+          try {
+            fileContent = await this.ide.readFile(uri);
+          } catch (err) {
+            console.error(
+              "Failed to read file:\n" +
+                `  Uri: ${uri}\n` +
+                `  Error: ${err instanceof Error ? err.message : String(err)}`,
+            );
+
+            continue;
+          }
+
+          const filteredSignatures = signatures.filter(
+            (signature) => signature.trim() !== fileContent.trim(),
+          );
+
+          if (filteredSignatures.length > 0) {
+            this.pathsInDirsWithSnippets.add(uri);
+          }
+
+          let content = `${this.getUriForWrite(uri)}:\n`;
+
+          for (const signature of signatures.slice(0, -1)) {
+            content += `${this.indentMultilineString(signature)}\n\t...\n`;
+          }
+
+          content += `${this.indentMultilineString(
+            signatures[signatures.length - 1],
+          )}\n\n`;
+
+          if (content) {
+            await this.writeToStream(content);
+          }
+        }
+        if (!hasMore || this.contentTokens >= this.maxRepoMapTokens) {
+          break;
+        }
+        offset += this.BATCH_SIZE;
       }
-    }
 
-    return paths;
-  }
-
-  private async processPathsAndSignatures(): Promise<void> {
-    let offset = 0;
-    while (true) {
-      const { groupedByPath, hasMore } =
-        await CodeSnippetsCodebaseIndex.getPathsAndSignatures(
-          this.repoMapDirs,
-          offset,
-          this.BATCH_SIZE,
-        );
-      await this.processBatch(groupedByPath);
-      if (!hasMore || this.contentTokens >= this.maxRepoMapTokens) {
-        break;
-      }
-      offset += this.BATCH_SIZE;
-    }
-    await this.writeRemainingPaths();
-  }
-
-  private async processBatch(
-    groupedByPath: Record<string, string[]>,
-  ): Promise<void> {
-    for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
-      const content = await this.processFile(absolutePath, signatures);
-
-      if (content) {
-        await this.writeToStream(content);
-      }
-    }
-  }
-
-  private async processFile(
-    absolutePath: string,
-    signatures: string[],
-  ): Promise<string | undefined> {
-    const workspaceDir =
-      this.repoMapDirs.find((dir) => absolutePath.startsWith(dir)) || "";
-    const relativePath = path.relative(workspaceDir, absolutePath);
-
-    let fileContent: string;
-
-    try {
-      fileContent = await fs.promises.readFile(absolutePath, "utf8");
-    } catch (err) {
-      console.error(
-        "Failed to read file:\n" +
-          `  Path: ${absolutePath}\n` +
-          `  Error: ${err instanceof Error ? err.message : String(err)}`,
+      // Remaining Uris just so that written repo map isn't incomplete
+      const urisWithoutSnippets = this.allUris.filter(
+        (uri) => !this.pathsInDirsWithSnippets.has(uri),
       );
 
-      return;
+      if (urisWithoutSnippets.length > 0) {
+        await this.writeToStream(
+          urisWithoutSnippets.map((uri) => this.getUriForWrite(uri)).join("\n"),
+        );
+      }
+    } else {
+      // Only process uris
+      await this.writeToStream(
+        this.allUris.map((uri) => this.getUriForWrite(uri)).join("\n"),
+      );
     }
 
-    const filteredSignatures = signatures.filter(
-      (signature) => signature.trim() !== fileContent.trim(),
-    );
+    this.writeStream.end();
 
-    if (filteredSignatures.length > 0) {
-      this.pathsInDirsWithSnippets.add(relativePath);
+    if (this.contentTokens >= this.maxRepoMapTokens) {
+      console.debug(
+        "Full repo map was unable to be generated due to context window limitations",
+      );
     }
 
-    return this.generateContentForPath(relativePath, filteredSignatures);
-  }
-
-  private generateContentForPath(
-    relativePath: string,
-    signatures: string[],
-  ): string {
-    if (this.options.includeSignatures === false) {
-      return `${relativePath}\n`;
-    }
-
-    let content = `${relativePath}:\n`;
-
-    for (const signature of signatures.slice(0, -1)) {
-      content += `${this.indentMultilineString(signature)}\n\t...\n`;
-    }
-
-    content += `${this.indentMultilineString(
-      signatures[signatures.length - 1],
-    )}\n\n`;
-
-    return content;
+    return fs.readFileSync(this.repoMapPath, "utf8");
   }
 
   private async writeToStream(content: string): Promise<void> {
@@ -168,26 +151,6 @@ class RepoMapGenerator {
     this.contentTokens += this.llm.countTokens(content);
 
     await new Promise((resolve) => this.writeStream.write(content, resolve));
-  }
-
-  private async writeRemainingPaths(): Promise<void> {
-    const pathsWithoutSnippets = new Set(
-      [...this.allPathsInDirs].filter(
-        (x) => !this.pathsInDirsWithSnippets.has(x),
-      ),
-    );
-
-    if (pathsWithoutSnippets.size > 0) {
-      await this.writeToStream(Array.from(pathsWithoutSnippets).join("\n"));
-    }
-  }
-
-  private logRepoMapGeneration(): void {
-    if (this.contentTokens >= this.maxRepoMapTokens) {
-      console.debug(
-        "Full repo map was unable to be generated due to context window limitations",
-      );
-    }
   }
 
   private indentMultilineString(str: string) {

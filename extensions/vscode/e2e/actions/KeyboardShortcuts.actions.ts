@@ -1,14 +1,15 @@
-import { WebDriver } from "vscode-extension-tester";
+import { TextEditor, WebDriver, WebView } from "vscode-extension-tester";
 
 import { TestUtils } from "../TestUtils";
 
 export class KeyboardShortcutsActions {
-  public static async executeFocusContinueInput(driver: WebDriver) {
-    return await driver
-      .actions()
-      .keyDown(TestUtils.osControlKey)
-      .sendKeys("l")
-      .keyUp(TestUtils.osControlKey)
-      .perform();
+  /**
+   * For some reason Selenium-simulated keyboard shortcuts don't perfectly
+   * mimic the behavior of real shortcuts unless some text is highlighted first.
+   */
+  public static async HACK__typeWithSelect(editor: TextEditor, text: string) {
+    await editor.typeText(text);
+    await editor.selectText(text);
+    await editor.typeText(text);
   }
 }

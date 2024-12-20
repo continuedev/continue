@@ -18,7 +18,7 @@ describe("GUI Test", () => {
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
-    await GUIActions.openGui();
+    await GUIActions.toggleGui();
 
     ({ view, driver } = await GUIActions.switchToReactIframe());
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");

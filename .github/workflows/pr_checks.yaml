@@ -511,12 +511,7 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Build GUI
-        run: |
-          cd gui
-          npm ci 
-          npm run build
-
+      # We can shave off another minute off our CI script by finding a way to share this with vscode-tests
       - name: Run prepackage script
         run: |
           cd extensions/vscode
@@ -552,7 +547,7 @@ jobs:
         with:
           url: http://127.0.0.1:8082
           max-attempts: 15
-          retry-delay: 30s
+          retry-delay: 5s
 
       - name: Run tests
         run: |

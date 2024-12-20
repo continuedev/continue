@@ -3,23 +3,23 @@ import { languageForFilepath } from "core/autocomplete/constants/AutocompleteLan
 import { DEFAULT_IGNORE_DIRS } from "core/indexing/ignore";
 import { deduplicateArray } from "core/util";
 import { getParserForFile } from "core/util/treeSitter";
-
+import * as vscode from "vscode";
 import { getDefinitionsForNode } from "../autocomplete/lsp";
 
 import type { SyntaxNode } from "web-tree-sitter";
 
 export async function expandSnippet(
-  filepath: string,
+  fileUri: string,
   startLine: number,
   endLine: number,
   ide: IDE,
 ): Promise<Chunk[]> {
-  const parser = await getParserForFile(filepath);
+  const parser = await getParserForFile(fileUri);
   if (!parser) {
     return [];
   }
 
-  const fullFileContents = await ide.readFile(filepath);
+  const fullFileContents = await ide.readFile(fileUri);
   const root: SyntaxNode = parser.parse(fullFileContents).rootNode;
 
   // Find all nodes contained in the range
@@ -53,10 +53,10 @@ export async function expandSnippet(
     await Promise.all(
       callExpressions.map(async (node) => {
         return getDefinitionsForNode(
-          filepath,
+          vscode.Uri.parse(fileUri),
           node,
           ide,
-          languageForFilepath(filepath),
+          languageForFilepath(fileUri),
         );
       }),
     )
@@ -79,7 +79,7 @@ export async function expandSnippet(
   // Filter out definitions already in selected range
   callExpressionDefinitions = callExpressionDefinitions.filter((def) => {
     return !(
-      def.filepath === filepath &&
+      def.filepath === fileUri &&
       def.range.start.line >= startLine &&
       def.range.end.line <= endLine
     );
