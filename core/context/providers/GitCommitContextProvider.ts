@@ -6,11 +6,8 @@ import {
     LoadSubmenuItemsArgs,
   } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
-import childProcess from "node:child_process";
-import util from "node:util";
 import { fileURLToPath} from "node:url";
 
-const asyncExec = util.promisify(childProcess.exec);
 
 class GitCommitContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -29,7 +26,7 @@ class GitCommitContextProvider extends BaseContextProvider {
           {
           name: query,
           description: query,
-          content: (await asyncExec(`git --no-pager log --pretty=format:"%H,%h,%an,%ae,%ad,%P,%s,%b" -p -n ${lastXCommitsDepth}`, {cwd: topLevelDir})).stdout,
+          content: (await extras.ide.subprocess(`git --no-pager log --pretty=format:"%H,%h,%an,%ae,%ad,%P,%s,%b" -p -n ${lastXCommitsDepth}`, topLevelDir))[0],
           }
         ]
       }
@@ -38,7 +35,7 @@ class GitCommitContextProvider extends BaseContextProvider {
           {
             name: query,
             description: `commit ${query}`,
-            content: (await asyncExec(`git --no-pager show --pretty=format:"%H,%h,%an,%ae,%ad,%P,%s,%b" ${query}`, {cwd: topLevelDir})).stdout,
+            content: (await extras.ide.subprocess(`git --no-pager show --pretty=format:"%H,%h,%an,%ae,%ad,%P,%s,%b" ${query}`, topLevelDir))[0],
           }
         ]
       }
@@ -54,9 +51,9 @@ class GitCommitContextProvider extends BaseContextProvider {
     const lastXCommitsDepth = this.options?.LastXCommitsDepth ?? 10;
     const topLevelDir =  fileURLToPath((await args.ide.getWorkspaceDirs())[0]);
     try{
-      const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%H%x00%s" -n ${depth}`, {cwd: topLevelDir});
+      const [gitResult] = await args.ide.subprocess(`git --no-pager log --pretty=format:"%H%x00%s" -n ${depth}`, topLevelDir);
       const recentCommits = [{ id: `last ${lastXCommitsDepth} commits`, title: `last ${lastXCommitsDepth} commits`, description: "recent commits" }];
-      const allCommits = gitResult.stdout
+      const allCommits = gitResult
       .trim()
       .split('\n')
       .map(line => {
