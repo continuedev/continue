@@ -5,6 +5,7 @@ import HttpSlashCommand from "./http";
 import OnboardSlashCommand from "./onboard";
 import ReviewMessageCommand from "./review";
 import ShareSlashCommand from "./share";
+import GitHubCopilotCommand from "./githubCopilot";
 
 export default [
   DraftIssueCommand,
@@ -14,4 +15,5 @@ export default [
   CommitMessageCommand,
   ReviewMessageCommand,
   OnboardSlashCommand,
+  GitHubCopilotCommand,
 ];

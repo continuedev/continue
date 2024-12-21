@@ -19,6 +19,20 @@ export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
   apiKey: "",
 };
 
+export const GITHUB_COPILOT_CHAT_MODEL_CONFIG: ModelDescription = {
+  model: "github-copilot",
+  provider: "github-copilot",
+  apiKey: "",
+  title: "GitHub Copilot",
+};
+
+export const GITHUB_COPILOT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
+  title: "GitHub Copilot",
+  provider: "github-copilot",
+  model: "github-copilot",
+  apiKey: "",
+};
+
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
     title: "Claude 3.5 Sonnet (Free Trial)",
@@ -93,15 +107,15 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [DEFAULT_CHAT_MODEL_CONFIG],
-  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
+  models: [DEFAULT_CHAT_MODEL_CONFIG, GITHUB_COPILOT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: [DEFAULT_AUTOCOMPLETE_MODEL_CONFIG, GITHUB_COPILOT_AUTOCOMPLETE_MODEL_CONFIG],
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: [DEFAULT_CHAT_MODEL_CONFIG],
-  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
+  models: [DEFAULT_CHAT_MODEL_CONFIG, GITHUB_COPILOT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: [DEFAULT_AUTOCOMPLETE_MODEL_CONFIG, GITHUB_COPILOT_AUTOCOMPLETE_MODEL_CONFIG],
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
 };
