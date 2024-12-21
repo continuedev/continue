@@ -6,6 +6,7 @@ import type {
   ChatMessage,
   ContextItem,
   ContextItemWithId,
+  ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
   FileSymbolMap,
@@ -66,6 +67,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { config: BrowserSerializedContinueConfig; profileId: string },
   ];
   "config/deleteModel": [{ title: string }, void];
+  "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, BrowserSerializedContinueConfig];
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];

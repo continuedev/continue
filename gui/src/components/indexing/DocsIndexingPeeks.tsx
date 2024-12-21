@@ -3,6 +3,7 @@ import { IndexingStatus } from "core";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { useAppSelector } from "../../redux/hooks";
 
 export interface DocsIndexingPeekProps {
   status: IndexingStatus;

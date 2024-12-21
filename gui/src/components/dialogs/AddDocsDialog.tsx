@@ -17,8 +17,10 @@ import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
 import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
 import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
 import { useAppSelector } from "../../redux/hooks";
+import { setConfig } from "../../redux/slices/configSlice";
 
 function AddDocsDialog() {
+  const config = useAppSelector((store) => store.config.config);
   const posthog = usePostHog();
   const dispatch = useDispatch();
 
@@ -125,6 +127,7 @@ function AddDocsDialog() {
     }
     const suggestedTitle =
       docsResult.details.title ?? docsResult.packageInfo.name;
+
     if (docsResult.details?.docsLinkWarning) {
       setTitle(suggestedTitle);
       setStartUrl(docsResult.details.docsLink);
@@ -143,6 +146,19 @@ function AddDocsDialog() {
 
     // Optimistic status update
     dispatch(
+      setConfig({
+        ...config,
+        docs: [
+          ...(config.docs?.filter(
+            (doc) => doc.startUrl !== docsResult.details.docsLink,
+          ) ?? []),
+          {
+            startUrl: docsResult.details.docsLink,
+            title: suggestedTitle,
+            faviconUrl: undefined,
+          },
+        ],
+      }),
       updateIndexingStatus({
         type: "docs",
         description: "Initializing",

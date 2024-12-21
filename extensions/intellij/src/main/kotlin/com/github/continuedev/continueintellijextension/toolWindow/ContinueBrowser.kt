@@ -26,6 +26,7 @@ class ContinueBrowser(val project: Project, url: String) {
         "history/save",
         "devdata/log",
         "config/addModel",
+        "config/addContextProvider",
         "config/newPromptFile",
         "config/ideSettingsUpdate",
         "config/getSerializedProfileInfo",
