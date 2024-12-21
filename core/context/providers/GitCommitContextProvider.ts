@@ -8,7 +8,6 @@ import {
 import { BaseContextProvider } from "../index.js";
 import { fileURLToPath} from "node:url";
 
-
 class GitCommitContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "commit",
