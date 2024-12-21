@@ -55,9 +55,6 @@ class GitCommitContextProvider extends BaseContextProvider {
     const topLevelDir =  fileURLToPath((await args.ide.getWorkspaceDirs())[0]);
     try{
       const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%H:%s" -n ${depth}`, {cwd: topLevelDir});
-      if (gitResult.stderr.toLowerCase().includes('fatal')) {
-        throw new Error(gitResult.stderr);
-      }
       return [{ id: `last ${lastXCommitsDepth} commits`, title: `last ${lastXCommitsDepth} commits`, description: "recent commits" }]
       .concat(
         gitResult.stdout
