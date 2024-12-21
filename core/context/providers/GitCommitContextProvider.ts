@@ -35,7 +35,6 @@ class GitCommitContextProvider extends BaseContextProvider {
         ]
       }
       else{
-        console.log('query');
         return [
           {
             name: query,
@@ -56,11 +55,9 @@ class GitCommitContextProvider extends BaseContextProvider {
     const depth = this.options?.Depth ?? 50;
     const lastXCommitsDepth = this.options?.LastXCommitsDepth ?? 10;
     const topLevelDir =  fileURLToPath((await args.ide.getWorkspaceDirs())[0]);
-    console.log(topLevelDir);
     try{
       const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%H:%s" -n ${depth}`, {cwd: topLevelDir});
       if (gitResult.stderr.toLowerCase().includes('fatal')) {
-        console.log(gitResult.stderr);
         throw new Error(gitResult.stderr);
       }
       return [{ id: `last ${lastXCommitsDepth} commits`, title: `last ${lastXCommitsDepth} commits`, description: "recent commits" }]
@@ -70,9 +67,6 @@ class GitCommitContextProvider extends BaseContextProvider {
           .split('\n')
           .map(line => {
             const [hash, message] = line.split(":");
-            console.log("line", line);
-            console.log(message);
-            if(!hash || hash === ""){console.log('empty');}
             return {
               id: hash,
               title: message,
@@ -81,7 +75,6 @@ class GitCommitContextProvider extends BaseContextProvider {
           })
       );
     }catch(err: any){
-      console.log(err.message);
       //could be nice to toast the error eg. not a git repo or git is not installed
       return [];
     }
