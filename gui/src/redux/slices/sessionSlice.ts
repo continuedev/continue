@@ -328,20 +328,24 @@ export const sessionSlice = createSlice({
                 if (msg.toolCalls.length <= i) {
                   msg.toolCalls.push(toolCall);
                 } else {
-                  msg.toolCalls[i].function.arguments +=
-                    toolCall.function.arguments;
+                  const existingArgs = msg.toolCalls[i].function.arguments;
+                  const newArgs = toolCall.function.arguments;
+                  
+                  if (!existingArgs.endsWith(newArgs)) {
+                    msg.toolCalls[i].function.arguments += newArgs;
 
-                  const [_, parsedArgs] = incrementalParseJson(
-                    msg.toolCalls[i].function.arguments,
-                  );
+                    const [_, parsedArgs] = incrementalParseJson(
+                      msg.toolCalls[i].function.arguments,
+                    );
 
-                  state.history[
-                    state.history.length - 1
-                  ].toolCallState.parsedArgs = parsedArgs;
-                  state.history[
-                    state.history.length - 1
-                  ].toolCallState.toolCall.function.arguments +=
-                    toolCall.function.arguments;
+                    state.history[
+                      state.history.length - 1
+                    ].toolCallState.parsedArgs = parsedArgs;
+                    state.history[
+                      state.history.length - 1
+                    ].toolCallState.toolCall.function.arguments = 
+                      msg.toolCalls[i].function.arguments;
+                  }
                 }
               });
             }
