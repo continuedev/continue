@@ -8,6 +8,8 @@ import {
 import { BaseContextProvider } from "../index.js";
 import childProcess from "node:child_process";
 import util from "node:util";
+import { fileURLToPath} from "node:url";
+
 
 const asyncExec = util.promisify(childProcess.exec);
 
@@ -21,7 +23,7 @@ class GitCommitContextProvider extends BaseContextProvider {
 
   async getContextItems(query: string, extras: ContextProviderExtras): Promise<ContextItem[]> {
     const lastXCommitsDepth = this.options?.LastXCommitsDepth ?? 10;
-    const [topLevelDir] = await extras.ide.getWorkspaceDirs();
+    const topLevelDir = fileURLToPath((await extras.ide.getWorkspaceDirs())[0]);
     try{
       if(query.includes("last ")){
         return [
@@ -53,9 +55,10 @@ class GitCommitContextProvider extends BaseContextProvider {
   ): Promise<ContextSubmenuItem[]> {
     const depth = this.options?.Depth ?? 50;
     const lastXCommitsDepth = this.options?.LastXCommitsDepth ?? 10;
-    const [topLevelDir] = await args.ide.getWorkspaceDirs();
+    const topLevelDir =  fileURLToPath((await args.ide.getWorkspaceDirs())[0]);
+    console.log(topLevelDir);
     try{
-      const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%Hx00%s" -n ${depth}`, {cwd: topLevelDir});
+      const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%H:%s" -n ${depth}`, {cwd: topLevelDir});
       if (gitResult.stderr.toLowerCase().includes('fatal')) {
         console.log(gitResult.stderr);
         throw new Error(gitResult.stderr);
@@ -66,7 +69,7 @@ class GitCommitContextProvider extends BaseContextProvider {
           .trim()
           .split('\n')
           .map(line => {
-            const [hash, message] = line.split("x00");
+            const [hash, message] = line.split(":");
             console.log("line", line);
             console.log(message);
             if(!hash || hash === ""){console.log('empty');}
