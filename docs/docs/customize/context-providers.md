@@ -576,6 +576,27 @@ The response 200 OK should be a JSON object with the following structure:
 }
 ```
 
+### @Commits
+
+Reference specific git commit metadata and diff or all of the recent commits.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "commit",
+      "params": {
+        "Depth": 50,
+        "LastXCommitsDepth": 10
+      }
+    }
+  ]
+}
+```
+
+The depth is how many commits will be loaded into the submenu, defaults to 50.
+the LastXCommitsDepth is how many recent commits will be included, defaults to 10.
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.
