@@ -181,27 +181,37 @@ export default class DocsService {
   }
 
   abort(startUrl: string) {
-    const status = this.statuses.get(startUrl);
-    if (status) {
-      this.handleStatusUpdate({
-        ...status,
-        status: "aborted",
-        progress: 0,
-        description: "Canceled",
-      });
+    if (this.docsIndexingQueue.has(startUrl)) {
+      const status = this.statuses.get(startUrl);
+      if (status) {
+        this.handleStatusUpdate({
+          ...status,
+          status: "aborted",
+          progress: 0,
+          description: "Canceled",
+        });
+      }
+      this.docsIndexingQueue.delete(startUrl);
     }
-    this.docsIndexingQueue.delete(startUrl);
   }
 
-  shouldCancel(startUrl: string) {
+  shouldCancel(startUrl: string, startedWithEmbedder: string) {
+    // Check if aborted
     const isAborted = this.statuses.get(startUrl)?.status === "aborted";
     if (isAborted) {
       return true;
     }
+    // Handle indexing disabled change mid-indexing
     if (this.config.disableIndexing) {
       this.abort(startUrl);
       return true;
     }
+    // Handle embeddings provider change mid-indexing
+    if (this.config.embeddingsProvider.embeddingId !== startedWithEmbedder) {
+      this.abort(startUrl);
+      return true;
+    }
+    return false;
   }
 
   // NOTE Pausing not supported for docs yet
@@ -374,6 +384,7 @@ export default class DocsService {
     }
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
+    const startedWithEmbedder = this.config.embeddingsProvider.embeddingId;
     const indexExists = await this.hasMetadata(startUrl);
 
     // Build status update - most of it is fixed values
@@ -428,7 +439,7 @@ export default class DocsService {
         estimatedProgress += 1 / 2 ** (processedPages + 1);
 
         // NOTE - during "indexing" phase, check if aborted before each status update
-        if (this.shouldCancel(startUrl)) {
+        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
           return;
         }
         this.handleStatusUpdate({
@@ -466,7 +477,7 @@ export default class DocsService {
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
 
-        if (this.shouldCancel(startUrl)) {
+        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
           return;
         }
         this.handleStatusUpdate({
@@ -503,7 +514,7 @@ export default class DocsService {
           `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
         );
 
-        if (this.shouldCancel(startUrl)) {
+        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
           return;
         }
         this.handleStatusUpdate({
@@ -521,7 +532,7 @@ export default class DocsService {
       // Add docs to databases
       console.log(`Adding ${embeddings.length} embeddings to db`);
 
-      if (this.shouldCancel(startUrl)) {
+      if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
       }
       this.handleStatusUpdate({
@@ -539,7 +550,7 @@ export default class DocsService {
 
       const favicon = await fetchFavicon(new URL(siteIndexingConfig.startUrl));
 
-      if (this.shouldCancel(startUrl)) {
+      if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
       }
       this.handleStatusUpdate({
@@ -558,7 +569,7 @@ export default class DocsService {
 
       this.docsIndexingQueue.delete(startUrl);
 
-      if (this.shouldCancel(startUrl)) {
+      if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
       }
       this.handleStatusUpdate({
@@ -577,7 +588,7 @@ export default class DocsService {
       console.error("Error indexing docs", e);
       this.handleStatusUpdate({
         ...fixedStatus,
-        description: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
+        description: `Error getting docs from: ${siteIndexingConfig.startUrl}`,
         status: "failed",
         progress: 1,
       });
@@ -785,7 +796,9 @@ export default class DocsService {
           const oldConfigDoc = oldConfigDocs.find(
             (d) => d.startUrl === doc.startUrl,
           );
+          // const currentStatus = this.statuses.get(doc.startUrl);
           if (
+            // currentStatus?.status === "complete" &&
             oldConfigDoc &&
             (oldConfigDoc.maxDepth !== doc.maxDepth ||
               oldConfigDoc.title !== doc.title ||
