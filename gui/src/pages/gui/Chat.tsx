@@ -323,14 +323,8 @@ export function Chat() {
   useWebviewListener(
     "newSession",
     async () => {
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-        }),
-      );
       // unwrapResult(response) // errors if session creation failed
       mainTextInputRef.current?.focus?.();
-      dispatch(exitEditMode());
     },
     [mainTextInputRef],
   );
