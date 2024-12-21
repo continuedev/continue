@@ -31,7 +31,8 @@ describe.only("Prompt file", () => {
     await new EditorView().closeAllEditors();
   });
 
-  it("Should display intellisense for default context providers", async () => {
+  it("Should display intellisense for default context providers and preamble", async () => {
+    // Check that "@" dropdown in body works
     const providers = [
       "currentFile",
       "open",
@@ -48,5 +49,17 @@ describe.only("Prompt file", () => {
       expect(text).equals("@" + provider);
       await editor.clearText();
     }
+
+    // Check that dropdown for properties in preamble works
+    // await editor.typeText(Key.ENTER);
+    // await editor.typeText(Key.ENTER);
+    // await editor.typeText("---");
+    // await editor.typeText(Key.UP);
+    // await editor.typeText(Key.UP);
+    // await editor.typeText(Key.SPACE);
+    // await editor.typeText(Key.BACK_SPACE);
+    // await editor.typeText(Key.ENTER);
+    // const text = await editor.getText();
+    // expect(text).equals("description: \n\n---");
   }).timeout(DEFAULT_TIMEOUT.XL);
 });
