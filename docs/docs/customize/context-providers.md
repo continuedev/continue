@@ -576,7 +576,7 @@ The response 200 OK should be a JSON object with the following structure:
 }
 ```
 
-### @Commits
+### `@Commits`
 
 Reference specific git commit metadata and diff or all of the recent commits.
 
