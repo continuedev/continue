@@ -114,7 +114,6 @@ async function resolveEditorContent({
   }
 
   const shouldGatherContext = modifiers.useCodebase || slashCommand;
-
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(true));
   }
@@ -189,7 +188,6 @@ async function resolveEditorContent({
       parts = [{ type: "text", text: lastPart }];
     }
   }
-
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(false));
   }
