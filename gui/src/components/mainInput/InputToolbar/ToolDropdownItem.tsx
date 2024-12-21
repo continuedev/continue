@@ -41,7 +41,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
           msg={props.tool.function.description}
         /> */}
       </span>
-      <div className="flex gap-2 pr-4">
+      <div className="flex cursor-pointer gap-2 pr-4">
         {(settings === "allowedWithPermission" || settings === undefined) && (
           <span className="text-yellow-500">Allowed</span>
         )}

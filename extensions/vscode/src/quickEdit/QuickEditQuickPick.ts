@@ -17,7 +17,6 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 // @ts-ignore - error finding typings
 // @ts-ignore
 
-
 /**
  * Used to track what action to take after a user interacts
  * with the initial Quick Pick
@@ -133,11 +132,11 @@ export class QuickEdit {
     }
 
     const hasChanges = !!this.verticalDiffManager.getHandlerForFile(
-      editor.document.uri.fsPath,
+      editor.document.uri.toString(),
     );
 
     if (hasChanges) {
-      this.openAcceptRejectMenu("", editor.document.uri.fsPath);
+      this.openAcceptRejectMenu("", editor.document.uri.toString());
     } else {
       await this.initiateNewQuickPick(editor, params);
     }
@@ -185,7 +184,7 @@ export class QuickEdit {
     });
 
     if (prompt) {
-      await this.handleUserPrompt(prompt, editor.document.uri.fsPath);
+      await this.handleUserPrompt(prompt, editor.document.uri.toString());
     }
   }
 
@@ -249,7 +248,7 @@ export class QuickEdit {
 
   private setActiveEditorAndPrevInput(editor: vscode.TextEditor) {
     const existingHandler = this.verticalDiffManager.getHandlerForFile(
-      editor.document.uri.fsPath ?? "",
+      editor.document.uri.toString(),
     );
 
     this.editorWhenOpened = editor;
@@ -448,8 +447,8 @@ export class QuickEdit {
 
           if (searchResults.length > 0) {
             quickPick.items = searchResults
-              .map(({ filename }) => ({
-                label: filename,
+              .map(({ relativePath }) => ({
+                label: relativePath,
                 alwaysShow: true,
               }))
               .slice(0, QuickEdit.maxFileSearchResults);

@@ -27,16 +27,13 @@ export class MessageIde implements IDE {
     ) => void,
   ) {}
 
-  pathSep(): Promise<string> {
-    return this.request("pathSep", undefined);
-  }
-  fileExists(filepath: string): Promise<boolean> {
-    return this.request("fileExists", { filepath });
+  fileExists(fileUri: string): Promise<boolean> {
+    return this.request("fileExists", { filepath: fileUri });
   }
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return this.request("gotoDefinition", { location });
   }
-  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
     this.on("didChangeActiveTextEditor", (data) => callback(data.filepath));
   }
 
@@ -126,38 +123,27 @@ export class MessageIde implements IDE {
   }
 
   async showLines(
-    filepath: string,
+    fileUri: string,
     startLine: number,
     endLine: number,
   ): Promise<void> {
-    return await this.request("showLines", { filepath, startLine, endLine });
+    return await this.request("showLines", {
+      filepath: fileUri,
+      startLine,
+      endLine,
+    });
   }
 
-  async listFolders(): Promise<string[]> {
-    return await this.request("listFolders", undefined);
-  }
-
-  _continueDir: string | null = null;
-
-  async getContinueDir(): Promise<string> {
-    if (this._continueDir) {
-      return this._continueDir;
-    }
-    const dir = await this.request("getContinueDir", undefined);
-    this._continueDir = dir;
-    return dir;
-  }
-
-  async writeFile(path: string, contents: string): Promise<void> {
-    await this.request("writeFile", { path, contents });
+  async writeFile(fileUri: string, contents: string): Promise<void> {
+    await this.request("writeFile", { path: fileUri, contents });
   }
 
   async showVirtualFile(title: string, contents: string): Promise<void> {
     await this.request("showVirtualFile", { name: title, content: contents });
   }
 
-  async openFile(path: string): Promise<void> {
-    await this.request("openFile", { path });
+  async openFile(fileUri: string): Promise<void> {
+    await this.request("openFile", { path: fileUri });
   }
 
   async openUrl(url: string): Promise<void> {
@@ -168,18 +154,11 @@ export class MessageIde implements IDE {
     await this.request("runCommand", { command });
   }
 
-  async saveFile(filepath: string): Promise<void> {
-    await this.request("saveFile", { filepath });
+  async saveFile(fileUri: string): Promise<void> {
+    await this.request("saveFile", { filepath: fileUri });
   }
-  async readFile(filepath: string): Promise<string> {
-    return await this.request("readFile", { filepath });
-  }
-  async showDiff(
-    filepath: string,
-    newContents: string,
-    stepIndex: number,
-  ): Promise<void> {
-    await this.request("showDiff", { filepath, newContents, stepIndex });
+  async readFile(fileUri: string): Promise<string> {
+    return await this.request("readFile", { filepath: fileUri });
   }
 
   getOpenFiles(): Promise<string[]> {
@@ -198,8 +177,8 @@ export class MessageIde implements IDE {
     return this.request("getSearchResults", { query });
   }
 
-  getProblems(filepath: string): Promise<Problem[]> {
-    return this.request("getProblems", { filepath });
+  getProblems(fileUri: string): Promise<Problem[]> {
+    return this.request("getProblems", { filepath: fileUri });
   }
 
   subprocess(command: string, cwd?: string): Promise<[string, string]> {

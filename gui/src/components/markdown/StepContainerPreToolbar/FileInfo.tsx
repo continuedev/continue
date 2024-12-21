@@ -1,20 +1,24 @@
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { getBasename } from "core/util";
 import FileIcon from "../../FileIcon";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
+import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 
 export interface FileInfoProps {
-  filepath: string;
+  relativeFilepath: string;
   range?: string;
 }
 
-const FileInfo = ({ filepath, range }: FileInfoProps) => {
+const FileInfo = ({ relativeFilepath, range }: FileInfoProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
 
-  function onClickFileName() {
+  async function onClickFileName() {
+    const fileUri = await inferResolvedUriFromRelativePath(
+      relativeFilepath,
+      ideMessenger.ide,
+    );
     ideMessenger.post("showFile", {
-      filepath,
+      filepath: fileUri,
     });
   }
 
@@ -24,9 +28,9 @@ const FileInfo = ({ filepath, range }: FileInfoProps) => {
         className="mr-0.5 flex w-full min-w-0 cursor-pointer items-center gap-0.5"
         onClick={onClickFileName}
       >
-        <FileIcon height="20px" width="20px" filename={filepath} />
+        <FileIcon height="20px" width="20px" filename={relativeFilepath} />
         <span className="w-full truncate hover:underline">
-          {getBasename(filepath)}
+          {getLastNPathParts(relativeFilepath, 1)}
           {range && ` ${range}`}
         </span>
       </div>

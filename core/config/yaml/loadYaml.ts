@@ -32,14 +32,11 @@ import {
   readAllGlobalPromptFiles,
 } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
-import {
-  DEFAULT_PROMPTS_FOLDER,
-  getPromptFiles,
-  slashCommandFromPromptFile,
-} from "../promptFile.js";
 import { ConfigValidationError } from "../validation.js";
 
 import { llmsFromModelConfig } from "./models";
+import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
+import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
 
 export interface ConfigResult<T> {
   config: T | undefined;
@@ -102,25 +99,11 @@ async function slashCommandsFromV1PromptFiles(
   ide: IDE,
 ): Promise<SlashCommand[]> {
   const slashCommands: SlashCommand[] = [];
-  const workspaceDirs = await ide.getWorkspaceDirs();
 
-  // v1 prompt files
-  let promptFiles: { path: string; content: string }[] = [];
-  promptFiles = (
-    await Promise.all(
-      workspaceDirs.map((dir) =>
-        getPromptFiles(ide, path.join(dir, DEFAULT_PROMPTS_FOLDER)),
-      ),
-    )
-  )
-    .flat()
-    .filter(({ path }) => path.endsWith(".prompt"));
-
-  // Also read from ~/.continue/.prompts
-  promptFiles.push(...readAllGlobalPromptFiles());
+  const promptFiles = await getAllPromptFiles(ide, undefined, true);
 
   for (const file of promptFiles) {
-    const slashCommand = slashCommandFromPromptFile(file.path, file.content);
+    const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
     if (slashCommand) {
       slashCommands.push(slashCommand);
     }

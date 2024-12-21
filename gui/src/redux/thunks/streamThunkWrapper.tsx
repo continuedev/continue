@@ -2,6 +2,8 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { clearLastEmptyResponse, setInactive } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { saveCurrentSession } from "./session";
+import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
+import StreamErrorDialog from "../../pages/gui/StreamError";
 
 export const streamThunkWrapper = createAsyncThunk<
   void,
@@ -10,10 +12,10 @@ export const streamThunkWrapper = createAsyncThunk<
 >("chat/streamWrapper", async (runStream, { dispatch, extra, getState }) => {
   try {
     await runStream();
-  } catch (e: any) {
-    // NOTE - streaming errors are shown as ide toasts in core, don't show duplicate here
-    console.debug("Error streaming response: ", e);
+  } catch (e: unknown) {
     dispatch(clearLastEmptyResponse());
+    dispatch(setDialogMessage(<StreamErrorDialog error={e} />));
+    dispatch(setShowDialog(true));
   } finally {
     dispatch(setInactive());
     const state = getState();

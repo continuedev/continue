@@ -5,7 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { dedent, getMarkdownLanguageTagForFile } from "core/util";
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -13,6 +13,7 @@ import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
+import { ctxItemToRifWithContents } from "core/commands/util";
 
 const PreviewMarkdownDiv = styled.div<{
   borderColor?: string;
@@ -49,7 +50,6 @@ interface CodeSnippetPreviewProps {
 
 const MAX_PREVIEW_HEIGHT = 300;
 
-// Pre-compile the regular expression outside of the function
 const backticksRegex = /`{3,}/gm;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
@@ -58,12 +58,14 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const [collapsed, setCollapsed] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
 
-  const content = dedent`${props.item.content}`;
+  const content = useMemo(() => {
+    return dedent`${props.item.content}`;
+  }, [props.item.content]);
 
-  const fence = React.useMemo(() => {
+  const fence = useMemo(() => {
     const backticks = content.match(backticksRegex);
     return backticks ? backticks.sort().at(-1) + "`" : "```";
-  }, [props.item.content]);
+  }, [content]);
 
   const codeBlockRef = React.useRef<HTMLDivElement>(null);
 
@@ -79,19 +81,19 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         <PreviewMarkdownHeader
           className="flex cursor-pointer justify-between"
           onClick={() => {
-            if (props.item.id.providerTitle === "file") {
+            if (
+              props.item.id.providerTitle === "file" &&
+              props.item.uri?.value
+            ) {
               ideMessenger.post("showFile", {
-                filepath: props.item.description,
+                filepath: props.item.uri.value,
               });
             } else if (props.item.id.providerTitle === "code") {
-              const lines = props.item.name
-                .split("(")[1]
-                .split(")")[0]
-                .split("-");
+              const rif = ctxItemToRifWithContents(props.item, true);
               ideMessenger.ide.showLines(
-                props.item.description.split(" ")[0],
-                parseInt(lines[0]) - 1,
-                parseInt(lines[1]) - 1,
+                rif.filepath,
+                rif.range.start.line,
+                rif.range.end.line,
               );
             } else {
               ideMessenger.post("showVirtualFile", {
@@ -120,13 +122,14 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       )}
       <div
         contentEditable={false}
-        className={`m-0 ${collapsed ? "max-h-[33vh] overflow-hidden" : "overflow-auto"}`}
+        className={`m-0 ${collapsed ? "overflow-hidden" : "overflow-auto"}`}
         ref={codeBlockRef}
+        style={{
+          maxHeight: collapsed ? MAX_PREVIEW_HEIGHT : undefined, // Could switch to max-h-[33vh] but then chevron icon shows when height can't change
+        }}
       >
         <StyledMarkdownPreview
-          source={`${fence}${getMarkdownLanguageTagForFile(
-            props.item.description.split(" ")[0],
-          )} ${props.item.description}\n${content}\n${fence}`}
+          source={`${fence}${getMarkdownLanguageTagForFile(props.item.name)} ${props.item.description}\n${content}\n${fence}`}
         />
       </div>
 

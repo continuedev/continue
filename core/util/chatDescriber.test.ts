@@ -1,6 +1,6 @@
-import { ChatDescriber } from "./chatDescriber";
-import { testLLM } from "../test/fixtures";
 import { LLMFullCompletionOptions } from "..";
+import { testLLM } from "../test/fixtures";
+import { ChatDescriber } from "./chatDescriber";
 
 describe("ChatDescriber", () => {
   beforeEach(() => {
@@ -30,7 +30,7 @@ describe("ChatDescriber", () => {
       expect(result).toBeUndefined();
     });
 
-    it("should set completionOptions.maxTokens to 6", async () => {
+    it("should set completionOptions.maxTokens to 12", async () => {
       const message = "Test message";
       const completionOptions: LLMFullCompletionOptions = { temperature: 0.7 };
 
@@ -38,7 +38,7 @@ describe("ChatDescriber", () => {
 
       await ChatDescriber.describe(testLLM, completionOptions, message);
 
-      expect(completionOptions.maxTokens).toBe(6);
+      expect(completionOptions.maxTokens).toBe(ChatDescriber.maxTokens);
     });
 
     it("should call model.chat with correct parameters", async () => {

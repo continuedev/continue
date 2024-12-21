@@ -1,8 +1,6 @@
-import fs from "node:fs";
-import path from "node:path";
-
 import MockLLM from "../../../llm/llms/Mock";
 import { testConfigHandler, testIde } from "../../../test/fixtures";
+import { joinPathsToUri } from "../../../util/uri";
 import { CompletionProvider } from "../../CompletionProvider";
 import { AutocompleteInput } from "../../util/types";
 
@@ -39,8 +37,8 @@ export async function testAutocompleteFiltering(
 
   // Create a real file
   const [workspaceDir] = await ide.getWorkspaceDirs();
-  const filepath = path.join(workspaceDir, test.filename);
-  fs.writeFileSync(filepath, test.input.replace(FIM_DELIMITER, ""));
+  const fileUri = joinPathsToUri(workspaceDir, test.filename);
+  await ide.writeFile(fileUri, test.input.replace(FIM_DELIMITER, ""));
 
   // Prepare completion input and provider
   const completionProvider = new CompletionProvider(
@@ -56,7 +54,7 @@ export async function testAutocompleteFiltering(
   const autocompleteInput: AutocompleteInput = {
     isUntitledFile: false,
     completionId: "test-completion-id",
-    filepath,
+    filepath: fileUri,
     pos: {
       line,
       character,

@@ -1,7 +1,8 @@
 import { ContextItem, ContextProviderExtras } from "../..";
 import { contextProviderClassFromName } from "../../context/providers";
 import URLContextProvider from "../../context/providers/URLContextProvider";
-import { getBasename } from "../../util";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
+import { getUriPathBasename } from "../../util/uri";
 import { getPreambleAndBody } from "./parse";
 
 async function resolveAttachment(
@@ -25,9 +26,27 @@ async function resolveAttachment(
   }
 
   // Files
-  if (await extras.ide.fileExists(name)) {
-    const content = `\`\`\`${name}\n${await extras.ide.readFile(name)}\n\`\`\``;
-    return [{ name: getBasename(name), content, description: name }];
+  const resolvedFileUri = await resolveRelativePathInDir(name, extras.ide);
+  if (resolvedFileUri) {
+    let subItems: ContextItem[] = [];
+    if (name.endsWith(".prompt")) {
+      // Recurse
+      const [items, _] = await renderPromptFileV2(
+        await extras.ide.readFile(name),
+        extras,
+      );
+      subItems.push(...items);
+    }
+
+    const content = `\`\`\`${name}\n${await extras.ide.readFile(resolvedFileUri)}\n\`\`\``;
+    return [
+      ...subItems,
+      {
+        name: getUriPathBasename(resolvedFileUri),
+        content,
+        description: resolvedFileUri,
+      },
+    ];
   }
 
   // URLs

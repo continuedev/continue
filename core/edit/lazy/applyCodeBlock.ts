@@ -1,14 +1,13 @@
-import path from "path";
-
 import { DiffLine, ILLM } from "../..";
 import { generateLines } from "../../diff/util";
 import { supportedLanguages } from "../../util/treeSitter";
+import { getUriFileExtension } from "../../util/uri";
 
 import { deterministicApplyLazyEdit } from "./deterministic";
 import { streamLazyApply } from "./streamLazyApply";
 
 function canUseInstantApply(filename: string) {
-  const fileExtension = path.extname(filename).toLowerCase().slice(1);
+  const fileExtension = getUriFileExtension(filename);
   return supportedLanguages[fileExtension] !== undefined;
 }
 

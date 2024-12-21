@@ -65,7 +65,11 @@ export class IdeMessenger implements IIdeMessenger {
     );
   }
 
-  private _postToIde(messageType: string, data: any, messageId?: string) {
+  private _postToIde(
+    messageType: string,
+    data: any,
+    messageId: string = uuidv4(),
+  ) {
     if (typeof vscode === "undefined") {
       if (isJetBrains()) {
         if (window.postIntellijMessage === undefined) {
@@ -76,23 +80,24 @@ export class IdeMessenger implements IIdeMessenger {
           );
           throw new Error("postIntellijMessage is undefined");
         }
-        messageId = messageId ?? uuidv4();
         window.postIntellijMessage?.(messageType, data, messageId);
         return;
       } else {
         console.log(
-          "Unable to send message: vscode is undefined. ",
+          "Unable to send message: vscode is undefined",
           messageType,
           data,
         );
         return;
       }
     }
+
     const msg: Message = {
-      messageId: messageId ?? uuidv4(),
+      messageId,
       messageType,
       data,
     };
+
     vscode.postMessage(msg);
   }
 

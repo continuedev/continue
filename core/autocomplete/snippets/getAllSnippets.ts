@@ -1,4 +1,5 @@
 import { IDE } from "../../index";
+import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
@@ -45,7 +46,9 @@ async function getIdeSnippets(
     const workspaceDirs = await ide.getWorkspaceDirs();
 
     return ideSnippets.filter((snippet) =>
-      workspaceDirs.some((dir) => snippet.filepath.startsWith(dir)),
+      workspaceDirs.some(
+        (dir) => !!findUriInDirs(snippet.filepath, [dir]).foundInDir,
+      ),
     );
   }
 

@@ -15,11 +15,12 @@
   - [🧑‍💻 Contributing Code](#-contributing-code)
     - [Environment Setup](#environment-setup)
       - [Pre-requisites](#pre-requisites)
-      - [Fork the Continue Repository with All Branches](#fork-the-continue-repository)
+      - [Fork the Continue Repository](#fork-the-continue-repository)
       - [VS Code](#vs-code)
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
     - [Our Git Workflow](#our-git-workflow)
+    - [Testing](#testing)
     - [Formatting](#formatting)
     - [Writing Slash Commands](#writing-slash-commands)
     - [Writing Context Providers](#writing-context-providers)
@@ -143,7 +144,13 @@ See the [`CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBr
 
 ### Our Git Workflow
 
-We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the `main` branch titled `v0.9.x-vscode`, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will create a new release titled `v0.8.x-vscode`, triggering a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow is well explained by http://releaseflow.org.
+We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the `main` branch titled `v0.9.x-vscode`, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will create a new release titled `v0.8.x-vscode`, triggering a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow is well explained by <http://releaseflow.org>.
+
+### Testing
+
+We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on each pull request. If your PR causes one of these tests to fail, we will ask that you resolve the issue before we merge.
+
+When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
 
 ### Formatting
 

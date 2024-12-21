@@ -1,13 +1,14 @@
 import { ILLM, LLMFullCompletionOptions } from "..";
 
-import { removeQuotesAndEscapes, removeCodeBlocksAndTrim } from ".";
+import { removeCodeBlocksAndTrim, removeQuotesAndEscapes } from ".";
 
-import type { IMessenger } from "../protocol/messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
+import type { IMessenger } from "../protocol/messenger";
 
 export class ChatDescriber {
+  static maxTokens = 12;
   static prompt: string | undefined =
-    "Given the following... please reply with a short summary that is 4-12 words in length, you should summarize what the user is asking for OR what the user is trying to accomplish. You should only respond with the summary, no additional text or explanation, you don't need ending punctuation.\n\n";
+    "Given the following... please reply with a short summary that is 4-8 words in length, you should summarize what the user is asking for OR what the user is trying to accomplish. You should only respond with the summary, no additional text or explanation, you don't need ending punctuation.\n\n";
   static messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
 
   static async describe(
@@ -26,7 +27,7 @@ export class ChatDescriber {
       return;
     }
 
-    completionOptions.maxTokens = 6;
+    completionOptions.maxTokens = ChatDescriber.maxTokens;
 
     // Prompt the user's current LLM for the title
     const titleResponse = await model.chat(

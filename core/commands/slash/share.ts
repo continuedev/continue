@@ -1,10 +1,12 @@
-import * as fs from "node:fs";
+import fs from "fs";
 import { homedir } from "node:os";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "path";
 
 import { languageForFilepath } from "../../autocomplete/constants/AutocompleteLanguageInfo.js";
 import { SlashCommand } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
+import { getContinueGlobalPath } from "../../util/paths.js";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
 function getOffsetDatetime(date: Date): Date {
@@ -62,10 +64,7 @@ const ShareSlashCommand: SlashCommand = {
       }\n\n${msgText}`;
     }
 
-    let outputDir: string = params?.outputDir;
-    if (!outputDir) {
-      outputDir = await ide.getContinueDir();
-    }
+    let outputDir: string = params?.outputDir ?? getContinueGlobalPath();
 
     if (outputDir.startsWith("~")) {
       outputDir = outputDir.replace(/^~/, homedir);
@@ -81,7 +80,7 @@ const ShareSlashCommand: SlashCommand = {
       // folders are included. We default to using the first item in the list, if
       // it exists.
       const workspaceDirectory = workspaceDirs?.[0] || "";
-      outputDir = outputDir.replace(/^./, workspaceDirectory);
+      outputDir = outputDir.replace(/^./, fileURLToPath(workspaceDirectory));
     }
 
     if (!fs.existsSync(outputDir)) {
@@ -91,8 +90,9 @@ const ShareSlashCommand: SlashCommand = {
     const dtString = asBasicISOString(getOffsetDatetime(now));
     const outPath = path.join(outputDir, `${dtString}_session.md`); //TODO: more flexible naming?
 
-    await ide.writeFile(outPath, content);
-    await ide.openFile(outPath);
+    const fileUrl = pathToFileURL(outPath).toString(); // TODO switch from path to URI above ^
+    await ide.writeFile(fileUrl, content);
+    await ide.openFile(fileUrl);
 
     yield `The session transcript has been saved to a markdown file at \`${outPath}\`.`;
   },

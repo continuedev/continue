@@ -6,14 +6,9 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
-import {
-  ContextItemWithId,
-  ContextProviderDescription,
-  InputModifiers,
-  RangeInFile,
-} from "core";
+import { ContextProviderDescription, InputModifiers } from "core";
+import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { getBasename, getRelativePath } from "core/util";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
 import {
@@ -25,7 +20,6 @@ import {
   useState,
 } from "react";
 import styled from "styled-components";
-import { v4 } from "uuid";
 import {
   defaultBorderRadius,
   lightGray,
@@ -41,7 +35,22 @@ import { useInputHistory } from "../../hooks/useInputHistory";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+  selectHasCodeToEdit,
+  selectIsInEditMode,
+  setMainEditorContentTrigger,
+} from "../../redux/slices/sessionSlice";
+import { exitEditMode } from "../../redux/thunks";
+import {
+  loadLastSession,
+  loadSession,
+  saveCurrentSession,
+} from "../../redux/thunks/session";
 import {
   getFontSize,
   isJetBrains,
@@ -62,21 +71,6 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
-import {
-  addCodeToEdit,
-  clearCodeToEdit,
-  selectHasCodeToEdit,
-  selectIsInEditMode,
-  setMainEditorContentTrigger,
-} from "../../redux/slices/sessionSlice";
-import { exitEditMode } from "../../redux/thunks";
-import {
-  loadLastSession,
-  loadSession,
-  saveCurrentSession,
-} from "../../redux/thunks/session";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -653,6 +647,17 @@ function TipTapEditor(props: TipTapEditorProps) {
     [props.onEnter, editor, props.isMainInput],
   );
 
+  useEffect(() => {
+    if (props.isMainInput) {
+      /**
+       * I have a strong suspicion that many of the other focus
+       * commands are redundant, especially the ones inside
+       * useTimeout.
+       */
+      editor.commands.focus();
+    }
+  }, [props.isMainInput, editor]);
+
   // Re-focus main input after done generating
   useEffect(() => {
     if (editor && !isStreaming && props.isMainInput && document.hasFocus()) {
@@ -668,7 +673,9 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (!props.isMainInput || !mainInputContentTrigger) {
       return;
     }
-    editor.commands.setContent(mainInputContentTrigger);
+    queueMicrotask(() => {
+      editor.commands.setContent(mainInputContentTrigger);
+    });
     dispatch(setMainEditorContentTrigger(undefined));
   }, [editor, props.isMainInput, mainInputContentTrigger]);
 
@@ -751,37 +758,30 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      const rif: RangeInFile & { contents: string } =
-        data.rangeInFileWithContents;
-      const basename = getBasename(rif.filepath);
-      const relativePath = getRelativePath(
-        rif.filepath,
-        await ideMessenger.ide.getWorkspaceDirs(),
+      // const rif: RangeInFile & { contents: string } =
+      //   data.rangeInFileWithContents;
+      // const basename = getBasename(rif.filepath);
+      // const relativePath = getRelativePath(
+      //   rif.filepath,
+      //   await ideMessenger.ide.getWorkspaceDirs(),
+      // const rangeStr = `(${rif.range.start.line + 1}-${
+      //   rif.range.end.line + 1
+      // })`;
+
+      // const itemName = `${basename} ${rangeStr}`;
+      // const item: ContextItemWithId = {
+      //   content: rif.contents,
+      //   name: itemName
+      // }
+
+      const contextItem = rifWithContentsToContextItem(
+        data.rangeInFileWithContents,
       );
-      const rangeStr = `(${rif.range.start.line + 1}-${
-        rif.range.end.line + 1
-      })`;
-
-      const itemName = `${basename} ${rangeStr}`;
-      const item: ContextItemWithId = {
-        content: rif.contents,
-        name: itemName,
-        // Description is passed on to the LLM to give more context on file path
-        description: `${relativePath} ${rangeStr}`,
-        id: {
-          providerTitle: "code",
-          itemId: v4(),
-        },
-        uri: {
-          type: "file",
-          value: rif.filepath,
-        },
-      };
-
+      console.log(contextItem);
       let index = 0;
-      for (const el of editor.getJSON().content) {
-        if (el.attrs?.item?.name === itemName) {
-          return; // Prevent duplicate code blocks
+      for (const el of editor.getJSON()?.content ?? []) {
+        if (el.attrs?.item?.name === contextItem.name) {
+          return; // Prevent exact duplicate code blocks
         }
         if (el.type === "codeBlock") {
           index += 2;
@@ -794,7 +794,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         .insertContentAt(index, {
           type: "codeBlock",
           attrs: {
-            item,
+            item: contextItem,
           },
         })
         .run();
@@ -813,13 +813,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         editor.commands.focus("end");
       }, 20);
     },
-    [
-      editor,
-      props.isMainInput,
-      historyLength,
-      props.isMainInput,
-      onEnterRef.current,
-    ],
+    [editor, props.isMainInput, historyLength, onEnterRef.current],
   );
 
   useWebviewListener(
@@ -1003,6 +997,12 @@ function TipTapEditor(props: TipTapEditorProps) {
             <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
           </>
         )}
+      <div
+        id="tippy-js-div"
+        style={{
+          position: "fixed",
+        }}
+      />
     </InputBoxDiv>
   );
 }

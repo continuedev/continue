@@ -13,7 +13,8 @@
       "../../out/tree-sitter-wasms/*",
       "../../out/llamaTokenizer.mjs",
       "../../out/llamaTokenizerWorkerPool.mjs",
-      "../../out/tiktokenWorkerPool.mjs"
+      "../../out/tiktokenWorkerPool.mjs",
+      "../../out/package.json"
     ],
     "targets": [
       "node18-macos-arm64"

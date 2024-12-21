@@ -20,6 +20,7 @@ import { AutocompleteInput } from "./types";
 export class HelperVars {
   lang: AutocompleteLanguageInfo;
   treePath: AstPath | undefined;
+  workspaceUris: string[] = [];
 
   private _fileContents: string | undefined;
   private _fileLines: string[] | undefined;
@@ -42,6 +43,8 @@ export class HelperVars {
     if (this._fileContents !== undefined) {
       return;
     }
+
+    this.workspaceUris = await this.ide.getWorkspaceDirs();
 
     this._fileContents =
       this.input.manuallyPassFileContents ??

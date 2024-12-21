@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import * as fs from "node:fs";
 import * as os from "node:os";
-import * as path from "node:path";
 
 import { ContextMenuConfig, RangeInFileWithContents } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
@@ -12,7 +10,11 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import {
+  getConfigJsonPath,
+  getDevDataFilePath,
+  getLogFilePath,
+} from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
@@ -27,13 +29,11 @@ import {
   setupStatusBar,
 } from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
-import { DiffManager } from "./diff/horizontal";
+
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
-import { getFullyQualifiedPath } from "./util/util";
-import { uriFromFilePath } from "./util/vscode";
 import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -71,7 +71,7 @@ function addCodeToContextFromRange(
   }
 
   const rangeInFileWithContents = {
-    filepath: document.uri.fsPath,
+    filepath: document.uri.toString(),
     contents: document.getText(range),
     range: {
       start: {
@@ -101,7 +101,7 @@ function getRangeInFileWithContents(
 
   if (editor) {
     const selection = editor.selection;
-    const filepath = editor.document.uri.fsPath;
+    const filepath = editor.document.uri.toString();
 
     if (range) {
       const contents = editor.document.getText(range);
@@ -132,7 +132,7 @@ function getRangeInFileWithContents(
     const contents = editor.document.getText(selectionRange);
 
     return {
-      filepath: editor.document.uri.fsPath,
+      filepath,
       contents,
       range: {
         start: {
@@ -162,17 +162,17 @@ async function addHighlightedCodeToContext(
 }
 
 async function addEntireFileToContext(
-  filepath: vscode.Uri,
+  uri: vscode.Uri,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   // If a directory, add all files in the directory
-  const stat = await vscode.workspace.fs.stat(filepath);
+  const stat = await vscode.workspace.fs.stat(uri);
   if (stat.type === vscode.FileType.Directory) {
-    const files = await vscode.workspace.fs.readDirectory(filepath);
+    const files = await vscode.workspace.fs.readDirectory(uri);
     for (const [filename, type] of files) {
       if (type === vscode.FileType.File) {
         addEntireFileToContext(
-          vscode.Uri.joinPath(filepath, filename),
+          vscode.Uri.joinPath(uri, filename),
           webviewProtocol,
         );
       }
@@ -181,9 +181,9 @@ async function addEntireFileToContext(
   }
 
   // Get the contents of the file
-  const contents = (await vscode.workspace.fs.readFile(filepath)).toString();
+  const contents = (await vscode.workspace.fs.readFile(uri)).toString();
   const rangeInFileWithContents = {
-    filepath: filepath.fsPath,
+    filepath: uri.toString(),
     contents: contents,
     range: {
       start: {
@@ -229,54 +229,40 @@ function hideGUI() {
 async function processDiff(
   action: "accept" | "reject",
   sidebar: ContinueGUIWebviewViewProvider,
-  diffManager: DiffManager,
   ide: VsCodeIde,
   verticalDiffManager: VerticalDiffManager,
-  newFilepath?: string | vscode.Uri,
+  newFileUri?: string,
   streamId?: string,
 ) {
   captureCommandTelemetry(`${action}Diff`);
 
-  let fullPath = newFilepath;
-
-  if (fullPath instanceof vscode.Uri) {
-    fullPath = fullPath.fsPath;
-  } else if (fullPath) {
-    fullPath = getFullyQualifiedPath(ide, fullPath);
-  } else {
-    const curFile = await ide.getCurrentFile();
-    fullPath = curFile?.path;
+  let newOrCurrentUri = newFileUri;
+  if (!newOrCurrentUri) {
+    const currentFile = await ide.getCurrentFile();
+    newOrCurrentUri = currentFile?.path;
   }
-
-  if (!fullPath) {
+  if (!newOrCurrentUri) {
     console.warn(
-      `Unable to resolve filepath while attempting to resolve diff: ${newFilepath}`,
+      `No file provided or current file open while attempting to resolve diff`,
     );
     return;
   }
 
-  await ide.openFile(fullPath);
+  await ide.openFile(newOrCurrentUri);
 
   // Clear vertical diffs depending on action
-  verticalDiffManager.clearForFilepath(fullPath, action === "accept");
-
-  // Accept or reject the diff
-  if (action === "accept") {
-    await diffManager.acceptDiff(fullPath);
-  } else {
-    await diffManager.rejectDiff(fullPath);
-  }
+  verticalDiffManager.clearForfileUri(newOrCurrentUri, action === "accept");
 
   void sidebar.webviewProtocol.request("setEditStatus", {
     status: "done",
   });
 
   if (streamId) {
-    const fileContent = await ide.readFile(fullPath);
+    const fileContent = await ide.readFile(newOrCurrentUri);
 
     await sidebar.webviewProtocol.request("updateApplyState", {
       fileContent,
-      filepath: fullPath,
+      filepath: newOrCurrentUri,
       streamId,
       status: "closed",
       numDiffs: 0,
@@ -312,7 +298,6 @@ const getCommandsMap: (
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
-  diffManager: DiffManager,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
@@ -324,7 +309,6 @@ const getCommandsMap: (
   extensionContext,
   sidebar,
   configHandler,
-  diffManager,
   verticalDiffManager,
   continueServerClientPromise,
   battery,
@@ -373,40 +357,32 @@ const getCommandsMap: (
     );
   }
   return {
-    "continue.acceptDiff": async (
-      newFilepath?: string | vscode.Uri,
-      streamId?: string,
-    ) =>
+    "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
       processDiff(
         "accept",
         sidebar,
-        diffManager,
         ide,
         verticalDiffManager,
-        newFilepath,
+        newFileUri,
         streamId,
       ),
 
-    "continue.rejectDiff": async (
-      newFilepath?: string | vscode.Uri,
-      streamId?: string,
-    ) =>
+    "continue.rejectDiff": async (newFilepath?: string, streamId?: string) =>
       processDiff(
         "reject",
         sidebar,
-        diffManager,
         ide,
         verticalDiffManager,
         newFilepath,
         streamId,
       ),
-    "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
+    "continue.acceptVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
-      verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
+      verticalDiffManager.acceptRejectVerticalDiffBlock(true, fileUri, index);
     },
-    "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
+    "continue.rejectVerticalDiffBlock": (fileUri?: string, index?: number) => {
       captureCommandTelemetry("rejectVerticalDiffBlock");
-      verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
+      verticalDiffManager.acceptRejectVerticalDiffBlock(false, fileUri, index);
     },
     "continue.quickFix": async (
       range: vscode.Range,
@@ -456,6 +432,12 @@ const getCommandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
+      const isContinueInputFocused = await sidebar.webviewProtocol.request(
+        "isContinueInputFocused",
+        undefined,
+        false,
+      );
+
       // This is a temporary fix—sidebar.webviewProtocol.request is blocking
       // when the GUI hasn't yet been setup and we should instead be
       // immediately throwing an error, or returning a Result object
@@ -469,11 +451,6 @@ const getCommandsMap: (
 
       const historyLength = await sidebar.webviewProtocol.request(
         "getWebviewHistoryLength",
-        undefined,
-        false,
-      );
-      const isContinueInputFocused = await sidebar.webviewProtocol.request(
-        "isContinueInputFocused",
         undefined,
         false,
       );
@@ -499,18 +476,22 @@ const getCommandsMap: (
       }
     },
     "continue.focusContinueInputWithoutClear": async () => {
-      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
-      // when the GUI hasn't yet been setup and we should instead be
-      // immediately throwing an error, or returning a Result object
-      if (!sidebar.isReady) {
-        focusGUI();
-        return;
-      }
-
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
+        false,
       );
+
+      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
+      // when the GUI hasn't yet been setup and we should instead be
+      // immediately throwing an error, or returning a Result object
+      focusGUI();
+      if (!sidebar.isReady) {
+        const isReady = await waitForSidebarReady(sidebar, 5000, 100);
+        if (!isReady) {
+          return;
+        }
+      }
 
       if (isContinueInputFocused) {
         hideGUI();
@@ -602,11 +583,10 @@ const getCommandsMap: (
           rangeInFileWithContents,
         );
       } else {
-        const filepath = document.uri.fsPath;
         const contents = document.getText();
 
         sidebar.webviewProtocol?.request("addCodeToEdit", {
-          filepath,
+          filepath: document.uri.toString(),
           contents,
         });
       }
@@ -664,17 +644,8 @@ const getCommandsMap: (
     },
     "continue.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
-
-      // Open ~/.continue/continue.log
-      const logFile = path.join(os.homedir(), ".continue", "continue.log");
-      // Make sure the file/directory exist
-      if (!fs.existsSync(logFile)) {
-        fs.mkdirSync(path.dirname(logFile), { recursive: true });
-        fs.writeFileSync(logFile, "");
-      }
-
-      const uri = vscode.Uri.file(logFile);
-      await vscode.window.showTextDocument(uri);
+      const logFilePath = getLogFilePath();
+      await vscode.window.showTextDocument(vscode.Uri.file(logFilePath));
     },
     "continue.debugTerminal": async () => {
       captureCommandTelemetry("debugTerminal");
@@ -755,7 +726,10 @@ const getCommandsMap: (
     "continue.toggleFullScreen": async () => {
       focusGUI();
 
-      const sessionId = await sidebar.webviewProtocol.request("getCurrentSessionId", undefined);
+      const sessionId = await sidebar.webviewProtocol.request(
+        "getCurrentSessionId",
+        undefined,
+      );
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
@@ -789,11 +763,14 @@ const getCommandsMap: (
         undefined,
         true,
       );
-      
+
       panel.onDidChangeViewState(() => {
         vscode.commands.executeCommand("continue.newSession");
-        if(sessionId){
-          vscode.commands.executeCommand("continue.focusContinueSessionId", sessionId);
+        if (sessionId) {
+          vscode.commands.executeCommand(
+            "continue.focusContinueSessionId",
+            sessionId,
+          );
         }
       });
 
@@ -831,9 +808,9 @@ const getCommandsMap: (
           .stat(uri)
           ?.then((stat) => stat.type === vscode.FileType.Directory);
         if (isDirectory) {
-          for await (const filepath of walkDirAsync(uri.fsPath, ide)) {
+          for await (const fileUri of walkDirAsync(uri.toString(), ide)) {
             addEntireFileToContext(
-              uriFromFilePath(filepath),
+              vscode.Uri.parse(fileUri),
               sidebar.webviewProtocol,
             );
           }
@@ -965,7 +942,7 @@ const getCommandsMap: (
         } else if (
           selectedOption === "$(gear) Configure autocomplete options"
         ) {
-          ide.openFile(getConfigJsonPath());
+          ide.openFile(vscode.Uri.file(getConfigJsonPath()).toString());
         } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
@@ -1056,7 +1033,6 @@ export function registerAllCommands(
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
-  diffManager: DiffManager,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
@@ -1072,7 +1048,6 @@ export function registerAllCommands(
       extensionContext,
       sidebar,
       configHandler,
-      diffManager,
       verticalDiffManager,
       continueServerClientPromise,
       battery,

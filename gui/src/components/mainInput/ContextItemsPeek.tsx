@@ -5,7 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { getBasename } from "core/util";
+import { getUriPathBasename } from "core/util/uri";
 import { useContext, useMemo, useState } from "react";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -29,10 +29,14 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   const isUrl = contextItem.uri?.type === "url";
 
   function openContextItem() {
-    const { uri, name, description, content } = contextItem;
+    const { uri, name, content } = contextItem;
 
     if (isUrl) {
-      ideMessenger.post("openUrl", uri.value);
+      if (uri?.value) {
+        ideMessenger.post("openUrl", uri.value);
+      } else {
+        console.error("Couldn't open url", uri);
+      }
     } else if (uri) {
       const isRangeInFile = name.includes(" (") && name.endsWith(")");
 
@@ -44,7 +48,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
           rif.range.end.line,
         );
       } else {
-        ideMessenger.ide.openFile(description);
+        ideMessenger.ide.openFile(uri.value);
       }
     } else {
       ideMessenger.ide.showVirtualFile(name, content);
@@ -67,7 +71,8 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
     }
 
     // Heuristic to check if it's a file
-    const shouldShowFileIcon = contextItem.content.includes("```");
+    const shouldShowFileIcon =
+      contextItem.content.includes("```") || contextItem.uri?.type === "file";
 
     if (shouldShowFileIcon) {
       return (
@@ -115,7 +120,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
             className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
           >
             {contextItem.uri?.type === "file"
-              ? getBasename(contextItem.description)
+              ? getUriPathBasename(contextItem.description)
               : contextItem.description}
           </div>
         </div>
