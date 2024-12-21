@@ -32,10 +32,9 @@ import kotlin.coroutines.resume
 class IdeProtocolClient(
     private val continuePluginService: ContinuePluginService,
     private val coroutineScope: CoroutineScope,
-    workspacePath: String?,
     private val project: Project
 ) : DumbAware {
-    private val ide: IDE = IntelliJIDE(project, workspacePath, continuePluginService)
+    private val ide: IDE = IntelliJIDE(project, continuePluginService)
 
     init {
         // Setup config.json / config.ts save listeners
@@ -389,7 +388,7 @@ class IdeProtocolClient(
                         ide.openUrl(url)
                         respond(null)
                     }
-                    
+
                     "insertAtCursor" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),

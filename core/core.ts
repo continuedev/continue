@@ -12,12 +12,7 @@ import {
   setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import {
-  addContextProvider,
-  addModel,
-  addOpenAIKey,
-  deleteModel,
-} from "./config/util";
+import { addContextProvider, addModel, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -47,9 +42,9 @@ import { TTS } from "./util/tts";
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 
+import * as URI from "uri-js";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import type { IMessenger, Message } from "./protocol/messenger";
-import * as URI from "uri-js";
 import { localPathToUri } from "./util/pathToUri";
 
 export class Core {
@@ -124,9 +119,15 @@ export class Core {
       this.messenger,
     );
 
-    this.configHandler.onConfigUpdate(
-      (() => this.messenger.send("configUpdate", undefined)).bind(this),
-    );
+    this.configHandler.onConfigUpdate(async (result) => {
+      const serialized = await (
+        await this.configHandler.getSerializedConfig()
+      ).config!;
+      this.messenger.send("configUpdate", {
+        config: serialized,
+        profileId: this.configHandler.currentProfile.profileId,
+      });
+    });
 
     this.configHandler.onDidChangeAvailableProfiles((profiles) =>
       this.messenger.send("didChangeAvailableProfiles", { profiles }),
@@ -269,9 +270,9 @@ export class Core {
       await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
-    on("config/reload", (msg) => {
+    on("config/reload", async (msg) => {
       void this.configHandler.reloadConfig();
-      return this.configHandler.getSerializedConfig();
+      return (await this.configHandler.getSerializedConfig()).config!; // <-- TODO
     });
 
     on("config/ideSettingsUpdate", (msg) => {
@@ -369,7 +370,7 @@ export class Core {
 
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
-        config: await this.configHandler.getSerializedConfig(),
+        config: (await this.configHandler.getSerializedConfig()).config!, // <-- TODO
         profileId: this.configHandler.currentProfile.profileId,
       };
     });

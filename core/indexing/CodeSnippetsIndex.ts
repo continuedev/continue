@@ -228,7 +228,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         );
       } catch (e) {
         // If can't parse, assume malformatted code
-        console.error(`Error parsing ${compute.path}:`, e);
       }
 
       // Add snippets to sqlite
@@ -293,7 +292,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         );
       } catch (e) {
         // If can't parse, assume malformatted code
-        console.error(`Error parsing ${addTag.path}:`, e);
       }
 
       for (const snippet of snippets) {

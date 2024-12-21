@@ -37,9 +37,15 @@ function getSuggestion(
             return;
           }
 
+          const container = document.getElementById("tippy-js-div");
+          if (!container) {
+            console.log("no container");
+            return;
+          }
+
           popup = tippy("body", {
             getReferenceClientRect: props.clientRect,
-            appendTo: () => document.body,
+            appendTo: () => container,
             content: component.element,
             showOnCreate: true,
             interactive: true,

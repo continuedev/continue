@@ -16,7 +16,7 @@ import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProvide
 
 const router = createMemoryRouter([
   {
-    path: "/",
+    path: ROUTES.HOME,
     element: <Layout />,
     errorElement: <ErrorPage />,
     children: [
@@ -25,7 +25,7 @@ const router = createMemoryRouter([
         element: <Chat />,
       },
       {
-        path: "/",
+        path: ROUTES.HOME,
         element: <Chat />,
       },
       {

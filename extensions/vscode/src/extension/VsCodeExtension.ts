@@ -136,7 +136,7 @@ export class VsCodeExtension {
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
-    this.configHandler.reloadConfig();
+    this.configHandler.loadConfig();
     this.verticalDiffManager = new VerticalDiffManager(
       this.configHandler,
       this.sidebar.webviewProtocol,
@@ -161,14 +161,18 @@ export class VsCodeExtension {
     });
 
     this.configHandler.onConfigUpdate(
-      ({ config: newConfig, errors, configLoadInterrupted }) => {
+      async ({ config: newConfig, errors, configLoadInterrupted }) => {
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);
         } else if (newConfig) {
           setupStatusBar(undefined, undefined, false);
 
-          this.sidebar.webviewProtocol?.request("configUpdate", undefined);
+          const serialized = await this.configHandler.getSerializedConfig();
+          this.sidebar.webviewProtocol?.request("configUpdate", {
+            config: serialized.config!, // <-- TODO
+            profileId: this.configHandler.currentProfile.profileId,
+          });
 
           this.tabAutocompleteModel.clearLlm();
 
@@ -246,6 +250,9 @@ export class VsCodeExtension {
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
+      if (stats.size === 0) {
+        return;
+      }
       await this.configHandler.reloadConfig();
     });
 
@@ -253,11 +260,17 @@ export class VsCodeExtension {
       getConfigYamlPath("vscode"),
       { interval: 1000 },
       async (stats) => {
+        if (stats.size === 0) {
+          return;
+        }
         await this.configHandler.reloadConfig();
       },
     );
 
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
+      if (stats.size === 0) {
+        return;
+      }
       this.configHandler.reloadConfig();
     });
 

@@ -602,7 +602,7 @@ class VsCodeIde implements IDE {
         "pauseCodebaseIndexOnStart",
         false,
       ),
-      enableDebugLogs: settings.get<boolean>("enableDebugLogs", false),
+      enableDebugLogs: false,
       // settings.get<boolean>(
       //   "enableControlServerBeta",
       //   false,

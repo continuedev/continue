@@ -1,4 +1,11 @@
-import { EditorView, WebView, WebDriver, Key } from "vscode-extension-tester";
+import {
+  EditorView,
+  WebView,
+  WebDriver,
+  Key,
+  WebElement,
+  VSBrowser,
+} from "vscode-extension-tester";
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
 import { GUISelectors } from "../selectors/GUI.selectors";
@@ -12,6 +19,7 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
+    await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
   });
 
@@ -184,6 +192,36 @@ describe("GUI Test", () => {
   });
 
   describe("Chat Paths", () => {
+    it("Open chat and type → open history → cmd+l → chat opens, empty and in focus", async () => {
+      const originalTextInput = await GUISelectors.getMessageInputFieldAtIndex(
+        view,
+        0,
+      );
+      await originalTextInput.click();
+      await originalTextInput.sendKeys("Hello");
+      expect(await originalTextInput.getText()).to.equal("Hello");
+
+      await view.switchBack();
+
+      await (await GUISelectors.getHistoryNavButton(view)).click();
+      await GUIActions.switchToReactIframe();
+
+      await view.switchBack();
+      await (await GUISelectors.getNewSessionNavButton(view)).click();
+      await GUIActions.switchToReactIframe();
+
+      const newTextInput = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getMessageInputFieldAtIndex(view, 0),
+      );
+      const activeElement: WebElement = await driver.switchTo().activeElement();
+      const newTextInputHtml = await newTextInput.getAttribute("outerHTML");
+      const activeElementHtml = await activeElement.getAttribute("outerHTML");
+      expect(newTextInputHtml).to.equal(activeElementHtml);
+
+      const textInputValue = await newTextInput.getText();
+      expect(textInputValue).to.equal("");
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
     it("chat → history → chat", async () => {
       const messagePair1 = TestUtils.generateTestMessagePair(1);
       await GUIActions.sendMessage({

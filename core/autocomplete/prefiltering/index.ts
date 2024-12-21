@@ -1,11 +1,9 @@
-import path from "node:path";
-
 import ignore from "ignore";
 
 import { IDE } from "../..";
 import { getConfigJsonPath } from "../../util/paths";
-import { HelperVars } from "../util/HelperVars";
 import { findUriInDirs } from "../../util/uri";
+import { HelperVars } from "../util/HelperVars";
 
 async function isDisabledForFile(
   currentFilepath: string,
@@ -52,9 +50,8 @@ export async function shouldPrefilter(
   }
 
   // Check whether autocomplete is disabled for this file
-  if (
-    await isDisabledForFile(helper.filepath, helper.options.disableInFiles, ide)
-  ) {
+  const disableInFiles = [...(helper.options.disableInFiles ?? []), "*.prompt"];
+  if (await isDisabledForFile(helper.filepath, disableInFiles, ide)) {
     return true;
   }
 

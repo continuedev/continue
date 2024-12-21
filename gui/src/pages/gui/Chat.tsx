@@ -233,8 +233,8 @@ export function Chat() {
     (
       editorState: JSONContent,
       modifiers: InputModifiers,
-      editor: Editor,
       index?: number,
+      editorToClearOnSend?: Editor,
     ) => {
       if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
@@ -268,7 +268,9 @@ export function Chat() {
         streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
       );
 
-      editor.commands.clearContent(true);
+      if (editorToClearOnSend) {
+        editorToClearOnSend.commands.clearContent();
+      }
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -321,14 +323,8 @@ export function Chat() {
   useWebviewListener(
     "newSession",
     async () => {
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-        }),
-      );
       // unwrapResult(response) // errors if session creation failed
       mainTextInputRef.current?.focus?.();
-      dispatch(exitEditMode());
     },
     [mainTextInputRef],
   );
@@ -381,8 +377,8 @@ export function Chat() {
                   {isInEditMode && index === 0 && <CodeToEditCard />}
                   <ContinueInputBox
                     isEditMode={isInEditMode}
-                    onEnter={(editorState, modifiers, editor) =>
-                      sendInput(editorState, modifiers, editor, index)
+                    onEnter={(editorState, modifiers) =>
+                      sendInput(editorState, modifiers, index)
                     }
                     isLastUserInput={isLastUserInput(index)}
                     isMainInput={false}
@@ -487,7 +483,9 @@ export function Chat() {
             isMainInput
             isEditMode={isInEditMode}
             isLastUserInput={false}
-            onEnter={sendInput}
+            onEnter={(editorState, modifiers, editor) =>
+              sendInput(editorState, modifiers, undefined, editor)
+            }
           />
         )}
 

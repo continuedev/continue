@@ -224,7 +224,9 @@ export class ConfigHandler {
     return { config, errors };
   }
 
-  getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
+  getSerializedConfig(): Promise<
+    ConfigResult<BrowserSerializedContinueConfig>
+  > {
     return this.currentProfile.getSerializedConfig(
       this.additionalContextProviders,
     );
@@ -235,7 +237,9 @@ export class ConfigHandler {
   }
 
   async loadConfig(): Promise<ContinueConfig> {
-    return this.currentProfile.loadConfig(this.additionalContextProviders);
+    return (
+      await this.currentProfile.loadConfig(this.additionalContextProviders)
+    ).config!; // <-- TODO
   }
 
   async llmFromTitle(title?: string): Promise<ILLM> {
