@@ -55,20 +55,20 @@ class GitCommitContextProvider extends BaseContextProvider {
     const topLevelDir =  fileURLToPath((await args.ide.getWorkspaceDirs())[0]);
     try{
       const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%H:%s" -n ${depth}`, {cwd: topLevelDir});
-      return [{ id: `last ${lastXCommitsDepth} commits`, title: `last ${lastXCommitsDepth} commits`, description: "recent commits" }]
-      .concat(
-        gitResult.stdout
-          .trim()
-          .split('\n')
-          .map(line => {
-            const [hash, message] = line.split(":");
-            return {
-              id: hash,
-              title: message,
-              description: hash
-            };
-          })
+      const recentCommits = [{ id: `last ${lastXCommitsDepth} commits`, title: `last ${lastXCommitsDepth} commits`, description: "recent commits" }];
+      const allCommits = gitResult.stdout
+      .trim()
+      .split('\n')
+      .map(line => {
+        const [hash, message] = line.split(":");
+        return {
+          id: hash,
+          title: message,
+          description: hash
+        };
+      }
       );
+      return recentCommits.concat(allCommits);
     }catch(err: any){
       //could be nice to toast the error eg. not a git repo or git is not installed
       return [];
