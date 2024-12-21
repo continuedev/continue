@@ -41,12 +41,13 @@ function DocsIndexingStatuses() {
         ) : null}
       </div>
       <span className="text-xs text-stone-500">
-        {configDocs.length
-          ? "Manage your documentation sources"
-          : "No docs yet"}
-      </span>
-      <div className="flex max-h-[170px] flex-col gap-1 overflow-x-hidden overflow-y-scroll pr-2">
-        {!hasDocsProvider && (
+        {hasDocsProvider ? (
+          configDocs.length ? (
+            "Manage your documentation sources"
+          ) : (
+            "No docs yet"
+          )
+        ) : (
           <div className="flex flex-col gap-1 text-xs">
             <div className="flex flex-row gap-1">
               <div>
@@ -69,6 +70,8 @@ function DocsIndexingStatuses() {
             </span>
           </div>
         )}
+      </span>
+      <div className="flex max-h-[170px] flex-col gap-1 overflow-x-hidden overflow-y-scroll pr-2">
         <div>
           {configDocs.length === 0 && (
             <SecondaryButton

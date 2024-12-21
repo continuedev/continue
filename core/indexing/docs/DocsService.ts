@@ -193,8 +193,15 @@ export default class DocsService {
     this.docsIndexingQueue.delete(startUrl);
   }
 
-  isAborted(startUrl: string) {
-    return this.statuses.get(startUrl)?.status === "aborted";
+  shouldCancel(startUrl: string) {
+    const isAborted = this.statuses.get(startUrl)?.status === "aborted";
+    if (isAborted) {
+      return true;
+    }
+    if (this.config.disableIndexing) {
+      this.abort(startUrl);
+      return true;
+    }
   }
 
   // NOTE Pausing not supported for docs yet
@@ -421,7 +428,7 @@ export default class DocsService {
         estimatedProgress += 1 / 2 ** (processedPages + 1);
 
         // NOTE - during "indexing" phase, check if aborted before each status update
-        if (this.isAborted(startUrl)) {
+        if (this.shouldCancel(startUrl)) {
           return;
         }
         this.handleStatusUpdate({
@@ -459,7 +466,7 @@ export default class DocsService {
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
 
-        if (this.isAborted(startUrl)) {
+        if (this.shouldCancel(startUrl)) {
           return;
         }
         this.handleStatusUpdate({
@@ -496,7 +503,7 @@ export default class DocsService {
           `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
         );
 
-        if (this.isAborted(startUrl)) {
+        if (this.shouldCancel(startUrl)) {
           return;
         }
         this.handleStatusUpdate({
@@ -514,7 +521,7 @@ export default class DocsService {
       // Add docs to databases
       console.log(`Adding ${embeddings.length} embeddings to db`);
 
-      if (this.isAborted(startUrl)) {
+      if (this.shouldCancel(startUrl)) {
         return;
       }
       this.handleStatusUpdate({
@@ -532,7 +539,7 @@ export default class DocsService {
 
       const favicon = await fetchFavicon(new URL(siteIndexingConfig.startUrl));
 
-      if (this.isAborted(startUrl)) {
+      if (this.shouldCancel(startUrl)) {
         return;
       }
       this.handleStatusUpdate({
@@ -551,7 +558,7 @@ export default class DocsService {
 
       this.docsIndexingQueue.delete(startUrl);
 
-      if (this.isAborted(startUrl)) {
+      if (this.shouldCancel(startUrl)) {
         return;
       }
       this.handleStatusUpdate({
