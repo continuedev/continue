@@ -54,13 +54,13 @@ class GitCommitContextProvider extends BaseContextProvider {
     const lastXCommitsDepth = this.options?.LastXCommitsDepth ?? 10;
     const topLevelDir =  fileURLToPath((await args.ide.getWorkspaceDirs())[0]);
     try{
-      const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%H:%s" -n ${depth}`, {cwd: topLevelDir});
+      const gitResult = await asyncExec(`git --no-pager log --pretty=format:"%H%x00%s" -n ${depth}`, {cwd: topLevelDir});
       const recentCommits = [{ id: `last ${lastXCommitsDepth} commits`, title: `last ${lastXCommitsDepth} commits`, description: "recent commits" }];
       const allCommits = gitResult.stdout
       .trim()
       .split('\n')
       .map(line => {
-        const [hash, message] = line.split(":");
+        const [hash, message] = line.split("\0");
         return {
           id: hash,
           title: message,
