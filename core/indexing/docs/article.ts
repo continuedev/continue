@@ -1,3 +1,5 @@
+// Article processing and chunking module
+
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 
@@ -6,6 +8,7 @@ import { cleanFragment, cleanHeader } from "../chunk/markdown";
 
 import { type PageData } from "./DocsCrawler";
 
+// Define types for article components and structure
 export type ArticleComponent = {
   title: string;
   body: string;
@@ -18,6 +21,7 @@ export type Article = {
   article_components: ArticleComponent[];
 };
 
+// Break down an article component into smaller chunks
 function breakdownArticleComponent(
   url: string,
   article: ArticleComponent,
@@ -27,78 +31,74 @@ function breakdownArticleComponent(
   const chunks: Chunk[] = [];
   const lines = article.body.split("\n");
   let startLine = 0;
-  let endLine = 0;
   let content = "";
   let index = 0;
 
+  // Construct full URL for the article component
   const fullUrl = new URL(
     `${subpath}#${cleanFragment(article.title)}`,
     url,
   ).toString();
 
+  // Helper function to create and add a chunk
   const createChunk = (
     chunkContent: string,
     chunkStartLine: number,
     chunkEndLine: number,
   ) => {
-    chunks.push({
-      content: chunkContent.trim(),
-      startLine: chunkStartLine,
-      endLine: chunkEndLine,
-      otherMetadata: {
-        title: cleanHeader(article.title),
-      },
-      index: index++,
-      filepath: fullUrl,
-      digest: fullUrl,
-    });
+    if (chunkContent.trim().length > 20) {
+      chunks.push({
+        content: chunkContent.trim(),
+        startLine: chunkStartLine,
+        endLine: chunkEndLine,
+        otherMetadata: {
+          title: cleanHeader(article.title),
+        },
+        index: index++,
+        filepath: fullUrl,
+        digest: fullUrl,
+      });
+    }
   };
 
+  // Process each line and create chunks
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Handle oversized lines by splitting them
     if (line.length > max_chunk_size) {
-      // First push any accumulated content
+      // Handle long lines by splitting them
       if (content.trim().length > 0) {
-        createChunk(content, startLine, endLine);
+        createChunk(content, startLine, i - 1);
         content = "";
       }
 
-      // Split the long line into chunks
       let remainingLine = line;
-      let subLineStart = i;
       while (remainingLine.length > 0) {
         const chunk = remainingLine.slice(0, max_chunk_size);
-        createChunk(chunk, subLineStart, i);
+        createChunk(chunk, i, i);
         remainingLine = remainingLine.slice(max_chunk_size);
       }
       startLine = i + 1;
-      continue;
-    }
-
-    // Normal line handling
-    if (content.length + line.length + 1 <= max_chunk_size) {
+    } else if (content.length + line.length + 1 <= max_chunk_size) {
+      // Add line to current chunk if it fits
       content += `${line}\n`;
-      endLine = i;
     } else {
-      if (content.trim().length > 0) {
-        createChunk(content, startLine, endLine);
-      }
+      // Create a new chunk if adding the line exceeds max size
+      createChunk(content, startLine, i - 1);
       content = `${line}\n`;
       startLine = i;
-      endLine = i;
     }
   }
 
-  // Push the last chunk
+  // Add any remaining content as a final chunk
   if (content.trim().length > 0) {
-    createChunk(content, startLine, endLine);
+    createChunk(content, startLine, lines.length - 1);
   }
 
-  return chunks.filter((c) => c.content.trim().length > 20);
+  return chunks;
 }
 
+// Chunk an entire article into smaller pieces
 export function chunkArticle(
   articleResult: Article,
   maxChunkSize: number,
@@ -118,26 +118,33 @@ export function chunkArticle(
   return chunks;
 }
 
+// Extract titles and bodies from HTML content
 function extractTitlesAndBodies(html: string): ArticleComponent[] {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
-  const titles = Array.from(document.querySelectorAll("h2"));
-  const result = titles.map((titleElement) => {
-    const title = titleElement.textContent || "";
-    let body = "";
-    let nextSibling = titleElement.nextElementSibling;
+  const headings = Array.from(
+    document.querySelectorAll("h1, h2, h3, h4, h5, h6"),
+  );
 
-    while (nextSibling && nextSibling.tagName !== "H2") {
-      body += nextSibling.textContent || "";
-      nextSibling = nextSibling.nextElementSibling;
-    }
+  return headings
+    .map((heading, index) => {
+      const title = heading.textContent?.trim() || "";
+      let body = "";
+      let nextElement = heading.nextElementSibling;
 
-    return { title, body };
-  });
+      // Collect content until the next heading
+      while (nextElement && !nextElement.tagName.match(/^H[1-6]$/)) {
+        body += nextElement.textContent || "";
+        nextElement = nextElement.nextElementSibling;
+      }
 
-  return result;
+      return { title, body: body.trim() };
+    })
+    .filter((component) => component.title && component.body);
 }
+
+// Convert HTML string to Article object
 export function stringToArticle(
   url: string,
   html: string,
@@ -148,8 +155,14 @@ export function stringToArticle(
     const reader = new Readability(dom.window.document);
     const article = reader.parse();
 
-    if (!article) {
-      return undefined;
+    if (!article || !article.content) {
+      // Fallback to extracting titles and bodies if Readability fails
+      return {
+        url,
+        subpath,
+        title: dom.window.document.title || url,
+        article_components: extractTitlesAndBodies(html),
+      };
     }
 
     const article_components = extractTitlesAndBodies(article.content);
@@ -157,8 +170,11 @@ export function stringToArticle(
     return {
       url,
       subpath,
-      title: article.title,
-      article_components,
+      title: article.title || dom.window.document.title || url,
+      article_components:
+        article_components.length > 0
+          ? article_components
+          : [{ title: "Main Content", body: article.textContent || "" }],
     };
   } catch (err) {
     console.error("Error converting URL to article components", err);
@@ -166,6 +182,7 @@ export function stringToArticle(
   }
 }
 
+// Convert PageData to Article object
 export function pageToArticle(page: PageData): Article | undefined {
   try {
     return stringToArticle(page.url, page.content, page.path);
