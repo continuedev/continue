@@ -1,13 +1,13 @@
 import {
   EditorView,
-  TextEditor,
   InputBox,
+  TextEditor,
   Workbench,
 } from "vscode-extension-tester";
 
-import { DEFAULT_TIMEOUT } from "../constants";
-import { GlobalActions } from "../actions/Global.actions";
 import { AutocompleteActions } from "../actions/Autocomplete.actions";
+import { GlobalActions } from "../actions/Global.actions";
+import { DEFAULT_TIMEOUT } from "../constants";
 
 describe("Autocomplete", () => {
   let editor: TextEditor;
