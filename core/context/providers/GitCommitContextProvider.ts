@@ -10,7 +10,6 @@ import childProcess from "node:child_process";
 import util from "node:util";
 import { fileURLToPath} from "node:url";
 
-
 const asyncExec = util.promisify(childProcess.exec);
 
 class GitCommitContextProvider extends BaseContextProvider {
@@ -42,7 +41,6 @@ class GitCommitContextProvider extends BaseContextProvider {
             content: (await asyncExec(`git --no-pager show --pretty=format:"%H,%h,%an,%ae,%ad,%P,%s,%b" ${query}`, {cwd: topLevelDir})).stdout,
           }
         ]
-
       }
     }catch(err){
       return [];
