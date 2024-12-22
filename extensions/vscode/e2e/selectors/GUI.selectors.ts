@@ -1,4 +1,4 @@
-import { By, until, WebDriver, WebView } from "vscode-extension-tester";
+import { By, WebDriver, WebView } from "vscode-extension-tester";
 import { SelectorUtils } from "./SelectorUtils";
 
 export class GUISelectors {
@@ -28,6 +28,13 @@ export class GUISelectors {
 
   public static getSubmitInputButton(view: WebView) {
     return SelectorUtils.getElementByDataTestId(view, "submit-input-button");
+  }
+
+  public static getAcceptToolCallButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "accept-tool-call-button",
+    );
   }
 
   public static getModelDropdownButton(view: WebView) {

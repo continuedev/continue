@@ -1,9 +1,18 @@
-import { ChatMessage, CompletionOptions } from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
+
+type MockMessage = ChatMessage | "REPEAT_LAST_MSG";
 
 class MockLLM extends BaseLLM {
   public completion: string = "Test Completion";
+  public chatStreams: MockMessage[][] | undefined;
   static providerName = "mock";
+
+  constructor(options: LLMOptions) {
+    super(options);
+    this.templateMessages = undefined;
+    this.chatStreams = options.requestOptions?.extraBodyProperties?.chatStream;
+  }
 
   protected async *_streamComplete(
     prompt: string,
@@ -18,6 +27,29 @@ class MockLLM extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    if (this.chatStreams) {
+      const chatStream =
+        this.chatStreams?.[
+          messages.filter((m) => m.role === "user" || m.role === "tool")
+            .length - 1
+        ];
+      if (chatStream) {
+        for (const message of chatStream) {
+          switch (message) {
+            case "REPEAT_LAST_MSG":
+              yield {
+                role: "assistant",
+                content: messages[messages.length - 1].content,
+              };
+              break;
+            default:
+              yield message;
+          }
+        }
+      }
+      return;
+    }
+
     for (const char of this.completion) {
       yield {
         role: "assistant",
