@@ -10,7 +10,7 @@ import {
 import { GlobalActions } from "../actions/Global.actions";
 import { DEFAULT_TIMEOUT } from "../constants";
 
-describe.only("Prompt file", () => {
+describe("Prompt file", () => {
   let editor: TextEditor;
 
   beforeEach(async function () {

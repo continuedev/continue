@@ -1,6 +1,6 @@
 ### Setup
 
-When running e2e tests for the first time:
+When running e2e tests for the first time, or after changing non-test source code:
 
 ```bash
 npm run e2e:all
@@ -8,7 +8,7 @@ npm run e2e:all
 
 ### Run
 
-Afterward, you can run the tests with:
+Afterward, you can run the tests with as long as you've only changed the e2e test code:
 
 ```bash
 npm run e2e:quick
