@@ -23,8 +23,7 @@
   "scripts": {
     "test": "jest",
     "build": "node build.js",
-    "build:dev": "tsc",
-    "esbuild": "node build.js --esbuild-only"
+    "build:dev": "node build.js --with-sourcemaps"
   },
   "license": "Apache-2.0",
   "devDependencies": {
