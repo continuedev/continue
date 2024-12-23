@@ -497,7 +497,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
     const diffs = myersDiff(oldFileContent, newFileContent);
 
     const meyersDiffLines = diffs.map((diff) => diff.line).join("\n");
-    console.log({ newFileContent });
 
     // Then, we overwrite the potentially miscalcualted diff blocks with our Meyers Diff
     const fullRange = new vscode.Range(
