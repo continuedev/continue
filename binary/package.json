@@ -23,7 +23,7 @@
   "scripts": {
     "test": "jest",
     "build": "node build.js",
-    "build:dev": "node build.js --with-sourcemaps"
+    "build:darwin-x64": "node build.js --os darwin-x64"
   },
   "license": "Apache-2.0",
   "devDependencies": {
