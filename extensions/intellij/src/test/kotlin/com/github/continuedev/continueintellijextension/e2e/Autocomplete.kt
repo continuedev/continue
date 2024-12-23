@@ -55,6 +55,7 @@ class Autocomplete {init {
         }
 
         idea {
+            waitFor(ofMinutes(5)) { isDumbMode().not() }
             with(textEditor()) {
                 val userMsg = "TEST_USER_MESSAGE_0"
                 editor.insertTextAtLine(0, 0, userMsg)

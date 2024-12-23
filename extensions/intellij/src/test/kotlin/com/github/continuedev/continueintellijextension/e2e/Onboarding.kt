@@ -48,6 +48,8 @@ class Onboarding {
         }
 
         idea {
+            waitFor(ofMinutes(5)) { isDumbMode().not() }
+            
             // Wait for the default "Main.java" tab to load
             // Our "continue_tutorial.java.ft" tab loads first, but then "Main.java" takes focus.
             // So we need to wait for that to occur, and then focus on "continue_tutorial.java.ft"

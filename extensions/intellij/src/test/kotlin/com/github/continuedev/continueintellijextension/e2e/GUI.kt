@@ -53,6 +53,7 @@ class GUI {
 
 
         idea {
+            waitFor(ofMinutes(5)) { isDumbMode().not() }
             step("Manually open the webview") {
                 // Manually open the webview
                 find<ComponentFixture>(byXpath("//div[@text='Continue']"), ofSeconds((10))).click()
