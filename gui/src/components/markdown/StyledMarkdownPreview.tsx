@@ -26,9 +26,9 @@ import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { ToolTip } from "../gui/Tooltip";
 import { v4 as uuidv4 } from "uuid";
+import { ContextItemWithId, RangeInFileWithContents } from "core";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -141,34 +141,59 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
 
-  // Grab context items that are this one or further back
+  // The logic here is to get file names from
+  // 1. Context items found in past messages
+  // 2. Toolbar Codeblocks found in past messages
   const history = useAppSelector((state) => state.session.history);
-  const previousFileContextItems = useMemo(() => {
+  const allSymbols = useAppSelector((state) => state.session.symbols);
+  const pastFileInfo = useMemo(() => {
     const index = props.itemIndex;
     if (index === undefined) {
-      return [];
+      return {
+        symbols: [],
+        rifs: [],
+      };
     }
-    const previousItems = history.flatMap((item, i) =>
-      i <= index ? item.contextItems : [],
-    );
-    return previousItems.filter(
-      (item) => item.uri?.type === "file" && item?.uri?.value,
-    );
-  }, [props.itemIndex, history]);
-  const previousFileContextItemsRef = useUpdatingRef(previousFileContextItems);
+    const pastHistoryItems = history.filter((_, i) => i <= index);
 
-  // Extract global symbols for files matching previous context items
-  const allSymbols = useAppSelector((state) => state.session.symbols);
-  const previousFileContextItemSymbols = useMemo(() => {
-    const uniqueUris = new Set(
-      previousFileContextItems.map((item) => item.uri!.value!),
+    const pastNormalContextItems = pastHistoryItems.flatMap((item) => {
+      return (
+        item.contextItems?.filter(
+          (item) => item.uri?.type === "file" && item.uri?.value,
+        ) ?? []
+      );
+    });
+
+    const pastToolbarContextItems: ContextItemWithId[] = pastHistoryItems
+      .filter((item) => item.editorState && Array.isArray(item.editorState))
+      .flatMap((item) => item.editorState)
+      .filter(
+        (content) =>
+          content?.type === "codeBlock" &&
+          content?.attrs?.item &&
+          content.attrs.item.uri?.type === "file" &&
+          content.attrs.item.uri?.value,
+      )
+      .map((content) => content.attrs!.item!);
+
+    const pastContextItems = [
+      ...pastNormalContextItems,
+      ...pastToolbarContextItems,
+    ];
+    const rifs = pastContextItems.map((item) =>
+      ctxItemToRifWithContents(item, true),
     );
-    return Object.entries(allSymbols)
-      .filter((e) => uniqueUris.has(e[0]))
+    const symbols = Object.entries(allSymbols)
+      .filter((e) => pastContextItems.find((item) => item.uri!.value === e[0]))
       .map((f) => f[1])
       .flat();
-  }, [allSymbols, previousFileContextItems]);
-  const symbolsRef = useUpdatingRef(previousFileContextItemSymbols);
+
+    return {
+      symbols,
+      rifs,
+    };
+  }, [props.itemIndex, history, allSymbols]);
+  const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -298,26 +323,22 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (content && previousFileContextItemsRef.current) {
+          if (content) {
+            const { symbols, rifs } = pastFileInfoRef.current;
             // Insert file links for matching previous context items
-            const ctxItem = previousFileContextItemsRef.current.find((item) =>
-              item.uri!.value!.includes(content),
-            );
-            if (ctxItem) {
-              const rif = ctxItemToRifWithContents(ctxItem);
+            const rif = rifs.find((rif) => rif.filepath.includes(content));
+            if (rif) {
               return <FilenameLink rif={rif} />;
             }
 
             // Insert symbols for exact matches
-            const exactSymbol = symbolsRef.current.find(
-              (s) => s.name === content,
-            );
+            const exactSymbol = symbols.find((s) => s.name === content);
             if (exactSymbol) {
               return <SymbolLink content={content} symbol={exactSymbol} />;
             }
 
             // Partial matches - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
-            const partialSymbol = symbolsRef.current.find((s) =>
+            const partialSymbol = symbols.find((s) =>
               content.startsWith(s.name),
             );
             if (partialSymbol) {
