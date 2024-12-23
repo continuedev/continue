@@ -5,6 +5,7 @@ import {
   Key,
   WebElement,
   VSBrowser,
+  until,
 } from "vscode-extension-tester";
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
@@ -192,7 +193,63 @@ describe("GUI Test", () => {
   });
 
   describe("Chat Paths", () => {
-    it("Open chat and type → open history → cmd+l → chat opens, empty and in focus", async () => {
+    it("Open chat and send message → press arrow up and arrow down to cycle through messages → submit another message → press arrow up and arrow down to cycle through messages", async () => {
+      await GUIActions.sendMessage({
+        view,
+        message: "MESSAGE 1",
+        inputFieldIndex: 0,
+      });
+
+      const input1 = await TestUtils.waitForSuccess(async () => {
+        return GUISelectors.getMessageInputFieldAtIndex(view, 1);
+      });
+      expect(await input1.getText()).to.equal("");
+
+      await input1.sendKeys(Key.ARROW_UP);
+      await driver.wait(
+        until.elementTextIs(input1, "MESSAGE 1"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input1.sendKeys(Key.ARROW_DOWN); // First press - bring caret to the end of the message
+      await input1.sendKeys(Key.ARROW_DOWN); // Second press - trigger message change
+      await driver.wait(until.elementTextIs(input1, ""), DEFAULT_TIMEOUT.SM);
+
+      await GUIActions.sendMessage({
+        view,
+        message: "MESSAGE 2",
+        inputFieldIndex: 1,
+      });
+
+      const input2 = await TestUtils.waitForSuccess(async () => {
+        return GUISelectors.getMessageInputFieldAtIndex(view, 2);
+      });
+      expect(await input2.getText()).to.equal("");
+
+      await input2.sendKeys(Key.ARROW_UP);
+      await driver.wait(
+        until.elementTextIs(input2, "MESSAGE 2"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input2.sendKeys(Key.ARROW_UP);
+      await driver.wait(
+        until.elementTextIs(input2, "MESSAGE 1"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input2.sendKeys(Key.ARROW_DOWN); // First press - bring caret to the end of the message
+      await input2.sendKeys(Key.ARROW_DOWN); // Second press - trigger message change
+      await driver.wait(
+        until.elementTextIs(input2, "MESSAGE 2"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input2.sendKeys(Key.ARROW_DOWN);
+      await driver.wait(until.elementTextIs(input2, ""), DEFAULT_TIMEOUT.SM);
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
+    it("Open chat and type → open history → press new session button → chat opens, empty and in focus", async () => {
       const originalTextInput = await GUISelectors.getMessageInputFieldAtIndex(
         view,
         0,
