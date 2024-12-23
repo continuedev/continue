@@ -11,16 +11,6 @@ import type {
 } from "../";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
-  onLoad: [
-    undefined,
-    {
-      windowId: string;
-      serverUrl: string;
-      workspacePaths: string[];
-      vscMachineId: string;
-      vscMediaUrl: string;
-    },
-  ];
   openUrl: [string, void];
   // We pass the `curSelectedModel` because we currently cannot access the
   // default model title in the GUI from JB
@@ -42,8 +32,18 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   toggleFullScreen: [{ newWindow?: boolean } | undefined, void];
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
-  "jetbrains/editorInsetHeight": [{ height: number }, void];
-  "jetbrains/isOSREnabled": [undefined, void];
+  "jetbrains/isOSREnabled": [undefined, boolean];
+  "jetbrains/onLoad": [
+    undefined,
+    {
+      windowId: string;
+      serverUrl: string;
+      workspacePaths: string[];
+      vscMachineId: string;
+      vscMediaUrl: string;
+    },
+  ];
+  "jetbrains/getColors": [undefined, void];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
   acceptDiff: [{ filepath: string; streamId?: string }, void];
@@ -56,7 +56,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     { accept: boolean; onlyFirst: boolean; filepath: string },
     void,
   ];
-  "edit/escape": [undefined, void];
+  "edit/exit": [{ shouldFocusEditor: boolean }, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

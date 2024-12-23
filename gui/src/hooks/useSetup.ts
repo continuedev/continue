@@ -1,109 +1,139 @@
-import { Dispatch } from "@reduxjs/toolkit";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { setVscMachineId } from "../redux/slices/configSlice";
+
+import { BrowserSerializedContinueConfig } from "core";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setConfig, setConfigError } from "../redux/slices/configSlice";
+import { updateIndexingStatus } from "../redux/slices/indexingSlice";
+import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
   addContextItemsAtIndex,
-  setConfig,
-  setConfigError,
   setInactive,
   setSelectedProfileId,
-  setTTSActive,
-  updateIndexingStatus,
-} from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
-
-import { debounce } from "lodash";
+} from "../redux/slices/sessionSlice";
+import { setTTSActive } from "../redux/slices/uiSlice";
+import { refreshSessionMetadata } from "../redux/thunks/session";
+import { streamResponseThunk } from "../redux/thunks/streamResponse";
+import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { isJetBrains } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import useChatHandler from "./useChatHandler";
+import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
-import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
-function useSetup(dispatch: Dispatch) {
+function useSetup() {
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const history = useSelector((store: RootState) => store.state.history);
+  const history = useAppSelector((store) => store.session.history);
+  const defaultModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
 
-  const initialConfigLoad = useRef(false);
-  const loadConfig = useCallback(async () => {
-    const result = await ideMessenger.request(
-      "config/getSerializedProfileInfo",
-      undefined,
-    );
-    if (result.status === "error") {
-      return;
-    }
-    const { config, profileId } = result.content;
-    dispatch(setConfig(config));
-    dispatch(setSelectedProfileId(profileId));
-    initialConfigLoad.current = true;
-    setLocalStorage("disableIndexing", config.disableIndexing || false);
+  const hasLoadedConfig = useRef(false);
 
-    // Perform any actions needed with the config
-    if (config.ui?.fontSize) {
-      setLocalStorage("fontSize", config.ui.fontSize);
-      document.body.style.fontSize = `${config.ui.fontSize}px`;
-    }
-  }, [dispatch, ideMessenger, initialConfigLoad]);
+  const handleConfigUpdate = useCallback(
+    async (
+      initial: boolean,
+      result: { config: BrowserSerializedContinueConfig; profileId: string },
+    ) => {
+      const { config, profileId } = result;
+      if (initial && hasLoadedConfig.current) {
+        return;
+      }
+      hasLoadedConfig.current = true;
+      dispatch(setConfig(config));
+      dispatch(setSelectedProfileId(profileId));
+
+      // Perform any actions needed with the config
+      if (config.ui?.fontSize) {
+        setLocalStorage("fontSize", config.ui.fontSize);
+        document.body.style.fontSize = `${config.ui.fontSize}px`;
+      }
+    },
+    [dispatch, hasLoadedConfig],
+  );
+
+  const loadConfig = useCallback(
+    async (initial: boolean) => {
+      const result = await ideMessenger.request(
+        "config/getSerializedProfileInfo",
+        undefined,
+      );
+      if (result.status === "error") {
+        return;
+      }
+      await handleConfigUpdate(initial, result.content);
+    },
+    [ideMessenger, handleConfigUpdate],
+  );
 
   // Load config from the IDE
   useEffect(() => {
-    loadConfig();
+    loadConfig(true);
     const interval = setInterval(() => {
-      if (initialConfigLoad.current) {
+      if (hasLoadedConfig.current) {
+        // Init to run on initial config load
+        ideMessenger.post("docs/getSuggestedDocs", undefined);
+        ideMessenger.post("docs/initStatuses", undefined);
+        dispatch(updateFileSymbolsFromHistory());
+        dispatch(refreshSessionMetadata({}));
+
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
-        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
-      loadConfig();
+      loadConfig(true);
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig, ideMessenger]);
+  }, [hasLoadedConfig, loadConfig, ideMessenger]);
 
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-  });
+  useWebviewListener(
+    "configUpdate",
+    async (update) => {
+      if (!update) {
+        return;
+      }
+      await handleConfigUpdate(false, update);
+    },
+    [loadConfig],
+  );
 
   // Load symbols for chat on any session change
-  const sessionId = useSelector((store: RootState) => store.state.sessionId);
-  const sessionIdRef = useRef("");
+  const sessionId = useAppSelector((state) => state.session.id);
   useEffect(() => {
-    if (sessionIdRef.current !== sessionId) {
-      updateFileSymbolsFromContextItems(
-        history.flatMap((item) => item.contextItems),
-        ideMessenger,
-        dispatch,
-      );
+    if (sessionId) {
+      dispatch(updateFileSymbolsFromHistory());
     }
-    sessionIdRef.current = sessionId;
-  }, [sessionId, history, ideMessenger, dispatch]);
+  }, [sessionId]);
 
   // ON LOAD
   useEffect(() => {
     // Override persisted state
     dispatch(setInactive());
 
-    // Tell JetBrains the webview is ready
-    ideMessenger.request("onLoad", undefined).then((result) => {
-      if (result.status === "error") {
-        return;
-      }
-      const msg = result.content;
-      (window as any).windowId = msg.windowId;
-      (window as any).serverUrl = msg.serverUrl;
-      (window as any).workspacePaths = msg.workspacePaths;
-      (window as any).vscMachineId = msg.vscMachineId;
-      (window as any).vscMediaUrl = msg.vscMediaUrl;
-      dispatch(setVscMachineId(msg.vscMachineId));
-      // dispatch(setVscMediaUrl(msg.vscMediaUrl));
-    });
-
-    // Save theme colors to local storage for immediate loading in JetBrains
     if (isJetBrains()) {
+      // Save theme colors to local storage for immediate loading in JetBrains
+      ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
+        Object.keys(result).forEach((key) => {
+          document.body.style.setProperty(key, result[key]);
+          document.documentElement.style.setProperty(key, result[key]);
+        });
+      });
+
+      // Tell JetBrains the webview is ready
+      ideMessenger.request("jetbrains/onLoad", undefined).then((result) => {
+        if (result.status === "error") {
+          return;
+        }
+
+        const msg = result.content;
+        (window as any).windowId = msg.windowId;
+        (window as any).serverUrl = msg.serverUrl;
+        (window as any).workspacePaths = msg.workspacePaths;
+        (window as any).vscMachineId = msg.vscMachineId;
+        (window as any).vscMediaUrl = msg.vscMediaUrl;
+      });
+
       for (const colorVar of VSC_THEME_COLOR_VARS) {
         if (document.body.style.getPropertyValue(colorVar)) {
           localStorage.setItem(
@@ -115,11 +145,9 @@ function useSetup(dispatch: Dispatch) {
     }
   }, []);
 
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
-
-  const defaultModelTitle = useSelector(
-    (store: RootState) => store.state.defaultModelTitle,
-  );
+  useWebviewListener("docs/suggestions", async (data) => {
+    dispatch(updateDocsSuggestions(data));
+  });
 
   // IDE event listeners
   useWebviewListener(
@@ -130,6 +158,14 @@ function useSetup(dispatch: Dispatch) {
     [history],
   );
 
+  useWebviewListener(
+    "getCurrentSessionId",
+    async () => {
+      return sessionId;
+    },
+    [sessionId],
+  );
+
   useWebviewListener("setInactive", async () => {
     dispatch(setInactive());
   });
@@ -138,23 +174,17 @@ function useSetup(dispatch: Dispatch) {
     dispatch(setTTSActive(status));
   });
 
-  useWebviewListener("setColors", async (colors) => {
-    Object.keys(colors).forEach((key) => {
-      document.body.style.setProperty(key, colors[key]);
-      document.documentElement.style.setProperty(key, colors[key]);
-    });
-  });
-
   useWebviewListener("configError", async (error) => {
     dispatch(setConfigError(error));
   });
 
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
-    streamResponse(
-      data.message,
-      { useCodebase: false, noContext: true },
-      ideMessenger,
+    dispatch(
+      streamResponseThunk({
+        editorState: data.message,
+        modifiers: { useCodebase: false, noContext: true },
+      }),
     );
   });
 
@@ -178,8 +208,6 @@ function useSetup(dispatch: Dispatch) {
     },
     [defaultModelTitle],
   );
-
-
 }
 
 export default useSetup;

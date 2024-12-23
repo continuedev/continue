@@ -1,9 +1,9 @@
-import { CompletionOptions, ModelProvider } from "../../index.js";
+import { CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
-  static providerName: ModelProvider = "huggingface-inference-api";
+  static providerName = "huggingface-inference-api";
 
   private _convertArgs(options: CompletionOptions) {
     return {
@@ -37,7 +37,7 @@ class HuggingFaceInferenceAPI extends BaseLLM {
         stream: true,
         parameters: this._convertArgs(options),
       }),
-      signal
+      signal,
     });
 
     async function* stream() {

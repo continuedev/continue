@@ -1,10 +1,8 @@
-import path from "node:path";
-
 import ignore from "ignore";
 
 import { IDE } from "../..";
-import { getBasename } from "../../util";
 import { getConfigJsonPath } from "../../util/paths";
+import { findUriInDirs } from "../../util/uri";
 import { HelperVars } from "../util/HelperVars";
 
 async function isDisabledForFile(
@@ -15,26 +13,14 @@ async function isDisabledForFile(
   if (disableInFiles) {
     // Relative path needed for `ignore`
     const workspaceDirs = await ide.getWorkspaceDirs();
-    let filepath = currentFilepath;
-    for (const workspaceDir of workspaceDirs) {
-      const relativePath = path.relative(workspaceDir, filepath);
-      const relativePathBase = relativePath.split(path.sep).at(0);
-      const isInWorkspace =
-        !path.isAbsolute(relativePath) && relativePathBase !== "..";
-      if (isInWorkspace) {
-        filepath = path.relative(workspaceDir, filepath);
-        break;
-      }
-    }
-
-    // Worst case we can check filetype glob patterns
-    if (filepath === currentFilepath) {
-      filepath = getBasename(filepath);
-    }
+    const { relativePathOrBasename } = findUriInDirs(
+      currentFilepath,
+      workspaceDirs,
+    );
 
     // @ts-ignore
     const pattern = ignore.default().add(disableInFiles);
-    if (pattern.ignores(filepath)) {
+    if (pattern.ignores(relativePathOrBasename)) {
       return true;
     }
   }
@@ -64,8 +50,15 @@ export async function shouldPrefilter(
   }
 
   // Check whether autocomplete is disabled for this file
+  const disableInFiles = [...(helper.options.disableInFiles ?? []), "*.prompt"];
+  if (await isDisabledForFile(helper.filepath, disableInFiles, ide)) {
+    return true;
+  }
+
+  // Don't offer completions when we have no information (untitled file and no file contents)
   if (
-    await isDisabledForFile(helper.filepath, helper.options.disableInFiles, ide)
+    helper.filepath.includes("Untitled") &&
+    helper.fileContents.trim() === ""
   ) {
     return true;
   }

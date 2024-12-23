@@ -1,6 +1,5 @@
 import Parser from "web-tree-sitter";
 
-import { getBasename, getLastNPathParts } from "../util/";
 import { migrate } from "../util/paths";
 import {
   getFullLanguageName,
@@ -29,6 +28,7 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../";
+import { getLastNPathParts, getUriPathBasename } from "../util/uri";
 
 type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 
@@ -190,6 +190,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const ast = parser.parse(contents);
 
     const language = getFullLanguageName(filepath);
+    if (!language) {
+      return [];
+    }
     const query = await getQueryForFile(
       filepath,
       `code-snippet-queries/${language}.scm`,
@@ -225,7 +228,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         );
       } catch (e) {
         // If can't parse, assume malformatted code
-        console.error(`Error parsing ${compute.path}:`, e);
       }
 
       // Add snippets to sqlite
@@ -250,7 +252,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       }
 
       yield {
-        desc: `Indexing ${getBasename(compute.path)}`,
+        desc: `Indexing ${getUriPathBasename(compute.path)}`,
         progress: i / results.compute.length,
         status: "indexing",
       };
@@ -290,7 +292,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         );
       } catch (e) {
         // If can't parse, assume malformatted code
-        console.error(`Error parsing ${addTag.path}:`, e);
       }
 
       for (const snippet of snippets) {
@@ -353,7 +354,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     return {
       name: row.title,
       description: getLastNPathParts(row.path, 2),
-      content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
+      content: `\`\`\`${getUriPathBasename(row.path)}\n${row.content}\n\`\`\``,
       uri: {
         type: "file",
         value: row.path,
@@ -390,7 +391,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     offset: number = 0,
     batchSize: number = 100,
   ): Promise<{
-    groupedByPath: { [path: string]: string[] };
+    groupedByUri: { [path: string]: string[] };
     hasMore: boolean;
   }> {
     const db = await SqliteDb.get();
@@ -411,17 +412,17 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     const rows = await db.all(query, [...likePatterns, batchSize, offset]);
 
-    const groupedByPath: { [path: string]: string[] } = {};
+    const groupedByUri: { [path: string]: string[] } = {};
 
     for (const { path, signature } of rows) {
-      if (!groupedByPath[path]) {
-        groupedByPath[path] = [];
+      if (!groupedByUri[path]) {
+        groupedByUri[path] = [];
       }
-      groupedByPath[path].push(signature);
+      groupedByUri[path].push(signature);
     }
 
     const hasMore = rows.length === batchSize;
 
-    return { groupedByPath, hasMore };
+    return { groupedByUri, hasMore };
   }
 }

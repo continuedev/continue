@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { z } from "zod";
 import { AnthropicApi } from "./apis/Anthropic.js";
 import { AzureOpenAIApi } from "./apis/AzureOpenAI.js";
 import { BaseLlmApi } from "./apis/base.js";
@@ -8,32 +9,26 @@ import { GeminiApi } from "./apis/Gemini.js";
 import { JinaApi } from "./apis/Jina.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
+import { LLMConfig, OpenAIConfigSchema } from "./types.js";
 
 dotenv.config();
 
-export interface LlmApiConfig {
-  provider: string;
-  model: string;
-  apiKey: string;
-  apiBase?: string;
+function openAICompatible(
+  apiBase: string,
+  config: z.infer<typeof OpenAIConfigSchema>,
+): OpenAIApi {
+  return new OpenAIApi({
+    ...config,
+    apiBase: config.apiBase ?? apiBase,
+  });
 }
 
-export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
+export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
   switch (config.provider) {
     case "openai":
       return new OpenAIApi(config);
-    case "mistral":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.mistral.ai/v1/",
-      });
     case "azure":
       return new AzureOpenAIApi(config);
-    case "voyage":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.voyageai.com/v1/",
-      });
     case "cohere":
       return new CohereApi(config);
     case "anthropic":
@@ -42,47 +37,53 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
       return new GeminiApi(config);
     case "jina":
       return new JinaApi(config);
-    case "deepinfra":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.deepinfra.com/v1/openai/",
-      });
     case "deepseek":
       return new DeepSeekApi(config);
     case "moonshot":
       return new MoonshotApi(config);
+    case "x-ai":
+      return openAICompatible("https://api.x.ai/v1/", config);
+    case "voyage":
+      return openAICompatible("https://api.voyageai.com/v1/", config);
+    case "mistral":
+      return openAICompatible("https://api.mistral.ai/v1/", config);
+    case "deepinfra":
+      return openAICompatible("https://api.deepinfra.com/v1/openai/", config);
+    case "vllm":
+      return openAICompatible("http://localhost:8000/v1/", config);
     case "groq":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.groq.com/openai/v1/",
-      });
-    case "nvidia":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://integrate.api.nvidia.com/v1/",
-      });
-    case "fireworks":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.fireworks.ai/inference/v1",
-      });
-    case "together":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.together.xyz/v1/",
-      });
+      return openAICompatible("https://api.groq.com/openai/v1/", config);
     case "sambanova":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.sambanova.ai/v1/",
-      });
+      return openAICompatible("https://api.sambanova.ai/v1/", config);
+    case "text-gen-webui":
+      return openAICompatible("http://127.0.0.1:5000/v1/", config);
+    case "openrouter":
+      return openAICompatible("https://openrouter.ai/api/v1/", config);
+    case "cerebras":
+      return openAICompatible("https://api.cerebras.ai/v1/", config);
+    case "kindo":
+      return openAICompatible("https://llm.kindo.ai/v1/", config);
+    case "msty":
+      return openAICompatible("http://localhost:10000", config);
+    case "nvidia":
+      return openAICompatible("https://integrate.api.nvidia.com/v1/", config);
+    case "scaleway":
+      return openAICompatible("https://api.scaleway.ai/v1/", config);
+    case "fireworks":
+      return openAICompatible("https://api.fireworks.ai/inference/v1/", config);
+    case "together":
+      return openAICompatible("https://api.together.xyz/v1/", config);
     case "nebius":
-      return new OpenAIApi({
-        ...config,
-        apiBase: "https://api.studio.nebius.ai/v1/",
-      });
+      return openAICompatible("https://api.studio.nebius.ai/v1/", config);
+    case "function-network":
+      return openAICompatible("https://api.function.network/v1/", config);
+    case "llama.cpp":
+    case "llamafile":
+      return openAICompatible("http://localhost:8000/", config);
+    case "lmstudio":
+      return openAICompatible("http://localhost:1234/", config);
     default:
-      throw new Error(`Unsupported LLM API format: ${config.provider}`);
+      return undefined;
   }
 }
 
@@ -96,4 +97,7 @@ export {
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
   type CompletionCreateParamsStreaming,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
+
+// export
+export type { BaseLlmApi } from "./apis/base.js";

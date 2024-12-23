@@ -1,8 +1,15 @@
 // Fill in the middle prompts
 
 import { CompletionOptions } from "../../index.js";
-import { getLastNPathParts, shortestRelativePaths } from "../../util/index.js";
-import { AutocompleteSnippet } from "../context/ranking/index.js";
+import {
+  getLastNUriRelativePathParts,
+  getShortestUniqueRelativeUriPaths,
+} from "../../util/uri.js";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippet,
+  AutocompleteSnippetType,
+} from "../snippets/types.js";
 
 export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
@@ -11,6 +18,7 @@ export interface AutocompleteTemplate {
     filepath: string,
     reponame: string,
     snippets: AutocompleteSnippet[],
+    workspaceUris: string[],
   ) => [string, string];
   template:
     | string
@@ -21,6 +29,7 @@ export interface AutocompleteTemplate {
         reponame: string,
         language: string,
         snippets: AutocompleteSnippet[],
+        workspaceUris: string[],
       ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
@@ -69,25 +78,43 @@ const codestralFimTemplate: AutocompleteTemplate = {
 
 const codestralMultifileFimTemplate: AutocompleteTemplate = {
   compilePrefixSuffix: (
-    prefix: string,
-    suffix: string,
-    filepath: string,
-    reponame: string,
-    snippets: AutocompleteSnippet[],
+    prefix,
+    suffix,
+    filepath,
+    reponame,
+    snippets,
+    workspaceUris,
   ): [string, string] => {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
-        return [`+++++ ${getLastNPathParts(filepath, 2)}\n${prefix}`, suffix];
+        return [
+          `+++++ ${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n${prefix}`,
+          suffix,
+        ];
       }
       return [prefix, suffix];
     }
-    const relativePaths = shortestRelativePaths([
-      ...snippets.map((snippet) => snippet.filepath),
-      filepath,
-    ]);
+
+    const relativePaths = getShortestUniqueRelativeUriPaths(
+      [
+        ...snippets.map((snippet) =>
+          "filepath" in snippet ? snippet.filepath : "file:///Untitled.txt",
+        ),
+        filepath,
+      ],
+      workspaceUris,
+    );
+
     const otherFiles = snippets
-      .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
+      .map((snippet, i) => {
+        if (snippet.type === AutocompleteSnippetType.Diff) {
+          return snippet.content;
+        }
+
+        return `+++++ ${relativePaths[i]}\n${snippet.content}`;
+      })
       .join("\n\n");
+
     return [
       `${otherFiles}\n\n+++++ ${
         relativePaths[relativePaths.length - 1]
@@ -95,14 +122,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       suffix,
     ];
   },
-  template: (
-    prefix: string,
-    suffix: string,
-    filepath: string,
-    reponame: string,
-    language: string,
-    snippets: AutocompleteSnippet[],
-  ): string => {
+  template: (prefix: string, suffix: string): string => {
     return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
   completionOptions: {
@@ -128,20 +148,20 @@ const codegemmaFimTemplate: AutocompleteTemplate = {
 // https://arxiv.org/pdf/2402.19173.pdf section 5.1
 const starcoder2FimTemplate: AutocompleteTemplate = {
   template: (
-    prefix: string,
-    suffix: string,
-    filename: string,
-    reponame: string,
-    language: string,
-    snippets: AutocompleteSnippet[],
+    prefix,
+    suffix,
+    filename,
+    reponame,
+    language,
+    snippets,
+    workspaceUris,
   ): string => {
     const otherFiles =
       snippets.length === 0
         ? ""
         : `<file_sep>${snippets
             .map((snippet) => {
-              return snippet.contents;
-              // return `${getBasename(snippet.filepath)}\n${snippet.contents}`;
+              return snippet.content;
             })
             .join("<file_sep>")}<file_sep>`;
 
@@ -182,17 +202,22 @@ const deepseekFimTemplate: AutocompleteTemplate = {
 // https://github.com/THUDM/CodeGeeX4/blob/main/guides/Infilling_guideline.md
 const codegeexFimTemplate: AutocompleteTemplate = {
   template: (
-    prefix: string,
-    suffix: string,
-    filepath: string,
-    reponame: string,
-    language: string,
-    snippets: AutocompleteSnippet[],
+    prefix,
+    suffix,
+    filepath,
+    reponame,
+    language,
+    allSnippets,
+    workspaceUris,
   ): string => {
-    const relativePaths = shortestRelativePaths([
-      ...snippets.map((snippet) => snippet.filepath),
-      filepath,
-    ]);
+    const snippets = allSnippets.filter(
+      (snippet) => snippet.type === AutocompleteSnippetType.Code,
+    ) as AutocompleteCodeSnippet[];
+
+    const relativePaths = getShortestUniqueRelativeUriPaths(
+      [...snippets.map((snippet) => snippet.filepath), filepath],
+      workspaceUris,
+    );
     const baseTemplate = `###PATH:${
       relativePaths[relativePaths.length - 1]
     }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
@@ -200,7 +225,7 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
     const references = `###REFERENCE:\n${snippets
-      .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.contents}\n`)
+      .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.content}\n`)
       .join("###REFERENCE:\n")}`;
     const prompt = `<|user|>\n${references}\n${baseTemplate}<|assistant|>\n`;
     return prompt;
@@ -227,14 +252,7 @@ Fill in the blank to complete the code block. Your response should include only 
 };
 
 const holeFillerTemplate: AutocompleteTemplate = {
-  template: (
-    prefix: string,
-    suffix: string,
-    filename: string,
-    reponame: string,
-    language: string,
-    snippets: AutocompleteSnippet[],
-  ) => {
+  template: (prefix: string, suffix: string) => {
     // From https://github.com/VictorTaelin/AI-scripts
     const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
 

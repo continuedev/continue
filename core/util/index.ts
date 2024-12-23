@@ -1,18 +1,18 @@
-export function removeQuotesAndEscapes(output: string): string {
-  output = output.trim();
+export function removeQuotesAndEscapes(input: string): string {
+  let output = input.trim();
 
   // Replace smart quotes
-  output = output.replace("“", '"');
-  output = output.replace("”", '"');
-  output = output.replace("‘", "'");
-  output = output.replace("’", "'");
+  output = output.replaceAll("“", '"');
+  output = output.replaceAll("”", '"');
+  output = output.replaceAll("‘", "'");
+  output = output.replaceAll("’", "'");
 
   // Remove escapes
-  output = output.replace('\\"', '"');
-  output = output.replace("\\'", "'");
-  output = output.replace("\\n", "\n");
-  output = output.replace("\\t", "\t");
-  output = output.replace("\\\\", "\\");
+  output = output.replaceAll('\\"', '"');
+  output = output.replaceAll("\\'", "'");
+  output = output.replaceAll("\\n", "\n");
+  output = output.replaceAll("\\t", "\t");
+  output = output.replaceAll("\\\\", "\\");
   while (
     (output.startsWith('"') && output.endsWith('"')) ||
     (output.startsWith("'") && output.endsWith("'"))
@@ -66,189 +66,38 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-const SEP_REGEX = /[\\/]/;
-
-export function getBasename(filepath: string): string {
-  return filepath.split(SEP_REGEX).pop() ?? "";
-}
-
-export function getLastNPathParts(filepath: string, n: number): string {
-  if (n <= 0) {
-    return "";
-  }
-  return filepath.split(SEP_REGEX).slice(-n).join("/");
-}
-
-export function groupByLastNPathParts(
-  filepaths: string[],
-  n: number,
-): Record<string, string[]> {
-  return filepaths.reduce(
-    (groups, item) => {
-      const lastNParts = getLastNPathParts(item, n);
-      if (!groups[lastNParts]) {
-        groups[lastNParts] = [];
-      }
-      groups[lastNParts].push(item);
-      return groups;
-    },
-    {} as Record<string, string[]>,
-  );
-}
-
-export function getUniqueFilePath(
-  item: string,
-  itemGroups: Record<string, string[]>,
-): string {
-  const lastTwoParts = getLastNPathParts(item, 2);
-  const group = itemGroups[lastTwoParts];
-
-  let n = 2;
-  if (group.length > 1) {
-    while (
-      group.some(
-        (otherItem) =>
-          otherItem !== item &&
-          getLastNPathParts(otherItem, n) === getLastNPathParts(item, n),
-      )
-    ) {
-      n++;
-    }
-  }
-
-  return getLastNPathParts(item, n);
-}
-
-export function shortestRelativePaths(paths: string[]): string[] {
-  if (paths.length === 0) {
-    return [];
-  }
-
-  const partsLengths = paths.map((x) => x.split(SEP_REGEX).length);
-  const currentRelativePaths = paths.map(getBasename);
-  const currentNumParts = paths.map(() => 1);
-  const isDuplicated = currentRelativePaths.map(
-    (x, i) =>
-      currentRelativePaths.filter((y, j) => y === x && paths[i] !== paths[j])
-        .length > 1,
-  );
-
-  while (isDuplicated.some(Boolean)) {
-    const firstDuplicatedPath = currentRelativePaths.find(
-      (x, i) => isDuplicated[i],
-    );
-    if (!firstDuplicatedPath) {
-      break;
-    }
-
-    currentRelativePaths.forEach((x, i) => {
-      if (x === firstDuplicatedPath) {
-        currentNumParts[i] += 1;
-        currentRelativePaths[i] = getLastNPathParts(
-          paths[i],
-          currentNumParts[i],
-        );
-      }
-    });
-
-    isDuplicated.forEach((x, i) => {
-      if (x) {
-        isDuplicated[i] =
-          // Once we've used up all the parts, we can't make it longer
-          currentNumParts[i] < partsLengths[i] &&
-          currentRelativePaths.filter((y) => y === currentRelativePaths[i])
-            .length > 1;
-      }
-    });
-  }
-
-  return currentRelativePaths;
-}
-
-export function splitPath(path: string, withRoot?: string): string[] {
-  let parts = path.includes("/") ? path.split("/") : path.split("\\");
-  if (withRoot !== undefined) {
-    const rootParts = splitPath(withRoot);
-    parts = parts.slice(rootParts.length - 1);
-  }
-  return parts;
-}
-
-export function getRelativePath(
-  filepath: string,
-  workspaceDirs: string[],
-): string {
-  for (const workspaceDir of workspaceDirs) {
-    const filepathParts = splitPath(filepath);
-    const workspaceDirParts = splitPath(workspaceDir);
-    if (
-      filepathParts.slice(0, workspaceDirParts.length).join("/") ===
-      workspaceDirParts.join("/")
-    ) {
-      return filepathParts.slice(workspaceDirParts.length).join("/");
-    }
-  }
-  return splitPath(filepath).pop() ?? ""; // If the file is not in any of the workspaces, return the plain filename
-}
-
 export function getMarkdownLanguageTagForFile(filepath: string): string {
+  const extToLangMap: { [key: string]: string } = {
+    py: "python",
+    js: "javascript",
+    jsx: "jsx",
+    tsx: "tsx",
+    ts: "typescript",
+    java: "java",
+    go: "go",
+    rb: "ruby",
+    rs: "rust",
+    c: "c",
+    cpp: "cpp",
+    cs: "csharp",
+    php: "php",
+    scala: "scala",
+    swift: "swift",
+    kt: "kotlin",
+    md: "markdown",
+    json: "json",
+    html: "html",
+    css: "css",
+    sh: "shell",
+    yaml: "yaml",
+    toml: "toml",
+    tex: "latex",
+    sql: "sql",
+    ps1: "powershell",
+  };
+
   const ext = filepath.split(".").pop();
-  switch (ext) {
-    case "py":
-      return "python";
-    case "js":
-      return "javascript";
-    case "jsx":
-      return "jsx";
-    case "tsx":
-      return "tsx";
-    case "ts":
-      return "typescript";
-    case "java":
-      return "java";
-    case "go":
-      return "go";
-    case "rb":
-      return "ruby";
-    case "rs":
-      return "rust";
-    case "c":
-      return "c";
-    case "cpp":
-      return "cpp";
-    case "cs":
-      return "csharp";
-    case "php":
-      return "php";
-    case "scala":
-      return "scala";
-    case "swift":
-      return "swift";
-    case "kt":
-      return "kotlin";
-    case "md":
-      return "markdown";
-    case "json":
-      return "json";
-    case "html":
-      return "html";
-    case "css":
-      return "css";
-    case "sh":
-      return "shell";
-    case "yaml":
-      return "yaml";
-    case "toml":
-      return "toml";
-    case "tex":
-      return "latex";
-    case "sql":
-      return "sql";
-    case "ps1":
-      return "powershell";
-    default:
-      return ext ?? "";
-  }
+  return ext ? (extToLangMap[ext] ?? ext) : "";
 }
 
 export function copyOf(obj: any): any {
@@ -257,6 +106,7 @@ export function copyOf(obj: any): any {
   }
   return JSON.parse(JSON.stringify(obj));
 }
+``;
 
 export function deduplicateArray<T>(
   array: T[],
@@ -327,4 +177,18 @@ export function dedent(strings: TemplateStringsArray, ...values: any[]) {
   }
 
   return lines.join("\n");
+}
+
+/**
+ * Removes code blocks from a message.
+ *
+ * Return modified message text.
+ */
+export function removeCodeBlocksAndTrim(text: string): string {
+  const codeBlockRegex = /```[\s\S]*?```/g;
+
+  // Remove code blocks from the message text
+  const textWithoutCodeBlocks = text.replace(codeBlockRegex, "");
+
+  return textWithoutCodeBlocks.trim();
 }

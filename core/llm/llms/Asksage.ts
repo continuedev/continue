@@ -1,30 +1,35 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 class Asksage extends BaseLLM {
-  static providerName: ModelProvider = "askSage";
+  static providerName = "askSage";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.asksage.ai/server/",
     model: "gpt-4o",
   };
 
   private static modelConversion: { [key: string]: string } = {
-    "gpt-4o": "gpt-4o",
-    "gpt-4o-mini": "gpt-4o-mini",
-    "gpt4-gov": "gpt4-gov",
-    "gpt-4o-gov": "gpt-4o-gov",
-    "gpt-3.5-turbo": "gpt35-16k",
-    "mistral-large-latest": "mistral-large",
-    "llama3-70b": "llma3",
-    "gemini-1.5-pro-latest": "google-gemini-pro",
-    "claude-3-5-sonnet-20240620": "claude-35-sonnet",
-    "claude-3-opus-20240229": "claude-3-opus",
-    "claude-3-sonnet-20240229": "claude-3-sonnet",
+    "gpt-4o-gov": "gpt-4o-gov", // Works
+    "gpt-4o-mini-gov": "gpt-4o-mini-gov",
+    "gpt4-gov": "gpt4-gov", // Works
+    "gpt-gov": "gpt-gov", // Works
+    "gpt-4o": "gpt-4o", // Works
+    "gpt-4o-mini": "gpt-4o-mini", // Works 
+    "gpt4": "gpt4", // Works
+    "gpt4-32k": "gpt4-32k",
+    "gpt-o1": "gpt-o1", // Works
+    "gpt-o1-mini": "gpt-o1-mini", // Works
+    "gpt-3.5-turbo": "gpt35-16k", // Works
+    "aws-bedrock-claude-35-sonnet-gov": "aws-bedrock-claude-35-sonnet-gov", // Works
+    "claude-3-5-sonnet-latest": "claude-35-sonnet", // Works
+    "claude-3-opus-20240229": "claude-3-opus", // Works
+    "claude-3-sonnet-20240229": "claude-3-sonnet", // Works
+    "grok-beta": "xai-grok",
+    "groq-llama33": "groq-llama33", 
+    "groq-70b": "groq-70b",
+    "mistral-large-latest": "mistral-large", // Works
+    "llama3-70b": "llma3", // Works
+    "gemini-1.5-pro-latest": "google-gemini-pro", // Works
   };
 
   constructor(options: LLMOptions) {
@@ -33,7 +38,10 @@ class Asksage extends BaseLLM {
   }
 
   protected _convertModelName(model: string): string {
-    return Asksage.modelConversion[model] ?? model;
+    console.log("Converting model:", model);
+    const convertedModel = Asksage.modelConversion[model] ?? model;
+    console.log("Converted model:", convertedModel);
+    return convertedModel;
   }
 
   protected _convertMessage(message: ChatMessage) {
@@ -62,13 +70,15 @@ class Asksage extends BaseLLM {
       temperature: options.temperature ?? 0.0,
       live: options.live ?? 0,
       model: this._convertModelName(options.model),
-      system_prompt: options.systemPrompt ?? "You are an expert software developer. You give helpful and concise responses.",
+      system_prompt:
+        options.systemPrompt ??
+        "You are an expert software developer. You give helpful and concise responses.",
       tools: options.tools,
       tool_choice: options.toolChoice,
     };
 
     Object.keys(args).forEach(
-      (key) => args[key] === undefined && delete args[key]
+      (key) => args[key] === undefined && delete args[key],
     );
 
     return args;
@@ -89,7 +99,7 @@ class Asksage extends BaseLLM {
   protected _getEndpoint(endpoint: string) {
     if (!this.apiBase) {
       throw new Error(
-        "No API base URL provided. Please set the 'apiBase' option."
+        "No API base URL provided. Please set the 'apiBase' option.",
       );
     }
 
@@ -99,7 +109,7 @@ class Asksage extends BaseLLM {
   protected async _complete(
     prompt: string,
     signal: AbortSignal,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): Promise<string> {
     if (typeof prompt !== "string" || prompt.trim() === "") {
       throw new Error("Prompt must be a non-empty string.");
@@ -117,7 +127,7 @@ class Asksage extends BaseLLM {
 
     if (!response.ok) {
       throw new Error(
-        `API request failed with status ${response.status}: ${response.statusText}`
+        `API request failed with status ${response.status}: ${response.statusText}`,
       );
     }
 
@@ -128,7 +138,7 @@ class Asksage extends BaseLLM {
   protected async *_streamComplete(
     prompt: string,
     signal: AbortSignal,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const completion = await this._complete(prompt, signal, options);
     yield completion;
@@ -137,7 +147,7 @@ class Asksage extends BaseLLM {
   protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(options, messages);
 
@@ -145,12 +155,12 @@ class Asksage extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify(args),
-      signal
+      signal,
     });
 
     if (!response.ok) {
       throw new Error(
-        `API request failed with status ${response.status}: ${response.statusText}`
+        `API request failed with status ${response.status}: ${response.statusText}`,
       );
     }
 

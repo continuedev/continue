@@ -1,6 +1,6 @@
 import ReplicateClient from "replicate";
 
-import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
+import { CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 class Replicate extends BaseLLM {
@@ -35,19 +35,19 @@ class Replicate extends BaseLLM {
     "phind-codellama-34b": "kcaverly/phind-codellama-34b-v2-gguf" as any,
   };
 
-  static providerName: ModelProvider = "replicate";
+  static providerName = "replicate";
   private _replicate: ReplicateClient;
 
   private _convertArgs(
     options: CompletionOptions,
     prompt: string,
-    signal: AbortSignal
-  ): [`${string}/${string}:${string}`, { input: any, signal: AbortSignal }] {
+    signal: AbortSignal,
+  ): [`${string}/${string}:${string}`, { input: any; signal: AbortSignal }] {
     return [
       Replicate.MODEL_IDS[options.model] || (options.model as any),
       {
         input: { prompt, message: prompt },
-        signal
+        signal,
       },
     ];
   }

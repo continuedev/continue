@@ -1,9 +1,8 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
-import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.google.gson.Gson
+import com.github.continuedev.continueintellijextension.utils.uuid
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.application.*
 import com.intellij.openapi.components.Service
@@ -70,7 +69,7 @@ class AutocompleteService(private val project: Project) {
         val column = editor.caretModel.primaryCaret.logicalPosition.column
         val input = mapOf(
             "completionId" to completionId,
-            "filepath" to virtualFile?.path,
+            "filepath" to virtualFile?.url,
             "pos" to mapOf(
                 "line" to editor.caretModel.primaryCaret.logicalPosition.line,
                 "character" to column
@@ -98,8 +97,7 @@ class AutocompleteService(private val project: Project) {
 
                     if (shouldRenderCompletion(finalTextToInsert, column, lineLength, editor)) {
                         renderCompletion(editor, offset, finalTextToInsert)
-                        pendingCompletion = pendingCompletion?.copy(text = finalTextToInsert)
-
+                        pendingCompletion = PendingCompletion(editor, offset, completionId, finalTextToInsert)
                         // Hide auto-popup
 //                    AutoPopupController.getInstance(project).cancelAllRequests()
                     }
@@ -152,8 +150,8 @@ class AutocompleteService(private val project: Project) {
             return
         }
         if (isInjectedFile(editor)) return
-        // Don't render completions when code completion dropdown is visible
-        if (!autocompleteLookupListener.isLookupEmpty()) {
+        // Skip rendering completions if the code completion dropdown is already visible and the IDE completion side-by-side setting is disabled
+        if (shouldSkipRender(ServiceManager.getService(ContinueExtensionSettings::class.java))) {
             return
         }
 
@@ -209,6 +207,10 @@ class AutocompleteService(private val project: Project) {
             clearCompletions(editor)
         }
     }
+
+    private fun shouldSkipRender(settings: ContinueExtensionSettings) =
+        !settings.continueState.showIDECompletionSideBySide && !autocompleteLookupListener.isLookupEmpty()
+
 
     private fun splitKeepingDelimiters(input: String, delimiterPattern: String = "\\s+"): List<String> {
         val initialSplit = input.split("(?<=$delimiterPattern)|(?=$delimiterPattern)".toRegex())

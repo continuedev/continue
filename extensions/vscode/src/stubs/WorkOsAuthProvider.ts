@@ -169,7 +169,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   get redirectUri() {
-    if (env.uriScheme === "vscode-insiders" || env.uriScheme === "vscode") {
+    if (
+      env.uriScheme === "vscode-insiders" ||
+      env.uriScheme === "vscode" ||
+      env.uriScheme === "code-oss"
+    ) {
       // We redirect to a page that says "you can close this page", and that page finishes the redirect
       const url = new URL(controlPlaneEnv.APP_URL);
       url.pathname = `/auth/${env.uriScheme}-redirect`;
@@ -404,7 +408,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           return await Promise.race([
             codeExchangePromise.promise,
             new Promise<string>((_, reject) =>
-              setTimeout(() => reject("Cancelled"), 60000),
+              setTimeout(() => reject("Cancelled"), 15 * 60 * 1_000),
             ),
             promiseFromEvent<any, any>(
               token.onCancellationRequested,

@@ -1,7 +1,8 @@
 import { Chunk, ContinueConfig, IDE, ILLM } from "../..";
 import { getModelByRole } from "../../config/util";
-import { stripImages } from "../../llm/images";
 import generateRepoMap from "../../util/generateRepoMap";
+import { renderChatMessage } from "../../util/messageContent";
+import { getUriPathBasename } from "../../util/uri";
 
 const SUPPORTED_MODEL_TITLE_FAMILIES = [
   "claude-3",
@@ -35,7 +36,7 @@ export async function requestFilesFromRepoMap(
   config: ContinueConfig,
   ide: IDE,
   input: string,
-  filterDirectory?: string,
+  filterDirUri?: string,
 ): Promise<Chunk[]> {
   const llm = getModelByRole(config, "repoMapFileSelection") ?? defaultLlm;
 
@@ -46,8 +47,9 @@ export async function requestFilesFromRepoMap(
 
   try {
     const repoMap = await generateRepoMap(llm, ide, {
+      dirUris: filterDirUri ? [filterDirUri] : undefined,
       includeSignatures: false,
-      dirs: filterDirectory ? [filterDirectory] : undefined,
+      outputRelativeUriPaths: false,
     });
 
     const prompt = `${repoMap}
@@ -58,36 +60,34 @@ After this, your response should begin with a <results> tag, followed by a list 
 
 This is the question that you should select relevant files for: "${input}"`;
 
-    const response = await llm.chat([
-      { role: "user", content: prompt },
-      { role: "assistant", content: "<reasoning>" },
-    ], new AbortController().signal);
-    const content = stripImages(response.content);
-    console.debug("Repo map retrieval response: ", content);
+    const response = await llm.chat(
+      [
+        { role: "user", content: prompt },
+        { role: "assistant", content: "<reasoning>" },
+      ],
+      new AbortController().signal,
+    );
+    const content = renderChatMessage(response);
 
     if (!content.includes("\n")) {
       return [];
     }
 
-    const pathSep = await ide.pathSep();
-    const subDirPrefix = filterDirectory ? filterDirectory + pathSep : "";
-    const files =
-      content
-        .split("<results>")[1]
-        ?.split("</results>")[0]
-        ?.split("\n")
-        .filter(Boolean)
-        .map((file) => file.trim())
-        .map((file) => subDirPrefix + file) ?? [];
+    const fileUris = content
+      .split("<results>")[1]
+      ?.split("</results>")[0]
+      ?.split("\n")
+      .filter(Boolean)
+      .map((uri) => uri.trim());
 
     const chunks = await Promise.all(
-      files.map(async (file) => {
-        const content = await ide.readFile(file);
+      fileUris.map(async (uri) => {
+        const content = await ide.readFile(uri);
         const lineCount = content.split("\n").length;
         const chunk: Chunk = {
-          digest: file,
+          digest: uri,
           content,
-          filepath: file,
+          filepath: uri,
           endLine: lineCount - 1,
           startLine: 0,
           index: 0,

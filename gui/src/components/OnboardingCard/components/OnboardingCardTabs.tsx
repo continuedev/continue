@@ -80,7 +80,7 @@ export function OnboardingCardTabs({
 
             return (
               <TabButton
-                className="xs:py-2 xs:px-3 px-6 py-2 sm:px-5"
+                className="xs:py-2 xs:px-3 rounded-t-sm px-6 py-2 hover:brightness-125 sm:px-5"
                 key={tabType}
                 isActive={activeTab === tabType}
                 onClick={() => onTabClick(tabType as TabTitle)}

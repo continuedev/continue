@@ -5,8 +5,12 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { InProcessMessenger } from "core/util/messenger";
-import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
+import { InProcessMessenger } from "core/protocol/messenger";
+import {
+  getConfigJsonPath,
+  getConfigTsPath,
+  getConfigYamlPath,
+} from "core/util/paths";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
@@ -18,7 +22,6 @@ import {
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
-import { DiffManager } from "../diff/horizontal";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { registerAllPromptFilesCompletionProviders } from "../lang-server/promptFileCompletions";
@@ -29,7 +32,6 @@ import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
-import { arePathsEqual } from "../util/arePathsEqual";
 import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -37,7 +39,6 @@ import { VsCodeIde } from "../VsCodeIde";
 
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
-import { SYSTEM_PROMPT_DOT_FILE } from "core/config/getSystemPromptDotFile";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -49,7 +50,6 @@ export class VsCodeExtension {
   private tabAutocompleteModel: TabAutocompleteModel;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
-  private diffManager: DiffManager;
   private editDecorationManager: EditDecorationManager;
   private verticalDiffManager: VerticalDiffManager;
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
@@ -72,12 +72,7 @@ export class VsCodeExtension {
         resolveWebviewProtocol = resolve;
       },
     );
-    this.diffManager = new DiffManager(context);
-    this.ide = new VsCodeIde(
-      this.diffManager,
-      this.webviewProtocolPromise,
-      context,
-    );
+    this.ide = new VsCodeIde(this.webviewProtocolPromise, context);
     this.extensionContext = context;
     this.windowId = uuidv4();
 
@@ -141,7 +136,7 @@ export class VsCodeExtension {
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
-    this.configHandler.reloadConfig();
+    this.configHandler.loadConfig();
     this.verticalDiffManager = new VerticalDiffManager(
       this.configHandler,
       this.sidebar.webviewProtocol,
@@ -154,14 +149,10 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig.bind(this.configHandler),
     );
 
-    // Indexing + pause token
-    this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
-
     this.configHandler.loadConfig().then((config) => {
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
-        this.diffManager,
-        this.verticalDiffManager.filepathToCodeLens,
+        this.verticalDiffManager.fileUriToCodeLens,
         config,
       );
 
@@ -170,21 +161,24 @@ export class VsCodeExtension {
     });
 
     this.configHandler.onConfigUpdate(
-      ({ config: newConfig, errors, configLoadInterrupted }) => {
+      async ({ config: newConfig, errors, configLoadInterrupted }) => {
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);
         } else if (newConfig) {
           setupStatusBar(undefined, undefined, false);
 
-          this.sidebar.webviewProtocol?.request("configUpdate", undefined);
+          const serialized = await this.configHandler.getSerializedConfig();
+          this.sidebar.webviewProtocol?.request("configUpdate", {
+            config: serialized.config!, // <-- TODO
+            profileId: this.configHandler.currentProfile.profileId,
+          });
 
           this.tabAutocompleteModel.clearLlm();
 
           registerAllCodeLensProviders(
             context,
-            this.diffManager,
-            this.verticalDiffManager.filepathToCodeLens,
+            this.verticalDiffManager.fileUriToCodeLens,
             newConfig,
           );
         }
@@ -242,7 +236,6 @@ export class VsCodeExtension {
       context,
       this.sidebar,
       this.configHandler,
-      this.diffManager,
       this.verticalDiffManager,
       this.core.continueServerClientPromise,
       this.battery,
@@ -257,65 +250,45 @@ export class VsCodeExtension {
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
+      if (stats.size === 0) {
+        return;
+      }
       await this.configHandler.reloadConfig();
     });
 
+    fs.watchFile(
+      getConfigYamlPath("vscode"),
+      { interval: 1000 },
+      async (stats) => {
+        if (stats.size === 0) {
+          return;
+        }
+        await this.configHandler.reloadConfig();
+      },
+    );
+
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
+      if (stats.size === 0) {
+        return;
+      }
       this.configHandler.reloadConfig();
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
-      // Listen for file changes in the workspace
-      const filepath = event.uri.fsPath;
-
-      if (arePathsEqual(filepath, getConfigJsonPath())) {
-        // Trigger a toast notification to provide UI feedback that config
-        // has been updated
-        const showToast = context.globalState.get<boolean>(
-          "showConfigUpdateToast",
-          true,
-        );
-
-        if (showToast) {
-          vscode.window
-            .showInformationMessage("Config updated", "Don't show again")
-            .then((selection) => {
-              if (selection === "Don't show again") {
-                context.globalState.update("showConfigUpdateToast", false);
-              }
-            });
-        }
-      }
-
-      if (
-        filepath.endsWith(".continuerc.json") ||
-        filepath.endsWith(".prompt") ||
-        filepath.endsWith(SYSTEM_PROMPT_DOT_FILE)
-      ) {
-        this.configHandler.reloadConfig();
-      } else if (
-        filepath.endsWith(".continueignore") ||
-        filepath.endsWith(".gitignore")
-      ) {
-        // Reindex the workspaces
-        this.core.invoke("index/forceReIndex", undefined);
-      } else {
-        // Reindex the file
-        this.core.invoke("index/forceReIndexFiles", {
-          files: [filepath],
-        });
-      }
+      this.core.invoke("files/changed", {
+        uris: [event.uri.toString()],
+      });
     });
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
-      this.core.invoke("index/forceReIndexFiles", {
-        files: event.files.map((file) => file.fsPath),
+      this.core.invoke("files/deleted", {
+        uris: event.files.map((uri) => uri.toString()),
       });
     });
 
     vscode.workspace.onDidCreateFiles(async (event) => {
-      this.core.invoke("index/forceReIndexFiles", {
-        files: event.files.map((file) => file.fsPath),
+      this.core.invoke("files/created", {
+        uris: event.files.map((uri) => uri.toString()),
       });
     });
 
@@ -356,7 +329,7 @@ export class VsCodeExtension {
     // Refresh index when branch is changed
     this.ide.getWorkspaceDirs().then((dirs) =>
       dirs.forEach(async (dir) => {
-        const repo = await this.ide.getRepo(vscode.Uri.file(dir));
+        const repo = await this.ide.getRepo(dir);
         if (repo) {
           repo.state.onDidChange(() => {
             // args passed to this callback are always undefined, so keep track of previous branch

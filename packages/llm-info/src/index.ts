@@ -22,7 +22,7 @@ export const allModelProviders: ModelProvider[] = [
   Vllm,
   Bedrock,
   Cohere,
-  xAI
+  xAI,
 ];
 
 export const allLlms: LlmInfo[] = allModelProviders.flatMap((provider) =>

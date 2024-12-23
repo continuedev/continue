@@ -1,9 +1,9 @@
-import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { ChatMessage, CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
-class Mock extends BaseLLM {
+class MockLLM extends BaseLLM {
   public completion: string = "Test Completion";
-  static providerName: ModelProvider = "mock";
+  static providerName = "mock";
 
   protected async *_streamComplete(
     prompt: string,
@@ -27,4 +27,4 @@ class Mock extends BaseLLM {
   }
 }
 
-export default Mock;
+export default MockLLM;

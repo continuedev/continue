@@ -1,6 +1,5 @@
 import { streamResponse } from "@continuedev/fetch";
-import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -12,8 +11,11 @@ import {
   CompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
-} from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+  Model,
+} from "openai/resources/index";
+
+import { GeminiConfig } from "../types.js";
+import { customFetch, embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -26,11 +28,8 @@ export class GeminiApi implements BaseLlmApi {
 
   static maxStopSequences = 5;
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: GeminiConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    if (!this.apiBase.endsWith("/")) {
-      this.apiBase += "/";
-    }
   }
 
   private _convertMessages(
@@ -45,16 +44,22 @@ export class GeminiApi implements BaseLlmApi {
   private _oaiPartToGeminiPart(
     part: OpenAI.Chat.Completions.ChatCompletionContentPart,
   ) {
-    return part.type === "text"
-      ? {
+    switch (part.type) {
+      case "text":
+        return {
           text: part.text,
-        }
-      : {
+        };
+      case "input_audio":
+        throw new Error("Unsupported part type: input_audio");
+      case "image_url":
+      default:
+        return {
           inlineData: {
             mimeType: "image/jpeg",
             data: part.image_url?.url.split(",")[1],
           },
         };
+    }
   }
 
   private _convertBody(oaiBody: ChatCompletionCreateParams, url: string) {
@@ -110,12 +115,16 @@ export class GeminiApi implements BaseLlmApi {
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
     let completion = "";
-    for await (const chunk of this.chatCompletionStream({
-      ...body,
-      stream: true,
-    })) {
+    for await (const chunk of this.chatCompletionStream(
+      {
+        ...body,
+        stream: true,
+      },
+      signal,
+    )) {
       completion += chunk.choices[0].delta.content;
     }
     return {
@@ -141,14 +150,16 @@ export class GeminiApi implements BaseLlmApi {
 
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const apiURL = new URL(
       `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
       this.apiBase,
     ).toString();
-    const resp = await fetch(apiURL, {
+    const resp = await customFetch(this.config.requestOptions)(apiURL, {
       method: "POST",
       body: JSON.stringify(this._convertBody(body, apiURL)),
+      signal,
     });
 
     let buffer = "";
@@ -232,7 +243,7 @@ export class GeminiApi implements BaseLlmApi {
 
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
     const inputs = Array.isArray(body.input) ? body.input : [body.input];
-    const response = await fetch(
+    const response = await customFetch(this.config.requestOptions)(
       new URL(`${body.model}:batchEmbedContents`, this.apiBase),
       {
         method: "POST",
@@ -255,18 +266,17 @@ export class GeminiApi implements BaseLlmApi {
     );
 
     const data = (await response.json()) as any;
-    return {
-      object: "list",
+    return embedding({
       model: body.model,
       usage: {
-        total_tokens: 0,
-        prompt_tokens: 0,
+        total_tokens: data.total_tokens,
+        prompt_tokens: data.prompt_tokens,
       },
-      data: data.embeddings.map((embedding: any, index: number) => ({
-        object: "embedding",
-        index,
-        embedding: embedding.values,
-      })),
-    };
+      data: data.batchEmbedContents.map((embedding: any) => embedding.values),
+    });
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

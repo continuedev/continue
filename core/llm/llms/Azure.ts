@@ -1,13 +1,16 @@
-import { LLMOptions, ModelProvider } from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 
 import OpenAI from "./OpenAI.js";
 
 class Azure extends OpenAI {
-  static providerName: ModelProvider = "azure";
+  static providerName = "azure";
 
   protected supportsPrediction(model: string): boolean {
     return false;
   }
+
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [];
 
   static defaultOptions: Partial<LLMOptions> = {
     apiVersion: "2024-02-15-preview",

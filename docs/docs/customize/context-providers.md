@@ -56,6 +56,20 @@ Reference all of the changes you've made to your current branch. This is useful 
 }
 ```
 
+### `@Current File`
+
+Reference the currently open file.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "currentFile"
+    }
+  ]
+}
+```
+
 ### `@Terminal`
 
 Reference the last command you ran in your IDE's terminal and its output.
@@ -444,7 +458,7 @@ Available connection types:
 
 ### `@Debugger`
 
-Reference the contents of the local variables in the debugger.
+Reference the contents of the local variables in the debugger. Currently only available in VS Code.
 
 ```json title="config.json"
 {
@@ -494,6 +508,28 @@ Reference the architecture and platform of your current operating system.
   ]
 }
 ```
+
+### Model Context Protocol
+
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then configure your `config.json` like this:
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
+  }
+}
+```
+
+You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
 ### `@HTTP`
 

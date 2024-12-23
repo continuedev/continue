@@ -1,17 +1,18 @@
 import {
   ChatMessage,
+  Chunk,
   CompletionOptions,
   LLMOptions,
-  ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamJSON } from "../stream.js";
 
 class Cohere extends BaseLLM {
-  static providerName: ModelProvider = "cohere";
+  static providerName = "cohere";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.cohere.ai/v1",
+    maxEmbeddingBatchSize: 96,
   };
   static maxStopSequences = 5;
 
@@ -51,7 +52,7 @@ class Cohere extends BaseLLM {
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
     for await (const update of this._streamChat(messages, signal, options)) {
-      yield stripImages(update.content);
+      yield renderChatMessage(update);
     }
   }
 
@@ -75,7 +76,7 @@ class Cohere extends BaseLLM {
         chat_history: this._convertMessages(messages),
         preamble: this.systemMessage,
       }),
-      signal
+      signal,
     });
 
     if (options.stream === false) {
@@ -89,6 +90,53 @@ class Cohere extends BaseLLM {
         yield { role: "assistant", content: value.text };
       }
     }
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const resp = await this.fetch(new URL("embed", this.apiBase), {
+      method: "POST",
+      body: JSON.stringify({
+        texts: chunks,
+        model: this.model,
+        input_type: "search_document",
+        embedding_types: ["float"],
+        truncate: "END",
+      }),
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    return data.embeddings.float;
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    const resp = await fetch(new URL("rerank", this.apiBase), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.model,
+        query,
+        documents: chunks.map((chunk) => chunk.content),
+      }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    const results = data.results.sort((a: any, b: any) => a.index - b.index);
+    return results.map((result: any) => result.relevance_score);
   }
 }
 

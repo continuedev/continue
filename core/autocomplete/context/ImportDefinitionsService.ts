@@ -29,14 +29,28 @@ export class ImportDefinitionsService {
     return this.cache.get(filepath);
   }
 
-  private async _getFileInfo(filepath: string): Promise<FileInfo> {
+  private async _getFileInfo(filepath: string): Promise<FileInfo | null> {
+    if (filepath.endsWith(".ipynb")) {
+      // Commenting out this line was the solution to https://github.com/continuedev/continue/issues/1463
+      return null;
+    }
+
     const parser = await getParserForFile(filepath);
     if (!parser) {
       return {
         imports: {},
       };
     }
-    const ast = parser.parse(await this.ide.readFile(filepath), undefined, {
+
+    let fileContents: string | undefined = undefined;
+    try {
+      fileContents = await this.ide.readFile(filepath);
+    } catch (err) {
+      // File removed
+      return null;
+    }
+
+    const ast = parser.parse(fileContents, undefined, {
       includedRanges: [
         {
           startIndex: 0,

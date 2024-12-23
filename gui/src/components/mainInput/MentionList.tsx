@@ -37,14 +37,11 @@ import {
   vscQuickInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
@@ -123,7 +120,7 @@ const ItemsDiv = styled.div`
   overflow-y: auto;
   max-height: 330px;
   padding: 0.2rem;
-  position: relative;
+  position: relative; // absolute to test tippy.js bug
 
   background-color: ${vscQuickInputBackground};
   /* backdrop-filter: blur(12px); */
@@ -355,7 +352,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   }, [allItems]);
 
   return (
-    <ItemsDiv className="items-container">
+    <ItemsDiv>
       {querySubmenuItem ? (
         <QueryInput
           rows={1}
@@ -382,7 +379,6 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       ) : (
         <>
           {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
-          {/* <CustomScrollbarDiv className="overflow-y-scroll max-h-96"> */}
           {allItems.length ? (
             allItems.map((item, index) => (
               <ItemDiv
@@ -402,7 +398,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         height="20px"
                         width="20px"
                         filename={item.description}
-                      ></FileIcon>
+                      />
                     )}
                     {!showFileIconForItem(item) && (
                       <>
@@ -414,7 +410,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   </div>
                   <span
                     style={{
-                      color: vscListActiveForeground,
+                      color: lightGray,
                       float: "right",
                       textAlign: "right",
                       opacity: index !== selectedIndex ? 0 : 1,

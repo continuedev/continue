@@ -1,9 +1,8 @@
 import * as YAML from "yaml";
-
-import { getBasename } from "../../util";
+import { getLastNPathParts } from "../../util/uri";
 
 export function extractName(preamble: { name?: string }, path: string): string {
-  return preamble.name ?? getBasename(path).split(".prompt")[0];
+  return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
 }
 
 export function getPreambleAndBody(content: string): [string, string] {

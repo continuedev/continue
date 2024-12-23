@@ -2,10 +2,28 @@ import os from "node:os";
 
 import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
 import { IdeInfo } from "../index.js";
+import type { PostHog as PostHogType } from "posthog-node";
+
+export enum PosthogFeatureFlag {
+  AutocompleteTimeout = "autocomplete-timeout",
+}
+
+export const EXPERIMENTS: {
+  [key in PosthogFeatureFlag]: {
+    [key: string]: { value: number };
+  };
+} = {
+  [PosthogFeatureFlag.AutocompleteTimeout]: {
+    control: { value: 150 },
+    "250": { value: 250 },
+    "350": { value: 350 },
+    "450": { value: 450 },
+  },
+};
 
 export class Telemetry {
   // Set to undefined whenever telemetry is disabled
-  static client: any = undefined;
+  static client: PostHogType | undefined = undefined;
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
   static ideInfo: IdeInfo | undefined = undefined;
@@ -28,6 +46,7 @@ export class Telemetry {
         distinctId: Telemetry.uniqueId,
         event,
         properties: augmentedProperties,
+        sendFeatureFlags: true,
       };
 
       // In cases where an extremely early fatal error occurs, we may not have initialized yet
@@ -55,7 +74,7 @@ export class Telemetry {
     Telemetry.client?.shutdown();
   }
 
-  static async getTelemetryClient() {
+  static async getTelemetryClient(): Promise<PostHogType | undefined> {
     try {
       const { PostHog } = await import("posthog-node");
       return new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
@@ -75,6 +94,23 @@ export class Telemetry {
       Telemetry.client = undefined;
     } else if (!Telemetry.client) {
       Telemetry.client = await Telemetry.getTelemetryClient();
+    }
+  }
+
+  static async getFeatureFlag(flag: PosthogFeatureFlag) {
+    return Telemetry.client?.getFeatureFlag(flag, Telemetry.uniqueId);
+  }
+
+  static async getValueForFeatureFlag(flag: PosthogFeatureFlag) {
+    try {
+      const userGroup = await Telemetry.getFeatureFlag(flag);
+      if (typeof userGroup === "string") {
+        return EXPERIMENTS[flag][userGroup].value;
+      }
+
+      return undefined;
+    } catch {
+      return undefined;
     }
   }
 }

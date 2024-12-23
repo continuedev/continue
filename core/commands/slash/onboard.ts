@@ -1,15 +1,18 @@
-import * as fs from "fs/promises";
-import * as path from "path";
-
 import ignore from "ignore";
 
-import { IDE, SlashCommand } from "../..";
+import type { FileType, IDE, SlashCommand } from "../..";
 import {
   defaultIgnoreDir,
   defaultIgnoreFile,
+  getGlobalContinueIgArray,
   gitIgArrayFromFile,
 } from "../../indexing/ignore";
-import { stripImages } from "../../llm/images";
+import { renderChatMessage } from "../../util/messageContent";
+import {
+  findUriInDirs,
+  getUriPathBasename,
+  joinPathsToUri,
+} from "../../util/uri";
 
 const LANGUAGE_DEP_MGMT_FILENAMES = [
   "package.json", // JavaScript (Node.js)
@@ -45,36 +48,53 @@ const OnboardSlashCommand: SlashCommand = {
     const context = await gatherProjectContext(workspaceDir, ide);
     const prompt = createOnboardingPrompt(context);
 
-    for await (const chunk of llm.streamChat([
-      { role: "user", content: prompt },
-    ], new AbortController().signal)) {
-      yield stripImages(chunk.content);
+    for await (const chunk of llm.streamChat(
+      [{ role: "user", content: prompt }],
+      new AbortController().signal,
+    )) {
+      yield renderChatMessage(chunk);
     }
   },
 };
 
 async function getEntriesFilteredByIgnore(dir: string, ide: IDE) {
-  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const ig = ignore()
+    .add(defaultIgnoreDir)
+    .add(defaultIgnoreFile)
+    .add(getGlobalContinueIgArray());
+  const entries = await ide.listDir(dir);
 
-  let ig = ignore().add(defaultIgnoreDir).add(defaultIgnoreFile);
+  const ignoreUri = joinPathsToUri(dir, ".gitignore");
+  const fileExists = await ide.fileExists(ignoreUri);
 
-  const gitIgnorePath = path.join(dir, ".gitignore");
-
-  const hasIgnoreFile = await fs
-    .access(gitIgnorePath)
-    .then(() => true)
-    .catch(() => false);
-
-  if (hasIgnoreFile) {
-    const gitIgnore = await ide.readFile(gitIgnorePath);
+  if (fileExists) {
+    const gitIgnore = await ide.readFile(ignoreUri);
     const igPatterns = gitIgArrayFromFile(gitIgnore);
 
-    ig = ig.add(igPatterns);
+    ig.add(igPatterns);
   }
 
-  const filteredEntries = entries.filter((entry) => !ig.ignores(entry.name));
+  const workspaceDirs = await ide.getWorkspaceDirs();
 
-  return filteredEntries;
+  const withRelativePaths = entries
+    .filter(
+      (entry) =>
+        entry[1] === (1 as FileType.File) ||
+        entry[1] === (2 as FileType.Directory),
+    )
+    .map((entry) => {
+      const { relativePathOrBasename } = findUriInDirs(entry[0], workspaceDirs);
+      return {
+        uri: entry[0],
+        type: entry[1],
+        basename: getUriPathBasename(entry[0]),
+        relativePath:
+          relativePathOrBasename +
+          (entry[1] === (2 as FileType.Directory) ? "/" : ""),
+      };
+    });
+
+  return withRelativePaths.filter((entry) => !ig.ignores(entry.relativePath));
 }
 
 async function gatherProjectContext(
@@ -82,7 +102,6 @@ async function gatherProjectContext(
   ide: IDE,
 ): Promise<string> {
   let context = "";
-
   async function exploreDirectory(dir: string, currentDepth: number = 0) {
     if (currentDepth > MAX_EXPLORE_DEPTH) {
       return;
@@ -91,19 +110,16 @@ async function gatherProjectContext(
     const entries = await getEntriesFilteredByIgnore(dir, ide);
 
     for (const entry of entries) {
-      const fullPath = path.join(dir, entry.name);
-      const relativePath = path.relative(workspaceDir, fullPath);
-
-      if (entry.isDirectory()) {
-        context += `\nFolder: ${relativePath}\n`;
-        await exploreDirectory(fullPath, currentDepth + 1);
+      if (entry.type === (2 as FileType.Directory)) {
+        context += `\nFolder: ${entry.relativePath}\n`;
+        await exploreDirectory(entry.uri, currentDepth + 1);
       } else {
-        if (entry.name.toLowerCase() === "readme.md") {
-          const content = await fs.readFile(fullPath, "utf-8");
-          context += `README for ${relativePath}:\n${content}\n\n`;
-        } else if (LANGUAGE_DEP_MGMT_FILENAMES.includes(entry.name)) {
-          const content = await fs.readFile(fullPath, "utf-8");
-          context += `${entry.name} for ${relativePath}:\n${content}\n\n`;
+        if (entry.basename.toLowerCase() === "readme.md") {
+          const content = await ide.readFile(entry.uri);
+          context += `README for ${entry.relativePath}:\n${content}\n\n`;
+        } else if (LANGUAGE_DEP_MGMT_FILENAMES.includes(entry.basename)) {
+          const content = await ide.readFile(entry.uri);
+          context += `${entry.basename} for ${entry.relativePath}:\n${content}\n\n`;
         }
       }
     }
@@ -116,7 +132,7 @@ async function gatherProjectContext(
 
 function createOnboardingPrompt(context: string): string {
   return `
-    As a helpful AI assistant, your task is to onboard a new developer to this project. 
+    As a helpful AI assistant, your task is to onboard a new developer to this project.
     Use the following context about the project structure, READMEs, and dependency files to create a comprehensive overview:
 
     ${context}

@@ -4,21 +4,21 @@ import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
+  ContextItem,
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
   FileSymbolMap,
   IdeSettings,
-  IndexingStatusMap,
   LLMFullCompletionOptions,
-  MessageContent,
   ModelDescription,
   ModelRoles,
-  PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
-  SessionInfo,
+  Session,
+  SessionMetadata,
   SiteIndexingConfig,
+  ToolCall,
 } from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -39,7 +39,6 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  "update/modelChange": [string, void];
   "update/selectTabAutocompleteModel": [string, void];
 
   // Special
@@ -47,10 +46,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   abort: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, SessionInfo[]];
+  "history/list": [ListHistoryOptions, SessionMetadata[]];
   "history/delete": [{ id: string }, void];
-  "history/load": [{ id: string }, PersistedSessionInfo];
-  "history/save": [PersistedSessionInfo, void];
+  "history/load": [{ id: string }, Session];
+  "history/save": [Session, void];
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
@@ -76,6 +75,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
+      selectedModelTitle: string;
     },
     ContextItemWithId[],
   ];
@@ -123,7 +123,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    ProtocolGeneratorType<MessageContent>,
+    ProtocolGeneratorType<ChatMessage>,
   ];
   streamDiffLines: [
     {
@@ -136,7 +136,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "chatDescriber/describe": [string, string | undefined];
+  "chatDescriber/describe": [
+    {
+      selectedModelTitle: string;
+      text: string;
+    },
+    string | undefined,
+  ];
   "stats/getTokensPerDay": [
     undefined,
     { day: string; promptTokens: number; generatedTokens: number }[],
@@ -153,7 +159,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
     void,
   ];
-  "index/forceReIndexFiles": [undefined | { files?: string[] }, void];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {
@@ -162,15 +167,26 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
 
+  // File changes
+  "files/changed": [{ uris?: string[] }, void];
+  "files/opened": [{ uris?: string[] }, void];
+  "files/created": [{ uris?: string[] }, void];
+  "files/deleted": [{ uris?: string[] }, void];
+
   // Docs etc. Indexing. TODO move codebase to this
   "indexing/reindex": [{ type: string; id: string }, void];
   "indexing/abort": [{ type: string; id: string }, void];
   "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
-  "indexing/initStatuses": [undefined, void];
+  "docs/getSuggestedDocs": [undefined, void];
+  "docs/initStatuses": [undefined, void];
 
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];
 
   "auth/getAuthUrl": [undefined, { url: string }];
+  "tools/call": [
+    { toolCall: ToolCall; selectedModelTitle: string },
+    { contextItems: ContextItem[] },
+  ];
 };

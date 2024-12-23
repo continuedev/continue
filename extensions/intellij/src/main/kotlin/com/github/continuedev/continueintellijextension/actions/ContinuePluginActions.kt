@@ -9,15 +9,7 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
-import java.awt.Dimension
-import javax.swing.*
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
-import com.intellij.ui.components.JBScrollPane
-import java.awt.BorderLayout
 
 fun getPluginService(project: Project?): ContinuePluginService? {
     if (project == null) {
@@ -37,7 +29,7 @@ class AcceptDiffAction : AnAction() {
 
     private fun acceptHorizontalDiff(e: AnActionEvent) {
         val continuePluginService = getPluginService(e.project) ?: return
-        continuePluginService.ideProtocolClient?.diffManager?.acceptDiff(null)
+        continuePluginService?.diffManager?.acceptDiff(null)
     }
 
     private fun acceptVerticalDiff(e: AnActionEvent) {
@@ -57,7 +49,7 @@ class RejectDiffAction : AnAction() {
 
     private fun rejectHorizontalDiff(e: AnActionEvent) {
         val continuePluginService = getPluginService(e.project) ?: return
-        continuePluginService.ideProtocolClient?.diffManager?.rejectDiff(null)
+        continuePluginService.diffManager?.rejectDiff(null)
     }
 
     private fun rejectVerticalDiff(e: AnActionEvent) {
@@ -87,7 +79,7 @@ fun getContinuePluginService(project: Project?): ContinuePluginService? {
 fun focusContinueInput(project: Project?) {
     val continuePluginService = getContinuePluginService(project) ?: return
     continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-    continuePluginService.sendToWebview("focusContinueInputWithoutClear", null)
+    continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
 
     continuePluginService.ideProtocolClient?.sendHighlightedCode()
 }
@@ -104,7 +96,7 @@ class FocusContinueInputAction : AnAction() {
         val continuePluginService = getContinuePluginService(e.project) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.sendToWebview("focusContinueInput", null)
+        continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
@@ -122,5 +114,29 @@ class ViewHistoryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
         continuePluginService.sendToWebview("viewHistory", null)
+    }
+}
+
+class OpenConfigAction : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val continuePluginService = getContinuePluginService(e.project) ?: return
+        val params = mapOf("profileId" to null)
+        continuePluginService.coreMessenger?.request("config/openProfile", params, null) { _ -> }
+    }
+}
+
+class OpenMorePageAction : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val continuePluginService = getContinuePluginService(e.project) ?: return
+        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
+        val params = mapOf("path" to "/more", "toggle" to true)
+        continuePluginService.sendToWebview("navigateTo", params)
+    }
+}
+
+class OpenAccountDialogAction : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val continuePluginService = getContinuePluginService(e.project) ?: return
+        continuePluginService.sendToWebview("openDialogMessage", "account")
     }
 }

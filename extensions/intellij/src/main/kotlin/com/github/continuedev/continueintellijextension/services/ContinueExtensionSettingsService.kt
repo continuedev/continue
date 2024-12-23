@@ -32,6 +32,7 @@ class ContinueSettingsComponent : DumbAware {
     val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable Continue for Teams Beta")
     val enableOSR: JCheckBox = JCheckBox("Enable Off-Screen Rendering")
     val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
+    val showIDECompletionSideBySide: JCheckBox = JCheckBox("Show IDE completions side-by-side")
 
     init {
         val constraints = GridBagConstraints()
@@ -62,6 +63,8 @@ class ContinueSettingsComponent : DumbAware {
         panel.add(enableOSR, constraints)
         constraints.gridy++
         panel.add(displayEditorTooltip, constraints)
+        constraints.gridy++
+        panel.add(showIDECompletionSideBySide, constraints)
         constraints.gridy++
 
         // Add a "filler" component that takes up all remaining vertical space
@@ -94,6 +97,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var enableContinueTeamsBeta: Boolean = false
         var enableOSR: Boolean = shouldRenderOffScreen()
         var displayEditorTooltip: Boolean = true
+        var showIDECompletionSideBySide: Boolean = false
     }
 
     var continueState: ContinueState = ContinueState()
@@ -206,7 +210,8 @@ class ContinueExtensionConfigurable : Configurable {
                     mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
                     mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
                     mySettingsComponent?.enableOSR?.isSelected != settings.continueState.enableOSR ||
-                    mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip
+                    mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip ||
+                    mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide
         return modified
     }
 
@@ -220,6 +225,8 @@ class ContinueExtensionConfigurable : Configurable {
             mySettingsComponent?.enableContinueTeamsBeta?.isSelected ?: false
         settings.continueState.enableOSR = mySettingsComponent?.enableOSR?.isSelected ?: true
         settings.continueState.displayEditorTooltip = mySettingsComponent?.displayEditorTooltip?.isSelected ?: true
+        settings.continueState.showIDECompletionSideBySide =
+            mySettingsComponent?.showIDECompletionSideBySide?.isSelected ?: false
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC)
             .settingsUpdated(settings.continueState)
@@ -235,6 +242,8 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.enableContinueTeamsBeta?.isSelected = settings.continueState.enableContinueTeamsBeta
         mySettingsComponent?.enableOSR?.isSelected = settings.continueState.enableOSR
         mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
+        mySettingsComponent?.showIDECompletionSideBySide?.isSelected =
+            settings.continueState.showIDECompletionSideBySide
 
         ContinueExtensionSettings.instance.addRemoteSyncJob()
     }
@@ -271,12 +280,6 @@ class ContinueExtensionConfigurable : Configurable {
  * it's a simple integer without dot notation, making it easier to compare.
  */
 private fun shouldRenderOffScreen(): Boolean {
-    // With the 0.0.77 release, non-Mac users have been reporting issues with paste functionality
-    // in the browser. Disabling OSR for all non-Mac users for now.
-    if (!SystemInfo.isMac) {
-        return false
-    }
-
     val minBuildNumber = 233
     val applicationInfo = ApplicationInfo.getInstance()
     val currentBuildNumber = applicationInfo.build.baselineVersion

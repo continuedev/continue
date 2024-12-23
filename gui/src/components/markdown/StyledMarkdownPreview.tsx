@@ -1,4 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { ctxItemToRifWithContents } from "core/commands/util";
+import { memo, useContext, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -12,23 +13,29 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize, isJetBrains } from "../../util";
+import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
-import { ctxItemToRifWithContents } from "core/commands/util";
-import FilenameLink from "./FilenameLink";
-import StepContainerPreToolbar from "./StepContainerPreToolbar";
-import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
-import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { RootState } from "../../redux/store";
-import { ContextItemWithId, SymbolWithRange } from "core";
+import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
-import { useSelector } from "react-redux";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { remarkTables } from "./utils/remarkTables";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
+import { useAppSelector } from "../../redux/hooks";
+import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
+import { selectUIConfig } from "../../redux/slices/configSlice";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { ToolTip } from "../gui/Tooltip";
+import { v4 as uuidv4 } from "uuid";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
+  whiteSpace: string;
 }>`
   pre {
+    white-space: ${(props) => props.whiteSpace};
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
@@ -111,7 +118,7 @@ function getLanuageFromClassName(className: any): string | null {
     .find((word) => word.startsWith(HLJS_LANGUAGE_CLASSNAME_PREFIX))
     ?.split("-")[1];
 
-  return language;
+  return language ?? null;
 }
 
 function getCodeChildrenContent(children: any) {
@@ -127,58 +134,77 @@ function getCodeChildrenContent(children: any) {
   return undefined;
 }
 
-function processCodeBlocks(tree: any) {
-  const lastNode = tree.children[tree.children.length - 1];
-  const lastCodeNode = lastNode.type === "code" ? lastNode : null;
-
-  visit(tree, "code", (node: any) => {
-    if (!node.lang) {
-      node.lang = "javascript";
-    } else if (node.lang.includes(".")) {
-      node.lang = node.lang.split(".").slice(-1)[0];
-    }
-
-    node.data = node.data || {};
-    node.data.hProperties = node.data.hProperties || {};
-
-    node.data.hProperties["data-isgeneratingcodeblock"] = lastCodeNode === node;
-    node.data.hProperties["data-codeblockcontent"] = node.value;
-
-    if (node.meta) {
-      let meta = node.meta.split(" ");
-      node.data.hProperties.filepath = meta[0];
-      node.data.hProperties.range = meta[1];
-    }
-  });
-}
-
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
-  const contextItems = useSelector(
-    (state: RootState) =>
-      state.state.history[props.itemIndex - 1]?.contextItems,
-  );
-  const symbols = useSelector((state: RootState) => state.state.symbols);
-
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
-  const symbolsRef = useRef<SymbolWithRange[]>([]);
-  const contextItemsRef = useRef<ContextItemWithId[]>([]);
 
-  useEffect(() => {
-    contextItemsRef.current = contextItems || [];
-  }, [contextItems]);
-  useEffect(() => {
-    // Note, before I was only looking for symbols that matched
-    // Context item files on current history item
-    // but in practice global symbols for session makes way more sense
-    symbolsRef.current = Object.values(symbols).flat();
-  }, [symbols]);
+  // Grab context items that are this one or further back
+  const history = useAppSelector((state) => state.session.history);
+  const previousFileContextItems = useMemo(() => {
+    const index = props.itemIndex;
+    if (index === undefined) {
+      return [];
+    }
+    const previousItems = history.flatMap((item, i) =>
+      i <= index ? item.contextItems : [],
+    );
+    return previousItems.filter(
+      (item) => item.uri?.type === "file" && item?.uri?.value,
+    );
+  }, [props.itemIndex, history]);
+  const previousFileContextItemsRef = useUpdatingRef(previousFileContextItems);
+
+  // Extract global symbols for files matching previous context items
+  const allSymbols = useAppSelector((state) => state.session.symbols);
+  const previousFileContextItemSymbols = useMemo(() => {
+    const uniqueUris = new Set(
+      previousFileContextItems.map((item) => item.uri!.value!),
+    );
+    return Object.entries(allSymbols)
+      .filter((e) => uniqueUris.has(e[0]))
+      .map((f) => f[1])
+      .flat();
+  }, [allSymbols, previousFileContextItems]);
+  const symbolsRef = useUpdatingRef(previousFileContextItemSymbols);
 
   const [reactContent, setMarkdownSource] = useRemark({
-    remarkPlugins: [remarkMath, () => processCodeBlocks],
+    remarkPlugins: [
+      remarkTables,
+      [
+        remarkMath,
+        {
+          singleDollarTextMath: false,
+        },
+      ],
+      () => (tree: any) => {
+        const lastNode = tree.children[tree.children.length - 1];
+        const lastCodeNode = lastNode.type === "code" ? lastNode : null;
+
+        visit(tree, "code", (node: any) => {
+          if (!node.lang) {
+            node.lang = "javascript";
+          } else if (node.lang.includes(".")) {
+            node.lang = node.lang.split(".").slice(-1)[0];
+          }
+
+          node.data = node.data || {};
+          node.data.hProperties = node.data.hProperties || {};
+
+          node.data.hProperties["data-isgeneratingcodeblock"] =
+            lastCodeNode === node;
+          node.data.hProperties["data-codeblockcontent"] = node.value;
+
+          if (node.meta) {
+            let meta = node.meta.split(" ");
+            node.data.hProperties["data-relativefilepath"] = meta[0];
+            node.data.hProperties.range = meta[1];
+          }
+        });
+      },
+    ],
     rehypePlugins: [
       rehypeKatex as any,
       {},
@@ -195,7 +221,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         return (tree) => {
           visit(tree, { tagName: "pre" }, (node: any) => {
             // Add an index (0, 1, 2, etc...) to each code block.
-            node.properties = { codeBlockIndex };
+            node.properties = { "data-codeblockindex": codeBlockIndex };
             codeBlockIndex++;
           });
         };
@@ -205,16 +231,30 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypeReactOptions: {
       components: {
         a: ({ node, ...aProps }) => {
+          const tooltipId = uuidv4();
+
           return (
-            <a {...aProps} target="_blank">
-              {aProps.children}
-            </a>
+            <>
+              <a
+                href={aProps.href}
+                target="_blank"
+                className="hover:underline"
+                data-tooltip-id={tooltipId}
+              >
+                {aProps.children}
+              </a>
+              <ToolTip id={tooltipId} place="top" className="m-0 p-0">
+                {aProps.href}
+              </ToolTip>
+            </>
           );
         },
         pre: ({ node, ...preProps }) => {
-          const preChildProps = preProps?.children?.[0]?.props;
-          const { className, filepath, range } = preProps?.children?.[0]?.props;
+          const codeBlockIndex = preProps["data-codeblockindex"];
 
+          const preChildProps = preProps?.children?.[0]?.props ?? {};
+          const { className, range } = preChildProps;
+          const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
           const isGeneratingCodeBlock =
             preChildProps["data-isgeneratingcodeblock"];
@@ -228,13 +268,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           // If we don't have a filepath show the more basic toolbar
           // that is just action buttons on hover.
           // We also use this in JB since we haven't yet implemented
-          // the logic for lazy apply.
-          if (!filepath || isJetBrains()) {
+          // the logic forfileUri lazy apply.
+          if (!relativeFilePath || isJetBrains()) {
             return (
               <StepContainerPreActionButtons
                 language={language}
                 codeBlockContent={codeBlockContent}
-                codeBlockIndex={preProps.codeBlockIndex}
+                codeBlockIndex={codeBlockIndex}
               >
                 <SyntaxHighlightedPre {...preProps} />
               </StepContainerPreActionButtons>
@@ -245,9 +285,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
-              codeBlockIndex={preProps.codeBlockIndex}
+              codeBlockIndex={codeBlockIndex}
               language={language}
-              filepath={filepath}
+              relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
             >
@@ -258,15 +298,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (content && contextItemsRef.current) {
-            const ctxItem = contextItemsRef.current.find((ctxItem) =>
-              ctxItem.uri?.value.includes(content),
+          if (content && previousFileContextItemsRef.current) {
+            // Insert file links for matching previous context items
+            const ctxItem = previousFileContextItemsRef.current.find((item) =>
+              item.uri!.value!.includes(content),
             );
             if (ctxItem) {
               const rif = ctxItemToRifWithContents(ctxItem);
               return <FilenameLink rif={rif} />;
             }
 
+            // Insert symbols for exact matches
             const exactSymbol = symbolsRef.current.find(
               (s) => s.name === content,
             );
@@ -274,7 +316,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               return <SymbolLink content={content} symbol={exactSymbol} />;
             }
 
-            // PARTIAL - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
+            // Partial matches - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
             const partialSymbol = symbolsRef.current.find((s) =>
               content.startsWith(s.name),
             );
@@ -289,11 +331,18 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   });
 
   useEffect(() => {
-    setMarkdownSource(patchNestedMarkdown(props.source ?? ""));
-  }, [props.source]);
+    setMarkdownSource(
+      // some patches to source markdown are applied here:
+      fixDoubleDollarNewLineLatex(patchNestedMarkdown(props.source ?? "")),
+    );
+  }, [props.source, allSymbols]);
 
+  const uiConfig = useAppSelector(selectUIConfig);
+  const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
-    <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>
+      {reactContent}
+    </StyledMarkdown>
   );
 });
 

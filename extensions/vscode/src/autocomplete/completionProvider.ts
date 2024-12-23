@@ -6,6 +6,7 @@ import {
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
+const Diff = require("diff");
 
 import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -18,9 +19,17 @@ import {
   setupStatusBar,
   stopStatusBarLoading,
 } from "./statusBar";
+import * as URI from "uri-js";
 
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { IDE } from "core";
+import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+
+interface DiffType {
+  count: number;
+  added: boolean;
+  removed: boolean;
+  value: string;
+}
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -42,7 +51,7 @@ export class ContinueCompletionProvider
         e.message,
         this.configHandler.reloadConfig.bind(this.configHandler),
         () => {
-          void this.webviewProtocol.request("openOnboardingCard", undefined)
+          void this.webviewProtocol.request("openOnboardingCard", undefined);
         },
       );
       return;
@@ -76,12 +85,6 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
-
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      if (event.document.uri.fsPath === this._lastShownCompletion?.filepath) {
-        // console.log("updating completion");
-      }
-    });
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
@@ -98,6 +101,16 @@ export class ContinueCompletionProvider
     const enableTabAutocomplete =
       getStatusBarStatus() === StatusBarStatus.Enabled;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
+      return null;
+    }
+
+    if (document.uri.scheme === "vscode-scm") {
+      return null;
+    }
+
+    // Don't autocomplete with multi-cursor
+    const editor = vscode.window.activeTextEditor;
+    if (editor && editor.selections.length > 1) {
       return null;
     }
 
@@ -153,12 +166,6 @@ export class ContinueCompletionProvider
       const signal = abortController.signal;
       token.onCancellationRequested(() => abortController.abort());
 
-      const config = await this.configHandler.loadConfig();
-      let clipboardText = "";
-      if (config.tabAutocompleteOptions?.useCopyBuffer === true) {
-        clipboardText = await vscode.env.clipboard.readText();
-      }
-
       // Handle notebook cells
       const pos = {
         line: position.line,
@@ -169,7 +176,9 @@ export class ContinueCompletionProvider
         const notebook = vscode.workspace.notebookDocuments.find((notebook) =>
           notebook
             .getCells()
-            .some((cell) => cell.document.uri === document.uri),
+            .some((cell) =>
+              URI.equal(cell.document.uri.toString(), document.uri.toString()),
+            ),
         );
         if (notebook) {
           const cells = notebook.getCells();
@@ -184,7 +193,9 @@ export class ContinueCompletionProvider
             })
             .join("\n\n");
           for (const cell of cells) {
-            if (cell.document.uri === document.uri) {
+            if (
+              URI.equal(cell.document.uri.toString(), document.uri.toString())
+            ) {
               break;
             } else {
               pos.line += cell.document.getText().split("\n").length + 1;
@@ -192,23 +203,23 @@ export class ContinueCompletionProvider
           }
         }
       }
-      // Handle commit message input box
-      let manuallyPassPrefix: string | undefined = undefined;
-      if (document.uri.scheme === "vscode-scm") {
-        return null;
-        // let diff = await this.ide.getDiff();
-        // diff = diff.split("\n").splice(-150).join("\n");
-        // manuallyPassPrefix = `${diff}\n\nCommit message: `;
+
+      // Manually pass file contents for unsaved, untitled files
+      if (document.isUntitled) {
+        manuallyPassFileContents = document.getText();
       }
 
+      // Handle commit message input box
+      let manuallyPassPrefix: string | undefined = undefined;
+
       const input: AutocompleteInput = {
+        isUntitledFile: document.isUntitled,
         completionId: uuidv4(),
-        filepath: document.uri.fsPath,
+        filepath: document.uri.toString(),
         pos,
         recentlyEditedFiles: [],
         recentlyEditedRanges:
           await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-        clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
         selectedCompletionInfo,
@@ -258,13 +269,67 @@ export class ContinueCompletionProvider
 
       // Construct the range/text to show
       const startPos = selectedCompletionInfo?.range.start ?? position;
-      const completionRange = new vscode.Range(
-        startPos,
-        startPos.translate(0, outcome.completion.length),
-      );
+      let range = new vscode.Range(startPos, startPos);
+      let completionText = outcome.completion;
+      const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
+
+      if (isSingleLineCompletion) {
+        const lastLineOfCompletionText = completionText.split("\n").pop();
+        const currentText = document
+          .lineAt(startPos)
+          .text.substring(startPos.character);
+        const diffs: DiffType[] = Diff.diffWords(
+          currentText,
+          lastLineOfCompletionText,
+        );
+
+        if (diffPatternMatches(diffs, ["+"])) {
+          // Just insert, we're already at the end of the line
+        } else if (
+          diffPatternMatches(diffs, ["+", "="]) ||
+          diffPatternMatches(diffs, ["+", "=", "+"])
+        ) {
+          // The model repeated the text after the cursor to the end of the line
+          range = new vscode.Range(
+            startPos,
+            document.lineAt(startPos).range.end,
+          );
+        } else if (
+          diffPatternMatches(diffs, ["+", "-"]) ||
+          diffPatternMatches(diffs, ["-", "+"])
+        ) {
+          // We are midline and the model just inserted without repeating to the end of the line
+          // We want to move the cursor to the end of the line
+          // range = new vscode.Range(
+          //   startPos,
+          //   document.lineAt(startPos).range.end,
+          // );
+          // // Find the last removed part of the diff
+          // const lastRemovedIndex = findLastIndex(
+          //   diffs,
+          //   (diff) => diff.removed === true,
+          // );
+          // const lastRemovedContent = diffs[lastRemovedIndex].value;
+          // completionText += lastRemovedContent;
+        } else {
+          // Diff is too complicated, just insert the first added part of the diff
+          // This is the safe way to ensure that it is displayed
+          if (diffs[0]?.added) {
+            completionText = diffs[0].value;
+          } else {
+            // If the first part of the diff isn't an insertion, then the model is
+            // probably rewriting other parts of the line
+            return undefined;
+          }
+        }
+      } else {
+        // Extend the range to the end of the line for multiline completions
+        range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
+      }
+
       const completionItem = new vscode.InlineCompletionItem(
-        outcome.completion,
-        completionRange,
+        completionText,
+        range,
         {
           title: "Log Autocomplete Outcome",
           command: "continue.logAutocompleteOutcome",
@@ -302,4 +367,27 @@ export class ContinueCompletionProvider
 
     return true;
   }
+}
+
+type DiffPartType = "+" | "-" | "=";
+
+function diffPatternMatches(
+  diffs: DiffType[],
+  pattern: DiffPartType[],
+): boolean {
+  if (diffs.length !== pattern.length) {
+    return false;
+  }
+
+  for (let i = 0; i < diffs.length; i++) {
+    const diff = diffs[i];
+    const diffPartType: DiffPartType =
+      !diff.added && !diff.removed ? "=" : diff.added ? "+" : "-";
+
+    if (diffPartType !== pattern[i]) {
+      return false;
+    }
+  }
+
+  return true;
 }

@@ -11,7 +11,7 @@ import {
   vscForeground,
 } from "..";
 import { useDispatch } from "react-redux";
-import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { setShowDialog } from "../../redux/slices/uiSlice";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface TextDialogProps {
@@ -71,15 +71,16 @@ const TextDialog = (props: TextDialogProps) => {
   return (
     <ScreenCover onClick={props.onClose} hidden={!props.showDialog}>
       <DialogContainer
-        className="xs:w-[85%] w-[92%] sm:w-[75%]"
+        className="xs:w-[90%] no-scrollbar max-h-full w-[92%] max-w-[600px] overflow-auto sm:w-[88%] md:w-[80%]"
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
         <Dialog>
           <CloseButton onClick={props.onClose}>
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="h-5 w-5 hover:brightness-125" />
           </CloseButton>
+
           {typeof props.message === "string" ? (
             <ReactMarkdown>{props.message || ""}</ReactMarkdown>
           ) : !React.isValidElement(props.message) ? null : (

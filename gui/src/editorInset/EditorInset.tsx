@@ -1,12 +1,10 @@
-import { useContext, useEffect, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useRef } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius } from "../components";
 import TipTapEditor from "../components/mainInput/TipTapEditor";
-import { IdeMessengerContext } from "../context/IdeMessenger";
 import useSetup from "../hooks/useSetup";
-import { selectSlashCommands } from "../redux/selectors";
-import { RootState } from "../redux/store";
+import { selectSlashCommandComboBoxInputs } from "../redux/selectors";
+import { useAppSelector } from "../redux/hooks";
 
 const EditorInsetDiv = styled.div`
   max-width: 500px;
@@ -17,31 +15,16 @@ const EditorInsetDiv = styled.div`
 `;
 
 function EditorInset() {
-  const dispatch = useDispatch();
-  const availableSlashCommands = useSelector(selectSlashCommands);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
+  const availableSlashCommands = useAppSelector(
+    selectSlashCommandComboBoxInputs,
+  );
+  const availableContextProviders = useAppSelector(
+    (store) => store.config.config.contextProviders,
   );
 
-  useSetup(dispatch);
+  useSetup();
 
   const elementRef = useRef<HTMLDivElement | null>(null);
-
-  const ideMessenger = useContext(IdeMessengerContext);
-
-  useEffect(() => {
-    if (!elementRef.current) return;
-    const resizeObserver = new ResizeObserver(() => {
-      if (!elementRef.current) return;
-
-      console.log("Height: ", elementRef.current.clientHeight);
-      ideMessenger.post("jetbrains/editorInsetHeight", {
-        height: elementRef.current.clientHeight,
-      });
-    });
-    resizeObserver.observe(elementRef.current);
-    return () => resizeObserver.disconnect();
-  }, []);
 
   return (
     <EditorInsetDiv ref={elementRef}>
@@ -53,7 +36,7 @@ function EditorInset() {
           console.log("Enter: ", e, modifiers);
         }}
         historyKey="chat"
-      ></TipTapEditor>
+      />
     </EditorInsetDiv>
   );
 }

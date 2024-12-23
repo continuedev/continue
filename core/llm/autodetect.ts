@@ -1,4 +1,4 @@
-import { ModelCapability, ModelProvider, TemplateType } from "../index.js";
+import { ModelCapability, TemplateType } from "../index.js";
 
 import {
   anthropicTemplateMessages,
@@ -36,7 +36,7 @@ import {
   zephyrEditPrompt,
 } from "./templates/edit.js";
 
-const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
+const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
   "openai",
   "ollama",
@@ -52,7 +52,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "watsonx",
 ];
 
-const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
+const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "openai",
   "ollama",
   "gemini",
@@ -65,6 +65,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "openrouter",
   "vertexai",
   "azure",
+  "scaleway",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -84,8 +85,16 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
 ];
 
+function modelSupportsTools(modelName: string, provider: string) {
+  return (
+    provider === "anthropic" &&
+    modelName.includes("claude") &&
+    (modelName.includes("3-5") || modelName.includes("3.5"))
+  );
+}
+
 function modelSupportsImages(
-  provider: ModelProvider,
+  provider: string,
   model: string,
   title: string | undefined,
   capabilities: ModelCapability | undefined,
@@ -108,7 +117,7 @@ function modelSupportsImages(
 
   return false;
 }
-const PARALLEL_PROVIDERS: ModelProvider[] = [
+const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
   "sagemaker",
@@ -124,12 +133,11 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "sambanova",
   "nebius",
   "vertexai",
+  "function-network",
+  "scaleway",
 ];
 
-function llmCanGenerateInParallel(
-  provider: ModelProvider,
-  model: string,
-): boolean {
+function llmCanGenerateInParallel(provider: string, model: string): boolean {
   if (provider === "openai") {
     return model.includes("gpt");
   }
@@ -150,13 +158,12 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini") ||
-    lower.includes("grok")||
+    lower.includes("grok") ||
     lower.includes("moonshot")
   ) {
-    return undefined; 
+    return undefined;
   }
-
-  if (lower.includes("llama3")) {
+  if (lower.includes("llama3") || lower.includes("llama-3")) {
     return "llama3";
   }
 
@@ -234,7 +241,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
 function autodetectTemplateFunction(
   model: string,
-  provider: ModelProvider,
+  provider: string,
   explicitTemplate: TemplateType | undefined = undefined,
 ) {
   if (
@@ -354,4 +361,5 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
+  modelSupportsTools,
 };

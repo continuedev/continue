@@ -1,9 +1,9 @@
-import { LLMOptions, ModelProvider } from "../../index.js";
+import { LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
 class Cerebras extends OpenAI {
-  static providerName: ModelProvider = "cerebras";
+  static providerName = "cerebras";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.cerebras.ai/v1/",
   };

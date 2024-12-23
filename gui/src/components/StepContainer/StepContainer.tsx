@@ -1,15 +1,16 @@
 import { ChatHistoryItem } from "core";
-import { stripImages } from "core/llm/images";
+import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
-import useUIConfig from "../../hooks/useUIConfig";
-import { RootState } from "../../redux/store";
+import { useAppSelector } from "../../redux/hooks";
+import { selectUIConfig } from "../../redux/slices/configSlice";
+import { deleteMessage } from "../../redux/slices/sessionSlice";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import ResponseActions from "./ResponseActions";
-import { deleteMessage } from "../../redux/slices/stateSlice";
+import ThinkingIndicator from "./ThinkingIndicator";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -19,6 +20,7 @@ interface StepContainerProps {
 
 const ContentDiv = styled.div<{ fontSize?: number }>`
   padding-top: 4px;
+  padding-bottom: 4px;
   background-color: ${vscBackground};
   font-size: ${getFontSize()}px;
   overflow: hidden;
@@ -27,25 +29,27 @@ const ContentDiv = styled.div<{ fontSize?: number }>`
 export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
-  const active = useSelector((store: RootState) => store.state.active);
-  const curCheckpointIndex = useSelector(
-    (store: RootState) => store.state.curCheckpointIndex,
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const historyItemAfterThis = useAppSelector(
+    (state) => state.session.history[props.index + 1],
   );
-  const isInEditMode = useSelector(
-    (store: RootState) => store.editModeState.isInEditMode,
-  );
-  const uiConfig = useUIConfig();
-  const shouldHideActions = active && props.isLast;
+  const uiConfig = useAppSelector(selectUIConfig);
+
+  const shouldHideActions =
+    (isStreaming && props.isLast) ||
+    historyItemAfterThis?.message.role === "assistant";
+
   // const isStepAheadOfCurCheckpoint =
   //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
-    if (!active) {
-      const content = stripImages(props.item.message.content).trim();
-      const endingPunctuation = [".", "?", "!", "```"];
+    if (!isStreaming) {
+      const content = renderChatMessage(props.item.message).trim();
+      const endingPunctuation = [".", "?", "!", "```", ":"];
 
       // If not ending in punctuation or emoji, we assume the response got truncated
       if (
+        content.trim() !== "" &&
         !(
           endingPunctuation.some((p) => content.endsWith(p)) ||
           /\p{Emoji}/u.test(content.slice(-2))
@@ -56,7 +60,7 @@ export default function StepContainer(props: StepContainerProps) {
         setIsTruncated(false);
       }
     }
-  }, [props.item.message.content, active]);
+  }, [props.item.message.content, isStreaming]);
 
   function onDelete() {
     dispatch(deleteMessage(props.index));
@@ -76,10 +80,7 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div
-      // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
-      style={{
-        minHeight: props.isLast ? "50vh" : 0,
-      }}
+    // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
     >
       <ContentDiv>
         {uiConfig?.displayRawMarkdown ? (
@@ -87,7 +88,7 @@ export default function StepContainer(props: StepContainerProps) {
             className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4"
             style={{ fontSize: getFontSize() - 2 }}
           >
-            {stripImages(props.item.message.content)}
+            {renderChatMessage(props.item.message)}
           </pre>
         ) : (
           <StyledMarkdownPreview
@@ -96,11 +97,10 @@ export default function StepContainer(props: StepContainerProps) {
             itemIndex={props.index}
           />
         )}
+        {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </ContentDiv>
-      {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on */}
-      <div
-        className={`${shouldHideActions && "hidden"} transition-opacity duration-300 ease-in-out`}
-      >
+      {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete */}
+      <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
         {!shouldHideActions && (
           <ResponseActions
             isTruncated={isTruncated}
@@ -108,6 +108,7 @@ export default function StepContainer(props: StepContainerProps) {
             onContinueGeneration={onContinueGeneration}
             index={props.index}
             item={props.item}
+            shouldHideActions={shouldHideActions}
           />
         )}
       </div>

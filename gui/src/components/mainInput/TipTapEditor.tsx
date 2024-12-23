@@ -6,14 +6,9 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
-import {
-  ContextItemWithId,
-  ContextProviderDescription,
-  InputModifiers,
-  RangeInFile,
-} from "core";
+import { ContextProviderDescription, InputModifiers } from "core";
+import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { getBasename, getRelativePath } from "core/util";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
 import {
@@ -24,9 +19,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { v4 } from "uuid";
 import {
   defaultBorderRadius,
   lightGray,
@@ -37,19 +30,33 @@ import {
   vscInputBorderFocus,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
-import useHistory from "../../hooks/useHistory";
+import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
 import { useInputHistory } from "../../hooks/useInputHistory";
+import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { RootState } from "../../redux/store";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+  selectHasCodeToEdit,
+  selectIsInEditMode,
+  setMainEditorContentTrigger,
+} from "../../redux/slices/sessionSlice";
+import { exitEditMode } from "../../redux/thunks";
+import {
+  loadLastSession,
+  loadSession,
+  saveCurrentSession,
+} from "../../redux/thunks/session";
 import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../../util";
+import { AddCodeToEdit } from "./AddCodeToEditExtension";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
@@ -64,10 +71,6 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import useIsOSREnabled from "../../hooks/useIsOSREnabled";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
-import { AddCodeToEdit } from "./AddCodeToEditExtension";
-import { addCodeToEdit } from "../../redux/slices/editModeState";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -129,9 +132,13 @@ const HoverTextDiv = styled.div`
   justify-content: center;
 `;
 
-function getDataUrlForFile(file: File, img): string {
-  const targetWidth = 512;
-  const targetHeight = 512;
+const IMAGE_RESOLUTION = 1024;
+function getDataUrlForFile(
+  file: File,
+  img: HTMLImageElement,
+): string | undefined {
+  const targetWidth = IMAGE_RESOLUTION;
+  const targetHeight = IMAGE_RESOLUTION;
   const scaleFactor = Math.min(
     targetWidth / img.width,
     targetHeight / img.height,
@@ -142,6 +149,10 @@ function getDataUrlForFile(file: File, img): string {
   canvas.height = img.height * scaleFactor;
 
   const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    console.error("Error getting image data url: 2d context not found");
+    return;
+  }
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
   const downsizedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
@@ -165,35 +176,21 @@ interface TipTapEditorProps {
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
-  const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
+  const { getSubmenuContextItems } = useSubmenuContextProviders();
 
-  const historyLength = useSelector(
-    (store: RootState) => store.state.history.length,
-  );
+  const historyLength = useAppSelector((store) => store.session.history.length);
 
-  const useActiveFile = useSelector(selectUseActiveFile);
-
-  const { saveSession, loadSession } = useHistory(dispatch);
+  const useActiveFile = useAppSelector(selectUseActiveFile);
 
   const posthog = usePostHog();
-  const [isEditorFocused, setIsEditorFocused] = useState(false);
-  const [hasDefaultModel, setHasDefaultModel] = useState(true);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
 
   const isOSREnabled = useIsOSREnabled();
-
-  const isInEditMode = useSelector(
-    (state: RootState) => state.editModeState.isInEditMode,
-  );
-
-  const shouldAddFileForEditing = useSelector(
-    (state: RootState) => state.uiState.shouldAddFileForEditing,
-  );
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -236,7 +233,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     inDropdownRef.current = true;
   };
 
-  const defaultModel = useSelector(defaultModelSelector);
+  const defaultModel = useAppSelector(selectDefaultModel);
   const defaultModelRef = useUpdatingRef(defaultModel);
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
@@ -249,23 +246,13 @@ function TipTapEditor(props: TipTapEditorProps) {
     props.availableSlashCommands,
   );
 
-  const active = useSelector((state: RootState) => state.state.active);
-  const activeRef = useUpdatingRef(active);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const isStreamingRef = useUpdatingRef(isStreaming);
 
-  // Only set `hasDefaultModel` after a timeout to prevent jank
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasDefaultModel(
-        !!defaultModel &&
-          defaultModel.apiKey !== undefined &&
-          defaultModel.apiKey !== "",
-      );
-    }, 3500);
-
-    // Cleanup function to clear the timeout if the component unmounts
-    return () => clearTimeout(timer);
-  }, [defaultModel]);
-
+  const isInEditMode = useAppSelector(selectIsInEditMode);
+  const isInEditModeRef = useUpdatingRef(isInEditMode);
+  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
@@ -290,6 +277,9 @@ function TipTapEditor(props: TipTapEditorProps) {
       return await new Promise((resolve) => {
         img.onload = function () {
           const dataUrl = getDataUrlForFile(file, img);
+          if (!dataUrl) {
+            return;
+          }
 
           let image = new window.Image();
           image.src = dataUrl;
@@ -307,21 +297,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return undefined;
   }
 
-  const mainEditorContent = useSelector(
-    (store: RootState) => store.state.mainEditorContent,
-  );
-
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
-
-  function getPlaceholder() {
-    if (!hasDefaultModel) {
-      return "Configure a Chat model to get started";
-    }
-
-    return historyLengthRef.current === 0
-      ? "Ask anything, '/' for slash commands, '@' to add context"
-      : "Ask a follow-up";
-  }
 
   const editor: Editor = useEditor({
     extensions: [
@@ -334,26 +310,29 @@ function TipTapEditor(props: TipTapEditorProps) {
               handleDOMEvents: {
                 paste(view, event) {
                   const model = defaultModelRef.current;
-                  const items = event.clipboardData.items;
-                  for (const item of items) {
-                    const file = item.getAsFile();
-                    file &&
-                      modelSupportsImages(
-                        model.provider,
-                        model.model,
-                        model.title,
-                        model.capabilities,
-                      ) &&
-                      handleImageFile(file).then((resp) => {
-                        if (!resp) return;
-                        const [img, dataUrl] = resp;
-                        const { schema } = view.state;
-                        const node = schema.nodes.image.create({
-                          src: dataUrl,
+                  if (!model) return;
+                  const items = event.clipboardData?.items;
+                  if (items) {
+                    for (const item of items) {
+                      const file = item.getAsFile();
+                      file &&
+                        modelSupportsImages(
+                          model.provider,
+                          model.model,
+                          model.title,
+                          model.capabilities,
+                        ) &&
+                        handleImageFile(file).then((resp) => {
+                          if (!resp) return;
+                          const [img, dataUrl] = resp;
+                          const { schema } = view.state;
+                          const node = schema.nodes.image.create({
+                            src: dataUrl,
+                          });
+                          const tr = view.state.tr.insert(0, node);
+                          view.dispatch(tr);
                         });
-                        const tr = view.state.tr.insert(0, node);
-                        view.dispatch(tr);
-                      });
+                    }
                   }
                 },
               },
@@ -363,11 +342,10 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Placeholder.configure({
-        placeholder:
-          props.placeholder ??
-          (historyLengthRef.current === 0
-            ? "Ask anything, '/' for slash commands, '@' to add context"
-            : "Ask a follow-up"),
+        placeholder: getPlaceholderText(
+          props.placeholder,
+          historyLengthRef.current,
+        ),
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {
@@ -396,7 +374,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
               onEnterRef.current({
                 useCodebase: false,
-                noContext: useActiveFile,
+                noContext: !!useActiveFile,
               });
 
               return true;
@@ -405,7 +383,7 @@ function TipTapEditor(props: TipTapEditorProps) {
               // If you press cmd+backspace wanting to cancel,
               // but are inside of a text box, it shouldn't
               // delete the text
-              if (activeRef.current) {
+              if (isStreamingRef.current) {
                 return true;
               }
             },
@@ -434,6 +412,21 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return true;
               }
             },
+            Escape: () => {
+              if (inDropdownRef.current || !isInEditModeRef.current) {
+                return false;
+              }
+              (async () => {
+                await dispatch(
+                  loadLastSession({
+                    saveCurrentSession: false,
+                  }),
+                );
+                dispatch(exitEditMode());
+              })();
+
+              return true;
+            },
             ArrowDown: () => {
               if (
                 this.editor.state.selection.anchor <
@@ -459,68 +452,63 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Text,
-      props.availableContextProviders.length
-        ? Mention.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getContextProviderDropdownOptions(
-              availableContextProvidersRef,
-              getSubmenuContextItemsRef,
-              enterSubmenu,
-              onClose,
-              onOpen,
-              inSubmenuRef,
-              ideMessenger,
-            ),
-            renderHTML: (props) => {
-              return `@${props.node.attrs.label || props.node.attrs.id}`;
-            },
-          })
-        : undefined,
-      isInEditMode
-        ? AddCodeToEdit.configure({
-            HTMLAttributes: {
-              class: "add-code-to-edit",
-            },
-            suggestion: {
-              ...getContextProviderDropdownOptions(
-                availableContextProvidersRef,
-                getSubmenuContextItemsRef,
-                enterSubmenu,
-                onClose,
-                onOpen,
-                inSubmenuRef,
-                ideMessenger,
-              ),
-              command: async ({ editor, range, props }) => {
-                editor.chain().focus().insertContentAt(range, "").run();
-                const filepath = props.id;
-                const contents = await ideMessenger.ide.readFile(filepath);
-                dispatch(
-                  addCodeToEdit({
-                    filepath,
-                    contents,
-                  }),
-                );
-              },
-              items: async ({ query }) => {
-                // Only display files in the dropdown
-                const results = getSubmenuContextItemsRef.current(
-                  "file",
-                  query,
-                );
-                return results.map((result) => ({
-                  ...result,
-                  label: result.title,
-                  type: "file",
-                  query: result.id,
-                  icon: result.icon,
-                }));
-              },
-            },
-          })
-        : undefined,
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: getContextProviderDropdownOptions(
+          availableContextProvidersRef,
+          getSubmenuContextItemsRef,
+          enterSubmenu,
+          onClose,
+          onOpen,
+          inSubmenuRef,
+          ideMessenger,
+        ),
+        renderHTML: (props) => {
+          return `@${props.node.attrs.label || props.node.attrs.id}`;
+        },
+      }),
+
+      AddCodeToEdit.configure({
+        HTMLAttributes: {
+          class: "add-code-to-edit",
+        },
+        suggestion: {
+          ...getContextProviderDropdownOptions(
+            availableContextProvidersRef,
+            getSubmenuContextItemsRef,
+            enterSubmenu,
+            onClose,
+            onOpen,
+            inSubmenuRef,
+            ideMessenger,
+          ),
+          allow: () => isInEditModeRef.current,
+          command: async ({ editor, range, props }) => {
+            editor.chain().focus().insertContentAt(range, "").run();
+            const filepath = props.id;
+            const contents = await ideMessenger.ide.readFile(filepath);
+            dispatch(
+              addCodeToEdit({
+                filepath,
+                contents,
+              }),
+            );
+          },
+          items: async ({ query }) => {
+            // Only display files in the dropdown
+            const results = getSubmenuContextItemsRef.current("file", query);
+            return results.map((result) => ({
+              ...result,
+              label: result.title,
+              type: "file",
+              query: result.id,
+              icon: result.icon,
+            }));
+          },
+        },
+      }),
       props.availableSlashCommands.length
         ? SlashCommand.configure({
             HTMLAttributes: {
@@ -545,17 +533,46 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: `font-size: ${getFontSize()}px;`,
       },
     },
-    content: props.editorState || mainEditorContent || "",
-    onFocus: () => setIsEditorFocused(true),
-    onBlur: () => setIsEditorFocused(false),
-    // onUpdate
-    editable: !active || props.isMainInput,
+    content: props.editorState,
+    editable: !isStreaming || props.isMainInput,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
   const debouncedShouldHideToolbar = debounce((value) => {
     setShouldHideToolbar(value);
   }, 200);
+
+  function getPlaceholderText(
+    placeholder: TipTapEditorProps["placeholder"],
+    historyLength: number,
+  ) {
+    if (placeholder) {
+      return placeholder;
+    }
+
+    return historyLength === 0
+      ? "Ask anything, '@' to add context"
+      : "Ask a follow-up";
+  }
+
+  useEffect(() => {
+    const placeholder = getPlaceholderText(
+      props.placeholder,
+      historyLengthRef.current,
+    );
+
+    editor.extensionManager.extensions.filter(
+      (extension) => extension.name === "placeholder",
+    )[0].options["placeholder"] = placeholder;
+
+    editor.view.dispatch(editor.state.tr);
+  }, [editor, props.placeholder, historyLengthRef.current]);
+
+  useEffect(() => {
+    if (props.isMainInput) {
+      editor.commands.clearContent(true);
+    }
+  }, [isInEditMode, props.isMainInput]);
 
   useEffect(() => {
     if (editor) {
@@ -598,7 +615,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
-    } else if (!isJetBrains()){
+    } else if (!isJetBrains()) {
       await handleVSCMetaKeyIssues(e, editor);
     }
   };
@@ -609,7 +626,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
-      if (active) {
+      if (isStreaming || isEditModeAndNoCodeToEdit) {
         return;
       }
 
@@ -630,12 +647,37 @@ function TipTapEditor(props: TipTapEditorProps) {
     [props.onEnter, editor, props.isMainInput],
   );
 
+  useEffect(() => {
+    if (props.isMainInput) {
+      /**
+       * I have a strong suspicion that many of the other focus
+       * commands are redundant, especially the ones inside
+       * useTimeout.
+       */
+      editor.commands.focus();
+    }
+  }, [props.isMainInput, editor]);
+
   // Re-focus main input after done generating
   useEffect(() => {
-    if (editor && !active && props.isMainInput && document.hasFocus()) {
+    if (editor && !isStreaming && props.isMainInput && document.hasFocus()) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
-  }, [props.isMainInput, active, editor]);
+  }, [props.isMainInput, isStreaming, editor]);
+
+  // This allows anywhere in the app to set the content of the main input
+  const mainInputContentTrigger = useAppSelector(
+    (store) => store.session.mainEditorContentTrigger,
+  );
+  useEffect(() => {
+    if (!props.isMainInput || !mainInputContentTrigger) {
+      return;
+    }
+    queueMicrotask(() => {
+      editor.commands.setContent(mainInputContentTrigger);
+    });
+    dispatch(setMainEditorContentTrigger(undefined));
+  }, [editor, props.isMainInput, mainInputContentTrigger]);
 
   // IDE event listeners
   useWebviewListener(
@@ -660,15 +702,22 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
+
+      dispatch(clearCodeToEdit());
+
       if (historyLength > 0) {
-        await saveSession();
+        await dispatch(
+          saveCurrentSession({
+            openNewSession: false,
+          }),
+        );
       }
       setTimeout(() => {
         editor?.commands.blur();
         editor?.commands.focus("end");
       }, 20);
     },
-    [historyLength, saveSession, editor, props.isMainInput],
+    [historyLength, editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -690,12 +739,16 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      await saveSession();
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: true,
+        }),
+      );
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput, saveSession],
+    [editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -705,37 +758,30 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      const rif: RangeInFile & { contents: string } =
-        data.rangeInFileWithContents;
-      const basename = getBasename(rif.filepath);
-      const relativePath = getRelativePath(
-        rif.filepath,
-        await ideMessenger.ide.getWorkspaceDirs(),
+      // const rif: RangeInFile & { contents: string } =
+      //   data.rangeInFileWithContents;
+      // const basename = getBasename(rif.filepath);
+      // const relativePath = getRelativePath(
+      //   rif.filepath,
+      //   await ideMessenger.ide.getWorkspaceDirs(),
+      // const rangeStr = `(${rif.range.start.line + 1}-${
+      //   rif.range.end.line + 1
+      // })`;
+
+      // const itemName = `${basename} ${rangeStr}`;
+      // const item: ContextItemWithId = {
+      //   content: rif.contents,
+      //   name: itemName
+      // }
+
+      const contextItem = rifWithContentsToContextItem(
+        data.rangeInFileWithContents,
       );
-      const rangeStr = `(${rif.range.start.line + 1}-${
-        rif.range.end.line + 1
-      })`;
-
-      const itemName = `${basename} ${rangeStr}`;
-      const item: ContextItemWithId = {
-        content: rif.contents,
-        name: itemName,
-        // Description is passed on to the LLM to give more context on file path
-        description: `${relativePath} ${rangeStr}`,
-        id: {
-          providerTitle: "code",
-          itemId: v4(),
-        },
-        uri: {
-          type: "file",
-          value: rif.filepath,
-        },
-      };
-
+      console.log(contextItem);
       let index = 0;
-      for (const el of editor.getJSON().content) {
-        if (el.attrs?.item?.name === itemName) {
-          return; // Prevent duplicate code blocks
+      for (const el of editor.getJSON()?.content ?? []) {
+        if (el.attrs?.item?.name === contextItem.name) {
+          return; // Prevent exact duplicate code blocks
         }
         if (el.type === "codeBlock") {
           index += 2;
@@ -748,7 +794,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         .insertContentAt(index, {
           type: "codeBlock",
           attrs: {
-            item,
+            item: contextItem,
           },
         })
         .run();
@@ -767,13 +813,35 @@ function TipTapEditor(props: TipTapEditorProps) {
         editor.commands.focus("end");
       }, 20);
     },
-    [
-      editor,
-      props.isMainInput,
-      historyLength,
-      props.isMainInput,
-      onEnterRef.current,
-    ],
+    [editor, props.isMainInput, historyLength, onEnterRef.current],
+  );
+
+  useWebviewListener(
+    "focusEdit",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
+    },
+    [editor, props.isMainInput],
+  );
+
+  useWebviewListener(
+    "focusEditWithoutClear",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 2000);
+    },
+    [editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -788,12 +856,17 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueSessionId",
     async (data) => {
-      if (!props.isMainInput) {
+      if (!props.isMainInput || !data.sessionId) {
         return;
       }
-      loadSession(data.sessionId);
+      await dispatch(
+        loadSession({
+          sessionId: data.sessionId,
+          saveCurrentSession: true,
+        }),
+      );
     },
-    [loadSession, props.isMainInput],
+    [props.isMainInput],
   );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
@@ -821,13 +894,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (shouldAddFileForEditing && props.isMainInput) {
-      insertCharacterWithWhitespace("#");
-      dispatch(setShouldAddFileForEditing(false));
-    }
-  }, [shouldAddFileForEditing]);
 
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
@@ -915,7 +981,7 @@ function TipTapEditor(props: TipTapEditorProps) {
               });
             });
           }}
-          disabled={active}
+          disabled={isStreaming}
         />
       </PaddingDiv>
 
@@ -931,6 +997,12 @@ function TipTapEditor(props: TipTapEditorProps) {
             <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
           </>
         )}
+      <div
+        id="tippy-js-div"
+        style={{
+          position: "fixed",
+        }}
+      />
     </InputBoxDiv>
   );
 }

@@ -1,7 +1,8 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "config.json",
-  "$ref": "#/definitions/SerializedContinueConfig",
-  "definitions": {
+  "$ref": "#/$defs/SerializedContinueConfig",
+  "$defs": {
     "BaseCompletionOptions": {
       "title": "BaseCompletionOptions",
       "type": "object",
@@ -154,7 +155,7 @@
         "clientCertificate": {
           "title": "Client Certificate",
           "description": "Client certificate to use when making the HTTP request",
-          "$ref": "#/definitions/ClientCertificateOptions"
+          "$ref": "#/$defs/ClientCertificateOptions"
         }
       }
     },
@@ -206,7 +207,10 @@
             "vertexai",
             "xAI",
             "kindo",
-            "moonshot"
+            "moonshot",
+            "siliconflow",
+            "function-network",
+            "scaleway"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -244,7 +248,10 @@
             "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
-            "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)"
+            "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
+            "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
+            "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings.",
+            "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/)."
           ],
           "type": "string"
         },
@@ -382,7 +389,7 @@
           },
           "allOf": [
             {
-              "$ref": "#/definitions/BaseCompletionOptions"
+              "$ref": "#/$defs/BaseCompletionOptions"
             }
           ]
         },
@@ -404,7 +411,7 @@
           },
           "allOf": [
             {
-              "$ref": "#/definitions/RequestOptions"
+              "$ref": "#/$defs/RequestOptions"
             }
           ]
         },
@@ -472,7 +479,8 @@
                   "sambanova",
                   "nebius",
                   "xAI",
-                  "kindo"
+                  "kindo",
+                  "scaleway"
                 ]
               }
             },
@@ -923,7 +931,9 @@
                   "gemini-1.5-pro-latest",
                   "gemini-1.5-pro",
                   "gemini-1.5-flash-latest",
-                  "gemini-1.5-flash"
+                  "gemini-1.5-flash",
+                  "gemini-1.5-flash-8b",
+                  "gemini-2.0-flash-exp"
                 ]
               }
             }
@@ -1231,6 +1241,65 @@
                   "llama3.1-405b",
                   "AUTODETECT"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["siliconflow"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "Qwen/QwQ-32B-Preview",
+                  "Qwen/Qwen2.5-Coder-32B-Instruct",
+                  "Qwen/Qwen2.5-Coder-7B-Instruct",
+                  "Pro/Qwen/Qwen2.5-Coder-7B-Instruct",
+                  "Tencent/Hunyuan-A52B-Instruct",
+                  "nvidia/Llama-3.1-Nemotron-70B-Instruct",
+                  "Qwen/Qwen2-VL-72B-Instruct",
+                  "TeleAI/TeleMM",
+                  "deepseek-ai/DeepSeek-V2.5"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["scaleway"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "llama-3.1-8b-instruct",
+                      "llama-3.1-70b-instruct",
+                      "mistral-nemo-instruct-2407",
+                      "qwen2.5-coder-32b-instruct",
+                      "pixtral-12b-2409"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find the exact model string from Scaleway [here](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/).",
+                "x-intellij-html-description": "Select a pre-defined option, or find the exact model string from Scaleway <a href='https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/'>here</a>."
               }
             }
           }
@@ -2163,7 +2232,7 @@
                     },
                     "allOf": [
                       {
-                        "$ref": "#/definitions/RequestOptions"
+                        "$ref": "#/$defs/RequestOptions"
                       }
                     ]
                   }
@@ -2385,7 +2454,7 @@
           ],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ModelDescription"
+            "$ref": "#/$defs/ModelDescription"
           }
         },
         "systemMessage": {
@@ -2407,7 +2476,7 @@
           },
           "allOf": [
             {
-              "$ref": "#/definitions/BaseCompletionOptions"
+              "$ref": "#/$defs/BaseCompletionOptions"
             }
           ]
         },
@@ -2416,7 +2485,7 @@
           "description": "Default request options for all fetch requests from models and context providers. These will be overriden by any model-specific request options.",
           "allOf": [
             {
-              "$ref": "#/definitions/RequestOptions"
+              "$ref": "#/$defs/RequestOptions"
             }
           ]
         },
@@ -2427,7 +2496,7 @@
           "default": [],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/SlashCommand"
+            "$ref": "#/$defs/SlashCommand"
           }
         },
         "customCommands": {
@@ -2443,7 +2512,7 @@
           ],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/CustomCommand"
+            "$ref": "#/$defs/CustomCommand"
           }
         },
         "contextProviders": {
@@ -2453,7 +2522,7 @@
           "default": [],
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ContextProviderWithParams"
+            "$ref": "#/$defs/ContextProviderWithParams"
           }
         },
         "userToken": {
@@ -2500,7 +2569,10 @@
                 "deepinfra",
                 "mistral",
                 "watsonx",
-                "lmstudio"
+                "lmstudio",
+                "siliconflow",
+                "function-network",
+                "scaleway"
               ]
             },
             "model": {
@@ -2515,7 +2587,7 @@
             "requestOptions": {
               "title": "Request Options",
               "description": "Request options to be used in any fetch requests made by the embeddings provider",
-              "$ref": "#/definitions/RequestOptions"
+              "$ref": "#/$defs/RequestOptions"
             },
             "maxChunkSize": {
               "title": "Maximum Chunk Size",
@@ -2534,7 +2606,7 @@
             "region": {
               "title": "Region",
               "description": "The region where the model is hosted",
-              "$ref": "#/definitions/ModelDescription/properties/region"
+              "$ref": "#/$defs/ModelDescription/properties/region"
             },
             "profile": {
               "title": "Profile",
@@ -2548,7 +2620,13 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "nvidia", "gemini"]
+                    "enum": [
+                      "cohere",
+                      "voyage",
+                      "nvidia",
+                      "gemini",
+                      "siliconflow"
+                    ]
                   }
                 },
                 "required": ["provider"]
@@ -2609,6 +2687,7 @@
           "properties": {
             "name": {
               "enum": [
+                "bedrock",
                 "cohere",
                 "voyage",
                 "llm",
@@ -2641,7 +2720,8 @@
                           "rerank-english-v3.0",
                           "rerank-multilingual-v3.0",
                           "rerank-english-v2.0",
-                          "rerank-multilingual-v2.0"
+                          "rerank-multilingual-v2.0",
+                          "rerank-v3.5"
                         ]
                       },
                       "apiBase": {
@@ -2714,6 +2794,32 @@
               "if": {
                 "properties": {
                   "name": {
+                    "enum": ["bedrock"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "cohere.rerank-v3-5:0",
+                          "amazon.rerank-v1:0"
+                        ]
+                      }
+                    },
+                    "required": ["model"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
                     "enum": ["huggingface-tei"]
                   }
                 },
@@ -2770,12 +2876,12 @@
           },
           "oneOf": [
             {
-              "$ref": "#/definitions/ModelDescription"
+              "$ref": "#/$defs/ModelDescription"
             },
             {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ModelDescription"
+                "$ref": "#/$defs/ModelDescription"
               }
             }
           ]
@@ -2790,10 +2896,6 @@
               "type": "boolean",
               "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
               "default": false
-            },
-            "useCopyBuffer": {
-              "type": "boolean",
-              "description": "Determines whether the copy buffer will be considered when contructing the prompt."
             },
             "useFileSuffix": {
               "type": "boolean",
@@ -2835,10 +2937,6 @@
               "type": "boolean",
               "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
             },
-            "useOtherFiles": {
-              "type": "boolean",
-              "description": "Defaults to true. If set to false, Continue will not attempt to include snippets from other files."
-            },
             "disableInFiles": {
               "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",
               "type": "array",
@@ -2871,6 +2969,11 @@
               "x-intellij-html-description": "If set to <code>true</code>, a scrollbar will be displayed in the chat window to navigate through messages.",
               "default": false,
               "type": "boolean"
+            },
+            "codeWrap": {
+              "type": "boolean",
+              "description": "If set to true, code in pre blocks will wrap.",
+              "default": false
             }
           }
         },
@@ -2933,7 +3036,7 @@
               "items": {
                 "allOf": [
                   {
-                    "$ref": "#/definitions/ContextProviderWithParams"
+                    "$ref": "#/$defs/ContextProviderWithParams"
                   },
                   {
                     "properties": {
@@ -3023,6 +3126,68 @@
               "type": "boolean",
               "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`.",
               "default": false
+            },
+            "useTools": {
+              "type": "boolean",
+              "description": "Allow tool use. Currently only supported with Claude 3.5 Sonnet",
+              "default": true
+            },
+            "modelContextProtocolServer": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["stdio"]
+                        },
+                        "command": {
+                          "type": "string"
+                        },
+                        "args": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": ["type", "command", "args"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["websocket"]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": ["type", "url"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["sse"]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": ["type", "url"]
+                    }
+                  ]
+                }
+              },
+              "required": ["transport"]
             }
           }
         }

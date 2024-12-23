@@ -1,40 +1,22 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { CodeToEdit, EditStatus, MessageContent } from "core";
+import { EditStatus, MessageContent } from "core";
 
-interface EditModeState {
+export interface EditModeState {
   editStatus: EditStatus;
   previousInputs: MessageContent[];
   fileAfterEdit?: string;
-  codeToEdit: CodeToEdit[];
-  isInEditMode: boolean;
 }
 
 const initialState: EditModeState = {
   editStatus: "not-started",
   previousInputs: [],
-  codeToEdit: [],
-  isInEditMode: false,
 };
-
-function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
-  return a.filepath === b.filepath && a.contents === b.contents;
-}
 
 export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    addCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      const entryExists = state.codeToEdit.some((entry) =>
-        isCodeToEditEqual(entry, payload),
-      );
-
-      if (!entryExists) {
-        state.codeToEdit.push(payload);
-      }
-    },
     focusEdit: (state) => {
-      state.isInEditMode = true;
       state.editStatus = "not-started";
       state.previousInputs = [];
       state.fileAfterEdit = undefined;
@@ -42,14 +24,6 @@ export const editModeStateSlice = createSlice({
     submitEdit: (state, { payload }: PayloadAction<MessageContent>) => {
       state.previousInputs.push(payload);
       state.editStatus = "streaming";
-    },
-    removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      state.codeToEdit = state.codeToEdit.filter(
-        (entry) => !isCodeToEditEqual(entry, payload),
-      );
-    },
-    clearCodeToEdit: (state) => {
-      state.codeToEdit = [];
     },
     setEditStatus: (
       state,
@@ -99,13 +73,10 @@ export const editModeStateSlice = createSlice({
 });
 
 export const {
-  addCodeToEdit,
   setEditStatus,
   addPreviousInput,
   setEditDone,
   submitEdit,
-  removeCodeToEdit,
   focusEdit,
-  clearCodeToEdit,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

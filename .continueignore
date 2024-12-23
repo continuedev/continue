@@ -5,3 +5,4 @@ docs/docs/languages
 .vscode/
 .archive/
 **/*.scm
+**/*.diff

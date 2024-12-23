@@ -34,7 +34,12 @@
     "extensions/vscode/tag-qry/**": true,
     "extensions/vscode/textmate-syntaxes/**": true,
     "extensions/vscode/tree-sitter/**": true,
-    "gui/dist/**": true
+    "gui/dist/**": true,
+    "extensions/vscode/e2e/.test-extensions": true,
+    "extensions/vscode/e2e/_output": true,
+    "extensions/vscode/e2e/storage": true,
+    "extensions/vscode/e2e/vsix": true,
+    "extensions/.continue-debug": true
     // "sync/**": true
   },
   "eslint.workingDirectories": ["./core"]

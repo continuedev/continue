@@ -57,6 +57,7 @@ export const modelDescriptionSchema = z.object({
     "azure",
     "continue-proxy",
     "nebius",
+    "scaleway"
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
@@ -109,6 +110,7 @@ export const embeddingsProviderSchema = z.object({
     "gemini",
     "continue-proxy",
     "nebius",
+    "scaleway",
   ]),
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),
@@ -125,12 +127,12 @@ export const uiOptionsSchema = z.object({
   fontSize: z.number().optional(),
   displayRawMarkdown: z.boolean().optional(),
   showChatScrollbar: z.boolean().optional(),
+  codeWrap: z.boolean().optional(),
 });
 export type UiOptions = z.infer<typeof uiOptionsSchema>;
 
 export const tabAutocompleteOptionsSchema = z.object({
   disable: z.boolean(),
-  useCopyBuffer: z.boolean(),
   useFileSuffix: z.boolean(),
   maxPromptTokens: z.number(),
   debounceDelay: z.number(),
@@ -141,14 +143,9 @@ export const tabAutocompleteOptionsSchema = z.object({
   multilineCompletions: z.enum(["always", "never", "auto"]),
   slidingWindowPrefixPercentage: z.number(),
   slidingWindowSize: z.number(),
-  maxSnippetPercentage: z.number(),
-  maxDiffPercentage: z.number(),
-  maxClipboardPercentage: z.number(),
   useCache: z.boolean(),
   onlyMyCode: z.boolean(),
-  useOtherFiles: z.boolean(),
   useRecentlyEdited: z.boolean(),
-  recentLinePrefixMatchMinLength: z.number(),
   disableInFiles: z.array(z.string()).optional(),
   useImports: z.boolean().optional(),
 });

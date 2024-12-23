@@ -12,7 +12,7 @@ export function useTutorialCard(): UseTutorialCard {
   const posthog = usePostHog();
 
   const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard"),
+    getLocalStorage("showTutorialCard") ?? true,
   );
 
   function closeTutorialCard() {

@@ -8,6 +8,8 @@ export default {
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
     "^uuid$": "uuid", // https://stackoverflow.com/a/73626360
+    "^@azure/(.*)$": "<rootDir>/node_modules/@azure/$1",
+    "^mssql$": "<rootDir>/node_modules/mssql",
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
@@ -17,6 +19,14 @@ export default {
     __dirname: path.dirname(fileURLToPath(import.meta.url)),
     __filename: path.resolve(fileURLToPath(import.meta.url)),
   },
-  globalSetup: "<rootDir>/jest.global-setup.ts",
-  setupFilesAfterEnv: ["<rootDir>/jest.setup-after-env.ts"],
+  // collectCoverage: true,
+  collectCoverageFrom: [
+    "**/*.{js,ts}", // Adjust this pattern to match files you want coverage for
+    "!**/node_modules/**", // Exclude node_modules
+    "!**/vendor/**",
+    // "!**/autocomplete/context/root-path-context/test/files/**",
+  ],
+  globalSetup: "<rootDir>/test/jest.global-setup.ts",
+  setupFilesAfterEnv: ["<rootDir>/test/jest.setup-after-env.js"],
+  maxWorkers: 1, // equivalent to CLI --runInBand
 };

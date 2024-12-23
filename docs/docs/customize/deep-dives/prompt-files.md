@@ -47,11 +47,22 @@ If you don't need any of these parameters, you can leave out the preamble and do
 
 ### Context
 
-Many [context provider](../context-providers.md) can be referenced by typing "@" followed by the name of the context provider.
+Many [context provider](../context-providers.md) can be referenced by typing "@" followed by the name of the context provider. The currently supported list is:
 
 - `@terminal` - The contents of the terminal
+- `@currentFile` - The currently active file
+- `@open` - All open files
+- `@os` - Information about the operating system
+- `@problems` - Problems reported by the language server in the active file
+- `@repo-map` - A map of files in the repository
+- `@tree` - A tree view of the repository structure
+
+Or you can directly type URLs and file paths:
+
 - `@https://github.com/continuedev/continue` - The contents of a URL
-- `@src/index.ts` - The contents of a file
+- `@src/index.ts` - The contents of a file (VS Code only)
+
+All references will be attached as context items, rather than injected directly inline.
 
 ## Feedback
 

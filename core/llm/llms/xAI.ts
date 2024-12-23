@@ -1,9 +1,9 @@
-import { LLMOptions, ModelProvider } from "../../index.js";
+import { LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
 class xAI extends OpenAI {
-  static providerName: ModelProvider = "xAI";
+  static providerName = "xAI";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.x.ai/v1/",
   };

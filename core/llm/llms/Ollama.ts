@@ -1,16 +1,9 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
-import { stripImages } from "../images.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
-interface OllamaChatMessage extends ChatMessage {
-  images?: string[];
-}
+type OllamaChatMessage = ChatMessage & { images?: string[] };
 
 // See https://github.com/ollama/ollama/blob/main/docs/modelfile.md for details on each parameter
 interface ModelFileParams {
@@ -61,10 +54,11 @@ interface ChatOptions extends BaseOptions {
 }
 
 class Ollama extends BaseLLM {
-  static providerName: ModelProvider = "ollama";
+  static providerName = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:11434/",
     model: "codellama-7b",
+    maxEmbeddingBatchSize: 64,
   };
 
   private fimSupported: boolean = false;
@@ -158,6 +152,12 @@ class Ollama extends BaseLLM {
         "llama3.2-90b": "llama3.2:90b",
         "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
+        "qwen2.5-coder-0.5b": "qwen2.5-coder:0.5b",
+        "qwen2.5-coder-1.5b": "qwen2.5-coder:1.5b",
+        "qwen2.5-coder-3b": "qwen2.5-coder:3b",
+        "qwen2.5-coder-7b": "qwen2.5-coder:7b",
+        "qwen2.5-coder-14b": "qwen2.5-coder:14b",
+        "qwen2.5-coder-32b": "qwen2.5-coder:32b",
         "wizardcoder-7b": "wizardcoder:7b-python",
         "wizardcoder-13b": "wizardcoder:13b-python",
         "wizardcoder-34b": "wizardcoder:34b-python",
@@ -195,6 +195,10 @@ class Ollama extends BaseLLM {
   }
 
   private _convertMessage(message: ChatMessage) {
+    if (message.role === "tool") {
+      return null;
+    }
+
     if (typeof message.content === "string") {
       return message;
     }
@@ -210,7 +214,7 @@ class Ollama extends BaseLLM {
 
     return {
       role: message.role,
-      content: stripImages(message.content),
+      content: renderChatMessage(message),
       images,
     };
   }
@@ -221,7 +225,7 @@ class Ollama extends BaseLLM {
   ): ChatOptions {
     return {
       model: this._getModel(),
-      messages: messages.map(this._convertMessage),
+      messages: messages.map(this._convertMessage).filter(Boolean) as any,
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
@@ -402,6 +406,32 @@ class Ollama extends BaseLLM {
         "Failed to list Ollama models. Make sure Ollama is running.",
       );
     }
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const resp = await this.fetch(new URL("api/embed", this.apiBase), {
+      method: "POST",
+      body: JSON.stringify({
+        model: this.model,
+        input: chunks,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(`Failed to embed chunk: ${await resp.text()}`);
+    }
+
+    const data = await resp.json();
+    const embedding: number[][] = data.embeddings;
+
+    if (!embedding || embedding.length === 0) {
+      throw new Error("Ollama generated empty embedding");
+    }
+    return embedding;
   }
 }
 

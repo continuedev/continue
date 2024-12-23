@@ -2,6 +2,7 @@ import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
 import { ChatMessage, MessageContent, MessagePart } from "../index.js";
 
+import { renderChatMessage } from "../util/messageContent.js";
 import {
   AsyncEncoder,
   GPTAsyncEncoder,
@@ -9,7 +10,6 @@ import {
 } from "./asyncEncoder.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
-import { stripImages } from "./images.js";
 import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
@@ -115,19 +115,28 @@ function countTokens(
   }
 }
 
-function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
+function messageHasToolCalls(msg: ChatMessage): boolean {
+  return msg.role === "assistant" && !!msg.toolCalls;
+}
+
+export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
   const flattened: ChatMessage[] = [];
+
   for (let i = 0; i < msgs.length; i++) {
     const msg = msgs[i];
+
     if (
       flattened.length > 0 &&
-      flattened[flattened.length - 1].role === msg.role
+      flattened[flattened.length - 1].role === msg.role &&
+      !messageHasToolCalls(msg) &&
+      !messageHasToolCalls(flattened[flattened.length - 1])
     ) {
       flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
     } else {
       flattened.push(msg);
     }
   }
+
   return flattened;
 }
 
@@ -222,11 +231,8 @@ function pruneRawPromptFromBottom(
   return pruneStringFromBottom(modelName, maxTokens, prompt);
 }
 
-function summarize(message: MessageContent): string {
-  if (Array.isArray(message)) {
-    return `${stripImages(message).substring(0, 100)}...`;
-  }
-  return `${message.substring(0, 100)}...`;
+function summarize(message: ChatMessage): string {
+  return `${renderChatMessage(message).substring(0, 100)}...`;
 }
 
 function pruneChatHistory(
@@ -257,7 +263,7 @@ function pruneChatHistory(
   for (let i = 0; i < longerThanOneThird.length; i++) {
     // Prune line-by-line from the top
     const message = longerThanOneThird[i];
-    const content = stripImages(message.content);
+    const content = renderChatMessage(message);
     const deltaNeeded = totalTokens - contextLength;
     const delta = Math.min(deltaNeeded, distanceFromThird[i]);
     message.content = pruneStringFromTop(
@@ -273,8 +279,8 @@ function pruneChatHistory(
   while (totalTokens > contextLength && i < chatHistory.length - 5) {
     const message = chatHistory[0];
     totalTokens -= countTokens(message.content, modelName);
-    totalTokens += countTokens(summarize(message.content), modelName);
-    message.content = summarize(message.content);
+    totalTokens += countTokens(summarize(message), modelName);
+    message.content = summarize(message);
     i++;
   }
 
@@ -297,8 +303,8 @@ function pruneChatHistory(
   ) {
     const message = chatHistory[i];
     totalTokens -= countTokens(message.content, modelName);
-    totalTokens += countTokens(summarize(message.content), modelName);
-    message.content = summarize(message.content);
+    totalTokens += countTokens(summarize(message), modelName);
+    message.content = summarize(message);
     i++;
   }
 
@@ -314,7 +320,7 @@ function pruneChatHistory(
     message.content = pruneRawPromptFromTop(
       modelName,
       contextLength,
-      stripImages(message.content),
+      renderChatMessage(message),
       tokensForCompletion,
     );
     totalTokens = contextLength;
@@ -344,6 +350,24 @@ function addSpaceToAnyEmptyMessages(messages: ChatMessage[]): ChatMessage[] {
   });
 }
 
+function chatMessageIsEmpty(message: ChatMessage): boolean {
+  switch (message.role) {
+    case "system":
+    case "user":
+      return (
+        typeof message.content === "string" && message.content.trim() === ""
+      );
+    case "assistant":
+      return (
+        typeof message.content === "string" &&
+        message.content.trim() === "" &&
+        !message.toolCalls
+      );
+    case "tool":
+      return false;
+  }
+}
+
 function compileChatMessages(
   modelName: string,
   msgs: ChatMessage[] | undefined,
@@ -357,7 +381,7 @@ function compileChatMessages(
   let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
-        .filter((msg) => msg.content !== "" && msg.role !== "system")
+        .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
@@ -376,7 +400,7 @@ function compileChatMessages(
   ) {
     let content = "";
     if (msgs?.[0].role === "system") {
-      content = stripImages(msgs?.[0].content);
+      content = renderChatMessage(msgs?.[0]);
     }
     if (systemMessage && systemMessage.trim() !== "") {
       const shouldAddNewLines = content !== "";
@@ -411,7 +435,7 @@ function compileChatMessages(
   if (!supportsImages) {
     for (const msg of msgsCopy) {
       if ("content" in msg && Array.isArray(msg.content)) {
-        const content = stripImages(msg.content);
+        const content = renderChatMessage(msg);
         msg.content = content;
       }
     }

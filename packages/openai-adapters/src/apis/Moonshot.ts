@@ -1,21 +1,25 @@
 import { streamSse } from "@continuedev/fetch";
-import fetch from "node-fetch";
-import { ChatCompletionChunk } from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+import { ChatCompletionChunk, Model } from "openai/resources/index";
+import { MoonshotConfig } from "../types.js";
+import { chatChunk, customFetch } from "../util.js";
 import { OpenAIApi } from "./OpenAI.js";
 import { FimCreateParamsStreaming } from "./base.js";
 
 export class MoonshotApi extends OpenAIApi {
-  constructor(config: LlmApiConfig) {
-    super(config);
-    this.apiBase = "https://api.moonshot.cn/";
+  apiBase: string = "https://api.moonshot.cn/";
+  constructor(config: MoonshotConfig) {
+    super({
+      ...config,
+      provider: "openai",
+    });
   }
 
   async *fimStream(
     body: FimCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const endpoint = new URL("v1/chat/completions", this.apiBase);
-    const resp = await fetch(endpoint, {
+    const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
         model: body.model,
@@ -38,26 +42,18 @@ export class MoonshotApi extends OpenAIApi {
         Accept: "application/json",
         Authorization: `Bearer ${this.config.apiKey}`,
       },
+      signal,
     });
 
     for await (const chunk of streamSse(resp as any)) {
-      yield {
-        choices: [
-          {
-            delta: {
-              content: chunk.choices[0].delta.content,
-              role: "assistant",
-            },
-            finish_reason: chunk.finish_reason,
-            index: 0,
-            logprobs: null,
-          },
-        ],
-        created: Date.now(),
-        id: "",
+      yield chatChunk({
+        content: chunk.choices[0].delta.content,
+        finish_reason: chunk.finish_reason,
         model: body.model,
-        object: "chat.completion.chunk",
-      };
+      });
     }
+  }
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

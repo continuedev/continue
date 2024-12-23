@@ -336,6 +336,23 @@ const preIndexedDocs: Record<
     rootUrl: "https://go.dev",
     faviconUrl: "https://go.dev/favicon.ico",
   },
+  "https://api.flutter.dev": {
+    title: "Flutter",
+    startUrl: "https://api.flutter.dev",
+    rootUrl: "https://api.flutter.dev",
+    faviconUrl: "https://api.flutter.dev/flutter/static-assets/favicon.png",
+  },
+  "https://api.dart.dev": {
+    title: "Dart",
+    startUrl: "https://api.dart.dev",
+    rootUrl: "https://api.dart.dev",
+    faviconUrl: "https://api.dart.dev/static-assets/favicon.png",
+  },
+  "https://docs.asksage.ai/": {
+    title: "Ask Sage",
+    startUrl: "https://docs.asksage.ai/",
+    rootUrl: "https://docs.asksage.ai/",
+  },
 };
 
 export default preIndexedDocs;

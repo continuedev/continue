@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import styled from "styled-components";
-import { vscForeground, defaultBorderRadius } from "..";
+import { defaultBorderRadius, vscForeground } from "..";
 import { VscThemeContext } from "../../context/VscTheme";
 
 const generateThemeStyles = (theme: any) => {
@@ -29,5 +29,5 @@ const StyledPre = styled.pre<{ theme: any }>`
 
 export const SyntaxHighlightedPre = (props: any) => {
   const currentTheme = useContext(VscThemeContext);
-  return <StyledPre {...props} theme={currentTheme} />;
+  return <StyledPre {...props} theme={currentTheme.theme} />;
 };
