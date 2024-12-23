@@ -209,6 +209,8 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     format: "cjs",
     platform: "node",
     sourcemap: true,
+    minify: true,
+    treeShaking: true,
     loader: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       ".node": "file",
