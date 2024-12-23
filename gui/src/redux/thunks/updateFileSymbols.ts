@@ -1,28 +1,22 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ThunkApiType } from "../store";
 import { updateFileSymbols } from "../slices/sessionSlice";
-import { ContextItemWithId } from "core";
+import { ContextItemWithId, RangeInFile } from "core";
 
 /*
     Get file symbols for given context items
     Overwrite symbols for existing file matches
 */
-export const updateFileSymbolsFromNewContextItems = createAsyncThunk<
+export const updateFileSymbolsFromFiles = createAsyncThunk<
   void,
-  ContextItemWithId[],
+  string[],
   ThunkApiType
 >(
   "symbols/updateFromContextItems",
-  async (contextItems, { dispatch, extra, getState }) => {
+  async (filepaths, { dispatch, extra, getState }) => {
     try {
       // Get unique file uris from context items
-      const uniqueUris = Array.from(
-        new Set(
-          contextItems
-            .filter((item) => item.uri?.type === "file" && item?.uri?.value)
-            .map((item) => item.uri!.value),
-        ),
-      );
+      const uniqueUris = Array.from(new Set(filepaths));
 
       // Update symbols for those files
       if (uniqueUris.length > 0) {
@@ -36,11 +30,7 @@ export const updateFileSymbolsFromNewContextItems = createAsyncThunk<
         dispatch(updateFileSymbols(result.content));
       }
     } catch (e) {
-      console.error(
-        "Error updating file symbols from context items",
-        e,
-        contextItems,
-      );
+      console.error("Error updating file symbols from filepaths", e, filepaths);
     }
   },
 );
