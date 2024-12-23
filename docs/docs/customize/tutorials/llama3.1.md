@@ -1,7 +1,7 @@
 ---
 title: Using Llama 3.1 with Continue
 description: How to use Llama 3.1 with Continue
-keywords: [llama, meta, togetherai, ollama, replicate]
+keywords: [llama, meta, togetherai, novita, ollama, replicate]
 ---
 
 Continue makes it easy to code with the latest open-source models, including the entire Llama 3.1 family of models. Llama 3.2 models are also supported but not recommended for chat, because they are specifically designed to be small or multi-modal.
@@ -64,6 +64,28 @@ Together AI provides fast and reliable inference of open-source models. You'll b
     {
       "title": "Llama 3.1 405b",
       "provider": "together",
+      "model": "llama3.1-405b",
+      "apiKey": "<API_KEY>"
+    }
+  ]
+}
+```
+
+
+## Novita AI
+
+Novita AI provides fast and reliable inference of open-source models. You'll be able to run the 405b model with good speed.
+
+1. Create an account [here](https://novita.ai/user/login?&redirect=/&utm_source=github_continuedev)
+2. Copy your API key that appears on the welcome screen
+3. Update your Continue config file like this:
+
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "Llama 3.1 405b",
+      "provider": "novita",
       "model": "llama3.1-405b",
       "apiKey": "<API_KEY>"
     }
