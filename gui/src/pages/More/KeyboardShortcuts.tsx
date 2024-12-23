@@ -78,17 +78,19 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ L",
     windows: "⌃ L",
-    description: "Select Code + New Session",
+    description:
+      "Start New Session / Start New Session With Selected Code / Toggle Continue Sidebar",
+  },
+  {
+    mac: "⌘ ⇧ L",
+    windows: "⌃ ⇧ L",
+    description:
+      "Add Selected Code To Current Session / Toggle Continue Sidebar",
   },
   {
     mac: "⌘ I",
     windows: "⌃ I",
     description: "Edit highlighted code",
-  },
-  {
-    mac: "⌘ ⇧ L",
-    windows: "⌃ ⇧ L",
-    description: "Select Code",
   },
   {
     mac: "⌘ ⇧ ⏎",
@@ -109,11 +111,6 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     mac: "⌥ ⌘ N",
     windows: "Alt ⌃ N",
     description: "Reject Top Change in Diff",
-  },
-  {
-    mac: "⌥ ⌘ L",
-    windows: "Alt ⌃ L",
-    description: "Toggle Continue Sidebar",
   },
   {
     mac: "⌘ ⇧ R",
@@ -146,12 +143,14 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ J",
     windows: "⌃ J",
-    description: "Select Code + New Session",
+    description:
+      "Start New Session / Start New Session With Selected Code / Toggle Continue Sidebar",
   },
   {
     mac: "⌘ ⇧ J",
     windows: "⌃ ⇧ J",
-    description: "Select Code",
+    description:
+      "Add Selected Code To Current Session / Toggle Continue Sidebar",
   },
   {
     mac: "⌘ I",
