@@ -180,7 +180,7 @@ function ModelSelectionListbox({
             )}
 
             {topOptions.length > 0 && otherOptions.length > 0 && (
-              <div className="my-1 h-px bg-zinc-500" />
+              <div className="bg-vsc-input-border my-1 h-px" />
             )}
 
             {otherOptions.length > 0 && (
