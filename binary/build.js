@@ -37,17 +37,16 @@ const assetBackups = [
   "node_modules/win-ca/lib/crypt32-x64.node.bak",
 ];
 
-const args = process.argv.slice(2);
-const includeSourcemaps = args.includes("--with-sourcemaps");
-
-// Note: Currently this flag is not functioning due to issues with sqlite bindings
-// `Error: Could not locate the bindings file. Tried ...`
-const esbuildOnly = args.includes("--esbuild-only");
-
-const targetIndex = args.indexOf("--target");
-if (targetIndex !== -1) {
-  targets = [args[targetIndex + 1]];
+let esbuildOnly = false;
+for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === "--esbuild-only") {
+    esbuildOnly = true;
+  }
+  if (process.argv[i - 1] === "--target") {
+    targets = [process.argv[i]];
+  }
 }
+
 const targetToLanceDb = {
   "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
   "darwin-x64": "@lancedb/vectordb-darwin-x64",
@@ -209,7 +208,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     ],
     format: "cjs",
     platform: "node",
-    sourcemap: includeSourcemaps,
+    sourcemap: true,
     minify: true,
     treeShaking: true,
     loader: {
