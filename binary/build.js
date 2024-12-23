@@ -276,6 +276,9 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       `node_modules/${targetToLanceDb[target]}/index.node`,
       `${targetDir}/index.node`,
     );
+
+    // Copy over our dummy package.json
+    fs.copyFileSync("out/package.json", `${targetDir}/package.json`);
   }
 
   // Our dummy `package.json` is no longer needed so we can remove it.
@@ -284,13 +287,12 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   fs.unlinkSync("out/package.json");
 
   const pathsToVerify = [];
-  for (target of targets) {
+  for (const target of targets) {
     const exe = target.startsWith("win") ? ".exe" : "";
     const targetDir = `bin/${target}`;
     pathsToVerify.push(
       `${targetDir}/continue-binary${exe}`,
       `${targetDir}/index.node`, // @lancedb
-      "package.json", // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
       `${targetDir}/build/Release/node_sqlite3.node`,
     );
   }
