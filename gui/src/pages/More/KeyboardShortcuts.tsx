@@ -76,10 +76,30 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
 
 const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
+    mac: "⌘ '",
+    windows: "⌃ '",
+    description: "Toggle Selected Model",
+  },
+  {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
+  },
+  {
     mac: "⌘ L",
     windows: "⌃ L",
     description:
       "Start New Session / Start New Session With Selected Code / Toggle Continue Sidebar",
+  },
+  {
+    mac: "⌘ ⌫",
+    windows: "⌃ ⌫",
+    description: "Cancel response",
+  },
+  {
+    mac: "⌘ ⇧ I",
+    windows: "⌃ ⇧ I",
+    description: "Toggle inline edit focus",
   },
   {
     mac: "⌘ ⇧ L",
@@ -88,14 +108,9 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
       "Add Selected Code To Current Session / Toggle Continue Sidebar",
   },
   {
-    mac: "⌘ I",
-    windows: "⌃ I",
-    description: "Edit highlighted code",
-  },
-  {
-    mac: "⌘ ⇧ ⏎",
-    windows: "⌃ ⇧ ⏎",
-    description: "Accept Diff",
+    mac: "⌘ ⇧ R",
+    windows: "⌃ ⇧ R",
+    description: "Debug Terminal",
   },
   {
     mac: "⌘ ⇧ ⌫",
@@ -103,9 +118,9 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Reject Diff",
   },
   {
-    mac: "⌥ ⌘ Y",
-    windows: "Alt ⌃ Y",
-    description: "Accept Top Change in Diff",
+    mac: "⌘ ⇧ ⏎",
+    windows: "⌃ ⇧ ⏎",
+    description: "Accept Diff",
   },
   {
     mac: "⌥ ⌘ N",
@@ -113,9 +128,38 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Reject Top Change in Diff",
   },
   {
-    mac: "⌘ ⇧ R",
-    windows: "⌃ ⇧ R",
-    description: "Debug Terminal",
+    mac: "⌥ ⌘ Y",
+    windows: "Alt ⌃ Y",
+    description: "Accept Top Change in Diff",
+  },
+  {
+    mac: "⌘ K ⌘ A",
+    windows: "⌃ K ⌃ A",
+    description: "Toggle Autocomplete Enabled",
+  },
+  {
+    mac: "⌘ K ⌘ M",
+    windows: "⌃ K ⌃ M",
+    description: "Toggle Full Screen",
+  },
+];
+
+const jetbrainsShortcuts: KeyboardShortcutProps[] = [
+  {
+    mac: "⌘ '",
+    windows: "⌃ '",
+    description: "Toggle Selected Model",
+  },
+  {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
+  },
+  {
+    mac: "⌘ J",
+    windows: "⌃ J",
+    description:
+      "Start New Session / Start New Session With Selected Code / Toggle Continue Sidebar",
   },
   {
     mac: "⌘ ⌫",
@@ -123,28 +167,9 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Cancel response",
   },
   {
-    mac: "⌘ K ⌘ M",
-    windows: "⌃ K ⌃ M",
-    description: "Toggle Full Screen",
-  },
-  {
-    mac: "⌘ '",
-    windows: "⌃ '",
-    description: "Toggle Selected Model",
-  },
-  {
-    mac: "⌘ K ⌘ A",
-    windows: "⌃ K ⌃ A",
-    description: "Toggle Autocomplete Enabled",
-  },
-];
-
-const jetbrainsShortcuts: KeyboardShortcutProps[] = [
-  {
-    mac: "⌘ J",
-    windows: "⌃ J",
-    description:
-      "Start New Session / Start New Session With Selected Code / Toggle Continue Sidebar",
+    mac: "⌘ ⇧ I",
+    windows: "⌃ ⇧ I",
+    description: "Toggle inline edit focus",
   },
   {
     mac: "⌘ ⇧ J",
@@ -153,24 +178,14 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
       "Add Selected Code To Current Session / Toggle Continue Sidebar",
   },
   {
-    mac: "⌘ I",
-    windows: "⌃ I",
-    description: "Edit highlighted code",
-  },
-  {
-    mac: "⌘ ⇧ I",
-    windows: "⌃ ⇧ I",
-    description: "Toggle inline edit focus",
+    mac: "⌘ ⇧ ⌫",
+    windows: "⌃ ⇧ ⌫",
+    description: "Reject Diff",
   },
   {
     mac: "⌘ ⇧ ⏎",
     windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",
-  },
-  {
-    mac: "⌘ ⇧ ⌫",
-    windows: "⌃ ⇧ ⌫",
-    description: "Reject Diff",
   },
   {
     mac: "⌥ ⇧ J",
@@ -181,16 +196,6 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "⌥ ⌘ J",
     windows: "Alt ⌃ J",
     description: "Toggle Sidebar",
-  },
-  {
-    mac: "⌘ ⌫",
-    windows: "⌃ ⌫",
-    description: "Cancel response",
-  },
-  {
-    mac: "⌘ '",
-    windows: "⌃ '",
-    description: "Toggle Selected Model",
   },
 ];
 
