@@ -89,7 +89,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ L",
     windows: "⌃ L",
     description:
-      "Start New Session / Start New Session With Selected Code / Toggle Continue Sidebar",
+      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
   },
   {
     mac: "⌘ ⌫",
@@ -105,7 +105,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ ⇧ L",
     windows: "⌃ ⇧ L",
     description:
-      "Add Selected Code To Current Session / Toggle Continue Sidebar",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
   },
   {
     mac: "⌘ ⇧ R",
@@ -159,7 +159,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ J",
     windows: "⌃ J",
     description:
-      "Start New Session / Start New Session With Selected Code / Toggle Continue Sidebar",
+      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
   },
   {
     mac: "⌘ ⌫",
@@ -175,7 +175,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ ⇧ J",
     windows: "⌃ ⇧ J",
     description:
-      "Add Selected Code To Current Session / Toggle Continue Sidebar",
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
   },
   {
     mac: "⌘ ⇧ ⌫",
