@@ -1,5 +1,5 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useContext, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -26,7 +26,6 @@ import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { ToolTip } from "../gui/Tooltip";
 import { v4 as uuidv4 } from "uuid";
 
@@ -43,8 +42,7 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    margin: 10px 0;
-    padding: 6px 8px;
+    padding: 16px 8px;
   }
 
   code {
