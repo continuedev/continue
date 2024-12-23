@@ -1,4 +1,5 @@
 import { IDE } from "..";
+
 import { joinPathsToUri, pathToUriPathSegment } from "./uri";
 
 /*
@@ -34,17 +35,17 @@ export async function inferResolvedUriFromRelativePath(
   dirCandidates?: string[],
 ): Promise<string> {
   const dirs = dirCandidates ?? (await ide.getWorkspaceDirs());
-  console.log(path, dirs);
+
   if (dirs.length === 0) {
     throw new Error("inferResolvedUriFromRelativePath: no dirs provided");
   }
+
   const segments = pathToUriPathSegment(path).split("/");
   // Generate all possible suffixes from shortest to longest
   const suffixes: string[] = [];
   for (let i = segments.length - 1; i >= 0; i--) {
     suffixes.push(segments.slice(i).join("/"));
   }
-  console.log(suffixes);
 
   // For each suffix, try to find a unique matching directory
   for (const suffix of suffixes) {

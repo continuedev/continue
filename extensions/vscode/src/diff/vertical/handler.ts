@@ -1,3 +1,5 @@
+import { myersDiff } from "core/diff/myers";
+import * as URI from "uri-js";
 import * as vscode from "vscode";
 
 import {
@@ -10,7 +12,6 @@ import {
 
 import type { VerticalDiffCodeLens } from "./manager";
 import type { ApplyState, DiffLine } from "core";
-import * as URI from "uri-js";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
@@ -249,11 +250,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       ? this.redDecorationManager.getRanges()
       : this.greenDecorationManager.getRanges();
 
-    this.redDecorationManager.clear();
-    this.greenDecorationManager.clear();
-    this.clearIndexLineDecorations();
-
-    this.editorToVerticalDiffCodeLens.delete(this.fileUri);
+    this.clearDecorations();
 
     await this.editor.edit(
       (editBuilder) => {
@@ -360,9 +357,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
       // Clear deletion buffer
       await this.insertDeletionBuffer();
-      this.clearIndexLineDecorations();
 
-      this.refreshCodeLens();
+      this.reapplyWithMeyersDiff(diffLines);
 
       this.options.onStatusUpdate(
         "done",
@@ -468,5 +464,88 @@ export class VerticalDiffHandler implements vscode.Disposable {
   public hasDiffForCurrentFile(): boolean {
     const diffBlocks = this.editorToVerticalDiffCodeLens.get(this.fileUri);
     return diffBlocks !== undefined && diffBlocks.length > 0;
+  }
+
+  clearDecorations() {
+    this.redDecorationManager.clear();
+    this.greenDecorationManager.clear();
+    this.clearIndexLineDecorations();
+    this.editorToVerticalDiffCodeLens.delete(this.fileUri);
+    this.refreshCodeLens();
+  }
+
+  /**
+   * This method is used to apply diff decorations after the intiial stream.
+   * This is to handle scenarios where we miscalculate the original diff blocks,
+   * and decide to follow up with a deterministic algorithm like Meyers Diff once
+   * we have received all of the diff lines.
+   */
+  async reapplyWithMeyersDiff(diffLines: DiffLine[]) {
+    this.clearDecorations();
+
+    // First, get our old/new file content based on the diff lines
+    const oldFileContent = diffLines
+      .filter((line) => line.type === "same" || line.type === "old")
+      .map((line) => line.line)
+      .join("\n");
+
+    const newFileContent = diffLines
+      .filter((line) => line.type === "same" || line.type === "new")
+      .map((line) => line.line)
+      .join("\n");
+
+    const diffs = myersDiff(oldFileContent, newFileContent);
+
+    const meyersDiffLines = diffs.map((diff) => diff.line).join("\n");
+    console.log({ newFileContent });
+
+    // Then, we overwrite the potentially miscalcualted diff blocks with our Meyers Diff
+    const fullRange = new vscode.Range(
+      this.editor.document.positionAt(0),
+      this.editor.document.positionAt(this.editor.document.getText().length),
+    );
+
+    await this.editor.edit((editBuilder) => {
+      editBuilder.replace(fullRange, meyersDiffLines);
+    });
+
+    let currentBlock = {
+      start: 0,
+      numRed: 0,
+      numGreen: 0,
+    };
+
+    const blocks: VerticalDiffCodeLens[] = [];
+
+    // Lastly, we apply decorations
+    diffs.forEach((diff, index) => {
+      if (diff.type === "old") {
+        this.redDecorationManager.addLine(index);
+        currentBlock.numRed++;
+      } else if (diff.type === "new") {
+        this.greenDecorationManager.addLine(index);
+        currentBlock.numGreen++;
+      } else if (
+        diff.type === "same" &&
+        (currentBlock.numRed > 0 || currentBlock.numGreen > 0)
+      ) {
+        blocks.push({
+          ...currentBlock,
+          start: index - currentBlock.numRed - currentBlock.numGreen,
+        });
+        currentBlock = {
+          start: index + 1,
+          numRed: 0,
+          numGreen: 0,
+        };
+      }
+    });
+
+    if (currentBlock.numRed > 0 || currentBlock.numGreen > 0) {
+      blocks.push(currentBlock);
+    }
+
+    this.editorToVerticalDiffCodeLens.set(this.fileUri, blocks);
+    this.refreshCodeLens();
   }
 }

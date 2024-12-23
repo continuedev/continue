@@ -22,9 +22,9 @@ import {
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 
 const TopDiv = styled.div`
-  outline: 1px solid rgba(153, 153, 152);
+  outline: 0.5px solid rgba(153, 153, 152);
   outline-offset: -0.5px;
-  border-radius: ${defaultBorderRadius};
+  border-radius: 2.5px;
   margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
   min-width: 0;
@@ -93,12 +93,12 @@ export default function StepContainerPreToolbar(
     if (!defaultModel) {
       return;
     }
-    console.log(props.relativeFilepath);
+    
     const fileUri = await inferResolvedUriFromRelativePath(
       props.relativeFilepath,
       ideMessenger.ide,
     );
-    console.log(fileUri);
+    
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: fileUri,
