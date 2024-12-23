@@ -102,6 +102,24 @@ function shouldRejectDiff(diff: DiffLine[]): boolean {
   return false;
 }
 
+function nodeSurroundedInLazyBlocks(
+  parser: Parser,
+
+  file: string,
+  filename: string,
+): { newTree: Parser.Tree; newFile: string } | undefined {
+  const ext = path.extname(filename).slice(1);
+  const language = LANGUAGES[ext];
+  if (language) {
+    const newFile = `${language.singleLineComment} ... existing code ...\n\n${file}\n\n${language.singleLineComment} ... existing code...`;
+    const newTree = parser.parse(newFile);
+
+    return { newTree, newFile };
+  }
+
+  return undefined;
+}
+
 // TODO: If we don't have high confidence, return undefined to fall back to slower methods
 export async function deterministicApplyLazyEdit(
   oldFile: string,
@@ -115,6 +133,7 @@ export async function deterministicApplyLazyEdit(
 
   const oldTree = parser.parse(oldFile);
   let newTree = parser.parse(newLazyFile);
+  let reconstructedNewFile: string | undefined = undefined;
 
   // If there is no lazy block anywhere, we add our own to the outsides
   // so that large chunks of the file don't get removed
@@ -125,24 +144,51 @@ export async function deterministicApplyLazyEdit(
     );
     if (firstSimilarNode?.parent?.equals(oldTree.rootNode)) {
       // If so, we tack lazy blocks to start and end, and run the usual algorithm
-      const ext = path.extname(filename).slice(1);
-      const language = LANGUAGES[ext];
-      if (language) {
-        newLazyFile = `${language.singleLineComment} ... existing code ...\n\n${newLazyFile}\n\n${language.singleLineComment} ... existing code...`;
-        newTree = parser.parse(newLazyFile);
+      const result = nodeSurroundedInLazyBlocks(parser, newLazyFile, filename);
+      if (result) {
+        newLazyFile = result.newFile;
+        newTree = result.newTree;
       }
     } else {
       // If not, we need to recursively search for the nodes that are being rewritten,
       // and we apply a slightly different algorithm
-      return undefined; // TODO
+      const newCodeNumLines = newTree.rootNode.text.split("\n").length;
+      const matchingNode = findInAst(
+        oldTree.rootNode,
+        (node) => programNodeIsSimilar(newTree.rootNode, node),
+        // This isn't perfect—we want the length of the matching code in the old tree
+        // and the new version could have more lines, or fewer. But should work a lot.
+        (node) => node.text.split("\n").length >= newCodeNumLines,
+      );
+      if (matchingNode) {
+        // Now that we've successfully matched the node from the old tree,
+        // we create the full new lazy file
+        const startIndex = matchingNode.startIndex;
+        const endIndex = matchingNode.endIndex;
+        const oldText = oldTree.rootNode.text;
+        reconstructedNewFile =
+          oldText.slice(0, startIndex) +
+          newTree.rootNode.text +
+          oldText.slice(endIndex);
+      } else {
+        console.warn("No matching node found for lazy block");
+        return [];
+      }
     }
   }
 
-  const replacements: AstReplacements = [];
-  findLazyBlockReplacements(oldTree.rootNode, newTree.rootNode, replacements);
+  if (!reconstructedNewFile) {
+    const replacements: AstReplacements = [];
+    findLazyBlockReplacements(oldTree.rootNode, newTree.rootNode, replacements);
 
-  const newFullFile = reconstructNewFile(oldFile, newLazyFile, replacements);
-  const diff = myersDiff(oldFile, newFullFile);
+    reconstructedNewFile = reconstructNewFile(
+      oldFile,
+      newLazyFile,
+      replacements,
+    );
+  }
+
+  const diff = myersDiff(oldFile, reconstructedNewFile);
 
   // If the diff is too messy and seems likely borked, we fall back to LLM strategy
   if (shouldRejectDiff(diff)) {
@@ -177,6 +223,50 @@ function stringsWithinLevDistThreshold(
 ) {
   const dist = distance(a, b);
   return dist / Math.min(a.length, b.length) <= threshold;
+}
+
+function programNodeIsSimilar(
+  programNode: Parser.SyntaxNode,
+  otherNode: Parser.SyntaxNode,
+): boolean {
+  // Check purely based on whether they are similar strings
+  const newLines = programNode.text.split("\n");
+  const oldLines = otherNode.text.split("\n");
+
+  // Check that there is a line that matches the start of the old range
+  const oldFirstLine = oldLines[0].trim();
+  let matchForOldFirstLine = -1;
+  for (let i = 0; i < newLines.length; i++) {
+    if (newLines[i].trim() === oldFirstLine) {
+      matchForOldFirstLine = i;
+      break;
+    }
+  }
+
+  if (matchForOldFirstLine < 0) {
+    return false;
+  }
+
+  // Check that the last lines match each other
+  const oldLastLine = oldLines[oldLines.length - 1].trim();
+  const newLastLine = newLines[newLines.length - 1].trim();
+  if (oldLastLine !== newLastLine) {
+    return false;
+  }
+
+  // Check that the number of matching lines is at least half of the shorter length
+  let matchingLines = 0;
+  for (let i = 0; i < Math.min(newLines.length, oldLines.length); i++) {
+    if (oldLines[i].trim() === newLines[matchForOldFirstLine + i].trim()) {
+      matchingLines += 1;
+    }
+  }
+
+  if (matchingLines >= Math.max(newLines.length, oldLines.length) / 2) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
