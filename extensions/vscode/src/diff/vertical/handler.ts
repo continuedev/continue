@@ -504,9 +504,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.editor.document.positionAt(this.editor.document.getText().length),
     );
 
-    await this.editor.edit((editBuilder) => {
-      editBuilder.replace(fullRange, meyersDiffLines);
-    });
+    await this.editor.edit(
+      (editBuilder) => {
+        editBuilder.replace(fullRange, meyersDiffLines);
+      },
+      {
+        undoStopAfter: false,
+        undoStopBefore: false,
+      },
+    );
 
     let currentBlock = {
       start: 0,
