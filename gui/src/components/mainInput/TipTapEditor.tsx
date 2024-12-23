@@ -637,12 +637,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      props.onEnter(json, modifiers, editor);
-
       if (props.isMainInput) {
-        const content = editor.state.toJSON().doc;
-        addRef.current(content);
+        addRef.current(json);
       }
+
+      props.onEnter(json, modifiers, editor);
     },
     [props.onEnter, editor, props.isMainInput],
   );
