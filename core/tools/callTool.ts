@@ -55,6 +55,7 @@ async function callToolFromUri(
   args: any,
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
+  // @ts-ignore
   const canParse = URL.canParse(uri);
   if (!canParse) {
     throw new Error(`Invalid URI: ${uri}`);
