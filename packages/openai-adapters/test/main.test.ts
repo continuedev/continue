@@ -269,7 +269,7 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
   },
   {
     provider: "novita",
-    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+    model: "meta-llama/llama-3.1-8b-instruct",
     apiKey: process.env.NOVITA_API_KEY!,
     chatOnly: true,
   },

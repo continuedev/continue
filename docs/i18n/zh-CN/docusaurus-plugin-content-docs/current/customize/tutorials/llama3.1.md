@@ -85,7 +85,7 @@ Novita AI 提供开源模型的快速和可信任的推理。你可以以良好�
     {
       "title": "Llama 3.1 405b",
       "provider": "novita",
-      "model": "llama3.1-405b",
+      "model": "meta-llama/llama-3.1-405b-instruct",
       "apiKey": "<API_KEY>"
     }
   ]

@@ -998,20 +998,16 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "mistral-7b",
-                      "mistral-8x7b",
-                      "llama2-7b",
-                      "llama2-13b",
                       "llama3-8b",
                       "llama3-70b",
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "codellama-7b",
-                      "codellama-13b",
-                      "codellama-34b",
-                      "codellama-70b",
-                      "phind-codellama-34b"
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama-3.3-70b",
+                      "mistral-nemo",
+                      "mistral-7b"
                     ]
                   },
                   {

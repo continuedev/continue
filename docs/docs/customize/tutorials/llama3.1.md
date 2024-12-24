@@ -86,7 +86,7 @@ Novita AI provides fast and reliable inference of open-source models. You'll be 
     {
       "title": "Llama 3.1 405b",
       "provider": "novita",
-      "model": "llama3.1-405b",
+      "model": "meta-llama/llama-3.1-405b-instruct",
       "apiKey": "<API_KEY>"
     }
   ]
