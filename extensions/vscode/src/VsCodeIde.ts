@@ -3,20 +3,20 @@ import { exec } from "node:child_process";
 
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import { walkDir } from "core/indexing/walkDir";
 import { GetGhTokenArgs } from "core/protocol/ide";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import * as vscode from "vscode";
 
+import * as URI from "uri-js";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
-import * as URI from "uri-js";
 
 import type {
   ContinueRcJson,
+  FileStatsMap,
   FileType,
   IDE,
   IdeInfo,
@@ -27,7 +27,6 @@ import type {
   RangeInFile,
   Thread,
 } from "core";
-import { findUriInDirs } from "core/util/uri";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -274,12 +273,15 @@ class VsCodeIde implements IDE {
     );
   }
 
-  async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
-    const pathToLastModified: { [path: string]: number } = {};
+  async getFileStats(files: string[]): Promise<FileStatsMap> {
+    const pathToLastModified: FileStatsMap = {};
     await Promise.all(
       files.map(async (file) => {
         const stat = await vscode.workspace.fs.stat(vscode.Uri.parse(file));
-        pathToLastModified[file] = stat.mtime;
+        pathToLastModified[file] = {
+          lastModified: stat.mtime,
+          size: stat.size,
+        };
       }),
     );
 
