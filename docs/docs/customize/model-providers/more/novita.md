@@ -6,9 +6,9 @@ The Novita API is a cloud platform for running large AI models. You can sign up 
 {
   "models": [
     {
-      "title": "Novita Qwen2.5 Coder",
+      "title": "Llama 3.1 8B",
       "provider": "novita",
-      "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+      "model": "meta-llama/llama-3.1-8b-instruct",
       "apiKey": "YOUR_API_KEY"
     }
   ]

@@ -31,6 +31,33 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  llama318BChat: {
+    title: "Llama 3.1 8B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-8b",
+      model: "meta-llama/llama-3.1-8b-instruct",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "meta-llama/llama-3.1-8b-instruct",
+            title: "Llama3.1-8b",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "novita"
+    ],
+    isOpenSource: true,
+  },
   llama31Chat: {
     title: "Llama3.1 Chat",
     description: "A model from Meta, fine-tuned for chat",
@@ -65,7 +92,6 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
-      "novita",
       "llama.cpp",
       "replicate",
       "sambanova",
@@ -254,7 +280,6 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
-      "novita",
       "llama.cpp",
       "replicate",
       "nebius",
@@ -300,7 +325,6 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
-      "novita",
       "llama.cpp",
       "replicate",
     ],
@@ -448,7 +472,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "together", "novita"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "together"],
     isOpenSource: false,
   },
   llama3211bChat: {
@@ -461,7 +485,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["ollama", "groq", "llama.cpp", "together", "novita"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "together"],
     isOpenSource: false,
   },
   llama3290bChat: {
@@ -507,7 +531,6 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
-      "novita",
       "llama.cpp",
       "replicate",
       "nebius",
