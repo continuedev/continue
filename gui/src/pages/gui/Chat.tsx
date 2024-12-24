@@ -70,11 +70,7 @@ import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import {
-  loadLastSession,
-  saveCurrentSession,
-} from "../../redux/thunks/session";
-import { C } from "core/autocomplete/constants/AutocompleteLanguageInfo";
+import { loadLastSession } from "../../redux/thunks/session";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
