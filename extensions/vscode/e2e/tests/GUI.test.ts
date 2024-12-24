@@ -193,6 +193,68 @@ describe("GUI Test", () => {
   });
 
   describe("Chat Paths", () => {
+    it("Send many messages → chat auto scrolls → go to history → open previous chat → it is scrolled to the bottom", async () => {
+      for (let i = 0; i <= 20; i++) {
+        const { userMessage, llmResponse } =
+          TestUtils.generateTestMessagePair(i);
+        await GUIActions.sendMessage({
+          view,
+          message: userMessage,
+          inputFieldIndex: i,
+        });
+        const response = await TestUtils.waitForSuccess(() =>
+          GUISelectors.getThreadMessageByText(view, llmResponse),
+        );
+
+        const viewportHeight = await driver.executeScript(
+          "return window.innerHeight",
+        );
+
+        const isInViewport = await driver.executeScript(
+          `
+          const rect = arguments[0].getBoundingClientRect();
+          return (
+            rect.top >= 0 &&
+            rect.bottom <= ${viewportHeight}
+          );
+          `,
+          response,
+        );
+
+        expect(isInViewport).to.eq(true);
+      }
+
+      await view.switchBack();
+
+      await (await GUISelectors.getHistoryNavButton(view)).click();
+      await GUIActions.switchToReactIframe();
+      TestUtils.waitForSuccess(async () => {
+        await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
+      });
+
+      const { llmResponse } = TestUtils.generateTestMessagePair(20);
+      const response = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse),
+      );
+
+      const viewportHeight = await driver.executeScript(
+        "return window.innerHeight",
+      );
+
+      const isInViewport = await driver.executeScript(
+        `
+        const rect = arguments[0].getBoundingClientRect();
+        return (
+          rect.top >= 0 &&
+          rect.bottom <= ${viewportHeight}
+        );
+        `,
+        response,
+      );
+
+      expect(isInViewport).to.eq(true);
+    }).timeout(DEFAULT_TIMEOUT.XL * 1000);
+
     it("Open chat and send message → press arrow up and arrow down to cycle through messages → submit another message → press arrow up and arrow down to cycle through messages", async () => {
       await GUIActions.sendMessage({
         view,

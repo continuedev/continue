@@ -19,7 +19,6 @@ import {
   lightGray,
   vscBackground,
 } from "../../components";
-import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
@@ -71,10 +70,7 @@ import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import {
-  loadLastSession,
-  saveCurrentSession,
-} from "../../redux/thunks/session";
+import { loadLastSession } from "../../redux/thunks/session";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -132,6 +128,58 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
   );
 }
 
+const useAutoScroll = (
+  ref: React.RefObject<HTMLDivElement>,
+  history: unknown[],
+) => {
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
+
+  useEffect(() => {
+    if (history.length) {
+      setUserHasScrolled(false);
+    }
+  }, [history.length]);
+
+  useEffect(() => {
+    if (!ref.current || history.length === 0) return;
+
+    const handleScroll = () => {
+      const elem = ref.current;
+      if (!elem) return;
+
+      const isAtBottom =
+        Math.abs(elem.scrollHeight - elem.scrollTop - elem.clientHeight) < 1;
+
+      /**
+       * We stop auto scrolling if a user manually scrolled up.
+       * We resume auto scrolling if a user manually scrolled to the bottom.
+       */
+      setUserHasScrolled(!isAtBottom);
+    };
+
+    const resizeObserver = new ResizeObserver(() => {
+      const elem = ref.current;
+      if (!elem || userHasScrolled) return;
+      elem.scrollTop = elem.scrollHeight;
+    });
+
+    ref.current.addEventListener("scroll", handleScroll);
+
+    // Observe the container
+    resizeObserver.observe(ref.current);
+
+    // Observe all immediate children
+    Array.from(ref.current.children).forEach((child) => {
+      resizeObserver.observe(child);
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      ref.current?.removeEventListener("scroll", handleScroll);
+    };
+  }, [ref, history.length, userHasScrolled]);
+};
+
 export function Chat() {
   const posthog = usePostHog();
   const dispatch = useAppDispatch();
@@ -147,7 +195,6 @@ export function Chat() {
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const history = useAppSelector((state) => state.session.history);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
@@ -168,34 +215,6 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const snapToBottom = useCallback(() => {
-    if (!stepsDivRef.current) return;
-    const elem = stepsDivRef.current;
-    elem.scrollTop = elem.scrollHeight - elem.clientHeight;
-
-    setIsAtBottom(true);
-  }, [stepsDivRef, setIsAtBottom]);
-
-  const smoothScrollToBottom = useCallback(async () => {
-    if (!stepsDivRef.current) return;
-    const elem = stepsDivRef.current;
-    elem.scrollTo({
-      top: elem.scrollHeight - elem.clientHeight,
-      behavior: "smooth",
-    });
-
-    setIsAtBottom(true);
-  }, [stepsDivRef, setIsAtBottom]);
-
-  useEffect(() => {
-    if (isStreaming) snapToBottom();
-  }, [isStreaming, snapToBottom]);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     smoothScrollToBottom();
-  //   }, 400);
-  // }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -214,18 +233,6 @@ export function Chat() {
       window.removeEventListener("keydown", listener);
     };
   }, [isStreaming]);
-
-  const handleScroll = () => {
-    // Temporary fix to account for additional height when code blocks are added
-    const OFFSET_HERUISTIC = 300;
-    if (!stepsDivRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = stepsDivRef.current;
-    const atBottom =
-      scrollHeight - clientHeight <= scrollTop + OFFSET_HERUISTIC;
-
-    setIsAtBottom(atBottom);
-  };
 
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
@@ -340,6 +347,8 @@ export function Chat() {
 
   const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
 
+  useAutoScroll(stepsDivRef, history);
+
   return (
     <>
       {isInEditMode && (
@@ -356,14 +365,13 @@ export function Chat() {
       <StepsDiv
         ref={stepsDivRef}
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
-        onScroll={handleScroll}
       >
         {highlights}
         {history.map((item, index: number) => (
           <div
             key={item.message.id}
             style={{
-              minHeight: index === history.length - 1 ? "50vh" : 0,
+              minHeight: index === history.length - 1 ? "25vh" : 0,
             }}
           >
             <ErrorBoundary
@@ -444,11 +452,6 @@ export function Chat() {
             </ErrorBoundary>
           </div>
         ))}
-        <ChatScrollAnchor
-          scrollAreaRef={stepsDivRef}
-          isAtBottom={isAtBottom}
-          trackVisibility={isStreaming}
-        />
       </StepsDiv>
       <div className={`relative`}>
         <div className="absolute -top-8 right-2 z-30">
