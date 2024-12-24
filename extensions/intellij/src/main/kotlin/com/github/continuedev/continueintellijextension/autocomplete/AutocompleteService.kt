@@ -87,7 +87,7 @@ class AutocompleteService(private val project: Project) {
         val column = editor.caretModel.primaryCaret.logicalPosition.column
         val input = mapOf(
             "completionId" to completionId,
-            "filepath" to virtualFile?.path,
+            "filepath" to virtualFile?.url,
             "pos" to mapOf(
                 "line" to line,
                 "character" to column
