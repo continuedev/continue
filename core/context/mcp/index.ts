@@ -132,7 +132,7 @@ class MCPConnection {
       if (!error.message.startsWith("StdioClientTransport already started")) {
         return {
           fatal: false,
-          message: `Failed to connect to MCP ${mcpId}: ${error.message}`,
+          message: `Failed to connect to MCP: ${error.message}`,
         };
       }
     }

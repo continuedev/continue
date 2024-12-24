@@ -171,7 +171,12 @@ export class VsCodeMessenger {
 
       // Get LLM from config
       const configHandler = await configHandlerPromise;
-      const config = await configHandler.loadConfig();
+      const { config } = await configHandler.loadConfig();
+
+      if (!config) {
+        vscode.window.showErrorMessage("Config not loaded");
+        return;
+      }
 
       let llm = getModelByRole(config, "applyCodeBlock");
 

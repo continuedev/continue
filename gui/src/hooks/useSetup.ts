@@ -3,8 +3,9 @@ import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { BrowserSerializedContinueConfig } from "core";
+import { ConfigResult } from "core/config/load";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setConfig, setConfigError } from "../redux/slices/configSlice";
+import { setConfigError, setConfigResult } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
@@ -33,20 +34,23 @@ function useSetup() {
   const handleConfigUpdate = useCallback(
     async (
       initial: boolean,
-      result: { config: BrowserSerializedContinueConfig; profileId: string },
+      result: {
+        result: ConfigResult<BrowserSerializedContinueConfig>;
+        profileId: string;
+      },
     ) => {
-      const { config, profileId } = result;
+      const { result: configResult, profileId } = result;
       if (initial && hasLoadedConfig.current) {
         return;
       }
       hasLoadedConfig.current = true;
-      dispatch(setConfig(config));
+      dispatch(setConfigResult(configResult));
       dispatch(setSelectedProfileId(profileId));
 
       // Perform any actions needed with the config
-      if (config.ui?.fontSize) {
-        setLocalStorage("fontSize", config.ui.fontSize);
-        document.body.style.fontSize = `${config.ui.fontSize}px`;
+      if (configResult.config?.ui?.fontSize) {
+        setLocalStorage("fontSize", configResult.config.ui.fontSize);
+        document.body.style.fontSize = `${configResult.config.ui.fontSize}px`;
       }
     },
     [dispatch, hasLoadedConfig],
@@ -61,6 +65,7 @@ function useSetup() {
       if (result.status === "error") {
         return;
       }
+      console.log("Config loaded", result.content);
       await handleConfigUpdate(initial, result.content);
     },
     [ideMessenger, handleConfigUpdate],
