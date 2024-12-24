@@ -1,6 +1,6 @@
 # Novita
 
-[Novita AI](https://novita.ai) 提供了一个经济实惠、可靠且简单的推理平台。你可以在 [这里](https://novita.ai/user/login?&redirect=/&utm_source=github_continuedev) 注册，在 [Key 管理页面](https://novita.ai/settings/key-management)复制你的 API key ，然后在 [Novita 模型列表](https://novita.ai/llm-api?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=link) 的任何模型上点击 Try it now 按钮。修改 `~/.continue/config.json` 像这样：
+[Novita AI](https://novita.ai?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) 提供了一个经济实惠、可靠且简单的推理平台。你可以在 [这里](https://novita.ai/user/login?&redirect=/&utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) 注册，在 [Key Management](https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link)复制你的 API key ，然后在 [Novita 模型列表](https://novita.ai/llm-api?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) 的任何模型上点击 Try it now 按钮。修改 `~/.continue/config.json` 像这样：
 
 ```json title="config.json"
 {

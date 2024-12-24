@@ -73,10 +73,10 @@ Together AI 提供开源模型的快速和可信任的推理。你可以以良�
 
 ## Novita AI
 
-[Novita AI](https://novita.ai) 提供了一个经济实惠、可靠且简单的推理平台。你可以以良好的速度运行 405b 模型。
+[Novita AI](https://novita.ai?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) 提供了一个经济实惠、可靠且简单的推理平台。你可以以良好的速度运行 405b 模型。
 
-1. 创建账号 [在这里](https://novita.ai/llm-api?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=link)
-2. 复制[Key Management](https://novita.ai/settings/key-management)中的你的 API key
+1. 创建账号 [在这里](https://novita.ai/user/login?&redirect=/&utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link)
+2. 复制[Key Management](https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link)中的你的 API key
 3. 更新你的 Continue 配置文件，像这样：
 
 ```json title="config.json"
