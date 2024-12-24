@@ -1,7 +1,7 @@
+import { jest } from "@jest/globals";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "path";
-import { jest } from "@jest/globals";
 
 import { ContinueServerClient } from "../continueServer/stubs/client.js";
 import { testConfigHandler, testIde } from "../test/fixtures.js";
@@ -14,13 +14,12 @@ import {
 } from "../test/testDir.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 
+import { pathToFileURL } from "node:url";
 import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
 import { walkDir } from "./walkDir.js";
-import { pathToFileURL } from "node:url";
-import { joinPathsToUri } from "../util/uri.js";
 
 jest.useFakeTimers();
 
@@ -120,7 +119,7 @@ describe("CodebaseIndexer", () => {
   async function getIndexPlan() {
     const workspaceFiles = await walkDir(TEST_DIR, testIde);
     const [tag] = await testIde.getTags(testIndex.artifactId);
-    const stats = await testIde.getLastModified(workspaceFiles);
+    const stats = await testIde.getFileStats(workspaceFiles);
 
     const [results, lastUpdated, markComplete] =
       await getComputeDeleteAddRemove(

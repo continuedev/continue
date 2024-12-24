@@ -582,6 +582,16 @@ export interface IdeSettings {
   enableDebugLogs: boolean;
 }
 
+export interface FileStats {
+  size: number;
+  lastModified: number;
+}
+
+/** Map of file name to stats */
+export type FileStatsMap = {
+  [path: string]: FileStats;
+};
+
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
 
@@ -665,7 +675,7 @@ export interface IDE {
 
   listDir(dir: string): Promise<[string, FileType][]>;
 
-  getLastModified(files: string[]): Promise<{ [path: string]: number }>;
+  getFileStats(files: string[]): Promise<FileStatsMap>;
 
   getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 

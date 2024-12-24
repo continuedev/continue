@@ -473,8 +473,8 @@ export class VsCodeMessenger {
       return await ide.gotoDefinition(msg.data.location);
     });
 
-    this.onWebviewOrCore("getLastModified", async (msg) => {
-      return await ide.getLastModified(msg.data.files);
+    this.onWebviewOrCore("getFileStats", async (msg) => {
+      return await ide.getFileStats(msg.data.files);
     });
 
     this.onWebviewOrCore("getGitRootPath", async (msg) => {

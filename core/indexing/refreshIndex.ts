@@ -5,13 +5,12 @@ import plimit from "p-limit";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 
-import { IndexTag, IndexingProgressUpdate } from "../index.js";
+import { FileStatsMap, IndexTag, IndexingProgressUpdate } from "../index.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 
 import {
   CodebaseIndex,
   IndexResultType,
-  LastModifiedMap,
   MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
@@ -129,7 +128,7 @@ enum AddRemoveResultType {
 
 async function getAddRemoveForTag(
   tag: IndexTag,
-  currentFiles: LastModifiedMap,
+  currentFiles: FileStatsMap,
   readFile: (path: string) => Promise<string>,
 ): Promise<
   [
@@ -157,7 +156,7 @@ async function getAddRemoveForTag(
       remove.push(pathAndCacheKey);
     } else {
       // Exists in old and new, so determine whether it was updated
-      if (lastUpdated < files[item.path]) {
+      if (lastUpdated < files[item.path].lastModified) {
         // Change was made after last update
         const newHash = calculateHash(await readFile(pathAndCacheKey.path));
         if (pathAndCacheKey.cacheKey !== newHash) {
@@ -345,7 +344,7 @@ function mapIndexResultTypeToAddRemoveResultType(
 
 export async function getComputeDeleteAddRemove(
   tag: IndexTag,
-  currentFiles: LastModifiedMap,
+  currentFiles: FileStatsMap,
   readFile: (path: string) => Promise<string>,
   repoName: string | undefined,
 ): Promise<[RefreshIndexResults, PathAndCacheKey[], MarkCompleteCallback]> {

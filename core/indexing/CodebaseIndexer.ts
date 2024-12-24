@@ -6,6 +6,7 @@ import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 
+import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
@@ -17,7 +18,6 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
-import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -110,7 +110,7 @@ export class CodebaseIndexer {
     const branch = await this.ide.getBranch(foundInDir);
     const repoName = await this.ide.getRepoName(foundInDir);
     const indexesToBuild = await this.getIndexesToBuild();
-    const stats = await this.ide.getLastModified([file]);
+    const stats = await this.ide.getFileStats([file]);
     for (const index of indexesToBuild) {
       const tag = {
         directory: foundInDir,
@@ -389,7 +389,7 @@ export class CodebaseIndexer {
     branch: string,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const stats = await this.ide.getLastModified(files);
+    const stats = await this.ide.getFileStats(files);
     const indexesToBuild = await this.getIndexesToBuild();
     let completedIndexCount = 0;
     let progress = 0;
