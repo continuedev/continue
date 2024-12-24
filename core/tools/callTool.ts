@@ -44,7 +44,10 @@ export function decodeMCPToolUri(uri: string): [string, string] | null {
   if (url.protocol !== "mcp:") {
     return null;
   }
-  return [decodeURIComponent(url.hostname), decodeURIComponent(url.pathname)];
+  return [
+    decodeURIComponent(url.hostname),
+    decodeURIComponent(url.pathname).slice(1), // to remove leading '/'
+  ];
 }
 
 async function callToolFromUri(

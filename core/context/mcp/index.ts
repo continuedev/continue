@@ -7,6 +7,7 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { ConfigValidationError } from "../../config/validation";
+import { encodeMCPToolUri } from "../../tools/callTool";
 import MCPContextProvider from "../providers/MCPContextProvider";
 
 export class MCPManagerSingleton {
@@ -172,7 +173,7 @@ class MCPConnection {
         readonly: false,
         type: "function",
         wouldLikeTo: `use the ${tool.name} tool`,
-        uri: `mcp://${tool.name}`,
+        uri: encodeMCPToolUri(mcpId, tool.name),
       }));
 
       config.tools = [...config.tools, ...continueTools];
