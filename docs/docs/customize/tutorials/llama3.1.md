@@ -74,7 +74,7 @@ Together AI provides fast and reliable inference of open-source models. You'll b
 
 ## Novita AI
 
-Novita AI provides fast and reliable inference of open-source models. You'll be able to run the 405b model with good speed.
+[Novita AI](https://novita.ai) offers an affordable, reliable, and simple inference platform with scalable [LLM API](https://novita.ai/docs/model-api/reference/introduction.html), empowering developers to build AI applications. Try the [Novita AI Llama 3 API Demo](https://novita.ai/model-api/product/llm-api/playground/meta-llama-llama-3.1-70b-instruct) today!
 
 1. Create an account [here](https://novita.ai/user/login?&redirect=/&utm_source=github_continuedev)
 2. Copy your API key that appears on the welcome screen

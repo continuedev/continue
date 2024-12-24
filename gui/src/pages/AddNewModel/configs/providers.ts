@@ -409,9 +409,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     provider: "novita",
     refPage: "novita",
     description:
-      "Use the NovitaAI API for extremely fast streaming of open-source models",
+      "Use Novita AI API for extremely fast streaming of open-source models",
     icon: "novita.png",
-    longDescription: `Novita is a hosted service that provides extremely fast streaming of open-source language models. To get started with Novita:\n1. Obtain an API key from [here](https://novita.ai)\n2. Paste below\n3. Select a model preset`,
+    longDescription: `[Novita AI](https://novita.ai) offers an affordable, reliable, and simple inference platform with scalable [LLM APIs](https://novita.ai/docs/model-api/reference/introduction.html), empowering developers to build AI applications. To get started with Novita AI:\n1. Obtain an API key from [here](https://novita.ai)\n2. Paste below\n3. Select a model preset`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     params: {
       apiKey: "",
@@ -421,7 +421,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         inputType: "text",
         key: "apiKey",
         label: "API Key",
-        placeholder: "Enter your NovitaAI API key",
+        placeholder: "Enter your Novita AI API key",
         required: true,
       },
       ...completionParamsInputsConfigs,
@@ -670,8 +670,8 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     provider: "free-trial",
     refPage: "freetrial",
     description:
-      "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, Together, or Novita using our API key",
-    longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, Together or Novita using our API key. If you are ready to set up a model for long-term use or have used all ${FREE_TRIAL_LIMIT_REQUESTS} free uses, you can enter your API key or use a local model.`,
+      "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, Together, or Novita AI using our API key",
+    longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, Together or Novita AI using our API key. If you are ready to set up a model for long-term use or have used all ${FREE_TRIAL_LIMIT_REQUESTS} free uses, you can enter your API key or use a local model.`,
     icon: "openai.png",
     tags: [ModelProviderTags.Free],
     packages: [

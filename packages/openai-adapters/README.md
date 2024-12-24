@@ -59,7 +59,7 @@ They are concerned with:
 - [ ] Silicon Flow
 - [x] TextGen Web UI
 - [x] Together
-- [x] Novita
+- [x] Novita AI
 - [x] Vllm
 - [ ] Vertex AI
 - [x] Voyage AI
