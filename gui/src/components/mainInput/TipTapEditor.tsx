@@ -340,6 +340,10 @@ function TipTapEditor(props: TipTapEditorProps) {
           });
           return [plugin];
         },
+      }).configure({
+        HTMLAttributes: {
+          class: "editor-image bg-black object-contain max-h-[250px] w-full",
+        },
       }),
       Placeholder.configure({
         placeholder: getPlaceholderText(
