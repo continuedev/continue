@@ -126,6 +126,9 @@ enum AddRemoveResultType {
   Compute = "compute",
 }
 
+// Don't attempt to index anything over 5MB
+const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
 async function getAddRemoveForTag(
   tag: IndexTag,
   currentFiles: FileStatsMap,
@@ -140,6 +143,12 @@ async function getAddRemoveForTag(
 > {
   const newLastUpdatedTimestamp = Date.now();
   const files = { ...currentFiles };
+
+  for (const path in files) {
+    if (files[path].size > MAX_FILE_SIZE_BYTES) {
+      delete files[path];
+    }
+  }
 
   const saved = await getSavedItemsForTag(tag);
 
