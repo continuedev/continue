@@ -68,34 +68,34 @@ describe("Keyboard Shortcuts", () => {
     await chatInput.sendKeys("CONTINUE");
     await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
 
-    await chatInput.sendKeys(Key.COMMAND + "z");
+    await chatInput.sendKeys(TestUtils.osControlKey + "z");
     await driver.wait(
       until.elementTextIs(chatInput, "HELLO WORLD"),
       DEFAULT_TIMEOUT.SM,
     );
 
-    await chatInput.sendKeys(Key.COMMAND + "z");
+    await chatInput.sendKeys(TestUtils.osControlKey + "z");
     await driver.wait(until.elementTextIs(chatInput, ""), DEFAULT_TIMEOUT.SM);
 
-    await chatInput.sendKeys(Key.SHIFT + Key.COMMAND + "z");
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
     await driver.wait(
       until.elementTextIs(chatInput, "HELLO"),
       DEFAULT_TIMEOUT.SM,
     );
 
-    await chatInput.sendKeys(Key.SHIFT + Key.COMMAND + "z");
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
     await driver.wait(
       until.elementTextIs(chatInput, "HELLO WORLD"),
       DEFAULT_TIMEOUT.SM,
     );
 
-    await chatInput.sendKeys(Key.SHIFT + Key.COMMAND + "z");
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
     await driver.wait(
       until.elementTextIs(chatInput, "HELLO WORLD HELLO"),
       DEFAULT_TIMEOUT.SM,
     );
 
-    await chatInput.sendKeys(Key.SHIFT + Key.COMMAND + "z");
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
     await driver.wait(
       until.elementTextIs(chatInput, "HELLO WORLD HELLO CONTINUE"),
       DEFAULT_TIMEOUT.SM,
