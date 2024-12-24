@@ -5,7 +5,7 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import ContextItemsPeek from "./ContextItemsPeek";
-import TipTapEditor from "./TipTapEditor";
+// import TipTapEditor from "./TipTapEditor";
 import { useAppSelector } from "../../redux/hooks";
 import { ToolbarOptions } from "./InputToolbar";
 import { useMemo } from "react";
@@ -128,7 +128,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           }
           borderRadius={defaultBorderRadius}
         >
-          <TipTapEditor
+          {/* <TipTapEditor
             editorState={props.editorState}
             onEnter={props.onEnter}
             placeholder={placeholder}
@@ -137,7 +137,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             availableSlashCommands={filteredSlashCommands}
             historyKey={historyKey}
             toolbarOptions={toolbarOptions}
-          />
+          /> */}
         </GradientBorder>
       </div>
       <ContextItemsPeek

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius } from "../components";
-import TipTapEditor from "../components/mainInput/TipTapEditor";
+// import TipTapEditor from "../components/mainInput/TipTapEditor";
 import useSetup from "../hooks/useSetup";
 import { selectSlashCommandComboBoxInputs } from "../redux/selectors";
 import { useAppSelector } from "../redux/hooks";
@@ -28,7 +28,7 @@ function EditorInset() {
 
   return (
     <EditorInsetDiv ref={elementRef}>
-      <TipTapEditor
+      {/* <TipTapEditor
         availableContextProviders={availableContextProviders ?? []}
         availableSlashCommands={availableSlashCommands}
         isMainInput={true}
@@ -36,7 +36,7 @@ function EditorInset() {
           console.log("Enter: ", e, modifiers);
         }}
         historyKey="chat"
-      />
+      /> */}
     </EditorInsetDiv>
   );
 }
