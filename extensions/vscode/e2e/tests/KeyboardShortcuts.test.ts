@@ -17,7 +17,7 @@ import { expect } from "chai";
 import { TestUtils } from "../TestUtils";
 import { KeyboardShortcutsActions } from "../actions/KeyboardShortcuts.actions";
 
-describe("Cmd+L Shortcut Test", () => {
+describe("Keyboard Shortcuts", () => {
   let driver: WebDriver;
   let editor: TextEditor;
   let view: WebView;
