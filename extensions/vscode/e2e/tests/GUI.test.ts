@@ -1,4 +1,12 @@
-import { EditorView, WebView, WebDriver, Key } from "vscode-extension-tester";
+import {
+  EditorView,
+  WebView,
+  WebDriver,
+  Key,
+  WebElement,
+  VSBrowser,
+  until,
+} from "vscode-extension-tester";
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
 import { GUISelectors } from "../selectors/GUI.selectors";
@@ -12,18 +20,16 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
+    await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
   });
 
   beforeEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
-    await GUIActions.openGui();
+    await GUIActions.toggleGui();
 
-    view = new WebView();
-    driver = view.getDriver();
-
-    await GUIActions.switchToReactIframe(driver);
+    ({ view, driver } = await GUIActions.switchToReactIframe());
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
   });
 
@@ -31,6 +37,10 @@ describe("GUI Test", () => {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
     await view.switchBack();
+    await TestUtils.waitForSuccess(
+      async () => (await GUISelectors.getContinueExtensionBadge(view)).click(),
+      DEFAULT_TIMEOUT.XS,
+    );
     await new EditorView().closeAllEditors();
   });
 
@@ -183,6 +193,154 @@ describe("GUI Test", () => {
   });
 
   describe("Chat Paths", () => {
+    it("Send many messages → chat auto scrolls → go to history → open previous chat → it is scrolled to the bottom", async () => {
+      for (let i = 0; i <= 20; i++) {
+        const { userMessage, llmResponse } =
+          TestUtils.generateTestMessagePair(i);
+        await GUIActions.sendMessage({
+          view,
+          message: userMessage,
+          inputFieldIndex: i,
+        });
+        const response = await TestUtils.waitForSuccess(() =>
+          GUISelectors.getThreadMessageByText(view, llmResponse),
+        );
+
+        const viewportHeight = await driver.executeScript(
+          "return window.innerHeight",
+        );
+
+        const isInViewport = await driver.executeScript(
+          `
+          const rect = arguments[0].getBoundingClientRect();
+          return (
+            rect.top >= 0 &&
+            rect.bottom <= ${viewportHeight}
+          );
+          `,
+          response,
+        );
+
+        expect(isInViewport).to.eq(true);
+      }
+
+      await view.switchBack();
+
+      await (await GUISelectors.getHistoryNavButton(view)).click();
+      await GUIActions.switchToReactIframe();
+      TestUtils.waitForSuccess(async () => {
+        await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
+      });
+
+      const { llmResponse } = TestUtils.generateTestMessagePair(20);
+      const response = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getThreadMessageByText(view, llmResponse),
+      );
+
+      const viewportHeight = await driver.executeScript(
+        "return window.innerHeight",
+      );
+
+      const isInViewport = await driver.executeScript(
+        `
+        const rect = arguments[0].getBoundingClientRect();
+        return (
+          rect.top >= 0 &&
+          rect.bottom <= ${viewportHeight}
+        );
+        `,
+        response,
+      );
+
+      expect(isInViewport).to.eq(true);
+    }).timeout(DEFAULT_TIMEOUT.XL * 1000);
+
+    it("Open chat and send message → press arrow up and arrow down to cycle through messages → submit another message → press arrow up and arrow down to cycle through messages", async () => {
+      await GUIActions.sendMessage({
+        view,
+        message: "MESSAGE 1",
+        inputFieldIndex: 0,
+      });
+
+      const input1 = await TestUtils.waitForSuccess(async () => {
+        return GUISelectors.getMessageInputFieldAtIndex(view, 1);
+      });
+      expect(await input1.getText()).to.equal("");
+
+      await input1.sendKeys(Key.ARROW_UP);
+      await driver.wait(
+        until.elementTextIs(input1, "MESSAGE 1"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input1.sendKeys(Key.ARROW_DOWN); // First press - bring caret to the end of the message
+      await input1.sendKeys(Key.ARROW_DOWN); // Second press - trigger message change
+      await driver.wait(until.elementTextIs(input1, ""), DEFAULT_TIMEOUT.SM);
+
+      await GUIActions.sendMessage({
+        view,
+        message: "MESSAGE 2",
+        inputFieldIndex: 1,
+      });
+
+      const input2 = await TestUtils.waitForSuccess(async () => {
+        return GUISelectors.getMessageInputFieldAtIndex(view, 2);
+      });
+      expect(await input2.getText()).to.equal("");
+
+      await input2.sendKeys(Key.ARROW_UP);
+      await driver.wait(
+        until.elementTextIs(input2, "MESSAGE 2"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input2.sendKeys(Key.ARROW_UP);
+      await driver.wait(
+        until.elementTextIs(input2, "MESSAGE 1"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input2.sendKeys(Key.ARROW_DOWN); // First press - bring caret to the end of the message
+      await input2.sendKeys(Key.ARROW_DOWN); // Second press - trigger message change
+      await driver.wait(
+        until.elementTextIs(input2, "MESSAGE 2"),
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      await input2.sendKeys(Key.ARROW_DOWN);
+      await driver.wait(until.elementTextIs(input2, ""), DEFAULT_TIMEOUT.SM);
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
+    it("Open chat and type → open history → press new session button → chat opens, empty and in focus", async () => {
+      const originalTextInput = await GUISelectors.getMessageInputFieldAtIndex(
+        view,
+        0,
+      );
+      await originalTextInput.click();
+      await originalTextInput.sendKeys("Hello");
+      expect(await originalTextInput.getText()).to.equal("Hello");
+
+      await view.switchBack();
+
+      await (await GUISelectors.getHistoryNavButton(view)).click();
+      await GUIActions.switchToReactIframe();
+
+      await view.switchBack();
+      await (await GUISelectors.getNewSessionNavButton(view)).click();
+      await GUIActions.switchToReactIframe();
+
+      const newTextInput = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getMessageInputFieldAtIndex(view, 0),
+      );
+      const activeElement: WebElement = await driver.switchTo().activeElement();
+      const newTextInputHtml = await newTextInput.getAttribute("outerHTML");
+      const activeElementHtml = await activeElement.getAttribute("outerHTML");
+      expect(newTextInputHtml).to.equal(activeElementHtml);
+
+      const textInputValue = await newTextInput.getText();
+      expect(textInputValue).to.equal("");
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
     it("chat → history → chat", async () => {
       const messagePair1 = TestUtils.generateTestMessagePair(1);
       await GUIActions.sendMessage({
@@ -212,7 +370,7 @@ describe("GUI Test", () => {
        */
       await view.switchBack();
       await (await GUISelectors.getHistoryNavButton(view)).click();
-      await GUIActions.switchToReactIframe(driver);
+      await GUIActions.switchToReactIframe();
 
       await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
 
@@ -222,7 +380,7 @@ describe("GUI Test", () => {
        * END OF SWITCHING BACK AND FORTH
        */
 
-      await GUIActions.switchToReactIframe(driver);
+      await GUIActions.switchToReactIframe();
       await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
 
       await GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse);

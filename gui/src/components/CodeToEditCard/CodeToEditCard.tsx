@@ -41,10 +41,10 @@ export default function CodeToEditCard() {
     }
   }
 
-  async function onSelectFilesToAdd(filepaths: string[]) {
-    const filePromises = filepaths.map(async (filepath) => {
-      const contents = await ideMessenger.ide.readFile(filepath);
-      return { contents, filepath };
+  async function onSelectFilesToAdd(uris: string[]) {
+    const filePromises = uris.map(async (uri) => {
+      const contents = await ideMessenger.ide.readFile(uri);
+      return { contents, filepath: uri };
     });
 
     const fileResults = await Promise.all(filePromises);

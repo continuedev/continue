@@ -38,10 +38,10 @@ import {
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
@@ -120,7 +120,7 @@ const ItemsDiv = styled.div`
   overflow-y: auto;
   max-height: 330px;
   padding: 0.2rem;
-  position: relative;
+  position: relative; // absolute to test tippy.js bug
 
   background-color: ${vscQuickInputBackground};
   /* backdrop-filter: blur(12px); */
@@ -352,7 +352,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   }, [allItems]);
 
   return (
-    <ItemsDiv className="items-container">
+    <ItemsDiv>
       {querySubmenuItem ? (
         <QueryInput
           rows={1}

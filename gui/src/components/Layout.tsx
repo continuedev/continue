@@ -66,6 +66,44 @@ const Layout = () => {
   const showDialog = useAppSelector((state) => state.ui.showDialog);
 
   useWebviewListener(
+    "newSession",
+    async () => {
+      navigate(ROUTES.HOME);
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: true,
+        }),
+      );
+      dispatch(exitEditMode());
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "isContinueInputFocused",
+    async () => {
+      return false;
+    },
+    [location.pathname],
+    location.pathname === ROUTES.HOME,
+  );
+
+  useWebviewListener(
+    "focusContinueInputWithNewSession",
+    async () => {
+      navigate(ROUTES.HOME);
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: true,
+        }),
+      );
+      dispatch(exitEditMode());
+    },
+    [location.pathname],
+    location.pathname === ROUTES.HOME,
+  );
+
+  useWebviewListener(
     "openDialogMessage",
     async (message) => {
       if (message === "account") {

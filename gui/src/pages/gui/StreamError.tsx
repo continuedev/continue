@@ -56,27 +56,121 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       }
     }
   }
-  let errorContent: React.ReactNode = (
-    <span>Error while streaming chat response.</span>
+
+  const checkKeysButton = apiKeyUrl ? (
+    <Button
+      className="cursor-pointer hover:underline"
+      onClick={() => {
+        ideMessenger.post("openUrl", apiKeyUrl!);
+      }}
+    >
+      Check keys/usage
+    </Button>
+  ) : null;
+
+  const configButton = (
+    <SecondaryButton
+      className="flex flex-row items-center gap-1.5 hover:underline hover:opacity-70"
+      onClick={() => {
+        ideMessenger.post("config/openProfile", {
+          profileId: undefined,
+        });
+      }}
+    >
+      <div>
+        <Cog8ToothIcon className="h-4 w-4" />
+      </div>
+      <span>Open config</span>
+    </SecondaryButton>
   );
 
+  let errorContent: React.ReactNode = <></>;
+
+  // Display components for specific errors
   if (statusCode === 429) {
     errorContent = (
       <div className="flex flex-col gap-2">
         <span>
-          {`This likely means your ${modelTitle} usage has been rate limited
+          {`This might mean your ${modelTitle} usage has been rate limited
                 by ${providerName}.`}
         </span>
-        {apiKeyUrl ? (
-          <Button
-            className="cursor-pointer hover:underline"
-            onClick={() => {
-              ideMessenger.post("openUrl", apiKeyUrl!);
-            }}
-          >
-            Check keys/usage
-          </Button>
+        <div className="flex flex-row flex-wrap gap-2">
+          {checkKeysButton}
+          {configButton}
+        </div>
+      </div>
+    );
+  }
+
+  if (statusCode === 404) {
+    errorContent = (
+      <div className="flex flex-col gap-2">
+        <span>Likely causes:</span>
+        <ul className="m-0">
+          <li>
+            <span>Invalid</span>
+            <code>apiBase</code>
+            {selectedModel && (
+              <>
+                <span>{`: `}</span>
+                <code>{selectedModel.apiBase}</code>
+              </>
+            )}
+          </li>
+          <li>
+            <span>Model/deployment not found</span>
+            {selectedModel && (
+              <>
+                <span>{` for: `}</span>
+                <code>{selectedModel.model}</code>
+              </>
+            )}
+          </li>
+        </ul>
+        <div>{configButton}</div>
+      </div>
+    );
+  }
+
+  if (statusCode === 401) {
+    errorContent = (
+      <div className="flex flex-col gap-2">
+        <span>{`Likely cause: your API key is invalid.`}</span>
+        <div className="flex flex-row flex-wrap gap-2">
+          {checkKeysButton}
+          {configButton}
+        </div>
+      </div>
+    );
+  }
+
+  if (statusCode === 403) {
+    errorContent = (
+      <div className="flex flex-col gap-2">
+        <span>{`Likely cause: not authorized to access the model deployment.`}</span>
+        <div className="flex flex-row flex-wrap gap-2">
+          {checkKeysButton}
+          {configButton}
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    message &&
+    (message.toLowerCase().includes("overloaded") ||
+      message.toLowerCase().includes("malformed"))
+  ) {
+    errorContent = (
+      <div className="flex flex-col gap-2">
+        <span>{`Most likely, the provider's server(s) are overloaded and streaming was interrupted. Try again later`}</span>
+        {selectedModel ? (
+          <span>
+            {`Provider: `}
+            <code>{selectedModel.provider}</code>
+          </span>
         ) : null}
+        {/* TODO: status page links for providers? */}
       </div>
     );
   }
@@ -84,13 +178,10 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   return (
     <div className={`flex flex-col gap-1 px-3 pb-2 pt-2`}>
       <p className="m-0 p-0 text-lg text-red-500">{`${statusCode ? statusCode + " " : ""}Error`}</p>
-      <div className="">{errorContent}</div>
 
       {message ? (
         <div className="mt-2 flex flex-col gap-0 rounded-sm border border-solid">
-          <code className="max-h-20 overflow-y-scroll px-1 py-1">
-            {message}
-          </code>
+          <code className="max-h-20 overflow-y-auto px-1 py-1">{message}</code>
           <div
             className="flex cursor-pointer flex-row justify-end px-1 py-1 hover:underline"
             onClick={() => {
@@ -101,22 +192,9 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           </div>
         </div>
       ) : null}
+      <div className="mt-3">{errorContent}</div>
+
       <div className="mt-2 flex flex-col gap-1.5">
-        <div>
-          <SecondaryButton
-            className="flex flex-row items-center gap-1.5 hover:underline hover:opacity-70"
-            onClick={() => {
-              ideMessenger.post("config/openProfile", {
-                profileId: undefined,
-              });
-            }}
-          >
-            <div>
-              <Cog8ToothIcon className="h-4 w-4" />
-            </div>
-            <span>Open config</span>
-          </SecondaryButton>
-        </div>
         <span>Report this error:</span>
         <div className="flex flex-row flex-wrap items-center gap-2">
           <SecondaryButton

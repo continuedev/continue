@@ -1,5 +1,4 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
 
 import { getTheme } from "./util/getTheme";
@@ -19,42 +18,6 @@ export class ContinueGUIWebviewViewProvider
     return !!this.webview;
   }
 
-  private updateDebugLogsStatus() {
-    const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
-    this.enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
-    if (!this.enableDebugLogs) {
-      this.outputChannel.hide();
-    }
-  }
-
-  // Show or hide the output channel on enableDebugLogs
-  private setupDebugLogsListener() {
-    vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("continue.enableDebugLogs")) {
-        const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
-        const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
-        if (!enableDebugLogs) {
-          this.outputChannel.hide();
-        }
-      }
-    });
-  }
-
-  private async handleWebviewMessage(message: any) {
-    if (message.messageType === "log") {
-      const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
-      const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
-
-      if (message.level === "debug" && !enableDebugLogs) {
-        return; // Skip debug logs if enableDebugLogs is false
-      }
-
-      const timestamp = new Date().toISOString().split(".")[0];
-      const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${message.text}`;
-      this.outputChannel.appendLine(logMessage);
-    }
-  }
-
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
@@ -62,9 +25,6 @@ export class ContinueGUIWebviewViewProvider
   ): void | Thenable<void> {
     this._webviewView = webviewView;
     this._webview = webviewView.webview;
-    this._webview.onDidReceiveMessage((message) =>
-      this.handleWebviewMessage(message),
-    );
     webviewView.webview.html = this.getSidebarContent(
       this.extensionContext,
       webviewView,
@@ -73,8 +33,6 @@ export class ContinueGUIWebviewViewProvider
 
   private _webview?: vscode.Webview;
   private _webviewView?: vscode.WebviewView;
-  private outputChannel: vscode.OutputChannel;
-  private enableDebugLogs: boolean;
 
   get isVisible() {
     return this._webviewView?.visible;
@@ -104,11 +62,6 @@ export class ContinueGUIWebviewViewProvider
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
   ) {
-    this.outputChannel = vscode.window.createOutputChannel("Continue");
-    this.enableDebugLogs = false;
-    this.updateDebugLogsStatus();
-    this.setupDebugLogsListener();
-
     this.webviewProtocol = new VsCodeWebviewProtocol(
       (async () => {
         const configHandler = await this.configHandlerPromise;
@@ -216,8 +169,8 @@ export class ContinueGUIWebviewViewProvider
         <script>window.fullColorTheme = ${JSON.stringify(currentTheme)}</script>
         <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
-          vscode.workspace.workspaceFolders?.map(
-            (folder) => folder.uri.fsPath,
+          vscode.workspace.workspaceFolders?.map((folder) =>
+            folder.uri.toString(),
           ) || [],
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>

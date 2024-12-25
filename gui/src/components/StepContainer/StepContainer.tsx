@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
-import { getFontSize } from "../../util";
-import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import ResponseActions from "./ResponseActions";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
+import { getFontSize } from "../../util";
+import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import ResponseActions from "./ResponseActions";
+import ThinkingIndicator from "./ThinkingIndicator";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -48,6 +49,7 @@ export default function StepContainer(props: StepContainerProps) {
 
       // If not ending in punctuation or emoji, we assume the response got truncated
       if (
+        content.trim() !== "" &&
         !(
           endingPunctuation.some((p) => content.endsWith(p)) ||
           /\p{Emoji}/u.test(content.slice(-2))
@@ -95,8 +97,9 @@ export default function StepContainer(props: StepContainerProps) {
             itemIndex={props.index}
           />
         )}
+        {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </ContentDiv>
-      {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on */}
+      {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete */}
       <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
         {!shouldHideActions && (
           <ResponseActions

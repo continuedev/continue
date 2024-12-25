@@ -1,5 +1,6 @@
 import { Chunk } from "../../..";
 import { RETRIEVAL_PARAMS } from "../../../util/parameters";
+import { findUriInDirs } from "../../../util/uri";
 import { requestFilesFromRepoMap } from "../repoMapRequest";
 import { deduplicateChunks } from "../util";
 
@@ -40,8 +41,8 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
-      retrievalResults = retrievalResults.filter((chunk) =>
-        chunk.filepath.startsWith(filterDirectory),
+      retrievalResults = retrievalResults.filter(
+        (chunk) => !!findUriInDirs(chunk.filepath, [filterDirectory]),
       );
     }
 

@@ -59,9 +59,10 @@ import {
   getConfigTsPath,
   getContinueDotEnv,
   getEsbuildBinaryPath,
-  readAllGlobalPromptFiles,
 } from "../util/paths";
 
+import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
+import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -69,11 +70,6 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import {
-  DEFAULT_PROMPTS_FOLDER,
-  getPromptFiles,
-  slashCommandFromPromptFile,
-} from "./promptFile.js";
 import { ConfigValidationError, validateConfig } from "./validation.js";
 
 export interface ConfigResult<T> {
@@ -184,8 +180,8 @@ function loadSerializedConfig(
 async function serializedToIntermediateConfig(
   initial: SerializedContinueConfig,
   ide: IDE,
-  loadPromptFiles: boolean = true,
 ): Promise<Config> {
+  // DEPRECATED - load custom slash commands
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = slashCommandFromDescription(command);
@@ -197,33 +193,18 @@ async function serializedToIntermediateConfig(
     slashCommands.push(slashFromCustomCommand(command));
   }
 
-  const workspaceDirs = await ide.getWorkspaceDirs();
-  const promptFolder = initial.experimental?.promptPath;
+  // DEPRECATED - load slash commands from v1 prompt files
+  // NOTE: still checking the v1 default .prompts folder for slash commands
+  const promptFiles = await getAllPromptFiles(
+    ide,
+    initial.experimental?.promptPath,
+    true,
+  );
 
-  if (loadPromptFiles) {
-    // v1 prompt files
-    let promptFiles: { path: string; content: string }[] = [];
-    promptFiles = (
-      await Promise.all(
-        workspaceDirs.map((dir) =>
-          getPromptFiles(
-            ide,
-            path.join(dir, promptFolder ?? DEFAULT_PROMPTS_FOLDER),
-          ),
-        ),
-      )
-    )
-      .flat()
-      .filter(({ path }) => path.endsWith(".prompt"));
-
-    // Also read from ~/.continue/.prompts
-    promptFiles.push(...readAllGlobalPromptFiles());
-
-    for (const file of promptFiles) {
-      const slashCommand = slashCommandFromPromptFile(file.path, file.content);
-      if (slashCommand) {
-        slashCommands.push(slashCommand);
-      }
+  for (const file of promptFiles) {
+    const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
+    if (slashCommand) {
+      slashCommands.push(slashCommand);
     }
   }
 
@@ -258,7 +239,9 @@ async function intermediateToFinalConfig(
   workOsAccessToken: string | undefined,
   loadPromptFiles: boolean = true,
   allowFreeTrial: boolean = true,
-): Promise<ContinueConfig> {
+): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+  const errors: ConfigValidationError[] = [];
+
   // Auto-detect models
   let models: BaseLLM[] = [];
   for (const desc of config.models) {
@@ -509,37 +492,41 @@ async function intermediateToFinalConfig(
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
   if (config.experimental?.modelContextProtocolServers) {
-    config.experimental.modelContextProtocolServers?.forEach(
-      async (server, index) => {
-        const mcpId = index.toString();
-        const mcpConnection = mcpManager.createConnection(mcpId, server);
-        if (!mcpConnection) {
-          return;
-        }
-
-        const abortController = new AbortController();
-        const mcpConnectionTimeout = setTimeout(
-          () => abortController.abort(),
-          2000,
-        );
-
-        try {
-          await mcpConnection.modifyConfig(
-            continueConfig,
-            mcpId,
-            abortController.signal,
-          );
-        } catch (e: any) {
-          if (e.name !== "AbortError") {
-            throw e;
+    await Promise.all(
+      config.experimental.modelContextProtocolServers?.map(
+        async (server, index) => {
+          const mcpId = index.toString();
+          const mcpConnection = mcpManager.createConnection(mcpId, server);
+          if (!mcpConnection) {
+            return;
           }
-        }
-        clearTimeout(mcpConnectionTimeout);
-      },
+
+          const abortController = new AbortController();
+
+          try {
+            const mcpError = await mcpConnection.modifyConfig(
+              continueConfig,
+              mcpId,
+              abortController.signal,
+            );
+            if (mcpError) {
+              errors.push(mcpError);
+            }
+          } catch (e: any) {
+            errors.push({
+              fatal: false,
+              message: `Failed to load MCP server: ${e.message}`,
+            });
+            if (e.name !== "AbortError") {
+              throw e;
+            }
+          }
+        },
+      ) || [],
     );
   }
 
-  return continueConfig;
+  return { config: continueConfig, errors };
 }
 
 function finalToBrowserConfig(
@@ -850,21 +837,25 @@ async function loadFullConfigNode(
   }
 
   // Convert to final config format
-  const finalConfig = await intermediateToFinalConfig(
-    intermediate,
-    ide,
-    ideSettings,
-    uniqueId,
-    writeLog,
-    workOsAccessToken,
-  );
-  return { config: finalConfig, errors, configLoadInterrupted: false };
+  const { config: finalConfig, errors: finalErrors } =
+    await intermediateToFinalConfig(
+      intermediate,
+      ide,
+      ideSettings,
+      uniqueId,
+      writeLog,
+      workOsAccessToken,
+    );
+  return {
+    config: finalConfig,
+    errors: [...(errors ?? []), ...finalErrors],
+    configLoadInterrupted: false,
+  };
 }
 
 export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadFullConfigNode,
-  serializedToIntermediateConfig,
   type BrowserSerializedContinueConfig,
 };

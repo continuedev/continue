@@ -1,4 +1,4 @@
-import { By, WebDriver, WebView } from "vscode-extension-tester";
+import { By, until, WebDriver, WebView } from "vscode-extension-tester";
 import { SelectorUtils } from "./SelectorUtils";
 
 export class GUISelectors {
@@ -14,7 +14,7 @@ export class GUISelectors {
     view: WebView,
     index: number,
   ) {
-    const elements = await view.findWebElements(By.className("tiptap"));
+    const elements = await this.getMessageInputFields(view);
     return elements[index];
   }
 
@@ -65,5 +65,22 @@ export class GUISelectors {
 
   public static getNewSessionNavButton(view: WebView) {
     return SelectorUtils.getElementByAriaLabel(view, "New Session");
+  }
+
+  public static async getInputBoxCodeBlockAtIndex(
+    view: WebView,
+    index: number,
+  ) {
+    const firstInputField = await this.getMessageInputFieldAtIndex(view, index);
+
+    const codeBlockElement = await firstInputField.findElement(
+      By.xpath(".//code"),
+    );
+
+    return codeBlockElement;
+  }
+
+  public static getContinueExtensionBadge(view: WebView) {
+    return SelectorUtils.getElementByAriaLabel(view, "Continue");
   }
 }

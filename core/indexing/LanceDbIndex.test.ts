@@ -2,13 +2,13 @@ import { jest } from "@jest/globals";
 import lance from "vectordb";
 
 import { testConfigHandler, testIde } from "../test/fixtures";
+import { getLanceDbPath } from "../util/paths";
 import {
   mockPathAndCacheKey,
   mockTag,
   testContinueServerClient,
   updateIndexAndAwaitGenerator,
 } from "./test/indexing";
-import { getLanceDbPath } from "../util/paths";
 
 import { LanceDbIndex } from "./LanceDbIndex";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
@@ -26,13 +26,14 @@ describe.skip("ChunkCodebaseIndex", () => {
   }
 
   beforeAll(async () => {
-    const pathSep = await testIde.pathSep();
-    const mockConfig = await testConfigHandler.loadConfig();
+    const { config: mockConfig } = await testConfigHandler.loadConfig();
+    if (!mockConfig) {
+      throw new Error("Failed to load config");
+    }
 
     index = new LanceDbIndex(
       mockConfig.embeddingsProvider,
       testIde.readFile.bind(testIde),
-      pathSep,
       testContinueServerClient,
     );
 

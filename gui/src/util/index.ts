@@ -34,16 +34,7 @@ export function isMetaEquivalentKeyPressed({
 }
 
 export function getMetaKeyLabel(): string {
-  const platform = getPlatform();
-  switch (platform) {
-    case "mac":
-      return "⌘";
-    case "linux":
-    case "windows":
-      return "^";
-    default:
-      return "^";
-  }
+  return getPlatform() === "mac" ? "⌘" : "Ctrl";
 }
 
 export function getAltKeyLabel(): string {

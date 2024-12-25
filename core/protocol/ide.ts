@@ -3,6 +3,7 @@ import { ControlPlaneSessionInfo } from "../control-plane/client";
 import type {
   ContinueRcJson,
   DiffLine,
+  FileStatsMap,
   FileType,
   IDE,
   IdeInfo,
@@ -23,10 +24,8 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
   getIdeInfo: [undefined, IdeInfo];
   getWorkspaceDirs: [undefined, string[]];
-  listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
   showVirtualFile: [{ name: string; content: string }, void];
-  getContinueDir: [undefined, string];
   openFile: [{ path: string }, void];
   openUrl: [string, void];
   runCommand: [{ command: string }, void];
@@ -35,10 +34,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
-  showDiff: [
-    { filepath: string; newContents: string; stepIndex: number },
-    void,
-  ];
   diffLine: [
     {
       diffLine: DiffLine;
@@ -90,7 +85,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
-  getLastModified: [{ files: string[] }, { [path: string]: number }];
+  getFileStats: [{ files: string[] }, FileStatsMap];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
@@ -100,7 +95,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     ControlPlaneSessionInfo | undefined,
   ];
   logoutOfControlPlane: [undefined, void];
-  pathSep: [undefined, string];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {

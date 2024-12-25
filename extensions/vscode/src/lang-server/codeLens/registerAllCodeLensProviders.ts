@@ -1,7 +1,6 @@
 import { ContinueConfig } from "core";
 import * as vscode from "vscode";
 
-import { DiffManager } from "../../diff/horizontal";
 import { VerticalDiffCodeLens } from "../../diff/vertical/manager";
 
 import * as providers from "./providers";
@@ -67,7 +66,6 @@ function registerQuickActionsProvider(
  * It also sets up a subscription to VS Code Quick Actions settings changes.
  *
  * @param context - The VS Code extension context
- * @param diffManager - The DiffManager instance for managing diffs
  * @param editorToVerticalDiffCodeLens - A Map of editor IDs to VerticalDiffCodeLens arrays
  * @param config - The Continue configuration object
  *
@@ -75,9 +73,8 @@ function registerQuickActionsProvider(
  */
 export function registerAllCodeLensProviders(
   context: vscode.ExtensionContext,
-  diffManager: DiffManager,
   editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]>,
-  config: ContinueConfig,
+  config: ContinueConfig | undefined,
 ) {
   if (verticalPerLineCodeLensProvider) {
     verticalPerLineCodeLensProvider.dispose();
@@ -113,20 +110,16 @@ export function registerAllCodeLensProviders(
     new providers.SuggestionsCodeLensProvider(),
   );
 
-  diffsCodeLensDisposable = registerCodeLensProvider(
-    "*",
-    new providers.DiffViewerCodeLensProvider(diffManager),
-  );
+  if (config) {
+    registerQuickActionsProvider(config, context);
 
-  registerQuickActionsProvider(config, context);
-
-  subscribeToVSCodeQuickActionsSettings(() =>
-    registerQuickActionsProvider(config, context),
-  );
+    subscribeToVSCodeQuickActionsSettings(() =>
+      registerQuickActionsProvider(config, context),
+    );
+  }
 
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
-  context.subscriptions.push(diffsCodeLensDisposable);
 
   return { verticalDiffCodeLens };
 }

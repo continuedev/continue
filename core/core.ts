@@ -12,7 +12,7 @@ import {
   setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { addModel, addOpenAIKey, deleteModel } from "./config/util";
+import { addModel, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -30,14 +30,22 @@ import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
+import {
+  editConfigJson,
+  getConfigJsonPath,
+  setupInitialDotContinueDirectory,
+} from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+
+import * as URI from "uri-js";
+import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { localPathToUri } from "./util/pathToUri";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -57,7 +65,7 @@ export class Core {
   private abortedMessageIds: Set<string> = new Set();
 
   private async config() {
-    return this.configHandler.loadConfig();
+    return (await this.configHandler.loadConfig()).config;
   }
 
   invoke<T extends keyof ToCoreProtocol>(
@@ -111,9 +119,13 @@ export class Core {
       this.messenger,
     );
 
-    this.configHandler.onConfigUpdate(
-      (() => this.messenger.send("configUpdate", undefined)).bind(this),
-    );
+    this.configHandler.onConfigUpdate(async (result) => {
+      const serializedResult = await this.configHandler.getSerializedConfig();
+      this.messenger.send("configUpdate", {
+        result: serializedResult,
+        profileId: this.configHandler.currentProfile.profileId,
+      });
+    });
 
     this.configHandler.onDidChangeAvailableProfiles((profiles) =>
       this.messenger.send("didChangeAvailableProfiles", { profiles }),
@@ -164,12 +176,12 @@ export class Core {
     });
 
     const getLlm = async () => {
-      const config = await this.configHandler.loadConfig();
+      const { config } = await this.configHandler.loadConfig();
       const selected = this.globalContext.get("selectedTabAutocompleteModel");
       return (
-        config.tabAutocompleteModels?.find(
+        config?.tabAutocompleteModels?.find(
           (model) => model.title === selected,
-        ) ?? config.tabAutocompleteModels?.[0]
+        ) ?? config?.tabAutocompleteModels?.[0]
       );
     };
     this.completionProvider = new CompletionProvider(
@@ -239,11 +251,6 @@ export class Core {
       void this.configHandler.reloadConfig();
     });
 
-    on("config/addOpenAiKey", (msg) => {
-      addOpenAIKey(msg.data);
-      void this.configHandler.reloadConfig();
-    });
-
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
       void this.configHandler.reloadConfig();
@@ -252,7 +259,7 @@ export class Core {
     on("config/newPromptFile", async (msg) => {
       await createNewPromptFileV2(
         this.ide,
-        (await this.config()).experimental?.promptPath,
+        (await this.config())?.experimental?.promptPath,
       );
       await this.configHandler.reloadConfig();
     });
@@ -261,9 +268,9 @@ export class Core {
       await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
-    on("config/reload", (msg) => {
+    on("config/reload", async (msg) => {
       void this.configHandler.reloadConfig();
-      return this.configHandler.getSerializedConfig();
+      return await this.configHandler.getSerializedConfig();
     });
 
     on("config/ideSettingsUpdate", (msg) => {
@@ -288,6 +295,10 @@ export class Core {
 
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
+      if (!config) {
+        return [];
+      }
+
       const items = await config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
@@ -303,6 +314,10 @@ export class Core {
       const { name, query, fullInput, selectedCode, selectedModelTitle } =
         msg.data;
       const config = await this.config();
+      if (!config) {
+        return [];
+      }
+
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider = config.contextProviders?.find(
         (provider) => provider.description.title === name,
@@ -357,7 +372,7 @@ export class Core {
 
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
-        config: await this.configHandler.getSerializedConfig(),
+        result: await this.configHandler.getSerializedConfig(),
         profileId: this.configHandler.currentProfile.profileId,
       };
     });
@@ -367,7 +382,11 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
-      const config = await configHandler.loadConfig();
+      const { config } = await configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
       // Stop TTS on new StreamChat
       if (config.experimental?.readResponseTTS) {
         void TTS.kill();
@@ -471,7 +490,11 @@ export class Core {
       return completion;
     });
     on("llm/listModels", async (msg) => {
-      const config = await this.configHandler.loadConfig();
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        return [];
+      }
+
       const model =
         config.models.find((model) => model.title === msg.data.title) ??
         config.models.find((model) => model.title?.startsWith(msg.data.title));
@@ -524,7 +547,11 @@ export class Core {
         selectedCode,
       } = msg.data;
 
-      const config = await configHandler.loadConfig();
+      const { config } = await configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
       const llm = await configHandler.llmFromTitle(modelTitle);
       const slashCommand = config.slashCommands?.find(
         (sc) => sc.name === slashCommandName,
@@ -703,11 +730,6 @@ export class Core {
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.refreshCodebaseIndex(dirs);
     });
-    on("index/forceReIndexFiles", async ({ data }) => {
-      if (data?.files?.length) {
-        await this.refreshCodebaseIndexFiles(data.files);
-      }
-    });
     on("index/setPaused", (msg) => {
       this.globalContext.update("indexingPaused", msg.data);
       this.indexingPauseToken.paused = msg.data;
@@ -720,6 +742,66 @@ export class Core {
           "indexProgress",
           this.codebaseIndexingState,
         );
+      }
+    });
+
+    // File changes
+    // TODO - remove remaining logic for these from IDEs where possible
+    on("files/changed", async ({ data }) => {
+      if (data?.uris?.length) {
+        for (const uri of data.uris) {
+          // Listen for file changes in the workspace
+          // URI TODO is this equality statement valid?
+          if (URI.equal(uri, localPathToUri(getConfigJsonPath()))) {
+            // Trigger a toast notification to provide UI feedback that config has been updated
+            const showToast =
+              this.globalContext.get("showConfigUpdateToast") ?? true;
+            if (showToast) {
+              const selection = await this.ide.showToast(
+                "info",
+                "Config updated",
+                "Don't show again",
+              );
+              if (selection === "Don't show again") {
+                this.globalContext.update("showConfigUpdateToast", false);
+              }
+            }
+          }
+
+          if (
+            uri.endsWith(".continuerc.json") ||
+            uri.endsWith(".prompt") ||
+            uri.endsWith(SYSTEM_PROMPT_DOT_FILE)
+          ) {
+            await this.configHandler.reloadConfig();
+          } else if (
+            uri.endsWith(".continueignore") ||
+            uri.endsWith(".gitignore")
+          ) {
+            // Reindex the workspaces
+            this.invoke("index/forceReIndex", undefined);
+          } else {
+            // Reindex the file
+            await this.refreshCodebaseIndexFiles([uri]);
+          }
+        }
+      }
+    });
+
+    on("files/created", async ({ data }) => {
+      if (data?.uris?.length) {
+        await this.refreshCodebaseIndexFiles(data.uris);
+      }
+    });
+
+    on("files/deleted", async ({ data }) => {
+      if (data?.uris?.length) {
+        await this.refreshCodebaseIndexFiles(data.uris);
+      }
+    });
+    on("files/opened", async ({ data }) => {
+      if (data?.uris?.length) {
+        // Do something on files opened
       }
     });
 
@@ -782,7 +864,11 @@ export class Core {
     });
 
     on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
-      const config = await this.configHandler.loadConfig();
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
       const tool = config.tools.find(
         (t) => t.function.name === toolCall.function.name,
       );

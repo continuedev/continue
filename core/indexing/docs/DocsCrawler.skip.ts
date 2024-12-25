@@ -28,7 +28,8 @@ describe.skip("DocsCrawler", () => {
   let docsCrawler: DocsCrawler;
 
   beforeAll(async () => {
-    config = await testConfigHandler.loadConfig();
+    const result = await testConfigHandler.loadConfig();
+    config = result.config!;
     mockIde = new FileSystemIde(process.cwd());
     chromiumInstaller = new ChromiumInstaller(mockIde, config);
     docsCrawler = new DocsCrawler(mockIde, config);

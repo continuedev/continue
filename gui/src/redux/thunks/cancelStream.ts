@@ -1,5 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { abortStream, setInactive } from "../slices/sessionSlice";
+import {
+  abortStream,
+  clearLastEmptyResponse,
+  setInactive,
+} from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 
 export const cancelStream = createAsyncThunk<void, undefined, ThunkApiType>(
@@ -10,6 +14,6 @@ export const cancelStream = createAsyncThunk<void, undefined, ThunkApiType>(
 
     // If the assistant message is empty, then remove it and the user message, placing the user input in the main text box
     // TODO: Waiting until next release
-    // dispatch(clearLastEmptyResponse());
+    dispatch(clearLastEmptyResponse());
   },
 );

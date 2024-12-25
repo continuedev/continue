@@ -41,7 +41,8 @@ body {
   height: 100%;
 }
 
-a:focus {
+/* To override the default `-webkit-focus-ring-color` that is an ugly orange */
+*:focus {
   outline: none;
 }
 

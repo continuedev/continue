@@ -6,6 +6,8 @@ import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
+import { ConfigValidationError } from "../../config/validation";
+import { encodeMCPToolUri } from "../../tools/callTool";
 import MCPContextProvider from "../providers/MCPContextProvider";
 
 export class MCPManagerSingleton {
@@ -104,9 +106,6 @@ class MCPConnection {
 
     try {
       await this.connectPromise;
-    } catch (error) {
-      // Handle connection error if needed
-      throw error;
     } finally {
       // Reset the promise so future attempts can try again if necessary
       this.connectPromise = null;
@@ -117,7 +116,7 @@ class MCPConnection {
     config: ContinueConfig,
     mcpId: string,
     signal: AbortSignal,
-  ): Promise<void> {
+  ): Promise<ConfigValidationError | undefined> {
     try {
       await Promise.race([
         this.connectClient(),
@@ -132,7 +131,10 @@ class MCPConnection {
         throw new Error("Operation aborted");
       }
       if (!error.message.startsWith("StdioClientTransport already started")) {
-        console.error("Failed to connect client:", error);
+        return {
+          fatal: false,
+          message: `Failed to connect to MCP: ${error.message}`,
+        };
       }
     }
 
@@ -171,7 +173,7 @@ class MCPConnection {
         readonly: false,
         type: "function",
         wouldLikeTo: `use the ${tool.name} tool`,
-        uri: `mcp://${tool.name}`,
+        uri: encodeMCPToolUri(mcpId, tool.name),
       }));
 
       config.tools = [...config.tools, ...continueTools];

@@ -1,9 +1,8 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
-import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.google.gson.Gson
+import com.github.continuedev.continueintellijextension.utils.uuid
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.application.*
 import com.intellij.openapi.components.Service
@@ -70,7 +69,7 @@ class AutocompleteService(private val project: Project) {
         val column = editor.caretModel.primaryCaret.logicalPosition.column
         val input = mapOf(
             "completionId" to completionId,
-            "filepath" to virtualFile?.path,
+            "filepath" to virtualFile?.url,
             "pos" to mapOf(
                 "line" to editor.caretModel.primaryCaret.logicalPosition.line,
                 "character" to column

@@ -607,8 +607,6 @@ declare global {
   
     getAvailableThreads(): Promise<Thread[]>;
   
-    listFolders(): Promise<string[]>;
-  
     getWorkspaceDirs(): Promise<string[]>;
   
     getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
@@ -618,9 +616,6 @@ declare global {
     writeFile(path: string, contents: string): Promise<void>;
   
     showVirtualFile(title: string, contents: string): Promise<void>;
-  
-    getContinueDir(): Promise<string>;
-  
     openFile(path: string): Promise<void>;
   
     openUrl(url: string): Promise<void>;
@@ -638,13 +633,6 @@ declare global {
       startLine: number,
       endLine: number,
     ): Promise<void>;
-  
-    showDiff(
-      filepath: string,
-      newContents: string,
-      stepIndex: number,
-    ): Promise<void>;
-  
     getOpenFiles(): Promise<string[]>;
   
     getCurrentFile(): Promise<
@@ -689,8 +677,6 @@ declare global {
   
     // Callbacks
     onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
-  
-    pathSep(): Promise<string>;
   }
   
   // Slash Commands

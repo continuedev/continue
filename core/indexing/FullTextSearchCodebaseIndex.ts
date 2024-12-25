@@ -1,6 +1,6 @@
 import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "../";
-import { getBasename } from "../util/index";
 import { RETRIEVAL_PARAMS } from "../util/parameters";
+import { getUriPathBasename } from "../util/uri";
 
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
@@ -79,7 +79,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
       yield {
         progress: i / results.compute.length,
-        desc: `Indexing ${getBasename(item.path)}`,
+        desc: `Indexing ${getUriPathBasename(item.path)}`,
         status: "indexing",
       };
       await markComplete([item], IndexResultType.Compute);

@@ -133,11 +133,15 @@ function InputToolbar(props: InputToolbarProps) {
                   />
                   <HoverItem>
                     <PhotoIcon
-                      className="h-4 w-4"
+                      className="h-4 w-4 hover:brightness-125"
+                      data-tooltip-id="image-tooltip"
                       onClick={(e) => {
                         fileInputRef.current?.click();
                       }}
                     />
+                    <ToolTip id="image-tooltip" place="top-middle">
+                      Attach an image
+                    </ToolTip>
                   </HoverItem>
                 </>
               ))}
@@ -145,10 +149,10 @@ function InputToolbar(props: InputToolbarProps) {
               <HoverItem onClick={props.onAddContextItem}>
                 <AtSymbolIcon
                   data-tooltip-id="add-context-item-tooltip"
-                  className="h-4 w-4"
+                  className="h-4 w-4 hover:brightness-125"
                 />
 
-                <ToolTip id="add-context-item-tooltip" place="top-start">
+                <ToolTip id="add-context-item-tooltip" place="top-middle">
                   Add context (files, docs, urls, etc.)
                 </ToolTip>
               </HoverItem>
@@ -159,7 +163,7 @@ function InputToolbar(props: InputToolbarProps) {
         </div>
 
         <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
-          {props.toolbarOptions?.hideUseCodebase || (
+          {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
               className={`${shouldRenderToolsButton ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
             >

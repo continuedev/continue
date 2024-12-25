@@ -93,9 +93,7 @@ class OpenAI extends BaseLLM {
   }
 
   private isO1Model(model?: string): boolean {
-    return (
-      !!model && (model.startsWith("o1-preview") || model.startsWith("o1-mini"))
-    );
+    return !!model && model.startsWith("o1");
   }
 
   protected supportsPrediction(model: string): boolean {

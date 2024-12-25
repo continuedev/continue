@@ -1,8 +1,8 @@
 import { IDE } from "core";
-import { getBasename, getLastNPathParts } from "core/util";
 import vscode from "vscode";
 
 import { FileSearch } from "../util/FileSearch";
+import { getUriPathBasename, getLastNPathParts } from "core/util/uri";
 
 class PromptFilesCompletionItemProvider
   implements vscode.CompletionItemProvider
@@ -30,13 +30,16 @@ class PromptFilesCompletionItemProvider
     }
 
     const searchText = linePrefix.split("@").pop() || "";
-    const files = this.fileSearch.search(searchText).map(({ filename }) => {
-      return filename;
-    });
+    const files = this.fileSearch.search(searchText);
 
     if (files.length === 0) {
       const openFiles = await this.ide.getOpenFiles();
-      files.push(...openFiles);
+      files.push(
+        ...openFiles.map((fileUri) => ({
+          id: fileUri,
+          relativePath: vscode.workspace.asRelativePath(fileUri),
+        })),
+      );
     }
 
     // Provide completion items
@@ -84,17 +87,10 @@ class PromptFilesCompletionItemProvider
         kind: vscode.CompletionItemKind.Field,
       },
       ...files.map((file) => {
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(
-          vscode.Uri.file(file),
-        );
-        const relativePath = workspaceFolder
-          ? vscode.workspace.asRelativePath(file)
-          : file;
-
         return {
-          label: getBasename(file),
-          detail: getLastNPathParts(file, 2),
-          insertText: relativePath,
+          label: getUriPathBasename(file.id),
+          detail: getLastNPathParts(file.relativePath, 2),
+          insertText: file.relativePath,
           kind: vscode.CompletionItemKind.File,
         };
       }),

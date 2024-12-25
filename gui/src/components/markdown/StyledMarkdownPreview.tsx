@@ -1,6 +1,5 @@
-import { SymbolWithRange } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -27,7 +26,8 @@ import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-
+import { ToolTip } from "../gui/Tooltip";
+import { v4 as uuidv4 } from "uuid";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -42,8 +42,7 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    margin: 10px 0;
-    padding: 6px 8px;
+    padding: 16px 8px;
   }
 
   code {
@@ -133,31 +132,6 @@ function getCodeChildrenContent(children: any) {
   return undefined;
 }
 
-function processCodeBlocks(tree: any) {
-  const lastNode = tree.children[tree.children.length - 1];
-  const lastCodeNode = lastNode.type === "code" ? lastNode : null;
-
-  visit(tree, "code", (node: any) => {
-    if (!node.lang) {
-      node.lang = "javascript";
-    } else if (node.lang.includes(".")) {
-      node.lang = node.lang.split(".").slice(-1)[0];
-    }
-
-    node.data = node.data || {};
-    node.data.hProperties = node.data.hProperties || {};
-
-    node.data.hProperties["data-isgeneratingcodeblock"] = lastCodeNode === node;
-    node.data.hProperties["data-codeblockcontent"] = node.value;
-
-    if (node.meta) {
-      let meta = node.meta.split(" ");
-      node.data.hProperties.filepath = meta[0];
-      node.data.hProperties.range = meta[1];
-    }
-  });
-}
-
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
@@ -203,7 +177,31 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           singleDollarTextMath: false,
         },
       ],
-      () => processCodeBlocks,
+      () => (tree: any) => {
+        const lastNode = tree.children[tree.children.length - 1];
+        const lastCodeNode = lastNode.type === "code" ? lastNode : null;
+
+        visit(tree, "code", (node: any) => {
+          if (!node.lang) {
+            node.lang = "javascript";
+          } else if (node.lang.includes(".")) {
+            node.lang = node.lang.split(".").slice(-1)[0];
+          }
+
+          node.data = node.data || {};
+          node.data.hProperties = node.data.hProperties || {};
+
+          node.data.hProperties["data-isgeneratingcodeblock"] =
+            lastCodeNode === node;
+          node.data.hProperties["data-codeblockcontent"] = node.value;
+
+          if (node.meta) {
+            let meta = node.meta.split(" ");
+            node.data.hProperties["data-relativefilepath"] = meta[0];
+            node.data.hProperties.range = meta[1];
+          }
+        });
+      },
     ],
     rehypePlugins: [
       rehypeKatex as any,
@@ -221,7 +219,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         return (tree) => {
           visit(tree, { tagName: "pre" }, (node: any) => {
             // Add an index (0, 1, 2, etc...) to each code block.
-            node.properties = { codeBlockIndex };
+            node.properties = { "data-codeblockindex": codeBlockIndex };
             codeBlockIndex++;
           });
         };
@@ -231,16 +229,30 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypeReactOptions: {
       components: {
         a: ({ node, ...aProps }) => {
+          const tooltipId = uuidv4();
+
           return (
-            <a {...aProps} target="_blank">
-              {aProps.children}
-            </a>
+            <>
+              <a
+                href={aProps.href}
+                target="_blank"
+                className="hover:underline"
+                data-tooltip-id={tooltipId}
+              >
+                {aProps.children}
+              </a>
+              <ToolTip id={tooltipId} place="top" className="m-0 p-0">
+                {aProps.href}
+              </ToolTip>
+            </>
           );
         },
         pre: ({ node, ...preProps }) => {
-          const preChildProps = preProps?.children?.[0]?.props;
-          const { className, filepath, range } = preProps?.children?.[0]?.props;
+          const codeBlockIndex = preProps["data-codeblockindex"];
 
+          const preChildProps = preProps?.children?.[0]?.props ?? {};
+          const { className, range } = preChildProps;
+          const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
           const isGeneratingCodeBlock =
             preChildProps["data-isgeneratingcodeblock"];
@@ -254,13 +266,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           // If we don't have a filepath show the more basic toolbar
           // that is just action buttons on hover.
           // We also use this in JB since we haven't yet implemented
-          // the logic for lazy apply.
-          if (!filepath || isJetBrains()) {
+          // the logic forfileUri lazy apply.
+          if (!relativeFilePath || isJetBrains()) {
             return (
               <StepContainerPreActionButtons
                 language={language}
                 codeBlockContent={codeBlockContent}
-                codeBlockIndex={preProps.codeBlockIndex}
+                codeBlockIndex={codeBlockIndex}
               >
                 <SyntaxHighlightedPre {...preProps} />
               </StepContainerPreActionButtons>
@@ -271,9 +283,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
-              codeBlockIndex={preProps.codeBlockIndex}
+              codeBlockIndex={codeBlockIndex}
               language={language}
-              filepath={filepath}
+              relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
             >
@@ -326,7 +338,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
-    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>{reactContent}</StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>
+      {reactContent}
+    </StyledMarkdown>
   );
 });
 
