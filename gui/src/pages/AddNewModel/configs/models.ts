@@ -58,6 +58,33 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
+  mistralChat: {
+    title: "Mistral Chat",
+    description:
+      "A series of open-weight models created by Mistral AI, highly competent for code generation and other tasks",
+    params: {
+      title: "Mistral",
+      model: "mistralai/mistral-7b-instruct",
+      contextLength: 4096,
+    },
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "7b": {
+            model: "mistralai/mistral-7b-instruct",
+            title: "Mistral-7b",
+          },
+        },
+      },
+    ],
+    icon: "mistral.png",
+    providerOptions: [
+      "novita",
+    ],
+    isOpenSource: true,
+  },
   llama31Chat: {
     title: "Llama3.1 Chat",
     description: "A model from Meta, fine-tuned for chat",

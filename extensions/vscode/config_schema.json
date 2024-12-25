@@ -1003,9 +1003,10 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-1b",
                       "llama3.2-3b",
                       "llama3.2-11b",
-                      "llama-3.3-70b",
+                      "llama3.3-70b",
                       "mistral-nemo",
                       "mistral-7b"
                     ]

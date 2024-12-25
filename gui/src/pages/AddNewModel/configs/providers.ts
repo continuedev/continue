@@ -427,7 +427,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama318BChat,
+      models.llama318BChat, models.mistralChat
     ].map((p) => {
       p.params.contextLength = 4096;
       return p;
