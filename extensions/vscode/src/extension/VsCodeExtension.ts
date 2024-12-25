@@ -149,7 +149,7 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig.bind(this.configHandler),
     );
 
-    this.configHandler.loadConfig().then((config) => {
+    this.configHandler.loadConfig().then(({ config }) => {
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.verticalDiffManager.fileUriToCodeLens,
@@ -168,9 +168,9 @@ export class VsCodeExtension {
         } else if (newConfig) {
           setupStatusBar(undefined, undefined, false);
 
-          const serialized = await this.configHandler.getSerializedConfig();
+          const result = await this.configHandler.getSerializedConfig();
           this.sidebar.webviewProtocol?.request("configUpdate", {
-            config: serialized.config!, // <-- TODO
+            result,
             profileId: this.configHandler.currentProfile.profileId,
           });
 

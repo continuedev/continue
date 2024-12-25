@@ -34,7 +34,11 @@ export class TabAutocompleteModel {
 
   async get() {
     if (!this._llm) {
-      const config = await this.configHandler.loadConfig();
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        return undefined;
+      }
+
       if (config.tabAutocompleteModels?.length) {
         const selected = this.globalContext.get("selectedTabAutocompleteModel");
         if (selected) {

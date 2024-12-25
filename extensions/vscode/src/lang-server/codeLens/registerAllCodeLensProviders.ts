@@ -74,7 +74,7 @@ function registerQuickActionsProvider(
 export function registerAllCodeLensProviders(
   context: vscode.ExtensionContext,
   editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]>,
-  config: ContinueConfig,
+  config: ContinueConfig | undefined,
 ) {
   if (verticalPerLineCodeLensProvider) {
     verticalPerLineCodeLensProvider.dispose();
@@ -110,11 +110,13 @@ export function registerAllCodeLensProviders(
     new providers.SuggestionsCodeLensProvider(),
   );
 
-  registerQuickActionsProvider(config, context);
+  if (config) {
+    registerQuickActionsProvider(config, context);
 
-  subscribeToVSCodeQuickActionsSettings(() =>
-    registerQuickActionsProvider(config, context),
-  );
+    subscribeToVSCodeQuickActionsSettings(() =>
+      registerQuickActionsProvider(config, context),
+    );
+  }
 
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);

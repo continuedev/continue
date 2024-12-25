@@ -75,7 +75,11 @@ export class CodebaseIndexer {
   }
 
   protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
-    const config = await this.configHandler.loadConfig();
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      return [];
+    }
+
     const indexes = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
@@ -198,8 +202,8 @@ export class CodebaseIndexer {
       return;
     }
 
-    const config = await this.configHandler.loadConfig();
-    if (config.disableIndexing) {
+    const { config } = await this.configHandler.loadConfig();
+    if (config?.disableIndexing) {
       yield {
         progress,
         desc: "Indexing is disabled in config.json",
