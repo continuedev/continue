@@ -7,11 +7,13 @@ import { HelperVars } from "../util/HelperVars";
 
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
 import { getSymbolsForSnippet } from "./ranking";
+import { RecentFilesService } from "./RecentFilesService";
 import { RootPathContextService } from "./root-path-context/RootPathContextService";
 
 export class ContextRetrievalService {
   private importDefinitionsService: ImportDefinitionsService;
   private rootPathContextService: RootPathContextService;
+  private recentFilesService: RecentFilesService;
 
   constructor(private readonly ide: IDE) {
     this.importDefinitionsService = new ImportDefinitionsService(this.ide);
@@ -19,6 +21,7 @@ export class ContextRetrievalService {
       this.importDefinitionsService,
       this.ide,
     );
+    this.recentFilesService = new RecentFilesService(this.ide);
   }
 
   public async getSnippetsFromImportDefinitions(
@@ -69,5 +72,9 @@ export class ContextRetrievalService {
       helper.filepath,
       helper.treePath,
     );
+  }
+
+  public async getRecentFileSnippets(): Promise<AutocompleteCodeSnippet[]> {
+    return this.recentFilesService.getSnippets();
   }
 }
