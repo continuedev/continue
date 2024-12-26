@@ -5,6 +5,7 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.utils.getOS
+import com.github.continuedev.continueintellijextension.utils.toUriOrNull
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
@@ -180,7 +181,7 @@ class IntelliJIDE(
         for (workspaceDir in workspaceDirs) {
             val dir = VirtualFileManager.getInstance().findFileByUrl(workspaceDir)
             if (dir != null) {
-                val contents = dir.children.map { it.url }
+                val contents = dir.children.mapNotNull { it.toUriOrNull() }
 
                 // Find any .continuerc.json files
                 for (file in contents) {
@@ -307,16 +308,16 @@ class IntelliJIDE(
 
     override suspend fun getOpenFiles(): List<String> {
         val fileEditorManager = FileEditorManager.getInstance(project)
-        return fileEditorManager.openFiles.map { it.url }.toList()
+        return fileEditorManager.openFiles.mapNotNull { it.toUriOrNull() }.toList()
     }
 
     override suspend fun getCurrentFile(): Map<String, Any>? {
         val fileEditorManager = FileEditorManager.getInstance(project)
         val editor = fileEditorManager.selectedTextEditor
         val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
-        return virtualFile?.let {
+        return virtualFile?.toUriOrNull()?.let {
             mapOf(
-                "path" to it.url,
+                "path" to it,
                 "contents" to editor.document.text,
                 "isUntitled" to false
             )
@@ -382,7 +383,7 @@ class IntelliJIDE(
 
                     problems.add(
                         Problem(
-                            filepath = psiFile.virtualFile?.url ?: "",
+                            filepath = psiFile.virtualFile?.toUriOrNull() ?: "",
                             range = Range(
                                 start = Position(
                                     line = startLineNumber,
@@ -561,6 +562,6 @@ class IntelliJIDE(
             return dirs
         }
 
-        return listOfNotNull(project.guessProjectDir()?.url).toTypedArray()
+        return listOfNotNull(project.guessProjectDir()?.toUriOrNull()).toTypedArray()
     }
 }

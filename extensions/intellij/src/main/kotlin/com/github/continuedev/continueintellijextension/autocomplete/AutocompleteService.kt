@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.autocomplete
 
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.toUriOrNull
 import com.github.continuedev.continueintellijextension.utils.uuid
 import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.application.*
@@ -83,11 +84,14 @@ class AutocompleteService(private val project: Project) {
 
         // Request a completion from the core
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+
+        val uri = virtualFile?.toUriOrNull() ?: return
+
         val line = editor.caretModel.primaryCaret.logicalPosition.line
         val column = editor.caretModel.primaryCaret.logicalPosition.column
         val input = mapOf(
             "completionId" to completionId,
-            "filepath" to virtualFile?.url,
+            "filepath" to uri,
             "pos" to mapOf(
                 "line" to line,
                 "character" to column
