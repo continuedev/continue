@@ -1,10 +1,15 @@
+import { execSync } from "child_process";
+import os from "os";
+
 import {
   ContextProviderWithParams,
   ContinueConfig,
+  IDE,
   ILLM,
   ModelDescription,
   ModelRoles,
 } from "../";
+import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
 
 function stringify(obj: any, indentation?: number): string {
@@ -95,4 +100,75 @@ export function getModelByRole<T extends keyof ModelRoles>(
   );
 
   return matchingModel;
+}
+
+// https://github.com/continuedev/continue/issues/940
+export async function isSupportedLanceDbCpuTarget(ide: IDE) {
+  const globalContext = new GlobalContext();
+  const globalContextVal = globalContext.get("isSupportedLanceDbCpuTarget");
+
+  // If we've already checked the CPU target, return the cached value
+  if (globalContextVal !== undefined) {
+    return globalContextVal;
+  }
+
+  const arch = os.arch();
+  const platform = os.platform();
+
+  //https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
+  // Only applies to x64
+  if (arch !== "x64") {
+    return true;
+  }
+
+  try {
+    const CPU_FEATURES_TO_CHECK = ["avx", "fma"] as const;
+
+    const cpuFlags = (() => {
+      switch (platform) {
+        case "darwin":
+          return execSync("sysctl -n machdep.cpu.features")
+            .toString()
+            .toLowerCase();
+        case "linux":
+          return execSync("cat /proc/cpuinfo").toString().toLowerCase();
+        case "win32":
+          return execSync("wmic cpu get caption /format:list")
+            .toString()
+            .toLowerCase();
+        default:
+          return "";
+      }
+    })();
+
+    // TODO: Remvoe !
+    const isSupportedLanceDbCpuTarget = cpuFlags
+      ? !CPU_FEATURES_TO_CHECK.every((feature) => cpuFlags.includes(feature))
+      : true;
+
+    // If it's not a supported CPU target, and it's the first time we are checking,
+    // show a toast to inform the user that we are going to disable indexing.
+    if (!isSupportedLanceDbCpuTarget) {
+      const shouldOpenLink = await ide.showToast(
+        "warning",
+        "Cdoebase indexing is disabled due to CPU incompatibility",
+        "View details",
+      );
+
+      if (shouldOpenLink) {
+        // TODO
+        void ide.openUrl("https://continue.dev");
+      }
+    }
+
+    globalContext.update(
+      "isSupportedLanceDbCpuTarget",
+      isSupportedLanceDbCpuTarget,
+    );
+
+    return isSupportedLanceDbCpuTarget;
+  } catch (error) {
+    // If we can't determine CPU features, default to true
+    return true;
+  }
 }
