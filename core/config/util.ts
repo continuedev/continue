@@ -102,8 +102,15 @@ export function getModelByRole<T extends keyof ModelRoles>(
   return matchingModel;
 }
 
-// https://github.com/continuedev/continue/issues/940
-export async function isSupportedLanceDbCpuTarget(ide: IDE) {
+/**
+ * This check is to determine if the user is on an unsupported CPU
+ * target for our Lance DB binaries.
+ *
+ * See here for details: https://github.com/continuedev/continue/issues/940
+ */
+export function isSupportedLanceDbCpuTarget(ide: IDE) {
+  const CPU_FEATURES_TO_CHECK = ["avx", "fma"] as const;
+
   const globalContext = new GlobalContext();
   const globalContextVal = globalContext.get("isSupportedLanceDbCpuTarget");
 
@@ -115,15 +122,14 @@ export async function isSupportedLanceDbCpuTarget(ide: IDE) {
   const arch = os.arch();
   const platform = os.platform();
 
+  // This check only applies to x64
   //https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
-  // Only applies to x64
   if (arch !== "x64") {
+    globalContext.update("isSupportedLanceDbCpuTarget", true);
     return true;
   }
 
   try {
-    const CPU_FEATURES_TO_CHECK = ["avx", "fma"] as const;
-
     const cpuFlags = (() => {
       switch (platform) {
         case "darwin":
@@ -141,24 +147,16 @@ export async function isSupportedLanceDbCpuTarget(ide: IDE) {
       }
     })();
 
-    // TODO: Remvoe !
     const isSupportedLanceDbCpuTarget = cpuFlags
-      ? !CPU_FEATURES_TO_CHECK.every((feature) => cpuFlags.includes(feature))
+      ? CPU_FEATURES_TO_CHECK.every((feature) => cpuFlags.includes(feature))
       : true;
 
     // If it's not a supported CPU target, and it's the first time we are checking,
     // show a toast to inform the user that we are going to disable indexing.
     if (!isSupportedLanceDbCpuTarget) {
-      const shouldOpenLink = await ide.showToast(
-        "warning",
-        "Cdoebase indexing is disabled due to CPU incompatibility",
-        "View details",
-      );
-
-      if (shouldOpenLink) {
-        // TODO
-        void ide.openUrl("https://continue.dev");
-      }
+      // We offload our async toast to `showUnsupportedCpuToast` to prevent making
+      // our config loading async upstream of `isSupportedLanceDbCpuTarget`
+      void showUnsupportedCpuToast(ide);
     }
 
     globalContext.update(
@@ -170,5 +168,17 @@ export async function isSupportedLanceDbCpuTarget(ide: IDE) {
   } catch (error) {
     // If we can't determine CPU features, default to true
     return true;
+  }
+}
+
+async function showUnsupportedCpuToast(ide: IDE) {
+  const shouldOpenLink = await ide.showToast(
+    "warning",
+    "Codebase indexing is disabled due to CPU incompatibility",
+    "Learn more",
+  );
+
+  if (shouldOpenLink) {
+    void ide.openUrl("https://github.com/continuedev/continue/pull/3551");
   }
 }

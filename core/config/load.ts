@@ -113,7 +113,7 @@ function loadSerializedConfig(
   ideSettings: IdeSettings,
   ideType: IdeType,
   overrideConfigJson: SerializedContinueConfig | undefined,
-  ide: IDE
+  ide: IDE,
 ): ConfigResult<SerializedContinueConfig> {
   const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
@@ -133,10 +133,6 @@ function loadSerializedConfig(
       config: undefined,
       configLoadInterrupted: true,
     };
-  }
-
-  if (config.allowAnonymousTelemetry === undefined) {
-    config.allowAnonymousTelemetry = true;
   }
 
   if (config.ui?.getChatTitles === undefined) {
@@ -773,7 +769,7 @@ async function loadFullConfigNode(
     ideSettings,
     ideType,
     overrideConfigJson,
-    ide
+    ide,
   );
 
   if (!serialized || configLoadInterrupted) {
