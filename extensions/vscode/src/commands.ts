@@ -37,6 +37,7 @@ import { Battery } from "./util/battery";
 import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { Disposable } from "vscode-languageclient";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -767,14 +768,17 @@ const getCommandsMap: (
         true,
       );
 
-      panel.onDidChangeViewState(() => {
-        vscode.commands.executeCommand("continue.newSession");
-        if (sessionId) {
-          vscode.commands.executeCommand(
-            "continue.focusContinueSessionId",
-            sessionId,
-          );
+      const sessionLoader = panel.onDidChangeViewState(() => {
+        if(!fullScreenTab){
+          vscode.commands.executeCommand("continue.newSession");
+          if (sessionId) {
+            vscode.commands.executeCommand(
+              "continue.focusContinueSessionId",
+              sessionId,
+            );
+          }
         }
+        sessionLoader.dispose()
       });
 
       // When panel closes, reset the webview and focus
