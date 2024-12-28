@@ -769,14 +769,12 @@ const getCommandsMap: (
       );
 
       const sessionLoader = panel.onDidChangeViewState(() => {
-        if(!fullScreenTab){
-          vscode.commands.executeCommand("continue.newSession");
-          if (sessionId) {
-            vscode.commands.executeCommand(
-              "continue.focusContinueSessionId",
-              sessionId,
-            );
-          }
+        vscode.commands.executeCommand("continue.newSession");
+        if (sessionId) {
+          vscode.commands.executeCommand(
+            "continue.focusContinueSessionId",
+            sessionId,
+          );
         }
         sessionLoader.dispose()
       });
