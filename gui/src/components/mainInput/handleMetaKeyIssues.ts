@@ -1,6 +1,7 @@
 import { Editor } from "@tiptap/react";
 import { KeyboardEvent } from "react";
 import { getPlatform, isWebEnvironment } from "../../util";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 
 const isWebEnv = isWebEnvironment();
 const platform = getPlatform();
@@ -38,6 +39,7 @@ export const handleJetBrainsOSRMetaKeyIssues = (
 export const handleVSCMetaKeyIssues = async (
   e: KeyboardEvent,
   editor: Editor,
+  ideMessenger: IIdeMessenger,
 ) => {
   const text = editor.state.doc.textBetween(
     editor.state.selection.from,
@@ -46,7 +48,14 @@ export const handleVSCMetaKeyIssues = async (
 
   const handlers: Record<string, () => Promise<void>> = {
     x: () => handleCutOperation(text, editor),
-    c: () => handleCopyOperation(text),
+    c: async () => {
+      await handleCopyOperation(text);
+      if (text) {
+        ideMessenger.post("clipboardCache/add", {
+          content: text,
+        });
+      }
+    },
     v: () => handlePasteOperation(editor),
     z: () => {
       return e.shiftKey

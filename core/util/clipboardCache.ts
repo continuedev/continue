@@ -19,6 +19,16 @@ class ClipboardCache {
       }
     }
 
+    for (const [existingId, existingContent] of this.cache.entries()) {
+      if (existingContent === content) {
+        const index = this.order.indexOf(existingId);
+        if (index > -1) {
+          this.order.splice(index, 1);
+        }
+        this.cache.delete(existingId);
+      }
+    }
+
     this.cache.set(id, content);
     this.order.unshift(id);
   }
