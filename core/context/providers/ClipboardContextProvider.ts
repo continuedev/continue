@@ -43,7 +43,6 @@ class ClipboardContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const recentClipboardItems = clipboardCache.getNItems(MAX_CLIPBOARD_ITEMS);
-    console.log(recentClipboardItems);
     return recentClipboardItems.map((item, index) => {
       return {
         id: item.id,

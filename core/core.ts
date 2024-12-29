@@ -295,7 +295,6 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      console.log("Load SUMBENU ITEMS", msg);
       const config = await this.config();
       if (!config) {
         return [];
@@ -380,7 +379,6 @@ export class Core {
     });
 
     on("clipboardCache/add", (msg) => {
-      console.log("ADD TO CLIPBOARD", msg);
       clipboardCache.add(uuidv4(), msg.data.content);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
