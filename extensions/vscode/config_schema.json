@@ -1864,7 +1864,8 @@
                 "os",
                 "repo-map",
                 "greptile",
-                "web"
+                "web",
+                "clipboard"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -2805,10 +2806,7 @@
                     "type": "object",
                     "properties": {
                       "model": {
-                        "enum": [
-                          "cohere.rerank-v3-5:0",
-                          "amazon.rerank-v1:0"
-                        ]
+                        "enum": ["cohere.rerank-v3-5:0", "amazon.rerank-v1:0"]
                       }
                     },
                     "required": ["model"]
