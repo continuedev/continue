@@ -175,6 +175,8 @@ interface TipTapEditorProps {
   historyKey: string;
 }
 
+export const TIPPY_DIV_ID = "tippy-js-div";
+
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useAppDispatch();
 
@@ -976,22 +978,17 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       {showDragOverMsg &&
         modelSupportsImages(
-          defaultModel.provider,
-          defaultModel.model,
-          defaultModel.title,
-          defaultModel.capabilities,
+          defaultModel?.provider || "",
+          defaultModel?.model || "",
+          defaultModel?.title,
+          defaultModel?.capabilities,
         ) && (
           <>
             <HoverDiv></HoverDiv>
             <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
           </>
         )}
-      <div
-        id="tippy-js-div"
-        style={{
-          position: "fixed",
-        }}
-      />
+      <div id={TIPPY_DIV_ID} className="fixed z-50" />
     </InputBoxDiv>
   );
 }
