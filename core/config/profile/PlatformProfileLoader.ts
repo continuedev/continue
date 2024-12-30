@@ -1,60 +1,53 @@
-import { ConfigJson } from "@continuedev/config-types";
-
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import {
-  ContinueConfig,
-  IDE,
-  IdeSettings,
-  SerializedContinueConfig,
-} from "../../index.js";
+import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
 import { ConfigResult } from "../load.js";
 
+import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
-export default class ControlPlaneProfileLoader implements IProfileLoader {
+export default class PlatformProfileLoader implements IProfileLoader {
   private static RELOAD_INTERVAL = 1000 * 60 * 15; // every 15 minutes
 
   readonly profileId: string;
   profileTitle: string;
 
-  workspaceSettings: ConfigJson | undefined;
-
   constructor(
-    private readonly workspaceId: string,
-    private workspaceTitle: string,
+    private configYaml: ConfigYaml,
+    private readonly ownerSlug: string,
+    private readonly packageSlug: string,
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private writeLog: (message: string) => Promise<void>,
     private readonly onReload: () => void,
   ) {
-    this.profileId = workspaceId;
-    this.profileTitle = workspaceTitle;
+    this.profileId = `${ownerSlug}/${packageSlug}`;
+    this.profileTitle = `${ownerSlug}/${packageSlug}`;
 
     setInterval(async () => {
-      this.workspaceSettings =
-        await this.controlPlaneClient.getSettingsForWorkspace(this.profileId);
+      const assistants = await this.controlPlaneClient.listAssistants();
+      const newConfigYaml = assistants.find(
+        (assistant) =>
+          assistant.packageSlug === this.packageSlug &&
+          assistant.ownerSlug === this.ownerSlug,
+      )?.configYaml;
+      if (!newConfigYaml) {
+        return;
+      }
+      this.configYaml = newConfigYaml;
       this.onReload();
-    }, ControlPlaneProfileLoader.RELOAD_INTERVAL);
+    }, PlatformProfileLoader.RELOAD_INTERVAL);
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    const settings =
-      this.workspaceSettings ??
-      ((await this.controlPlaneClient.getSettingsForWorkspace(
-        this.profileId,
-      )) as any);
-    const serializedConfig: SerializedContinueConfig = settings;
-
     const results = await doLoadConfig(
       this.ide,
       this.ideSettingsPromise,
       this.controlPlaneClient,
       this.writeLog,
-      serializedConfig,
       undefined,
-      this.workspaceId,
+      this.configYaml,
     );
 
     return {

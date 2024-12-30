@@ -24,6 +24,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       this.controlPlaneClient,
       this.writeLog,
       undefined,
+      undefined,
     );
   }
 

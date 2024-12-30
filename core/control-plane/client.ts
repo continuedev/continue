@@ -3,6 +3,7 @@ import fetch, { RequestInit, Response } from "node-fetch";
 
 import { ModelDescription } from "../index.js";
 
+import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import { controlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
@@ -77,6 +78,28 @@ export class ControlPlaneClient {
 
     try {
       const resp = await this.request("workspaces", {
+        method: "GET",
+      });
+      return (await resp.json()) as any;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  public async listAssistants(): Promise<
+    {
+      configYaml: ConfigYaml;
+      ownerSlug: string;
+      packageSlug: string;
+    }[]
+  > {
+    const userId = await this.userId;
+    if (!userId) {
+      return [];
+    }
+
+    try {
+      const resp = await this.request("ide/list-assistants", {
         method: "GET",
       });
       return (await resp.json()) as any;

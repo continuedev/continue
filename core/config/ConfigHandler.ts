@@ -19,8 +19,8 @@ import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
 } from "./onboarding.js";
-import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
+import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
   ProfileDescription,
   ProfileLifecycleManager,
@@ -100,15 +100,16 @@ export class ConfigHandler {
   private async fetchControlPlaneProfiles() {
     // Get the profiles and create their lifecycle managers
     this.controlPlaneClient
-      .listWorkspaces()
-      .then(async (workspaces) => {
+      .listAssistants()
+      .then(async (assistants) => {
         this.profiles = this.profiles.filter(
           (profile) => profile.profileId === "local",
         );
-        workspaces.forEach((workspace) => {
-          const profileLoader = new ControlPlaneProfileLoader(
-            workspace.id,
-            workspace.name,
+        assistants.forEach((assistant) => {
+          const profileLoader = new PlatformProfileLoader(
+            assistant.configYaml,
+            assistant.ownerSlug,
+            assistant.packageSlug,
             this.controlPlaneClient,
             this.ide,
             this.ideSettingsPromise,
@@ -140,7 +141,7 @@ export class ConfigHandler {
         }
       })
       .catch((e) => {
-        console.error(e);
+        console.error("Failed to list assistants: ", e);
       });
   }
 

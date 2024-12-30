@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import path from "path";
 
 import {
   extendConfig,
@@ -26,17 +25,13 @@ import { contextProviderClassFromName } from "../../context/providers/index";
 import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
-import {
-  getConfigYamlPath,
-  getContinueDotEnv,
-  readAllGlobalPromptFiles,
-} from "../../util/paths";
+import { getConfigYamlPath, getContinueDotEnv } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { ConfigValidationError } from "../validation.js";
 
-import { llmsFromModelConfig } from "./models";
-import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
+import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
+import { llmsFromModelConfig } from "./models";
 
 export interface ConfigResult<T> {
   config: T | undefined;
@@ -60,12 +55,12 @@ function renderTemplateVars(configYaml: string): string {
 
 function loadConfigYaml(
   workspaceConfigs: string[],
-  ideSettings: IdeSettings,
-  ideType: IdeType,
   rawYaml: string,
+  overrideConfigYaml: ConfigYaml | undefined,
 ): ConfigResult<ConfigYaml> {
-  const renderedYaml = renderTemplateVars(rawYaml);
-  let config = YAML.parse(renderedYaml) as ConfigYaml;
+  let config =
+    overrideConfigYaml ??
+    (YAML.parse(renderTemplateVars(rawYaml)) as ConfigYaml);
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.level === ValidationLevel.Error)) {
@@ -283,16 +278,18 @@ export async function loadContinueConfigFromYaml(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
-  overrideConfigYaml: string | undefined,
+  overrideConfigYaml: ConfigYaml | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const configYamlPath = getConfigYamlPath(ideType);
-  const rawYaml = fs.readFileSync(configYamlPath, "utf-8");
+  const rawYaml =
+    overrideConfigYaml === undefined
+      ? fs.readFileSync(configYamlPath, "utf-8")
+      : "";
 
   const configYamlResult = await loadConfigYaml(
     workspaceConfigs,
-    ideSettings,
-    ideType,
-    overrideConfigYaml ?? rawYaml,
+    rawYaml,
+    overrideConfigYaml,
   );
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
