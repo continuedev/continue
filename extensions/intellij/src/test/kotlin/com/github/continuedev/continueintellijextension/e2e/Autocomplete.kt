@@ -21,9 +21,10 @@ import java.time.Duration.ofMinutes
 import java.time.Duration.ofSeconds
 
 @ExtendWith(RemoteRobotExtension::class)
-class Autocomplete {init {
-    StepsLogger.init()
-}
+class Autocomplete {
+    init {
+        StepsLogger.init()
+    }
 
     @BeforeEach
     fun waitForIde(remoteRobot: RemoteRobot) {
@@ -33,8 +34,7 @@ class Autocomplete {init {
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
-    // TODO: Uncomment
-//    @Test
+    @Test
     @Video
     fun displayCompletion(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
         welcomeFrame {
@@ -48,7 +48,6 @@ class Autocomplete {init {
 
         // Wait for the default "Main.java" tab to load
         // Our "continue_tutorial.java.ft" tab loads first, but then "Main.java" takes focus.
-        // So we need to wait for that to occur, and then focus on "continue_tutorial.java.ft"
         waitFor(ofSeconds(20)) {
             findAll<ComponentFixture>(
                 byXpath("//div[@accessiblename='Main.java' and @class='EditorTabLabel']")
@@ -56,7 +55,6 @@ class Autocomplete {init {
         }
 
         idea {
-            waitFor(ofMinutes(5)) { isDumbMode().not() }
             with(textEditor()) {
                 val userMsg = "TEST_USER_MESSAGE_0"
                 editor.insertTextAtLine(0, 0, userMsg)

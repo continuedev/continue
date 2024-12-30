@@ -51,9 +51,17 @@ class GUI {
             }
         }
 
+        // Wait for the default "Main.java" tab to load
+        // Our "continue_tutorial.java.ft" tab loads first, but then "Main.java" takes focus.
+        // If we don't wait for this, clicking on the GUI may fail because a popup displays
+        // while the `continue_tutorial.java` is loading.
+        waitFor(ofSeconds(20)) {
+            findAll<ComponentFixture>(
+                byXpath("//div[@accessiblename='Main.java' and @class='EditorTabLabel']")
+            ).isNotEmpty()
+        }
 
         idea {
-            waitFor(ofMinutes(5)) { isDumbMode().not() }
             step("Manually open the webview") {
                 // Manually open the webview
                 find<ComponentFixture>(byXpath("//div[@text='Continue']"), ofSeconds((10))).click()
