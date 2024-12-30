@@ -5,6 +5,7 @@ import tippy from "tippy.js";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import MentionList from "./MentionList";
 import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
+import { TIPPY_DIV_ID } from "./TipTapEditor";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
@@ -37,7 +38,8 @@ function getSuggestion(
             return;
           }
 
-          const container = document.getElementById("tippy-js-div");
+          const container = document.getElementById(TIPPY_DIV_ID);
+
           if (!container) {
             console.log("no container");
             return;
