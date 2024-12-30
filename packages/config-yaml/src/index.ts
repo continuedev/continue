@@ -91,5 +91,6 @@ export function fillTemplateVariables(
   });
 }
 
+export { ConfigYaml, configYamlSchema } from "./schemas/index.js";
 export type { ModelConfig } from "./schemas/models.js";
 export { validateConfigYaml } from "./validation.js";

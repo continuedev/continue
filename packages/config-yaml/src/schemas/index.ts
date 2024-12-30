@@ -9,6 +9,9 @@ const packageSchema = z.object({
 });
 
 const toolSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  policy: z.enum(["automatic", "allowed", "disabled"]).optional(),
   url: z.string(),
   apiKey: z.string().optional(),
 });
@@ -21,6 +24,13 @@ const mcpServerSchema = z.object({
   env: z.record(z.string()).optional(),
 });
 
+const promptSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  type: z.enum(["slash-command", "context-provider"]).optional(),
+  prompt: z.string(),
+});
+
 export const configYamlSchema = z.object({
   name: z.string(),
   packages: z.array(packageSchema).optional(),
@@ -29,6 +39,8 @@ export const configYamlSchema = z.object({
   data: z.array(dataSchema).optional(),
   tools: z.array(toolSchema).optional(),
   mcpServers: z.array(mcpServerSchema).optional(),
+  rules: z.string().optional(),
+  prompts: z.array(promptSchema).optional(),
 });
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
