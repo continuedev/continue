@@ -262,7 +262,7 @@ class IntelliJIDE(
                 content
             } else {
                 val file = File(URI(filepath))
-                if (!file.exists()) return ""
+                if (!file.exists() || file.isDirectory) return ""
                 withContext(Dispatchers.IO) {
                     FileInputStream(file).use { fis ->
                         val sizeToRead = minOf(100000, file.length()).toInt()
@@ -270,6 +270,8 @@ class IntelliJIDE(
                         val bytesRead = fis.read(buffer, 0, sizeToRead)
                         if (bytesRead <= 0) return@use ""
                         String(buffer, 0, bytesRead, Charset.forName("UTF-8"))
+                            // `\r` takes up unnecessary tokens
+                            .lineSequence().joinToString("\n")
                     }
                 }
             }
