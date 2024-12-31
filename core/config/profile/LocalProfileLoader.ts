@@ -25,6 +25,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       this.writeLog,
       undefined,
       undefined,
+      undefined,
     );
   }
 

@@ -1,21 +1,21 @@
+import { ProfileDescription } from "core/config/ProfileLifecycleManager";
+import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import React, {
   createContext,
   useContext,
-  useState,
   useEffect,
   useMemo,
+  useState,
 } from "react";
-import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import { useDispatch } from "react-redux";
+import AccountDialog from "../components/AccountDialog";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
-import { IdeMessengerContext } from "./IdeMessenger";
+import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useAppSelector } from "../redux/hooks";
+import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { ProfileDescription } from "core/config/ProfileLifecycleManager";
-import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
-import { useWebviewListener } from "../hooks/useWebviewListener";
-import AccountDialog from "../components/AccountDialog";
-import { useAppSelector } from "../redux/hooks";
+import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;

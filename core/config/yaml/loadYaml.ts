@@ -31,6 +31,7 @@ import { ConfigValidationError } from "../validation.js";
 
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
+import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { llmsFromModelConfig } from "./models";
 
 export interface ConfigResult<T> {
@@ -114,6 +115,7 @@ async function configYamlToContinueConfig(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   const continueConfig: ContinueConfig = {
@@ -141,6 +143,7 @@ async function configYamlToContinueConfig(
         uniqueId,
         ideSettings,
         writeLog,
+        platformConfigMetadata,
       );
       continueConfig.models.push(...llms);
     } else if (model.roles?.includes("autocomplete")) {
@@ -151,6 +154,7 @@ async function configYamlToContinueConfig(
         uniqueId,
         ideSettings,
         writeLog,
+        platformConfigMetadata,
       );
       continueConfig.tabAutocompleteModels?.push(...llms);
     }
@@ -279,6 +283,7 @@ export async function loadContinueConfigFromYaml(
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
   overrideConfigYaml: ConfigYaml | undefined,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const configYamlPath = getConfigYamlPath(ideType);
   const rawYaml =
@@ -307,6 +312,7 @@ export async function loadContinueConfigFromYaml(
     uniqueId,
     writeLog,
     workOsAccessToken,
+    platformConfigMetadata,
   );
 
   const systemPromptDotFile = await getSystemPromptDotFile(ide);

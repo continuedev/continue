@@ -19,6 +19,7 @@ import { TTS } from "../../util/tts";
 import { ConfigResult, loadFullConfigNode } from "../load";
 import { ConfigValidationError } from "../validation";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
+import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -27,6 +28,7 @@ export default async function doLoadConfig(
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
   overrideConfigYaml: ConfigYaml | undefined,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
@@ -51,6 +53,7 @@ export default async function doLoadConfig(
       writeLog,
       workOsAccessToken,
       overrideConfigYaml,
+      platformConfigMetadata,
     );
     newConfig = result.config;
     errors = result.errors;

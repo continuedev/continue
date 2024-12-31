@@ -6,6 +6,11 @@ import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
+export interface PlatformConfigMetadata {
+  ownerSlug: string;
+  packageSlug: string;
+}
+
 export default class PlatformProfileLoader implements IProfileLoader {
   private static RELOAD_INTERVAL = 1000 * 60 * 15; // every 15 minutes
 
@@ -48,6 +53,10 @@ export default class PlatformProfileLoader implements IProfileLoader {
       this.writeLog,
       undefined,
       this.configYaml,
+      {
+        ownerSlug: this.ownerSlug,
+        packageSlug: this.packageSlug,
+      },
     );
 
     return {
