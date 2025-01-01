@@ -31,7 +31,7 @@ For those preferring local execution or self-hosting,`Qwen2.5-Coder 1.5B` offers
 ```json title="config.json""
 {
   "tabAutocompleteModel": {
-    "title": "Qwen2.5-Coder 1.5B Base",
+    "title": "Qwen2.5-Coder 1.5B",
     "model": "qwen2.5-coder:1.5b-base",
     "provider": "ollama"
   }
