@@ -146,7 +146,9 @@ async function configYamlToContinueConfig(
         platformConfigMetadata,
       );
       continueConfig.models.push(...llms);
-    } else if (model.roles?.includes("autocomplete")) {
+    }
+
+    if (model.roles?.includes("autocomplete")) {
       // Autocomplete models array
       const llms = await llmsFromModelConfig(
         model,

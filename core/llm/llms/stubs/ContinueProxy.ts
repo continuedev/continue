@@ -2,13 +2,7 @@ import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyti
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 
-import { ChatCompletionCreateParams } from "@continuedev/openai-adapters";
-import type {
-  ChatMessage,
-  Chunk,
-  CompletionOptions,
-  LLMOptions,
-} from "../../../index.js";
+import type { Chunk, LLMOptions } from "../../../index.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
@@ -33,17 +27,14 @@ class ContinueProxy extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
-  protected _convertArgs(
-    options: CompletionOptions,
-    messages: ChatMessage[],
-  ): ChatCompletionCreateParams {
-    const args: any = super._convertArgs(options, messages);
-    args.continueProperties = {
-      apiKey: this.actualApiKey,
-      apiBase: this.actualApiBase,
-      apiKeySecret: this.apiKeySecret,
+  protected extraBodyProperties(): Record<string, any> {
+    return {
+      continueProperties: {
+        apiKey: this.actualApiKey,
+        apiBase: this.actualApiBase,
+        apiKeySecret: this.apiKeySecret,
+      },
     };
-    return args;
   }
 
   protected _getHeaders() {
