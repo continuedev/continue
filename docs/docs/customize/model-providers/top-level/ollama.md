@@ -23,12 +23,12 @@ We recommend configuring **Llama3.1 8B** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **Qwen2.5-Coder 1.5B-base** as your autocomplete model.
+We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
 
 ```json title="config.json"
 {
   "tabAutocompleteModel": {
-    "title": "Qwen2.5-Coder 1.5B-base",
+    "title": "Qwen2.5-Coder 1.5B",
     "provider": "ollama",
     "model": "qwen2.5-coder:1.5b-base"
   }
