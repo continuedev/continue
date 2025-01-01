@@ -18,7 +18,7 @@ export default function RunInTerminalButton({
 
   return (
     <div
-      className={`flex items-center border-none bg-transparent text-xs text-gray-400 text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+      className={`text-vsc-foreground flex cursor-pointer items-center border-none bg-transparent text-xs text-gray-400 outline-none hover:brightness-125`}
       onClick={runInTerminal}
     >
       <div

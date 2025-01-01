@@ -106,7 +106,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   return (
     <div
       onClick={openContextItem}
-      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:opacity-80"
     >
       <div className="flex w-full items-center">
         {getContextItemIcon()}
@@ -164,12 +164,12 @@ function ContextItemsPeek({
       >
         <div className="relative mr-1 h-4 w-4">
           <ChevronRightIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+            className={`text-lightgray absolute h-4 w-4 transition-all duration-200 ease-in-out ${
               open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
             }`}
           />
           <ChevronDownIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+            className={`text-lightgray absolute h-4 w-4 transition-all duration-200 ease-in-out ${
               open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
             }`}
           />

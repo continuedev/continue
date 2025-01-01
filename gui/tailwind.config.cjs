@@ -58,6 +58,14 @@ module.exports = {
           "var(--vscode-descriptionForeground, #999)",
         "vsc-input-placeholder-foreground":
           "var(--vscode-input-placeholderForeground, #999)",
+        error: "var(--vscode-errorBackground, #f00)",
+        "error-foreground": "var(--vscode-errorForeground, #fff)",
+
+        // --vscode-errorForeground  /* Text color for error messages */
+        // --vscode-errorBackground  /* Background color for error messages */
+        // --vscode-editorError-foreground  /* Color for error squiggles in editor */
+        // --vscode-inputValidation-errorBackground  /* Background for error validation */
+        // --vscode-inputValidation-errorBorder  /* Border color for error validation */
       },
     },
   },

@@ -301,7 +301,7 @@ const Layout = () => {
 
             {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
               <div
-                className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+                className="bg-error text-error-foreground z-50 cursor-pointer p-4 text-center"
                 role="alert"
                 onClick={() => navigate(ROUTES.CONFIG_ERROR)}
               >

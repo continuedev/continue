@@ -650,10 +650,10 @@ export const Button = ({
 <|fim|>
   );
 };`,
-    llmOutput: `<button onClick={onClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    llmOutput: `<button onClick={onClick} className="bg-blue-500 hover:bg-primary text-primary-foreground font-bold py-2 px-4 rounded">
       {children}
     </button>`,
-    expectedCompletion: `<button onClick={onClick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    expectedCompletion: `<button onClick={onClick} className="bg-blue-500 hover:bg-primary text-primary-foreground font-bold py-2 px-4 rounded">
       {children}
     </button>`,
     filename: "Button.tsx",

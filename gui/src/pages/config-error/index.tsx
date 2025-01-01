@@ -32,7 +32,7 @@ export default function ConfigErrorPage() {
       <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="py-5">
           <h3 className="mb-2 mt-0 text-xl">Config Errors</h3>
-          <p className="text-md mb-4">
+          <p className="mb-4 text-base">
             Please resolve the following errors in your config.json file.
           </p>
           <div className="flex flex-col gap-5">
