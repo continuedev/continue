@@ -52,7 +52,8 @@ function AddModelForm({
 
   const allProviders = Object.entries(providers)
     .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
-    .map(([, provider]) => provider);
+    .map(([, provider]) => provider)
+    .filter((provider) => !!provider);
 
   const popularProviders = allProviders
     .filter((provider) => popularProviderTitles.includes(provider.title))
@@ -187,8 +188,9 @@ function AddModelForm({
                 setSelectedProvider={setSelectedModel}
                 otherOptions={
                   Object.entries(providers).find(
-                    ([, provider]) => provider.title === selectedProvider.title,
-                  )?.[1].packages
+                    ([, provider]) =>
+                      provider?.title === selectedProvider.title,
+                  )?.[1]?.packages
                 }
               />
             </div>
@@ -220,9 +222,14 @@ function AddModelForm({
                   <InputSubtext className="mb-0">
                     <a
                       className="cursor-pointer text-inherit underline hover:text-inherit"
-                      onClick={() =>
-                        ideMessenger.post("openUrl", selectedProviderApiKeyUrl)
-                      }
+                      onClick={() => {
+                        if (selectedProviderApiKeyUrl) {
+                          ideMessenger.post(
+                            "openUrl",
+                            selectedProviderApiKeyUrl,
+                          );
+                        }
+                      }}
                     >
                       Click here
                     </a>{" "}

@@ -82,8 +82,6 @@ export const SubmenuContextProvidersProvider = ({
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
 
-  const config = useAppSelector((store) => store.config.config);
-
   const ideMessenger = useContext(IdeMessengerContext);
 
   const getOpenFilesItems = useCallback(async () => {
@@ -102,7 +100,7 @@ export const SubmenuContextProvidersProvider = ({
     }));
   }, [ideMessenger]);
 
-  useWebviewListener("refreshSubmenuItems", async (data) => {
+  useWebviewListener("refreshSubmenuItems", async () => {
     if (!isLoading) {
       setInitialLoadComplete(false);
       setAutoLoadTriggered((prev) => !prev); // Toggle to trigger effect

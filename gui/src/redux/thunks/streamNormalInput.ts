@@ -41,7 +41,7 @@ export const streamNormalInput = createAsyncThunk<
                 (tool) => tool.function.name === toolName,
               ),
             )
-            .filter(Boolean)
+            .filter((tool) => !!tool)
         : undefined,
     },
   );

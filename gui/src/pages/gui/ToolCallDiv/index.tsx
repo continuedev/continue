@@ -12,7 +12,6 @@ import { ThreadDiv } from "./ThreadDiv";
 interface ToolCallDivProps {
   toolCall: ToolCall;
   toolCallState: ToolCallState;
-  reactKey: string;
 }
 
 export function ToolCallDiv(props: ToolCallDivProps) {
@@ -32,7 +31,6 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
   return (
     <ThreadDiv
-      reactKey={props.reactKey}
       icon={getIcon(props.toolCallState.status)}
       toolCall={props.toolCall}
       toolCallState={props.toolCallState}

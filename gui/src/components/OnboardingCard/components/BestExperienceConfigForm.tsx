@@ -83,7 +83,7 @@ function BestExperienceConfigForm({
           <div className="mb-1 flex flex-row justify-between gap-4 text-lg font-bold">
             <label className="text-lg font-bold">Chat model</label>
             <div
-              className="flex hidden items-center justify-end text-xs font-semibold sm:flex"
+              className="hidden items-center justify-end text-xs font-semibold sm:flex"
               style={{ color: lightGray }}
             >
               <CubeIcon className="mr-1 h-4 w-4 flex-shrink-0" />

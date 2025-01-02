@@ -116,7 +116,10 @@ export const sessionSlice = createSlice({
       state.isStreaming = true;
     },
     setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
-      state.history.at(-1).isGatheringContext = payload;
+      const curMessage = state.history.at(-1);
+      if (curMessage) {
+        curMessage.isGatheringContext = payload;
+      }
     },
     clearLastEmptyResponse: (state) => {
       if (state.history.length < 2) {
@@ -472,8 +475,10 @@ export const sessionSlice = createSlice({
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
     ) => {
-      state.history[state.curCheckpointIndex].checkpoint[payload.filepath] =
-        payload.content;
+      const checkpoint = state.history[state.curCheckpointIndex].checkpoint;
+      if (checkpoint) {
+        checkpoint[payload.filepath] = payload.content;
+      }
     },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(
