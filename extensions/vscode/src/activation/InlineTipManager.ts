@@ -15,7 +15,7 @@ const SVG_CONFIG = {
   radius: 4,
   leftMargin: 40,
   debounceDelay: 500,
-  chatLabel: "Add to Chat",
+  chatLabel: "Chat",
   chatShortcut: `${getMetaKeyLabel()}L`,
   editLabel: "Edit",
   editShortcut: `${getMetaKeyLabel()}I`,
