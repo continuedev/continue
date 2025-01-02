@@ -7,7 +7,8 @@ import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 
 import { VsCodeContinueApi } from "./api";
-import { setupInlineTips } from "./inlineTips";
+import setupInlineTips from "./InlineTipManager";
+// import { setupInlineTips } from "./inlineTips";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
