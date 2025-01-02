@@ -321,12 +321,14 @@ class OpenAI extends BaseLLM {
       // We call it toolCalls, they call it tool_calls
       tool_calls: m.toolCalls,
       tool_call_id: m.toolCallId,
-      ...this.extraBodyProperties(),
     })) as any;
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
       headers: this._getHeaders(),
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        ...this.extraBodyProperties(),
+      }),
       signal,
     });
 
