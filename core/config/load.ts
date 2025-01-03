@@ -46,6 +46,8 @@ import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
 import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
+import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
+import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
 import { allTools } from "../tools";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
@@ -61,8 +63,6 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
-import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
-import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -70,6 +70,7 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
+import { isSupportedLanceDbCpuTarget } from "./util";
 import { ConfigValidationError, validateConfig } from "./validation.js";
 
 export interface ConfigResult<T> {
@@ -112,6 +113,7 @@ function loadSerializedConfig(
   ideSettings: IdeSettings,
   ideType: IdeType,
   overrideConfigJson: SerializedContinueConfig | undefined,
+  ide: IDE,
 ): ConfigResult<SerializedContinueConfig> {
   const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
@@ -131,10 +133,6 @@ function loadSerializedConfig(
       config: undefined,
       configLoadInterrupted: true,
     };
-  }
-
-  if (config.allowAnonymousTelemetry === undefined) {
-    config.allowAnonymousTelemetry = true;
   }
 
   if (config.ui?.getChatTitles === undefined) {
@@ -173,6 +171,10 @@ function loadSerializedConfig(
     ideType === "vscode"
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
+
+  if (!isSupportedLanceDbCpuTarget(ide)) {
+    config.disableIndexing = true;
+  }
 
   return { config, errors, configLoadInterrupted: false };
 }
@@ -767,6 +769,7 @@ async function loadFullConfigNode(
     ideSettings,
     ideType,
     overrideConfigJson,
+    ide,
   );
 
   if (!serialized || configLoadInterrupted) {
