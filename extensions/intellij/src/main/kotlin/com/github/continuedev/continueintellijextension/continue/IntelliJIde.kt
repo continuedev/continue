@@ -519,9 +519,9 @@ class IntelliJIDE(
         return files
     }
 
-    override suspend fun getLastModified(files: List<String>): Map<String, Long> {
+    override suspend fun getFileStats(files: List<String>): Map<String, FileStats> {
         return files.associateWith { file ->
-            File(URI(file)).lastModified()
+            FileStats(File(URI(file)).lastModified(), File(URI(file)).length())
         }
     }
 

@@ -28,6 +28,10 @@ class ContinuePluginSelectionListener(
     private var lastActiveEditor: Editor? = null
 
     override fun selectionChanged(e: SelectionEvent) {
+        if (e.editor.isDisposed || e.editor.project?.isDisposed == true) {
+            return
+        }
+
         debouncer.debounce { handleSelection(e) }
     }
 

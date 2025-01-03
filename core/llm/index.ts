@@ -809,12 +809,12 @@ export abstract class BaseLLM implements ILLM {
               if (this.shouldUseOpenAIAdapter("embed") && this.openaiAdapter) {
                 const result = await this.openaiAdapter.embed({
                   model: this.model,
-                  input: chunks,
+                  input: batch,
                 });
                 return result.data.map((chunk) => chunk.embedding);
               }
 
-              return await this._embed(chunks);
+              return await this._embed(batch);
             },
           );
 

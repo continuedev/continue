@@ -335,7 +335,10 @@ const getCommandsMap: (
     onlyOneInsertion?: boolean,
     range?: vscode.Range,
   ) {
-    const config = await configHandler.loadConfig();
+    const { config } = await configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
 
     const defaultModelTitle = await sidebar.webviewProtocol.request(
       "getDefaultModelTitle",
@@ -867,7 +870,7 @@ const getCommandsMap: (
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
       const autocompleteModels =
-        (await configHandler.loadConfig())?.tabAutocompleteModels ?? [];
+        (await configHandler.loadConfig()).config?.tabAutocompleteModels ?? [];
 
       let selected = new GlobalContext().get("selectedTabAutocompleteModel");
       if (

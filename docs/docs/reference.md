@@ -88,7 +88,7 @@ Specifies options for tab autocompletion behavior.
 - `debounceDelay`: Delay (in ms) before triggering autocomplete.
 - `maxSuffixPercentage`: Maximum percentage of prompt for suffix.
 - `prefixPercentage`: Percentage of input for prefix.
-- `template`: Template string for autocomplete, using Mustache templating.
+- `template`: Template string for autocomplete, using Mustache templating. You can use the `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}`, and `{{{ language }}}` variables.
 - `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`).
 - `useCache`: If `true`, caches completions.
 - `onlyMyCode`: If `true`, only includes code within the repository.

@@ -175,6 +175,8 @@ interface TipTapEditorProps {
   historyKey: string;
 }
 
+export const TIPPY_DIV_ID = "tippy-js-div";
+
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useAppDispatch();
 
@@ -339,6 +341,10 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
           });
           return [plugin];
+        },
+      }).configure({
+        HTMLAttributes: {
+          class: "editor-image bg-black object-contain max-h-[250px] w-full",
         },
       }),
       Placeholder.configure({
@@ -637,12 +643,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      props.onEnter(json, modifiers, editor);
-
       if (props.isMainInput) {
-        const content = editor.state.toJSON().doc;
-        addRef.current(content);
+        addRef.current(json);
       }
+
+      props.onEnter(json, modifiers, editor);
     },
     [props.onEnter, editor, props.isMainInput],
   );
@@ -987,22 +992,17 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       {showDragOverMsg &&
         modelSupportsImages(
-          defaultModel.provider,
-          defaultModel.model,
-          defaultModel.title,
-          defaultModel.capabilities,
+          defaultModel?.provider || "",
+          defaultModel?.model || "",
+          defaultModel?.title,
+          defaultModel?.capabilities,
         ) && (
           <>
             <HoverDiv></HoverDiv>
             <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
           </>
         )}
-      <div
-        id="tippy-js-div"
-        style={{
-          position: "fixed",
-        }}
-      />
+      <div id={TIPPY_DIV_ID} className="fixed z-50" />
     </InputBoxDiv>
   );
 }

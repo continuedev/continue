@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Fixed
-body: Autodetect mistral API key type
-time: 2024-12-16T22:08:18.369444-08:00

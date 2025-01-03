@@ -16,8 +16,10 @@ import { addContextProvider } from "../../config/util";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
+import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
 import { IMessenger } from "../../protocol/messenger";
+import { GlobalContext } from "../../util/GlobalContext";
 import {
   editConfigJson,
   getDocsSqlitePath,
@@ -25,6 +27,7 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 
+import { ConfigResult } from "../../config/load";
 import { Article, chunkArticle, pageToArticle } from "./article";
 import DocsCrawler from "./DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
@@ -121,8 +124,8 @@ export default class DocsService {
 
   // Initialization - load config and attach config listener
   private async init(configHandler: ConfigHandler) {
-    const config = await configHandler.loadConfig();
-    await this.handleConfigUpdate({ config });
+    const result = await configHandler.loadConfig();
+    await this.handleConfigUpdate(result);
     configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
   }
 
@@ -262,9 +265,7 @@ export default class DocsService {
 
   private async handleConfigUpdate({
     config: newConfig,
-  }: {
-    config: ContinueConfig | undefined;
-  }) {
+  }: ConfigResult<ContinueConfig>) {
     if (newConfig) {
       const oldConfig = this.config;
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in

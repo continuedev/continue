@@ -215,13 +215,13 @@ class IdeProtocolClient(
                         respond(null)
                     }
 
-                    "getLastModified" -> {
+                    "getFileStats" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
-                            GetLastModifiedParams::class.java
+                            GetFileStatsParams::class.java
                         )
-                        val lastModifiedMap = ide.getLastModified(params.files)
-                        respond(lastModifiedMap)
+                        val fileStatsMap = ide.getFileStats(params.files)
+                        respond(fileStatsMap)
                     }
 
                     "listDir" -> {
