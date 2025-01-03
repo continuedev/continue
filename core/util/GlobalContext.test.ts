@@ -75,7 +75,7 @@ describe("GlobalContext", () => {
     const value = globalContext.get("indexingPaused");
     expect(value).toBeUndefined();
     expect(consoleWarnMock).toHaveBeenCalledWith(
-      expect.stringContaining("Error parsing global context")
+      expect.stringContaining("Error parsing global context"),
     );
 
     // Clean up
@@ -99,7 +99,7 @@ describe("GlobalContext", () => {
     expect(value).toBeUndefined();
 
     expect(consoleWarnMock).toHaveBeenCalledWith(
-      expect.stringContaining("Error updating global context")
+      expect.stringContaining("Error updating global context"),
     );
 
     // Clean up
@@ -113,10 +113,10 @@ describe("GlobalContext", () => {
 
     expect(globalContext.get("indexingPaused")).toBe(true);
     expect(globalContext.get("selectedTabAutocompleteModel")).toBe(
-      "test-model"
+      "test-model",
     );
     expect(globalContext.get("hasDismissedConfigTsNoticeJetBrains")).toBe(
-      false
+      false,
     );
   });
 
@@ -125,16 +125,7 @@ describe("GlobalContext", () => {
     expect(globalContext.get("hasAlreadyCreatedAPromptFile")).toBe(true);
   });
 
-  it("should handle curEmbeddingsProviderId correctly", () => {
-    globalContext.update("curEmbeddingsProviderId", "test-provider-id");
-    expect(globalContext.get("curEmbeddingsProviderId")).toBe(
-      "test-provider-id"
-    );
-  });
-
   it("should not crash or throw when getting a key that hasn't been set", () => {
-    expect(
-      globalContext.get("hasAlreadyCreatedAPromptFile")
-    ).toBeUndefined();
+    expect(globalContext.get("hasAlreadyCreatedAPromptFile")).toBeUndefined();
   });
 });
