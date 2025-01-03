@@ -34,7 +34,7 @@ export async function resolveRelativePathInDir(
   If no meaninful path match just concatenates to first dir's uri
 */
 export async function inferResolvedUriFromRelativePath(
-  path: string,
+  relativePath: string,
   ide: IDE,
   dirCandidates?: string[],
 ): Promise<string> {
@@ -44,7 +44,7 @@ export async function inferResolvedUriFromRelativePath(
     throw new Error("inferResolvedUriFromRelativePath: no dirs provided");
   }
 
-  const segments = pathToUriPathSegment(path).split("/");
+  const segments = pathToUriPathSegment(relativePath).split("/");
   // Generate all possible suffixes from shortest to longest
   const suffixes: string[] = [];
   for (let i = segments.length - 1; i >= 0; i--) {
@@ -79,5 +79,5 @@ export async function inferResolvedUriFromRelativePath(
   }
 
   // If no unique match found, use the first directory
-  return joinPathsToUri(dirs[0], path);
+  return joinPathsToUri(dirs[0], relativePath);
 }

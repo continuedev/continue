@@ -98,6 +98,7 @@ export default function StepContainerPreToolbar(
       props.relativeFilepath,
       ideMessenger.ide,
     );
+    console.log("HERE", props.relativeFilepath, fileUri);
 
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,

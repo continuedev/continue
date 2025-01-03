@@ -1,16 +1,22 @@
-import { CodeToEdit } from "core";
+import { CodeToEdit, IDE } from "core";
+import { findUriInDirs } from "core/util/uri";
 
 export default function getMultifileEditPrompt(
   codeToEdit: CodeToEdit[],
+  dirs?: string[],
 ): string {
   const codeToEditStr = codeToEdit
-    .map(
-      (code) => `
-\`\`\` ${code.filepath}
+    .map((code) => {
+      const { relativePathOrBasename } = findUriInDirs(
+        code.filepath,
+        dirs ?? window.workspacePaths ?? [],
+      );
+      return `
+\`\`\` ${relativePathOrBasename}
 ${code.contents}
 \`\`\`
-  `,
-    )
+  `;
+    })
     .join("\n");
 
   return `
