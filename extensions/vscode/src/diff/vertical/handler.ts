@@ -544,7 +544,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       codeLensBlocks.push({
         numGreen,
         numRed,
-        start: this.startLine + diffs.length - 1 - numRed - numGreen,
+        start: this.startLine + diffs.length - numRed - numGreen,
       });
     }
 
