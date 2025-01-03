@@ -37,6 +37,7 @@ import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
+import com.intellij.openapi.ide.CopyPasteManager
 
 fun showTutorial(project: Project) {
     val tutorialFileName = getTutorialFileName()
@@ -155,7 +156,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         )
                     )
                 }
-            })
+            })            
 
             // Handle file changes and deletions - reindex
             connection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {

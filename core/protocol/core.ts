@@ -195,4 +195,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { toolCall: ToolCall; selectedModelTitle: string },
     { contextItems: ContextItem[] },
   ];
+  "clipboardCache/add": [{ content: string }, void];
 };

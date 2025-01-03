@@ -103,6 +103,21 @@ function useSetup() {
     [loadConfig],
   );
 
+  useEffect(() => {
+    const handleCopyEvent = (e: ClipboardEvent) => {
+      const content = e.clipboardData?.getData("text/plain");
+      if (content) {
+        ideMessenger.post("clipboardCache/add", {
+          content,
+        });
+      }
+    };
+    window.addEventListener("copy", handleCopyEvent);
+    return () => {
+      window.removeEventListener("copy", handleCopyEvent);
+    };
+  }, []);
+
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
   useEffect(() => {
