@@ -18,8 +18,6 @@ import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbed
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
-import { IMessenger } from "../../protocol/messenger";
-import { GlobalContext } from "../../util/GlobalContext";
 import {
   editConfigJson,
   getDocsSqlitePath,

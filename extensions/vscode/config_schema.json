@@ -3151,6 +3151,13 @@
                             "items": {
                               "type": "string"
                             }
+                          },
+                          "env": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            },
+                            "description": "Environment variables to pass to the command"
                           }
                         },
                         "required": ["type", "command", "args"]
