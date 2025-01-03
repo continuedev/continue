@@ -1,7 +1,38 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ThunkApiType } from "../store";
 import { updateFileSymbols } from "../slices/sessionSlice";
-import { ContextItemWithId, RangeInFile } from "core";
+import { ChatHistoryItem, ContextItemWithId } from "core";
+
+export function getContextItemsFromHistory(
+  historyItems: ChatHistoryItem[],
+  priorToIndex?: number,
+) {
+  const pastHistoryItems = historyItems.filter(
+    (_, i) => i <= (priorToIndex ?? historyItems.length - 1),
+  );
+
+  const pastNormalContextItems = pastHistoryItems.flatMap((item) => {
+    return (
+      item.contextItems?.filter(
+        (item) => item.uri?.type === "file" && item.uri?.value,
+      ) ?? []
+    );
+  });
+  const pastToolbarContextItems: ContextItemWithId[] = pastHistoryItems
+    .filter(
+      (item) => item.editorState && Array.isArray(item.editorState.content),
+    )
+    .flatMap((item) => item.editorState.content)
+    .filter(
+      (content) =>
+        content?.type === "codeBlock" &&
+        content?.attrs?.item?.uri?.value &&
+        content.attrs.item.uri?.type === "file",
+    )
+    .map((content) => content.attrs!.item!);
+
+  return [...pastNormalContextItems, ...pastToolbarContextItems];
+}
 
 /*
     Get file symbols for given context items
@@ -48,9 +79,8 @@ export const updateFileSymbolsFromHistory = createAsyncThunk<
     const state = getState();
 
     // Get unique context item file uris from all history
-    const contextItems = state.session.history.flatMap(
-      (item) => item.contextItems,
-    );
+    const contextItems = getContextItemsFromHistory(state.session.history);
+
     const uniqueUris = new Set(
       contextItems
         .filter((item) => item.uri?.type === "file" && item?.uri?.value)

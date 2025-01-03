@@ -29,6 +29,7 @@ import { selectUIConfig } from "../../redux/slices/configSlice";
 import { ToolTip } from "../gui/Tooltip";
 import { v4 as uuidv4 } from "uuid";
 import { ContextItemWithId, RangeInFileWithContents } from "core";
+import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -154,32 +155,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         rifs: [],
       };
     }
-    const pastHistoryItems = history.filter((_, i) => i <= index);
-
-    const pastNormalContextItems = pastHistoryItems.flatMap((item) => {
-      return (
-        item.contextItems?.filter(
-          (item) => item.uri?.type === "file" && item.uri?.value,
-        ) ?? []
-      );
-    });
-
-    const pastToolbarContextItems: ContextItemWithId[] = pastHistoryItems
-      .filter((item) => item.editorState && Array.isArray(item.editorState))
-      .flatMap((item) => item.editorState)
-      .filter(
-        (content) =>
-          content?.type === "codeBlock" &&
-          content?.attrs?.item &&
-          content.attrs.item.uri?.type === "file" &&
-          content.attrs.item.uri?.value,
-      )
-      .map((content) => content.attrs!.item!);
-
-    const pastContextItems = [
-      ...pastNormalContextItems,
-      ...pastToolbarContextItems,
-    ];
+    const pastContextItems = getContextItemsFromHistory(history, index);
     const rifs = pastContextItems.map((item) =>
       ctxItemToRifWithContents(item, true),
     );
