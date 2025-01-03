@@ -311,7 +311,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   useEffect(() => setSelectedIndex(0), [allItems]);
 
   useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }) => {
+    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
       if (event.key === "ArrowUp") {
         upHandler();
         return true;

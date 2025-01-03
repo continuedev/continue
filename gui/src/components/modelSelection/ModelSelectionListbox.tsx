@@ -17,7 +17,7 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from "..";
-import { providers } from "../../pages/AddNewModel/configs/providers";
+import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
 
 export const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -97,11 +97,6 @@ export const StyledListboxOption = styled(Listbox.Option)<{
     color: ${vscListActiveForeground};
   }
 `;
-
-interface DisplayInfo {
-  title: string;
-  icon?: string;
-}
 
 interface ModelSelectionListboxProps {
   selectedProvider: DisplayInfo;
