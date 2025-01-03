@@ -30,7 +30,7 @@ export function isTerminalCodeBlock(
   text: string,
 ) {
   return (
-    terminalLanguages.includes(language) ||
+    (language && terminalLanguages.includes(language)) ||
     ((!language || language?.length === 0) &&
       (text.trim().split("\n").length === 1 ||
         commonTerminalCommands.some((c) => text.trim().startsWith(c))))

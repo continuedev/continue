@@ -144,7 +144,9 @@ export const SubmenuContextProvidersProvider = ({
     [minisearches],
   );
 
-  const lastOpenFilesRef = useRef([]);
+  const lastOpenFilesRef = useRef<
+    Awaited<ReturnType<typeof getOpenFilesItems>>
+  >([]);
   useEffect(() => {
     let isMounted = true;
     const refreshOpenFiles = async () => {
@@ -214,12 +216,14 @@ export const SubmenuContextProvidersProvider = ({
         try {
           const results = getSubmenuSearchResults(providerTitle, query);
           if (results.length === 0) {
-            const fallbackItems = (fallbackResults[providerTitle] ?? [])
+            const fallbackItems = (
+              providerTitle ? (fallbackResults[providerTitle] ?? []) : []
+            )
               .slice(0, limit)
               .map((result) => {
                 return {
                   ...result,
-                  providerTitle,
+                  providerTitle: providerTitle || "unknown",
                 };
               });
 
