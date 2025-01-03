@@ -67,6 +67,7 @@ class ContinueBrowser(val project: Project, url: String) {
         "profiles/switch",
         "didChangeSelectedProfile",
         "tools/call",
+        "clipboardCache/add"
     )
 
     private fun registerAppSchemeHandler() {
