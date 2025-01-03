@@ -53,15 +53,6 @@ export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
           arguments: [uri, i],
         }),
       );
-
-      if (codeLenses.length === 2) {
-        codeLenses.push(
-          new vscode.CodeLens(range, {
-            title: `${getMetaKeyLabel()}I to add instructions`,
-            command: "",
-          }),
-        );
-      }
     }
 
     return codeLenses;
