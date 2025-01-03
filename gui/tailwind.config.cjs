@@ -25,6 +25,8 @@ module.exports = {
         "spin-slow": "spin 6s linear infinite",
       },
       colors: {
+        // All vscode variables https://gist.github.com/estruyf/ba49203e1a7d6868e9320a4ea480c27a
+        // Examples for vscode https://github.com/githubocto/tailwind-vscode/blob/main/index.js
         lightgray: "#999998",
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
         "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
@@ -56,6 +58,14 @@ module.exports = {
           "var(--vscode-descriptionForeground, #999)",
         "vsc-input-placeholder-foreground":
           "var(--vscode-input-placeholderForeground, #999)",
+        error: "var(--vscode-errorBackground, #f00)",
+        "error-foreground": "var(--vscode-errorForeground, #fff)",
+
+        // --vscode-errorForeground  /* Text color for error messages */
+        // --vscode-errorBackground  /* Background color for error messages */
+        // --vscode-editorError-foreground  /* Color for error squiggles in editor */
+        // --vscode-inputValidation-errorBackground  /* Background for error validation */
+        // --vscode-inputValidation-errorBorder  /* Border color for error validation */
       },
     },
   },

@@ -34,7 +34,7 @@ const ErrorPage: React.FC = () => {
     <div className="flex flex-col items-center justify-center px-2 py-4 text-center sm:px-8">
       <h1 className="mb-4 text-3xl font-bold">Oops! Something went wrong</h1>
 
-      <code className="whitespace-wrap mx-2 mb-4 max-w-full break-words py-2">
+      <code className="whitespace-wrap mx-2 mb-4 max-w-full break-words px-2 py-2">
         {error.statusText || error.message}
       </code>
 
@@ -50,27 +50,27 @@ const ErrorPage: React.FC = () => {
         }}
       >
         {initialLoad ? (
-          <FlagIcon className="h-5 w-5 text-red-600" />
+          <FlagIcon className="text-error-foreground h-5 w-5" />
         ) : (
           <ArrowPathIcon className="h-5 w-5" />
         )}
         Continue
       </Button>
 
-      <p className="mb-0 mt-6 text-lg">
+      <p className="mb-0 mt-6 text-base">
         Report the issue on GitHub or Discord:
       </p>
 
-      <div className="flex space-x-4">
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4">
         <SecondaryButton
           onClick={() => openUrl(GITHUB_LINK)}
-          className="flex w-full items-center justify-center space-x-2 rounded-lg px-4 py-2 text-base text-white"
+          className="flex items-center justify-center"
         >
           <GithubIcon size={20} /> <span className="ml-2">GitHub</span>
         </SecondaryButton>
         <SecondaryButton
           onClick={() => openUrl(DISCORD_LINK)}
-          className="flex w-full items-center justify-center rounded-lg text-base"
+          className="flex items-center justify-center"
         >
           <DiscordIcon size={20} /> <span className="ml-2">Discord</span>
         </SecondaryButton>

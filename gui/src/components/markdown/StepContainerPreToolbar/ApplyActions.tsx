@@ -36,7 +36,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
 
   const applyButton = (text: string) => (
     <button
-      className={`flex items-center border-none bg-transparent text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+      className={`text-vsc-foreground flex cursor-pointer items-center border-none bg-transparent text-xs outline-none hover:brightness-125`}
       onClick={props.onClickApply}
       style={{ color: lightGray }}
     >
