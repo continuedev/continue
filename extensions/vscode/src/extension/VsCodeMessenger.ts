@@ -171,7 +171,12 @@ export class VsCodeMessenger {
 
       // Get LLM from config
       const configHandler = await configHandlerPromise;
-      const config = await configHandler.loadConfig();
+      const { config } = await configHandler.loadConfig();
+
+      if (!config) {
+        vscode.window.showErrorMessage("Config not loaded");
+        return;
+      }
 
       let llm = getModelByRole(config, "applyCodeBlock");
 
@@ -473,8 +478,8 @@ export class VsCodeMessenger {
       return await ide.gotoDefinition(msg.data.location);
     });
 
-    this.onWebviewOrCore("getLastModified", async (msg) => {
-      return await ide.getLastModified(msg.data.files);
+    this.onWebviewOrCore("getFileStats", async (msg) => {
+      return await ide.getFileStats(msg.data.files);
     });
 
     this.onWebviewOrCore("getGitRootPath", async (msg) => {

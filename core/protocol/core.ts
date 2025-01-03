@@ -20,6 +20,7 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { ConfigResult } from "../config/load";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -63,10 +64,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,
-    { config: BrowserSerializedContinueConfig; profileId: string },
+    {
+      result: ConfigResult<BrowserSerializedContinueConfig>;
+      profileId: string;
+    },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, BrowserSerializedContinueConfig];
+  "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "context/getContextItems": [

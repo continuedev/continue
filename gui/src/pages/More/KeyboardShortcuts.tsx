@@ -63,7 +63,7 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   const shortcut = getPlatform() === "mac" ? props.mac : props.windows;
   return (
-    <div className="flex w-full items-center justify-between">
+    <div className="flex w-full items-center justify-between gap-x-4">
       <span className="text-sm">{props.description}</span>
       <div className="float-right flex gap-2">
         {shortcut.split(" ").map((key, i) => {
@@ -76,9 +76,9 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
 
 const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
-    mac: "⌘ L",
-    windows: "⌃ L",
-    description: "Select Code + New Session",
+    mac: "⌘ '",
+    windows: "⌃ '",
+    description: "Toggle Selected Model",
   },
   {
     mac: "⌘ I",
@@ -86,39 +86,10 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Edit highlighted code",
   },
   {
-    mac: "⌘ ⇧ L",
-    windows: "⌃ ⇧ L",
-    description: "Select Code",
-  },
-  {
-    mac: "⌘ ⇧ ⏎",
-    windows: "⌃ ⇧ ⏎",
-    description: "Accept Diff",
-  },
-  {
-    mac: "⌘ ⇧ ⌫",
-    windows: "⌃ ⇧ ⌫",
-    description: "Reject Diff",
-  },
-  {
-    mac: "⌥ ⌘ Y",
-    windows: "Alt ⌃ Y",
-    description: "Accept Top Change in Diff",
-  },
-  {
-    mac: "⌥ ⌘ N",
-    windows: "Alt ⌃ N",
-    description: "Reject Top Change in Diff",
-  },
-  {
-    mac: "⌥ ⌘ L",
-    windows: "Alt ⌃ L",
-    description: "Toggle Continue Sidebar",
-  },
-  {
-    mac: "⌘ ⇧ R",
-    windows: "⌃ ⇧ R",
-    description: "Debug Terminal",
+    mac: "⌘ L",
+    windows: "⌃ L",
+    description:
+      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
   },
   {
     mac: "⌘ ⌫",
@@ -126,42 +97,25 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Cancel response",
   },
   {
-    mac: "⌘ K ⌘ M",
-    windows: "⌃ K ⌃ M",
-    description: "Toggle Full Screen",
-  },
-  {
-    mac: "⌘ '",
-    windows: "⌃ '",
-    description: "Toggle Selected Model",
-  },
-  {
-    mac: "⌘ K ⌘ A",
-    windows: "⌃ K ⌃ A",
-    description: "Toggle Autocomplete Enabled",
-  },
-];
-
-const jetbrainsShortcuts: KeyboardShortcutProps[] = [
-  {
-    mac: "⌘ J",
-    windows: "⌃ J",
-    description: "Select Code + New Session",
-  },
-  {
-    mac: "⌘ ⇧ J",
-    windows: "⌃ ⇧ J",
-    description: "Select Code",
-  },
-  {
-    mac: "⌘ I",
-    windows: "⌃ I",
-    description: "Edit highlighted code",
-  },
-  {
     mac: "⌘ ⇧ I",
     windows: "⌃ ⇧ I",
     description: "Toggle inline edit focus",
+  },
+  {
+    mac: "⌘ ⇧ L",
+    windows: "⌃ ⇧ L",
+    description:
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
+  },
+  {
+    mac: "⌘ ⇧ R",
+    windows: "⌃ ⇧ R",
+    description: "Debug Terminal",
+  },
+  {
+    mac: "⌘ ⇧ ⌫",
+    windows: "⌃ ⇧ ⌫",
+    description: "Reject Diff",
   },
   {
     mac: "⌘ ⇧ ⏎",
@@ -169,9 +123,69 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Accept Diff",
   },
   {
+    mac: "⌥ ⌘ N",
+    windows: "Alt ⌃ N",
+    description: "Reject Top Change in Diff",
+  },
+  {
+    mac: "⌥ ⌘ Y",
+    windows: "Alt ⌃ Y",
+    description: "Accept Top Change in Diff",
+  },
+  {
+    mac: "⌘ K ⌘ A",
+    windows: "⌃ K ⌃ A",
+    description: "Toggle Autocomplete Enabled",
+  },
+  {
+    mac: "⌘ K ⌘ M",
+    windows: "⌃ K ⌃ M",
+    description: "Toggle Full Screen",
+  },
+];
+
+const jetbrainsShortcuts: KeyboardShortcutProps[] = [
+  {
+    mac: "⌘ '",
+    windows: "⌃ '",
+    description: "Toggle Selected Model",
+  },
+  {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
+  },
+  {
+    mac: "⌘ J",
+    windows: "⌃ J",
+    description:
+      "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
+  },
+  {
+    mac: "⌘ ⌫",
+    windows: "⌃ ⌫",
+    description: "Cancel response",
+  },
+  {
+    mac: "⌘ ⇧ I",
+    windows: "⌃ ⇧ I",
+    description: "Toggle inline edit focus",
+  },
+  {
+    mac: "⌘ ⇧ J",
+    windows: "⌃ ⇧ J",
+    description:
+      "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
+  },
+  {
     mac: "⌘ ⇧ ⌫",
     windows: "⌃ ⇧ ⌫",
     description: "Reject Diff",
+  },
+  {
+    mac: "⌘ ⇧ ⏎",
+    windows: "⌃ ⇧ ⏎",
+    description: "Accept Diff",
   },
   {
     mac: "⌥ ⇧ J",
@@ -182,16 +196,6 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     mac: "⌥ ⌘ J",
     windows: "Alt ⌃ J",
     description: "Toggle Sidebar",
-  },
-  {
-    mac: "⌘ ⌫",
-    windows: "⌃ ⌫",
-    description: "Cancel response",
-  },
-  {
-    mac: "⌘ '",
-    windows: "⌃ '",
-    description: "Toggle Selected Model",
   },
 ];
 

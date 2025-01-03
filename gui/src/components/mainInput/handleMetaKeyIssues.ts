@@ -48,6 +48,11 @@ export const handleVSCMetaKeyIssues = async (
     x: () => handleCutOperation(text, editor),
     c: () => handleCopyOperation(text),
     v: () => handlePasteOperation(editor),
+    z: () => {
+      return e.shiftKey
+        ? handleRedoOperation(editor)
+        : handleUndoOperation(editor);
+    },
   };
 
   if (e.key in handlers) {
@@ -129,4 +134,12 @@ export const handlePasteOperation = async (editor: Editor) => {
   } else {
     document.execCommand("paste");
   }
+};
+
+export const handleUndoOperation = async (editor: Editor) => {
+  editor.commands.undo();
+};
+
+export const handleRedoOperation = async (editor: Editor) => {
+  editor.commands.redo();
 };

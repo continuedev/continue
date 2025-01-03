@@ -38,8 +38,8 @@ export class ReverseMessageIde {
       return this.ide.getGitHubAuthToken(data);
     });
 
-    this.on("getLastModified", (data) => {
-      return this.ide.getLastModified(data.files);
+    this.on("getFileStats", (data) => {
+      return this.ide.getFileStats(data.files);
     });
 
     this.on("getGitRootPath", (data) => {

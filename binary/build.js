@@ -118,22 +118,6 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 }
 
 (async () => {
-  // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
-  // This is only needed for our `pkg` command
-  fs.writeFileSync(
-    "out/package.json",
-    JSON.stringify(
-      {
-        name: "binary",
-        version: "1.0.0",
-        author: "Continue Dev, Inc",
-        license: "Apache-2.0",
-      },
-      undefined,
-      2,
-    ),
-  );
-
   console.log("[info] Downloading prebuilt lancedb...");
   for (const target of targets) {
     if (targetToLanceDb[target]) {
@@ -209,6 +193,8 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     format: "cjs",
     platform: "node",
     sourcemap: true,
+    minify: true,
+    treeShaking: true,
     loader: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       ".node": "file",
@@ -274,21 +260,19 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       `node_modules/${targetToLanceDb[target]}/index.node`,
       `${targetDir}/index.node`,
     );
+
+    // Informs the `continue-binary` of where to look for node_sqlite3.node
+    // https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
+    fs.writeFileSync(`${targetDir}/package.json`, "");
   }
 
-  // Our dummy `package.json` is no longer needed so we can remove it.
-  // If it isn't removed, then running locally via `node out/index.js` will fail
-  // with a `Failed to locate bindings` error
-  fs.unlinkSync("out/package.json");
-
   const pathsToVerify = [];
-  for (target of targets) {
+  for (const target of targets) {
     const exe = target.startsWith("win") ? ".exe" : "";
     const targetDir = `bin/${target}`;
     pathsToVerify.push(
       `${targetDir}/continue-binary${exe}`,
       `${targetDir}/index.node`, // @lancedb
-      "package.json", // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
       `${targetDir}/build/Release/node_sqlite3.node`,
     );
   }
