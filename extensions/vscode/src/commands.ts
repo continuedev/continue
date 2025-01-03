@@ -767,7 +767,7 @@ const getCommandsMap: (
         true,
       );
 
-      panel.onDidChangeViewState(() => {
+      const sessionLoader = panel.onDidChangeViewState(() => {
         vscode.commands.executeCommand("continue.newSession");
         if (sessionId) {
           vscode.commands.executeCommand(
@@ -775,6 +775,7 @@ const getCommandsMap: (
             sessionId,
           );
         }
+        sessionLoader.dispose()
       });
 
       // When panel closes, reset the webview and focus
