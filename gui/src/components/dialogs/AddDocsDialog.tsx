@@ -5,19 +5,19 @@ import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { IndexingStatus, PackageDocsResult, SiteIndexingConfig } from "core";
+import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Input, SecondaryButton } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { ToolTip } from "../gui/Tooltip";
-import FileIcon from "../FileIcon";
-import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
-import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
-import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
 import { useAppSelector } from "../../redux/hooks";
-import { setConfig } from "../../redux/slices/configSlice";
+import { updateConfig } from "../../redux/slices/configSlice";
+import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import FileIcon from "../FileIcon";
+import { ToolTip } from "../gui/Tooltip";
+import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
 
 function AddDocsDialog() {
   const config = useAppSelector((store) => store.config.config);
@@ -146,7 +146,7 @@ function AddDocsDialog() {
 
     // Optimistic status update
     dispatch(
-      setConfig({
+      updateConfig({
         ...config,
         docs: [
           ...(config.docs?.filter(
