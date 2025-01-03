@@ -32,18 +32,18 @@ export const streamNormalInput = createAsyncThunk<
     defaultModel.title,
     streamAborter.signal,
     messages,
-    {
-      tools: useTools
-        ? Object.keys(toolSettings)
+    useTools
+      ? {
+          tools: Object.keys(toolSettings)
             .filter((tool) => toolSettings[tool] !== "disabled")
             .map((toolName) =>
               state.config.config.tools.find(
                 (tool) => tool.function.name === toolName,
               ),
             )
-            .filter((tool) => !!tool)
-        : undefined,
-    },
+            .filter((tool) => !!tool),
+        }
+      : {},
   );
 
   // Stream response

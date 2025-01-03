@@ -9,9 +9,13 @@ export interface PackageDimension {
   description: string;
   options: { [key: string]: { [key: string]: any } };
 }
-export interface ModelPackage {
+
+export interface DisplayInfo {
   title: string;
   icon?: string;
+}
+
+export interface ModelPackage extends DisplayInfo {
   collectInputFor?: InputDescriptor[];
   description: string;
   refUrl?: string;
@@ -70,7 +74,7 @@ export const models: { [key: string]: ModelPackage } = {
       "sambanova",
       "cerebras",
       "nebius",
-      "scaleway"
+      "scaleway",
     ],
     isOpenSource: true,
   },
@@ -1085,8 +1089,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   asksagegpt35gov: {
     title: "GPT-3.5-Turbo gov",
-    description:
-      "U.S. Government. Inexpensive and good ROI.",
+    description: "U.S. Government. Inexpensive and good ROI.",
     params: {
       model: "gpt-gov",
       contextLength: 8096,
@@ -1122,7 +1125,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8_192,
       title: "GPT-4",
     },
-    providerOptions: ["openai",],
+    providerOptions: ["openai"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1135,7 +1138,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32_768,
       title: "GPT-4-32k",
     },
-    providerOptions: ["openai",],
+    providerOptions: ["openai"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -1148,7 +1151,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 128_000,
       title: "GPT-o1",
       systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.", 
+        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1163,7 +1166,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 128_000,
       title: "GPT-o1-mini",
       systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.", 
+        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["askSage"],
     icon: "openai.png",
@@ -1178,7 +1181,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 200_000,
       title: "Claude 3.5 Sonnet gov",
       systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.", 
+        "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["askSage"],
     icon: "anthropic.png",
@@ -1186,8 +1189,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   asksagegroqllama33: {
     title: "Llama 3.3",
-    description:
-      "Llama-3.3 is a large language model customized by Groq.",
+    description: "Llama-3.3 is a large language model customized by Groq.",
     params: {
       title: "Llama 3.3",
       model: "groq-llama33",
@@ -1198,8 +1200,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   asksagegroq70b: {
     title: "Groq-70B",
-    description:
-      "A large language model customized by Groq.",
+    description: "A large language model customized by Groq.",
     params: {
       title: "Groq-70B",
       model: "groq-70b",
@@ -1244,7 +1245,7 @@ export const models: { [key: string]: ModelPackage } = {
     },
     icon: "qwen.png",
     providerOptions: ["scaleway"],
-    isOpenSource: true,    
+    isOpenSource: true,
   },
   grokBeta: {
     title: "Grok Beta",

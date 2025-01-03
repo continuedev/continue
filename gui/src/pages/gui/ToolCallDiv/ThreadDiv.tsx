@@ -1,4 +1,4 @@
-import { Tool, ToolCall, ToolCallState } from "core";
+import { Tool, ToolCallDelta, ToolCallState } from "core";
 import Mustache from "mustache";
 import styled from "styled-components";
 import { useAppSelector } from "../../../redux/hooks";
@@ -6,7 +6,7 @@ import { useAppSelector } from "../../../redux/hooks";
 interface ThreadDivProps {
   children: React.ReactNode;
   icon: React.ReactNode;
-  toolCall: ToolCall;
+  toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
 }
 
@@ -63,7 +63,7 @@ export function ThreadDiv(props: ThreadDivProps) {
         Continue wants to{" "}
         {renderWouldLikeToMessage(
           availableTools.find(
-            (tool) => props.toolCall.function.name === tool.function.name,
+            (tool) => props.toolCall.function?.name === tool.function.name,
           ),
           props.toolCallState,
         )}
