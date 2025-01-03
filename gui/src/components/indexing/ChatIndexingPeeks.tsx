@@ -62,7 +62,7 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
         </div>
       </div>
       <EyeSlashIcon
-        className="ml-2 h-4 w-4 cursor-pointer text-stone-500 hover:opacity-80"
+        className="ml-6 h-4 w-4 cursor-pointer text-stone-500 hover:opacity-80"
         onClick={(e) => {
           dispatch(
             setIndexingChatPeekHidden({ type: state.type, hidden: true }),
