@@ -11,8 +11,5 @@
     "eslint-plugin-import": "^2.29.1",
     "prettier": "^3.3.3",
     "prettier-plugin-tailwindcss": "^0.6.8"
-  },
-  "dependencies": {
-    "svg-builder": "^2.0.0"
   }
 }

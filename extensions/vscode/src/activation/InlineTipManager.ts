@@ -23,7 +23,7 @@ const SVG_CONFIG = {
   get fontSize() {
     return Math.ceil(
       (vscode.workspace.getConfiguration("editor").get<number>("fontSize") ??
-        14) * 0.7,
+        14) * 0.8,
     );
   },
   get fontFamily() {
@@ -237,7 +237,7 @@ export class InlineTipManager {
     return vscode.window.createTextEditorDecorationType({
       after: {
         contentIconPath: this.svgTooltip,
-        margin: `-2.5px 0 0 ${SVG_CONFIG.leftMargin}px`,
+        margin: `-5px 0 0 ${SVG_CONFIG.leftMargin}px`,
         width: `${SVG_CONFIG.tipWidth}px`,
       },
     });
