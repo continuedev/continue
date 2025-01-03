@@ -30,7 +30,7 @@ We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
   "tabAutocompleteModel": {
     "title": "Qwen2.5-Coder 1.5B",
     "provider": "ollama",
-    "model": "qwen2.5-coder:1.5b"
+    "model": "qwen2.5-coder:1.5b-base"
   }
 }
 ```
