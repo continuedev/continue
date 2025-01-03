@@ -26,7 +26,7 @@ export function getTerminalCommand(text: string): string {
 }
 
 export function isTerminalCodeBlock(
-  language: string | undefined,
+  language: string | undefined | null,
   text: string,
 ) {
   return (

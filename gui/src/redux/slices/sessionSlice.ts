@@ -288,9 +288,7 @@ export const sessionSlice = createSlice({
             message.role &&
             (lastMessage.role !== message.role ||
               // This is when a tool call comes after assistant text
-              (lastMessage.content !== "" &&
-                message.role === "assistant"
-))
+              (lastMessage.content !== "" && message.role === "assistant"))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -300,17 +298,19 @@ export const sessionSlice = createSlice({
               },
               contextItems: [],
             };
-            const toolCalls = 
             if (message.role === "assistant" && message.toolCalls?.[0]) {
-              const [_, parsedArgs] = incrementalParseJson(
-                message.toolCalls[0].function.arguments,
-              );
-              historyItem.toolCallState = {
-                status: "generating",
-                toolCall: message.toolCalls[0] as ToolCall,
-                toolCallId: message.toolCalls[0].id,
-                parsedArgs,
-              };
+              const toolCalls = message.toolCalls?.[0];
+              if (toolCalls) {
+                const [_, parsedArgs] = incrementalParseJson(
+                  message.toolCalls[0].function.arguments,
+                );
+                historyItem.toolCallState = {
+                  status: "generating",
+                  toolCall: message.toolCalls[0] as ToolCall,
+                  toolCallId: message.toolCalls[0].id,
+                  parsedArgs,
+                };
+              }
             }
 
             state.history.push(historyItem);
