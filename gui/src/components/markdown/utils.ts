@@ -37,7 +37,7 @@ export function isTerminalCodeBlock(
   );
 }
 
-function childToText(child: any) {
+function childToText(child: any): string {
   if (typeof child === "string") {
     return child;
   } else if (child?.props) {

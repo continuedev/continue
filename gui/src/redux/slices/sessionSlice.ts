@@ -306,7 +306,7 @@ export const sessionSlice = createSlice({
                 );
                 historyItem.toolCallState = {
                   status: "generating",
-                  toolCall: message.toolCalls[0] as ToolCall,
+                  toolCall: message.toolCalls[0],
                   toolCallId: message.toolCalls[0].id,
                   parsedArgs,
                 };

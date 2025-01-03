@@ -53,7 +53,8 @@ function AddModelForm({
   const allProviders = Object.entries(providers)
     .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
     .map(([, provider]) => provider)
-    .filter((provider) => !!provider);
+    .filter((provider) => !!provider)
+    .map((provider) => provider!); // for type checking
 
   const popularProviders = allProviders
     .filter((provider) => popularProviderTitles.includes(provider.title))

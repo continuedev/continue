@@ -165,7 +165,8 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     title: "Scaleway",
     provider: "scaleway",
     refPage: "scaleway",
-    description: "Use the Scaleway Generative APIs to instantly access leading open models",
+    description:
+      "Use the Scaleway Generative APIs to instantly access leading open models",
     longDescription: `Hosted in European data centers, ideal for developers requiring low latency, full data privacy, and compliance with EU AI Act. You can generate your API key in [Scaleway's console](https://console.scaleway.com/generative-api/models). Get started:\n1. Create an API key [here](https://console.scaleway.com/iam/api-keys/)\n2. Paste below\n3. Select a model preset`,
     params: {
       apiKey: "",

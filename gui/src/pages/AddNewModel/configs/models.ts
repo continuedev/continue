@@ -15,7 +15,9 @@ export interface DisplayInfo {
   icon?: string;
 }
 
-export interface ModelPackage extends DisplayInfo {
+export interface ModelPackage {
+  title: string;
+  icon?: string;
   collectInputFor?: InputDescriptor[];
   description: string;
   refUrl?: string;
