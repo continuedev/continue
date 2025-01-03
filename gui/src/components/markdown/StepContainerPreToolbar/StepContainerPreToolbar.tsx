@@ -44,7 +44,7 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
 
 export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
-  language: string;
+  language: string | null;
   relativeFilepath: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
@@ -93,12 +93,12 @@ export default function StepContainerPreToolbar(
     if (!defaultModel) {
       return;
     }
-    
+
     const fileUri = await inferResolvedUriFromRelativePath(
       props.relativeFilepath,
       ideMessenger.ide,
     );
-    
+
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: fileUri,

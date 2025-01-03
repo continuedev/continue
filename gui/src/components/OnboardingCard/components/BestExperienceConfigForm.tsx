@@ -1,6 +1,6 @@
 import { CubeIcon } from "@heroicons/react/24/outline";
 import { DEFAULT_CHAT_MODEL_CONFIG } from "core/config/default";
-import { useContext, useState } from "react";
+import { FormEventHandler, useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button, Input, InputSubtext, lightGray } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -33,7 +33,7 @@ function BestExperienceConfigForm({
   const [autocompleteApiKey, setAutocompleteApiKey] = useState("");
   const [chatApiKey, setChatApiKey] = useState("");
 
-  async function handleSubmit(e) {
+  const handleSubmit: FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
 
     const chatModelConfig = {
@@ -74,7 +74,7 @@ function BestExperienceConfigForm({
     }
 
     onComplete();
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit}>
@@ -83,7 +83,7 @@ function BestExperienceConfigForm({
           <div className="mb-1 flex flex-row justify-between gap-4 text-lg font-bold">
             <label className="text-lg font-bold">Chat model</label>
             <div
-              className="flex hidden items-center justify-end text-xs font-semibold sm:flex"
+              className="hidden items-center justify-end text-xs font-semibold sm:flex"
               style={{ color: lightGray }}
             >
               <CubeIcon className="mr-1 h-4 w-4 flex-shrink-0" />

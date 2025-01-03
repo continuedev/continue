@@ -63,7 +63,10 @@ const persistConfig = {
   migrate: createMigrate(migrations, { debug: false }),
 };
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
+  persistConfig,
+  rootReducer,
+);
 
 export function setupStore() {
   return configureStore({

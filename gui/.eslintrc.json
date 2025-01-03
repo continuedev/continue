@@ -1,23 +1,16 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": [
-    "@typescript-eslint",
-    "strict-null-checks",
-    "eslint-plugin-react"
-  ],
+  "plugins": ["@typescript-eslint", "eslint-plugin-react"],
   "parserOptions": {
-    "project": "gui/tsconfig.strictNullChecks.json"
+    "project": "gui/tsconfig.json"
   },
-  // "extends": [
-  //   "eslint:recommended",
-  //   "plugin:@typescript-eslint/recommended",
-  //   "plugin:@typescript-eslint/recommended-requiring-type-checking"
-  //   "plugin:react/recommended"
-  // ],
-  "rules": {
-    "strict-null-checks/all": "warn"
-  },
+  "extends": [
+    // "eslint:recommended",
+    // "plugin:@typescript-eslint/recommended",
+    // "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    // "plugin:react/recommended"
+  ],
   "overrides": [
     {
       "files": ["src/**/*.{js,ts,jsx,tsx}"]

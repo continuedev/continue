@@ -52,7 +52,9 @@ function AddModelForm({
 
   const allProviders = Object.entries(providers)
     .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
-    .map(([, provider]) => provider);
+    .map(([, provider]) => provider)
+    .filter((provider) => !!provider)
+    .map((provider) => provider!); // for type checking
 
   const popularProviders = allProviders
     .filter((provider) => popularProviderTitles.includes(provider.title))
@@ -77,13 +79,13 @@ function AddModelForm({
     }
 
     const required = selectedProvider.collectInputFor
-      .filter((input) => input.required)
+      ?.filter((input) => input.required)
       .map((input) => {
         const value = formMethods.watch(input.key);
         return value;
       });
 
-    return !required.every((value) => value !== undefined && value.length > 0);
+    return !required?.every((value) => value !== undefined && value.length > 0);
   }
 
   useEffect(() => {
@@ -93,8 +95,8 @@ function AddModelForm({
   function onSubmit() {
     const apiKey = formMethods.watch("apiKey");
     const hasValidApiKey = apiKey !== undefined && apiKey !== "";
-    const reqInputFields = {};
-    for (let input of selectedProvider.collectInputFor) {
+    const reqInputFields: Record<string, any> = {};
+    for (let input of selectedProvider.collectInputFor ?? []) {
       reqInputFields[input.key] = formMethods.watch(input.key);
     }
 
@@ -187,8 +189,9 @@ function AddModelForm({
                 setSelectedProvider={setSelectedModel}
                 otherOptions={
                   Object.entries(providers).find(
-                    ([, provider]) => provider.title === selectedProvider.title,
-                  )?.[1].packages
+                    ([, provider]) =>
+                      provider?.title === selectedProvider.title,
+                  )?.[1]?.packages
                 }
               />
             </div>
@@ -220,9 +223,14 @@ function AddModelForm({
                   <InputSubtext className="mb-0">
                     <a
                       className="cursor-pointer text-inherit underline hover:text-inherit"
-                      onClick={() =>
-                        ideMessenger.post("openUrl", selectedProviderApiKeyUrl)
-                      }
+                      onClick={() => {
+                        if (selectedProviderApiKeyUrl) {
+                          ideMessenger.post(
+                            "openUrl",
+                            selectedProviderApiKeyUrl,
+                          );
+                        }
+                      }}
                     >
                       Click here
                     </a>{" "}

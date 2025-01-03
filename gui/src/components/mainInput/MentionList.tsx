@@ -66,11 +66,12 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/cmd": CommandLineIcon,
 };
 
-export function getIconFromDropdownItem(id: string, type: ComboBoxItemType) {
-  return (
-    ICONS_FOR_DROPDOWN[id] ??
-    (type === "contextProvider" ? AtSymbolIcon : BoltIcon)
-  );
+export function getIconFromDropdownItem(
+  id: string | undefined,
+  type: ComboBoxItemType,
+) {
+  const typeIcon = type === "contextProvider" ? AtSymbolIcon : BoltIcon;
+  return id ? (ICONS_FOR_DROPDOWN[id] ?? typeIcon) : typeIcon;
 }
 
 function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
@@ -238,7 +239,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
   }, [querySubmenuItem]);
 
-  const selectItem = (index) => {
+  const selectItem = (index: number) => {
     const item = allItems[index];
 
     if (item.type === "action" && item.action) {
@@ -251,7 +252,9 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       item.contextProvider?.type === "submenu"
     ) {
       setSubMenuTitle(item.description);
-      props.enterSubmenu(props.editor, item.id);
+      if (item.id) {
+        props.enterSubmenu?.(props.editor, item.id);
+      }
       return;
     }
 
@@ -308,7 +311,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   useEffect(() => setSelectedIndex(0), [allItems]);
 
   useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }) => {
+    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
       if (event.key === "ArrowUp") {
         upHandler();
         return true;
@@ -359,6 +362,9 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           ref={queryInputRef}
           placeholder={querySubmenuItem.description}
           onKeyDown={(e) => {
+            if (!queryInputRef.current) {
+              return;
+            }
             if (e.key === "Enter") {
               if (e.shiftKey) {
                 queryInputRef.current.innerText += "\n";

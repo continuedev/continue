@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { ReactNode, useMemo } from "react";
 import { Tooltip } from "react-tooltip";
 import { lightGray, vscForeground } from "../..";
 import styled from "styled-components";
@@ -19,11 +19,18 @@ export const ToolbarButton = styled.button`
     filter: brightness(1.25);
   }
 `;
+
+interface ToolbarButtonWithTooltipProps {
+  onClick: () => void;
+  children: ReactNode;
+  tooltipContent: string;
+}
+
 export function ToolbarButtonWithTooltip({
   onClick,
   children,
   tooltipContent,
-}) {
+}: ToolbarButtonWithTooltipProps) {
   const tooltipId = useMemo(
     () => `tooltip-${Math.random().toString(36).slice(2, 11)}`,
     [],

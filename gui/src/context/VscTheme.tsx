@@ -58,7 +58,7 @@ function constructTheme(
 ): Record<string, string> {
   const rules = tmTheme?.["rules"] || [];
 
-  const tokenToForeground = {};
+  const tokenToForeground: Record<string, string> = {};
   rules.forEach(({ token, foreground }) => {
     if (!foreground || !token) {
       return;
@@ -66,7 +66,7 @@ function constructTheme(
     tokenToForeground[token] = foreground;
   });
 
-  const theme = {};
+  const theme: Record<string, string> = {};
   Object.keys(hljsToTextMate).forEach((className) => {
     const tokens = hljsToTextMate[className];
     for (const scope of tokens) {

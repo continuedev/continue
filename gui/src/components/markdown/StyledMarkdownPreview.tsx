@@ -228,7 +228,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     ],
     rehypeReactOptions: {
       components: {
-        a: ({ node, ...aProps }) => {
+        a: ({ ...aProps }) => {
           const tooltipId = uuidv4();
 
           return (
@@ -247,7 +247,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </>
           );
         },
-        pre: ({ node, ...preProps }) => {
+        pre: ({ ...preProps }) => {
           const codeBlockIndex = preProps["data-codeblockindex"];
 
           const preChildProps = preProps?.children?.[0]?.props ?? {};
@@ -293,7 +293,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </StepContainerPreToolbar>
           );
         },
-        code: ({ node, ...codeProps }) => {
+        code: ({ ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
           if (content && previousFileContextItemsRef.current) {

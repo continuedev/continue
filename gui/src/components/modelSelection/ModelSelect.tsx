@@ -6,7 +6,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useRef, useState } from "react";
+import { MouseEvent, useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -144,7 +144,7 @@ function ModelOption({
   const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
-  function onClickDelete(e) {
+  function onClickDelete(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -164,7 +164,7 @@ function ModelOption({
     );
   }
 
-  function onClickGear(e) {
+  function onClickGear(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -173,7 +173,7 @@ function ModelOption({
     });
   }
 
-  function handleOptionClick(e) {
+  function handleOptionClick(e: MouseEvent) {
     if (showMissingApiKeyMsg) {
       e.preventDefault();
       e.stopPropagation();
@@ -287,7 +287,7 @@ function ModelSelect() {
     setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
   }
 
-  function onClickAddModel(e) {
+  function onClickAddModel(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
 

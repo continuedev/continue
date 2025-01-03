@@ -122,8 +122,8 @@ async function resolveEditorContent({
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
     const result = await ideMessenger.request("context/getContextItems", {
-      name: item.itemType === "contextProvider" ? item.id : item.itemType,
-      query: item.query,
+      name: item.itemType === "contextProvider" ? item.id : item.itemType!,
+      query: item.query ?? "",
       fullInput: stripImages(parts),
       selectedCode,
       selectedModelTitle,
@@ -211,22 +211,22 @@ function resolveParagraph(
   p: JSONContent,
 ): [string, MentionAttrs[], string | undefined] {
   let text = "";
-  const contextItems = [];
+  const contextItems: MentionAttrs[] = [];
   let slashCommand: string | undefined = undefined;
   for (const child of p.content || []) {
     if (child.type === "text") {
-      text += text === "" ? child.text.trimStart() : child.text;
+      text += text === "" ? child.text?.trimStart() : child.text;
     } else if (child.type === "mention") {
       text +=
-        typeof child.attrs.renderInlineAs === "string"
+        typeof child.attrs?.renderInlineAs === "string"
           ? child.attrs.renderInlineAs
-          : child.attrs.label;
-      contextItems.push(child.attrs);
+          : child.attrs?.label;
+      contextItems.push(child.attrs as MentionAttrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {
-        slashCommand = child.attrs.id;
+        slashCommand = child.attrs?.id;
       } else {
-        text += child.attrs.label;
+        text += child.attrs?.label;
       }
     } else {
       console.warn("Unexpected child type", child.type);

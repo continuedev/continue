@@ -66,6 +66,10 @@ export const streamResponseThunk = createAsyncThunk<
         const slashCommands = state.config.config.slashCommands || [];
         const inputIndex = index ?? state.session.history.length;
 
+        if (!defaultModel) {
+          throw new Error("No chat model selected");
+        }
+
         dispatch(submitEditorAndInitAtIndex({ index, editorState }));
         resetStateForNewMessage();
 
@@ -115,7 +119,6 @@ export const streamResponseThunk = createAsyncThunk<
           unwrapResult(await dispatch(streamNormalInput(messages)));
         } else {
           const [slashCommand, commandInput] = commandAndInput;
-          let updatedContextItems = [];
           posthog.capture("step run", {
             step_name: slashCommand.name,
             params: {},
@@ -132,7 +135,7 @@ export const streamResponseThunk = createAsyncThunk<
               input: commandInput,
               historyIndex: inputIndex,
               selectedCode,
-              contextItems: updatedContextItems,
+              contextItems: [],
             }),
           );
         }

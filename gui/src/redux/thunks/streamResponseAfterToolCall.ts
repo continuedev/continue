@@ -30,6 +30,11 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const initialHistory = state.session.history;
         const defaultModel = selectDefaultModel(state);
 
+        if (!defaultModel) {
+          console.error("No default model found");
+          return;
+        }
+
         resetStateForNewMessage();
 
         await new Promise((resolve) => setTimeout(resolve, 0));

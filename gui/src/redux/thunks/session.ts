@@ -192,7 +192,7 @@ export const saveCurrentSession = createAsyncThunk<
       }
       // Fallbacks if above doesn't work out or getChatTitles = false
       if (title === NEW_SESSION_TITLE) {
-        title = getChatTitleFromMessage(history[0].message);
+        title = getChatTitleFromMessage(state.session.history[0].message);
       }
     }
     // More fallbacks in case of no title

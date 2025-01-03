@@ -7,7 +7,7 @@
     "skipLibCheck": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
-    "strict": false,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "Node",
@@ -18,7 +18,6 @@
     "noEmitOnError": false,
     "types": ["vitest/globals"]
     // Disabled for now since it's causing too many errors
-    // "strictNullChecks": true
   },
   "include": ["src", "../src/util/messenger.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]

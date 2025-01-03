@@ -8,8 +8,8 @@ import FileIcon from "../FileIcon";
 import { useAppSelector } from "../../redux/hooks";
 
 export interface AddFileComboboxProps {
-  onSelect: (filepaths: string[]) => void;
-  onEscape: () => void;
+  onSelect: (filepaths: string[]) => void | Promise<void>;
+  onEscape: () => void | Promise<void>;
 }
 
 export default function AddFileCombobox({
@@ -50,7 +50,7 @@ export default function AddFileCombobox({
         value={selectedFiles}
         onChange={(files) => {
           setSelectedFiles(files);
-          onSelect(files.map((file) => file.id));
+          void onSelect(files.map((file) => file.id));
           buttonRef.current?.click();
         }}
       >
@@ -72,7 +72,7 @@ export default function AddFileCombobox({
               placeholder="Type to search files..."
               onKeyDown={(e) => {
                 if (e.key === "Escape" && !open) {
-                  onEscape();
+                  void onEscape();
                 }
               }}
             />

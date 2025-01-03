@@ -119,10 +119,12 @@ function useSetup() {
     if (isJetBrains()) {
       // Save theme colors to local storage for immediate loading in JetBrains
       ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
-        Object.keys(result).forEach((key) => {
-          document.body.style.setProperty(key, result[key]);
-          document.documentElement.style.setProperty(key, result[key]);
-        });
+        if (result.status === "success") {
+          Object.entries(result.content).forEach(([key, value]) => {
+            document.body.style.setProperty(key, value);
+            document.documentElement.style.setProperty(key, value);
+          });
+        }
       });
 
       // Tell JetBrains the webview is ready
