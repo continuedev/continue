@@ -37,7 +37,6 @@ import { Battery } from "./util/battery";
 import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { Disposable } from "vscode-languageclient";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
