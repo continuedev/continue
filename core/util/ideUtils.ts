@@ -1,6 +1,10 @@
 import { IDE } from "..";
 
-import { joinPathsToUri, pathToUriPathSegment } from "./uri";
+import {
+  joinEncodedUriPathSegmentToUri,
+  joinPathsToUri,
+  pathToUriPathSegment,
+} from "./uri";
 
 /*
   This function takes a relative (to workspace) filepath
@@ -51,7 +55,7 @@ export async function inferResolvedUriFromRelativePath(
   for (const suffix of suffixes) {
     const uris = dirs.map((dir) => ({
       dir,
-      partialUri: joinPathsToUri(dir, suffix),
+      partialUri: joinEncodedUriPathSegmentToUri(dir, suffix),
     }));
     const promises = uris.map(async ({ partialUri, dir }) => {
       const exists = await ide.fileExists(partialUri);
@@ -67,15 +71,13 @@ export async function inferResolvedUriFromRelativePath(
 
     // If exactly one directory matches, use it
     if (existingUris.length === 1) {
-      return joinPathsToUri(existingUris[0].dir, segments.join("/"));
+      return joinEncodedUriPathSegmentToUri(
+        existingUris[0].dir,
+        segments.join("/"),
+      );
     }
   }
 
   // If no unique match found, use the first directory
   return joinPathsToUri(dirs[0], path);
-}
-
-interface ResolveResult {
-  resolvedUri: string;
-  matchedDir: string;
 }
