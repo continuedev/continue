@@ -101,7 +101,9 @@ toolbar.
   _Run | Debugging Actions | Reload Changed Classes`_
     - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
-- `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Core Dev Server` task)
+- `core`: Run `npm run build -- --os [darwin | linux | win32]` from the `binary` directory (requires
+  restarting the
+  `Start Core Dev Server` task)
 
 ### Setting breakpoints
 

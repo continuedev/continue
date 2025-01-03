@@ -41,7 +41,10 @@ export function OnboardingCard() {
   }
 
   return (
-    <StyledCard className="xs:py-4 xs:px-4 relative px-2 py-3">
+    <StyledCard
+      className="xs:py-4 xs:px-4 relative px-2 py-3"
+      data-testid="onboarding-card"
+    >
       <OnboardingCardTabs
         activeTab={onboardingCard.activeTab || "Best"}
         onTabClick={onboardingCard.setActiveTab}
