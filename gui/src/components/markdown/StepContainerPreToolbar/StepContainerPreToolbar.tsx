@@ -93,12 +93,13 @@ export default function StepContainerPreToolbar(
     if (!defaultModel) {
       return;
     }
-    
+
     const fileUri = await inferResolvedUriFromRelativePath(
       props.relativeFilepath,
       ideMessenger.ide,
     );
-    
+    console.log("HERE", props.relativeFilepath, fileUri);
+
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: fileUri,
