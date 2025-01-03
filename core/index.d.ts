@@ -751,6 +751,7 @@ export type ContextProviderName =
   | "issue"
   | "repo-map"
   | "url"
+  | "commit"
   | string;
 
 export type TemplateType =
