@@ -33,7 +33,7 @@ import TabItem from "@theme/TabItem";
 
 ### 来自 Meta 的 Llama 3.1 405B
 
-如果你倾向于使用开放权重模型，那么来自 Meta 的 Llama 3.1 405B 是你当前的最好选择。你需要决定，通过 SaaS 模型提供者使用它（比如 [Together](../customize/model-providers/more/together.md) 或 [Groq](../customize/model-providers/more/groq.md)）或者自托管使用它（比如使用 [vLLM](../customize/model-providers//more/vllm.md) 或 [Ollama](../customize/model-providers/top-level/ollama.md)） 。
+如果你倾向于使用开放权重模型，那么来自 Meta 的 Llama 3.1 405B 是你当前的最好选择。你需要决定，通过 SaaS 模型提供者使用它（比如 [Together](../customize/model-providers/more/together.md) 、[Novita AI](../customize/model-providers/more/novita.md)或 [Groq](../customize/model-providers/more/groq.md)）或者自托管使用它（比如使用 [vLLM](../customize/model-providers//more/vllm.md) 或 [Ollama](../customize/model-providers/top-level/ollama.md)） 。
 
 <Tabs groupId="providers">
     <TabItem value="Together">
@@ -44,6 +44,18 @@ import TabItem from "@theme/TabItem";
                     "provider": "together",
                     "model": "llama3.1-405b",
                     "apiKey": "[TOGETHER_API_KEY]"
+                }
+            ]
+        ```
+    </TabItem>
+    <TabItem value="Novita">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 405B",
+                    "provider": "novita",
+                    "model": "meta-llama/llama-3.1-405b-instruct",
+                    "apiKey": "[NOVITA_API_KEY]"
                 }
             ]
         ```
