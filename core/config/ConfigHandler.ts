@@ -25,6 +25,7 @@ import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
+import { pathToFileURL } from "url";
 
 export type { ProfileDescription };
 
@@ -88,7 +89,7 @@ export class ConfigHandler {
   async openConfigProfile(profileId?: string) {
     let openProfileId = profileId || this.selectedProfileId;
     if (openProfileId === "local") {
-      await this.ide.openFile(getConfigJsonPath());
+      await this.ide.openFile(pathToFileURL(getConfigJsonPath()).toString());
     } else {
       await this.ide.openUrl(
         "https://app.continue.dev/",
