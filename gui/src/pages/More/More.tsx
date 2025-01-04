@@ -103,6 +103,16 @@ function MorePage() {
           <h3 className="mx-auto mb-1 text-lg">Keyboard shortcuts</h3>
           <KeyboardShortcuts />
         </div>
+        {process.env.NODE_ENV === "development" && (
+          <div className="flex flex-col gap-1 px-3 py-2">
+            <span
+              className="cursor-pointer underline"
+              onClick={() => navigate("/theme")}
+            >
+              Themes
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

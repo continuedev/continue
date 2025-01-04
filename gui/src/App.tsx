@@ -16,7 +16,7 @@ import ThemePage from "./pages/theme";
 
 const router = createMemoryRouter([
   {
-    path: ROUTES.THEME,
+    path: ROUTES.HOME,
     element: <Layout />,
     errorElement: <ErrorPage />,
     children: [
