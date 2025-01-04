@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.utils
 
+import com.intellij.openapi.vfs.VirtualFile
 import java.net.NetworkInterface
 import java.util.*
 import java.awt.event.KeyEvent.*
@@ -78,3 +79,5 @@ fun getMachineUniqueID(): String {
 fun uuid(): String {
     return UUID.randomUUID().toString()
 }
+
+fun VirtualFile.toUriOrNull(): String? = fileSystem.getNioPath(this)?.toUri()?.toString()?.removeSuffix("/")
