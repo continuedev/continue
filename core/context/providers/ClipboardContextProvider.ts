@@ -14,7 +14,7 @@ class ClipboardContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "clipboard",
     displayTitle: "Clipboard",
-    description: "Recent copies",
+    description: "Use recent copies",
     type: "submenu",
   };
 
@@ -43,6 +43,7 @@ class ClipboardContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const recentClipboardItems = clipboardCache.getNItems(MAX_CLIPBOARD_ITEMS);
+
     return recentClipboardItems.map((item, index) => {
       return {
         id: item.id,

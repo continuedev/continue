@@ -380,7 +380,6 @@ export class Core {
 
     on("clipboardCache/add", (msg) => {
       clipboardCache.add(uuidv4(), msg.data.content);
-      this.messenger.send("refreshSubmenuItems", undefined);
     });
 
     async function* llmStreamChat(

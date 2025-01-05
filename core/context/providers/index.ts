@@ -1,6 +1,5 @@
 import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
-import ClipboardContextProvider from "./ClipboardContextProvider";
 
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
@@ -63,7 +62,6 @@ export const Providers: (typeof BaseContextProvider)[] = [
   GreptileContextProvider,
   WebContextProvider,
   MCPContextProvider,
-  ClipboardContextProvider,
 ];
 
 export function contextProviderClassFromName(
