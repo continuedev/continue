@@ -186,7 +186,7 @@ function AddModelForm({
               <label className="block text-sm font-medium">Model</label>
               <ModelSelectionListbox
                 selectedProvider={selectedModel}
-                setSelectedProvider={setSelectedModel}
+                setSelectedProvider={setbSelectedModel}
                 otherOptions={
                   Object.entries(providers).find(
                     ([, provider]) =>

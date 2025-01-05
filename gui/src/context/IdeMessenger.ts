@@ -164,22 +164,18 @@ export class IdeMessenger implements IIdeMessenger {
     messageType: T,
     data: FromWebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): AsyncGenerator<FromWebviewProtocol[T][1][]> {
+  ): AsyncGenerator<unknown[]> {
+    // ): FromWebviewProtocol[T][1] {
     const messageId = uuidv4();
 
     this.post(messageType, data, messageId);
 
-    const buffer: FromWebviewProtocol[T][1][] = [];
+    const buffer: any[] = [];
     let index = 0;
     let done = false;
     let returnVal = undefined;
 
-    const handler = (event: {
-      data: Message<{
-        done: boolean;
-        content: FromWebviewProtocol[T][1];
-      }>;
-    }) => {
+    const handler = (event: { data: Message }) => {
       if (event.data.messageId === messageId) {
         const responseData = event.data.data;
         if (responseData.done) {
