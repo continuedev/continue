@@ -22,6 +22,9 @@ class HttpContextProvider extends BaseContextProvider {
         this.options.description ||
         "Retrieve a context item from a custom server",
       type: "normal",
+      renderInlineAs:
+        this.options.renderInlineAs ||
+        HttpContextProvider.description.renderInlineAs,
     };
   }
 
