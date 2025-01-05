@@ -7,7 +7,7 @@ import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
 import { useContext, useMemo, useState } from "react";
-import { AnimatedEllipsis, lightGray, vscBackground } from "..";
+import { AnimatedEllipsis, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
@@ -164,12 +164,12 @@ function ContextItemsPeek({
       >
         <div className="relative mr-1 h-4 w-4">
           <ChevronRightIcon
-            className={`text-lightgray absolute h-4 w-4 transition-all duration-200 ease-in-out ${
+            className={`text-description absolute h-4 w-4 transition-all duration-200 ease-in-out ${
               open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
             }`}
           />
           <ChevronDownIcon
-            className={`text-lightgray absolute h-4 w-4 transition-all duration-200 ease-in-out ${
+            className={`text-description absolute h-4 w-4 transition-all duration-200 ease-in-out ${
               open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
             }`}
           />

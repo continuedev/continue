@@ -5,7 +5,7 @@ import { useRef } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
+  vscBorder,
   vscForeground,
   vscInputBackground,
 } from "..";
@@ -51,7 +51,8 @@ const EnterButton = styled.button`
   padding: 2px 4px;
   display: flex;
   align-items: center;
-  background-color: ${lightGray}33;
+  background-color: ${vscBorder};
+  background-opacity: 0.33;
   border-radius: ${defaultBorderRadius};
   color: ${vscForeground};
   cursor: pointer;

@@ -1,7 +1,7 @@
 import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import styled from "styled-components";
-import { lightGray, vscBackground } from "..";
+import { vscBackground, vscDescription } from "..";
 import { getFontSize } from "../../util";
 
 const CollapseButton = styled.div`
@@ -48,7 +48,7 @@ function TimelineItem(props: TimelineItemProps) {
           <ChatBubbleOvalLeftIcon width="16px" height="16px" />
         )}
       </CollapseButton>
-      <span style={{ color: lightGray }}>
+      <span style={{ color: vscDescription }}>
         {props.item.message.role} Message
         {/* {props.step.error ? props.step.error.title : props.step.name} */}
       </span>

@@ -1,6 +1,6 @@
 import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
-import { lightGray, vscForeground } from "../..";
+import { vscBorder } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 
 interface RunInTerminalButtonProps {
@@ -23,7 +23,7 @@ export default function RunInTerminalButton({
     >
       <div
         className="max-2xs:hidden flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
-        style={{ color: lightGray }}
+        style={{ color: vscBorder }}
       >
         <>
           <CommandLineIcon className="h-3 w-3 hover:brightness-125" />

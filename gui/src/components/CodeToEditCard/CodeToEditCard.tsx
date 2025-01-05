@@ -56,7 +56,7 @@ export default function CodeToEditCard() {
 
   return (
     <div className="bg-vsc-editor-background mx-3 flex flex-col rounded-t-lg p-1">
-      <div className="text-lightgray flex items-center justify-between gap-1.5 py-1.5 pl-3 pr-2 text-xs">
+      <div className="text-description flex items-center justify-between gap-1.5 py-1.5 pl-3 pr-2 text-xs">
         <span>{title}</span>
         <AddFileButton onClick={() => setShowAddFileCombobox(true)} />
       </div>
@@ -75,7 +75,7 @@ export default function CodeToEditCard() {
       ) : (
         !showAddFileCombobox && (
           <div
-            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground -mt-0.5 flex cursor-pointer items-center justify-center gap-1 rounded py-1 text-center text-xs transition-colors hover:bg-opacity-20"
+            className="text-description hover:bg-description hover:text-vsc-foreground -mt-0.5 flex cursor-pointer items-center justify-center gap-1 rounded py-1 text-center text-xs transition-colors hover:bg-opacity-20"
             onClick={() => setShowAddFileCombobox(true)}
           >
             <PlusIcon className="h-3.5 w-3.5" />
@@ -96,7 +96,7 @@ export default function CodeToEditCard() {
             onClick={(e) => {
               setShowAddFileCombobox(false);
             }}
-            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground mb-2 h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
+            className="text-description hover:bg-description hover:text-vsc-foreground mb-2 h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
           />
         </div>
       )}

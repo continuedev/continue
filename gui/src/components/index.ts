@@ -26,6 +26,9 @@ export const VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR =
   "--vscode-diffEditor-removedLineBackground";
 export const VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR =
   "--vscode-diffEditor-insertedLineBackground";
+export const VSC_SUCCESS_VAR = "--vscode-testing-iconPassed";
+export const VSC_WARNING_VAR = "--vscode-list-warningForeground";
+export const VSC_ERROR_VAR = "--vscode-errorForeground"; // "--vscode-list-errorForeground";
 
 export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
@@ -48,11 +51,13 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_BADGE_FOREGROUND_VAR,
   VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
   VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
+  VSC_SUCCESS_VAR,
+  VSC_ERROR_VAR,
+  VSC_WARNING_VAR,
 ];
 
 export const defaultBorderRadius = "5px";
-export const lightGray = "#999998";
-export const greenButtonColor = "#189e72";
+const lightGray = "#999998";
 
 export const vscInputBackground = `var(${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
 export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, ${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
@@ -67,6 +72,11 @@ export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, $
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
 export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGray})`;
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
+export const vscSuccess = `var(${VSC_SUCCESS_VAR}, "#189e72")`;
+export const vscError = `var(${VSC_ERROR_VAR}, "#d91434")`;
+export const vscWarning = `var(${VSC_WARNING_VAR}, #ff9600)`;
+export const vscBorder = `var(${VSC_SIDEBAR_BORDER_VAR}, ${lightGray})`;
+export const vscDescription = `var(${VSC_DESCRIPTION_FOREGROUND}, ${lightGray})`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
@@ -197,7 +207,7 @@ export const GhostButton = styled.button`
 export const InputSubtext = styled.span`
   font-size: 0.75rem;
   line-height: 1rem;
-  color: ${lightGray};
+  color: ${vscDescription};
   margin-top: 0.25rem;
 `;
 
@@ -205,7 +215,7 @@ export const ButtonSubtext = styled.span`
   display: block;
   margin-top: 0;
   text-align: center;
-  color: ${lightGray};
+  color: ${vscDescription};
   font-size: 0.75rem;
 `;
 
@@ -235,14 +245,14 @@ export const Input = styled.input`
   box-sizing: border-box;
   margin: 4px 0px;
   border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${lightGray};
+  outline: 1px solid ${vscBorder};
   border: none;
   background-color: ${vscBackground};
   color: ${vscForeground};
 
   &:focus {
     background: ${vscInputBackground};
-    outline: 1px solid ${lightGray};
+    outline: 1px solid ${vscBorder};
   }
 
   &:invalid {
@@ -255,7 +265,7 @@ export const Select = styled.select`
   margin: 8px 0;
   box-sizing: border-box;
   border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${lightGray};
+  outline: 1px solid ${vscBorder};
   border: none;
   background-color: ${vscBackground};
   color: ${vscForeground};
@@ -300,7 +310,7 @@ export const HeaderButton = styled.button<{
 
 export const Divider = styled.div`
   height: 1px;
-  background-color: ${lightGray};
+  background-color: ${vscBorder};
 `;
 
 export const StyledActionButton = styled.div`
@@ -311,18 +321,19 @@ export const StyledActionButton = styled.div`
   transition: background-color 200ms;
   border-radius: ${defaultBorderRadius};
   padding: 2px 12px;
-  background-color: ${lightGray}33;
+  background-color: ${vscBorder};
   background-opacity: 0.1;
 
   &:hover {
-    background-color: ${lightGray}55;
+    background-color: ${vscBorder};
+    background-opacity: 0.55;
   }
 `;
 
 export const CloseButton = styled.button`
   border: none;
   background-color: inherit;
-  color: ${lightGray};
+  color: ${vscDescription};
   position: absolute;
   top: 0.6rem;
   right: 1rem;

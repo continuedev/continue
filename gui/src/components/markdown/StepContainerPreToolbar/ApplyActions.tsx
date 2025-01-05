@@ -1,7 +1,7 @@
 import { CheckIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
 import { useEffect, useState } from "react";
-import { lightGray, vscForeground } from "../..";
+import { vscBorder } from "../..";
 import { getMetaKeyLabel } from "../../../util";
 import Spinner from "../../gui/Spinner";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
@@ -38,7 +38,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
     <button
       className={`text-vsc-foreground flex cursor-pointer items-center border-none bg-transparent text-xs outline-none hover:brightness-125`}
       onClick={props.onClickApply}
-      style={{ color: lightGray }}
+      style={{ color: vscBorder }}
     >
       <div className="flex items-center gap-1 text-gray-400">
         <PlayIcon className="h-3 w-3" />

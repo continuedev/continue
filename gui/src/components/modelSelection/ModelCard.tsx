@@ -1,12 +1,7 @@
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  greenButtonColor,
-  lightGray,
-  vscFocusBorder,
-} from "..";
+import { defaultBorderRadius, vscBorder, vscFocusBorder, vscSuccess } from "..";
 import { PackageDimension } from "../../pages/AddNewModel/configs/models";
 import { providers } from "../../pages/AddNewModel/configs/providers";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
@@ -31,7 +26,7 @@ interface ModelCardProps {
 }
 
 const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
   border-radius: ${defaultBorderRadius};
   position: relative;
   width: 100%;
@@ -60,7 +55,7 @@ const DimensionsDiv = styled.div`
   flex-wrap: wrap;
   row-gap: 12px;
 
-  border-top: 1px solid ${lightGray};
+  border-top: 1px solid ${vscBorder};
 `;
 
 const DimensionOptionDiv = styled.div<{ selected: boolean }>`
@@ -68,15 +63,15 @@ const DimensionOptionDiv = styled.div<{ selected: boolean }>`
   flex-direction: column;
   align-items: center;
   margin-right: 8px;
-  background-color: ${lightGray};
+  background-color: ${vscBorder};
   padding: 4px;
   border-radius: ${defaultBorderRadius};
-  outline: 0.5px solid ${lightGray};
+  outline: 0.5px solid ${vscBorder};
 
   ${(props) =>
     props.selected &&
     `
-    background-color: ${greenButtonColor};
+    background-color: ${vscSuccess};
     color: white;
   `}
 
@@ -106,7 +101,7 @@ function ModelCard(props: ModelCardProps) {
   return (
     <Div
       disabled={props.disabled || false}
-      color={greenButtonColor}
+      color={vscSuccess}
       hovered={hovered}
     >
       <div
@@ -228,7 +223,7 @@ function ModelCard(props: ModelCardProps) {
                           (i === 0 &&
                             typeof selectedProvider === "undefined") ||
                           selectedProvider === option
-                            ? greenButtonColor + "aa"
+                            ? vscSuccess + "aa"
                             : undefined,
                       }}
                       onClick={() => {

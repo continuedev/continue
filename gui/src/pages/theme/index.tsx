@@ -1,52 +1,51 @@
 import { useNavigate } from "react-router-dom";
 import { CheckIcon, XIcon } from "@heroicons/react/solid";
 import { vscodeCssClasses } from "./vscode-classes";
+import { VSC_THEME_COLOR_VARS } from "../../components";
 
 interface ThemeExampleProps {
   className: string;
 }
 
-// const classes = [
-//   "lightgray",
-//   "vsc-background",
-//   "secondary-dark",
-//   "vsc-input-background",
-//   "vsc-quick-input-background",
-//   "vsc-background",
-//   "vsc-foreground",
-//   "vsc-button-background",
-//   "vsc-button-foreground",
-//   "vsc-editor-background",
-//   "vsc-list-active-background",
-//   "vsc-focus-border",
-//   "vsc-list-active-foreground",
-//   "vsc-input-border",
-//   "vsc-input-border-focus",
-//   "vsc-badge-background",
-//   "vsc-badge-foreground",
-//   "vsc-sidebar-border",
-//   "vsc-find-match",
-//   "vsc-find-match-selected",
-//   "vsc-foreground-muted",
-//   "vsc-description-foreground",
-//   "vsc-input-placeholder-foreground",
-//   "error",
-//   "error-foreground",
-// ];
+const TAILWIND_CLASSES = [
+  "vsc-background",
+  "secondary-dark",
+  "vsc-input-background",
+  "vsc-quick-input-background",
+  "vsc-background",
+  "vsc-foreground",
+  "vsc-button-background",
+  "vsc-button-foreground",
+  "vsc-editor-background",
+  "vsc-list-active-background",
+  "vsc-focus-border",
+  "vsc-list-active-foreground",
+  "vsc-input-border",
+  "vsc-input-border-focus",
+  "vsc-badge-background",
+  "vsc-badge-foreground",
+  "vsc-sidebar-border",
+  "vsc-find-match",
+  "vsc-find-match-selected",
+  "vsc-foreground-muted",
+  "vsc-description-foreground",
+  "vsc-input-placeholder-foreground",
+  "error",
+  "error-foreground",
+];
 
 const ThemeExample = ({ className }: ThemeExampleProps) => {
   // const exists = window
   //   .getComputedStyle(document.documentElement)
   //   .getPropertyValue(`--${className}`)
   //   .trim();
-  const exists = true;
   return (
     <div className="flex flex-row items-center justify-end gap-2">
       <span className="lines lines-1">{className}</span>
       <div
         className={`h-6 w-12`}
         style={{
-          backgroundColor: `var(--${className})`,
+          backgroundColor: `var(${className})`,
         }}
       ></div>
       {/*{exists ? (
@@ -70,7 +69,7 @@ export default function ThemePage() {
       </span>
       <p className="">More pretty than this</p>
       <div className="flex flex-col">
-        {vscodeCssClasses.map((c) => (
+        {VSC_THEME_COLOR_VARS.map((c) => (
           <ThemeExample key={c} className={c} />
         ))}
       </div>

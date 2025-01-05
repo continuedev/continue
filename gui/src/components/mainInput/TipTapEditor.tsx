@@ -22,8 +22,8 @@ import {
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
   vscBadgeBackground,
+  vscBorder,
   vscForeground,
   vscInputBackground,
   vscInputBorder,
@@ -94,7 +94,8 @@ const InputBoxDiv = styled.div<{ border?: string }>`
   }
 
   &::placeholder {
-    color: ${lightGray}cc;
+    color: ${vscBorder};
+    opacity: 0.66;
   }
 
   display: flex;

@@ -7,7 +7,7 @@ import { ContextItemWithId } from "core";
 import { dedent, getMarkdownLanguageTagForFile } from "core/util";
 import React, { useContext, useMemo } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
+import { defaultBorderRadius, vscBorder, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
@@ -20,7 +20,7 @@ const PreviewMarkdownDiv = styled.div<{
 }>`
   background-color: ${vscEditorBackground};
   border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${(props) => props.borderColor || lightGray};
+  border: 0.5px solid ${(props) => props.borderColor || vscBorder};
   margin-top: 4px;
   margin-bottom: 4px;
   overflow: hidden;
@@ -34,7 +34,7 @@ const PreviewMarkdownDiv = styled.div<{
 const PreviewMarkdownHeader = styled.div`
   margin: 0;
   padding: 2px 6px;
-  border-bottom: 0.5px solid ${lightGray};
+  border-bottom: 0.5px solid ${vscBorder};
   word-break: break-all;
   font-size: ${getFontSize() - 3}px;
   display: flex;

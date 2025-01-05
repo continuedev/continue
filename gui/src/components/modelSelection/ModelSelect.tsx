@@ -7,12 +7,12 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
   Divider,
-  lightGray,
+  vscBorder,
   vscInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -54,7 +54,7 @@ const StyledListboxButton = styled(Listbox.Button)`
   cursor: pointer;
   font-size: ${getFontSize() - 2}px;
   background: transparent;
-  color: ${lightGray};
+  color: ${vscBorder};
   &:focus {
     outline: none;
   }
@@ -72,7 +72,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
   flex-direction: column;
 
   border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${lightGray};
+  border: 0.5px solid ${vscBorder};
   background-color: ${vscInputBackground};
 
   max-height: ${MAX_HEIGHT_PX}px;
@@ -93,7 +93,8 @@ const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
     cursor: pointer;
 
     &:hover {
-      background: ${lightGray}33;
+      background: ${vscBorder};
+      background-opacity: 0.33;
     }
   `}
 
@@ -115,7 +116,8 @@ const IconBase = styled.div<{ $hovered: boolean }>`
 
   &:hover {
     opacity: 1;
-    background-color: ${lightGray}33;
+    background-color: ${vscBorder};
+    background-opacity: 0.3;
   }
 `;
 
@@ -366,7 +368,7 @@ function ModelSelect() {
 
             <Divider className="!my-0" />
 
-            <span className="block px-3 py-3" style={{ color: lightGray }}>
+            <span className="block px-3 py-3" style={{ color: vscBorder }}>
               <code>{getMetaKeyLabel()} + '</code> to toggle
             </span>
           </div>

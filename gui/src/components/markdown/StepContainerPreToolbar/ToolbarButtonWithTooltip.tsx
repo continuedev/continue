@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Tooltip } from "react-tooltip";
-import { lightGray, vscForeground } from "../..";
+import { vscDescription, vscForeground } from "../..";
 import styled from "styled-components";
 import { getFontSize } from "../../../util";
 
@@ -33,7 +33,7 @@ export function ToolbarButtonWithTooltip({
     <>
       <ToolbarButton
         onClick={onClick}
-        style={{ color: lightGray }}
+        style={{ color: vscDescription }}
         data-tooltip-id={tooltipId}
         className="px-0.5"
       >

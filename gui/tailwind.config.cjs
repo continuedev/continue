@@ -27,7 +27,6 @@ module.exports = {
       colors: {
         // All vscode variables https://gist.github.com/estruyf/ba49203e1a7d6868e9320a4ea480c27a
         // Examples for vscode https://github.com/githubocto/tailwind-vscode/blob/main/index.js
-        lightgray: "#999998",
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
         "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
         "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",
@@ -60,6 +59,8 @@ module.exports = {
           "var(--vscode-input-placeholderForeground, #999)",
         error: "var(--vscode-errorBackground, #f00)",
         "error-foreground": "var(--vscode-errorForeground, #fff)",
+        border: "var(--vscode-sideBar-border, #999998)",
+        description: "var(--vscode-descriptionForeground, #999)",
 
         // --vscode-errorForeground  /* Text color for error messages */
         // --vscode-errorBackground  /* Background color for error messages */

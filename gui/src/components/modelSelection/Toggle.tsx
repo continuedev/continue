@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
+  vscBorder,
   vscInputBackground,
   vscListActiveBackground,
   vscListActiveForeground,
@@ -15,13 +15,14 @@ const TopDiv = styled.div`
   width: fit-content;
   cursor: pointer;
 
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
 
   background-color: ${vscInputBackground};
   border-radius: ${defaultBorderRadius};
 
   &:hover {
-    background-color: ${lightGray}55;
+    background-color: ${vscBorder};
+    background-opacity: 0.55;
   }
 `;
 

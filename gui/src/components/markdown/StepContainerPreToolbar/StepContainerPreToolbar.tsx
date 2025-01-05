@@ -3,7 +3,7 @@ import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
-import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
+import { defaultBorderRadius, vscBorder, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { getFontSize } from "../../../util";
@@ -39,7 +39,7 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
   padding: 4px 6px;
   margin: 0;
   border-bottom: ${({ isExpanded }) =>
-    isExpanded ? `0.5px solid ${lightGray}80` : "inherit"};
+    isExpanded ? `0.5px solid ${vscBorder}` : "inherit"};
 `;
 
 export interface StepContainerPreToolbarProps {

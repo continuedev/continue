@@ -67,7 +67,7 @@ export default function AddFileCombobox({
               onFocus={() => {
                 buttonRef.current?.click();
               }}
-              className="bg-vsc-background border-lightgray text-vsc-foreground box-border w-full rounded border border-solid py-0.5 pl-2 focus:outline-none"
+              className="bg-vsc-background border-border text-vsc-foreground box-border w-full rounded border border-solid py-0.5 pl-2 focus:outline-none"
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Type to search files..."
               onKeyDown={(e) => {
@@ -77,7 +77,7 @@ export default function AddFileCombobox({
               }}
             />
 
-            <Combobox.Options className="no-scrollbar bg-vsc-editor-background border-lightgray/50 absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto overflow-x-hidden rounded-md border border-solid px-1 py-0 pl-0 pr-5 shadow-lg focus:outline-none">
+            <Combobox.Options className="no-scrollbar bg-vsc-editor-background border-border/50 absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto overflow-x-hidden rounded-md border border-solid px-1 py-0 pl-0 pr-5 shadow-lg focus:outline-none">
               {filteredFiles.length > 0 ? (
                 filteredFiles.map((file) => (
                   <Combobox.Option
@@ -103,7 +103,7 @@ export default function AddFileCombobox({
                         </div>
 
                         <span
-                          className={`text-lightgray max-w-[30%] truncate ${
+                          className={`text-description max-w-[30%] truncate ${
                             active || selected ? "visible" : "invisible"
                           } group-hover:visible`}
                         >

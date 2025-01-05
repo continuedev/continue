@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
+  vscBorder,
   vscForeground,
 } from "../../components";
 import { getPlatform, isJetBrains } from "../../util";
@@ -17,7 +17,7 @@ const GridDiv = styled.div`
 `;
 
 const StyledKeyDiv = styled.div`
-  border: 0.5px solid ${lightGray};
+  border: 0.5px solid ${vscBorder};
   border-radius: ${defaultBorderRadius};
   padding: 2px;
   color: ${vscForeground};

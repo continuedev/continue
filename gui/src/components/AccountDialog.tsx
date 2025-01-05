@@ -43,7 +43,7 @@ export default function AccountDialog() {
     return (
       <div className="p-4 pt-0">
         <h1 className="mb-0.5 text-center text-2xl">Account</h1>
-        <span className="text-lightgray mb-4 block text-center">
+        <span className="text-description mb-4 block text-center">
           Signed out
         </span>
         <Button className="w-full" onClick={login}>
@@ -77,7 +77,7 @@ export default function AccountDialog() {
     <div className="flex flex-col items-center gap-5 p-4 pt-0">
       <div className="flex flex-col items-center text-center">
         <h1 className="mb-1 text-2xl">Account</h1>
-        <span className="text-lightgray text-sm">
+        <span className="text-description text-sm">
           {session.account.label === "" ? (
             "Signed in"
           ) : (

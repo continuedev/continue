@@ -6,10 +6,8 @@ import {
 import { WrenchScrewdriverIcon as WrenchScrewdriverIconSolid } from "@heroicons/react/24/solid";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "../..";
+import { vscBorder, vscForeground } from "../..";
 import { toggleUseTools } from "../../../redux/slices/uiSlice";
-import { getFontSize } from "../../../util";
 import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
 import ToolDropdownItem from "./ToolDropdownItem";
@@ -50,7 +48,7 @@ export default function ToolDropdown() {
       <div
         data-tooltip-id="tools-tooltip"
         className={`-ml-1 -mt-1 flex flex-row items-center gap-1.5 rounded-md px-1 py-0.5 text-xs ${
-          useTools || isHovered ? "bg-lightgray/30" : ""
+          useTools || isHovered ? "bg-description/30" : ""
         }`}
       >
         <ToolsIcon
@@ -83,7 +81,7 @@ export default function ToolDropdown() {
                         e.stopPropagation();
                         setDropdownOpen(!isDropdownOpen);
                       }}
-                      className="text-lightgray flex cursor-pointer items-center border-none bg-transparent px-0 outline-none"
+                      className="text-description flex cursor-pointer items-center border-none bg-transparent px-0 outline-none"
                     >
                       <EllipsisHorizontalIcon className="h-3 w-3 cursor-pointer hover:brightness-125" />
                     </Listbox.Button>
@@ -98,7 +96,7 @@ export default function ToolDropdown() {
                       afterLeave={() => setDropdownOpen(false)}
                     >
                       <Listbox.Options
-                        className={`bg-vsc-editor-background border-lightgray/50 absolute -left-32 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}
+                        className={`bg-vsc-editor-background border-border/50 absolute -left-32 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}
                         static
                       >
                         <div className="sticky">
@@ -106,7 +104,7 @@ export default function ToolDropdown() {
                             className="mb-1 flex items-center gap-2 px-2 py-1 text-xs"
                             style={{
                               color: vscForeground,
-                              borderBottom: `1px solid ${lightGray}`,
+                              borderBottom: `1px solid ${vscBorder}`,
                             }}
                           >
                             Tool policies{" "}
