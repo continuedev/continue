@@ -13,7 +13,7 @@ export function useWebviewListener<T extends keyof ToWebviewProtocol>(
 
   useEffect(
     () => {
-      let listener: (event: { data: Message }) => Promise<void>;
+      let listener: (event: { data: Message<ToWebviewProtocol[T][0]>}) => Promise<void>;
 
       if (!skip) {
         listener = async (event) => {

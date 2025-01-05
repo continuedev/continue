@@ -23,10 +23,26 @@ import type {
 } from "../";
 import { ConfigResult } from "../config/load";
 
-export type ProtocolGeneratorType<T> = AsyncGenerator<{
+export type ProtocolGeneratorYield<T> = {
   done?: boolean;
   content: T;
-}>;
+};
+export type ProtocolGeneratorType<Y> = AsyncGenerator<
+  ProtocolGeneratorYield<Y>
+>;
+
+export type AsyncGeneratorYieldType<T> =
+  T extends AsyncGenerator<infer Y, any, any>
+    ? Y extends ProtocolGeneratorYield<infer PR>
+      ? PR
+      : never
+    : never;
+// export type AsyncGeneratorReturnType<T> =
+//   T extends AsyncGenerator<any, infer R, any>
+//     ? R extends ProtocolGeneratorYield<infer PR>
+//       ? PR
+//       : never
+//     : never;
 
 export type OnboardingModes =
   | "Local"

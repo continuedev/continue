@@ -14,6 +14,7 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 import { setDefaultModel } from "../redux/slices/configSlice";
+import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -149,7 +150,14 @@ function AddModelForm({
               <label className="block text-sm font-medium">Provider</label>
               <ModelSelectionListbox
                 selectedProvider={selectedProvider}
-                setSelectedProvider={setSelectedProvider}
+                setSelectedProvider={(val: DisplayInfo) => {
+                  const match = [...popularProviders, ...otherProviders].find(
+                    (provider) => provider.title === val.title,
+                  );
+                  if (match) {
+                    setSelectedProvider(match);
+                  }
+                }}
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
               />
@@ -186,7 +194,19 @@ function AddModelForm({
               <label className="block text-sm font-medium">Model</label>
               <ModelSelectionListbox
                 selectedProvider={selectedModel}
-                setSelectedProvider={setbSelectedModel}
+                setSelectedProvider={(val: DisplayInfo) => {
+                  const options =
+                    Object.entries(providers).find(
+                      ([, provider]) =>
+                        provider?.title === selectedProvider.title,
+                    )?.[1]?.packages ?? [];
+                  const match = options.find(
+                    (option) => option.title === val.title,
+                  );
+                  if (match) {
+                    setSelectedModel(match);
+                  }
+                }}
                 otherOptions={
                   Object.entries(providers).find(
                     ([, provider]) =>

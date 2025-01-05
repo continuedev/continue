@@ -288,7 +288,9 @@ export const sessionSlice = createSlice({
             message.role &&
             (lastMessage.role !== message.role ||
               // This is when a tool call comes after assistant text
-              (lastMessage.content !== "" && message.role === "assistant"))
+              (lastMessage.content !== "" &&
+                message.role === "assistant" &&
+                message.toolCalls?.length))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -302,12 +304,12 @@ export const sessionSlice = createSlice({
               const toolCalls = message.toolCalls?.[0];
               if (toolCalls) {
                 const [_, parsedArgs] = incrementalParseJson(
-                  message.toolCalls[0].function.arguments,
+                  message.toolCalls[0].function?.arguments ?? "{}",
                 );
                 historyItem.toolCallState = {
                   status: "generating",
-                  toolCall: message.toolCalls[0],
-                  toolCallId: message.toolCalls[0].id,
+                  toolCall: message.toolCalls[0] as ToolCall,
+                  toolCallId: message.toolCalls[0].id as ToolCall["id"],
                   parsedArgs,
                 };
               }
@@ -330,16 +332,28 @@ export const sessionSlice = createSlice({
                 if (lastMessage.toolCalls!.length <= i) {
                   lastMessage.toolCalls!.push(toolCall);
                 } else {
-                  lastMessage.toolCalls[i].function.arguments +=
-                    toolCall.function.arguments;
+                  if (
+                    toolCall?.function?.arguments &&
+                    lastMessage?.toolCalls?.[i]?.function?.arguments &&
+                    lastItem.toolCallState
+                  ) {
+                    lastMessage.toolCalls[i].function!.arguments +=
+                      toolCall.function.arguments;
 
-                  const [_, parsedArgs] = incrementalParseJson(
-                    lastMessage.toolCalls[i].function.arguments,
-                  );
+                    const [_, parsedArgs] = incrementalParseJson(
+                      lastMessage.toolCalls[i].function!.arguments!,
+                    );
 
-                  lastItem.toolCallState.parsedArgs = parsedArgs;
-                  lastItem.toolCallState.toolCall.function.arguments +=
-                    toolCall.function.arguments;
+                    lastItem.toolCallState.parsedArgs = parsedArgs;
+                    lastItem.toolCallState.toolCall.function.arguments +=
+                      toolCall.function.arguments;
+                  } else {
+                    console.error(
+                      "Unexpected tool call format received - this message added during gui strict null checks",
+                      message,
+                      lastMessage,
+                    );
+                  }
                 }
               });
             }

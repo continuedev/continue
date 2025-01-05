@@ -407,7 +407,7 @@ export function Chat() {
                     return (
                       <div key={i}>
                         <ToolCallDiv
-                          toolCallState={item.toolCallState}
+                          toolCallState={item.toolCallState!}
                           toolCall={toolCall}
                         />
                       </div>

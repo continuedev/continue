@@ -103,10 +103,8 @@ export const StyledListboxOption = styled(Listbox.Option)<{
 `;
 
 interface ModelSelectionListboxProps {
-  selectedProvider: DisplayInfo | ProviderInfo | ModelPackage;
-  setSelectedProvider: Dispatch<
-    SetStateAction<DisplayInfo | ProviderInfo | ModelPackage>
-  >;
+  selectedProvider: DisplayInfo;
+  setSelectedProvider: (val: DisplayInfo) => void;
   topOptions?: DisplayInfo[];
   otherOptions?: DisplayInfo[];
 }

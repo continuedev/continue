@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import type { IProtocol } from "../index";
 
-export interface Message<T = any> {
+export interface Message<T = unknown> {
   messageType: string;
   messageId: string;
   data: T;
