@@ -54,7 +54,7 @@ Ollama currently does not offer any reranking models.
 
 [Click here](../../model-types/reranking.md) to see a list of reranking model providers.
 
-## Setting up a remote instance
+## Using a remote instance
 
 To configure a remote instance of Ollama, add the `"apiBase"` property to your model in config.json:
 
