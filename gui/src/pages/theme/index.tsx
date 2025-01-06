@@ -31,28 +31,27 @@ const TAILWIND_CLASSES = [
   "vsc-description-foreground",
   "vsc-input-placeholder-foreground",
   "error",
-  "error-foreground",
 ];
 
-const ThemeExample = ({ className }: ThemeExampleProps) => {
-  // const exists = window
-  //   .getComputedStyle(document.documentElement)
-  //   .getPropertyValue(`--${className}`)
-  //   .trim();
+const ThemeVariableExample = ({ varName }: { varName: string }) => {
   return (
     <div className="flex flex-row items-center justify-end gap-2">
-      <span className="lines lines-1">{className}</span>
+      <span className="lines lines-1">{varName}</span>
       <div
         className={`h-6 w-12`}
         style={{
-          backgroundColor: `var(${className})`,
+          backgroundColor: `var(${varName})`,
         }}
       ></div>
-      {/*{exists ? (
-        <CheckIcon className="h-4 w-4 text-green-500" />
-      ) : (
-        <XIcon className="h-4 w-4 text-red-500" />
-      )} */}
+    </div>
+  );
+};
+
+const ThemeTailwindClassExample = ({ className }: { className: string }) => {
+  return (
+    <div className="flex flex-row items-center justify-end gap-2">
+      <span className="lines lines-1">{className}</span>
+      <div className={`h-6 w-12 bg-${className}`}></div>
     </div>
   );
 };
@@ -70,7 +69,10 @@ export default function ThemePage() {
       <p className="">More pretty than this</p>
       <div className="flex flex-col">
         {VSC_THEME_COLOR_VARS.map((c) => (
-          <ThemeExample key={c} className={c} />
+          <ThemeVariableExample key={c} varName={c} />
+        ))}
+        {TAILWIND_CLASSES.map((c) => (
+          <ThemeTailwindClassExample key={c} className={c} />
         ))}
       </div>
     </div>

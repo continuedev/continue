@@ -39,7 +39,7 @@ export default function AcceptRejectAllButtons({
         className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleAcceptOrReject("rejectDiff")}
       >
-        <XMarkIcon className="mr-1 h-4 w-4 text-red-600" />
+        <XMarkIcon className="text-error mr-1 h-4 w-4" />
         {isSingleRangeEdit ? (
           <span>Reject ({getMetaKeyLabel()}⇧⌫)</span>
         ) : (

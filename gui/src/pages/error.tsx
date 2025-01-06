@@ -50,7 +50,7 @@ const ErrorPage: React.FC = () => {
         }}
       >
         {initialLoad ? (
-          <FlagIcon className="text-error-foreground h-5 w-5" />
+          <FlagIcon className="text-error h-5 w-5" />
         ) : (
           <ArrowPathIcon className="h-5 w-5" />
         )}

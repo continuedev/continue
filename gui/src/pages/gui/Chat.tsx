@@ -18,6 +18,7 @@ import {
   defaultBorderRadius,
   vscBackground,
   vscBorder,
+  vscError,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import CodeToEditCard from "../../components/CodeToEditCard";
