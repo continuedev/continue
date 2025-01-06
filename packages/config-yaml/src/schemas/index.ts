@@ -6,6 +6,7 @@ import { modelSchema } from "./models.js";
 const packageSchema = z.object({
   uses: z.string(),
   with: z.any().optional(),
+  secrets: z.array(z.string()).optional(),
 });
 
 const toolSchema = z.object({
@@ -33,6 +34,7 @@ const promptSchema = z.object({
 
 export const configYamlSchema = z.object({
   name: z.string(),
+  version: z.string(),
   packages: z.array(packageSchema).optional(),
   models: z.array(modelSchema).optional(),
   context: z.array(contextSchema).optional(),
