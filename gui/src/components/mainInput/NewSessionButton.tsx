@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "..";
+import { defaultBorderRadius, vscDescription, vscForeground } from "..";
 import { getFontSize } from "../../util";
 
 export const NewSessionButton = styled.div`
@@ -12,10 +12,11 @@ export const NewSessionButton = styled.div`
 
   border-radius: ${defaultBorderRadius};
   padding: 2px 6px;
-  color: ${lightGray};
+  color: ${vscDescription};
 
   &:hover {
-    background-color: ${lightGray}33;
+    background-color: ${vscDescription};
+    background-opacity: 0.33;
     color: ${vscForeground};
   }
 

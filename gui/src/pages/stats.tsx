@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { table } from "table";
-import { lightGray, vscBackground, vscInputBackground } from "../components";
+import { vscBorder, vscBackground, vscInputBackground } from "../components";
 import { CopyIconButton } from "../components/gui/CopyIconButton";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
@@ -11,7 +11,7 @@ import { useNavigationListener } from "../hooks/useNavigationListener";
 const Th = styled.th`
   padding: 0.5rem;
   text-align: left;
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
 `;
 
 const Tr = styled.tr`
@@ -21,12 +21,12 @@ const Tr = styled.tr`
 
   overflow-wrap: anywhere;
 
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
 `;
 
 const Td = styled.td`
   padding: 0.5rem;
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
 `;
 
 function generateTable(data: unknown[][]) {
@@ -69,7 +69,7 @@ function Stats() {
         onClick={() => navigate(-1)}
         className="sticky top-0 m-0 flex cursor-pointer items-center p-0"
         style={{
-          borderBottom: `0.5px solid ${lightGray}`,
+          borderBottom: `0.5px solid ${vscBorder}`,
           backgroundColor: vscBackground,
         }}
       >

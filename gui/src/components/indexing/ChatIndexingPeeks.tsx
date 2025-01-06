@@ -33,7 +33,7 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
   if (hiddenPeeks[state.type]) return null;
   return (
     <div
-      className="flex flex-row items-center border-0 border-t border-solid border-t-zinc-700 px-3 py-0.5"
+      className="border-t-border flex flex-row items-center border-0 border-t border-solid px-3 py-0.5"
       onClick={() => {
         navigate("/more");
       }}

@@ -7,7 +7,7 @@ import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
 import { useContext, useMemo, useState } from "react";
-import { AnimatedEllipsis, lightGray, vscBackground } from "..";
+import { AnimatedEllipsis, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
 import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
@@ -106,7 +106,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   return (
     <div
       onClick={openContextItem}
-      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:opacity-80"
     >
       <div className="flex w-full items-center">
         {getContextItemIcon()}
@@ -117,7 +117,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
             {contextItem.name}
           </div>
           <div
-            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
+            className={`text-description min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs ${isUrl ? "hover:underline" : ""}`}
           >
             {contextItem.uri?.type === "file"
               ? getUriPathBasename(contextItem.description)
@@ -126,7 +126,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
         </div>
 
         {isUrl && (
-          <ArrowTopRightOnSquareIcon className="mx-2 h-4 w-4 flex-shrink-0 text-gray-400 opacity-0 group-hover:opacity-100" />
+          <ArrowTopRightOnSquareIcon className="text-description mx-2 h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100" />
         )}
       </div>
     </div>
@@ -164,17 +164,17 @@ function ContextItemsPeek({
       >
         <div className="relative mr-1 h-4 w-4">
           <ChevronRightIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+            className={`text-description absolute h-4 w-4 transition-all duration-200 ease-in-out ${
               open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
             }`}
           />
           <ChevronDownIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+            className={`text-description absolute h-4 w-4 transition-all duration-200 ease-in-out ${
               open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
             }`}
           />
         </div>
-        <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
+        <span className="text-description ml-1 text-xs transition-colors duration-200">
           {isGatheringContext ? (
             <>
               Gathering context

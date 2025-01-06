@@ -7,7 +7,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscBackground } from "..";
+import { defaultBorderRadius, vscBorder, vscBackground } from "..";
 import { getMetaKeyLabel, isJetBrains } from "../../util";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -17,7 +17,7 @@ interface TutorialCardProps {
 }
 
 const TutorialCardDiv = styled.div`
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
   border-radius: ${defaultBorderRadius};
   background-color: ${vscBackground};
   padding: 1rem 2.5rem 1rem 2rem;
@@ -29,7 +29,7 @@ const TutorialCardDiv = styled.div`
 const CloseButton = styled.button`
   border: none;
   background-color: ${vscBackground};
-  color: ${lightGray};
+  color: ${vscBorder};
   position: absolute;
   top: 0.4rem;
   right: 0.5rem;
@@ -49,7 +49,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <XMarkIcon className="h-5 w-5" />
       </CloseButton>
 
-      <ul className="space-y-4 pl-0" style={{ color: lightGray }}>
+      <ul className="space-y-4 pl-0" style={{ color: vscBorder }}>
         {!isJetBrains() && (
           <li className="flex items-start">
             <ArrowRightStartOnRectangleIcon className="h-4 w-4 pr-3 align-middle" />
@@ -57,10 +57,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
               <span
                 className="cursor-pointer underline"
                 onClick={() =>
-                  ideMessenger.post(
-                    "vscode/openMoveRightMarkdown",
-                    undefined,
-                  )
+                  ideMessenger.post("vscode/openMoveRightMarkdown", undefined)
                 }
               >
                 Move Chat panel to the right

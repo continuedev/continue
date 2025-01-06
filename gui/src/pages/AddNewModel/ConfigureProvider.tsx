@@ -8,7 +8,7 @@ import styled from "styled-components";
 import {
   Input,
   defaultBorderRadius,
-  lightGray,
+  vscBorder,
   vscBackground,
 } from "../../components";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
@@ -31,7 +31,7 @@ const GridDiv = styled.div`
 `;
 
 export const CustomModelButton = styled.div<{ disabled: boolean }>`
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
   border-radius: ${defaultBorderRadius};
   padding: 4px 8px;
   display: flex;
@@ -88,7 +88,7 @@ function ConfigureProvider() {
         <div
           className="sticky top-0 m-0 flex items-center p-0"
           style={{
-            borderBottom: `0.5px solid ${lightGray}`,
+            borderBottom: `0.5px solid ${vscBorder}`,
             backgroundColor: vscBackground,
             zIndex: 2,
           }}

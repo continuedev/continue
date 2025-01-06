@@ -30,7 +30,8 @@ import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
+  vscBorder,
+  vscDescription,
   vscForeground,
   vscListActiveBackground,
   vscListActiveForeground,
@@ -146,7 +147,7 @@ const ItemDiv = styled.div`
 
 const QueryInput = styled.textarea`
   background-color: #fff1;
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
   border-radius: ${defaultBorderRadius};
 
   padding: 0.2rem 0.4rem;
@@ -410,7 +411,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   </div>
                   <span
                     style={{
-                      color: lightGray,
+                      color: vscDescription,
                       float: "right",
                       textAlign: "right",
                       opacity: index !== selectedIndex ? 0 : 1,

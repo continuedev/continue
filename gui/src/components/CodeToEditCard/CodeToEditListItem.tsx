@@ -78,7 +78,7 @@ export default function CodeToEditListItem({
       }}
     >
       <div
-        className={`hover:bg-lightgray hover:text-vsc-foreground flex items-center justify-between rounded px-2 py-0.5 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
+        className={`hover:bg-description hover:text-vsc-foreground flex items-center justify-between rounded px-2 py-0.5 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-border bg-opacity-20"}`}
       >
         <div className="flex w-4/5 min-w-0 items-center gap-0.5">
           <FileIcon filename={code.filepath} height={"18px"} width={"18px"} />
@@ -92,7 +92,7 @@ export default function CodeToEditListItem({
             >
               {title}
             </span>
-            <span className="text-lightgray invisible flex-grow truncate text-xs group-hover:visible">
+            <span className="text-description invisible flex-grow truncate text-xs group-hover:visible">
               {last2Parts}
             </span>
           </div>
@@ -106,7 +106,7 @@ export default function CodeToEditListItem({
                   e.stopPropagation();
                   setShowCodeSnippet(false);
                 }}
-                className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
+                className="text-description hover:bg-description hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
               />
             ) : (
               <ChevronRightIcon
@@ -114,7 +114,7 @@ export default function CodeToEditListItem({
                   e.stopPropagation();
                   setShowCodeSnippet(true);
                 }}
-                className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
+                className="text-description hover:bg-description hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
               />
             )}
           </div>
@@ -124,7 +124,7 @@ export default function CodeToEditListItem({
                 e.stopPropagation();
                 onDelete(code);
               }}
-              className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
+              className="text-description hover:bg-description hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
             />
           </div>
         </div>

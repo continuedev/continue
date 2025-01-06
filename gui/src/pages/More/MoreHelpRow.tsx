@@ -9,7 +9,7 @@ interface MoreHelpRowProps {
 function MoreHelpRow({ title, description, onClick, Icon }: MoreHelpRowProps) {
   return (
     <div
-      className="hover:bg-lightgray/30 flex cursor-pointer items-center justify-between gap-2 rounded px-4 py-2"
+      className="hover:bg-description/30 flex cursor-pointer items-center justify-between gap-2 rounded px-4 py-2"
       onClick={onClick}
     >
       <div className="flex w-4/5 flex-col justify-center">
@@ -17,7 +17,7 @@ function MoreHelpRow({ title, description, onClick, Icon }: MoreHelpRowProps) {
         <span className="py-1 text-xs text-stone-500">{description}</span>
       </div>
 
-      <div className="flex h-5 w-1/5 w-5 cursor-pointer justify-end text-stone-500">
+      <div className="flex h-5 w-5 cursor-pointer justify-end text-stone-500">
         <Icon />
       </div>
     </div>

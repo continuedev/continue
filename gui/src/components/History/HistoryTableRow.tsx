@@ -88,7 +88,7 @@ export function HistoryTableRow({
         >
           <div className="flex-1 cursor-pointer space-y-1">
             {editing ? (
-              <div className="text-md">
+              <div className="text-base">
                 <Input
                   type="text"
                   className="w-full"
@@ -100,7 +100,7 @@ export function HistoryTableRow({
                 />
               </div>
             ) : (
-              <span className="text-md block max-w-80 truncate text-base font-semibold">
+              <span className="block max-w-80 truncate text-base font-semibold">
                 {sessionMetadata.title}
               </span>
             )}

@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
+  vscBorder,
   vscButtonBackground,
   vscButtonForeground,
 } from "../../../components";
@@ -42,8 +42,8 @@ const AcceptButton = styled(Button)`
 `;
 
 const RejectButton = styled(Button)`
-  color: ${lightGray};
-  border: 1px solid ${lightGray};
+  color: ${vscBorder};
+  border: 1px solid ${vscBorder};
   background-color: transparent;
 `;
 
@@ -64,7 +64,7 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
           <div
             className="flex w-full items-center justify-center gap-4"
             style={{
-              color: lightGray,
+              color: vscBorder,
               minHeight: "40px",
             }}
           >

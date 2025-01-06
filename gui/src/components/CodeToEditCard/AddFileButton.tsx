@@ -31,7 +31,7 @@ export default function AddFileButton({ onClick }: AddFileButtonProps) {
       <div className="relative">
         <Listbox.Button
           ref={buttonRef}
-          className="bg-vsc-editor-background border-lightgray/50 flex h-5 cursor-pointer items-center justify-between rounded-md border border-solid px-0 shadow-sm transition-colors"
+          className="bg-vsc-editor-background border-border/50 flex h-5 cursor-pointer items-center justify-between rounded-md border border-solid px-0 shadow-sm transition-colors"
         >
           <div
             className="flex h-5 w-14 items-center justify-center gap-1 hover:brightness-125"
@@ -47,12 +47,12 @@ export default function AddFileButton({ onClick }: AddFileButtonProps) {
             </span>
           </div>
 
-          <div className="border-lightgray/50 h-4 w-[1px] border-y-0 border-l-0 border-r border-solid" />
+          <div className="border-border/50 h-4 w-[1px] border-y-0 border-l-0 border-r border-solid" />
 
           <ChevronDownIcon className="text-vsc-foreground h-2.5 w-2.5 cursor-pointer px-1 brightness-75 hover:brightness-125" />
         </Listbox.Button>
 
-        <Listbox.Options className="bg-vsc-editor-background border-lightgray/50 absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg">
+        <Listbox.Options className="bg-vsc-editor-background border-border/50 absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg">
           <Listbox.Option
             value="addAllFiles"
             className="text-vsc-foreground block w-full cursor-pointer px-2 py-1 text-left text-[10px] brightness-75 hover:brightness-125"

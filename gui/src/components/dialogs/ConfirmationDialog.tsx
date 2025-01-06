@@ -27,7 +27,7 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
       <div className="w/1/2 flex justify-end gap-2">
         {!!props.hideCancelButton || (
           <SecondaryButton
-            className="text-lightgray"
+            className="text-description"
             onClick={() => {
               dispatch(setShowDialog(false));
               dispatch(setDialogMessage(undefined));

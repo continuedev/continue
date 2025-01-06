@@ -6,8 +6,8 @@ import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
   vscBackground,
+  vscBorder,
 } from "../../components";
 import ModelCard from "../../components/modelSelection/ModelCard";
 import Toggle from "../../components/modelSelection/Toggle";
@@ -21,7 +21,7 @@ import { setDefaultModel } from "../../redux/slices/configSlice";
 const IntroDiv = styled.div`
   padding: 8px 12px;
   border-radius: ${defaultBorderRadius};
-  border: 1px solid ${lightGray};
+  border: 1px solid ${vscBorder};
   margin-top: 1rem;
   margin-bottom: 1rem;
 `;
@@ -67,7 +67,7 @@ function AddNewModel() {
       <div
         className="sticky top-0 m-0 flex items-center p-0"
         style={{
-          borderBottom: `0.5px solid ${lightGray}`,
+          borderBottom: `0.5px solid ${vscBorder}`,
           backgroundColor: vscBackground,
           zIndex: 2,
         }}
@@ -159,8 +159,8 @@ function AddNewModel() {
                       style={{
                         height: "0px",
                         width: "100%",
-                        color: lightGray,
-                        border: `1px solid ${lightGray}`,
+                        color: vscBorder,
+                        border: `1px solid ${vscBorder}`,
                         borderRadius: "2px",
                       }}
                     />

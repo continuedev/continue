@@ -1,4 +1,3 @@
-import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
 import { VscThemeProvider } from "./context/VscTheme";
@@ -13,6 +12,7 @@ import MorePage from "./pages/More";
 import Stats from "./pages/stats";
 import { ROUTES } from "./util/navigation";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
+import ThemePage from "./pages/theme";
 
 const router = createMemoryRouter([
   {
@@ -55,6 +55,10 @@ const router = createMemoryRouter([
       {
         path: "/migration",
         element: <MigrationPage />,
+      },
+      {
+        path: ROUTES.THEME,
+        element: <ThemePage />,
       },
     ],
   },

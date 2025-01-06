@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import styled from "styled-components";
-import { Input, Label, Select, defaultBorderRadius, lightGray } from "..";
+import { Input, Label, Select, defaultBorderRadius, vscBorder } from "..";
 import { getFontSize } from "../../util";
 
 const Div = styled.div<{ dashed: boolean }>`
-  border: 1px ${(props) => (props.dashed ? "dashed" : "solid")} ${lightGray};
+  border: 1px ${(props) => (props.dashed ? "dashed" : "solid")} ${vscBorder};
   border-radius: ${defaultBorderRadius};
   padding: 8px;
   margin-bottom: 16px;

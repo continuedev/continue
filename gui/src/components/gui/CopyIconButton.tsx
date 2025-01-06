@@ -15,8 +15,8 @@ interface CopyIconButtonProps {
 export function CopyIconButton({
   text,
   tabIndex,
-  checkIconClassName = "h-4 w-4 text-green-400",
-  clipboardIconClassName = "h-4 w-4 text-gray-400",
+  checkIconClassName = "h-4 w-4 text-success",
+  clipboardIconClassName = "h-4 w-4 text-description",
 }: CopyIconButtonProps) {
   const { copyText, copied } = useCopy(text);
 

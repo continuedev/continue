@@ -16,8 +16,9 @@ import styled from "styled-components";
 import {
   Button,
   defaultBorderRadius,
-  lightGray,
   vscBackground,
+  vscBorder,
+  vscError,
 } from "../../components";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
@@ -78,10 +79,10 @@ const StopButton = styled.div`
   margin-right: auto;
   margin-left: auto;
   font-size: ${getFontSize() - 2}px;
-  border: 0.5px solid ${lightGray};
+  border: 0.5px solid ${vscBorder};
   border-radius: ${defaultBorderRadius};
   padding: 4px 8px;
-  color: ${lightGray};
+  color: ${vscBorder};
   cursor: pointer;
   box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.1),
@@ -118,8 +119,8 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
       style={{ backgroundColor: vscBackground }}
     >
       <p>Something went wrong:</p>
-      <pre style={{ color: "red" }}>{error.message}</pre>
-      <pre style={{ color: lightGray }}>{error.stack}</pre>
+      <pre style={{ color: vscError }}>{error.message}</pre>
+      <pre style={{ color: vscBorder }}>{error.stack}</pre>
 
       <div className="text-center">
         <Button onClick={resetErrorBoundary}>Restart</Button>

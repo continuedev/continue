@@ -3,7 +3,7 @@ import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
-import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
+import { defaultBorderRadius, vscBorder, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { getFontSize } from "../../../util";
@@ -39,7 +39,7 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
   padding: 4px 6px;
   margin: 0;
   border-bottom: ${({ isExpanded }) =>
-    isExpanded ? `0.5px solid ${lightGray}80` : "inherit"};
+    isExpanded ? `0.5px solid ${vscBorder}` : "inherit"};
 `;
 
 export interface StepContainerPreToolbarProps {
@@ -183,7 +183,7 @@ export default function StepContainerPreToolbar(
         <div className="flex min-w-0 max-w-[45%] items-center">
           <ChevronDownIcon
             onClick={onClickExpand}
-            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
+            className={`text-description h-3.5 w-3.5 shrink-0 cursor-pointer hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />

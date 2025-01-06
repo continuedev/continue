@@ -7,12 +7,13 @@ import { UserCircleIcon as UserCircleIconSolid } from "@heroicons/react/24/solid
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
   vscBackground,
+  vscBorder,
+  vscDescription,
   vscForeground,
   vscInputBackground,
   vscListActiveBackground,
@@ -22,7 +23,6 @@ import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
-import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 import { useAppSelector } from "../redux/hooks";
@@ -45,7 +45,7 @@ const StyledListboxButton = styled(Listbox.Button)`
   white-space: nowrap;
   overflow: hidden;
 
-  border: 0.5px solid ${lightGray};
+  border: 0.5px solid ${vscBorder};
   border-radius: ${defaultBorderRadius};
 
   display: grid;
@@ -202,7 +202,7 @@ function ProfileSwitcher() {
               <span className="truncate">{selectedProfile()?.title}</span>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon
-                  className="h-4 w-4 text-gray-400"
+                  className="text-description h-4 w-4"
                   aria-hidden="true"
                 />
               </div>
@@ -228,7 +228,7 @@ function ProfileSwitcher() {
                     <div
                       className="px-2 py-1"
                       style={{
-                        color: lightGray,
+                        color: vscDescription,
                         fontSize: getFontSize() - 2,
                       }}
                     >

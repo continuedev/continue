@@ -19,7 +19,7 @@ const InfoHover = ({
     <>
       <InformationCircleIcon
         data-tooltip-id={dataTooltipId}
-        className={`h-${size ?? DEFAULT_SIZE} w-${size ?? DEFAULT_SIZE} cursor-help text-gray-500`}
+        className={`h-${size ?? DEFAULT_SIZE} w-${size ?? DEFAULT_SIZE} text-description cursor-help`}
       />
 
       <ToolTip id={dataTooltipId} place="bottom">

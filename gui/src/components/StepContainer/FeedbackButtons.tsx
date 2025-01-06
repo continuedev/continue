@@ -37,7 +37,7 @@ export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
         onClick={() => sendFeedback(true)}
       >
         <HandThumbUpIcon
-          className={`mx-0.5 h-3.5 w-3.5 ${feedback === true ? "text-green-400" : "text-gray-500"}`}
+          className={`mx-0.5 h-3.5 w-3.5 ${feedback === true ? "text-success" : "text-description"}`}
         />
       </HeaderButtonWithToolTip>
       <HeaderButtonWithToolTip
@@ -46,7 +46,7 @@ export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
         onClick={() => sendFeedback(false)}
       >
         <HandThumbDownIcon
-          className={`h-3.5 w-3.5 ${feedback === false ? "text-red-400" : "text-gray-500"}`}
+          className={`h-3.5 w-3.5 ${feedback === false ? "text-red-400" : "text-description"}`}
         />
       </HeaderButtonWithToolTip>
     </>
