@@ -26,11 +26,11 @@ function MorePage() {
     <div className="overflow-y-scroll">
       <PageHeader onClick={() => navigate("/")} title="Chat" />
 
-      <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
+      <div className="divide-border gap-2 divide-x-0 divide-y-2 divide-solid px-4">
         <div className="py-5">
           <div>
             <h3 className="mx-auto mb-1 mt-0 text-xl">@codebase index</h3>
-            <span className="w-3/4 text-xs text-stone-500">
+            <span className="text-description w-3/4 text-xs">
               Local embeddings of your codebase
             </span>
           </div>

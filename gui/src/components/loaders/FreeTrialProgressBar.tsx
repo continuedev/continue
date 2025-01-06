@@ -58,10 +58,10 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
         <span>
           Free trial <span className="hidden sm:inline">requests</span>
         </span>
-        <div className="flex h-1.5 flex-1 rounded-md border border-solid border-gray-400">
+        <div className="border-border flex h-1.5 flex-1 rounded-md border border-solid">
           <div
             className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
-              completed / total > 0.75 ? "bg-error" : "bg-stone-500"
+              completed / total > 0.75 ? "bg-error" : "bg-vsc-editor-background"
             }`}
             style={{
               width: `${fillPercentage}%`,

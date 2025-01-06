@@ -38,9 +38,9 @@ export default function UndoAndRedoButtons() {
   }
 
   return (
-    <div className="flex justify-center gap-2 border-b border-gray-200/25 p-1 px-3">
+    <div className="border-border/25 flex justify-center gap-2 border-b p-1 px-3">
       <button
-        className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
+        className="text-description flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleUndoOrRedo("undo")}
       >
         <ArrowUturnLeftIcon className="mr-2 h-3.5 w-3.5" />
@@ -49,7 +49,7 @@ export default function UndoAndRedoButtons() {
 
       {shouldRenderRedo && (
         <button
-          className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
+          className="text-description flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
           onClick={() => handleUndoOrRedo("redo")}
         >
           <ArrowUturnRightIcon className="mr-2 h-3.5 w-3.5" />

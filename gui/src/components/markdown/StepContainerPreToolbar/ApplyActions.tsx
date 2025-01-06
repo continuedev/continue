@@ -50,7 +50,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
   switch (props.applyState ? props.applyState.status : null) {
     case "streaming":
       return (
-        <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
+        <div className="bg-vsc-editor-background flex items-center rounded pl-2 pr-1">
           <span className="text-description inline-flex items-center gap-2 text-xs">
             Applying changes
             <Spinner />
@@ -84,7 +84,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
       if (!hasRejected && props.applyState?.numDiffs === 0) {
         if (showApplied) {
           return (
-            <span className="text-description flex items-center rounded bg-zinc-700 max-sm:px-0.5 sm:pl-2">
+            <span className="text-description bg-vsc-editor-background flex items-center rounded max-sm:px-0.5 sm:pl-2">
               <span className="max-sm:hidden">Applied</span>
               <CheckIcon className="h-4 w-4 hover:brightness-125 sm:px-1" />
             </span>

@@ -34,9 +34,9 @@ export default function AcceptRejectAllButtons({
   }
 
   return (
-    <div className="flex justify-center gap-2 border-b border-gray-200/25 p-1 px-3">
+    <div className="border-border/25 flex justify-center gap-2 border-b p-1 px-3">
       <button
-        className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
+        className="text-description flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleAcceptOrReject("rejectDiff")}
       >
         <XMarkIcon className="text-error mr-1 h-4 w-4" />
@@ -51,7 +51,7 @@ export default function AcceptRejectAllButtons({
         )}
       </button>
       <button
-        className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
+        className="text-description flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleAcceptOrReject("acceptDiff")}
       >
         <CheckIcon className="text-success mr-1 h-4 w-4" />

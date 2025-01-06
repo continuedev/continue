@@ -29,6 +29,7 @@ export const VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR =
 export const VSC_SUCCESS_VAR = "--vscode-testing-iconPassed";
 export const VSC_WARNING_VAR = "--vscode-list-warningForeground";
 export const VSC_ERROR_VAR = "--vscode-errorForeground"; // "--vscode-list-errorForeground";
+export const VSC_LIST_HOVER_VAR = "--vscode-list-hoverBackground";
 
 export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
@@ -54,6 +55,7 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_SUCCESS_VAR,
   VSC_ERROR_VAR,
   VSC_WARNING_VAR,
+  VSC_LIST_HOVER_VAR,
 ];
 
 export const defaultBorderRadius = "5px";
@@ -77,6 +79,7 @@ export const vscError = `var(${VSC_ERROR_VAR}, "#d91434")`;
 export const vscWarning = `var(${VSC_WARNING_VAR}, #ff9600)`;
 export const vscBorder = `var(${VSC_SIDEBAR_BORDER_VAR}, ${lightGray})`;
 export const vscDescription = `var(${VSC_DESCRIPTION_FOREGROUND}, ${lightGray})`;
+export const vscListHover = `var(${VSC_LIST_HOVER_VAR}, ${lightGray}20)`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {

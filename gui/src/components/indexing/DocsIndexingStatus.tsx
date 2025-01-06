@@ -109,23 +109,23 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
           <p className="lines lines-1 m-0 p-0 text-left">
             {docConfig.title ?? docConfig.startUrl}
           </p>
-          <ArrowTopRightOnSquareIcon className="mb-0.5 h-3 w-3 text-stone-500" />
+          <ArrowTopRightOnSquareIcon className="text-description mb-0.5 h-3 w-3" />
         </div>
         {status?.status === "pending" ? (
-          <div className="text-xs text-stone-500">Pending...</div>
+          <div className="text-description text-xs">Pending...</div>
         ) : (
-          <div className="flex flex-row items-center gap-1 text-stone-500">
+          <div className="text-description flex flex-row items-center gap-1">
             <span className="text-xs">{progressPercentage.toFixed(0)}%</span>
             {Icon ? (
               <Icon
-                className={`inline-block h-4 w-4 text-stone-500 ${
+                className={`text-description inline-block h-4 w-4 ${
                   status?.status === "indexing" ? "animate-spin-slow" : ""
                 }`}
               ></Icon>
             ) : null}
             {status?.status !== "indexing" ? (
               <TrashIcon
-                className="h-4 w-4 cursor-pointer text-stone-500"
+                className="text-description h-4 w-4 cursor-pointer"
                 onClick={onDelete}
               />
             ) : null}
@@ -133,10 +133,12 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
         )}
       </div>
 
-      <div className="my-2 h-1.5 w-full rounded-md border border-solid border-gray-400">
+      <div className="border-border my-2 h-1.5 w-full rounded-md border border-solid">
         <div
           className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
-            status?.status === "failed" ? "bg-error" : "bg-stone-500"
+            status?.status === "failed"
+              ? "bg-error"
+              : "bg-vsc-editor-background"
           }`}
           style={{
             width: `${progressPercentage}%`,
@@ -146,7 +148,7 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
 
       <div className="flex flex-row items-center justify-between gap-4">
         <span
-          className={`cursor-pointer whitespace-nowrap text-xs text-stone-500 underline`}
+          className={`text-description cursor-pointer whitespace-nowrap text-xs underline`}
           onClick={
             {
               complete: reIndex,
@@ -170,7 +172,7 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
           }
         </span>
 
-        <span className="lines lines-1 text-right text-xs text-stone-500">
+        <span className="lines lines-1 text-description text-right text-xs">
           {status?.description}
         </span>
       </div>

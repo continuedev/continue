@@ -9,10 +9,10 @@ function IndexingProgressBar({ update }: IndexingProgressBarProps) {
   const progressPercentage = getProgressPercentage(update.progress);
 
   return (
-    <div className="my-2 h-1.5 w-full rounded-md border border-solid border-gray-400">
+    <div className="border-border my-2 h-1.5 w-full rounded-md border border-solid">
       <div
         className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
-          update.status === "failed" ? "bg-error" : "bg-stone-500"
+          update.status === "failed" ? "bg-error" : "bg-vsc-editor-background"
         }`}
         style={{
           width: `${progressPercentage}%`,

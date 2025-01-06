@@ -37,7 +37,7 @@ const ThinkingIndicator = ({ historyItem }: ThinkingIndicatorProps) => {
 
   return (
     <div className="px-2 py-2">
-      <span className="text-stone-500">{`Thinking.${".".repeat(animation)}`}</span>
+      <span className="text-description">{`Thinking.${".".repeat(animation)}`}</span>
     </div>
   );
 };

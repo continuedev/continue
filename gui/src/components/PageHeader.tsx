@@ -7,9 +7,9 @@ export interface PageHeaderProps {
 
 export default function PageHeader({ onClick, title }: PageHeaderProps) {
   return (
-    <div className="bg-vsc-background sticky top-0 z-20 m-0 flex items-center border-0 border-b border-solid border-b-zinc-700 bg-inherit p-0">
+    <div className="border-b-border sticky top-0 z-20 m-0 flex items-center border-0 border-b border-solid bg-inherit p-0">
       <div
-        className="cursor-pointer transition-colors duration-200 hover:text-zinc-100"
+        className="cursor-pointer transition-colors duration-200 hover:opacity-80"
         onClick={onClick}
       >
         <ArrowLeftIcon className="ml-3 inline-block h-3 w-3" />

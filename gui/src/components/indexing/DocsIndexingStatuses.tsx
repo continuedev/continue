@@ -26,7 +26,7 @@ function DocsIndexingStatuses() {
           </SecondaryButton>
         ) : null}
       </div>
-      <span className="text-xs text-stone-500">
+      <span className="text-description text-xs">
         {configDocs.length
           ? "Manage your documentation sources"
           : "No docs yet"}

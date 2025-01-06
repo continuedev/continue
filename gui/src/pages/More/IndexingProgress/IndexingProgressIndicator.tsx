@@ -27,7 +27,7 @@ function IndexingProgressIndicator({ update }: IndexingProgressIndicatorProps) {
   const showProgress = update.status !== "disabled";
 
   return (
-    <div className="flex items-center justify-between gap-1 text-stone-500">
+    <div className="text-description flex items-center justify-between gap-1">
       {showProgress && (
         <span className="text-xs">{progressPercentage.toFixed(0)}%</span>
       )}
@@ -35,7 +35,7 @@ function IndexingProgressIndicator({ update }: IndexingProgressIndicatorProps) {
       {Icon && (
         <div className="flex items-center">
           <Icon
-            className={`inline-block h-4 w-4 align-top text-stone-500 ${
+            className={`text-description inline-block h-4 w-4 align-top ${
               animateIcon ? "animate-spin-slow" : ""
             }`}
           ></Icon>

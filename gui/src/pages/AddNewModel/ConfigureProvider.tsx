@@ -139,7 +139,7 @@ function ConfigureProvider() {
                     <Input
                       type={d.inputType}
                       id={d.key}
-                      className="m-2 rounded-md border-2 border-gray-200 p-2"
+                      className="border-border m-2 rounded-md border-2 p-2"
                       placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
@@ -169,7 +169,7 @@ function ConfigureProvider() {
                     <Input
                       type={d.inputType}
                       id={d.key}
-                      className="m-2 rounded-md border-2 border-gray-200 p-2"
+                      className="border-border m-2 rounded-md border-2 p-2"
                       placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
