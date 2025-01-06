@@ -416,7 +416,7 @@ export function Chat() {
                         <ExclamationTriangleIcon
                           width="16px"
                           height="16px"
-                          color="red"
+                          className="text-error"
                         />
                       ) : (
                         <ChatBubbleOvalLeftIcon width="16px" height="16px" />

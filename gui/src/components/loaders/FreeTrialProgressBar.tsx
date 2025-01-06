@@ -37,7 +37,11 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
           className="flex flex-1 cursor-default select-none items-center justify-center gap-1"
           data-tooltip-id="usage_progress_bar"
         >
-          <ExclamationCircleIcon width="18px" height="18px" color="red" />
+          <ExclamationCircleIcon
+            width="18px"
+            height="18px"
+            className="text-error"
+          />
           Trial limit reached
         </div>
 
