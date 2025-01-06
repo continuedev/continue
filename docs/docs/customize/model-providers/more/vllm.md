@@ -1,6 +1,6 @@
 # vLLM
 
-Run the OpenAI-compatible server by vLLM using `vllm serve`. See their [server documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) and the [engine arguments documentation](https://docs.vllm.ai/en/latest/models/engine_args.html).
+Run the OpenAI-compatible server by vLLM using `vllm serve`. See their [server documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) and the [engine arguments documentation](https://docs.vllm.ai/en/latest/usage/engine_args.html).
 
 ```shell
 vllm serve NousResearch/Meta-Llama-3-8B-Instruct --max-model-len 1024
