@@ -52,7 +52,7 @@ export default function ToolDropdown() {
         }`}
       >
         <ToolsIcon
-          className="h-4 w-4 text-gray-400"
+          className="text-description h-4 w-4"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         />
@@ -117,19 +117,19 @@ export default function ToolDropdown() {
                                   style={{ fontSize: "10px" }}
                                 >
                                   <p>
-                                    <span className="text-green-500">
+                                    <span className="text-success">
                                       Automatic:
                                     </span>{" "}
                                     Can be used without asking
                                   </p>
                                   <p>
-                                    <span className="text-yellow-500">
+                                    <span className="text-warning">
                                       Allowed:
                                     </span>{" "}
                                     Will ask before using
                                   </p>
                                   <p>
-                                    <span className="text-red-500">
+                                    <span className="text-error">
                                       Disabled:
                                     </span>{" "}
                                     Cannot be used

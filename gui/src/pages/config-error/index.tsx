@@ -43,8 +43,8 @@ export default function ConfigErrorPage() {
                     key={index}
                     className={`flex items-start rounded-md p-2 text-sm shadow-md ${
                       error.fatal
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800"
+                        ? "text-error bg-red-100"
+                        : "text-warning bg-yellow-100"
                     }`}
                   >
                     {error.fatal ? (
@@ -62,7 +62,7 @@ export default function ConfigErrorPage() {
                 ))}
               </ul>
             ) : (
-              <p className="rounded-md bg-green-100 p-4 text-sm text-green-700">
+              <p className="text-success rounded-md bg-green-100 p-4 text-sm">
                 No configuration errors found.
               </p>
             )}

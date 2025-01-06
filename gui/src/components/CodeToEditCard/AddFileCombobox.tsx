@@ -114,7 +114,7 @@ export default function AddFileCombobox({
                   </Combobox.Option>
                 ))
               ) : (
-                <div className="text-vsc-list-active-foreground0 px-2 py-1 text-xs">
+                <div className="text-vsc-list-active-foreground px-2 py-1 text-xs">
                   No results
                 </div>
               )}

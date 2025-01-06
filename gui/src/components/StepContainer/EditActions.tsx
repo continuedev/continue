@@ -40,7 +40,7 @@ export default function EditActions({ index, item }: EditActionsProps) {
 
   return (
     <div
-      className={`mx-2 mb-2 mt-2 flex h-7 items-center justify-between pb-0 text-xs text-gray-400`}
+      className={`text-description mx-2 mb-2 mt-2 flex h-7 items-center justify-between pb-0 text-xs`}
     >
       <div className="flex-1" />
 
@@ -76,8 +76,8 @@ export default function EditActions({ index, item }: EditActionsProps) {
         <CopyIconButton
           tabIndex={-1}
           text={renderChatMessage(item.message)}
-          clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
-          checkIconClassName="h-3.5 w-3.5 text-green-400"
+          clipboardIconClassName="h-3.5 w-3.5 text-description"
+          checkIconClassName="h-3.5 w-3.5 text-success"
         />
 
         <FeedbackButtons item={item} />

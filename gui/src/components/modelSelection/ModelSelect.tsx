@@ -324,7 +324,7 @@ function ModelSelect() {
           style={{ padding: 0 }}
           onClick={calculatePosition}
         >
-          <div className="flex max-w-[33vw] items-center gap-0.5 text-gray-400 transition-colors duration-200">
+          <div className="text-description flex max-w-[33vw] items-center gap-0.5 transition-colors duration-200">
             <span className="truncate">
               {modelSelectTitle(defaultModel) || "Select model"}{" "}
             </span>

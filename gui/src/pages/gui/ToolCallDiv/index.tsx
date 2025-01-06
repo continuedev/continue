@@ -24,9 +24,9 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       case "generated":
         return <ArrowRightIcon color={vscButtonBackground} />;
       case "done":
-        return <CheckIcon className="text-green-500" />;
+        return <CheckIcon className="text-success" />;
       case "canceled":
-        return <XMarkIcon className="text-red-500" />;
+        return <XMarkIcon className="text-error" />;
     }
   }
 

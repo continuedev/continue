@@ -133,7 +133,7 @@ export default function StepContainerPreActionButtons({
               style={{ backgroundColor: vscEditorBackground }}
               onClick={onClickRunTerminal}
             >
-              <CommandLineIcon className="h-4 w-4 text-gray-400" />
+              <CommandLineIcon className="text-description h-4 w-4" />
             </HeaderButtonWithToolTip>
           )}
           <HeaderButtonWithToolTip
@@ -141,7 +141,7 @@ export default function StepContainerPreActionButtons({
             style={{ backgroundColor: vscEditorBackground }}
             onClick={onClickApply}
           >
-            <PlayIcon className="h-4 w-4 text-gray-400" />
+            <PlayIcon className="text-description h-4 w-4" />
           </HeaderButtonWithToolTip>
           <HeaderButtonWithToolTip
             text="Insert at cursor"
@@ -150,7 +150,7 @@ export default function StepContainerPreActionButtons({
               ideMessenger.post("insertAtCursor", { text: codeBlockContent })
             }
           >
-            <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
+            <ArrowLeftEndOnRectangleIcon className="text-description h-4 w-4" />
           </HeaderButtonWithToolTip>
           <CopyIconButton text={codeBlockContent} />
         </InnerHoverDiv>

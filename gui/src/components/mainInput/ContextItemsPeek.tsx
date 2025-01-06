@@ -117,7 +117,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
             {contextItem.name}
           </div>
           <div
-            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
+            className={`text-description min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs ${isUrl ? "hover:underline" : ""}`}
           >
             {contextItem.uri?.type === "file"
               ? getUriPathBasename(contextItem.description)
@@ -126,7 +126,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
         </div>
 
         {isUrl && (
-          <ArrowTopRightOnSquareIcon className="mx-2 h-4 w-4 flex-shrink-0 text-gray-400 opacity-0 group-hover:opacity-100" />
+          <ArrowTopRightOnSquareIcon className="text-description mx-2 h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100" />
         )}
       </div>
     </div>
@@ -174,7 +174,7 @@ function ContextItemsPeek({
             }`}
           />
         </div>
-        <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
+        <span className="text-description ml-1 text-xs transition-colors duration-200">
           {isGatheringContext ? (
             <>
               Gathering context

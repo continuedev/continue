@@ -32,7 +32,7 @@ export default function ResponseActions({
   }
 
   return (
-    <div className="mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs text-gray-400">
+    <div className="text-description mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs">
       {shouldHideActions || (
         <>
           {isTruncated && (
@@ -41,7 +41,7 @@ export default function ResponseActions({
               text="Continue generation"
               onClick={onContinueGeneration}
             >
-              <BarsArrowDownIcon className="h-3.5 w-3.5 text-gray-500" />
+              <BarsArrowDownIcon className="text-description h-3.5 w-3.5" />
             </HeaderButtonWithToolTip>
           )}
 
@@ -51,14 +51,14 @@ export default function ResponseActions({
             tabIndex={-1}
             onClick={onDelete}
           >
-            <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
+            <TrashIcon className="text-description h-3.5 w-3.5" />
           </HeaderButtonWithToolTip>
 
           <CopyIconButton
             tabIndex={-1}
             text={renderChatMessage(item.message)}
-            clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
-            checkIconClassName="h-3.5 w-3.5 text-green-400"
+            clipboardIconClassName="h-3.5 w-3.5 text-description"
+            checkIconClassName="h-3.5 w-3.5 text-success"
           />
 
           <FeedbackButtons item={item} />

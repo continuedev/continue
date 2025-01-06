@@ -51,7 +51,7 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
   return (
     <>
       <div
-        className="flex flex-1 cursor-pointer flex-row items-center gap-2 text-[10px] text-gray-400 sm:gap-3"
+        className="text-description flex flex-1 cursor-pointer flex-row items-center gap-2 text-[10px] sm:gap-3"
         data-tooltip-id="usage_progress_bar"
         onClick={onClick}
       >
@@ -61,7 +61,7 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
         <div className="flex h-1.5 flex-1 rounded-md border border-solid border-gray-400">
           <div
             className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
-              completed / total > 0.75 ? "bg-amber-500" : "bg-stone-500"
+              completed / total > 0.75 ? "bg-error" : "bg-stone-500"
             }`}
             style={{
               width: `${fillPercentage}%`,

@@ -8,7 +8,7 @@ function Footer() {
 
   if (defaultModel?.provider === "free-trial") {
     return (
-      <footer className="flex flex-col border-0 border-t border-solid border-t-zinc-700 px-2 py-2">
+      <footer className="border-t-border flex flex-col border-0 border-t border-solid px-2 py-2">
         <FreeTrialProgressBar
           completed={parseInt(localStorage.getItem("ftc") || "0")}
           total={FREE_TRIAL_LIMIT_REQUESTS}

@@ -25,7 +25,7 @@ const ConfigErrorIndicator = () => {
       text="Config error"
       onClick={onClickError}
     >
-      <ExclamationTriangleIcon className="h-4 w-4 text-red-600" />
+      <ExclamationTriangleIcon className="text-error h-4 w-4" />
     </HeaderButtonWithToolTip>
   );
 };

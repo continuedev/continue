@@ -479,7 +479,7 @@ class CustomPanel(
         JPanel(MigLayout("insets 0, fillx")).apply {
             val leftLabel =
                 JLabel("Type to re-prompt").apply {
-                    foreground = Color(156, 163, 175) // text-gray-400
+                    foreground = Color(156, 163, 175) // text-description
                     font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
                     border = EmptyBorder(0, 4, 0, 0)
                 }
@@ -737,7 +737,7 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
         if (item != null) {
             val c = renderer.getListCellRendererComponent(listBox, item, -1, false, false)
             c.font = comboBox.font
-            c.foreground = Color(156, 163, 175) // text-gray-400
+            c.foreground = Color(156, 163, 175) // text-description
             c.background = comboBox.background
 
             if (c is JComponent) {

@@ -8,28 +8,7 @@ interface ThemeExampleProps {
 }
 
 const TAILWIND_CLASSES = [
-  "vsc-background",
-  "secondary-dark",
-  "vsc-input-background",
-  "vsc-quick-input-background",
-  "vsc-background",
-  "vsc-foreground",
-  "vsc-button-background",
-  "vsc-button-foreground",
-  "vsc-editor-background",
-  "vsc-list-active-background",
-  "vsc-focus-border",
-  "vsc-list-active-foreground",
-  "vsc-input-border",
-  "vsc-input-border-focus",
-  "vsc-badge-background",
-  "vsc-badge-foreground",
-  "vsc-sidebar-border",
-  "vsc-find-match",
-  "vsc-find-match-selected",
-  "vsc-foreground-muted",
-  "vsc-description-foreground",
-  "vsc-input-placeholder-foreground",
+  // TODO
   "error",
 ];
 

@@ -40,7 +40,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
       onClick={props.onClickApply}
       style={{ color: vscBorder }}
     >
-      <div className="flex items-center gap-1 text-gray-400">
+      <div className="text-description flex items-center gap-1">
         <PlayIcon className="h-3 w-3" />
         <span className="xs:inline hidden">{text}</span>
       </div>
@@ -51,7 +51,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
     case "streaming":
       return (
         <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
-          <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+          <span className="text-description inline-flex items-center gap-2 text-xs">
             Applying changes
             <Spinner />
           </span>
@@ -60,7 +60,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
     case "done":
       return (
         <div className="xs:pl-2 xs:pr-1 flex items-center rounded bg-zinc-700">
-          <span className="max-xs:hidden xs:mr-1 text-xs text-gray-400">
+          <span className="max-xs:hidden xs:mr-1 text-description text-xs">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
             <span className="max-md:hidden">{` remaining`}</span>
           </span>
@@ -69,14 +69,14 @@ export default function ApplyActions(props: ApplyActionsProps) {
             onClick={onClickReject}
             tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
           >
-            <XMarkIcon className="h-4 w-4 text-red-600 hover:brightness-125" />
+            <XMarkIcon className="text-error h-4 w-4 hover:brightness-125" />
           </ToolbarButtonWithTooltip>
 
           <ToolbarButtonWithTooltip
             onClick={props.onClickAccept}
             tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
           >
-            <CheckIcon className="h-4 w-4 text-green-600 hover:brightness-125" />
+            <CheckIcon className="text-success h-4 w-4 hover:brightness-125" />
           </ToolbarButtonWithTooltip>
         </div>
       );
@@ -84,7 +84,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
       if (!hasRejected && props.applyState?.numDiffs === 0) {
         if (showApplied) {
           return (
-            <span className="flex items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
+            <span className="text-description flex items-center rounded bg-zinc-700 max-sm:px-0.5 sm:pl-2">
               <span className="max-sm:hidden">Applied</span>
               <CheckIcon className="h-4 w-4 hover:brightness-125 sm:px-1" />
             </span>

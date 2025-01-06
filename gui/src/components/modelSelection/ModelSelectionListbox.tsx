@@ -131,7 +131,7 @@ function ModelSelectionListbox({
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronUpDownIcon
-              className="h-5 w-5 text-gray-400"
+              className="text-description h-5 w-5"
               aria-hidden="true"
             />
           </span>
@@ -149,13 +149,13 @@ function ModelSelectionListbox({
                   <StyledListboxOption
                     selected={selectedProvider.title === option.title}
                     key={index}
-                    className="relative cursor-default select-none py-2 pr-4 text-gray-400"
+                    className="text-description relative cursor-default select-none py-2 pr-4"
                     value={option}
                   >
                     {({ selected }) => (
                       <>
                         {option.title === "Autodetect" ? (
-                          <CubeIcon className="mr-2 h-4 w-4 text-gray-400" />
+                          <CubeIcon className="text-description mr-2 h-4 w-4" />
                         ) : (
                           window.vscMediaUrl &&
                           option.icon && (
@@ -189,13 +189,13 @@ function ModelSelectionListbox({
                   <StyledListboxOption
                     selected={selectedProvider.title === option.title}
                     key={index}
-                    className="relative cursor-default select-none py-2 pr-4 text-gray-400"
+                    className="text-description relative cursor-default select-none py-2 pr-4"
                     value={option}
                   >
                     {({ selected }) => (
                       <>
                         {option.title === "Autodetect" ? (
-                          <CubeIcon className="mr-2 h-4 w-4 text-gray-400" />
+                          <CubeIcon className="text-description mr-2 h-4 w-4" />
                         ) : (
                           window.vscMediaUrl &&
                           option.icon && (

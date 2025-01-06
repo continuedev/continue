@@ -116,7 +116,7 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
           <ModelSelect />
-          <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
+          <div className="xs:flex text-description -mb-1 hidden items-center transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
               (supportsImages && (
                 <>
@@ -163,7 +163,7 @@ function InputToolbar(props: InputToolbarProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
+        <div className="text-description flex items-center gap-2 whitespace-nowrap">
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
               className={`${shouldRenderToolsButton ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}

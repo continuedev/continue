@@ -177,7 +177,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
 
   return (
     <div className={`flex flex-col gap-1 px-3 pb-2 pt-2`}>
-      <p className="m-0 p-0 text-lg text-red-500">{`${statusCode ? statusCode + " " : ""}Error`}</p>
+      <p className="text-error m-0 p-0 text-lg">{`${statusCode ? statusCode + " " : ""}Error`}</p>
 
       {message ? (
         <div className="mt-2 flex flex-col gap-0 rounded-sm border border-solid">
