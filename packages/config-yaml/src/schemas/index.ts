@@ -32,6 +32,13 @@ const promptSchema = z.object({
   prompt: z.string(),
 });
 
+const docSchema = z.object({
+  name: z.string(),
+  startUrl: z.string(),
+  rootUrl: z.string().optional(),
+  faviconUrl: z.string().optional(),
+});
+
 export const configYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
@@ -43,6 +50,7 @@ export const configYamlSchema = z.object({
   mcpServers: z.array(mcpServerSchema).optional(),
   rules: z.string().optional(),
   prompts: z.array(promptSchema).optional(),
+  docs: z.array(docSchema).optional(),
 });
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;

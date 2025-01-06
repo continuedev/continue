@@ -81,10 +81,11 @@ function convertMcp(mcp: any): NonNullable<ConfigYaml["mcpServers"]>[number] {
   };
 }
 
-function convertDoc(doc: NonNullable<ConfigJson["docs"]>[number]): any {
-  // NonNullable<ConfigYaml["docs"]>[number]
+function convertDoc(
+  doc: NonNullable<ConfigJson["docs"]>[number],
+): NonNullable<ConfigYaml["docs"]>[number] {
   return {
-    title: doc.title,
+    name: doc.title,
     startUrl: doc.startUrl,
     rootUrl: doc.rootUrl,
     faviconUrl: doc.faviconUrl,
@@ -134,7 +135,7 @@ export function convertJsonToYamlConfig(configJson: ConfigJson): ConfigYaml {
     rules: configJson.systemMessage,
     prompts,
     mcpServers,
-    // docs
+    docs,
   };
 
   return configYaml;
