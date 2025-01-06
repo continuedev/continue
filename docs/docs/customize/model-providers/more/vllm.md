@@ -1,6 +1,6 @@
 # vLLM
 
-vLLM is an open-source library for fast LLM inference which typically is used to serve multiple users at the same due its high performance but it can also be used to run a large model on multiple GPU:s (e.g. when it doesn´t fit in a single GPU). Run their OpenAI-compatible server using `vllm serve`. See their [server documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) and the [engine arguments documentation](https://docs.vllm.ai/en/latest/usage/engine_args.html).
+vLLM is an open-source library for fast LLM inference which typically is used to serve multiple users at the same. It can also be used to run a large model on multiple GPU:s (e.g. when it doesn´t fit in a single GPU). Run their OpenAI-compatible server using `vllm serve`. See their [server documentation](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) and the [engine arguments documentation](https://docs.vllm.ai/en/latest/usage/engine_args.html).
 
 ```shell
 vllm serve meta-llama/Meta-Llama-3.1-8B-Instruct
