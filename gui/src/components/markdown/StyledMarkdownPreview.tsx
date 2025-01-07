@@ -296,14 +296,16 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (content && previousFileContextItemsRef.current) {
+          if (content) {
             // Insert file links for matching previous context items
-            const ctxItem = previousFileContextItemsRef.current.find((item) =>
-              item.uri!.value!.includes(content),
-            );
-            if (ctxItem) {
-              const rif = ctxItemToRifWithContents(ctxItem);
-              return <FilenameLink rif={rif} />;
+            if (previousFileContextItemsRef.current?.length) {
+              const ctxItem = previousFileContextItemsRef.current.find((item) =>
+                item.uri!.value!.endsWith(content),
+              );
+              if (ctxItem) {
+                const rif = ctxItemToRifWithContents(ctxItem);
+                return <FilenameLink rif={rif} />;
+              }
             }
 
             // Insert symbols for exact matches
