@@ -6,10 +6,8 @@ import {
 import { WrenchScrewdriverIcon as WrenchScrewdriverIconSolid } from "@heroicons/react/24/solid";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "../..";
+import { lightGray, vscForeground } from "../..";
 import { toggleUseTools } from "../../../redux/slices/uiSlice";
-import { getFontSize } from "../../../util";
 import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
 import ToolDropdownItem from "./ToolDropdownItem";

@@ -12,9 +12,7 @@ export default function UndoAndRedoButtons() {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const checkpoints = useAppSelector(
-    (store) => store.session.history.at(-1).checkpoint,
-  );
+  const history = useAppSelector((store) => store.session.history);
 
   const curCheckpointIndex = useAppSelector(
     (store) => store.session.curCheckpointIndex,
@@ -28,10 +26,13 @@ export default function UndoAndRedoButtons() {
       type === "undo" ? curCheckpointIndex - 1 : curCheckpointIndex + 1,
     );
 
-    const checkpoint = checkpoints[checkpointIndex];
+    const checkpoint = history[checkpointIndex]?.checkpoint ?? {};
 
-    for (const [filepath, prevFileContent] of Object.entries(checkpoint)) {
-      ideMessenger.post("overwriteFile", { filepath, prevFileContent });
+    for (const [filepath, cachedFileContent] of Object.entries(checkpoint)) {
+      ideMessenger.post("overwriteFile", {
+        filepath,
+        prevFileContent: cachedFileContent,
+      });
     }
 
     dispatch(setCurCheckpointIndex(checkpointIndex));

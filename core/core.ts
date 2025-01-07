@@ -421,7 +421,6 @@ export class Core {
 
         const chunk = next.value;
 
-        // @ts-ignore
         yield { content: chunk };
         next = await gen.next();
       }
