@@ -733,6 +733,10 @@ const getCommandsMap: (
         "getCurrentSessionId",
         undefined,
       );
+
+      // Clear the sidebar to prevent overwriting changes made in fullscreen 
+      vscode.commands.executeCommand("continue.newSession")
+
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
