@@ -1905,7 +1905,8 @@
                 "os",
                 "repo-map",
                 "greptile",
-                "web"
+                "web",
+                "clipboard"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
