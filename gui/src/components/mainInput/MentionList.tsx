@@ -57,7 +57,6 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   folder: FolderIcon,
   docs: BookOpenIcon,
   issue: ExclamationCircleIcon,
-  trash: TrashIcon,
   web: GlobeAltIcon,
   "prompt-files": DocumentTextIcon,
   "repo-map": FolderIcon,

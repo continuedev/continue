@@ -724,7 +724,6 @@ export type StepName =
 
 export type ContextProviderName =
   | "diff"
-  | "github"
   | "terminal"
   | "debugger"
   | "open"
@@ -751,6 +750,8 @@ export type ContextProviderName =
   | "issue"
   | "repo-map"
   | "url"
+  | "web"
+  | "discord"
   | string;
 
 export type TemplateType =

@@ -1864,7 +1864,10 @@
                 "os",
                 "repo-map",
                 "greptile",
-                "web"
+                "web",
+                "gitlab-mr",
+                "discord",
+                "jira"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
