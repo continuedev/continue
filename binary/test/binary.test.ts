@@ -1,8 +1,8 @@
 import { SerializedContinueConfig } from "core";
 // import Mock from "core/llm/llms/Mock.js";
 import { FromIdeProtocol, ToIdeProtocol } from "core/protocol/index.js";
-import FileSystemIde from "core/util/filesystem";
 import { IMessenger } from "core/protocol/messenger";
+import FileSystemIde from "core/util/filesystem";
 import fs from "fs";
 import {
   ChildProcessWithoutNullStreams,
@@ -186,10 +186,11 @@ describe("Test Suite", () => {
   });
 
   it("should return valid config object", async () => {
-    const { config } = await messenger.request(
+    const { result } = await messenger.request(
       "config/getSerializedProfileInfo",
       undefined,
     );
+    const { config } = result;
     expect(config).toHaveProperty("models");
     expect(config).toHaveProperty("embeddingsProvider");
     expect(config).toHaveProperty("contextProviders");
@@ -229,18 +230,17 @@ describe("Test Suite", () => {
     await messenger.request("config/addModel", {
       model,
     });
-    const { config } = await messenger.request(
-      "config/getSerializedProfileInfo",
-      undefined,
-    );
-    expect(config.models.some((m) => m.title === model.title)).toBe(true);
+    const {
+      result: { config },
+    } = await messenger.request("config/getSerializedProfileInfo", undefined);
+
+    expect(config!.models.some((m) => m.title === model.title)).toBe(true);
 
     await messenger.request("config/deleteModel", { title: model.title });
-    const { config: configAfterDelete } = await messenger.request(
-      "config/getSerializedProfileInfo",
-      undefined,
-    );
-    expect(configAfterDelete.models.some((m) => m.title === model.title)).toBe(
+    const {
+      result: { config: configAfterDelete },
+    } = await messenger.request("config/getSerializedProfileInfo", undefined);
+    expect(configAfterDelete!.models.some((m) => m.title === model.title)).toBe(
       false,
     );
   });

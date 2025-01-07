@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { BrowserSerializedContinueConfig } from "core";
+import { ConfigResult } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
 
@@ -33,10 +34,19 @@ export const configSlice = createSlice({
   name: "config",
   initialState,
   reducers: {
-    setConfig: (
+    setConfigResult: (
       state,
-      { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
+      {
+        payload: result,
+      }: PayloadAction<ConfigResult<BrowserSerializedContinueConfig>>,
     ) => {
+      const { config, errors } = result;
+      state.configError = errors;
+
+      if (!config) {
+        return;
+      }
+
       const defaultModelTitle =
         config.models.find((model) => model.title === state.defaultModelTitle)
           ?.title ||
@@ -44,6 +54,12 @@ export const configSlice = createSlice({
         "";
       state.config = config;
       state.defaultModelTitle = defaultModelTitle;
+    },
+    updateConfig: (
+      state,
+      { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
+    ) => {
+      state.config = config;
     },
     setConfigError: (
       state,
@@ -83,8 +99,12 @@ export const configSlice = createSlice({
   },
 });
 
-export const { setDefaultModel, setConfig, setConfigError } =
-  configSlice.actions;
+export const {
+  setDefaultModel,
+  updateConfig,
+  setConfigResult,
+  setConfigError,
+} = configSlice.actions;
 
 export const {
   selectDefaultModel,

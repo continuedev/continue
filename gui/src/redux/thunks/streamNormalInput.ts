@@ -32,18 +32,19 @@ export const streamNormalInput = createAsyncThunk<
     defaultModel.title,
     streamAborter.signal,
     messages,
-    {
-      tools: useTools
-        ? Object.keys(toolSettings)
+    useTools
+      ? {
+          tools: Object.keys(toolSettings)
             .filter((tool) => toolSettings[tool] !== "disabled")
             .map((toolName) =>
               state.config.config.tools.find(
                 (tool) => tool.function.name === toolName,
               ),
             )
-            .filter(Boolean)
-        : undefined,
-    },
+            .filter((tool) => !!tool)
+            .map((tool) => tool!), // for type safety
+        }
+      : {},
   );
 
   // Stream response
@@ -54,15 +55,14 @@ export const streamNormalInput = createAsyncThunk<
       break;
     }
 
-    const updates = next.value as ChatMessage[];
+    const updates = next.value;
     dispatch(streamUpdate(updates));
     next = await gen.next();
   }
 
   // Attach prompt log
-  let returnVal = next.value as PromptLog;
-  if (returnVal) {
-    dispatch(addPromptCompletionPair([returnVal]));
+  if (next.done) {
+    dispatch(addPromptCompletionPair([next.value]));
   }
 
   // If it's a tool call that is automatically accepted, we should call it

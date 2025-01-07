@@ -6,6 +6,7 @@ import type {
   ChatMessage,
   ContextItem,
   ContextItemWithId,
+  ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
   FileSymbolMap,
@@ -20,11 +21,28 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { ConfigResult } from "../config/load";
 
-export type ProtocolGeneratorType<T> = AsyncGenerator<{
+export type ProtocolGeneratorYield<T> = {
   done?: boolean;
   content: T;
-}>;
+};
+export type ProtocolGeneratorType<Y> = AsyncGenerator<
+  ProtocolGeneratorYield<Y>
+>;
+
+export type AsyncGeneratorYieldType<T> =
+  T extends AsyncGenerator<infer Y, any, any>
+    ? Y extends ProtocolGeneratorYield<infer PR>
+      ? PR
+      : never
+    : never;
+// export type AsyncGeneratorReturnType<T> =
+//   T extends AsyncGenerator<any, infer R, any>
+//     ? R extends ProtocolGeneratorYield<infer PR>
+//       ? PR
+//       : never
+//     : never;
 
 export type OnboardingModes =
   | "Local"
@@ -63,10 +81,14 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
     undefined,
-    { config: BrowserSerializedContinueConfig; profileId: string },
+    {
+      result: ConfigResult<BrowserSerializedContinueConfig>;
+      profileId: string;
+    },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, BrowserSerializedContinueConfig];
+  "config/addContextProvider": [ContextProviderWithParams, void];
+  "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "context/getContextItems": [
@@ -189,4 +211,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { toolCall: ToolCall; selectedModelTitle: string },
     { contextItems: ContextItem[] },
   ];
+  "clipboardCache/add": [{ content: string }, void];
 };

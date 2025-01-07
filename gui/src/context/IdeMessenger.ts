@@ -7,6 +7,10 @@ import { createContext } from "react";
 import { v4 as uuidv4 } from "uuid";
 import "vscode-webview";
 import { isJetBrains } from "../util";
+import {
+  AsyncGeneratorYieldType,
+  ProtocolGeneratorYield,
+} from "core/protocol/core";
 
 interface vscode {
   postMessage(message: any): vscode;
@@ -164,24 +168,28 @@ export class IdeMessenger implements IIdeMessenger {
     messageType: T,
     data: FromWebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): AsyncGenerator<unknown[]> {
-    // ): FromWebviewProtocol[T][1] {
+  ): AsyncGenerator<AsyncGeneratorYieldType<FromWebviewProtocol[T][1]>[], any> {
+    type GenYield = AsyncGeneratorYieldType<FromWebviewProtocol[T][1]>;
+    // type GenReturn = AsyncGeneratorReturnType<FromWebviewProtocol[T][1]>;
+
     const messageId = uuidv4();
 
     this.post(messageType, data, messageId);
 
-    const buffer: any[] = [];
+    const buffer: GenYield[] = [];
     let index = 0;
     let done = false;
     let returnVal = undefined;
 
-    const handler = (event: { data: Message }) => {
+    const handler = (event: {
+      data: Message<ProtocolGeneratorYield<GenYield>>;
+    }) => {
       if (event.data.messageId === messageId) {
         const responseData = event.data.data;
         if (responseData.done) {
           window.removeEventListener("message", handler);
           done = true;
-          returnVal = responseData;
+          returnVal = responseData.content;
         } else {
           buffer.push(responseData.content);
         }
@@ -239,8 +247,8 @@ export class IdeMessenger implements IIdeMessenger {
       next = await gen.next();
     }
 
-    if (next.value.error) {
-      throw new Error(next.value.error);
+    if (!next.done) {
+      throw new Error();
     }
 
     return {

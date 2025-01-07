@@ -3,16 +3,15 @@ import {
   CheckIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { ToolCall, ToolCallState, ToolStatus } from "core";
+import { ToolCall, ToolCallDelta, ToolCallState, ToolStatus } from "core";
 import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/gui/Spinner";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { ThreadDiv } from "./ThreadDiv";
 
 interface ToolCallDivProps {
-  toolCall: ToolCall;
+  toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
-  reactKey: string;
 }
 
 export function ToolCallDiv(props: ToolCallDivProps) {
@@ -32,7 +31,6 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
   return (
     <ThreadDiv
-      reactKey={props.reactKey}
       icon={getIcon(props.toolCallState.status)}
       toolCall={props.toolCall}
       toolCallState={props.toolCallState}
