@@ -733,7 +733,6 @@ const getCommandsMap: (
         "getCurrentSessionId",
         undefined,
       );
-
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
