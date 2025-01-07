@@ -27,7 +27,7 @@ export async function runLanceMigrations(table: Table) {
 
 export async function runSqliteMigrations(db: Database) {
   await new Promise((resolve) => {
-    await migrate(
+    void migrate(
       "sqlite_modify_docs_columns_and_copy_to_config",
       async () => {
         try {
@@ -52,7 +52,7 @@ export async function runSqliteMigrations(db: Database) {
               `ALTER TABLE ${DocsService.sqlitebTableName} RENAME COLUMN baseUrl TO startUrl;`,
             );
           }
-          
+
           const hasEmbeddingsProviderColumn = pragma.some(
             (pragma) => pragma.name === "embeddingsProviderId",
           );
@@ -77,7 +77,10 @@ export async function runSqliteMigrations(db: Database) {
       },
       () => resolve(undefined),
     );
-    await migrate(
+  });
+
+  await new Promise((resolve) => {
+    void migrate(
       "sqlite_delete_docs_with_no_embeddingsProviderId",
       async () => {
         try {
