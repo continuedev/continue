@@ -27,7 +27,7 @@ export async function runLanceMigrations(table: Table) {
 
 export async function runSqliteMigrations(db: Database) {
   await new Promise((resolve) => {
-    void migrate(
+    await migrate(
       "sqlite_modify_docs_columns_and_copy_to_config",
       async () => {
         try {
@@ -52,7 +52,7 @@ export async function runSqliteMigrations(db: Database) {
               `ALTER TABLE ${DocsService.sqlitebTableName} RENAME COLUMN baseUrl TO startUrl;`,
             );
           }
-
+          
           const hasEmbeddingsProviderColumn = pragma.some(
             (pragma) => pragma.name === "embeddingsProviderId",
           );
@@ -70,6 +70,26 @@ export async function runSqliteMigrations(db: Database) {
               ...config,
               docs: [...(config.docs || []), ...sqliteDocs],
             }));
+          }
+        } finally {
+          resolve(undefined);
+        }
+      },
+      () => resolve(undefined),
+    );
+    await migrate(
+      "sqlite_delete_docs_with_no_embeddingsProviderId",
+      async () => {
+        try {
+          const pragma = await db.all(
+            `PRAGMA table_info(${DocsService.sqlitebTableName});`,
+          );
+          const hasEmbeddingsProviderColumn = pragma.some(
+            (pragma) => pragma.name === "embeddingsProviderId",
+          );
+          if (!hasEmbeddingsProviderColumn) {
+            // gotta just delete in this case since old docs will be unusable anyway
+            await db.exec(`DROP TABLE ${DocsService.sqlitebTableName};`);
           }
         } finally {
           resolve(undefined);

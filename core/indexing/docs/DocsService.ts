@@ -743,10 +743,17 @@ export default class DocsService {
   }
 
   async getFavicon(startUrl: string) {
+    if (!this.config.embeddingsProvider) {
+      console.warn(
+        "Attempting to get favicon without embeddings provider specified",
+      );
+      return;
+    }
     const db = await this.getOrCreateSqliteDb();
     const result = await db.get(
-      `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
+      this.config.embeddingsProvider.embeddingId,
     );
 
     if (!result) {
@@ -1011,10 +1018,18 @@ export default class DocsService {
   }
 
   private async deleteMetadataFromSqlite(startUrl: string) {
+    if (!this.config.embeddingsProvider) {
+      console.warn(
+        `Attempting to delete metadata for ${startUrl} without embeddings provider specified`,
+      );
+      return;
+    }
     const db = await this.getOrCreateSqliteDb();
+
     await db.run(
-      `DELETE FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      `DELETE FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
+      this.config.embeddingsProvider.embeddingId,
     );
   }
 
