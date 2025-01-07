@@ -734,18 +734,17 @@ const getCommandsMap: (
         undefined,
       );
 
-      // Clear the sidebar to prevent overwriting changes made in fullscreen 
-      vscode.commands.executeCommand("continue.newSession")
-
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
       if (fullScreenTab && fullScreenPanel) {
         // Full screen open, but not focused - focus it
         fullScreenPanel.reveal();
-        vscode.commands.executeCommand("continue.focusContinueInput");
         return;
       }
+
+      // Clear the sidebar to prevent overwriting changes made in fullscreen 
+      vscode.commands.executeCommand("continue.newSession")
 
       // Full screen not open - open it
       captureCommandTelemetry("openFullScreen");
