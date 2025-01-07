@@ -53,14 +53,6 @@ export async function runSqliteMigrations(db: Database) {
             );
           }
 
-          const hasEmbeddingsProviderColumn = pragma.some(
-            (pragma) => pragma.name === "embeddingsProviderId",
-          );
-          if (!hasEmbeddingsProviderColumn) {
-            // gotta just delete in this case since old docs will be unusable anyway
-            await db.exec(`DROP TABLE ${DocsService.sqlitebTableName};`);
-          }
-
           const needsToUpdateConfig = !hasFaviconCol || hasBaseUrlCol;
           if (needsToUpdateConfig) {
             const sqliteDocs = await db.all<
