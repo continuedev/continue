@@ -20,7 +20,7 @@ import { IdeMessengerContext } from "./IdeMessenger";
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
   logout: () => void;
-  login: () => void;
+  login: (useOnboarding: boolean) => void;
   selectedProfile: ProfileDescription | undefined;
   profiles: ProfileDescription[];
   controlServerBetaEnabled: boolean;
@@ -49,9 +49,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     (state) => state.misc.lastControlServerBetaEnabledStatus,
   );
 
-  const login = () => {
+  const login = (useOnboarding: boolean) => {
     ideMessenger
-      .request("getControlPlaneSessionInfo", { silent: false })
+      .request("getControlPlaneSessionInfo", {
+        silent: false,
+        useOnboarding,
+      })
       .then((result) => {
         if (result.status === "error") {
           return;
@@ -102,12 +105,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   });
 
   useWebviewListener("signInToControlPlane", async () => {
-    login();
+    login(false);
   });
 
   useEffect(() => {
     ideMessenger
-      .request("getControlPlaneSessionInfo", { silent: true })
+      .request("getControlPlaneSessionInfo", {
+        silent: true,
+        useOnboarding: false,
+      })
       .then(
         (result) => result.status === "success" && setSession(result.content),
       );

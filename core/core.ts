@@ -2,6 +2,7 @@ import path from "path";
 
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import ignore from "ignore";
+import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
@@ -40,10 +41,9 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-
-import * as URI from "uri-js";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
+import { USE_PLATFORM } from "./control-plane/env";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { localPathToUri } from "./util/pathToUri";
 
@@ -102,6 +102,7 @@ export class Core {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
+      useOnboarding: USE_PLATFORM,
     });
 
     this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);

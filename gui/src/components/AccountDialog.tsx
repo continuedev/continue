@@ -1,6 +1,7 @@
 import { Listbox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { Fragment, useContext } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   Button,
@@ -9,10 +10,9 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from ".";
-import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../context/Auth";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { setSelectedProfileId } from "../redux/slices/sessionSlice";
-import { useDispatch } from "react-redux";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
@@ -46,7 +46,7 @@ export default function AccountDialog() {
         <span className="text-lightgray mb-4 block text-center">
           Signed out
         </span>
-        <Button className="w-full" onClick={login}>
+        <Button className="w-full" onClick={() => login(false)}>
           Sign in
         </Button>
       </div>

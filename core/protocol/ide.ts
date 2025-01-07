@@ -91,7 +91,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
   getGitHubAuthToken: [GetGhTokenArgs, string | undefined];
   getControlPlaneSessionInfo: [
-    { silent: boolean },
+    { silent: boolean; useOnboarding: boolean },
     ControlPlaneSessionInfo | undefined,
   ];
   logoutOfControlPlane: [undefined, void];

@@ -301,7 +301,7 @@ export class VsCodeExtension {
           true,
         );
 
-        const sessionInfo = await getControlPlaneSessionInfo(true);
+        const sessionInfo = await getControlPlaneSessionInfo(true, false);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
           void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
             sessionInfo,
