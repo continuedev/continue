@@ -469,6 +469,10 @@ class IdeProtocolClient(
                         }
 
 
+                        val diffStreamService = project.service<DiffStreamService>()
+                        // Clear all diff blocks before running the diff stream
+                        diffStreamService.reject(editor)
+
                         val llmTitle = (llm as? Map<*, *>)?.get("title") as? String ?: ""
 
                         val prompt =
@@ -501,7 +505,6 @@ class IdeProtocolClient(
                                 rif?.range?.end?.line ?: (editor.document.lineCount - 1),
                                 {}, {})
 
-                        val diffStreamService = project.service<DiffStreamService>()
                         diffStreamService.register(diffStreamHandler, editor)
 
                         diffStreamHandler.streamDiffLinesToEditor(
