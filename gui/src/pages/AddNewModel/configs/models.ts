@@ -31,6 +31,60 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  llama318BChat: {
+    title: "Llama 3.1 8B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-8b",
+      model: "meta-llama/llama-3.1-8b-instruct",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "meta-llama/llama-3.1-8b-instruct",
+            title: "Llama3.1-8b",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "novita"
+    ],
+    isOpenSource: true,
+  },
+  mistralChat: {
+    title: "Mistral Chat",
+    description:
+      "A series of open-weight models created by Mistral AI, highly competent for code generation and other tasks",
+    params: {
+      title: "Mistral",
+      model: "mistralai/mistral-7b-instruct",
+      contextLength: 4096,
+    },
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "7b": {
+            model: "mistralai/mistral-7b-instruct",
+            title: "Mistral-7b",
+          },
+        },
+      },
+    ],
+    icon: "mistral.png",
+    providerOptions: [
+      "novita",
+    ],
+    isOpenSource: true,
+  },
   llama31Chat: {
     title: "Llama3.1 Chat",
     description: "A model from Meta, fine-tuned for chat",
