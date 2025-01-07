@@ -228,7 +228,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     ],
     rehypeReactOptions: {
       components: {
-        a: ({ node, ...aProps }) => {
+        a: ({ ...aProps }) => {
           const tooltipId = uuidv4();
 
           return (
@@ -247,7 +247,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </>
           );
         },
-        pre: ({ node, ...preProps }) => {
+        pre: ({ ...preProps }) => {
           const codeBlockIndex = preProps["data-codeblockindex"];
 
           const preChildProps = preProps?.children?.[0]?.props ?? {};
@@ -293,17 +293,25 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </StepContainerPreToolbar>
           );
         },
-        code: ({ node, ...codeProps }) => {
+        code: ({ ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (content && previousFileContextItemsRef.current) {
+          if (content) {
             // Insert file links for matching previous context items
-            const ctxItem = previousFileContextItemsRef.current.find((item) =>
-              item.uri!.value!.includes(content),
-            );
-            if (ctxItem) {
-              const rif = ctxItemToRifWithContents(ctxItem);
-              return <FilenameLink rif={rif} />;
+            // With some reasonable limitations on what might be a filename
+            if (
+              previousFileContextItemsRef.current?.length &&
+              content.includes(".") &&
+              content.length > 2
+            ) {
+              const ctxItem = previousFileContextItemsRef.current.find(
+                (item) => item.uri!.value!.split("/").pop() === content, // Exact match for last segment of URI
+              );
+
+              if (ctxItem) {
+                const rif = ctxItemToRifWithContents(ctxItem);
+                return <FilenameLink rif={rif} />;
+              }
             }
 
             // Insert symbols for exact matches

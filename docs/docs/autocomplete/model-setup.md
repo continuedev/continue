@@ -32,17 +32,17 @@ For those preferring local execution or self-hosting,`Qwen2.5-Coder 1.5B` offers
 {
   "tabAutocompleteModel": {
     "title": "Qwen2.5-Coder 1.5B",
-    "model": "qwen2.5-coder:1.5b",
+    "model": "qwen2.5-coder:1.5b-base",
     "provider": "ollama"
   }
 }
 ```
 
-Have more compute? Use `qwen2.5-coder:7b` for potentially higher-quality suggestions.
+Have more compute? Use `qwen2.5-coder:7b-base` for potentially higher-quality suggestions.
 
 :::note
 
-For LM Studio users, navigate to the "My Models" section, find your desired model, and copy the path (e.g., `Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/wen2.5-coder-1.5b-instruct-q4_k_m.gguf`). Use this path as the `model` value in your configuration.
+For LM Studio users, navigate to the "My Models" section, find your desired model, and copy the path (e.g., `Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`). Use this path as the `model` value in your configuration.
 
 :::
 

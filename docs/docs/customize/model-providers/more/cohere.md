@@ -46,7 +46,7 @@ We recommend configuring **rerank-english-v3.0** as your reranking model.
 ```json title="config.json"
 {
   "reranker": {
-    "provider": "cohere",
+    "name": "cohere",
     "params": {
       "model": "rerank-english-v3.0",
       "apiKey": "<COHERE_API_KEY>"

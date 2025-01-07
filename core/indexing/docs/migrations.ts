@@ -27,41 +27,65 @@ export async function runLanceMigrations(table: Table) {
 
 export async function runSqliteMigrations(db: Database) {
   await new Promise((resolve) => {
-    migrate(
+    void migrate(
       "sqlite_modify_docs_columns_and_copy_to_config",
       async () => {
         try {
           const pragma = await db.all(
-            `PRAGMA table_info(${DocsService.sqlitebTableName})`,
+            `PRAGMA table_info(${DocsService.sqlitebTableName});`,
           );
 
           const hasFaviconCol = pragma.some(
             (pragma) => pragma.name === "favicon",
           );
+          if (!hasFaviconCol) {
+            await db.exec(
+              `ALTER TABLE ${DocsService.sqlitebTableName} ADD COLUMN favicon BLOB;`,
+            );
+          }
+
           const hasBaseUrlCol = pragma.some(
             (pragma) => pragma.name === "baseUrl",
           );
-
-          if (!hasFaviconCol) {
-            await db.exec(
-              `ALTER TABLE ${DocsService.sqlitebTableName} ADD COLUMN favicon BLOB`,
-            );
-          }
-
           if (hasBaseUrlCol) {
             await db.exec(
-              `ALTER TABLE ${DocsService.sqlitebTableName} RENAME COLUMN baseUrl TO startUrl`,
+              `ALTER TABLE ${DocsService.sqlitebTableName} RENAME COLUMN baseUrl TO startUrl;`,
             );
           }
 
-          const sqliteDocs = await db.all<
-            Array<Pick<SqliteDocsRow, "title" | "startUrl">>
-          >(`SELECT title, startUrl FROM ${DocsService.sqlitebTableName}`);
+          const needsToUpdateConfig = !hasFaviconCol || hasBaseUrlCol;
+          if (needsToUpdateConfig) {
+            const sqliteDocs = await db.all<
+              Array<Pick<SqliteDocsRow, "title" | "startUrl">>
+            >(`SELECT title, startUrl FROM ${DocsService.sqlitebTableName}`);
+            editConfigJson((config) => ({
+              ...config,
+              docs: [...(config.docs || []), ...sqliteDocs],
+            }));
+          }
+        } finally {
+          resolve(undefined);
+        }
+      },
+      () => resolve(undefined),
+    );
+  });
 
-          editConfigJson((config) => ({
-            ...config,
-            docs: [...(config.docs || []), ...sqliteDocs],
-          }));
+  await new Promise((resolve) => {
+    void migrate(
+      "sqlite_delete_docs_with_no_embeddingsProviderId",
+      async () => {
+        try {
+          const pragma = await db.all(
+            `PRAGMA table_info(${DocsService.sqlitebTableName});`,
+          );
+          const hasEmbeddingsProviderColumn = pragma.some(
+            (pragma) => pragma.name === "embeddingsProviderId",
+          );
+          if (!hasEmbeddingsProviderColumn) {
+            // gotta just delete in this case since old docs will be unusable anyway
+            await db.exec(`DROP TABLE ${DocsService.sqlitebTableName};`);
+          }
         } finally {
           resolve(undefined);
         }
