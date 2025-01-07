@@ -222,6 +222,7 @@ const exe = os === "win32" ? ".exe" : "";
     "../../../core/llm/llamaTokenizerWorkerPool.mjs",
     "../../../core/llm/llamaTokenizer.mjs",
     "../../../core/llm/tiktokenWorkerPool.mjs",
+    "../../../core/util/start_ollama.sh"
   ];
 
   for (const f of filesToCopy) {

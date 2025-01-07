@@ -399,16 +399,14 @@ class VsCodeIde implements IDE {
   }
 
   async runCommand(command: string): Promise<void> {
+    let terminal : vscode.Terminal | undefined;
     if (vscode.window.terminals.length) {
-      const terminal =
-        vscode.window.activeTerminal ?? vscode.window.terminals[0];
-      terminal.show();
-      terminal.sendText(command, false);
+      terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
     } else {
-      const terminal = vscode.window.createTerminal();
-      terminal.show();
-      terminal.sendText(command, false);
+      terminal = vscode.window.createTerminal();
     }
+    terminal.show();
+    terminal.sendText(command, false);
   }
 
   async saveFile(fileUri: string): Promise<void> {

@@ -55,6 +55,7 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
+import { isOllamaInstalled } from "../util/ollamaHelper.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -414,9 +415,11 @@ export abstract class BaseLLM implements ILLM {
             e.code === "ECONNREFUSED" &&
             e.message.includes("http://127.0.0.1:11434")
           ) {
-            throw new Error(
-              "Failed to connect to local Ollama instance, please ensure Ollama is both installed and running. You can download Ollama from https://ollama.ai.",
-            );
+            const message = (await isOllamaInstalled()) ?
+              "Failed to connect to local Ollama instance. Ollama appears to be stopped. It needs to be running." :
+              "Failed to connect to local Ollama instance, please ensure Ollama is both installed and running. You can download Ollama from https://ollama.ai."
+            ;
+            throw new Error(message);
           }
         }
         throw new Error(e.message);
