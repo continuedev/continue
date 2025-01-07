@@ -14,3 +14,5 @@ In Continue, these models are used to display inline [Autocomplete](../../autoco
 If you have the ability to use any model, we recommend `Codestral` with [Mistral](../model-providers/top-level/mistral.md#autocomplete-model) or [Vertex AI](../model-providers/top-level/vertexai.md#autocomplete-model).
 
 If you want to run a model locally, we recommend `Qwen2.5-Coder 1.5B` with [Ollama](../model-providers/top-level/ollama.md#autocomplete-model).
+
+DeepSeek AutoComplete model config setting,refer [DeepSeek AutoComplete](https://github.com/deepseek-ai/awesome-deepseek-integration/blob/main/docs/continue/README.md)
