@@ -48,6 +48,3 @@ export const controlPlaneEnv =
     : process.env.CONTROL_PLANE_ENV === "staging"
       ? STAGING_ENV
       : PRODUCTION_ENV;
-
-export const USE_PLATFORM =
-  process.env.CONTROL_PLANE_ENV === "local" ? true : false;

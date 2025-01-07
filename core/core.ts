@@ -42,7 +42,7 @@ import { TTS } from "./util/tts";
 
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
-import { USE_PLATFORM } from "./control-plane/env";
+import { USE_PLATFORM } from "./control-plane/flags";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { localPathToUri } from "./util/pathToUri";

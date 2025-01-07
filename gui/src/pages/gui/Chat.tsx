@@ -6,6 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
+import { USE_PLATFORM } from "core/control-plane/flags";
 import { streamResponse } from "core/llm/stream";
 import { stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
@@ -32,6 +33,7 @@ import {
   OnboardingCard,
   useOnboardingCard,
 } from "../../components/OnboardingCard";
+import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform/PlatformOnboardingCard";
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
@@ -57,6 +59,7 @@ import {
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
@@ -70,7 +73,6 @@ import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import { loadLastSession } from "../../redux/thunks/session";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -540,7 +542,11 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  <OnboardingCard />
+                  {USE_PLATFORM ? (
+                    <PlatformOnboardingCard />
+                  ) : (
+                    <OnboardingCard />
+                  )}
                 </div>
               )}
 
