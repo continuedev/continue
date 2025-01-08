@@ -26,18 +26,18 @@ export function getTerminalCommand(text: string): string {
 }
 
 export function isTerminalCodeBlock(
-  language: string | undefined,
+  language: string | undefined | null,
   text: string,
 ) {
   return (
-    terminalLanguages.includes(language) ||
+    (language && terminalLanguages.includes(language)) ||
     ((!language || language?.length === 0) &&
       (text.trim().split("\n").length === 1 ||
         commonTerminalCommands.some((c) => text.trim().startsWith(c))))
   );
 }
 
-function childToText(child: any) {
+function childToText(child: any): string {
   if (typeof child === "string") {
     return child;
   } else if (child?.props) {

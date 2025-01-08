@@ -16,6 +16,7 @@ import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamSlashCommand } from "./streamSlashCommand";
 import { streamThunkWrapper } from "./streamThunkWrapper";
+import { updateFileSymbolsFromFiles } from "./updateFileSymbols";
 
 const getSlashCommandForInput = (
   input: MessageContent,
@@ -66,6 +67,10 @@ export const streamResponseThunk = createAsyncThunk<
         const slashCommands = state.config.config.slashCommands || [];
         const inputIndex = index ?? state.session.history.length;
 
+        if (!defaultModel) {
+          throw new Error("No chat model selected");
+        }
+
         dispatch(submitEditorAndInitAtIndex({ index, editorState }));
         resetStateForNewMessage();
 
@@ -78,6 +83,15 @@ export const streamResponseThunk = createAsyncThunk<
         );
         const unwrapped = unwrapResult(result);
         const { selectedContextItems, selectedCode, content } = unwrapped;
+
+        // symbols for both context items AND selected codeblocks
+        const filesForSymbols = [
+          ...selectedContextItems
+            .filter((item) => item.uri?.type === "file" && item?.uri?.value)
+            .map((item) => item.uri!.value),
+          ...selectedCode.map((rif) => rif.filepath),
+        ];
+        dispatch(updateFileSymbolsFromFiles(filesForSymbols));
 
         dispatch(
           updateHistoryItemAtIndex({
@@ -115,7 +129,6 @@ export const streamResponseThunk = createAsyncThunk<
           unwrapResult(await dispatch(streamNormalInput(messages)));
         } else {
           const [slashCommand, commandInput] = commandAndInput;
-          let updatedContextItems = [];
           posthog.capture("step run", {
             step_name: slashCommand.name,
             params: {},
@@ -132,7 +145,7 @@ export const streamResponseThunk = createAsyncThunk<
               input: commandInput,
               historyIndex: inputIndex,
               selectedCode,
-              contextItems: updatedContextItems,
+              contextItems: [],
             }),
           );
         }

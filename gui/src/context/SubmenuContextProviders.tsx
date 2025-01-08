@@ -82,8 +82,6 @@ export const SubmenuContextProvidersProvider = ({
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
 
-  const config = useAppSelector((store) => store.config.config);
-
   const ideMessenger = useContext(IdeMessengerContext);
 
   const getOpenFilesItems = useCallback(async () => {
@@ -102,7 +100,7 @@ export const SubmenuContextProvidersProvider = ({
     }));
   }, [ideMessenger]);
 
-  useWebviewListener("refreshSubmenuItems", async (data) => {
+  useWebviewListener("refreshSubmenuItems", async () => {
     if (!isLoading) {
       setInitialLoadComplete(false);
       setAutoLoadTriggered((prev) => !prev); // Toggle to trigger effect
@@ -146,7 +144,9 @@ export const SubmenuContextProvidersProvider = ({
     [minisearches],
   );
 
-  const lastOpenFilesRef = useRef([]);
+  const lastOpenFilesRef = useRef<
+    Awaited<ReturnType<typeof getOpenFilesItems>>
+  >([]);
   useEffect(() => {
     let isMounted = true;
     const refreshOpenFiles = async () => {
@@ -216,12 +216,14 @@ export const SubmenuContextProvidersProvider = ({
         try {
           const results = getSubmenuSearchResults(providerTitle, query);
           if (results.length === 0) {
-            const fallbackItems = (fallbackResults[providerTitle] ?? [])
+            const fallbackItems = (
+              providerTitle ? (fallbackResults[providerTitle] ?? []) : []
+            )
               .slice(0, limit)
               .map((result) => {
                 return {
                   ...result,
-                  providerTitle,
+                  providerTitle: providerTitle || "unknown",
                 };
               });
 
