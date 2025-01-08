@@ -32,14 +32,22 @@ We recommend configuring **DeepSeek Coder** as your autocomplete model.
 
 ```json title="config.json"
 {
+  "completionOptions": {
+    "BaseCompletionOptions": {
+        "temperature": 0.0,
+        "maxTokens": 256
+    }
+  },
   "tabAutocompleteModel": {
-    "title": "DeepSeek Coder",
+    "title": "DeepSeek",
+    "model": "deepseek-chat",
+    "apiKey": "REDACTED",
     "provider": "deepseek",
-    "model": "deepseek-coder"
-  }
-}
+    "apiBase": "https://api.deepseek.com/beta"
+  },
+...
 ```
-
+DeepSeek AutoComplete model config setting,refer [DeepSeek AutoComplete](https://github.com/deepseek-ai/awesome-deepseek-integration/blob/main/docs/continue/README.md)
 ## Embeddings model
 
 DeepSeek currently does not offer any embeddings models.
