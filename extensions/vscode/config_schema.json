@@ -2060,8 +2060,7 @@
                   }
                 }
               }
-            },
-            "required": ["params"]
+            }
           }
         },
         {
@@ -2079,6 +2078,28 @@
                   "onlyPinned": {
                     "type": "boolean",
                     "description": "If set to true, only 'pinned' files will be included.",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["repo-map"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeSignatures": {
+                    "type": "boolean",
+                    "description": "Include message signatures from repo-map",
                     "default": false
                   }
                 }

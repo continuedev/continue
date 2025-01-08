@@ -263,11 +263,16 @@ Uses the top _n_ levels (defaulting to 3) of the call stack for that thread.
 
 Reference the outline of your codebase.
 
+`includeSignatures` params can be used to include signatures for all files in the repo. Use with caution as will increase context size significantly. `includeSignatures` will not work if indexing is disabled.
+
 ```json title="config.json"
 {
   "contextProviders": [
     {
-      "name": "repo-map"
+      "name": "repo-map",
+      "params": {
+        "includeSignatures": false
+      }
     }
   ]
 }
