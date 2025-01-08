@@ -1,5 +1,6 @@
 import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
+import { USE_PLATFORM } from "core/control-plane/flags";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
 import styled from "styled-components";
@@ -26,6 +27,7 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
+import AssistantAndModelSelect from "../modelSelection/platform/AssistantAndModelSelect";
 import HoverItem from "./InputToolbar/HoverItem";
 import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
 
@@ -114,7 +116,7 @@ function InputToolbar(props: InputToolbarProps) {
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
-          <ModelSelect />
+          {USE_PLATFORM ? <AssistantAndModelSelect /> : <ModelSelect />}
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
               (supportsImages && (

@@ -13,6 +13,10 @@ import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
+import {
+  selectAvailableProfiles,
+  setAvailableProfiles,
+} from "../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { IdeMessengerContext } from "./IdeMessenger";
@@ -34,7 +38,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<ControlPlaneSessionInfo | undefined>(
     undefined,
   );
-  const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
+
+  const profiles = useAppSelector(selectAvailableProfiles);
+
   const selectedProfileId = useAppSelector(
     (store) => store.session.selectedProfileId,
   );
@@ -151,14 +157,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     ideMessenger
       .request("config/listProfiles", undefined)
       .then(
-        (result) => result.status === "success" && setProfiles(result.content),
+        (result) =>
+          result.status === "success" &&
+          dispatch(setAvailableProfiles(result.content)),
       );
   }, []);
 
   useWebviewListener(
     "didChangeAvailableProfiles",
     async (data) => {
-      setProfiles(data.profiles);
+      dispatch(setAvailableProfiles(data.profiles));
     },
     [],
   );

@@ -1,4 +1,4 @@
-import { Listbox, Transition } from "@headlessui/react";
+import { Listbox } from "@headlessui/react";
 import {
   EllipsisHorizontalCircleIcon as EllipsisHorizontalIcon,
   WrenchScrewdriverIcon as WrenchScrewdriverIconOutline,
@@ -6,15 +6,14 @@ import {
 import { WrenchScrewdriverIcon as WrenchScrewdriverIconSolid } from "@heroicons/react/24/solid";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "../..";
+import { lightGray, vscForeground } from "../..";
+import { useAppSelector } from "../../../redux/hooks";
 import { toggleUseTools } from "../../../redux/slices/uiSlice";
-import { getFontSize } from "../../../util";
+import { ToolTip } from "../../gui/Tooltip";
 import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
+import PopoverTransition from "./PopoverTransition";
 import ToolDropdownItem from "./ToolDropdownItem";
-import { useAppSelector } from "../../../redux/hooks";
-import { ToolTip } from "../../gui/Tooltip";
 
 export default function ToolDropdown() {
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -87,14 +86,8 @@ export default function ToolDropdown() {
                     >
                       <EllipsisHorizontalIcon className="h-3 w-3 cursor-pointer hover:brightness-125" />
                     </Listbox.Button>
-                    <Transition
+                    <PopoverTransition
                       show={open}
-                      enter="transition duration-100 ease-out"
-                      enterFrom="transform scale-95 opacity-0"
-                      enterTo="transform scale-100 opacity-100"
-                      leave="transition duration-75 ease-out"
-                      leaveFrom="transform scale-100 opacity-100"
-                      leaveTo="transform scale-95 opacity-0"
                       afterLeave={() => setDropdownOpen(false)}
                     >
                       <Listbox.Options
@@ -153,7 +146,7 @@ export default function ToolDropdown() {
                           ))}
                         </div>
                       </Listbox.Options>
-                    </Transition>
+                    </PopoverTransition>
                   </>
                 )}
               </Listbox>

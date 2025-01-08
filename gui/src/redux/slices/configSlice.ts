@@ -74,6 +74,20 @@ export const configSlice = createSlice({
         defaultModelTitle: payload.title,
       };
     },
+    cycleDefaultModel: (state, { payload }: PayloadAction<"next" | "prev">) => {
+      const currentIndex = state.config.models.findIndex(
+        (model) => model.title === state.defaultModelTitle,
+      );
+      const nextIndex =
+        (currentIndex +
+          (payload === "next" ? 1 : -1) +
+          state.config.models.length) %
+        state.config.models.length;
+      return {
+        ...state,
+        defaultModelTitle: state.config.models[nextIndex].title,
+      };
+    },
   },
   selectors: {
     selectDefaultModel: (state) => {
@@ -93,8 +107,12 @@ export const configSlice = createSlice({
   },
 });
 
-export const { setDefaultModel, setConfigResult, setConfigError } =
-  configSlice.actions;
+export const {
+  setDefaultModel,
+  cycleDefaultModel,
+  setConfigResult,
+  setConfigError,
+} = configSlice.actions;
 
 export const {
   selectDefaultModel,

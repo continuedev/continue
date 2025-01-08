@@ -7,16 +7,16 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  Divider,
-  lightGray,
-  vscInputBackground,
-} from "..";
+import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
+import { useAppSelector } from "../../redux/hooks";
+import {
+  selectDefaultModel,
+  setDefaultModel,
+} from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import {
   getFontSize,
@@ -24,11 +24,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
-import { useAppSelector } from "../../redux/hooks";
-import {
-  selectDefaultModel,
-  setDefaultModel,
-} from "../../redux/slices/configSlice";
+import { Divider } from "./platform/shared";
 
 interface ModelOptionProps {
   option: Option;
