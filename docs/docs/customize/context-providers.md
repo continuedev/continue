@@ -123,11 +123,16 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
 
 Reference relevant pages from across the web, automatically determined from your input.
 
+Optionally, set "n" to limit the number of results returned (default 6).
+
 ```json title="config.json"
 {
   "contextProviders": [
     {
-      "name": "web"
+      "name": "web",
+      "params": {
+        "n": 5
+      }
     }
   ]
 }

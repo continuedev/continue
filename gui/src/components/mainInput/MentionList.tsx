@@ -11,7 +11,6 @@ import {
   CommandLineIcon,
   CpuChipIcon,
   DocumentTextIcon,
-  ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
   FolderOpenIcon,
@@ -49,6 +48,9 @@ import AddDocsDialog from "../dialogs/AddDocsDialog";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 import { DiscordIcon } from "../svg/DiscordIcon";
+import { GoogleIcon } from "../svg/GoogleIcon";
+import { GitlabIcon } from "../svg/GitlabIcon";
+import { GithubIcon } from "../svg/GithubIcon";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -62,7 +64,6 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   problems: ExclamationTriangleIcon,
   folder: FolderIcon,
   docs: BookOpenIcon,
-  issue: ExclamationCircleIcon,
   web: GlobeAltIcon,
   clipboard: PaperClipIcon,
   database: CircleStackIcon,
@@ -75,7 +76,11 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/clear": TrashIcon,
   "/share": ArrowUpOnSquareIcon,
   "/cmd": CommandLineIcon,
-  // discord: DiscordIcon,
+  issue: GithubIcon,
+  discord: DiscordIcon,
+  google: GoogleIcon,
+  "gitlab-mr": GitlabIcon,
+  http: GlobeAltIcon,
 };
 
 export function getIconFromDropdownItem(

@@ -2449,10 +2449,11 @@
                     "default": 3,
                     "type": "integer"
                   }
-                }
+                },
+                "required": ["host", "port", "user", "password", "database"]
               }
             },
-            "required": ["host", "port", "user", "password", "database"]
+            "required": ["params"]
           }
         },
         {
@@ -2479,10 +2480,11 @@
                     "default": "",
                     "type": "string"
                   }
-                }
+                },
+                "required": ["GreptileToken", "GithubToken"]
               }
             },
-            "required": ["GreptileToken", "GithubToken"]
+            "required": ["params"]
           }
         }
       ],
