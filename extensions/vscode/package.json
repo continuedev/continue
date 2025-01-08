@@ -357,6 +357,12 @@
         "title": "Write Continue Config",
         "category": "Granite.Code",
         "group": "Granite.Code"
+      },
+      {
+        "command": "granite.setup",
+        "title": "Setup Granite as code assistant",
+        "category": "Granite.Code",
+        "group": "Granite.Code"
       }
     ],
     "keybindings": [
@@ -666,6 +672,7 @@
   "dependencies": {
     "@continuedev/fetch": "^1.0.3",
     "@electron/rebuild": "^3.2.10",
+    "@redhat-developer/vscode-redhat-telemetry": "^0.9.1",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/node-fetch": "^2.6.11",
     "@types/uuid": "^9.0.8",

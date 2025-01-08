@@ -34,6 +34,8 @@ import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
+import { SetupGranitePage } from "./granite/panels/setupGranitePage";
+
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
 function getFullScreenTab() {
@@ -1010,6 +1012,9 @@ const getCommandsMap: (
             core.invoke("config/writeContinueConfig", undefined);
           }
         });
+    },
+    "granite.setup": () => {
+      SetupGranitePage.render(extensionContext, configHandler);
     },
   };
 };

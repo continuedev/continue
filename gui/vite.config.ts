@@ -1,3 +1,4 @@
+import { resolve } from 'path'
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "tailwindcss";
 import { defineConfig } from "vitest/config";
@@ -9,6 +10,10 @@ export default defineConfig({
     // Change the output .js filename to not include a hash
     rollupOptions: {
       // external: ["vscode-webview"],
+      input: {
+        index: resolve(__dirname, 'index.html'),
+        "index-setupGranite": resolve(__dirname, 'index-setupGranite.html'),
+      },
       output: {
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,

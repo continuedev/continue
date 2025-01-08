@@ -1,0 +1,377 @@
+/* See https://github.com/microsoft/vscode/blob/cf4bc01bfb3fc9826670e46cb88cca107ee064fc/build/lib/stylelint/vscode-known-variables.json#L771
+for variable reference */
+main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+h1 {
+  text-align: center;
+}
+
+/* Poor man CSS debugger*/
+div {
+  border: 0px solid #ccc;
+}
+
+div .progress-bar {
+  background-color: var(--vscode-progressBar-background);
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.2s ease-in-out;
+}
+
+.form-group {
+  margin: 15px;
+  width: 100%;
+  vertical-align: middle;
+}
+
+.form-group label {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+button {
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  padding: 8px 16px;
+  margin: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+/* Styling for disabled buttons */
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.progress-container {
+  width: calc(100% - 10px);
+  margin: 5px 0 0 10px;
+  background: var(--vscode-welcomePage-tileBackground);
+  border-radius: 5px;
+}
+
+.progress-status {
+  font-style: italic;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.final-setup-group {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.final-setup-group .install-button {
+  min-width: 120px;
+  height: fit-content;
+}
+
+.modelList-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 500px;
+}
+
+.main-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.main-title {
+  font-size: 24px;
+  font-weight: bolder;
+  line-height: 1.2;
+  color: var(--vscode-editorGhostText-background);
+}
+
+.main-wrapper .form-group-wrapper {
+  width: 500px;
+  margin-bottom: 20px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--vscode-tree-tableColumnsBorder);
+  border-radius: 5px;
+}
+
+.main-wrapper .form-group-wrapper .form-group {
+  margin: 0 15px 15px;
+}
+
+.main-wrapper .form-group-wrapper .install-options {
+  padding: 8px 18px;
+}
+
+.main-wrapper .form-group-wrapper .ollama-status-wrapper {
+  width: calc(100% - 30px);
+  height: 100%;
+  padding: 15px;
+  border-radius: 5px;
+  background: var(--vscode-welcomePage-tileBackground);
+}
+
+.main-wrapper .form-group-wrapper .ollama-status-wrapper label {
+  display: flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.main-wrapper .form-group-wrapper .model-list--label {
+  display: flex;
+  align-items: center;
+  min-width: 200px;
+  font-size: 15px;
+  font-weight: normal;
+}
+
+.main-wrapper .form-group-wrapper .ollama-status-wrapper label>span,
+.main-wrapper .form-group-wrapper .model-list--label>span {
+  font-weight: normal;
+  margin-left: 5px;
+}
+
+.main-wrapper .form-group-wrapper .ollama-status-wrapper label>span {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.main-wrapper .form-group-wrapper .model-list--outer-wrapper {
+  display: inline-flex;
+  flex-wrap: wrap;
+  vertical-align: middle;
+  align-items: baseline;
+  padding: 10px 0 0 15px;
+  gap: 5px 0px;
+}
+
+.main-wrapper .form-group-wrapper .model-list {
+  min-width: 270px;
+}
+
+.main-wrapper .form-group-wrapper .model-list>div {
+  background-color: var(--vscode-terminal-background);
+}
+
+.main-wrapper .form-group-wrapper .model-list>div span {
+  color: var(--vscode-terminal-ansiWhite);
+}
+
+.main-wrapper .form-group-wrapper .info-label {
+  font-size: 14px;
+  font-weight: normal;
+  text-wrap: nowrap;
+  font-style: italic;
+  padding: 5px 5px 0;
+}
+
+/* Margin Override classes */
+.m-0 {
+  margin: 0 !important;
+}
+
+.mb-1 {
+  margin-bottom: 0.5rem !important;
+}
+
+.main-description {
+  width: 500px;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+  border: 1px solid var(--vscode-tree-tableColumnsBorder);
+  background-color: var(--vscode-sideBar-background);
+  /* Background color based on the theme */
+  border-radius: 5px;
+  color: var(--vscode-editor-foreground);
+  /* Text color based on theme */
+  padding: 10px;
+}
+
+.main-description>p {
+  position: relative;
+  line-height: 1.2rem;
+  color: var(--vscode-terminal-background);
+}
+
+/* Toggle Switch (with label) */
+.switch-toggle-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.switch-toggle-wrapper>label {
+  font-size: 0.8rem;
+}
+
+.switch-toggle {
+  --width: 135px;
+  --height: 30px;
+  --offset: 0px;
+  --radius: 35px;
+  position: relative;
+  width: var(--width);
+  height: var(--height);
+  padding: var(--offset);
+  background: var(--vscode-welcomePage-tileBackground);
+  border-radius: var(--radius);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 500;
+  line-height: normal;
+  font-style: normal;
+  margin: 10px 5px 0 0;
+}
+
+.switch-toggle input[type=checkbox] {
+  cursor: pointer;
+  position: absolute;
+  inset: 0;
+  appearance: none;
+  z-index: 2;
+  outline: none;
+}
+
+.switch-toggle input[type=checkbox]:checked+label.switch-toggle-label:before {
+  translate: 100% 0;
+}
+
+.switch-toggle input[type=checkbox]:checked+label.switch-toggle-label span:nth-child(1) {
+  color: var(--vscode-editor-foreground);
+}
+
+.switch-toggle input[type=checkbox]:checked+label.switch-toggle-label span:nth-child(2) {
+  color: var(--vscode-sideBar-background);
+}
+
+.switch-toggle input[type=checkbox]+label.switch-toggle-label {
+  position: absolute;
+  inset: var(--offset, 0);
+  padding: 5px 0;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+  display: grid;
+  gap: 2px;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  place-items: center;
+}
+
+.switch-toggle input[type=checkbox]+label.switch-toggle-label:before {
+  content: "";
+  position: absolute;
+  width: 50%;
+  inset: 0;
+  background: var(--vscode-terminal-ansiWhite);
+  border-radius: 35px;
+  box-shadow: 0px 10px 20px 0px rgba(16, 39, 68, 0.1);
+  translate: 0 0;
+  transition: translate 250ms cubic-bezier(0.93, 0.26, 0.07, 0.69);
+}
+
+.switch-toggle input[type=checkbox]+label.switch-toggle-label span {
+  position: relative;
+  transition: 200ms linear;
+}
+
+.switch-toggle input[type=checkbox]+label.switch-toggle-label span:nth-child(1) {
+  color: var(--vscode-sideBar-background);
+}
+
+.switch-toggle input[type=checkbox]+label.switch-toggle-label span:nth-child(2) {
+  color: var(--vscode-editor-foreground);
+}
+
+.info-message {
+  width: 500px;
+  font-size: 0.8rem;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  text-align: left;
+  border-radius: 5px;
+  opacity: 0.4;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 12.5px;
+}
+
+.info-message>p {
+  margin-bottom: 0;
+}
+
+/* Don't add CSS below @media query section */
+@media (max-width: 767px) {
+
+  .info-message,
+  .main-description,
+  .main-wrapper .form-group-wrapper {
+    width: calc(100% - 50px);
+  }
+
+  .modelList-wrapper {
+    width: 100%;
+  }
+}
+
+@media (max-width: 467px) {
+  .main-wrapper .form-group-wrapper .model-list--outer-wrapper {
+    flex-wrap: wrap;
+    gap: 8px 16px;
+  }
+
+  .main-wrapper .form-group-wrapper .model-list {
+    min-width: initial;
+  }
+}
+
+.model-warning {
+  margin-top: 8px;
+  font-size: 12px;
+  width: 100%;
+  padding: 0 22px;
+}
+
+.warning-message {
+  color: var(--vscode-notificationsWarningIcon-foreground);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.error-message {
+  color: var(--vscode-notificationsErrorIcon-foreground);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
