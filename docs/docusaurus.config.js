@@ -13,7 +13,6 @@ const config = {
     experimental_faster: true,
   },
 
-
   title: "Continue",
   tagline:
     "the open-source library for accelerating software development with language models",
@@ -107,6 +106,13 @@ const config = {
             position: "left",
             label: "Reference",
             href: "/reference",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "customizingSidebar",
+            position: "left",
+            label: "YAML Reference",
+            href: "/yaml-reference",
           },
           {
             to: "https://github.com/continuedev/continue",

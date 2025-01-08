@@ -138,6 +138,11 @@ const sidebars = {
       label: "Reference",
       href: "/reference",
     },
+    {
+      type: "link",
+      label: "YAML Reference",
+      href: "/yaml-reference",
+    },
   ],
 };
 
