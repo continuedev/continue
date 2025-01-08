@@ -25,6 +25,7 @@ import type {
   Location,
   Problem,
   RangeInFile,
+  TerminalOptions,
   Thread,
 } from "core";
 
@@ -398,12 +399,18 @@ class VsCodeIde implements IDE {
     );
   }
 
-  async runCommand(command: string): Promise<void> {
-    let terminal : vscode.Terminal | undefined;
-    if (vscode.window.terminals.length) {
-      terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
-    } else {
-      terminal = vscode.window.createTerminal();
+  async runCommand(command: string, options: TerminalOptions = {reuseTerminal: true}): Promise<void> {
+    let terminal: vscode.Terminal | undefined;
+    if (vscode.window.terminals.length && options.reuseTerminal) {
+      if (options.terminalName) {
+        terminal = vscode.window.terminals.find(t => t?.name === options.terminalName);
+      } else {
+        terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
+      }
+    }
+
+    if( !terminal) {
+      terminal = vscode.window.createTerminal(options?.terminalName);
     }
     terminal.show();
     terminal.sendText(command, false);

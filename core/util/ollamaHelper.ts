@@ -33,6 +33,9 @@ export async function startLocalOllama(ide: IDE): Promise<void> {
             }
     }
     if (startCommand) {
-        return ide.runCommand(startCommand);
+        return ide.runCommand(startCommand, {
+            reuseTerminal: true,
+            terminalName: "Start Ollama"
+        });
     }
 }
