@@ -4,11 +4,11 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
-import { useDispatch } from "react-redux";
 import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { setSelectedProfileId } from "../../../redux/slices/sessionSlice";
+import { useAppDispatch } from "../../../redux/hooks";
+import { setProfileId } from "../../../redux/thunks/setProfileId";
 import { getFontSize, getMetaKeyLabel } from "../../../util";
 import { Divider, Option, OptionDiv } from "./shared";
 
@@ -18,12 +18,7 @@ export function AssistantSelect(props: AssistantSelectProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { profiles, selectedProfile } = useAuth();
 
-  const dispatch = useDispatch();
-
-  const changeProfileId = (id: string) => {
-    ideMessenger.post("didChangeSelectedProfile", { id });
-    dispatch(setSelectedProfileId(id));
-  };
+  const dispatch = useAppDispatch();
 
   function onNewAssistant() {
     ideMessenger.post("openUrl", "https://app.continue.dev/new");
@@ -45,7 +40,7 @@ export function AssistantSelect(props: AssistantSelectProps) {
               profileId: option.id,
             });
           }}
-          onClick={() => changeProfileId(option.id)}
+          onClick={() => dispatch(setProfileId(option.id))}
         >
           <div className="flex flex-grow items-center">
             {option.id === "local" ? (

@@ -81,7 +81,7 @@ export function Option({
 }: ModelOptionProps) {
   const [hovered, setHovered] = useState(false);
 
-  function handleOptionClick(e) {
+  function handleOptionClick(e: any) {
     if (disabled) {
       e.preventDefault();
       e.stopPropagation();

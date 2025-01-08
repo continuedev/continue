@@ -1,17 +1,16 @@
 import { Popover } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "../..";
 import AddModelForm from "../../../forms/AddModelForm";
-import { useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   cycleDefaultModel,
   selectDefaultModel,
 } from "../../../redux/slices/configSlice";
-import { cycleSelectedProfileId } from "../../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
+import { cycleProfile } from "../../../redux/thunks/cycleProfile";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../../../util";
 import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
 import { AssistantSelect } from "./AssistantSelect";
@@ -50,7 +49,7 @@ const StyledPopoverPanel = styled(Popover.Panel)<{ $showabove: boolean }>`
 `;
 
 function AssistantAndModelSelect() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const defaultModel = useAppSelector(selectDefaultModel);
   const [showAbove, setShowAbove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -76,7 +75,7 @@ function AssistantAndModelSelect() {
     setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
   }
 
-  function onClickAddModel(e) {
+  function onClickAddModel(e: any) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -108,7 +107,7 @@ function AssistantAndModelSelect() {
           dispatch(cycleDefaultModel("next"));
         } else {
           if (now - lastToggleTime >= DEBOUNCE_MS) {
-            dispatch(cycleSelectedProfileId());
+            dispatch(cycleProfile());
             lastToggleTime = now;
           }
         }

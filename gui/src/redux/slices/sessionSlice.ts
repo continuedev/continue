@@ -485,15 +485,6 @@ export const sessionSlice = createSlice({
         selectedProfileId: payload,
       };
     },
-    cycleSelectedProfileId: (state) => {
-      const profileIds = state.availableProfiles.map((profile) => profile.id);
-      const curIndex = profileIds.indexOf(state.selectedProfileId);
-      const nextIndex = (curIndex + 1) % profileIds.length;
-      return {
-        ...state,
-        selectedProfileId: profileIds[nextIndex],
-      };
-    },
     setAvailableProfiles: (
       state,
       { payload }: PayloadAction<ProfileDescription[]>,
@@ -688,7 +679,6 @@ export const {
   removeCodeToEdit,
   setCalling,
   cancelToolCall,
-  cycleSelectedProfileId,
   setAvailableProfiles,
   acceptToolCall,
   setToolGenerated,
