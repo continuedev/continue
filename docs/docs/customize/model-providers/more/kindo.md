@@ -1,6 +1,6 @@
 # Kindo
 
-Kindo offers centralized control over your organization's AI operations, ensuring data protection and compliance with internal policies while supporting various commercial and open-source models. To get started, sign up [here](https://app.kindo.ai/), create your API key on the [API keys page](https://app.kindo.ai/settings/api), and choose a model from the list of supported models in the [plugins tab](https://app.kindo.ai/plugins).
+Kindo offers centralized control over your organization's AI operations, ensuring data protection and compliance with internal policies while supporting various commercial and open-source models. To get started, sign up [here](https://app.kindo.ai/), create an API key in [Settings > API > API Keys](https://app.kindo.ai/settings/api), and choose a model from the list of supported models in the "Available Models" tab or copy and paste the config in [Plugins > Your Configuration](https://app.kindo.ai/plugins).
 
 ## Config Example
 
@@ -10,7 +10,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
     {
       "title": "Claude 3.5 Sonnet",
       "provider": "kindo",
-      "model": "claude-3-5-sonnet-20240620",
+      "model": "claude-3-5-sonnet",
       "apiKey": "<KINDO_API_KEY>"
     }
   ]
@@ -26,13 +26,8 @@ Kindo offers centralized control over your organization's AI operations, ensurin
       "title": "WhiteRabbitNeo",
       "provider": "kindo",
       "model": "/models/WhiteRabbitNeo-33B-DeepSeekCoder",
-      "apiKey": "<KINDO_API_KEY>"
-    },
-    {
-      "title": "DeepSeek",
-      "provider": "kindo",
-      "model": "deepseek-ai/deepseek-coder-33b-instruct",
-      "apiKey": "<KINDO_API_KEY>"
+      "apiKey": "<KINDO_API_KEY>",
+      "template": "none"
     }
   ]
 }

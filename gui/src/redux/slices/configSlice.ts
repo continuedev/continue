@@ -55,6 +55,12 @@ export const configSlice = createSlice({
       state.config = config;
       state.defaultModelTitle = defaultModelTitle;
     },
+    updateConfig: (
+      state,
+      { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
+    ) => {
+      state.config = config;
+    },
     setConfigError: (
       state,
       { payload: error }: PayloadAction<ConfigValidationError[] | undefined>,
@@ -110,6 +116,7 @@ export const configSlice = createSlice({
 export const {
   setDefaultModel,
   cycleDefaultModel,
+  updateConfig,
   setConfigResult,
   setConfigError,
 } = configSlice.actions;

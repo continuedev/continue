@@ -140,7 +140,7 @@ function ModelOption({
   const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
-  function onClickDelete(e) {
+  function onClickDelete(e: any) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -160,7 +160,7 @@ function ModelOption({
     );
   }
 
-  function onClickGear(e) {
+  function onClickGear(e: any) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -169,7 +169,7 @@ function ModelOption({
     });
   }
 
-  function handleOptionClick(e) {
+  function handleOptionClick(e: any) {
     if (showMissingApiKeyMsg) {
       e.preventDefault();
       e.stopPropagation();
@@ -283,7 +283,7 @@ function ModelSelect() {
     setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
   }
 
-  function onClickAddModel(e) {
+  function onClickAddModel(e: MouseEvent) {
     e.stopPropagation();
     e.preventDefault();
 

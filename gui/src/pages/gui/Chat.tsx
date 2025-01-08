@@ -409,9 +409,8 @@ export function Chat() {
                     return (
                       <div key={i}>
                         <ToolCallDiv
-                          reactKey={toolCall.id}
-                          toolCallState={item.toolCallState}
-                          toolCall={toolCall as any}
+                          toolCallState={item.toolCallState!}
+                          toolCall={toolCall}
                         />
                       </div>
                     );

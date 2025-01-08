@@ -120,12 +120,19 @@ class AutocompleteService(private val project: Project) {
         return ApplicationManager.getApplication().runReadAction<String> {
             val document = editor.document
             val caretOffset = editor.caretModel.offset
+
+            // Don't care about it if it's at the end of the document
+            if (caretOffset == document.textLength) return@runReadAction completion
+
             val N = 10
             var textAfterCursor = if (caretOffset + N <= document.textLength) {
                 document.getText(com.intellij.openapi.util.TextRange(caretOffset, caretOffset + N))
             } else {
                 document.getText(com.intellij.openapi.util.TextRange(caretOffset, document.textLength))
             }
+
+            // Avoid truncating the completion text when the text after the cursor is blank
+            if (textAfterCursor.isBlank()) return@runReadAction completion
 
             // Determine the index of a newline character within the text following the cursor.
             val newlineIndex = textAfterCursor.indexOf("\r\n").takeIf { it >= 0 } ?: textAfterCursor.indexOf('\n')
