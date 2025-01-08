@@ -125,7 +125,9 @@ class DiffStreamHandler(
 
         diffBlocks.remove(diffBlock)
 
-        if (!didAccept) {
+        if (didAccept) {
+            updatePositionsOnAccept(diffBlock.startLine)
+        } else {
             updatePositionsOnReject(diffBlock.startLine, diffBlock.addedLines.size, diffBlock.deletedLines.size)
         }
 
@@ -186,10 +188,16 @@ class DiffStreamHandler(
         }
     }
 
+    private fun updatePositionsOnAccept(startLine: Int) {
+        updatePositions(startLine, 0)
+    }
 
     private fun updatePositionsOnReject(startLine: Int, numAdditions: Int, numDeletions: Int) {
         val offset = -numAdditions + numDeletions
+        updatePositions(startLine, offset)
+    }
 
+    private fun updatePositions(startLine: Int, offset: Int) {
         diffBlocks.forEach { block ->
             if (block.startLine > startLine) {
                 block.updatePosition(block.startLine + offset)
