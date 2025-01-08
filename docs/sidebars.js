@@ -143,6 +143,11 @@ const sidebars = {
       label: "YAML Reference",
       href: "/yaml-reference",
     },
+    {
+      type: "link",
+      label: "YAML Migration",
+      href: "/yaml-migration",
+    },
   ],
 };
 

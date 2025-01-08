@@ -108,13 +108,6 @@ const config = {
             href: "/reference",
           },
           {
-            type: "docSidebar",
-            sidebarId: "customizingSidebar",
-            position: "left",
-            label: "YAML Reference",
-            href: "/yaml-reference",
-          },
-          {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
             position: "right",
