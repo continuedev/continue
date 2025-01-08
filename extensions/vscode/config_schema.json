@@ -2048,6 +2048,51 @@
           "if": {
             "properties": {
               "name": {
+                "enum": ["debugger"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "stackDepth": {
+                    "title": "Stack Depth",
+                    "description": "Stack trace depth to include in context",
+                    "default": 3,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["diff"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "description": "Include diff from unstaged files",
+                    "default": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
                 "enum": ["issue"]
               }
             }
@@ -2278,7 +2323,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase", "folder"]
+                "enum": ["codebase", "folder", "docs"]
               }
             }
           },
