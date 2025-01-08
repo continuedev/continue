@@ -16,9 +16,9 @@ export interface SnippetPayload {
   importDefinitionSnippets: AutocompleteCodeSnippet[];
   ideSnippets: AutocompleteCodeSnippet[];
   recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
+  recentlyVisitedRangesSnippets: AutocompleteCodeSnippet[];
   diffSnippets: AutocompleteDiffSnippet[];
   clipboardSnippets: AutocompleteClipboardSnippet[];
-  recentFileSnippets: AutocompleteCodeSnippet[];
 }
 
 function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
@@ -120,7 +120,6 @@ export const getAllSnippets = async ({
     ideSnippets,
     diffSnippets,
     clipboardSnippets,
-    recentFileSnippets,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
     racePromise(
@@ -129,7 +128,6 @@ export const getAllSnippets = async ({
     racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)),
     racePromise(getDiffSnippets(ide)),
     racePromise(getClipboardSnippets(ide)),
-    racePromise(contextRetrievalService.getRecentFileSnippets()),
   ]);
 
   return {
@@ -139,6 +137,6 @@ export const getAllSnippets = async ({
     recentlyEditedRangeSnippets,
     diffSnippets,
     clipboardSnippets,
-    recentFileSnippets,
+    recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
   };
 };

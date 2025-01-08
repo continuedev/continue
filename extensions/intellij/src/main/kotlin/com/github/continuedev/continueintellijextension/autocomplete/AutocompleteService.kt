@@ -74,9 +74,10 @@ class AutocompleteService(private val project: Project) {
                 "line" to editor.caretModel.primaryCaret.logicalPosition.line,
                 "character" to column
             ),
-            "recentlyEditedFiles" to emptyList<String>(),
-            "recentlyEditedRanges" to emptyList<String>(),
-            "clipboardText" to ""
+            "clipboardText" to "",
+            "recentlyEditedFiles" to emptyList<Any>(),
+            "recentlyEditedRanges" to emptyList<Any>(),
+            "recentlyVisitedRanges" to emptyList<Any>(),
         )
 
         val lineStart = editor.document.getLineStartOffset(editor.caretModel.primaryCaret.logicalPosition.line)
@@ -98,8 +99,6 @@ class AutocompleteService(private val project: Project) {
                     if (shouldRenderCompletion(finalTextToInsert, column, lineLength, editor)) {
                         renderCompletion(editor, offset, finalTextToInsert)
                         pendingCompletion = PendingCompletion(editor, offset, completionId, finalTextToInsert)
-                        // Hide auto-popup
-//                    AutoPopupController.getInstance(project).cancelAllRequests()
                     }
                 }
             })
