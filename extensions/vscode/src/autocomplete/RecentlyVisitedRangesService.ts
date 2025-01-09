@@ -36,9 +36,10 @@ export class RecentlyVisitedRangesService {
   }
 
   private async setNumSurroundingLinesFromPostHogExperiment() {
-    this.numSurroundingLines = await Telemetry.getValueForFeatureFlag(
-      PosthogFeatureFlag.AutocompleteTimeout,
-    );
+    this.numSurroundingLines =
+      (await Telemetry.getValueForFeatureFlag(
+        PosthogFeatureFlag.AutocompleteTimeout,
+      )) ?? this.numSurroundingLines;
   }
 
   private handleOnDidChangeTextEditorSelection = async (
