@@ -576,6 +576,20 @@ The response 200 OK should be a JSON object with the following structure:
 }
 ```
 
+### `@Clipboard`
+
+Reference recent clipboard items
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "clipboard"
+    }
+  ]
+}
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.

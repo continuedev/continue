@@ -2,7 +2,7 @@ import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import CodeToEditListItem from "./CodeToEditListItem";
-import type { CodeToEdit, RangeInFileWithContents } from "core";
+import type { CodeToEdit } from "core";
 import AddFileButton from "./AddFileButton";
 import AddFileCombobox from "./AddFileCombobox";
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
@@ -25,19 +25,19 @@ export default function CodeToEditCard() {
         ? "Code to edit (1 item)"
         : `Code to edit (${codeToEdit.length} items)`;
 
-  function onDelete(rif: RangeInFileWithContents) {
+  function onDelete(rif: CodeToEdit) {
     dispatch(removeCodeToEdit(rif));
   }
 
-  function onClickFilename(code: CodeToEdit) {
+  async function onClickFilename(code: CodeToEdit) {
     if ("range" in code) {
-      ideMessenger.ide.showLines(
+      await ideMessenger.ide.showLines(
         code.filepath,
         code.range.start.line,
         code.range.end.line,
       );
     } else {
-      ideMessenger.ide.openFile(code.filepath);
+      await ideMessenger.ide.openFile(code.filepath);
     }
   }
 
@@ -93,10 +93,10 @@ export default function CodeToEditCard() {
             />
           </div>
           <XMarkIcon
-            onClick={(e) => {
+            onClick={() => {
               setShowAddFileCombobox(false);
             }}
-            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground mb-2 h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
+            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground mb-2 h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
           />
         </div>
       )}

@@ -6,14 +6,10 @@ import {
   MessageContent,
   RangeInFile,
 } from "core";
-import resolveEditorContent, {
-  hasSlashCommandOrContextProvider,
-} from "../../components/mainInput/resolveInput";
+import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
-import { setIsGatheringContext } from "../slices/sessionSlice";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
-import { updateFileSymbolsFromNewContextItems } from "./updateFileSymbols";
 
 export const gatherContext = createAsyncThunk<
   {
@@ -39,8 +35,10 @@ export const gatherContext = createAsyncThunk<
       state.config.config.experimental?.defaultContext ?? [];
 
     if (!state.config.defaultModelTitle) {
-      console.error("Failed to gather context, no model selected");
-      return;
+      console.error(
+        "gatherContext thunk: Cannot gather context, no model selected",
+      );
+      throw new Error("No chat model selected");
     }
 
     // Resolve context providers and construct new history
@@ -94,8 +92,6 @@ export const gatherContext = createAsyncThunk<
         }
       }
     }
-
-    dispatch(updateFileSymbolsFromNewContextItems(selectedContextItems));
 
     if (promptPreamble) {
       if (typeof content === "string") {

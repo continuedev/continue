@@ -1,28 +1,53 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ThunkApiType } from "../store";
 import { updateFileSymbols } from "../slices/sessionSlice";
-import { ContextItemWithId } from "core";
+import { ChatHistoryItem, ContextItemWithId } from "core";
+
+export function getContextItemsFromHistory(
+  historyItems: ChatHistoryItem[],
+  priorToIndex?: number,
+) {
+  const pastHistoryItems = historyItems.filter(
+    (_, i) => i <= (priorToIndex ?? historyItems.length - 1),
+  );
+
+  const pastNormalContextItems = pastHistoryItems.flatMap((item) => {
+    return (
+      item.contextItems?.filter(
+        (item) => item.uri?.type === "file" && item.uri?.value,
+      ) ?? []
+    );
+  });
+  const pastToolbarContextItems: ContextItemWithId[] = pastHistoryItems
+    .filter(
+      (item) => item.editorState && Array.isArray(item.editorState.content),
+    )
+    .flatMap((item) => item.editorState.content)
+    .filter(
+      (content) =>
+        content?.type === "codeBlock" &&
+        content?.attrs?.item?.uri?.value &&
+        content.attrs.item.uri?.type === "file",
+    )
+    .map((content) => content.attrs!.item!);
+
+  return [...pastNormalContextItems, ...pastToolbarContextItems];
+}
 
 /*
     Get file symbols for given context items
     Overwrite symbols for existing file matches
 */
-export const updateFileSymbolsFromNewContextItems = createAsyncThunk<
+export const updateFileSymbolsFromFiles = createAsyncThunk<
   void,
-  ContextItemWithId[],
+  string[],
   ThunkApiType
 >(
   "symbols/updateFromContextItems",
-  async (contextItems, { dispatch, extra, getState }) => {
+  async (filepaths, { dispatch, extra, getState }) => {
     try {
       // Get unique file uris from context items
-      const uniqueUris = Array.from(
-        new Set(
-          contextItems
-            .filter((item) => item.uri?.type === "file" && item?.uri?.value)
-            .map((item) => item.uri!.value),
-        ),
-      );
+      const uniqueUris = Array.from(new Set(filepaths));
 
       // Update symbols for those files
       if (uniqueUris.length > 0) {
@@ -36,11 +61,7 @@ export const updateFileSymbolsFromNewContextItems = createAsyncThunk<
         dispatch(updateFileSymbols(result.content));
       }
     } catch (e) {
-      console.error(
-        "Error updating file symbols from context items",
-        e,
-        contextItems,
-      );
+      console.error("Error updating file symbols from filepaths", e, filepaths);
     }
   },
 );
@@ -58,9 +79,8 @@ export const updateFileSymbolsFromHistory = createAsyncThunk<
     const state = getState();
 
     // Get unique context item file uris from all history
-    const contextItems = state.session.history.flatMap(
-      (item) => item.contextItems,
-    );
+    const contextItems = getContextItemsFromHistory(state.session.history);
+
     const uniqueUris = new Set(
       contextItems
         .filter((item) => item.uri?.type === "file" && item?.uri?.value)
