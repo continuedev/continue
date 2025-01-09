@@ -3,6 +3,7 @@ import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "core/autocomplete/snippets/types";
+import { PosthogFeatureFlag, Telemetry } from "core/util/posthog";
 import { LRUCache } from "lru-cache";
 import * as vscode from "vscode";
 
@@ -14,6 +15,7 @@ export class RecentlyVisitedRangesService {
     string,
     Array<AutocompleteCodeSnippet & { timestamp: number }>
   >;
+  // Default value, we override in setNumSurroundingLinesFromPostHogExperiment
   private numSurroundingLines = 5;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
@@ -26,15 +28,23 @@ export class RecentlyVisitedRangesService {
       max: this.maxRecentFiles,
     });
 
+    void this.setNumSurroundingLinesFromPostHogExperiment();
+
     vscode.window.onDidChangeTextEditorSelection(
       this.handleOnDidChangeTextEditorSelection,
+    );
+  }
+
+  private async setNumSurroundingLinesFromPostHogExperiment() {
+    this.numSurroundingLines = await Telemetry.getValueForFeatureFlag(
+      PosthogFeatureFlag.AutocompleteTimeout,
     );
   }
 
   private handleOnDidChangeTextEditorSelection = async (
     event: vscode.TextEditorSelectionChangeEvent,
   ) => {
-    const filepath = event.textEditor.document.uri.fsPath;
+    const filepath = event.textEditor.document.uri.toString();
     const line = event.selections[0].active.line;
     const startLine = Math.max(0, line - this.numSurroundingLines);
     const endLine = Math.min(
@@ -78,7 +88,8 @@ export class RecentlyVisitedRangesService {
    * @returns Array of code snippets from recently visited files
    */
   public getSnippets(): AutocompleteCodeSnippet[] {
-    const currentFilepath = vscode.window.activeTextEditor?.document.uri.fsPath;
+    const currentFilepath =
+      vscode.window.activeTextEditor?.document.uri.toString();
     let allSnippets: Array<AutocompleteCodeSnippet & { timestamp: number }> =
       [];
 

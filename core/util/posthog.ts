@@ -2,10 +2,12 @@ import os from "node:os";
 
 import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
 import { IdeInfo } from "../index.js";
+
 import type { PostHog as PostHogType } from "posthog-node";
 
 export enum PosthogFeatureFlag {
   AutocompleteTimeout = "autocomplete-timeout",
+  RecentlyVisitedRangesNumSurroundingLines = "recently-visited-ranges-num-surrounding-lines",
 }
 
 export const EXPERIMENTS: {
@@ -18,6 +20,12 @@ export const EXPERIMENTS: {
     "250": { value: 250 },
     "350": { value: 350 },
     "450": { value: 450 },
+  },
+  [PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines]: {
+    control: { value: 5 },
+    "10": { value: 10 },
+    "15": { value: 15 },
+    "20": { value: 20 },
   },
 };
 

@@ -54,10 +54,6 @@ export const getSnippets = (
     ),
   ];
 
-  console.log({
-    snippets,
-    recentlyVisitedRangesSnippets: payload.recentlyVisitedRangesSnippets,
-  });
   const finalSnippets = [];
 
   let remainingTokenCount = getRemainingTokenCount(helper);

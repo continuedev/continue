@@ -207,8 +207,6 @@ export class ContinueCompletionProvider
           await this.recentlyEditedTracker.getRecentlyEditedRanges(),
       };
 
-      console.log({ input });
-
       setupStatusBar(undefined, true);
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
