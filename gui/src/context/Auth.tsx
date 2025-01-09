@@ -135,9 +135,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const shouldShowPopup =
         !lastControlServerBetaEnabledStatus && enableControlServerBeta;
-      if (shouldShowPopup) {
-        ideMessenger.ide.showToast("info", "Continue for Teams enabled");
-      }
     });
   }, []);
 
