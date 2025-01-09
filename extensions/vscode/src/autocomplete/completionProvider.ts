@@ -43,9 +43,9 @@ export class ContinueCompletionProvider
 {
   private onError(e: any) {
     const options = ["Documentation"];
-    if (e.message.includes("https://ollama.ai")) {
+    if (e.message.includes("Ollama may not be installed")) {
       options.push("Download Ollama");
-    } else if (e.message.includes("Ollama appears to be stopped")) {
+    } else if (e.message.includes("Ollama may not be running")) {
       options.unshift("Start Ollama"); // We want "Start" to be the default choice
     }
 

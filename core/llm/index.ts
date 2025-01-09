@@ -416,8 +416,8 @@ export abstract class BaseLLM implements ILLM {
             e.message.includes("http://127.0.0.1:11434")
           ) {
             const message = (await isOllamaInstalled()) ?
-              "Failed to connect to local Ollama instance. Ollama appears to be stopped. It needs to be running." :
-              "Failed to connect to local Ollama instance, please ensure Ollama is both installed and running. You can download Ollama from https://ollama.ai."
+              "Unable to connect to local Ollama instance. Ollama may not be running." :
+              "Unable to connect to local Ollama instance. Ollama may not be installed or may not running."
             ;
             throw new Error(message);
           }
