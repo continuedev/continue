@@ -128,7 +128,9 @@ async function resolveEditorContent({
       selectedCode,
       selectedModelTitle,
     });
+    console.log(item, stripImages(parts));
     if (result.status === "success") {
+      console.log("SUCCESS", result);
       const resolvedItems = result.content;
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
@@ -238,7 +240,7 @@ function resolveParagraph(
 export function hasSlashCommandOrContextProvider(
   editorState: JSONContent,
 ): boolean {
-  if (!editorState.content) {
+  if (!editorState?.content) {
     return false;
   }
 

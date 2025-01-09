@@ -88,6 +88,7 @@ class DocsContextProvider extends BaseContextProvider {
     }
     await docsService.isInitialized;
 
+    console.log("DOCS REQUEST", extras.fullInput, query);
     // Get chunks
     let chunks = await docsService.retrieveChunksFromQuery(
       extras.fullInput, // confusing: fullInput = the query, query = startUrl in this case
