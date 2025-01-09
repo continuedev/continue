@@ -329,10 +329,14 @@ export class ConfigHandler {
     }
   }
 
-  private updateListeners: ConfigUpdateFunction[] = [];
+  private updateListeners = new Set<ConfigUpdateFunction>();
 
   onConfigUpdate(listener: ConfigUpdateFunction) {
-    this.updateListeners.push(listener);
+    this.updateListeners.add(listener);
+
+    return () => {
+      this.updateListeners.delete(listener);
+    };
   }
 
   async reloadConfig() {
