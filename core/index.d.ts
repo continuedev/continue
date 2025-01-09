@@ -231,6 +231,14 @@ export interface SiteIndexingConfig {
   maxDepth?: number;
 }
 
+export interface DocsIndexingDetails {
+  startUrl: string;
+  config: SiteIndexingConfig;
+  indexingStatus: IndexingStatus | undefined;
+  chunks: Chunk[];
+  isPreIndexedDoc: boolean;
+}
+
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 

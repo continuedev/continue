@@ -6,6 +6,7 @@ import {
   ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  EyeIcon,
   PauseCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -13,6 +14,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import DocsDetailsDialog from "./DocsDetailsDialog";
 
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
@@ -173,9 +175,27 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               }[status?.status]}
         </span>
 
-        <span className="lines lines-1 text-right text-xs text-stone-500">
-          {status?.description}
-        </span>
+        <div className="flex flex-row items-center gap-1">
+          <span className="lines lines-1 text-right text-xs text-stone-500">
+            {status?.description}
+          </span>
+          {process.env.NODE_ENV === "development" &&
+          status?.status === "complete" ? (
+            <EyeIcon
+              className="h-4 w-4 cursor-pointer text-stone-500"
+              onClick={() => {
+                dispatch(setShowDialog(true));
+                dispatch(
+                  setDialogMessage(
+                    <DocsDetailsDialog startUrl={docConfig.startUrl} />,
+                  ),
+                );
+              }}
+            >
+              Add Docs
+            </EyeIcon>
+          ) : null}
+        </div>
       </div>
     </div>
   );

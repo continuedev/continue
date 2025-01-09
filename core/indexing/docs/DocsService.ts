@@ -5,6 +5,7 @@ import lancedb, { Connection } from "vectordb";
 import {
   Chunk,
   ContinueConfig,
+  DocsIndexingDetails,
   IDE,
   IdeInfo,
   ILLM,
@@ -322,7 +323,7 @@ export default class DocsService {
   }
 
   // Returns true if startUrl has been indexed with current embeddingsProvider
-  async hasMetadata(startUrl: string): Promise<Promise<boolean>> {
+  async hasMetadata(startUrl: string): Promise<boolean> {
     const db = await this.getOrCreateSqliteDb();
     const title = await db.get(
       `SELECT title FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
@@ -660,6 +661,64 @@ export default class DocsService {
     return await this.retrieveChunks(startUrl, vector, nRetrieve);
   }
 
+  private lanceDBRowToChunk(row: LanceDbDocsRow): Chunk {
+    return {
+      digest: row.path,
+      filepath: row.path,
+      startLine: row.startline,
+      endLine: row.endline,
+      index: 0,
+      content: row.content,
+      otherMetadata: {
+        title: row.title,
+      },
+    };
+  }
+  async getDetails(startUrl: string): Promise<DocsIndexingDetails> {
+    const db = await this.getOrCreateSqliteDb();
+
+    try {
+      const preIndexedDoc = preIndexedDocs[startUrl];
+      const isPreIndexedDoc = !!preIndexedDoc;
+
+      const embeddingsProvider =
+        await this.getEmbeddingsProvider(isPreIndexedDoc);
+      const result = await db.get(
+        `SELECT startUrl, title, favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
+        startUrl,
+        embeddingsProvider.embeddingId,
+      );
+
+      if (!result) {
+        throw new Error(`${startUrl} not found in sqlite`);
+      }
+      const siteIndexingConfig: SiteIndexingConfig = {
+        startUrl,
+        faviconUrl: result.favicon,
+        title: result.title,
+      };
+
+      const table = await this.getOrCreateLanceTable({
+        initializationVector: [],
+        isPreIndexedDoc,
+      });
+      const rows = (await table
+        .filter(`starturl = '${startUrl}'`)
+        .limit(1000)
+        .execute()) as LanceDbDocsRow[];
+
+      return {
+        startUrl,
+        config: siteIndexingConfig,
+        indexingStatus: this.statuses.get(startUrl),
+        chunks: rows.map(this.lanceDBRowToChunk),
+        isPreIndexedDoc,
+      };
+    } catch (e) {
+      console.warn("Error getting details", e);
+      throw e;
+    }
+  }
   // This is split into its own function so that it can be recursive
   // in the case of fetching preindexed docs from s3
   async retrieveChunks(
@@ -703,17 +762,7 @@ export default class DocsService {
       });
     }
 
-    return docs.map((doc) => ({
-      digest: doc.path,
-      filepath: doc.path,
-      startLine: doc.startline,
-      endLine: doc.endline,
-      index: 0,
-      content: doc.content,
-      otherMetadata: {
-        title: doc.title,
-      },
-    }));
+    return docs.map(this.lanceDBRowToChunk);
   }
 
   // SQLITE DB
@@ -769,7 +818,7 @@ export default class DocsService {
   private async syncDocs(
     oldConfig: ContinueConfig | undefined,
     newConfig: ContinueConfig,
-    reindex: boolean,
+    forceReindex: boolean,
   ) {
     try {
       this.isSyncing = true;
@@ -812,20 +861,25 @@ export default class DocsService {
           ) {
             changedDocs.push(doc);
           } else {
-            // if get's here, not changed, no update needed, mark as complete
-            this.handleStatusUpdate({
-              type: "docs",
-              id: doc.startUrl,
-              embeddingsProviderId: this.config.embeddingsProvider.embeddingId,
-              isReindexing: false,
-              title: doc.title,
-              debugInfo: "Config sync: not changed",
-              icon: doc.faviconUrl,
-              url: doc.startUrl,
-              progress: 1,
-              description: "Complete",
-              status: "complete",
-            });
+            if (forceReindex) {
+              changedDocs.push(doc);
+            } else {
+              // if get's here, not changed, no update needed, mark as complete
+              this.handleStatusUpdate({
+                type: "docs",
+                id: doc.startUrl,
+                embeddingsProviderId:
+                  this.config.embeddingsProvider.embeddingId,
+                isReindexing: false,
+                title: doc.title,
+                debugInfo: "Config sync: not changed",
+                icon: doc.faviconUrl,
+                url: doc.startUrl,
+                progress: 1,
+                description: "Complete",
+                status: "complete",
+              });
+            }
           }
         } else {
           newDocs.push(doc);

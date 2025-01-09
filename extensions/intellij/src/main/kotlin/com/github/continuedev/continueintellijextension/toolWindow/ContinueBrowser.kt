@@ -62,6 +62,7 @@ class ContinueBrowser(val project: Project, url: String) {
         "indexing/setPaused",
         "docs/getSuggestedDocs",
         "docs/initStatuses",
+        "docs/getDetails",
         //
         "completeOnboarding",
         "addAutocompleteModel",
