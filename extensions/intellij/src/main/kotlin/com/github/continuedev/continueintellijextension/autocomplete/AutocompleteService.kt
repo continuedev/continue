@@ -75,7 +75,6 @@ class AutocompleteService(private val project: Project) {
                 "character" to column
             ),
             "clipboardText" to "",
-            "recentlyEditedFiles" to emptyList<Any>(),
             "recentlyEditedRanges" to emptyList<Any>(),
             "recentlyVisitedRanges" to emptyList<Any>(),
         )

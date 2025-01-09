@@ -201,7 +201,6 @@ export class ContinueCompletionProvider
         isUntitledFile: document.isUntitled,
         completionId: uuidv4(),
         filepath: document.uri.toString(),
-        recentlyEditedFiles: [],
         recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
         recentlyEditedRanges:
           await this.recentlyEditedTracker.getRecentlyEditedRanges(),

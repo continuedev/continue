@@ -18,7 +18,6 @@ export interface AutocompleteInput {
   completionId: string;
   filepath: string;
   pos: Position;
-  recentlyEditedFiles: RangeInFileWithContents[];
   recentlyVisitedRanges: AutocompleteCodeSnippet[];
   recentlyEditedRanges: RecentlyEditedRange[];
   // Used for notebook files
