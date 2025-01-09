@@ -335,7 +335,10 @@ const getCommandsMap: (
     onlyOneInsertion?: boolean,
     range?: vscode.Range,
   ) {
-    const config = await configHandler.loadConfig();
+    const { config } = await configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
 
     const defaultModelTitle = await sidebar.webviewProtocol.request(
       "getDefaultModelTitle",
@@ -867,7 +870,7 @@ const getCommandsMap: (
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
       const autocompleteModels =
-        (await configHandler.loadConfig())?.tabAutocompleteModels ?? [];
+        (await configHandler.loadConfig()).config?.tabAutocompleteModels ?? [];
 
       let selected = new GlobalContext().get("selectedTabAutocompleteModel");
       if (
@@ -998,7 +1001,10 @@ const getCommandsMap: (
   };
 };
 
-const registerCopyBufferSpy = (context: vscode.ExtensionContext) => {
+const registerCopyBufferSpy = (
+  context: vscode.ExtensionContext,
+  core: Core,
+) => {
   const typeDisposable = vscode.commands.registerCommand(
     "editor.action.clipboardCopyAction",
     async (arg) => doCopy(typeDisposable),
@@ -1010,6 +1016,12 @@ const registerCopyBufferSpy = (context: vscode.ExtensionContext) => {
     await vscode.commands.executeCommand("editor.action.clipboardCopyAction");
 
     const clipboardText = await vscode.env.clipboard.readText();
+
+    if (clipboardText) {
+      core.invoke("clipboardCache/add", {
+        content: clipboardText,
+      });
+    }
 
     await context.workspaceState.update("continue.copyBuffer", {
       text: clipboardText,
@@ -1040,7 +1052,7 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
-  registerCopyBufferSpy(context);
+  registerCopyBufferSpy(context, core);
 
   for (const [command, callback] of Object.entries(
     getCommandsMap(

@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Changed
-body: Improved autocomplete in untitled files
-time: 2024-12-13T09:15:05.552877-08:00

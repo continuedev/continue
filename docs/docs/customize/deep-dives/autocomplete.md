@@ -23,7 +23,7 @@ If you want to have the best autocomplete experience, we recommend using Codestr
 If you'd like to run your autocomplete model locally, we recommend using Ollama. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
 
 ```bash
-ollama run qwen2.5-coder:1.5b
+ollama run qwen2.5-coder:1.5b-base
 ```
 
 Once it has been downloaded, you should begin to see completions in VS Code.
@@ -37,7 +37,7 @@ All of the configuration options available for chat models are available to use 
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
         "provider": "ollama",
-        "model": "qwen2.5-coder:1.5b",
+        "model": "qwen2.5-coder:1.5b-base",
         "apiBase": "https://<my endpoint>"
     },
     ...
@@ -76,7 +76,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",
     "provider": "ollama",
-    "model": "qwen2.5-coder:1.5b",
+    "model": "qwen2.5-coder:1.5b-base",
     "apiBase": "https://<my endpoint>"
   },
   "tabAutocompleteOptions": {
@@ -91,7 +91,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 
 ### I want better completions, should I use GPT-4?
 
-Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/main/core/autocomplete/templates.ts)). Some of the best commercial models like GPT-4 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
+Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/main/core/autocomplete/templating/AutocompleteTemplate.ts)). Some of the best commercial models like GPT-4 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
 
 ### I'm not seeing any completions
 
@@ -99,7 +99,7 @@ Follow these steps to ensure that everything is set up correctly:
 
 1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar, and in JetBrains by going to Settings -> Tools -> Continue).
 2. Make sure you have downloaded Ollama.
-3. Run `ollama run qwen2.5-coder:1.5b` to verify that the model is downloaded.
+3. Run `ollama run qwen2.5-coder:1.5b-base` to verify that the model is downloaded.
 4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
 5. Check the output of the logs to find any potential errors: <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains.
 6. Check VS Code settings to make sure that `"editor.inlineSuggest.enabled"` is set to `true` (use <kbd>cmd/ctrl</kbd> + <kbd>,</kbd> then search for this and check the box)

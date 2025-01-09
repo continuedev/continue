@@ -14,6 +14,7 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 import { setDefaultModel } from "../redux/slices/configSlice";
+import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -52,7 +53,9 @@ function AddModelForm({
 
   const allProviders = Object.entries(providers)
     .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
-    .map(([, provider]) => provider);
+    .map(([, provider]) => provider)
+    .filter((provider) => !!provider)
+    .map((provider) => provider!); // for type checking
 
   const popularProviders = allProviders
     .filter((provider) => popularProviderTitles.includes(provider.title))
@@ -77,13 +80,13 @@ function AddModelForm({
     }
 
     const required = selectedProvider.collectInputFor
-      .filter((input) => input.required)
+      ?.filter((input) => input.required)
       .map((input) => {
         const value = formMethods.watch(input.key);
         return value;
       });
 
-    return !required.every((value) => value !== undefined && value.length > 0);
+    return !required?.every((value) => value !== undefined && value.length > 0);
   }
 
   useEffect(() => {
@@ -93,8 +96,8 @@ function AddModelForm({
   function onSubmit() {
     const apiKey = formMethods.watch("apiKey");
     const hasValidApiKey = apiKey !== undefined && apiKey !== "";
-    const reqInputFields = {};
-    for (let input of selectedProvider.collectInputFor) {
+    const reqInputFields: Record<string, any> = {};
+    for (let input of selectedProvider.collectInputFor ?? []) {
       reqInputFields[input.key] = formMethods.watch(input.key);
     }
 
@@ -147,7 +150,14 @@ function AddModelForm({
               <label className="block text-sm font-medium">Provider</label>
               <ModelSelectionListbox
                 selectedProvider={selectedProvider}
-                setSelectedProvider={setSelectedProvider}
+                setSelectedProvider={(val: DisplayInfo) => {
+                  const match = [...popularProviders, ...otherProviders].find(
+                    (provider) => provider.title === val.title,
+                  );
+                  if (match) {
+                    setSelectedProvider(match);
+                  }
+                }}
                 topOptions={popularProviders}
                 otherOptions={otherProviders}
               />
@@ -184,11 +194,24 @@ function AddModelForm({
               <label className="block text-sm font-medium">Model</label>
               <ModelSelectionListbox
                 selectedProvider={selectedModel}
-                setSelectedProvider={setSelectedModel}
+                setSelectedProvider={(val: DisplayInfo) => {
+                  const options =
+                    Object.entries(providers).find(
+                      ([, provider]) =>
+                        provider?.title === selectedProvider.title,
+                    )?.[1]?.packages ?? [];
+                  const match = options.find(
+                    (option) => option.title === val.title,
+                  );
+                  if (match) {
+                    setSelectedModel(match);
+                  }
+                }}
                 otherOptions={
                   Object.entries(providers).find(
-                    ([, provider]) => provider.title === selectedProvider.title,
-                  )?.[1].packages
+                    ([, provider]) =>
+                      provider?.title === selectedProvider.title,
+                  )?.[1]?.packages
                 }
               />
             </div>
@@ -220,9 +243,14 @@ function AddModelForm({
                   <InputSubtext className="mb-0">
                     <a
                       className="cursor-pointer text-inherit underline hover:text-inherit"
-                      onClick={() =>
-                        ideMessenger.post("openUrl", selectedProviderApiKeyUrl)
-                      }
+                      onClick={() => {
+                        if (selectedProviderApiKeyUrl) {
+                          ideMessenger.post(
+                            "openUrl",
+                            selectedProviderApiKeyUrl,
+                          );
+                        }
+                      }}
                     >
                       Click here
                     </a>{" "}

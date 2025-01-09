@@ -1,3 +1,4 @@
+// @ts-ignore
 import DOMPurify from "dompurify";
 import { useMemo } from "react";
 import { themeIcons } from "seti-file-icons";

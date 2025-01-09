@@ -32,6 +32,7 @@ function FilenameLink({ rif }: FilenameLinkProps) {
     <>
       <span
         data-tooltip-id={id}
+        data-tooltip-delay-show={500}
         className="mx-[0.1em] mb-[0.15em] inline-flex cursor-pointer items-center gap-0.5 rounded-md pr-[0.2em] align-middle hover:ring-1"
         onClick={onClick}
       >

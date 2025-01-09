@@ -39,7 +39,7 @@ class MessageTypes {
             "getRepoName",
             "listDir",
             "getGitRootPath",
-            "getLastModified",
+            "getFileStats",
             "insertAtCursor",
             "applyToFile",
             "getGitHubAuthToken",

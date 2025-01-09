@@ -91,7 +91,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
           );
         }
 
-        return applyButton("Re-apply");
+        return applyButton("Reapply");
       }
     default:
       return applyButton("Apply");

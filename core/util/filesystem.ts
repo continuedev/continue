@@ -1,7 +1,9 @@
 import * as fs from "node:fs";
 
+import { fileURLToPath } from "node:url";
 import {
   ContinueRcJson,
+  FileStatsMap,
   FileType,
   IDE,
   IdeInfo,
@@ -15,7 +17,6 @@ import {
   ToastType,
 } from "../index.js";
 import { GetGhTokenArgs } from "../protocol/ide.js";
-import { fileURLToPath } from "node:url";
 
 class FileSystemIde implements IDE {
   constructor(private readonly workspaceDir: string) {}
@@ -51,15 +52,16 @@ class FileSystemIde implements IDE {
   async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
     return undefined;
   }
-  async getLastModified(
-    fileUris: string[],
-  ): Promise<{ [path: string]: number }> {
-    const result: { [path: string]: number } = {};
+  async getFileStats(fileUris: string[]): Promise<FileStatsMap> {
+    const result: FileStatsMap = {};
     for (const uri of fileUris) {
       try {
         const filepath = fileURLToPath(uri);
         const stats = fs.statSync(filepath);
-        result[uri] = stats.mtimeMs;
+        result[uri] = {
+          lastModified: stats.mtimeMs,
+          size: stats.size,
+        };
       } catch (error) {
         console.error(`Error getting last modified time for ${uri}:`, error);
       }
