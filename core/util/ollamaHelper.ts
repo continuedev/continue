@@ -4,7 +4,7 @@ import { exec } from "node:child_process";
 
 export async function isOllamaInstalled(): Promise<boolean> {
     return new Promise((resolve, _reject) => {
-        const command = process.platform === "win32" ? "where ollama" : "which ollama";
+        const command = process.platform === "win32" ? "where.exe ollama" : "which ollama";
         exec(command, (error, _stdout, _stderr) => {
             resolve(!error);
         });
