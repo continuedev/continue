@@ -17,8 +17,18 @@ export const handleJetBrainsOSRMetaKeyIssues = (
 
   const handlers: Record<string, () => void> = {
     Backspace: () => handleJetBrainsMetaBackspace(editor),
-    ArrowLeft: () => selection?.modify(alter, "backward", "lineboundary"),
-    ArrowRight: () => selection?.modify(alter, "forward", "lineboundary"),
+    ArrowLeft: () =>
+      selection?.modify(
+        alter,
+        "backward",
+        platform === "mac" ? "lineboundary" : "word",
+      ),
+    ArrowRight: () =>
+      selection?.modify(
+        alter,
+        "forward",
+        platform === "mac" ? "lineboundary" : "word",
+      ),
     ArrowDown: () => selection?.modify(alter, "forward", "documentboundary"),
     ArrowUp: () => {
       selection?.modify(alter, "backward", "documentboundary");
@@ -48,6 +58,11 @@ export const handleVSCMetaKeyIssues = async (
     x: () => handleCutOperation(text, editor),
     c: () => handleCopyOperation(text),
     v: () => handlePasteOperation(editor),
+    z: () => {
+      return e.shiftKey
+        ? handleRedoOperation(editor)
+        : handleUndoOperation(editor);
+    },
   };
 
   if (e.key in handlers) {
@@ -129,4 +144,12 @@ export const handlePasteOperation = async (editor: Editor) => {
   } else {
     document.execCommand("paste");
   }
+};
+
+export const handleUndoOperation = async (editor: Editor) => {
+  editor.commands.undo();
+};
+
+export const handleRedoOperation = async (editor: Editor) => {
+  editor.commands.redo();
 };

@@ -50,7 +50,7 @@ const InnerHoverDiv = styled.div<{ isBottomToolbarPosition: boolean }>`
 `;
 
 interface StepContainerPreActionButtonsProps {
-  language: string;
+  language: string | null;
   codeBlockContent: string;
   codeBlockIndex: number;
   children: any;

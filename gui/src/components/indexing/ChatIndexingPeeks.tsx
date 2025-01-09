@@ -62,7 +62,7 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
         </div>
       </div>
       <EyeSlashIcon
-        className="ml-2 h-4 w-4 cursor-pointer text-stone-500 hover:opacity-80"
+        className="ml-6 h-4 w-4 cursor-pointer text-stone-500 hover:opacity-80"
         onClick={(e) => {
           dispatch(
             setIndexingChatPeekHidden({ type: state.type, hidden: true }),
@@ -75,25 +75,31 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
 }
 
 function ChatIndexingPeeks() {
+  const config = useAppSelector((store) => store.config.config);
   const indexingStatuses = useAppSelector(
     (store) => store.indexing.indexing.statuses,
   );
   const mergedIndexingStates: MergedIndexingState[] = useMemo(() => {
     const mergedStates: MergedIndexingState[] = [];
 
-    const docsStates = Object.values(indexingStatuses).filter(
-      (status) => status.type === "docs" && status.status === "indexing",
-    );
-    if (docsStates.length > 0) {
+    const configDocs = config?.docs ?? [];
+    const docsIndexing: IndexingStatus[] = [];
+    configDocs.forEach((doc) => {
+      const status = indexingStatuses[doc.startUrl];
+      if (status && status.status === "indexing") {
+        docsIndexing.push(status);
+      }
+    });
+    if (docsIndexing.length > 0) {
       mergedStates.push({
         displayName: "Docs indexing",
         type: "docs",
-        titles: docsStates.map((state) => state.title),
-        progressPercentage: mergeProgress(docsStates),
+        titles: docsIndexing.map((doc) => doc.title),
+        progressPercentage: mergeProgress(docsIndexing),
       });
     }
     return mergedStates;
-  }, [indexingStatuses]);
+  }, [config, indexingStatuses]);
 
   if (!mergedIndexingStates.length) return null;
 

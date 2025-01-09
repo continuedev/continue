@@ -122,22 +122,24 @@ function AddNewModel() {
             </div>
 
             <GridDiv>
-              {Object.entries(providers).map(([providerName, modelInfo], i) => (
-                <ModelCard
-                  key={`${providerName}-${i}`}
-                  title={modelInfo.title}
-                  description={modelInfo.description}
-                  tags={modelInfo.tags}
-                  icon={modelInfo.icon}
-                  refUrl={`https://docs.continue.dev/reference/Model%20Providers/${
-                    modelInfo.refPage || modelInfo.provider.toLowerCase()
-                  }`}
-                  onClick={(e) => {
-                    console.log(`/addModel/provider/${providerName}`);
-                    navigate(`/addModel/provider/${providerName}`);
-                  }}
-                />
-              ))}
+              {Object.entries(providers).map(([providerName, modelInfo], i) =>
+                modelInfo ? (
+                  <ModelCard
+                    key={`${providerName}-${i}`}
+                    title={modelInfo.title}
+                    description={modelInfo.description}
+                    tags={modelInfo.tags}
+                    icon={modelInfo.icon}
+                    refUrl={`https://docs.continue.dev/reference/Model%20Providers/${
+                      modelInfo.refPage || modelInfo.provider.toLowerCase()
+                    }`}
+                    onClick={(e) => {
+                      console.log(`/addModel/provider/${providerName}`);
+                      navigate(`/addModel/provider/${providerName}`);
+                    }}
+                  />
+                ) : null,
+              )}
             </GridDiv>
           </>
         ) : (
@@ -176,6 +178,9 @@ function AddNewModel() {
                         dimensions={config.dimensions}
                         providerOptions={config.providerOptions}
                         onClick={(e, dimensionChoices, selectedProvider) => {
+                          if (!selectedProvider) {
+                            return;
+                          }
                           const model = {
                             ...config.params,
                             ..._.merge(
@@ -187,7 +192,7 @@ function AddNewModel() {
                                 };
                               }) || []),
                             ),
-                            provider: providers[selectedProvider].provider,
+                            provider: providers[selectedProvider]?.provider,
                           };
                           ideMessenger.post("config/addModel", { model });
                           dispatch(

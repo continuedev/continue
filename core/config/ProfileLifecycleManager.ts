@@ -13,8 +13,8 @@ export interface ProfileDescription {
 }
 
 export class ProfileLifecycleManager {
-  private savedConfig: ConfigResult<ContinueConfig> | undefined;
-  private savedBrowserConfig?: BrowserSerializedContinueConfig;
+  private savedConfigResult: ConfigResult<ContinueConfig> | undefined;
+  private savedBrowserConfigResult?: ConfigResult<BrowserSerializedContinueConfig>;
   private pendingConfigPromise?: Promise<ConfigResult<ContinueConfig>>;
 
   constructor(private readonly profileLoader: IProfileLoader) {}
@@ -35,15 +35,15 @@ export class ProfileLifecycleManager {
   }
 
   clearConfig() {
-    this.savedConfig = undefined;
-    this.savedBrowserConfig = undefined;
+    this.savedConfigResult = undefined;
+    this.savedBrowserConfigResult = undefined;
     this.pendingConfigPromise = undefined;
   }
 
   // Clear saved config and reload
   async reloadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    this.savedConfig = undefined;
-    this.savedBrowserConfig = undefined;
+    this.savedConfigResult = undefined;
+    this.savedBrowserConfigResult = undefined;
     this.pendingConfigPromise = undefined;
 
     return this.loadConfig([], true);
@@ -55,8 +55,8 @@ export class ProfileLifecycleManager {
   ): Promise<ConfigResult<ContinueConfig>> {
     // If we already have a config, return it
     if (!forceReload) {
-      if (this.savedConfig) {
-        return this.savedConfig;
+      if (this.savedConfigResult) {
+        return this.savedConfigResult;
       } else if (this.pendingConfigPromise) {
         return this.pendingConfigPromise;
       }
@@ -72,7 +72,7 @@ export class ProfileLifecycleManager {
           result.config.contextProviders ?? []
         ).concat(additionalContextProviders);
 
-        this.savedConfig = result;
+        this.savedConfigResult = result;
         resolve(result);
       } else if (result.errors) {
         reject(
@@ -82,15 +82,17 @@ export class ProfileLifecycleManager {
     });
 
     // Wait for the config promise to resolve
-    this.savedConfig = await this.pendingConfigPromise;
+    this.savedConfigResult = await this.pendingConfigPromise;
     this.pendingConfigPromise = undefined;
-    return this.savedConfig;
+    return this.savedConfigResult;
   }
 
   async getSerializedConfig(
     additionalContextProviders: IContextProvider[],
   ): Promise<ConfigResult<BrowserSerializedContinueConfig>> {
-    if (!this.savedBrowserConfig) {
+    if (this.savedBrowserConfigResult) {
+      return this.savedBrowserConfigResult;
+    } else {
       const result = await this.loadConfig(additionalContextProviders);
       if (!result.config) {
         return {
@@ -98,12 +100,11 @@ export class ProfileLifecycleManager {
           config: undefined,
         };
       }
-      this.savedBrowserConfig = finalToBrowserConfig(result.config);
+      const serializedConfig = finalToBrowserConfig(result.config);
+      return {
+        ...result,
+        config: serializedConfig,
+      };
     }
-    return {
-      config: this.savedBrowserConfig,
-      errors: [],
-      configLoadInterrupted: false,
-    };
   }
 }

@@ -5,7 +5,7 @@ const CommitMessageCommand: SlashCommand = {
   name: "commit",
   description: "Generate a commit message for current changes",
   run: async function* ({ ide, llm, params }) {
-    const includeUnstaged = params?.includeUnstaged ?? true;
+    const includeUnstaged = params?.includeUnstaged ?? false;
     const diff = await ide.getDiff(includeUnstaged);
 
     if (diff.length === 0) {

@@ -33,7 +33,7 @@ Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customiz
 
 ### Llama 3.1 405B from Meta
 
-If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your best option right now. You will need to decide if you use it through a SaaS model provider (e.g. [Together](../customize/model-providers/more/together.md) or [Groq](../customize/model-providers/more/groq.md)) or self-host it (e.g. using [vLLM](../customize/model-providers//more/vllm.md) or [Ollama](../customize/model-providers/top-level/ollama.md)).
+If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your best option right now. You will need to decide if you use it through a SaaS model provider (e.g. [Together](../customize/model-providers/more/together.md) or [Novita AI](../customize/model-providers/more/novita.md) or [Groq](../customize/model-providers/more/groq.md)) or self-host it (e.g. using [vLLM](../customize/model-providers//more/vllm.md) or [Ollama](../customize/model-providers/top-level/ollama.md)).
 
 <Tabs groupId="providers">
     <TabItem value="Together">
@@ -44,6 +44,18 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
                     "provider": "together",
                     "model": "llama3.1-405b",
                     "apiKey": "[TOGETHER_API_KEY]"
+                }
+            ]
+        ```
+    </TabItem>
+    <TabItem value="Novita">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 405B",
+                    "provider": "novita",
+                    "model": "meta-llama/llama-3.1-405b-instruct",
+                    "apiKey": "[NOVITA_API_KEY]"
                 }
             ]
         ```
@@ -77,7 +89,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
                 {
                     "title": "Llama 3.1 405B",
                     "provider": "ollama",
-                    "model": "llama3.1-405b"
+                    "model": "llama3.1:405b"
                 }
             ]
         ```
@@ -141,7 +153,7 @@ If your local machine can run an 8B parameter model, then we recommend running L
                 {
                     "title": "Llama 3.1 8B",
                     "provider": "ollama",
-                    "model": "llama3.1-8b"
+                    "model": "llama3.1:8b"
                 }
             ]
         ```

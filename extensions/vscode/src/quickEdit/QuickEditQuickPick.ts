@@ -242,6 +242,10 @@ export class QuickEdit {
     path: string | undefined,
   ) => {
     const modelTitle = await this.getCurModelTitle();
+    if (!modelTitle) {
+      throw new Error("No model selected");
+    }
+
     await this._streamEditWithInputAndContext(prompt, modelTitle);
     this.openAcceptRejectMenu(prompt, path);
   };
@@ -258,12 +262,15 @@ export class QuickEdit {
   /**
    * Gets the model title the user has chosen, or their default model
    */
-  private async getCurModelTitle() {
+  private async getCurModelTitle(): Promise<string | undefined> {
     if (this._curModelTitle) {
       return this._curModelTitle;
     }
 
-    const config = await this.configHandler.loadConfig();
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      return undefined;
+    }
 
     return (
       getModelByRole(config, "inlineEdit")?.title ??
@@ -517,7 +524,10 @@ export class QuickEdit {
     editor: vscode.TextEditor;
     params: QuickEditShowParams | undefined;
   }) {
-    const config = await this.configHandler.loadConfig();
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
 
     let prompt: string | undefined;
     switch (selectedLabel) {

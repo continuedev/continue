@@ -1,3 +1,4 @@
+import { ConfigResult } from "../config/load.js";
 import { ConfigValidationError } from "../config/validation.js";
 
 import type {
@@ -10,7 +11,10 @@ import type {
 
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [
-    { config: BrowserSerializedContinueConfig; profileId: string },
+    {
+      result: ConfigResult<BrowserSerializedContinueConfig>;
+      profileId: string;
+    },
     void,
   ];
   configError: [ConfigValidationError[] | undefined, void];
