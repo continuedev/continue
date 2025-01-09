@@ -19,7 +19,7 @@ export class RecentlyVisitedRangesService {
   private numSurroundingLines = 5;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
-  private isActive: boolean = false;
+  private isEnabled = false;
 
   constructor(private readonly ide: IDE) {
     this.cache = new LRUCache<
@@ -29,23 +29,25 @@ export class RecentlyVisitedRangesService {
       max: this.maxRecentFiles,
     });
 
-    void this.setNumSurroundingLinesFromPostHogExperiment();
-
-    vscode.window.onDidChangeTextEditorSelection(
-      this.cacheCurrentSelectionContext,
-    );
+    void this.initWithPostHog();
   }
 
-  private async setNumSurroundingLinesFromPostHogExperiment() {
+  private async initWithPostHog() {
     const recentlyVisitedRangesNumSurroundingLines =
       await Telemetry.getValueForFeatureFlag(
         PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
       );
 
-    if (recentlyVisitedRangesNumSurroundingLines) {
-      this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
-      this.isActive = true;
+    if (!recentlyVisitedRangesNumSurroundingLines) {
+      this.isEnabled = false;
+      return;
     }
+
+    this.isEnabled = true;
+    this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
+    vscode.window.onDidChangeTextEditorSelection(
+      this.cacheCurrentSelectionContext,
+    );
   }
 
   private cacheCurrentSelectionContext = async (
@@ -95,9 +97,7 @@ export class RecentlyVisitedRangesService {
    * @returns Array of code snippets from recently visited files
    */
   public getSnippets(): AutocompleteCodeSnippet[] {
-    // If the feature is not active (e.g. user is in control group),
-    // return an empty array to exclude recently visited ranges snippets
-    if (!this.isActive) {
+    if (!this.isEnabled) {
       return [];
     }
 
@@ -107,7 +107,7 @@ export class RecentlyVisitedRangesService {
       [];
 
     // Get most recent snippets from each file in cache
-    for (const filepath of this.cache.keys()) {
+    for (const filepath of Array.from(this.cache.keys())) {
       const snippets = (this.cache.get(filepath) || [])
         .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, this.maxSnippetsPerFile);
