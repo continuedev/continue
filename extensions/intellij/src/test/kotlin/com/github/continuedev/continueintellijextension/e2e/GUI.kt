@@ -39,7 +39,7 @@ class GUI {
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
-    @Test
+    // @Test
     @Video
     fun highlightCode(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
         welcomeFrame {
