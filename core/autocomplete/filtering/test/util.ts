@@ -61,6 +61,7 @@ export async function testAutocompleteFiltering(
     },
     recentlyEditedFiles: [],
     recentlyEditedRanges: [],
+    recentlyVisitedRanges: [],
   };
 
   // Generate a completion
