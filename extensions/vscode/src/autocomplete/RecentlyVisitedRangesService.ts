@@ -19,6 +19,7 @@ export class RecentlyVisitedRangesService {
   private numSurroundingLines = 5;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
+  private isActive: boolean = false;
 
   constructor(private readonly ide: IDE) {
     this.cache = new LRUCache<
@@ -31,18 +32,23 @@ export class RecentlyVisitedRangesService {
     void this.setNumSurroundingLinesFromPostHogExperiment();
 
     vscode.window.onDidChangeTextEditorSelection(
-      this.handleOnDidChangeTextEditorSelection,
+      this.cacheCurrentSelectionContext,
     );
   }
 
   private async setNumSurroundingLinesFromPostHogExperiment() {
-    this.numSurroundingLines =
-      (await Telemetry.getValueForFeatureFlag(
-        PosthogFeatureFlag.AutocompleteTimeout,
-      )) ?? this.numSurroundingLines;
+    const recentlyVisitedRangesNumSurroundingLines =
+      await Telemetry.getValueForFeatureFlag(
+        PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
+      );
+
+    if (recentlyVisitedRangesNumSurroundingLines) {
+      this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
+      this.isActive = true;
+    }
   }
 
-  private handleOnDidChangeTextEditorSelection = async (
+  private cacheCurrentSelectionContext = async (
     event: vscode.TextEditorSelectionChangeEvent,
   ) => {
     const filepath = event.textEditor.document.uri.toString();
@@ -76,7 +82,7 @@ export class RecentlyVisitedRangesService {
       this.cache.set(filepath, newSnippets);
     } catch (err) {
       console.error(
-        "Error caching recently visited ranges for autocomplete",
+        "Error caching recently visited ranges for autocomplete: ",
         err,
       );
       return;
@@ -89,6 +95,12 @@ export class RecentlyVisitedRangesService {
    * @returns Array of code snippets from recently visited files
    */
   public getSnippets(): AutocompleteCodeSnippet[] {
+    // If the feature is not active (e.g. user is in control group),
+    // return an empty array to exclude recently visited ranges snippets
+    if (!this.isActive) {
+      return [];
+    }
+
     const currentFilepath =
       vscode.window.activeTextEditor?.document.uri.toString();
     let allSnippets: Array<AutocompleteCodeSnippet & { timestamp: number }> =

@@ -12,7 +12,7 @@ export enum PosthogFeatureFlag {
 
 export const EXPERIMENTS: {
   [key in PosthogFeatureFlag]: {
-    [key: string]: { value: number };
+    [key: string]: { value: any };
   };
 } = {
   [PosthogFeatureFlag.AutocompleteTimeout]: {
@@ -22,7 +22,8 @@ export const EXPERIMENTS: {
     "450": { value: 450 },
   },
   [PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines]: {
-    control: { value: 5 },
+    control: { value: null },
+    "5": { value: 5 },
     "10": { value: 10 },
     "15": { value: 15 },
     "20": { value: 20 },
