@@ -228,16 +228,4 @@ export class MockServer extends OllamaServer implements IModelServer {
     }
     return Array.from(this.models.values()).filter(model => model.status !== ModelStatus.missing).map(model => model.name);
   }
-
-  async configureAssistant(
-    chatModelName: string | null,
-    tabModelName: string | null,
-    embeddingsModelName: string | null
-  ): Promise<void> {
-    // Throw an error if conflicting models are selected
-    if (chatModelName === "granite-code:3b" && tabModelName === "granite-code:20b") {
-      throw new Error('Simulated error: Conflicting models selected for chat and tab completion.');
-    }
-    super.configureAssistant(chatModelName, tabModelName, embeddingsModelName);
-  }
 }

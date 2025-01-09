@@ -13,6 +13,7 @@ import {
   window
 } from "vscode";
 import { isDevMode } from 'core/granite/commons/constants';
+import { ConfiguredModels } from 'core/granite/commons/configuredModels';
 import { DOWNLOADABLE_MODELS } from 'core/granite/commons/modelRequirements';
 import { ProgressData } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from 'core/granite/commons/statuses';
@@ -23,6 +24,7 @@ import { Telemetry } from '../telemetry';
 import { getNonce } from "../utils/getNonce";
 import { getUri } from "../utils/getUri";
 import { getSystemInfo } from "../utils/sysUtils";
+import { ConfigHandler } from 'core/config/ConfigHandler';
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -55,7 +57,7 @@ export class SetupGranitePage {
    * @param panel A reference to the webview panel
    * @param extensionUri The URI of the directory containing the extension
    */
-  private constructor(panel: WebviewPanel, context: ExtensionContext) {
+  private constructor(panel: WebviewPanel, context: ExtensionContext, private configHandler: ConfigHandler) {
     this._panel = panel;
     this.server = useMockServer ?
       new MockServer(300) :
@@ -72,6 +74,12 @@ export class SetupGranitePage {
 
     // Set an event listener to listen for messages passed from the webview context
     this._setWebviewMessageListener(this._panel.webview);
+
+    // Send a new status on configuration changes
+    const cleanupConfigUpdate = configHandler.onConfigUpdate(({config}) => {
+      this.publishStatus(this._panel.webview);
+    });
+    this._disposables.push(new Disposable(cleanupConfigUpdate));
 
     if (isDevMode) {
       this._setupFileWatcher(context);
@@ -118,7 +126,7 @@ export class SetupGranitePage {
    *
    * @param extensionUri The URI of the directory containing the extension.
    */
-  public static render(context: ExtensionContext) {
+  public static render(context: ExtensionContext, configHandler: ConfigHandler) {
     if (SetupGranitePage.currentPanel) {
       // If the webview panel already exists reveal it
       SetupGranitePage.currentPanel._panel.reveal(ViewColumn.One);
@@ -143,7 +151,7 @@ export class SetupGranitePage {
         }
       );
 
-      SetupGranitePage.currentPanel = new SetupGranitePage(panel, context);
+      SetupGranitePage.currentPanel = new SetupGranitePage(panel, context, configHandler);
     }
   }
 
@@ -321,6 +329,40 @@ export class SetupGranitePage {
     );
   }
 
+  async getConfiguredModels(): Promise<ConfiguredModels> {
+    let { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
+
+    let chatModel = null;
+    let embeddingsModel = null;
+    let tabAutocompleteModel = null;
+
+    for (const model of config.models) {
+      if (model.providerName == "ollama") {
+        chatModel = model.model;
+        break;
+      }
+    }
+
+    for (const model of config.tabAutocompleteModels ?? []) {
+      if (model.providerName == "ollama") {
+        tabAutocompleteModel = model.model;
+        break;
+      }
+    }
+
+    if (config.embeddingsProvider.providerName == "ollama")
+      embeddingsModel = config.embeddingsProvider.model;
+
+    return {
+      chat: chatModel,
+      tabAutocomplete: tabAutocompleteModel,
+      embeddings: embeddingsModel,
+    }
+  }
+
   async getModelStatuses(): Promise<Map<string, ModelStatus>> {
     const modelStatuses: Map<string, ModelStatus> = new Map();
     await Promise.all(DOWNLOADABLE_MODELS.map(async (id) => {
@@ -340,10 +382,12 @@ export class SetupGranitePage {
     }
     const modelStatuses = await this.getModelStatuses();
     const modelStatusesObject = Object.fromEntries(modelStatuses); // Convert Map to Object
+    const configuredModels = await this.getConfiguredModels();
     webview.postMessage({
       command: "status",
       data: {
         serverStatus,
+        configuredModels: configuredModels,
         modelStatuses: modelStatusesObject
       },
     });
@@ -386,12 +430,6 @@ export class SetupGranitePage {
         }
       }
 
-      // After installing models, configure the assistant
-      await this.server.configureAssistant(
-        chatModel,
-        tabModel,
-        embeddingsModel
-      );
       console.log("Granite AI-Assistant setup complete");
       await Telemetry.send("paver.setup.success", {
         chatModelId: chatModel ?? 'none',

@@ -76,7 +76,6 @@ function App() {
 
   const [isKeepExistingConfigSelected, setIsKeepExistingConfigSelected] =
     useState(false);
-  const [uiMode, setUiMode] = useState<"simple" | "advanced">("simple");
 
   const getModelStatus = useCallback(
     (model: string | null): ModelStatus | null => {
@@ -87,6 +86,15 @@ function App() {
       return result ? result : ModelStatus.unknown;
     },
     [modelStatuses]
+  );
+
+  const allModelsInstalled = useCallback(
+    () => {
+      return getModelStatus(chatModel) == ModelStatus.installed &&
+        getModelStatus(tabModel) == ModelStatus.installed &&
+        getModelStatus(embeddingsModel) == ModelStatus.installed
+    },
+    [modelStatuses, chatModel, embeddingsModel, tabModel]
   );
 
   function requestStatus(): void {
@@ -110,12 +118,11 @@ function App() {
     });
   }
 
-  function handleSetupGraniteClick() {
-    const UImodeTabModel = uiMode === "advanced" ? tabModel : chatModel;
+  function handleInstallModelsClick() {
     vscode.postMessage({
       command: "setupGranite",
       data: {
-        tabModelId: UImodeTabModel,
+        tabModelId: tabModel,
         chatModelId: chatModel,
         embeddingsModelId: embeddingsModel,
       },
@@ -152,6 +159,9 @@ function App() {
         const data = payload.data; // The JSON data our extension sent
         console.log("received status " + JSON.stringify(data));
         setServerStatus(data.serverStatus);
+        setChatModel(data.configuredModels.chat)
+        setTabModel(data.configuredModels.tabAutocomplete);
+        setEmbeddingsModel(data.configuredModels.embeddings);
         setModelStatuses(new Map(Object.entries(data.modelStatuses)));
         break;
       }
@@ -246,23 +256,6 @@ function App() {
     [serverStatus]
   );
 
-  useEffect(() => {
-    advancedToggler(uiMode);
-  });
-
-  function advancedToggler(uiMode: any) {
-    let checkKeepExistingConfig;
-
-    uiMode === "advanced"
-      ? (checkKeepExistingConfig =
-        chatModel === null && tabModel === null && embeddingsModel === null)
-      : (checkKeepExistingConfig =
-        chatModel === null && embeddingsModel === null);
-
-    setIsKeepExistingConfigSelected(checkKeepExistingConfig);
-    setUiMode(uiMode);
-  }
-
   const selectedUninstalledModels = Array.from(new Set([
     chatModel,
     tabModel,
@@ -274,12 +267,18 @@ function App() {
   return (
     <main className="main-wrapper">
       <h1 className="main-title">
-        Setup IBM Granite as your code assistant with Continue
+        Set up your system for Granite.Code
       </h1>
 
       <div className="main-description">
         <p className="m-0 mb-1">
-          Run{" "}
+          The Granite.Code extension uses{" "}
+          <a
+            href="https://github.com/ollama/ollama"
+            target="_blank"
+            rel="noopener noreferrer"
+          > Ollama
+          </a> to run the {" "}
           <a
             href="https://github.com/ibm-granite/granite-3.0-language-models"
             target="_blank"
@@ -287,25 +286,8 @@ function App() {
           >
             IBM Granite
           </a>{" "}
-          models effortlessly with
-          <a
-            href="https://github.com/ollama/ollama"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {" "}
-            Ollama
-          </a>{" "}
-          and{" "}
-          <a
-            href="https://github.com/continuedev/continue"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Continue
-          </a>
-          . Granite will help you write, generate, explain or document code,
-          while your data stays secure and private on your own machine.
+          Models locally on your machine. Granite.Code will help you write,
+          generate, explain or document code, while your data stays secure and private.
         </p>
       </div>
 
@@ -360,7 +342,7 @@ function App() {
           </div>
         )}
         <div className="modelList-wrapper">
-          {uiMode === "simple" ? (
+          {tabModel === chatModel ? (
             <ModelList
               className="model-list"
               label="Granite model"
@@ -420,51 +402,20 @@ function App() {
         </div>
 
         <div className="final-setup-group">
-          <div className="switch-toggle-wrapper">
-            <label>Model Settings:</label>
-            <div className="switch-toggle">
-              <input
-                className="switch-toggle-checkbox"
-                type="checkbox"
-                id="uiModeSwitch"
-                checked={uiMode === "advanced"}
-                onChange={() =>
-                  advancedToggler(uiMode === "simple" ? "advanced" : "simple")
-                }
-              />
-              <label className="switch-toggle-label" htmlFor="uiModeSwitch">
-                <span>Simple</span>
-                <span>Advanced</span>
-              </label>
-            </div>
-          </div>
-          { }
           <button
             className="install-button"
-            onClick={handleSetupGraniteClick}
+            onClick={handleInstallModelsClick}
             disabled={
+              allModelsInstalled() ||
               serverStatus !== ServerStatus.started ||
               !enabled ||
               isKeepExistingConfigSelected ||
               !diskSpaceCheck.isCompatible
             }
           >
-            Setup Granite
+            Install Models
           </button>
         </div>
-      </div>
-
-      <div className="info-message">
-        <p>
-          * To reopen this wizard, open the command palette and run:
-          <p style={{ margin: 2, paddingLeft: 10 }}><strong>Paver: Setup Granite as code assistant</strong></p>
-        </p>
-        {uiMode === "simple" ? (
-          <p>
-            ** To configure both Chat and Tab Completion separately, choose
-            <strong><i> Advanced</i></strong>.
-          </p>
-        ) : <></>}
       </div>
     </main>
   );

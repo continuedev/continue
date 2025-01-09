@@ -268,19 +268,6 @@ export class OllamaServer implements IModelServer {
     console.log(`${modelName} was pulled`);
   }
 
-  async configureAssistant(
-    chatModel: string | null,
-    tabCompletionModel: string | null,
-    embeddingsModel: string | null
-  ): Promise<void> {
-    const assistantConfigurator = new AiAssistantConfigurator({
-      chatModel,
-      tabCompletionModel,
-      embeddingsModel
-    });
-    await assistantConfigurator.configureAssistant();
-  }
-
   async pullModel(modelName: string, reportProgress: (progress: ProgressData) => void): Promise<void> {
     return window.withProgress(
       {

@@ -1,5 +1,4 @@
 import React from 'react';
-import Select from 'react-select';
 import { ProgressData } from 'core/granite/commons/progressData';
 import ProgressBar from './ProgressBar';
 import { StatusCheck, StatusValue } from './StatusCheck';
@@ -114,9 +113,9 @@ const ModelList: React.FC<ModelListProps> = ({ className, label, value, onChange
     const getStatusLabel = (status: ModelStatus): string => {
         switch (status) {
             case ModelStatus.stale:
-                return '(will be updated automatically)';
+                return '(will be updated)';
             case ModelStatus.missing:
-                return '(will be pulled automatically)';
+                return '(will be pulled)';
             default:
                 return '';
         }
@@ -134,17 +133,7 @@ const ModelList: React.FC<ModelListProps> = ({ className, label, value, onChange
                 </label>
 
                 <div className={className + `--wrapper`}>
-                    <Select
-                        className={className}
-                        id={label}
-                        value={options.find(option => option.value === value)}
-                        onChange={(newValue) => onChange(newValue as ModelOption)}
-                        options={options}
-                        isDisabled={disabled}
-                        styles={customStyles}
-                        formatOptionLabel={formatOptionLabel}
-                        isSearchable={false} // Disable typing in dropdown
-                    />
+                    {formatOptionLabel(options.find(option => option.value === value), { context: 'value' })}
                     {status !== null && status !== ModelStatus.installed && !progress && <span className='info-label' style={{ display: 'flex', alignItems: 'center' }}> {getStatusLabel(status)}</span>}
                 </div >
             </div >
