@@ -12,7 +12,7 @@ import {
   setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { addModel, deleteModel } from "./config/util";
+import { addContextProvider, addModel, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -46,6 +46,7 @@ import * as URI from "uri-js";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { localPathToUri } from "./util/pathToUri";
+import { clipboardCache } from "./util/clipboardCache";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -65,7 +66,7 @@ export class Core {
   private abortedMessageIds: Set<string> = new Set();
 
   private async config() {
-    return this.configHandler.loadConfig();
+    return (await this.configHandler.loadConfig()).config;
   }
 
   invoke<T extends keyof ToCoreProtocol>(
@@ -120,11 +121,9 @@ export class Core {
     );
 
     this.configHandler.onConfigUpdate(async (result) => {
-      const serialized = await (
-        await this.configHandler.getSerializedConfig()
-      ).config!;
+      const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
-        config: serialized,
+        result: serializedResult,
         profileId: this.configHandler.currentProfile.profileId,
       });
     });
@@ -178,12 +177,12 @@ export class Core {
     });
 
     const getLlm = async () => {
-      const config = await this.configHandler.loadConfig();
+      const { config } = await this.configHandler.loadConfig();
       const selected = this.globalContext.get("selectedTabAutocompleteModel");
       return (
-        config.tabAutocompleteModels?.find(
+        config?.tabAutocompleteModels?.find(
           (model) => model.title === selected,
-        ) ?? config.tabAutocompleteModels?.[0]
+        ) ?? config?.tabAutocompleteModels?.[0]
       );
     };
     this.completionProvider = new CompletionProvider(
@@ -261,7 +260,7 @@ export class Core {
     on("config/newPromptFile", async (msg) => {
       await createNewPromptFileV2(
         this.ide,
-        (await this.config()).experimental?.promptPath,
+        (await this.config())?.experimental?.promptPath,
       );
       await this.configHandler.reloadConfig();
     });
@@ -272,7 +271,7 @@ export class Core {
 
     on("config/reload", async (msg) => {
       void this.configHandler.reloadConfig();
-      return (await this.configHandler.getSerializedConfig()).config!; // <-- TODO
+      return await this.configHandler.getSerializedConfig();
     });
 
     on("config/ideSettingsUpdate", (msg) => {
@@ -280,6 +279,10 @@ export class Core {
     });
     on("config/listProfiles", (msg) => {
       return this.configHandler.listProfiles();
+    });
+
+    on("config/addContextProvider", async (msg) => {
+      addContextProvider(msg.data);
     });
 
     // Context providers
@@ -292,11 +295,16 @@ export class Core {
     });
 
     on("context/indexDocs", async (msg) => {
-      await this.docsService.syncOrReindexAllDocsWithPrompt(msg.data.reIndex);
+      await this.docsService.syncDocsWithPrompt(msg.data.reIndex);
     });
 
     on("context/loadSubmenuItems", async (msg) => {
+      console.log("Load SUMBENU ITEMS", msg);
       const config = await this.config();
+      if (!config) {
+        return [];
+      }
+
       const items = await config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
@@ -312,6 +320,10 @@ export class Core {
       const { name, query, fullInput, selectedCode, selectedModelTitle } =
         msg.data;
       const config = await this.config();
+      if (!config) {
+        return [];
+      }
+
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider = config.contextProviders?.find(
         (provider) => provider.description.title === name,
@@ -366,9 +378,15 @@ export class Core {
 
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
-        config: (await this.configHandler.getSerializedConfig()).config!, // <-- TODO
+        result: await this.configHandler.getSerializedConfig(),
         profileId: this.configHandler.currentProfile.profileId,
       };
+    });
+
+    on("clipboardCache/add", (msg) => {
+      console.log("ADD TO CLIPBOARD", msg);
+      clipboardCache.add(uuidv4(), msg.data.content);
+      this.messenger.send("refreshSubmenuItems", undefined);
     });
 
     async function* llmStreamChat(
@@ -376,7 +394,11 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
-      const config = await configHandler.loadConfig();
+      const { config } = await configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
       // Stop TTS on new StreamChat
       if (config.experimental?.readResponseTTS) {
         void TTS.kill();
@@ -407,7 +429,6 @@ export class Core {
 
         const chunk = next.value;
 
-        // @ts-ignore
         yield { content: chunk };
         next = await gen.next();
       }
@@ -480,7 +501,11 @@ export class Core {
       return completion;
     });
     on("llm/listModels", async (msg) => {
-      const config = await this.configHandler.loadConfig();
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        return [];
+      }
+
       const model =
         config.models.find((model) => model.title === msg.data.title) ??
         config.models.find((model) => model.title?.startsWith(msg.data.title));
@@ -533,7 +558,11 @@ export class Core {
         selectedCode,
       } = msg.data;
 
-      const config = await configHandler.loadConfig();
+      const { config } = await configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
       const llm = await configHandler.llmFromTitle(modelTitle);
       const slashCommand = config.slashCommands?.find(
         (sc) => sc.name === slashCommandName,
@@ -800,7 +829,7 @@ export class Core {
     });
     on("indexing/setPaused", async (msg) => {
       if (msg.data.type === "docs") {
-        // this.docsService.setPaused(msg.data.id, msg.data.paused);
+        // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
     });
     on("docs/getSuggestedDocs", async (msg) => {
@@ -846,7 +875,11 @@ export class Core {
     });
 
     on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
-      const config = await this.configHandler.loadConfig();
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
+
       const tool = config.tools.find(
         (t) => t.function.name === toolCall.function.name,
       );

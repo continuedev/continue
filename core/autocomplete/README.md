@@ -7,7 +7,7 @@ Continue now provides support for tab autocomplete in [VS Code](https://marketpl
 We recommend setting up tab-autocomplete with a local Ollama instance. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
 
 ```bash
-ollama run qwen2.5-coder:1.5b
+ollama run qwen2.5-coder:1.5b-base
 ```
 
 Once it has been downloaded, you should begin to see completions in VS Code.
@@ -101,7 +101,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",
     "provider": "ollama",
-    "model": "qwen2.5-coder:1.5b",
+    "model": "qwen2.5-coder:1.5b-base",
     "apiBase": "https://<my endpoint>"
   },
   "tabAutocompleteOptions": {
@@ -123,9 +123,9 @@ Follow these steps to ensure that everything is set up correctly:
 
 1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar).
 2. Make sure you have downloaded Ollama.
-3. Run `ollama run qwen2.5-coder:1.5b` to verify that the model is downloaded.
+3. Run `ollama run qwen2.5-coder:1.5b-base` to verify that the model is downloaded.
 4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
-5. Make sure that you aren't also using another Ollama model for chat. This will cause Ollama to constantly load and unload the models from memory, resulting in slow responses (or none at all) for both.
+5. If you are using another Ollama model for chat and your resources are limited, this will cause Ollama to constantly load and unload the models from memory, resulting in slow responses (or none at all) for both. A resolution for this could be using the same model for chat and autocomplete.
 6. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains).
 7. If you are still having issues, please let us know in our [Discord](https://discord.gg/vapESyrFmJ) and we'll help as soon as possible.
 

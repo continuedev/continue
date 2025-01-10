@@ -16,9 +16,8 @@ import { addContextProvider } from "../../config/util";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
-import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
-import { GlobalContext } from "../../util/GlobalContext";
 import { IMessenger } from "../../protocol/messenger";
+import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
 import {
   editConfigJson,
   getDocsSqlitePath,
@@ -26,6 +25,7 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 
+import { ConfigResult } from "../../config/load";
 import { Article, chunkArticle, pageToArticle } from "./article";
 import DocsCrawler from "./DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
@@ -87,7 +87,6 @@ export default class DocsService {
   public isSyncing: boolean = false;
 
   private docsIndexingQueue = new Set<string>();
-  private globalContext = new GlobalContext();
   private lanceTableNamesSet = new Set<string>();
 
   private config!: ContinueConfig;
@@ -123,8 +122,8 @@ export default class DocsService {
 
   // Initialization - load config and attach config listener
   private async init(configHandler: ConfigHandler) {
-    const config = await configHandler.loadConfig();
-    await this.handleConfigUpdate({ config });
+    const result = await configHandler.loadConfig();
+    await this.handleConfigUpdate(result);
     configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
   }
 
@@ -144,7 +143,7 @@ export default class DocsService {
 
     this.config.docs?.forEach((doc) => {
       if (!doc.startUrl) {
-        console.error("Invalid config docs entry, no start");
+        console.error("Invalid config docs entry, no start url", doc.title);
         return;
       }
 
@@ -183,20 +182,37 @@ export default class DocsService {
   }
 
   abort(startUrl: string) {
-    const status = this.statuses.get(startUrl);
-    if (status) {
+    if (this.docsIndexingQueue.has(startUrl)) {
+      const status = this.statuses.get(startUrl);
+      if (status) {
+        this.handleStatusUpdate({
+          ...status,
+          status: "aborted",
+          progress: 0,
+          description: "Canceled",
+        });
+      }
       this.docsIndexingQueue.delete(startUrl);
-      this.handleStatusUpdate({
-        ...status,
-        status: "aborted",
-        progress: 0,
-        description: "Canceled",
-      });
     }
   }
 
-  isAborted(startUrl: string) {
-    return this.statuses.get(startUrl)?.status === "aborted";
+  shouldCancel(startUrl: string, startedWithEmbedder: string) {
+    // Check if aborted
+    const isAborted = this.statuses.get(startUrl)?.status === "aborted";
+    if (isAborted) {
+      return true;
+    }
+    // Handle indexing disabled change mid-indexing
+    if (this.config.disableIndexing) {
+      this.abort(startUrl);
+      return true;
+    }
+    // Handle embeddings provider change mid-indexing
+    if (this.config.embeddingsProvider.embeddingId !== startedWithEmbedder) {
+      this.abort(startUrl);
+      return true;
+    }
+    return false;
   }
 
   // NOTE Pausing not supported for docs yet
@@ -247,102 +263,86 @@ export default class DocsService {
 
   private async handleConfigUpdate({
     config: newConfig,
-  }: {
-    config: ContinueConfig | undefined;
-  }) {
+  }: ConfigResult<ContinueConfig>) {
     if (newConfig) {
       const oldConfig = this.config;
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
 
       this.docsCrawler = new DocsCrawler(this.ide, newConfig);
 
+      if (this.config.disableIndexing) {
+        return;
+      }
+
+      // No point in indexing if no docs context provider
+      const hasDocsContextProvider = this.hasDocsContextProvider();
+      if (!hasDocsContextProvider) {
+        return;
+      }
+
       // Skip docs indexing if not supported
+      // No warning message here because would show on ANY config update
       const unsupported =
         await this.isUsingUnsupportedPreIndexedEmbeddingsProvider();
       if (unsupported) {
         return;
       }
 
-      await this.syncOrReindexAllDocs(newConfig, oldConfig);
+      await this.syncDocs(oldConfig, newConfig, false);
     }
   }
 
-  private async syncOrReindexAllDocs(
-    newConfig: ContinueConfig,
-    oldConfig?: ContinueConfig,
-  ) {
-    // On embeddings provider change, reindex all non-preindexed docs
-    // change = doesn't match last successful embeddings provider
-    const curEmbeddingsProviderId = this.globalContext.get(
-      "curEmbeddingsProviderId",
-    );
-    if (
-      !curEmbeddingsProviderId ||
-      curEmbeddingsProviderId !== newConfig.embeddingsProvider.embeddingId
-    ) {
-      // If not set, we're initializing
-      const currentDocs = await this.listMetadata();
-      if (currentDocs.length > 0) {
-        await this.reindexDocsOnNewEmbeddingsProvider();
-        return;
-      }
-    }
-
-    await this.syncDocsOnConfigUpdate(oldConfig, newConfig);
-  }
-
-  async syncOrReindexAllDocsWithPrompt(reIndex: boolean = false) {
+  async syncDocsWithPrompt(reIndex: boolean = false) {
     if (!this.hasDocsContextProvider()) {
-      const didAddDocsContextProvider =
-        await this.showAddDocsContextProviderToast();
+      const actionMsg = "Add 'docs' context provider";
+      const res = await this.ide.showToast(
+        "info",
+        "Starting docs indexing",
+        actionMsg,
+      );
 
-      if (!didAddDocsContextProvider) {
+      if (res === actionMsg) {
+        addContextProvider({
+          name: DocsContextProvider.description.title,
+          params: {},
+        });
+
+        void this.ide.showToast(
+          "info",
+          "Successfuly added docs context provider",
+        );
+      } else {
         return;
       }
     }
 
-    await this.syncOrReindexAllDocs(this.config);
+    await this.syncDocs(undefined, this.config, reIndex);
 
     void this.ide.showToast("info", "Docs indexing completed");
   }
 
+  // Returns true if startUrl has been indexed with current embeddingsProvider
   async hasMetadata(startUrl: string): Promise<Promise<boolean>> {
     const db = await this.getOrCreateSqliteDb();
     const title = await db.get(
-      `SELECT title FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      `SELECT title FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
+      this.config.embeddingsProvider.embeddingId,
     );
 
     return !!title;
   }
 
-  async showAddDocsContextProviderToast() {
-    const actionMsg = "Add 'docs' context provider";
-    const res = await this.ide.showToast(
-      "info",
-      "Starting docs indexing",
-      actionMsg,
-    );
-
-    if (res === actionMsg) {
-      addContextProvider({
-        name: DocsContextProvider.description.title,
-        params: {},
-      });
-
-      void this.ide.showToast(
-        "info",
-        "Successfuly added docs context provider",
-      );
-    }
-
-    return res === actionMsg;
-  }
-
   async listMetadata() {
+    const embeddingsProvider = this.config.embeddingsProvider;
+    if (!embeddingsProvider) {
+      return [];
+    }
     const db = await this.getOrCreateSqliteDb();
     const docs = await db.all<SqliteDocsRow[]>(
-      `SELECT title, startUrl, favicon FROM ${DocsService.sqlitebTableName}`,
+      `SELECT title, startUrl, favicon FROM ${DocsService.sqlitebTableName}
+      WHERE embeddingsProviderId = ?`,
+      embeddingsProvider.embeddingId,
     );
 
     return docs;
@@ -361,7 +361,21 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
   ): Promise<void> {
+    if (this.config.disableIndexing) {
+      console.warn("Attempting to add/index docs when indexing is disabled");
+      return;
+    }
     const { startUrl } = siteIndexingConfig;
+
+    const canUsePreindexedDocs = await this.canUsePreindexedDocs();
+    if (canUsePreindexedDocs) {
+      const preIndexedDoc = preIndexedDocs[startUrl];
+      const isPreIndexedDoc = !!preIndexedDoc;
+      if (isPreIndexedDoc) {
+        console.warn("Can not override pre-indexed start urls");
+        return;
+      }
+    }
 
     // Queue - indexAndAdd is invoked circularly by config edits. This prevents duplicate runs
     if (this.docsIndexingQueue.has(startUrl)) {
@@ -369,9 +383,7 @@ export default class DocsService {
     }
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
-
-    this.docsIndexingQueue.add(startUrl);
-
+    const startedWithEmbedder = this.config.embeddingsProvider.embeddingId;
     const indexExists = await this.hasMetadata(startUrl);
 
     // Build status update - most of it is fixed values
@@ -405,13 +417,11 @@ export default class DocsService {
       }
     }
 
-    // If not preindexed
-    const isPreIndexedDoc = !!preIndexedDocs[siteIndexingConfig.startUrl];
-    if (!isPreIndexedDoc) {
-      this.addToConfig(siteIndexingConfig);
-    }
-
     try {
+      this.docsIndexingQueue.add(startUrl);
+
+      this.addToConfig(siteIndexingConfig);
+
       this.handleStatusUpdate({
         ...fixedStatus,
         status: "indexing",
@@ -428,7 +438,7 @@ export default class DocsService {
         estimatedProgress += 1 / 2 ** (processedPages + 1);
 
         // NOTE - during "indexing" phase, check if aborted before each status update
-        if (this.isAborted(startUrl)) {
+        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
           return;
         }
         this.handleStatusUpdate({
@@ -466,7 +476,7 @@ export default class DocsService {
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
 
-        if (this.isAborted(startUrl)) {
+        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
           return;
         }
         this.handleStatusUpdate({
@@ -503,7 +513,7 @@ export default class DocsService {
           `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
         );
 
-        if (this.isAborted(startUrl)) {
+        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
           return;
         }
         this.handleStatusUpdate({
@@ -521,7 +531,7 @@ export default class DocsService {
       // Add docs to databases
       console.log(`Adding ${embeddings.length} embeddings to db`);
 
-      if (this.isAborted(startUrl)) {
+      if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
       }
       this.handleStatusUpdate({
@@ -539,7 +549,7 @@ export default class DocsService {
 
       const favicon = await fetchFavicon(new URL(siteIndexingConfig.startUrl));
 
-      if (this.isAborted(startUrl)) {
+      if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
       }
       this.handleStatusUpdate({
@@ -558,7 +568,7 @@ export default class DocsService {
 
       this.docsIndexingQueue.delete(startUrl);
 
-      if (this.isAborted(startUrl)) {
+      if (this.shouldCancel(startUrl, startedWithEmbedder)) {
         return;
       }
       this.handleStatusUpdate({
@@ -577,7 +587,7 @@ export default class DocsService {
       console.error("Error indexing docs", e);
       this.handleStatusUpdate({
         ...fixedStatus,
-        description: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
+        description: `Error getting docs from: ${siteIndexingConfig.startUrl}`,
         status: "failed",
         progress: 1,
       });
@@ -650,13 +660,18 @@ export default class DocsService {
     return await this.retrieveChunks(startUrl, vector, nRetrieve);
   }
 
+  // This is split into its own function so that it can be recursive
+  // in the case of fetching preindexed docs from s3
   async retrieveChunks(
     startUrl: string,
     vector: number[],
     nRetrieve: number,
     isRetry: boolean = false,
   ): Promise<Chunk[]> {
-    const isPreIndexedDoc = !!preIndexedDocs[startUrl];
+    const preIndexedDoc = preIndexedDocs[startUrl];
+    const isPreIndexedDoc = !!preIndexedDoc;
+
+    // Lance doesn't have an embeddingsprovider column, instead it includes it in the table name
     const table = await this.getOrCreateLanceTable({
       initializationVector: vector,
       isPreIndexedDoc,
@@ -673,17 +688,19 @@ export default class DocsService {
       console.warn("Error retrieving chunks from LanceDB", e);
     }
 
-    const hasIndexedDoc = await this.hasMetadata(startUrl);
-
-    if (!hasIndexedDoc && docs.length === 0) {
-      const preIndexedDoc = preIndexedDocs[startUrl];
-
-      if (isRetry || !preIndexedDoc) {
+    // No docs are found for preindexed? try fetching once
+    if (docs.length === 0 && isPreIndexedDoc) {
+      if (isRetry) {
         return [];
       }
-
       await this.fetchAndAddPreIndexedDocEmbeddings(preIndexedDoc.title);
       return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
+    }
+
+    if (isPreIndexedDoc) {
+      void Telemetry.capture("docs_pre_indexed_doc_used", {
+        doc: preIndexedDoc["title"],
+      });
     }
 
     return docs.map((doc) => ({
@@ -710,12 +727,13 @@ export default class DocsService {
       await db.exec("PRAGMA busy_timeout = 3000;");
 
       await runSqliteMigrations(db);
-
+      // First create the table if it doesn't exist
       await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title STRING NOT NULL,
-            startUrl STRING NOT NULL UNIQUE,
-            favicon STRING
+            startUrl STRING NOT NULL,
+            favicon STRING,
+            embeddingsProviderId STRING
         )`);
 
       this.sqliteDb = db;
@@ -725,10 +743,17 @@ export default class DocsService {
   }
 
   async getFavicon(startUrl: string) {
+    if (!this.config.embeddingsProvider) {
+      console.warn(
+        "Attempting to get favicon without embeddings provider specified",
+      );
+      return;
+    }
     const db = await this.getOrCreateSqliteDb();
     const result = await db.get(
-      `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
+      this.config.embeddingsProvider.embeddingId,
     );
 
     if (!result) {
@@ -741,9 +766,10 @@ export default class DocsService {
     Sync with no embeddings provider change
     Ignores pre-indexed docs
   */
-  private async syncDocsOnConfigUpdate(
+  private async syncDocs(
     oldConfig: ContinueConfig | undefined,
     newConfig: ContinueConfig,
+    reindex: boolean,
   ) {
     try {
       this.isSyncing = true;
@@ -753,6 +779,7 @@ export default class DocsService {
       const newConfigDocs = newConfig.docs || [];
       const newConfigStartUrls = newConfigDocs.map((doc) => doc.startUrl);
 
+      // NOTE since listMetadata filters by embeddings provider id embedding model changes are accounted for here
       const currentlyIndexedDocs = await this.listMetadata();
       const currentStartUrls = currentlyIndexedDocs.map((doc) => doc.startUrl);
 
@@ -775,7 +802,9 @@ export default class DocsService {
           const oldConfigDoc = oldConfigDocs.find(
             (d) => d.startUrl === doc.startUrl,
           );
+          // const currentStatus = this.statuses.get(doc.startUrl);
           if (
+            // currentStatus?.status === "complete" &&
             oldConfigDoc &&
             (oldConfigDoc.maxDepth !== doc.maxDepth ||
               oldConfigDoc.title !== doc.title ||
@@ -863,9 +892,7 @@ export default class DocsService {
     return name.replace(/[^a-zA-Z0-9_.-]/g, "_");
   }
 
-  private async getLanceTableNameFromEmbeddingsProvider(
-    isPreIndexedDoc: boolean,
-  ) {
+  private async getLanceTableName(isPreIndexedDoc: boolean) {
     const embeddingsProvider =
       await this.getEmbeddingsProvider(isPreIndexedDoc);
 
@@ -886,7 +913,7 @@ export default class DocsService {
     const conn = await lancedb.connect(getLanceDbPath());
     const tableNames = await conn.tableNames();
     const tableNameFromEmbeddingsProvider =
-      await this.getLanceTableNameFromEmbeddingsProvider(!!isPreIndexedDoc);
+      await this.getLanceTableName(!!isPreIndexedDoc);
 
     if (!tableNames.includes(tableNameFromEmbeddingsProvider)) {
       if (initializationVector) {
@@ -943,24 +970,35 @@ export default class DocsService {
   }: AddParams) {
     const db = await this.getOrCreateSqliteDb();
     await db.run(
-      `INSERT INTO ${DocsService.sqlitebTableName} (title, startUrl, favicon) VALUES (?, ?, ?)`,
+      `INSERT INTO ${DocsService.sqlitebTableName} (title, startUrl, favicon, embeddingsProviderId) VALUES (?, ?, ?, ?)`,
       title,
       startUrl,
       favicon,
+      this.config.embeddingsProvider.embeddingId,
     );
   }
 
   private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
-    const doesDocExist = this.config.docs?.some(
-      (doc) => doc.startUrl === siteIndexingConfig.startUrl,
+    const doesEquivalentDocExist = this.config.docs?.some(
+      (doc) =>
+        doc.startUrl === siteIndexingConfig.startUrl &&
+        doc.faviconUrl === siteIndexingConfig.faviconUrl &&
+        siteIndexingConfig.title === doc.title,
+      // siteIndexingConfig.maxDepth === doc.maxDepth &&
+      // doc.rootUrl === siteIndexingConfig.rootUrl,
     );
 
-    if (!doesDocExist) {
+    if (!doesEquivalentDocExist) {
       editConfigJson((config) => ({
         ...config,
-        docs: [...(config.docs ?? []), siteIndexingConfig],
+        docs: [
+          ...(config.docs?.filter(
+            (doc) => doc.startUrl !== siteIndexingConfig.startUrl,
+          ) ?? []),
+          siteIndexingConfig,
+        ],
       }));
     }
   }
@@ -980,10 +1018,18 @@ export default class DocsService {
   }
 
   private async deleteMetadataFromSqlite(startUrl: string) {
+    if (!this.config.embeddingsProvider) {
+      console.warn(
+        `Attempting to delete metadata for ${startUrl} without embeddings provider specified`,
+      );
+      return;
+    }
     const db = await this.getOrCreateSqliteDb();
+
     await db.run(
-      `DELETE FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      `DELETE FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
+      this.config.embeddingsProvider.embeddingId,
     );
   }
 
@@ -1010,35 +1056,5 @@ export default class DocsService {
     await this.deleteIndexes(startUrl);
     this.deleteFromConfig(startUrl);
     this.messenger?.send("refreshSubmenuItems", undefined);
-  }
-
-  /**
-   * Currently this deletes re-crawls + re-indexes all docs.
-   * A more optimal solution in the future will be to create
-   * a per-embeddings-provider table for docs.
-   */
-  private async reindexDocsOnNewEmbeddingsProvider() {
-    // We use config as our source of truth here since it contains additional information
-    // needed for re-crawling such as `faviconUrl` and `maxDepth`.
-    const { docs, embeddingsProvider } = this.config;
-
-    if (!docs || docs.length === 0) {
-      return;
-    }
-
-    console.log(
-      `Reindexing non-preindexed docs with new embeddings provider: ${embeddingsProvider.embeddingId}`,
-    );
-    await Promise.allSettled(docs.map((doc) => this.indexAndAdd(doc)));
-
-    // Important that this only is invoked after we have successfully
-    // cleared and reindex the docs so that the table cannot end up in an
-    // invalid state.
-    this.globalContext.update(
-      "curEmbeddingsProviderId",
-      embeddingsProvider.embeddingId,
-    );
-
-    console.log("Completed reindexing of all non-preindexed docs");
   }
 }

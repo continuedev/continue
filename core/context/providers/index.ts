@@ -1,5 +1,6 @@
 import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
+import ClipboardContextProvider from "./ClipboardContextProvider";
 
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
@@ -11,6 +12,7 @@ import DiscordContextProvider from "./DiscordContextProvider";
 import DocsContextProvider from "./DocsContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
 import FolderContextProvider from "./FolderContextProvider";
+import GitCommitContextProvider from "./GitCommitContextProvider";
 import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
 import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
 import GoogleContextProvider from "./GoogleContextProvider";
@@ -27,7 +29,6 @@ import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import WebContextProvider from "./WebContextProvider";
-import GitCommitContextProvider from "./GitCommitContextProvider"
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
@@ -64,6 +65,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   WebContextProvider,
   MCPContextProvider,
   GitCommitContextProvider,
+  ClipboardContextProvider,
 ];
 
 export function contextProviderClassFromName(

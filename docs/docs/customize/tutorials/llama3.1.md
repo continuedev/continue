@@ -1,7 +1,7 @@
 ---
 title: Using Llama 3.1 with Continue
 description: How to use Llama 3.1 with Continue
-keywords: [llama, meta, togetherai, ollama, replicate]
+keywords: [llama, meta, togetherai, novita, ollama, replicate]
 ---
 
 Continue makes it easy to code with the latest open-source models, including the entire Llama 3.1 family of models. Llama 3.2 models are also supported but not recommended for chat, because they are specifically designed to be small or multi-modal.

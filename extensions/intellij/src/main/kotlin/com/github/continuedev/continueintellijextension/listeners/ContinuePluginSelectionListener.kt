@@ -28,6 +28,10 @@ class ContinuePluginSelectionListener(
     private var lastActiveEditor: Editor? = null
 
     override fun selectionChanged(e: SelectionEvent) {
+        if (e.editor.isDisposed || e.editor.project?.isDisposed == true) {
+            return
+        }
+
         debouncer.debounce { handleSelection(e) }
     }
 
@@ -106,6 +110,19 @@ class ContinuePluginSelectionListener(
             ApplicationManager.getApplication().invokeLater {
                 val document = editor.document
                 val (startLine, endLine, isFullLineSelection) = getSelectionInfo(model, document)
+
+                // Check if entire file is selected
+                val isEntireFileSelected = model.selectionStart == 0 &&
+                        model.selectionEnd == document.textLength
+
+                // Scroll to top if entire file selected so that the user can see the input
+                if (isEntireFileSelected) {
+                    editor.scrollingModel.scrollTo(
+                        LogicalPosition(0, 0),
+                        com.intellij.openapi.editor.ScrollType.CENTER
+                    )
+                }
+
                 val selectionTopY = calculateSelectionTopY(editor, startLine, endLine, isFullLineSelection)
                 val tooltipX = calculateTooltipX(editor, document, startLine, endLine, isFullLineSelection)
 

@@ -36,8 +36,4 @@ export type RefreshIndexResults = {
   removeTag: PathAndCacheKey[];
 };
 
-export type LastModifiedMap = {
-  [path: string]: number;
-};
-
 export type RefreshIndex = (tag: IndexTag) => Promise<RefreshIndexResults>;

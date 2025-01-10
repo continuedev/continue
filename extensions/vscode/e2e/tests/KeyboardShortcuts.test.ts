@@ -8,16 +8,16 @@ import {
   WebView,
   WebElement,
   until,
+  Key,
 } from "vscode-extension-tester";
 import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { GUIActions } from "../actions/GUI.actions";
 import { expect } from "chai";
 import { TestUtils } from "../TestUtils";
-import { Test } from "mocha";
 import { KeyboardShortcutsActions } from "../actions/KeyboardShortcuts.actions";
 
-describe("Cmd+L Shortcut Test", () => {
+describe("Keyboard Shortcuts", () => {
   let driver: WebDriver;
   let editor: TextEditor;
   let view: WebView;
@@ -49,6 +49,59 @@ describe("Cmd+L Shortcut Test", () => {
     await new EditorView().closeAllEditors();
   });
 
+  it("Should correctly undo and redo using keyboard shortcuts when writing a chat message", async () => {
+    await GUIActions.executeFocusContinueInputShortcut(driver);
+    ({ view } = await GUIActions.switchToReactIframe());
+    const chatInput = await TestUtils.waitForSuccess(async () => {
+      return GUISelectors.getMessageInputFieldAtIndex(view, 0);
+    });
+
+    await chatInput.sendKeys("HELLO ");
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
+
+    await chatInput.sendKeys("WORLD ");
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
+
+    await chatInput.sendKeys("HELLO ");
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
+
+    await chatInput.sendKeys("CONTINUE");
+    await TestUtils.waitForTimeout(DEFAULT_TIMEOUT.XS);
+
+    await chatInput.sendKeys(TestUtils.osControlKey + "z");
+    await driver.wait(
+      until.elementTextIs(chatInput, "HELLO WORLD"),
+      DEFAULT_TIMEOUT.SM,
+    );
+
+    await chatInput.sendKeys(TestUtils.osControlKey + "z");
+    await driver.wait(until.elementTextIs(chatInput, ""), DEFAULT_TIMEOUT.SM);
+
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
+    await driver.wait(
+      until.elementTextIs(chatInput, "HELLO"),
+      DEFAULT_TIMEOUT.SM,
+    );
+
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
+    await driver.wait(
+      until.elementTextIs(chatInput, "HELLO WORLD"),
+      DEFAULT_TIMEOUT.SM,
+    );
+
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
+    await driver.wait(
+      until.elementTextIs(chatInput, "HELLO WORLD HELLO"),
+      DEFAULT_TIMEOUT.SM,
+    );
+
+    await chatInput.sendKeys(Key.SHIFT + TestUtils.osControlKey + "z");
+    await driver.wait(
+      until.elementTextIs(chatInput, "HELLO WORLD HELLO CONTINUE"),
+      DEFAULT_TIMEOUT.SM,
+    );
+  }).timeout(DEFAULT_TIMEOUT.XL);
+
   it("Should not create a code block when Cmd+L is pressed without text highlighted", async () => {
     const text = "Hello, world!";
 
@@ -77,6 +130,8 @@ describe("Cmd+L Shortcut Test", () => {
     expect(await textInput.isDisplayed()).to.equal(true);
 
     await GUIActions.executeFocusContinueInputShortcut(driver);
+
+    await driver.wait(until.elementIsNotVisible(textInput), DEFAULT_TIMEOUT.XS);
     expect(await textInput.isDisplayed()).to.equal(false);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
@@ -116,7 +171,7 @@ describe("Cmd+L Shortcut Test", () => {
 
     await driver.wait(until.elementIsNotVisible(textInput), DEFAULT_TIMEOUT.XS);
     expect(await textInput.isDisplayed()).to.equal(false);
-  }).timeout(DEFAULT_TIMEOUT.XL * 1000);
+  }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Should create a code block when Cmd+L is pressed with text highlighted", async () => {
     const text = "Hello, world!";

@@ -165,7 +165,8 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     title: "Scaleway",
     provider: "scaleway",
     refPage: "scaleway",
-    description: "Use the Scaleway Generative APIs to instantly access leading open models",
+    description:
+      "Use the Scaleway Generative APIs to instantly access leading open models",
     longDescription: `Hosted in European data centers, ideal for developers requiring low latency, full data privacy, and compliance with EU AI Act. You can generate your API key in [Scaleway's console](https://console.scaleway.com/generative-api/models). Get started:\n1. Create an API key [here](https://console.scaleway.com/iam/api-keys/)\n2. Paste below\n3. Select a model preset`,
     params: {
       apiKey: "",
@@ -403,6 +404,35 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       return p;
     }),
     apiKeyUrl: "https://api.together.xyz/settings/api-keys",
+  },
+  novita: {
+    title: "NovitaAI",
+    provider: "novita",
+    refPage: "novita",
+    description:
+      "Use Novita AI API for extremely fast streaming of open-source models",
+    icon: "novita.png",
+    longDescription: `[Novita AI](https://novita.ai?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) offers an affordable, reliable, and simple inference platform with scalable [LLM APIs](https://novita.ai/docs/model-api/reference/introduction.html), empowering developers to build AI applications. To get started with Novita AI:\n1. Obtain an API key from [here](https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link)\n2. Paste below\n3. Select a model preset`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Novita AI API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.llama318BChat, models.mistralChat].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl:
+      "https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link",
   },
   gemini: {
     title: "Google Gemini API",

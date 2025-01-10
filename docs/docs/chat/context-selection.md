@@ -15,7 +15,7 @@ The highlighted code you’ve selected by pressing <kbd>cmd/ctrl</kbd> + <kbd>L<
 
 ## Active file
 
-You can include the currently open file as context by pressing <kbd>cmd</kbd> + <kbd>opt</kbd> + <kbd>enter</kbd> (Mac) or <kbd>ctrl</kbd> + <kbd>alt</kbd> + <kbd>enter</kbd> (Windows) when you send your request.
+You can include the currently open file as context by pressing <kbd>opt</kbd> + <kbd>enter</kbd> (Mac) or <kbd>alt</kbd> + <kbd>enter</kbd> (Windows) when you send your request at Chat window(Prompt can't be empty).
 
 ## Specific file
 

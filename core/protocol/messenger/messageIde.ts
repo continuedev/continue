@@ -1,8 +1,9 @@
-import { GetGhTokenArgs, ToIdeFromWebviewOrCoreProtocol } from "../ide";
 import { FromIdeProtocol } from "..";
+import { GetGhTokenArgs, ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
 import type {
   ContinueRcJson,
+  FileStatsMap,
   FileType,
   IDE,
   IdeInfo,
@@ -43,8 +44,8 @@ export class MessageIde implements IDE {
   getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
     return this.request("getGitHubAuthToken", args);
   }
-  getLastModified(files: string[]): Promise<{ [path: string]: number }> {
-    return this.request("getLastModified", { files });
+  getFileStats(files: string[]): Promise<FileStatsMap> {
+    return this.request("getFileStats", { files });
   }
   getGitRootPath(dir: string): Promise<string | undefined> {
     return this.request("getGitRootPath", { dir });

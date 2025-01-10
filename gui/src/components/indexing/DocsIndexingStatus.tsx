@@ -5,9 +5,9 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
+  ExclamationTriangleIcon,
   PauseCircleIcon,
   TrashIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
@@ -24,10 +24,11 @@ const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
   complete: CheckCircleIcon,
   aborted: null,
   pending: null,
-  failed: XMarkIcon, // Since we show an error message below
+  failed: ExclamationTriangleIcon, // Since we show an error message below
 };
 
 function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
+  const config = useAppSelector((store) => store.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
 
@@ -146,28 +147,30 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
 
       <div className="flex flex-row items-center justify-between gap-4">
         <span
-          className={`cursor-pointer whitespace-nowrap text-xs text-stone-500 underline`}
+          className={`cursor-pointer whitespace-nowrap text-xs text-stone-500 ${config.disableIndexing ? "" : "underline"}`}
           onClick={
-            {
-              complete: reIndex,
-              indexing: abort,
-              failed: reIndex,
-              aborted: reIndex,
-              paused: () => {},
-              pending: () => {},
-            }[status?.status]
+            config.disableIndexing
+              ? undefined
+              : {
+                  complete: reIndex,
+                  indexing: abort,
+                  failed: reIndex,
+                  aborted: reIndex,
+                  paused: () => {},
+                  pending: () => {},
+                }[status?.status]
           }
         >
-          {
-            {
-              complete: "Click to re-index",
-              indexing: "Cancel indexing",
-              failed: "Click to retry",
-              aborted: "Click to index",
-              paused: "",
-              pending: "",
-            }[status?.status]
-          }
+          {config.disableIndexing
+            ? "Indexing disabled"
+            : {
+                complete: "Click to re-index",
+                indexing: "Cancel indexing",
+                failed: "Click to retry",
+                aborted: "Click to index",
+                paused: "",
+                pending: "",
+              }[status?.status]}
         </span>
 
         <span className="lines lines-1 text-right text-xs text-stone-500">

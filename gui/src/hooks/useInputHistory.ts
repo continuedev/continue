@@ -52,9 +52,9 @@ export function useInputHistory(historyKey: string) {
     ) {
       setCurrentIndex(inputHistory.length);
       return;
-    } else {
-      setCurrentIndex(inputHistory.length + 1);
     }
+
+    setCurrentIndex(inputHistory.length + 1);
     setInputHistory((prev) => {
       return [...prev, inputValue].slice(-MAX_HISTORY_LENGTH);
     });

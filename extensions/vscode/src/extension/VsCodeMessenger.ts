@@ -9,25 +9,25 @@ import {
 import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
+import { InProcessMessenger, Message } from "core/protocol/messenger";
 import {
   CORE_TO_WEBVIEW_PASS_THROUGH,
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
-import { InProcessMessenger, Message } from "core/protocol/messenger";
+import { stripImages } from "core/util/messageContent";
+import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
-import { stripImages } from "core/util/messageContent";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { getUriPathBasename } from "core/util/uri";
-import { showTutorial } from "../util/tutorial";
 
 /**
  * A shared messenger class between Core and Webview
@@ -134,7 +134,7 @@ export class VsCodeMessenger {
         status: "streaming",
         fileContent: data.text,
       });
-      console.log("applyToFile", data);
+
       if (data.filepath) {
         const fileExists = await this.ide.fileExists(data.filepath);
         if (!fileExists) {
@@ -171,7 +171,12 @@ export class VsCodeMessenger {
 
       // Get LLM from config
       const configHandler = await configHandlerPromise;
-      const config = await configHandler.loadConfig();
+      const { config } = await configHandler.loadConfig();
+
+      if (!config) {
+        vscode.window.showErrorMessage("Config not loaded");
+        return;
+      }
 
       let llm = getModelByRole(config, "applyCodeBlock");
 
@@ -473,8 +478,8 @@ export class VsCodeMessenger {
       return await ide.gotoDefinition(msg.data.location);
     });
 
-    this.onWebviewOrCore("getLastModified", async (msg) => {
-      return await ide.getLastModified(msg.data.files);
+    this.onWebviewOrCore("getFileStats", async (msg) => {
+      return await ide.getFileStats(msg.data.files);
     });
 
     this.onWebviewOrCore("getGitRootPath", async (msg) => {

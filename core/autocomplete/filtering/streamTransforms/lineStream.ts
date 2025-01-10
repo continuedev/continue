@@ -317,6 +317,19 @@ export async function* skipLines(stream: LineStream): LineStream {
 }
 
 /**
+ * Handles cases where original lines have a trailing whitespace, but new lines do not.
+ * @param {LineStream} stream - The input stream of lines.
+ * @yields {string} Filtered lines that are stripped of trailing whitespace
+ */
+export async function* removeTrailingWhitespace(
+  stream: LineStream,
+): LineStream {
+  for await (const line of stream) {
+    yield line.trimEnd();
+  }
+}
+
+/**
  * Filters and processes lines from a code block, removing unnecessary markers and handling edge cases.
  *
  * @param {LineStream} rawLines - The input stream of lines to filter.
