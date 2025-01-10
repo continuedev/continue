@@ -384,9 +384,12 @@ export class Core {
     });
 
     on("clipboardCache/add", (msg) => {
-      console.log("ADD TO CLIPBOARD", msg);
-      clipboardCache.add(uuidv4(), msg.data.content);
-      this.messenger.send("refreshSubmenuItems", undefined);
+      const added = clipboardCache.add(uuidv4(), msg.data.content);
+      if (added) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["clipboard"],
+        });
+      }
     });
 
     async function* llmStreamChat(
@@ -948,7 +951,9 @@ export class Core {
       }
     }
 
-    this.messenger.send("refreshSubmenuItems", undefined);
+    this.messenger.send("refreshSubmenuItems", {
+      providers: "dependsOnIndexing",
+    });
     this.indexingCancellationController = undefined;
   }
 
@@ -979,7 +984,9 @@ export class Core {
       }
     }
 
-    this.messenger.send("refreshSubmenuItems", undefined);
+    this.messenger.send("refreshSubmenuItems", {
+      providers: "dependsOnIndexing",
+    });
   }
 
   // private

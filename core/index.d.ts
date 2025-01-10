@@ -216,6 +216,10 @@ export interface ContextSubmenuItem {
   metadata?: any;
 }
 
+export interface ContextSubmenuItemWithProvider extends ContextSubmenuItem {
+  providerTitle: string;
+}
+
 export interface SiteIndexingConfig {
   title: string;
   startUrl: string;
