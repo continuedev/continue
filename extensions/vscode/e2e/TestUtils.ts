@@ -1,9 +1,6 @@
 import { expect } from "chai";
-import {
-  Key,
-  WebElement,
-  waitForAttributeValue,
-} from "vscode-extension-tester";
+import { Key } from "vscode-extension-tester";
+
 import { DEFAULT_TIMEOUT } from "./constants";
 
 export class TestUtils {

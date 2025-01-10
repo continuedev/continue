@@ -1,3 +1,4 @@
+import { expect } from "chai";
 import {
   EditorView,
   WebView,
@@ -7,12 +8,12 @@ import {
   VSBrowser,
   until,
 } from "vscode-extension-tester";
-import { expect } from "chai";
+
+import { GlobalActions } from "../actions/Global.actions";
 import { GUIActions } from "../actions/GUI.actions";
+import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
-import { DEFAULT_TIMEOUT } from "../constants";
-import { GlobalActions } from "../actions/Global.actions";
 
 describe("GUI Test", () => {
   let view: WebView;
