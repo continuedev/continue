@@ -109,7 +109,7 @@ export function getModelByRole<T extends keyof ModelRoles>(
  * See here for details: https://github.com/continuedev/continue/issues/940
  */
 export function isSupportedLanceDbCpuTarget(ide: IDE) {
-  const CPU_FEATURES_TO_CHECK = ["avx", "fma"] as const;
+  const CPU_FEATURES_TO_CHECK = ["avx2", "fma"] as const;
 
   const globalContext = new GlobalContext();
   const globalContextVal = globalContext.get("isSupportedLanceDbCpuTarget");
