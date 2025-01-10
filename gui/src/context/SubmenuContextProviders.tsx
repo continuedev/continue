@@ -1,20 +1,12 @@
 import {
   ContextProviderDescription,
   ContextProviderName,
-  ContextSubmenuItem,
   ContextSubmenuItemWithProvider,
 } from "core";
 import { createContext } from "react";
 import { deduplicateArray } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "./IdeMessenger";
 import { selectSubmenuContextProviders } from "../redux/selectors";
 import { useWebviewListener } from "../hooks/useWebviewListener";
@@ -23,7 +15,6 @@ import {
   getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
 } from "core/util/uri";
-import { truncate } from "fs";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -48,9 +39,6 @@ const initialContextProviders: SubtextContextProvidersContextType = {
 const SubmenuContextProvidersContext =
   createContext<SubtextContextProvidersContextType>(initialContextProviders);
 
-/*
-
-*/
 export const SubmenuContextProvidersProvider = ({
   children,
 }: {

@@ -299,7 +299,6 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      console.log("Load SUMBENU ITEMS", msg);
       const config = await this.config();
       if (!config) {
         return [];
