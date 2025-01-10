@@ -135,6 +135,10 @@ function loadSerializedConfig(
     };
   }
 
+  if (config.allowAnonymousTelemetry === undefined) {
+    config.allowAnonymousTelemetry = true;
+  }
+
   if (config.ui?.getChatTitles === undefined) {
     config.ui = {
       ...config.ui,
