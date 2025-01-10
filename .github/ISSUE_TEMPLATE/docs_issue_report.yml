@@ -36,7 +36,7 @@ body:
       description: Provide the URL of the specific page where you encountered the issue.
       placeholder: "https://docs.continue.dev/path/to/page"
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: details
