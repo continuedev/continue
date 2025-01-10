@@ -739,9 +739,11 @@ const getCommandsMap: (
       if (fullScreenTab && fullScreenPanel) {
         // Full screen open, but not focused - focus it
         fullScreenPanel.reveal();
-        vscode.commands.executeCommand("continue.focusContinueInput");
         return;
       }
+
+      // Clear the sidebar to prevent overwriting changes made in fullscreen 
+      vscode.commands.executeCommand("continue.newSession")
 
       // Full screen not open - open it
       captureCommandTelemetry("openFullScreen");
@@ -767,7 +769,7 @@ const getCommandsMap: (
         true,
       );
 
-      panel.onDidChangeViewState(() => {
+      const sessionLoader = panel.onDidChangeViewState(() => {
         vscode.commands.executeCommand("continue.newSession");
         if (sessionId) {
           vscode.commands.executeCommand(
@@ -775,6 +777,7 @@ const getCommandsMap: (
             sessionId,
           );
         }
+        sessionLoader.dispose()
       });
 
       // When panel closes, reset the webview and focus

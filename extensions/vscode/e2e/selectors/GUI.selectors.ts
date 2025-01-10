@@ -1,4 +1,5 @@
-import { By, until, WebDriver, WebView } from "vscode-extension-tester";
+import { By, WebDriver, WebView } from "vscode-extension-tester";
+
 import { SelectorUtils } from "./SelectorUtils";
 
 export class GUISelectors {

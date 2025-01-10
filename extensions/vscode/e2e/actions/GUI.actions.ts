@@ -6,9 +6,10 @@ import {
   WebView,
   Workbench,
 } from "vscode-extension-tester";
+
+import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
-import { DEFAULT_TIMEOUT } from "../constants";
 
 export class GUIActions {
   public static moveContinueToSidebar = async (driver: WebDriver) => {

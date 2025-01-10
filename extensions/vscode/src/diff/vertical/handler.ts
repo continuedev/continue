@@ -359,7 +359,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       // Clear deletion buffer
       await this.insertDeletionBuffer();
 
-      this.reapplyWithMeyersDiff(diffLines);
+      await this.reapplyWithMeyersDiff(diffLines);
 
       this.options.onStatusUpdate(
         "done",
@@ -386,6 +386,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
     startLine: number,
     numGreen: number,
     numRed: number,
+    skipStatusUpdate?: boolean,
   ) {
     if (numGreen > 0) {
       // Delete the editor decoration
@@ -415,15 +416,18 @@ export class VerticalDiffHandler implements vscode.Disposable {
     // Shift the codelens objects
     this.shiftCodeLensObjects(startLine, offset);
 
-    const numDiffs =
-      this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
+    if (!skipStatusUpdate) {
+      const numDiffs =
+        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
 
-    const status = numDiffs === 0 ? "closed" : undefined;
-    this.options.onStatusUpdate(
-      status,
-      numDiffs,
-      this.editor.document.getText(),
-    );
+      const status = numDiffs === 0 ? "closed" : undefined;
+
+      this.options.onStatusUpdate(
+        status,
+        numDiffs,
+        this.editor.document.getText(),
+      );
+    }
   }
 
   private shiftCodeLensObjects(startLine: number, offset: number) {
@@ -482,11 +486,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
    * we have received all of the diff lines.
    */
   async reapplyWithMeyersDiff(diffLines: DiffLine[]) {
-    // First, we reset the original diff by deleting any new lines and clearing decorations
-    for (const range of this.greenDecorationManager.getRanges()) {
-      await this.deleteLinesAt(
-        range.start.line,
-        range.end.line - range.start.line + 1,
+    // First, we reset the original diff by rejecting all pending diff blocks
+    for (const block of this.editorToVerticalDiffCodeLens.get(this.fileUri) ??
+      []) {
+      await this.acceptRejectBlock(
+        false,
+        block.start,
+        block.numGreen,
+        block.numRed,
+        true,
       );
     }
 
