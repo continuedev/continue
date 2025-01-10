@@ -58,26 +58,3 @@ body:
       label: Expected Content
       description: If applicable, provide the content you believe should be added or updated.
       placeholder: "Suggested details or changes for the documentation..."
-
-  - type: textarea
-    id: additional-info
-    attributes:
-      label: Additional Information
-      description: Add any other relevant information that may help us understand and resolve your issue.
-      placeholder: "Additional context, screenshots, or related links..."
-
-  - type: input
-    id: related-issue
-    attributes:
-      label: Related Issue
-      description: If this issue is related to an existing GitHub issue, provide the issue number.
-      placeholder: "#123"
-
-  - type: checkboxes
-    id: terms
-    attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/continuedev/continue/blob/main/CODE_OF_CONDUCT.md)
-      options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
