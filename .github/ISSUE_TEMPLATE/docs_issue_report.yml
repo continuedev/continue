@@ -1,0 +1,75 @@
+---
+name: 📖 Documentation Issue Report
+description: Use this form to report issues related to the documentation
+labels: [area:docs]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thank you for helping us improve our documentation!
+
+        We appreciate your feedback.
+
+        ## Contributing
+
+        - Contribute directly by clicking "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev).
+        - Learn about running a local copy of the docs in [CONTRIBUTE.md](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md#-updating--improving-documentation)
+
+  - type: checkboxes
+    id: doc-issue-category
+    attributes:
+      label: What kind of problem are you reporting?
+      description: Please select a category.
+      options:
+        - label: Undocumentated feature or missing documentation
+          required: false
+        - label: Existing article contains incorrect or out-of-date documentation
+          required: false
+        - label: Existing article suggestion or improvement
+          required: false
+        - label: Broken link or dead link
+          required: false
+        - label: Documentation organization issue or improvement
+          required: false
+        - label: Other (please describe below)
+          required: false
+
+  - type: input
+    id: page-url
+    attributes:
+      label: URL of the affected documentation page
+      description: Provide the URL to the specific documentation page where you encountered the issue.
+      placeholder: "https://docs.continue.dev/"
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Description of the issue
+      description: Please describe the issue in detail. If there is missing information or outdated content, provide specifics about what should be added or updated.
+      value: |
+        Example:
+        * Missing section on ...
+        * Incorrect information stating ...
+        * Outdated example code ...
+
+  - type: input
+    id: expected-content
+    attributes:
+      label: Expected content (optional)
+      description: If applicable, provide the content you believe should be added or updated.
+      placeholder: "Expected details to include in the documentation..."
+
+  - type: input
+    id: additional-info
+    attributes:
+      label: Additional Information (optional)
+      description: Feel free to add any other relevant information that may help us understand and resolve your issue.
+      placeholder: "Additional details..."
+
+  - type: input
+    id: related-issue
+    attributes:
+      label: Related Issue (optional)
+      description: Is this issue related to another existing GitHub issue?
+      placeholder: "e.g., #123"
