@@ -130,7 +130,10 @@ tasks {
     // Configure UI tests plugin
     // Read more: https://github.com/JetBrains/intellij-ui-test-robot
     runIdeForUiTests {
-        environment("CONTINUE_GLOBAL_DIR", "src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue")
+        environment(
+            "CONTINUE_GLOBAL_DIR",
+            "${rootProject.projectDir}/src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue"
+        )
         systemProperty("robot-server.port", "8082")
         systemProperty("ide.mac.message.dialogs.as.sheets", "false")
         systemProperty("jb.privacy.policy.text", "<!--999.999-->")
@@ -141,6 +144,7 @@ tasks {
         systemProperty("idea.trust.all.projects", "true")
         systemProperty("ide.show.tips.on.startup.default.value", "false")
         systemProperty("ide.browser.jcef.jsQueryPoolSize", "10000")
+        systemProperty("ide.browser.jcef.contextMenu.devTools.enabled", "true")
 
         // This is to ensure we load the GUI with OSR enabled. We have logic that
         // renders with OSR disabled below a particular IDE version.
@@ -180,6 +184,5 @@ tasks {
 
     test {
         useJUnitPlatform()
-        environment("CONTINUE_GLOBAL_DIR", "src/test/kotlin/com/github/continuedev/continueintellijextension/e2e/test-continue")
     }
 }
