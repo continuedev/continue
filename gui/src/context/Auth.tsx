@@ -24,7 +24,7 @@ import { IdeMessengerContext } from "./IdeMessenger";
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
   logout: () => void;
-  login: (useOnboarding: boolean) => void;
+  login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | undefined;
   profiles: ProfileDescription[];
   controlServerBetaEnabled: boolean;
@@ -55,36 +55,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     (state) => state.misc.lastControlServerBetaEnabledStatus,
   );
 
-  const login = (useOnboarding: boolean) => {
-    ideMessenger
-      .request("getControlPlaneSessionInfo", {
-        silent: false,
-        useOnboarding,
-      })
-      .then((result) => {
-        if (result.status === "error") {
-          return;
-        }
-        const session = result.content;
-        setSession(session);
+  const login: AuthContextType["login"] = (useOnboarding: boolean) => {
+    return new Promise((resolve) => {
+      ideMessenger
+        .request("getControlPlaneSessionInfo", {
+          silent: false,
+          useOnboarding,
+        })
+        .then((result) => {
+          if (result.status === "error") {
+            resolve(false);
+            return;
+          }
 
-        // If this is the first time the user has logged in, explain how profiles work
-        if (!getLocalStorage("shownProfilesIntroduction")) {
-          dispatch(setShowDialog(true));
-          dispatch(
-            setDialogMessage(
-              <ConfirmationDialog
-                title="Welcome to Continue for Teams!"
-                text="You can switch between your local profile and team profile using the profile icon in the top right. Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
-                hideCancelButton={true}
-                confirmText="Ok"
-                onConfirm={() => {}}
-              />,
-            ),
-          );
-          setLocalStorage("shownProfilesIntroduction", true);
-        }
-      });
+          const session = result.content;
+          setSession(session);
+
+          // If this is the first time the user has logged in, explain how profiles work
+          if (!getLocalStorage("shownProfilesIntroduction")) {
+            dispatch(setShowDialog(true));
+            dispatch(
+              setDialogMessage(
+                <ConfirmationDialog
+                  title="Welcome to Continue for Teams!"
+                  text="You can switch between your local profile and team profile using the profile icon in the top right. Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
+                  hideCancelButton={true}
+                  confirmText="Ok"
+                  onConfirm={() => {}}
+                />,
+              ),
+            );
+            setLocalStorage("shownProfilesIntroduction", true);
+          }
+
+          resolve(true);
+        });
+    });
   };
 
   const logout = () => {

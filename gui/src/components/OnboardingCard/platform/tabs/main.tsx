@@ -13,8 +13,11 @@ export default function MainTab({
   const auth = useAuth();
 
   function onGetStarted() {
-    auth.login(true);
-    onboardingCard.close();
+    auth.login(true).then((success) => {
+      if (success) {
+        onboardingCard.close();
+      }
+    });
   }
 
   return (
