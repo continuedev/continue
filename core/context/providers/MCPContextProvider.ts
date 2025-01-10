@@ -73,7 +73,15 @@ class MCPContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    return (this.options as MCPContextProviderOptions).submenuItems;
+    return (this.options as MCPContextProviderOptions).submenuItems.map(
+      (item, index) => ({
+        ...item,
+        id: JSON.stringify({
+          mcpId: String(index),
+          uri: item.id,
+        }),
+      }),
+    );
   }
 }
 

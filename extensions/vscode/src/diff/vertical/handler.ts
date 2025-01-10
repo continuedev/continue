@@ -343,6 +343,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
   async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
     let diffLines = [];
+
     try {
       // As an indicator of loading
       this.updateIndexLineDecorations();
@@ -358,7 +359,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       // Clear deletion buffer
       await this.insertDeletionBuffer();
 
-      this.reapplyWithMeyersDiff(diffLines);
+      await this.reapplyWithMeyersDiff(diffLines);
 
       this.options.onStatusUpdate(
         "done",
@@ -385,6 +386,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
     startLine: number,
     numGreen: number,
     numRed: number,
+    skipStatusUpdate?: boolean,
   ) {
     if (numGreen > 0) {
       // Delete the editor decoration
@@ -414,15 +416,18 @@ export class VerticalDiffHandler implements vscode.Disposable {
     // Shift the codelens objects
     this.shiftCodeLensObjects(startLine, offset);
 
-    const numDiffs =
-      this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
+    if (!skipStatusUpdate) {
+      const numDiffs =
+        this.editorToVerticalDiffCodeLens.get(this.fileUri)?.length ?? 0;
 
-    const status = numDiffs === 0 ? "closed" : undefined;
-    this.options.onStatusUpdate(
-      status,
-      numDiffs,
-      this.editor.document.getText(),
-    );
+      const status = numDiffs === 0 ? "closed" : undefined;
+
+      this.options.onStatusUpdate(
+        status,
+        numDiffs,
+        this.editor.document.getText(),
+      );
+    }
   }
 
   private shiftCodeLensObjects(startLine: number, offset: number) {
@@ -481,9 +486,21 @@ export class VerticalDiffHandler implements vscode.Disposable {
    * we have received all of the diff lines.
    */
   async reapplyWithMeyersDiff(diffLines: DiffLine[]) {
+    // First, we reset the original diff by rejecting all pending diff blocks
+    for (const block of this.editorToVerticalDiffCodeLens.get(this.fileUri) ??
+      []) {
+      await this.acceptRejectBlock(
+        false,
+        block.start,
+        block.numGreen,
+        block.numRed,
+        true,
+      );
+    }
+
     this.clearDecorations();
 
-    // First, get our old/new file content based on the diff lines
+    // Then, get our old/new file content based on the original lines
     const oldFileContent = diffLines
       .filter((line) => line.type === "same" || line.type === "old")
       .map((line) => line.line)
@@ -498,59 +515,48 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     const meyersDiffLines = diffs.map((diff) => diff.line).join("\n");
 
-    // Then, we overwrite the potentially miscalcualted diff blocks with our Meyers Diff
-    const fullRange = new vscode.Range(
-      this.editor.document.positionAt(0),
-      this.editor.document.positionAt(this.editor.document.getText().length),
-    );
-
-    await this.editor.edit(
-      (editBuilder) => {
-        editBuilder.replace(fullRange, meyersDiffLines);
-      },
-      {
-        undoStopAfter: false,
-        undoStopBefore: false,
-      },
-    );
-
-    let currentBlock = {
-      start: 0,
-      numRed: 0,
-      numGreen: 0,
-    };
-
-    const blocks: VerticalDiffCodeLens[] = [];
+    // Then, we insert our diff lines
+    await this.editor.edit((editBuilder) => {
+      editBuilder.replace(this.range, meyersDiffLines),
+        {
+          undoStopAfter: false,
+          undoStopBefore: false,
+        };
+    });
 
     // Lastly, we apply decorations
+    let numRed = 0;
+    let numGreen = 0;
+
+    const codeLensBlocks: VerticalDiffCodeLens[] = [];
+
     diffs.forEach((diff, index) => {
       if (diff.type === "old") {
-        this.redDecorationManager.addLine(index);
-        currentBlock.numRed++;
+        this.redDecorationManager.addLine(this.startLine + index);
+        numRed++;
       } else if (diff.type === "new") {
-        this.greenDecorationManager.addLine(index);
-        currentBlock.numGreen++;
-      } else if (
-        diff.type === "same" &&
-        (currentBlock.numRed > 0 || currentBlock.numGreen > 0)
-      ) {
-        blocks.push({
-          ...currentBlock,
-          start: index - currentBlock.numRed - currentBlock.numGreen,
+        this.greenDecorationManager.addLine(this.startLine + index);
+        numGreen++;
+      } else if (diff.type === "same" && (numRed > 0 || numGreen > 0)) {
+        codeLensBlocks.push({
+          numRed,
+          numGreen,
+          start: this.startLine + index - numRed - numGreen,
         });
-        currentBlock = {
-          start: index + 1,
-          numRed: 0,
-          numGreen: 0,
-        };
+        numRed = 0;
+        numGreen = 0;
       }
     });
 
-    if (currentBlock.numRed > 0 || currentBlock.numGreen > 0) {
-      blocks.push(currentBlock);
+    if (numRed > 0 || numGreen > 0) {
+      codeLensBlocks.push({
+        numGreen,
+        numRed,
+        start: this.startLine + diffs.length - numRed - numGreen,
+      });
     }
 
-    this.editorToVerticalDiffCodeLens.set(this.fileUri, blocks);
+    this.editorToVerticalDiffCodeLens.set(this.fileUri, codeLensBlocks);
     this.refreshCodeLens();
   }
 }

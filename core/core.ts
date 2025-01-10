@@ -12,7 +12,7 @@ import {
   setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { addModel, deleteModel } from "./config/util";
+import { addContextProvider, addModel, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -46,6 +46,7 @@ import * as URI from "uri-js";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import type { IMessenger, Message } from "./protocol/messenger";
 import { localPathToUri } from "./util/pathToUri";
+import { clipboardCache } from "./util/clipboardCache";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -280,6 +281,10 @@ export class Core {
       return this.configHandler.listProfiles();
     });
 
+    on("config/addContextProvider", async (msg) => {
+      addContextProvider(msg.data);
+    });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);
@@ -290,10 +295,11 @@ export class Core {
     });
 
     on("context/indexDocs", async (msg) => {
-      await this.docsService.syncOrReindexAllDocsWithPrompt(msg.data.reIndex);
+      await this.docsService.syncDocsWithPrompt(msg.data.reIndex);
     });
 
     on("context/loadSubmenuItems", async (msg) => {
+      console.log("Load SUMBENU ITEMS", msg);
       const config = await this.config();
       if (!config) {
         return [];
@@ -377,6 +383,12 @@ export class Core {
       };
     });
 
+    on("clipboardCache/add", (msg) => {
+      console.log("ADD TO CLIPBOARD", msg);
+      clipboardCache.add(uuidv4(), msg.data.content);
+      this.messenger.send("refreshSubmenuItems", undefined);
+    });
+
     async function* llmStreamChat(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
@@ -417,7 +429,6 @@ export class Core {
 
         const chunk = next.value;
 
-        // @ts-ignore
         yield { content: chunk };
         next = await gen.next();
       }
@@ -818,7 +829,7 @@ export class Core {
     });
     on("indexing/setPaused", async (msg) => {
       if (msg.data.type === "docs") {
-        // this.docsService.setPaused(msg.data.id, msg.data.paused);
+        // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
     });
     on("docs/getSuggestedDocs", async (msg) => {

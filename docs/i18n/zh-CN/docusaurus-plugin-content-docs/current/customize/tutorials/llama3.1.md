@@ -1,7 +1,7 @@
 ---
 title: Continue 使用 Llama 3.1
 description: Continue 如何使用 Llama 3.1
-keywords: [llama, meta, togetherai, ollama, replicate]
+keywords: [llama, meta, togetherai, novita, ollama, replicate]
 ---
 
 Continue 让使用最新的开元模型编码变得简单，包括整个 Llama 3.1 家族模型。

@@ -16,8 +16,8 @@ import {
 
 export interface CodeToEditListItemProps {
   code: CodeToEdit;
-  onDelete: (codeToEdit: CodeToEdit) => void;
-  onClickFilename: (codeToEdit: CodeToEdit) => void;
+  onDelete: (codeToEdit: CodeToEdit) => void | Promise<void>;
+  onClickFilename: (codeToEdit: CodeToEdit) => void | Promise<void>;
 }
 
 const NoPaddingWrapper = styled.div`
@@ -87,7 +87,7 @@ export default function CodeToEditListItem({
               className="flex-shrink-0 text-xs hover:underline"
               onClick={(e) => {
                 e.stopPropagation();
-                onClickFilename(code);
+                void onClickFilename(code);
               }}
             >
               {title}
@@ -98,7 +98,7 @@ export default function CodeToEditListItem({
           </div>
         </div>
 
-        <div className="invisible flex items-center gap-1.5 group-hover:visible">
+        <div className="invisible flex items-center group-hover:visible">
           <div className={`flex items-center ${isInsertion ? "hidden" : ""}`}>
             {showCodeSnippet ? (
               <ChevronDownIcon
@@ -122,7 +122,7 @@ export default function CodeToEditListItem({
             <XMarkIcon
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(code);
+                void onDelete(code);
               }}
               className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
             />

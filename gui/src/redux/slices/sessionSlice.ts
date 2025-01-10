@@ -116,7 +116,10 @@ export const sessionSlice = createSlice({
       state.isStreaming = true;
     },
     setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
-      state.history.at(-1).isGatheringContext = payload;
+      const curMessage = state.history.at(-1);
+      if (curMessage) {
+        curMessage.isGatheringContext = payload;
+      }
     },
     clearLastEmptyResponse: (state) => {
       if (state.history.length < 2) {
@@ -278,14 +281,14 @@ export const sessionSlice = createSlice({
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
       if (state.history.length) {
+        const lastItem = state.history[state.history.length - 1];
+        const lastMessage = lastItem.message;
         for (const message of action.payload) {
-          const lastMessage = state.history[state.history.length - 1];
-
           if (
             message.role &&
-            (lastMessage.message.role !== message.role ||
+            (lastMessage.role !== message.role ||
               // This is when a tool call comes after assistant text
-              (lastMessage.message.content !== "" &&
+              (lastMessage.content !== "" &&
                 message.role === "assistant" &&
                 message.toolCalls?.length))
           ) {
@@ -297,51 +300,60 @@ export const sessionSlice = createSlice({
               },
               contextItems: [],
             };
-
-            if (message.role === "assistant" && message.toolCalls) {
-              const [_, parsedArgs] = incrementalParseJson(
-                message.toolCalls[0].function.arguments,
-              );
-              historyItem.toolCallState = {
-                status: "generating",
-                toolCall: message.toolCalls[0] as ToolCall,
-                toolCallId: message.toolCalls[0].id,
-                parsedArgs,
-              };
+            if (message.role === "assistant" && message.toolCalls?.[0]) {
+              const toolCalls = message.toolCalls?.[0];
+              if (toolCalls) {
+                const [_, parsedArgs] = incrementalParseJson(
+                  message.toolCalls[0].function?.arguments ?? "{}",
+                );
+                historyItem.toolCallState = {
+                  status: "generating",
+                  toolCall: message.toolCalls[0] as ToolCall,
+                  toolCallId: message.toolCalls[0].id as ToolCall["id"],
+                  parsedArgs,
+                };
+              }
             }
 
             state.history.push(historyItem);
           } else {
             // Add to the existing message
-            const msg = state.history[state.history.length - 1].message;
             if (message.content) {
-              msg.content += renderChatMessage(message);
+              lastMessage.content += renderChatMessage(message);
             } else if (
               message.role === "assistant" &&
               message.toolCalls &&
-              msg.role === "assistant"
+              lastMessage.role === "assistant"
             ) {
-              if (!msg.toolCalls) {
-                msg.toolCalls = [];
+              if (!lastMessage.toolCalls) {
+                lastMessage.toolCalls = [];
               }
               message.toolCalls.forEach((toolCall, i) => {
-                if (msg.toolCalls.length <= i) {
-                  msg.toolCalls.push(toolCall);
+                if (lastMessage.toolCalls!.length <= i) {
+                  lastMessage.toolCalls!.push(toolCall);
                 } else {
-                  msg.toolCalls[i].function.arguments +=
-                    toolCall.function.arguments;
+                  if (
+                    toolCall?.function?.arguments &&
+                    lastMessage?.toolCalls?.[i]?.function?.arguments &&
+                    lastItem.toolCallState
+                  ) {
+                    lastMessage.toolCalls[i].function!.arguments +=
+                      toolCall.function.arguments;
 
-                  const [_, parsedArgs] = incrementalParseJson(
-                    msg.toolCalls[i].function.arguments,
-                  );
+                    const [_, parsedArgs] = incrementalParseJson(
+                      lastMessage.toolCalls[i].function!.arguments!,
+                    );
 
-                  state.history[
-                    state.history.length - 1
-                  ].toolCallState.parsedArgs = parsedArgs;
-                  state.history[
-                    state.history.length - 1
-                  ].toolCallState.toolCall.function.arguments +=
-                    toolCall.function.arguments;
+                    lastItem.toolCallState.parsedArgs = parsedArgs;
+                    lastItem.toolCallState.toolCall.function.arguments +=
+                      toolCall.function.arguments;
+                  } else {
+                    console.error(
+                      "Unexpected tool call format received - this message added during gui strict null checks",
+                      message,
+                      lastMessage,
+                    );
+                  }
                 }
               });
             }
@@ -472,8 +484,10 @@ export const sessionSlice = createSlice({
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
     ) => {
-      state.history[state.curCheckpointIndex].checkpoint[payload.filepath] =
-        payload.content;
+      const checkpoint = state.history[state.curCheckpointIndex].checkpoint;
+      if (checkpoint) {
+        checkpoint[payload.filepath] = payload.content;
+      }
     },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(

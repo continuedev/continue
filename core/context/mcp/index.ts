@@ -72,6 +72,7 @@ class MCPConnection {
         return new StdioClientTransport({
           command: options.transport.command,
           args: options.transport.args,
+          env: options.transport.env,
         });
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));

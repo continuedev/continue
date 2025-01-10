@@ -1,3 +1,4 @@
+import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
 
 class ContinueQuickFixProvider implements vscode.CodeActionProvider {
@@ -42,6 +43,15 @@ class ContinueQuickFixProvider implements vscode.CodeActionProvider {
 }
 
 export default function registerQuickFixProvider() {
+  const isDisabled =
+    !!vscode.workspace
+      .getConfiguration(EXTENSION_NAME)
+      .get<boolean>("disableQuickFix") === true;
+
+  if (isDisabled) {
+    return;
+  }
+
   // In your extension's activate function:
   vscode.languages.registerCodeActionsProvider(
     { language: "*" },

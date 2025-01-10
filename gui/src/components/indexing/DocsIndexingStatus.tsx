@@ -28,6 +28,7 @@ const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
 };
 
 function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
+  const config = useAppSelector((store) => store.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
 
@@ -149,28 +150,30 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
 
       <div className="flex flex-row items-center justify-between gap-4">
         <span
-          className={`cursor-pointer whitespace-nowrap text-xs text-stone-500 underline`}
+          className={`cursor-pointer whitespace-nowrap text-xs text-stone-500 ${config.disableIndexing ? "" : "underline"}`}
           onClick={
-            {
-              complete: reIndex,
-              indexing: abort,
-              failed: reIndex,
-              aborted: reIndex,
-              paused: () => {},
-              pending: () => {},
-            }[status?.status]
+            config.disableIndexing
+              ? undefined
+              : {
+                  complete: reIndex,
+                  indexing: abort,
+                  failed: reIndex,
+                  aborted: reIndex,
+                  paused: () => {},
+                  pending: () => {},
+                }[status?.status]
           }
         >
-          {
-            {
-              complete: "Click to re-index",
-              indexing: "Cancel indexing",
-              failed: "Click to retry",
-              aborted: "Click to index",
-              paused: "",
-              pending: "",
-            }[status?.status]
-          }
+          {config.disableIndexing
+            ? "Indexing disabled"
+            : {
+                complete: "Click to re-index",
+                indexing: "Cancel indexing",
+                failed: "Click to retry",
+                aborted: "Click to index",
+                paused: "",
+                pending: "",
+              }[status?.status]}
         </span>
 
         <span className="lines lines-1 text-right text-xs text-stone-500">

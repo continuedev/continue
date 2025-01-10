@@ -739,9 +739,11 @@ const getCommandsMap: (
       if (fullScreenTab && fullScreenPanel) {
         // Full screen open, but not focused - focus it
         fullScreenPanel.reveal();
-        vscode.commands.executeCommand("continue.focusContinueInput");
         return;
       }
+
+      // Clear the sidebar to prevent overwriting changes made in fullscreen 
+      vscode.commands.executeCommand("continue.newSession")
 
       // Full screen not open - open it
       captureCommandTelemetry("openFullScreen");
@@ -767,7 +769,7 @@ const getCommandsMap: (
         true,
       );
 
-      panel.onDidChangeViewState(() => {
+      const sessionLoader = panel.onDidChangeViewState(() => {
         vscode.commands.executeCommand("continue.newSession");
         if (sessionId) {
           vscode.commands.executeCommand(
@@ -775,6 +777,7 @@ const getCommandsMap: (
             sessionId,
           );
         }
+        sessionLoader.dispose()
       });
 
       // When panel closes, reset the webview and focus
@@ -1001,7 +1004,10 @@ const getCommandsMap: (
   };
 };
 
-const registerCopyBufferSpy = (context: vscode.ExtensionContext) => {
+const registerCopyBufferSpy = (
+  context: vscode.ExtensionContext,
+  core: Core,
+) => {
   const typeDisposable = vscode.commands.registerCommand(
     "editor.action.clipboardCopyAction",
     async (arg) => doCopy(typeDisposable),
@@ -1013,6 +1019,12 @@ const registerCopyBufferSpy = (context: vscode.ExtensionContext) => {
     await vscode.commands.executeCommand("editor.action.clipboardCopyAction");
 
     const clipboardText = await vscode.env.clipboard.readText();
+
+    if (clipboardText) {
+      core.invoke("clipboardCache/add", {
+        content: clipboardText,
+      });
+    }
 
     await context.workspaceState.update("continue.copyBuffer", {
       text: clipboardText,
@@ -1043,7 +1055,7 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
-  registerCopyBufferSpy(context);
+  registerCopyBufferSpy(context, core);
 
   for (const [command, callback] of Object.entries(
     getCommandsMap(

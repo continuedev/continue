@@ -44,7 +44,7 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
 
 export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
-  language: string;
+  language: string | null;
   relativeFilepath: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
@@ -93,12 +93,12 @@ export default function StepContainerPreToolbar(
     if (!defaultModel) {
       return;
     }
-    
+
     const fileUri = await inferResolvedUriFromRelativePath(
       props.relativeFilepath,
       ideMessenger.ide,
     );
-    
+
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: fileUri,
@@ -131,18 +131,19 @@ export default function StepContainerPreToolbar(
     }
   }, [props.children, codeBlockContent]);
 
-  useEffect(() => {
-    const hasCompletedGenerating =
-      wasGeneratingRef.current && !isGeneratingCodeBlock;
+  // Temporarily disabling auto apply for Edit mode
+  // useEffect(() => {
+  //   const hasCompletedGenerating =
+  //     wasGeneratingRef.current && !isGeneratingCodeBlock;
 
-    const shouldAutoApply = hasCompletedGenerating && isInEditMode;
+  //   const shouldAutoApply = hasCompletedGenerating && isInEditMode;
 
-    if (shouldAutoApply) {
-      onClickApply();
-    }
+  //   if (shouldAutoApply) {
+  //     onClickApply();
+  //   }
 
-    wasGeneratingRef.current = isGeneratingCodeBlock;
-  }, [isGeneratingCodeBlock]);
+  //   wasGeneratingRef.current = isGeneratingCodeBlock;
+  // }, [isGeneratingCodeBlock]);
 
   async function onClickAcceptApply() {
     const fileUri = await inferResolvedUriFromRelativePath(

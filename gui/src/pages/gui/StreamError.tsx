@@ -44,15 +44,18 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   let statusCode: undefined | number = undefined;
 
   // Attempt to get error message and status code from error
-  if (error && (error instanceof Error || typeof error === "object")) {
-    if (error["message"]) {
-      message = error["message"];
-      const status = message?.split(" ")[0];
-      if (status) {
-        const code = Number(status);
-        if (!Number.isNaN(statusCode)) {
-          statusCode = code;
-        }
+  if (
+    error &&
+    (error instanceof Error || typeof error === "object") &&
+    "message" in error &&
+    typeof error["message"] === "string"
+  ) {
+    message = error["message"];
+    const status = message?.split(" ")[0];
+    if (status) {
+      const code = Number(status);
+      if (!Number.isNaN(statusCode)) {
+        statusCode = code;
       }
     }
   }
