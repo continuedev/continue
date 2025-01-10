@@ -513,7 +513,7 @@ class IntelliJIDE(
 
     override suspend fun listDir(dir: String): List<List<Any>> {
         val files = File(URI(dir)).listFiles()?.map {
-            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY else FileType.FILE)
+            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY.value else FileType.FILE.value)
         } ?: emptyList()
 
         return files
