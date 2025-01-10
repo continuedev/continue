@@ -3,6 +3,7 @@ import { ControlPlaneSessionInfo } from "../control-plane/client";
 import type {
   ContinueRcJson,
   DiffLine,
+  FileStatsMap,
   FileType,
   IDE,
   IdeInfo,
@@ -84,7 +85,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
-  getLastModified: [{ files: string[] }, { [path: string]: number }];
+  getFileStats: [{ files: string[] }, FileStatsMap];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 

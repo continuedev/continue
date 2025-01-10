@@ -74,7 +74,7 @@ describe.skip("DocsService Integration Tests", () => {
     expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(true);
 
     // config.json check
-    expect(latestConfig.docs).toContainEqual(mockSiteConfig);
+    expect(latestConfig.config!.docs).toContainEqual(mockSiteConfig);
 
     // Lance DB check
     let retrievedChunks = await docsService.retrieveChunksFromQuery(
@@ -92,7 +92,7 @@ describe.skip("DocsService Integration Tests", () => {
 
     // config.json check
     latestConfig = await getReloadedConfig();
-    expect(latestConfig.docs).not.toContainEqual(
+    expect(latestConfig.config!.docs).not.toContainEqual(
       expect.objectContaining(mockSiteConfig),
     );
 

@@ -180,6 +180,7 @@
             "bedrockimport",
             "sagemaker",
             "together",
+            "novita",
             "ollama",
             "huggingface-tgi",
             "huggingface-inference-api",
@@ -222,6 +223,7 @@
             "### Bedrock Imported Models\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
             "### Sagemaker\nSagemaker is AWS' machine learning platform.",
             "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/togetherllm)",
+            "### Novita AI\n[Novita AI](https://novita.ai?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) offers an affordable, reliable, and simple inference platform with scalable [LLM APIs](https://novita.ai/docs/model-api/reference/introduction.html), empowering developers to build AI applications. To get started with Novita AI:\n1. Obtain an API key from [here](https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/novita)",
             "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/ollama)",
             "### Huggingface TGI\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfacetgi)",
             "### Huggingface Inference API\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfaceinferenceapi)",
@@ -262,7 +264,7 @@
         },
         "apiKey": {
           "title": "Api Key",
-          "description": "OpenAI, Anthropic, Cohere, Together, or other API key",
+          "description": "OpenAI, Anthropic, Cohere, Together, Novita AI, or other API key",
           "type": "string"
         },
         "apiBase": {
@@ -475,6 +477,7 @@
                   "huggingface-inference-api",
                   "replicate",
                   "together",
+                  "novita",
                   "cloudflare",
                   "sambanova",
                   "nebius",
@@ -976,6 +979,44 @@
                 ],
                 "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models).",
                 "x-intellij-html-description": "Select a pre-defined option, or find an exact model string from Together AI <a href='https://docs.together.ai/docs/inference-models'>here</a>."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["novita"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "llama3-8b",
+                      "llama3-70b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.3-70b",
+                      "mistral-nemo",
+                      "mistral-7b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find an exact model string from Novita AI [here](https://novita.ai/llm-api?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link).",
+                "x-intellij-html-description": "Select a pre-defined option, or find an exact model string from Novita AI <a href='https://novita.ai/llm-api?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link'>here</a>."
               }
             }
           }
@@ -1864,7 +1905,8 @@
                 "os",
                 "repo-map",
                 "greptile",
-                "web"
+                "web",
+                "clipboard"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -2805,10 +2847,7 @@
                     "type": "object",
                     "properties": {
                       "model": {
-                        "enum": [
-                          "cohere.rerank-v3-5:0",
-                          "amazon.rerank-v1:0"
-                        ]
+                        "enum": ["cohere.rerank-v3-5:0", "amazon.rerank-v1:0"]
                       }
                     },
                     "required": ["model"]
@@ -3132,62 +3171,72 @@
               "description": "Allow tool use. Currently only supported with Claude 3.5 Sonnet",
               "default": true
             },
-            "modelContextProtocolServer": {
-              "type": "object",
-              "properties": {
-                "transport": {
-                  "oneOf": [
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": ["stdio"]
-                        },
-                        "command": {
-                          "type": "string"
-                        },
-                        "args": {
-                          "type": "array",
-                          "items": {
+            "modelContextProtocolServers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "transport": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": ["stdio"]
+                          },
+                          "command": {
                             "type": "string"
+                          },
+                          "args": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "env": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string"
+                            },
+                            "description": "Environment variables to pass to the command"
                           }
-                        }
-                      },
-                      "required": ["type", "command", "args"]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": ["websocket"]
                         },
-                        "url": {
-                          "type": "string",
-                          "format": "uri"
-                        }
+                        "required": ["type", "command", "args"]
                       },
-                      "required": ["type", "url"]
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": ["sse"]
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": ["websocket"]
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          }
                         },
-                        "url": {
-                          "type": "string",
-                          "format": "uri"
-                        }
+                        "required": ["type", "url"]
                       },
-                      "required": ["type", "url"]
-                    }
-                  ]
-                }
-              },
-              "required": ["transport"]
+                      {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string",
+                            "enum": ["sse"]
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        },
+                        "required": ["type", "url"]
+                      }
+                    ]
+                  }
+                },
+                "required": ["transport"]
+              }
             }
           }
         }

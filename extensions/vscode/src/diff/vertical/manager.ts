@@ -3,13 +3,13 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
+import * as URI from "uri-js";
 import * as vscode from "vscode";
 
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
-import * as URI from "uri-js";
 
 export interface VerticalDiffCodeLens {
   start: number;

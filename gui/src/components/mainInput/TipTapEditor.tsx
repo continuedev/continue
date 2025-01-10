@@ -5,7 +5,13 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
-import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
+import {
+  AnyExtension,
+  Editor,
+  EditorContent,
+  JSONContent,
+  useEditor,
+} from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
@@ -71,6 +77,7 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
+import { MockExtension } from "./FillerExtension";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -174,6 +181,8 @@ interface TipTapEditorProps {
   placeholder?: string;
   historyKey: string;
 }
+
+export const TIPPY_DIV_ID = "tippy-js-div";
 
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useAppDispatch();
@@ -299,7 +308,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
-  const editor: Editor = useEditor({
+  const editor: Editor | null = useEditor({
     extensions: [
       Document,
       History,
@@ -339,6 +348,10 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
           });
           return [plugin];
+        },
+      }).configure({
+        HTMLAttributes: {
+          class: "editor-image bg-black object-contain max-h-[250px] w-full",
         },
       }),
       Placeholder.configure({
@@ -386,6 +399,7 @@ function TipTapEditor(props: TipTapEditorProps) {
               if (isStreamingRef.current) {
                 return true;
               }
+              return false;
             },
             "Shift-Enter": () =>
               this.editor.commands.first(({ commands }) => [
@@ -411,6 +425,7 @@ function TipTapEditor(props: TipTapEditorProps) {
                 }, 0);
                 return true;
               }
+              return false;
             },
             Escape: () => {
               if (inDropdownRef.current || !isInEditModeRef.current) {
@@ -443,6 +458,7 @@ function TipTapEditor(props: TipTapEditorProps) {
                 }, 0);
                 return true;
               }
+              return false;
             },
           };
         },
@@ -524,7 +540,7 @@ function TipTapEditor(props: TipTapEditorProps) {
               return props.node.attrs.label;
             },
           })
-        : undefined,
+        : MockExtension,
       CodeBlockExtension,
     ],
     editorProps: {
@@ -556,6 +572,9 @@ function TipTapEditor(props: TipTapEditorProps) {
   }
 
   useEffect(() => {
+    if (!editor) {
+      return;
+    }
     const placeholder = getPlaceholderText(
       props.placeholder,
       historyLengthRef.current,
@@ -570,9 +589,9 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   useEffect(() => {
     if (props.isMainInput) {
-      editor.commands.clearContent(true);
+      editor?.commands.clearContent(true);
     }
-  }, [isInEditMode, props.isMainInput]);
+  }, [editor, isInEditMode, props.isMainInput]);
 
   useEffect(() => {
     if (editor) {
@@ -609,6 +628,10 @@ function TipTapEditor(props: TipTapEditorProps) {
    *  with those key actions.
    */
   const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!editor) {
+      return;
+    }
+
     setActiveKey(e.key);
 
     if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
@@ -626,6 +649,9 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
+      if (!editor) {
+        return;
+      }
       if (isStreaming || isEditModeAndNoCodeToEdit) {
         return;
       }
@@ -637,12 +663,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      props.onEnter(json, modifiers, editor);
-
       if (props.isMainInput) {
-        const content = editor.state.toJSON().doc;
-        addRef.current(content);
+        addRef.current(json);
       }
+
+      props.onEnter(json, modifiers, editor);
     },
     [props.onEnter, editor, props.isMainInput],
   );
@@ -654,7 +679,7 @@ function TipTapEditor(props: TipTapEditorProps) {
        * commands are redundant, especially the ones inside
        * useTimeout.
        */
-      editor.commands.focus();
+      editor?.commands.focus();
     }
   }, [props.isMainInput, editor]);
 
@@ -674,7 +699,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
     queueMicrotask(() => {
-      editor.commands.setContent(mainInputContentTrigger);
+      editor?.commands.setContent(mainInputContentTrigger);
     });
     dispatch(setMainEditorContentTrigger(undefined));
   }, [editor, props.isMainInput, mainInputContentTrigger]);
@@ -847,7 +872,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "isContinueInputFocused",
     async () => {
-      return props.isMainInput && editorFocusedRef.current;
+      return props.isMainInput && !!editorFocusedRef.current;
     },
     [editorFocusedRef, props.isMainInput],
     !props.isMainInput,
@@ -897,6 +922,9 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
+      if (!editor) {
+        return;
+      }
       const text = editor.getText();
       if (!text.endsWith(char)) {
         if (text.length > 0 && !text.endsWith(" ")) {
@@ -916,7 +944,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       onKeyUp={handleKeyUp}
       className="cursor-text"
       onClick={() => {
-        editor && editor.commands.focus();
+        editor?.commands.focus();
       }}
       onDragOver={(event) => {
         event.preventDefault();
@@ -936,6 +964,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       }}
       onDrop={(event) => {
         if (
+          !defaultModel ||
           !modelSupportsImages(
             defaultModel.provider,
             defaultModel.model,
@@ -947,11 +976,17 @@ function TipTapEditor(props: TipTapEditorProps) {
         }
         setShowDragOverMsg(false);
         let file = event.dataTransfer.files[0];
-        handleImageFile(file).then(([img, dataUrl]) => {
-          const { schema } = editor.state;
-          const node = schema.nodes.image.create({ src: dataUrl });
-          const tr = editor.state.tr.insert(0, node);
-          editor.view.dispatch(tr);
+        handleImageFile(file).then((result) => {
+          if (!editor) {
+            return;
+          }
+          if (result) {
+            const [_, dataUrl] = result;
+            const { schema } = editor.state;
+            const node = schema.nodes.image.create({ src: dataUrl });
+            const tr = editor.state.tr.insert(0, node);
+            editor.view.dispatch(tr);
+          }
         });
         event.preventDefault();
       }}
@@ -972,13 +1007,19 @@ function TipTapEditor(props: TipTapEditorProps) {
           onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
           onEnter={onEnterRef.current}
           onImageFileSelected={(file) => {
-            handleImageFile(file).then(([img, dataUrl]) => {
-              const { schema } = editor.state;
-              const node = schema.nodes.image.create({ src: dataUrl });
-              editor.commands.command(({ tr }) => {
-                tr.insert(0, node);
-                return true;
-              });
+            handleImageFile(file).then((result) => {
+              if (!editor) {
+                return;
+              }
+              if (result) {
+                const [_, dataUrl] = result;
+                const { schema } = editor.state;
+                const node = schema.nodes.image.create({ src: dataUrl });
+                editor.commands.command(({ tr }) => {
+                  tr.insert(0, node);
+                  return true;
+                });
+              }
             });
           }}
           disabled={isStreaming}
@@ -987,22 +1028,17 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       {showDragOverMsg &&
         modelSupportsImages(
-          defaultModel.provider,
-          defaultModel.model,
-          defaultModel.title,
-          defaultModel.capabilities,
+          defaultModel?.provider || "",
+          defaultModel?.model || "",
+          defaultModel?.title,
+          defaultModel?.capabilities,
         ) && (
           <>
             <HoverDiv></HoverDiv>
             <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
           </>
         )}
-      <div
-        id="tippy-js-div"
-        style={{
-          position: "fixed",
-        }}
-      />
+      <div id={TIPPY_DIV_ID} className="fixed z-50" />
     </InputBoxDiv>
   );
 }

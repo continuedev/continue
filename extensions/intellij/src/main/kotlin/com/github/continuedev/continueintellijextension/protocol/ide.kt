@@ -58,4 +58,4 @@ data class GetGitRootPathParams(val dir: String)
 
 data class ListDirParams(val dir: String)
 
-data class GetLastModifiedParams(val files: List<String>)
+data class GetFileStatsParams(val files: List<String>)

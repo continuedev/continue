@@ -1,16 +1,17 @@
+import { ChatMessage, DiffLine, ILLM, Prediction } from "../";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   filterLeadingAndTrailingNewLineInsertion,
+  removeTrailingWhitespace,
   skipLines,
   stopAtLines,
-} from "../autocomplete/filtering/streamTransforms/lineStream.js";
-import { streamDiff } from "../diff/streamDiff.js";
-import { streamLines } from "../diff/util.js";
-import { ChatMessage, DiffLine, ILLM, Prediction } from "../index.js";
-import { gptEditPrompt } from "../llm/templates/edit.js";
-import { Telemetry } from "../util/posthog.js";
+} from "../autocomplete/filtering/streamTransforms/lineStream";
+import { streamDiff } from "../diff/streamDiff";
+import { streamLines } from "../diff/util";
+import { gptEditPrompt } from "../llm/templates/edit";
+import { Telemetry } from "../util/posthog";
 
 function constructPrompt(
   prefix: string,
@@ -110,6 +111,7 @@ export async function* streamDiffLines(
   lines = filterCodeBlockLines(lines);
   lines = stopAtLines(lines, () => {});
   lines = skipLines(lines);
+  lines = removeTrailingWhitespace(lines);
   if (inept) {
     // lines = fixCodeLlamaFirstLineIndentation(lines);
     lines = filterEnglishLinesAtEnd(lines);

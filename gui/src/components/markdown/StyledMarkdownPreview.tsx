@@ -1,5 +1,5 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useContext, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -26,9 +26,10 @@ import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { ToolTip } from "../gui/Tooltip";
 import { v4 as uuidv4 } from "uuid";
+import { ContextItemWithId, RangeInFileWithContents } from "core";
+import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -43,8 +44,7 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    margin: 10px 0;
-    padding: 6px 8px;
+    padding: 16px 8px;
   }
 
   code {
@@ -141,34 +141,34 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
 
-  // Grab context items that are this one or further back
+  // The logic here is to get file names from
+  // 1. Context items found in past messages
+  // 2. Toolbar Codeblocks found in past messages
   const history = useAppSelector((state) => state.session.history);
-  const previousFileContextItems = useMemo(() => {
+  const allSymbols = useAppSelector((state) => state.session.symbols);
+  const pastFileInfo = useMemo(() => {
     const index = props.itemIndex;
     if (index === undefined) {
-      return [];
+      return {
+        symbols: [],
+        rifs: [],
+      };
     }
-    const previousItems = history.flatMap((item, i) =>
-      i <= index ? item.contextItems : [],
+    const pastContextItems = getContextItemsFromHistory(history, index);
+    const rifs = pastContextItems.map((item) =>
+      ctxItemToRifWithContents(item, true),
     );
-    return previousItems.filter(
-      (item) => item.uri?.type === "file" && item?.uri?.value,
-    );
-  }, [props.itemIndex, history]);
-  const previousFileContextItemsRef = useUpdatingRef(previousFileContextItems);
-
-  // Extract global symbols for files matching previous context items
-  const allSymbols = useAppSelector((state) => state.session.symbols);
-  const previousFileContextItemSymbols = useMemo(() => {
-    const uniqueUris = new Set(
-      previousFileContextItems.map((item) => item.uri!.value!),
-    );
-    return Object.entries(allSymbols)
-      .filter((e) => uniqueUris.has(e[0]))
+    const symbols = Object.entries(allSymbols)
+      .filter((e) => pastContextItems.find((item) => item.uri!.value === e[0]))
       .map((f) => f[1])
       .flat();
-  }, [allSymbols, previousFileContextItems]);
-  const symbolsRef = useUpdatingRef(previousFileContextItemSymbols);
+
+    return {
+      symbols,
+      rifs,
+    };
+  }, [props.itemIndex, history, allSymbols]);
+  const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -230,7 +230,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     ],
     rehypeReactOptions: {
       components: {
-        a: ({ node, ...aProps }) => {
+        a: ({ ...aProps }) => {
           const tooltipId = uuidv4();
 
           return (
@@ -249,7 +249,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </>
           );
         },
-        pre: ({ node, ...preProps }) => {
+        pre: ({ ...preProps }) => {
           const codeBlockIndex = preProps["data-codeblockindex"];
 
           const preChildProps = preProps?.children?.[0]?.props ?? {};
@@ -295,29 +295,32 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </StepContainerPreToolbar>
           );
         },
-        code: ({ node, ...codeProps }) => {
+        code: ({ ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (content && previousFileContextItemsRef.current) {
+          if (content) {
+            const { symbols, rifs } = pastFileInfoRef.current;
+
             // Insert file links for matching previous context items
-            const ctxItem = previousFileContextItemsRef.current.find((item) =>
-              item.uri!.value!.includes(content),
-            );
-            if (ctxItem) {
-              const rif = ctxItemToRifWithContents(ctxItem);
-              return <FilenameLink rif={rif} />;
+            // With some reasonable limitations on what might be a filename
+            if (rifs.length && content.includes(".") && content.length > 2) {
+              const match = rifs.find(
+                (rif) => rif.filepath.split("/").pop() === content, // Exact match for last segment of URI
+              );
+
+              if (match) {
+                return <FilenameLink rif={match} />;
+              }
             }
 
             // Insert symbols for exact matches
-            const exactSymbol = symbolsRef.current.find(
-              (s) => s.name === content,
-            );
+            const exactSymbol = symbols.find((s) => s.name === content);
             if (exactSymbol) {
               return <SymbolLink content={content} symbol={exactSymbol} />;
             }
 
             // Partial matches - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
-            const partialSymbol = symbolsRef.current.find((s) =>
+            const partialSymbol = symbols.find((s) =>
               content.startsWith(s.name),
             );
             if (partialSymbol) {

@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.editor
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
 import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
@@ -11,6 +12,7 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
+import com.intellij.util.application
 import java.awt.*
 import javax.swing.BorderFactory
 import javax.swing.JButton
@@ -41,7 +43,14 @@ class VerticalDiffBlock(
     }
 
     fun clearEditorUI() {
-        deletionInlay?.dispose()
+        deletionInlay?.let {
+            // Ensure that dispose is executed on EDT
+            if (application.isDispatchThread) {
+                it.dispose()
+            } else {
+                invokeLater { it.dispose() }
+            }
+        }
         removeGreenHighlighters()
         removeButtons()
     }

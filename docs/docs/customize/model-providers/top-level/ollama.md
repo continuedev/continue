@@ -30,7 +30,7 @@ We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
   "tabAutocompleteModel": {
     "title": "Qwen2.5-Coder 1.5B",
     "provider": "ollama",
-    "model": "qwen2.5-coder:1.5b"
+    "model": "qwen2.5-coder:1.5b-base"
   }
 }
 ```
@@ -53,3 +53,20 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
 Ollama currently does not offer any reranking models.
 
 [Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+
+## Using a remote instance
+
+To configure a remote instance of Ollama, add the `"apiBase"` property to your model in config.json:
+
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "Llama3.1 8B",
+      "provider": "ollama",
+      "model": "llama3.1:8b"
+      "apiBase": "http://<my endpoint>:11434"
+    }
+  ]
+}
+```

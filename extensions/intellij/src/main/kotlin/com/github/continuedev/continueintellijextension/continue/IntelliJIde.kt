@@ -513,15 +513,15 @@ class IntelliJIDE(
 
     override suspend fun listDir(dir: String): List<List<Any>> {
         val files = File(URI(dir)).listFiles()?.map {
-            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY else FileType.FILE)
+            listOf(it.name, if (it.isDirectory) FileType.DIRECTORY.value else FileType.FILE.value)
         } ?: emptyList()
 
         return files
     }
 
-    override suspend fun getLastModified(files: List<String>): Map<String, Long> {
+    override suspend fun getFileStats(files: List<String>): Map<String, FileStats> {
         return files.associateWith { file ->
-            File(URI(file)).lastModified()
+            FileStats(File(URI(file)).lastModified(), File(URI(file)).length())
         }
     }
 

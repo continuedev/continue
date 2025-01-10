@@ -36,7 +36,7 @@ export default function EditActions({ index, item }: EditActionsProps) {
   // const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
   const hasPendingApplies = pendingApplyStates.length > 0;
 
-  if (isStreaming) return;
+  if (isStreaming) return null;
 
   return (
     <div
