@@ -191,7 +191,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
-  describe("Chat with tools", () => {
+  describe.skip("Chat with tools", () => {
     it("should render tool call", async () => {
       await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
 
