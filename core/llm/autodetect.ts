@@ -86,12 +86,17 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
 ];
 
+const PROVIDER_TOOL_SUPPORT: Record<string, string[]> = {
+  anthropic: ["claude-3-5", "claude-3.5"],
+  ollama: ["llama3.1"],
+};
+
 function modelSupportsTools(modelName: string, provider: string) {
-  return (
-    provider === "anthropic" &&
-    modelName.includes("claude") &&
-    (modelName.includes("3-5") || modelName.includes("3.5"))
-  );
+  const providerSupport = PROVIDER_TOOL_SUPPORT[provider];
+  if (!providerSupport) {
+    return false;
+  }
+  return !!providerSupport.some((part) => modelName.includes(part));
 }
 
 function modelSupportsImages(

@@ -1,12 +1,17 @@
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  Tool,
+} from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
-type OllamaChatMessage = ChatMessage & { images?: string[] };
+type OllamaChatMessage = ChatMessage & { images?: string[] | null };
 
 // See https://github.com/ollama/ollama/blob/main/docs/modelfile.md for details on each parameter
-interface ModelFileParams {
+interface OllamaModelFileParams {
   mirostat?: number;
   mirostat_eta?: number;
   mirostat_tau?: number;
@@ -21,23 +26,35 @@ interface ModelFileParams {
   top_k?: number;
   top_p?: number;
   min_p?: number;
-  // deprecated?
+
+  // deprecated or not directly supported here:
   num_thread?: number;
   use_mmap?: boolean;
   num_gqa?: number;
   num_gpu?: number;
+  num_keep?: number;
+  typical_p?: number;
+  presence_penalty?: number;
+  frequency_penalty?: number;
+  penalize_newline?: boolean;
+  numa?: boolean;
+  num_batch?: number;
+  main_gpu?: number;
+  low_vram?: boolean;
+  vocab_only?: boolean;
+  use_mlock?: boolean;
 }
 
 // See https://github.com/ollama/ollama/blob/main/docs/api.md
-interface BaseOptions {
+interface OllamaBaseOptions {
   model: string; // the model name
-  options?: ModelFileParams; // additional model parameters listed in the documentation for the Modelfile such as temperature
+  options?: OllamaModelFileParams; // additional model parameters listed in the documentation for the Modelfile such as temperature
   format?: "json"; // the format to return a response in. Currently, the only accepted value is json
   stream?: boolean; // if false the response will be returned as a single response object, rather than a stream of objects
   keep_alive?: number; // controls how long the model will stay loaded into memory following the request (default: 5m)
 }
 
-interface GenerateOptions extends BaseOptions {
+interface OllamaGenerateOptions extends OllamaBaseOptions {
   prompt: string; // the prompt to generate a response for
   suffix?: string; // the text after the model response
   images?: string[]; // a list of base64-encoded images (for multimodal models such as llava)
@@ -47,8 +64,18 @@ interface GenerateOptions extends BaseOptions {
   raw?: boolean; // if true no formatting will be applied to the prompt. You may choose to use the raw parameter if you are specifying a full templated prompt in your request to the API
 }
 
-interface ChatOptions extends BaseOptions {
+interface OllamaTool {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: any;
+  };
+}
+
+interface OllamaChatOptions extends OllamaBaseOptions {
   messages: OllamaChatMessage[]; // the messages of the chat, this can be used to keep a chat memory
+  tools?: OllamaTool[]; // the tools of the chat, this can be used to keep a tool memory
   // Not supported yet - tools: tools for the model to use if supported. Requires stream to be set to false
   // And correspondingly, tool calls in OllamaChatMessage
 }
@@ -130,56 +157,59 @@ class Ollama extends BaseLLM {
       });
   }
 
+  // Map of "continue model name" to Ollama actual model name
+  private modelMap: Record<string, string> = {
+    "mistral-7b": "mistral:7b",
+    "mixtral-8x7b": "mixtral:8x7b",
+    "llama2-7b": "llama2:7b",
+    "llama2-13b": "llama2:13b",
+    "codellama-7b": "codellama:7b",
+    "codellama-13b": "codellama:13b",
+    "codellama-34b": "codellama:34b",
+    "codellama-70b": "codellama:70b",
+    "llama3-8b": "llama3:8b",
+    "llama3-70b": "llama3:70b",
+    "llama3.1-8b": "llama3.1:8b",
+    "llama3.1-70b": "llama3.1:70b",
+    "llama3.1-405b": "llama3.1:405b",
+    "llama3.2-1b": "llama3.2:1b",
+    "llama3.2-3b": "llama3.2:3b",
+    "llama3.2-11b": "llama3.2:11b",
+    "llama3.2-90b": "llama3.2:90b",
+    "phi-2": "phi:2.7b",
+    "phind-codellama-34b": "phind-codellama:34b-v2",
+    "qwen2.5-coder-0.5b": "qwen2.5-coder:0.5b",
+    "qwen2.5-coder-1.5b": "qwen2.5-coder:1.5b",
+    "qwen2.5-coder-3b": "qwen2.5-coder:3b",
+    "qwen2.5-coder-7b": "qwen2.5-coder:7b",
+    "qwen2.5-coder-14b": "qwen2.5-coder:14b",
+    "qwen2.5-coder-32b": "qwen2.5-coder:32b",
+    "wizardcoder-7b": "wizardcoder:7b-python",
+    "wizardcoder-13b": "wizardcoder:13b-python",
+    "wizardcoder-34b": "wizardcoder:34b-python",
+    "zephyr-7b": "zephyr:7b",
+    "codeup-13b": "codeup:13b",
+    "deepseek-1b": "deepseek-coder:1.3b",
+    "deepseek-7b": "deepseek-coder:6.7b",
+    "deepseek-33b": "deepseek-coder:33b",
+    "neural-chat-7b": "neural-chat:7b-v3.3",
+    "starcoder-1b": "starcoder:1b",
+    "starcoder-3b": "starcoder:3b",
+    "starcoder2-3b": "starcoder2:3b",
+    "stable-code-3b": "stable-code:3b",
+    "granite-code-3b": "granite-code:3b",
+    "granite-code-8b": "granite-code:8b",
+    "granite-code-20b": "granite-code:20b",
+    "granite-code-34b": "granite-code:34b",
+  };
+
   private _getModel() {
-    return (
-      {
-        "mistral-7b": "mistral:7b",
-        "mixtral-8x7b": "mixtral:8x7b",
-        "llama2-7b": "llama2:7b",
-        "llama2-13b": "llama2:13b",
-        "codellama-7b": "codellama:7b",
-        "codellama-13b": "codellama:13b",
-        "codellama-34b": "codellama:34b",
-        "codellama-70b": "codellama:70b",
-        "llama3-8b": "llama3:8b",
-        "llama3-70b": "llama3:70b",
-        "llama3.1-8b": "llama3.1:8b",
-        "llama3.1-70b": "llama3.1:70b",
-        "llama3.1-405b": "llama3.1:405b",
-        "llama3.2-1b": "llama3.2:1b",
-        "llama3.2-3b": "llama3.2:3b",
-        "llama3.2-11b": "llama3.2:11b",
-        "llama3.2-90b": "llama3.2:90b",
-        "phi-2": "phi:2.7b",
-        "phind-codellama-34b": "phind-codellama:34b-v2",
-        "qwen2.5-coder-0.5b": "qwen2.5-coder:0.5b",
-        "qwen2.5-coder-1.5b": "qwen2.5-coder:1.5b",
-        "qwen2.5-coder-3b": "qwen2.5-coder:3b",
-        "qwen2.5-coder-7b": "qwen2.5-coder:7b",
-        "qwen2.5-coder-14b": "qwen2.5-coder:14b",
-        "qwen2.5-coder-32b": "qwen2.5-coder:32b",
-        "wizardcoder-7b": "wizardcoder:7b-python",
-        "wizardcoder-13b": "wizardcoder:13b-python",
-        "wizardcoder-34b": "wizardcoder:34b-python",
-        "zephyr-7b": "zephyr:7b",
-        "codeup-13b": "codeup:13b",
-        "deepseek-1b": "deepseek-coder:1.3b",
-        "deepseek-7b": "deepseek-coder:6.7b",
-        "deepseek-33b": "deepseek-coder:33b",
-        "neural-chat-7b": "neural-chat:7b-v3.3",
-        "starcoder-1b": "starcoder:1b",
-        "starcoder-3b": "starcoder:3b",
-        "starcoder2-3b": "starcoder2:3b",
-        "stable-code-3b": "stable-code:3b",
-        "granite-code-3b": "granite-code:3b",
-        "granite-code-8b": "granite-code:8b",
-        "granite-code-20b": "granite-code:20b",
-        "granite-code-34b": "granite-code:34b",
-      }[this.model] ?? this.model
-    );
+    return this.modelMap[this.model] ?? this.model;
   }
 
-  private _getModelFileParams(options: CompletionOptions): ModelFileParams {
+  private _getModelFileParams(
+    options: CompletionOptions,
+  ): OllamaModelFileParams {
     return {
       temperature: options.temperature,
       top_p: options.topP,
@@ -194,10 +224,16 @@ class Ollama extends BaseLLM {
     };
   }
 
-  private _convertMessage(message: ChatMessage) {
-    if (message.role === "tool") {
-      return null;
-    }
+  private _convertMessage(message: ChatMessage): OllamaChatMessage {
+    // if (message.role === "tool") {
+    //   return null;
+    // }
+    // if (message.role === "tool") {
+    //   return {
+    //     role: "tool",
+
+    //   };
+    // }
 
     if (typeof message.content === "string") {
       return message;
@@ -222,22 +258,27 @@ class Ollama extends BaseLLM {
   private _getChatOptions(
     options: CompletionOptions,
     messages: ChatMessage[],
-  ): ChatOptions {
-    return {
+  ): OllamaChatOptions {
+    const chatOptions: OllamaChatOptions = {
       model: this._getModel(),
-      messages: messages.map(this._convertMessage).filter(Boolean) as any,
+      messages: messages.map(this._convertMessage).filter(Boolean),
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
+    if (options.tools?.length) {
+      chatOptions.tools = options.tools;
+      chatOptions.stream = false; // Cannot set stream = true for tools calls
+    }
+    return chatOptions;
   }
 
   private _getGenerateOptions(
     options: CompletionOptions,
     prompt: string,
     suffix?: string,
-  ): GenerateOptions {
+  ): OllamaGenerateOptions {
     return {
       model: this._getModel(),
       prompt,
