@@ -1,6 +1,6 @@
 ---
 name: 📖 Documentation Issue Report
-description: Use this form to report issues related to the documentation
+description: Report issues related to the documentation
 labels: [area:docs]
 
 body:
@@ -8,68 +8,76 @@ body:
     attributes:
       value: |
         ## Thank you for helping us improve our documentation!
+        We appreciate your feedback. Before submitting, please check if a similar issue already exists.
 
-        We appreciate your feedback.
+        ### Quick Contribution Tips:
+        - Click "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev) to contribute directly.
+        - For local development, see [CONTRIBUTING.md](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md#-updating--improving-documentation).
 
-        ## Contributing
-
-        - Contribute directly by clicking "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev).
-        - Learn about running a local copy of the docs in [CONTRIBUTE.md](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md#-updating--improving-documentation)
-
-  - type: checkboxes
+  - type: dropdown
     id: doc-issue-category
     attributes:
-      label: What kind of problem are you reporting?
-      description: Please select a category.
+      label: Issue Category
+      description: Select the category that best describes your issue.
       options:
-        - label: Undocumentated feature or missing documentation
-          required: false
-        - label: Existing article contains incorrect or out-of-date documentation
-          required: false
-        - label: Existing article suggestion or improvement
-          required: false
-        - label: Broken link or dead link
-          required: false
-        - label: Documentation organization issue or improvement
-          required: false
-        - label: Other (please describe below)
-          required: false
+        - Undocumented feature or missing documentation
+        - Incorrect or outdated information
+        - Suggestion for existing article
+        - Broken or dead link
+        - Documentation organization issue
+        - Other (please describe in the details section)
+    validations:
+      required: true
 
   - type: input
     id: page-url
     attributes:
-      label: URL of the affected documentation page
-      description: Provide the URL to the specific documentation page where you encountered the issue.
-      placeholder: "https://docs.continue.dev/"
+      label: Affected Documentation Page URL
+      description: Provide the URL of the specific page where you encountered the issue.
+      placeholder: "https://docs.continue.dev/path/to/page"
+    validations:
+      required: true
 
   - type: textarea
     id: details
     attributes:
-      label: Description of the issue
-      description: Please describe the issue in detail. If there is missing information or outdated content, provide specifics about what should be added or updated.
-      value: |
-        Example:
-        * Missing section on ...
-        * Incorrect information stating ...
-        * Outdated example code ...
+      label: Issue Description
+      description: Please describe the issue in detail. Include specifics about missing information, outdated content, or improvements needed.
+      placeholder: |
+        Examples:
+        - Missing section on [topic]
+        - Incorrect information about [subject]
+        - Outdated example code for [feature]
+        - Suggestion to improve [section] by [details]
+    validations:
+      required: true
 
-  - type: input
+  - type: textarea
     id: expected-content
     attributes:
-      label: Expected content (optional)
+      label: Expected Content
       description: If applicable, provide the content you believe should be added or updated.
-      placeholder: "Expected details to include in the documentation..."
+      placeholder: "Suggested details or changes for the documentation..."
 
-  - type: input
+  - type: textarea
     id: additional-info
     attributes:
-      label: Additional Information (optional)
-      description: Feel free to add any other relevant information that may help us understand and resolve your issue.
-      placeholder: "Additional details..."
+      label: Additional Information
+      description: Add any other relevant information that may help us understand and resolve your issue.
+      placeholder: "Additional context, screenshots, or related links..."
 
   - type: input
     id: related-issue
     attributes:
-      label: Related Issue (optional)
-      description: Is this issue related to another existing GitHub issue?
-      placeholder: "e.g., #123"
+      label: Related Issue
+      description: If this issue is related to an existing GitHub issue, provide the issue number.
+      placeholder: "#123"
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/continuedev/continue/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
