@@ -25,8 +25,8 @@ export function AssistantSelect(props: AssistantSelectProps) {
   }
 
   return (
-    <div className="border-lightgray flex min-w-0 flex-col border-0 border-r-[0.5px] border-solid pt-0">
-      <div className={`max-h-[300px] overflow-y-scroll`}>
+    <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden border-0 border-r-[0.5px] border-solid pt-0">
+      <div className={`max-h-[300px]`}>
         {profiles.map((option, idx) => (
           <Option
             idx={idx}
@@ -65,7 +65,7 @@ export function AssistantSelect(props: AssistantSelectProps) {
       <div className="mt-auto w-full">
         <OptionDiv key={profiles.length} onClick={onNewAssistant}>
           <div className="flex items-center py-0.5">
-            <PlusIcon className="mr-2 h-4 w-4" />
+            <PlusIcon className="mr-2 h-4 w-4 flex-shrink-0" />
             New Assistant
           </div>
         </OptionDiv>
