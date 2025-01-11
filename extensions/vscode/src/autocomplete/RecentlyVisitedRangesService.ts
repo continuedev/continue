@@ -15,7 +15,7 @@ export class RecentlyVisitedRangesService {
     string,
     Array<AutocompleteCodeSnippet & { timestamp: number }>
   >;
-  // Default value, we override in setNumSurroundingLinesFromPostHogExperiment
+  // Default value, we override in initWithPostHog
   private numSurroundingLines = 5;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
@@ -39,7 +39,6 @@ export class RecentlyVisitedRangesService {
       );
 
     if (!recentlyVisitedRangesNumSurroundingLines) {
-      this.isEnabled = false;
       return;
     }
 
