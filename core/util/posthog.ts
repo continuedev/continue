@@ -106,12 +106,21 @@ export class Telemetry {
     }
   }
 
+  private static featureValueCache: Record<string, any> = {};
+
   static async getFeatureFlag(flag: PosthogFeatureFlag) {
-    return Telemetry.client?.getFeatureFlag(flag, Telemetry.uniqueId);
+    const value = Telemetry.client?.getFeatureFlag(flag, Telemetry.uniqueId);
+
+    Telemetry.featureValueCache[flag] = value;
+    return value;
   }
 
   static async getValueForFeatureFlag(flag: PosthogFeatureFlag) {
     try {
+      if (Telemetry.featureValueCache[flag]) {
+        return Telemetry.featureValueCache[flag];
+      }
+
       const userGroup = await Telemetry.getFeatureFlag(flag);
       if (typeof userGroup === "string") {
         return EXPERIMENTS[flag][userGroup].value;
