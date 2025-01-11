@@ -45,8 +45,8 @@ import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import * as URI from "uri-js";
 import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { localPathToUri } from "./util/pathToUri";
 import { clipboardCache } from "./util/clipboardCache";
+import { localPathToUri } from "./util/pathToUri";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -299,7 +299,6 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      console.log("Load SUMBENU ITEMS", msg);
       const config = await this.config();
       if (!config) {
         return [];
