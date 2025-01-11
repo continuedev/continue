@@ -81,9 +81,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useAppSelector(
     (state) => state.config.config.contextProviders,
   );
-  const useTools = useAppSelector(
-    (state) => state.config.config.experimental?.useTools !== false,
-  );
+  const useTools = useAppSelector((state) => state.ui.useTools);
   const editModeState = useAppSelector((state) => state.editModeState);
 
   const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
@@ -115,7 +113,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         enterText: editModeState.editStatus === "accepting" ? "Retry" : "Edit",
       }
     : {
-        hideTools: !useTools,
+        // hideTools: false,
       };
 
   return (

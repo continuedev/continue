@@ -1,14 +1,21 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  Tool,
-} from "../../index.js";
+import { JSONSchema, JSONSchemaType } from "openai/lib/jsonschema.mjs";
+
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
-type OllamaChatMessage = ChatMessage & { images?: string[] | null };
+type OllamaChatMessage = {
+  role: "tool" | "user" | "assistant" | "system";
+  content: string;
+  images?: string[] | null;
+  tool_calls?: {
+    function: {
+      name: string;
+      arguments: Record<string, JSONSchemaType>;
+    };
+  }[];
+};
 
 // See https://github.com/ollama/ollama/blob/main/docs/modelfile.md for details on each parameter
 interface OllamaModelFileParams {
@@ -54,7 +61,7 @@ interface OllamaBaseOptions {
   keep_alive?: number; // controls how long the model will stay loaded into memory following the request (default: 5m)
 }
 
-interface OllamaGenerateOptions extends OllamaBaseOptions {
+interface OllamaRawOptions extends OllamaBaseOptions {
   prompt: string; // the prompt to generate a response for
   suffix?: string; // the text after the model response
   images?: string[]; // a list of base64-encoded images (for multimodal models such as llava)
@@ -64,20 +71,56 @@ interface OllamaGenerateOptions extends OllamaBaseOptions {
   raw?: boolean; // if true no formatting will be applied to the prompt. You may choose to use the raw parameter if you are specifying a full templated prompt in your request to the API
 }
 
-interface OllamaTool {
-  type: "function";
-  function: {
-    name: string;
-    description: string;
-    parameters: any;
-  };
-}
-
 interface OllamaChatOptions extends OllamaBaseOptions {
   messages: OllamaChatMessage[]; // the messages of the chat, this can be used to keep a chat memory
   tools?: OllamaTool[]; // the tools of the chat, this can be used to keep a tool memory
   // Not supported yet - tools: tools for the model to use if supported. Requires stream to be set to false
   // And correspondingly, tool calls in OllamaChatMessage
+}
+
+type OllamaBaseResponse = {
+  model: string;
+  created_at: string;
+} & (
+  | {
+      done: false;
+    }
+  | {
+      done: true;
+      done_reason: string;
+      total_duration: number; // Time spent generating the response in nanoseconds
+      load_duration: number; // Time spent loading the model in nanoseconds
+      prompt_eval_count: number; // Number of tokens in the prompt
+      prompt_eval_duration: number; // Time spent evaluating the prompt in nanoseconds
+      eval_count: number; // Number of tokens in the response
+      eval_duration: number; // Time spent generating the response in nanoseconds
+      context: number[]; // An encoding of the conversation used in this response; can be sent in the next request to keep conversational memory
+    }
+);
+
+type OllamaErrorResponse = {
+  error: string;
+};
+
+type OllamaRawResponse =
+  | OllamaErrorResponse
+  | (OllamaBaseResponse & {
+      response: string; // the generated response
+    });
+
+type OllamaChatResponse =
+  | OllamaErrorResponse
+  | (OllamaBaseResponse & {
+      message: OllamaChatMessage;
+    });
+
+interface OllamaTool {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters?: JSONSchema;
+  };
 }
 
 class Ollama extends BaseLLM {
@@ -224,61 +267,38 @@ class Ollama extends BaseLLM {
     };
   }
 
-  private _convertMessage(message: ChatMessage): OllamaChatMessage {
-    // if (message.role === "tool") {
-    //   return null;
-    // }
-    // if (message.role === "tool") {
-    //   return {
-    //     role: "tool",
-
-    //   };
-    // }
+  private _convertToOllamaMessage(message: ChatMessage): OllamaChatMessage {
+    const ollamaMessage: OllamaChatMessage = {
+      role: message.role,
+      content: "",
+    };
 
     if (typeof message.content === "string") {
-      return message;
-    }
-    const images: string[] = [];
-    message.content.forEach((part) => {
-      if (part.type === "imageUrl" && part.imageUrl) {
-        const image = part.imageUrl?.url.split(",").at(-1);
-        if (image) {
-          images.push(image);
+      ollamaMessage.content = message.content;
+    } else {
+      ollamaMessage.content = renderChatMessage(message);
+      const images: string[] = [];
+      message.content.forEach((part) => {
+        if (part.type === "imageUrl" && part.imageUrl) {
+          const image = part.imageUrl?.url.split(",").at(-1);
+          if (image) {
+            images.push(image);
+          }
         }
+      });
+      if (images.length > 0) {
+        ollamaMessage.images = images;
       }
-    });
-
-    return {
-      role: message.role,
-      content: renderChatMessage(message),
-      images,
-    };
-  }
-
-  private _getChatOptions(
-    options: CompletionOptions,
-    messages: ChatMessage[],
-  ): OllamaChatOptions {
-    const chatOptions: OllamaChatOptions = {
-      model: this._getModel(),
-      messages: messages.map(this._convertMessage).filter(Boolean),
-      options: this._getModelFileParams(options),
-      keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
-      stream: options.stream,
-      // format: options.format, // Not currently in base completion options
-    };
-    if (options.tools?.length) {
-      chatOptions.tools = options.tools;
-      chatOptions.stream = false; // Cannot set stream = true for tools calls
     }
-    return chatOptions;
+
+    return ollamaMessage;
   }
 
   private _getGenerateOptions(
     options: CompletionOptions,
     prompt: string,
     suffix?: string,
-  ): OllamaGenerateOptions {
+  ): OllamaRawOptions {
     return {
       model: this._getModel(),
       prompt,
@@ -327,12 +347,11 @@ class Ollama extends BaseLLM {
         const chunk = chunks[i];
         if (chunk.trim() !== "") {
           try {
-            const j = JSON.parse(chunk);
-            if ("response" in j) {
-              yield j.response;
-            } else if ("error" in j) {
+            const j = JSON.parse(chunk) as OllamaRawResponse;
+            if ("error" in j) {
               throw new Error(j.error);
             }
+            yield j.response;
           } catch (e) {
             throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
           }
@@ -346,39 +365,91 @@ class Ollama extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    const chatOptions: OllamaChatOptions = {
+      model: this._getModel(),
+      messages: messages.map(this._convertToOllamaMessage),
+      options: this._getModelFileParams(options),
+      keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
+      stream: options.stream,
+      // format: options.format, // Not currently in base completion options
+    };
+    if (options.tools?.length) {
+      chatOptions.tools = options.tools.map((tool) => ({
+        type: "function",
+        function: {
+          name: tool.function.name,
+          description: tool.function.description,
+          parameters: tool.function.parameters,
+        },
+      }));
+      chatOptions.stream = false; // Cannot set stream = true for tools calls
+    }
+
     const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify(this._getChatOptions(options, messages)),
+      body: JSON.stringify(chatOptions),
       signal,
     });
 
-    let buffer = "";
-    for await (const value of streamResponse(response)) {
-      // Append the received chunk to the buffer
-      buffer += value;
-      // Split the buffer into individual JSON chunks
-      const chunks = buffer.split("\n");
-      buffer = chunks.pop() ?? "";
+    function convertChatMessage(res: OllamaChatResponse): ChatMessage {
+      if ("error" in res) {
+        throw new Error(res.error);
+      }
+      if (res.message.role === "tool") {
+        throw new Error(
+          "Unexpected message received from ollama with role = tool",
+        );
+      }
+      if (res.message.role === "assistant") {
+        const chatMessage: ChatMessage = {
+          role: "assistant",
+          content: res.message.content,
+        };
+        if (res.message.tool_calls) {
+          // Continue handles the response as a tool call delta but
+          // But ollama returns the full object in one response with no streaming
+          chatMessage.toolCalls = res.message.tool_calls.map((tc) => ({
+            type: "function",
+            function: {
+              name: tc.function.name,
+              arguments: JSON.stringify(tc.function.arguments),
+            },
+          }));
+        }
+        return chatMessage;
+      } else {
+        return {
+          role: res.message.role,
+          content: res.message.content,
+        };
+      }
+    }
 
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        if (chunk.trim() !== "") {
-          try {
-            const j = JSON.parse(chunk);
-            if (j.message?.content) {
-              yield {
-                role: "assistant",
-                content: j.message.content,
-              };
-            } else if (j.error) {
-              throw new Error(j.error);
+    if (chatOptions.stream === false) {
+      const json = (await response.json()) as OllamaChatResponse;
+      yield convertChatMessage(json);
+    } else {
+      let buffer = "";
+      for await (const value of streamResponse(response)) {
+        // Append the received chunk to the buffer
+        buffer += value;
+        // Split the buffer into individual JSON chunks
+        const chunks = buffer.split("\n");
+        buffer = chunks.pop() ?? "";
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
+          if (chunk.trim() !== "") {
+            try {
+              const j = JSON.parse(chunk) as OllamaChatResponse;
+              const chatMessage = convertChatMessage(j);
+            } catch (e) {
+              throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
             }
-          } catch (e) {
-            throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
           }
         }
       }

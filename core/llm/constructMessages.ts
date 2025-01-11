@@ -72,11 +72,11 @@ function constructSystemPrompt(
   useTools: boolean,
 ): string | null {
   let systemMessage = "";
-  if(CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))){
+  if (CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))) {
     systemMessage = SYSTEM_MESSAGE;
   }
-  if(useTools && modelSupportsTools(model, provider)){
-    if(systemMessage){
+  if (useTools && modelSupportsTools(model, provider)) {
+    if (systemMessage) {
       systemMessage += "\n\n";
     }
     systemMessage += TOOL_USE_RULES;

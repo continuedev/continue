@@ -35,6 +35,7 @@ import {
   xWinCoderEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit.js";
+import { PROVIDER_TOOL_SUPPORT } from "./toolSupport.js";
 
 const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "lmstudio",
@@ -86,17 +87,12 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
 ];
 
-const PROVIDER_TOOL_SUPPORT: Record<string, string[]> = {
-  anthropic: ["claude-3-5", "claude-3.5"],
-  ollama: ["llama3.1"],
-};
-
 function modelSupportsTools(modelName: string, provider: string) {
   const providerSupport = PROVIDER_TOOL_SUPPORT[provider];
   if (!providerSupport) {
     return false;
   }
-  return !!providerSupport.some((part) => modelName.includes(part));
+  return providerSupport(modelName) ?? false;
 }
 
 function modelSupportsImages(
