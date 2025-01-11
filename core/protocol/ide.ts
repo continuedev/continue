@@ -14,6 +14,7 @@ import type {
   Range,
   RangeInFile,
   Thread,
+  TerminalOptions
 } from "../";
 
 export interface GetGhTokenArgs {
@@ -28,7 +29,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   showVirtualFile: [{ name: string; content: string }, void];
   openFile: [{ path: string }, void];
   openUrl: [string, void];
-  runCommand: [{ command: string }, void];
+  runCommand: [{ command: string, options?: TerminalOptions }, void];
   getSearchResults: [{ query: string }, string];
   subprocess: [{ command: string; cwd?: string }, [string, string]];
   saveFile: [{ filepath: string }, void];

@@ -634,7 +634,7 @@ export interface IDE {
 
   openUrl(url: string): Promise<void>;
 
-  runCommand(command: string): Promise<void>;
+  runCommand(command: string, options?: TerminalOptions): Promise<void>;
 
   saveFile(fileUri: string): Promise<void>;
 
@@ -1234,4 +1234,9 @@ export type PackageDocsResult = {
 } & (
   | { error: string; details?: never }
   | { details: PackageDetailsSuccess; error?: never }
-);
+  );
+
+export interface TerminalOptions {
+  reuseTerminal?: boolean,
+  terminalName?: string,
+}

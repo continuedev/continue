@@ -96,9 +96,9 @@ class AutocompleteService(private val project: Project) {
                 "line" to line,
                 "character" to column
             ),
-            "recentlyEditedFiles" to emptyList<String>(),
-            "recentlyEditedRanges" to emptyList<String>(),
-            "clipboardText" to ""
+            "clipboardText" to "",
+            "recentlyEditedRanges" to emptyList<Any>(),
+            "recentlyVisitedRanges" to emptyList<Any>(),
         )
 
         project.service<ContinuePluginService>().coreMessenger?.request(
@@ -115,8 +115,7 @@ class AutocompleteService(private val project: Project) {
 
                     if (shouldRenderCompletion(finalTextToInsert, offset, line, editor)) {
                         renderCompletion(editor, offset, finalTextToInsert)
-                        // Hide auto-popup
-//                    AutoPopupController.getInstance(project).cancelAllRequests()
+                        pendingCompletion = PendingCompletion(editor, offset, completionId, finalTextToInsert)
                     }
                 }
             })
