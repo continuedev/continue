@@ -717,7 +717,6 @@ declare global {
   
   type ContextProviderName =
     | "diff"
-    | "github"
     | "terminal"
     | "debugger"
     | "open"

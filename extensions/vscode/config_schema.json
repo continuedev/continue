@@ -1906,6 +1906,9 @@
                 "repo-map",
                 "greptile",
                 "web",
+                "gitlab-mr",
+                "discord",
+                "jira",
                 "clipboard"
               ],
               "markdownEnumDescriptions": [
@@ -2057,8 +2060,7 @@
                   }
                 }
               }
-            },
-            "required": ["params"]
+            }
           }
         },
         {
@@ -2077,6 +2079,73 @@
                     "type": "boolean",
                     "description": "If set to true, only 'pinned' files will be included.",
                     "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["repo-map"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeSignatures": {
+                    "type": "boolean",
+                    "description": "Include message signatures from repo-map",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["debugger"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "stackDepth": {
+                    "title": "Stack Depth",
+                    "description": "Stack trace depth to include in context",
+                    "default": 3,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["diff"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "description": "Include diff from unstaged files",
+                    "default": true
                   }
                 }
               }
@@ -2317,7 +2386,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase", "folder"]
+                "enum": ["codebase", "folder", "docs"]
               }
             }
           },
@@ -2401,10 +2470,11 @@
                     "default": 3,
                     "type": "integer"
                   }
-                }
+                },
+                "required": ["host", "port", "user", "password", "database"]
               }
             },
-            "required": ["host", "port", "user", "password", "database"]
+            "required": ["params"]
           }
         },
         {
@@ -2431,10 +2501,11 @@
                     "default": "",
                     "type": "string"
                   }
-                }
+                },
+                "required": ["GreptileToken", "GithubToken"]
               }
             },
-            "required": ["GreptileToken", "GithubToken"]
+            "required": ["params"]
           }
         }
       ],
