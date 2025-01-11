@@ -268,6 +268,10 @@ async function processDiff(
       numDiffs: 0,
     });
   }
+
+  if (action === "accept") {
+    await sidebar.webviewProtocol.request("exitEditMode", undefined);
+  }
 }
 
 function waitForSidebarReady(
@@ -742,8 +746,8 @@ const getCommandsMap: (
         return;
       }
 
-      // Clear the sidebar to prevent overwriting changes made in fullscreen 
-      vscode.commands.executeCommand("continue.newSession")
+      // Clear the sidebar to prevent overwriting changes made in fullscreen
+      vscode.commands.executeCommand("continue.newSession");
 
       // Full screen not open - open it
       captureCommandTelemetry("openFullScreen");
@@ -777,7 +781,7 @@ const getCommandsMap: (
             sessionId,
           );
         }
-        sessionLoader.dispose()
+        sessionLoader.dispose();
       });
 
       // When panel closes, reset the webview and focus
