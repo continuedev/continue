@@ -23,17 +23,23 @@ export const streamNormalInput = createAsyncThunk<
   const toolSettings = state.ui.toolSettings;
   const streamAborter = state.session.streamAborter;
   const useTools = state.ui.useTools;
-
   if (!defaultModel) {
     throw new Error("Default model not defined");
   }
+
+  console.log("YOO", messages);
+  const includeTools =
+    useTools &&
+    modelSupportsTools(defaultModel.title, defaultModel.provider) &&
+    messages.length >= 2 &&
+    messages[messages.length - 2].role === "user";
 
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(
     defaultModel.title,
     streamAborter.signal,
     messages,
-    useTools && modelSupportsTools(defaultModel.title, defaultModel.provider)
+    includeTools
       ? {
           tools: state.config.config.tools.filter(
             (tool) => toolSettings[tool.function.name] !== "disabled",

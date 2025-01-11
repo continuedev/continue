@@ -309,14 +309,6 @@ class OpenAI extends BaseLLM {
 
     const body = this._convertArgs(options, messages);
 
-    // Empty messages cause an error in LM Studio
-    body.messages = body.messages.map((m: any) => ({
-      ...m,
-      content: m.content === "" ? " " : m.content,
-      // We call it toolCalls, they call it tool_calls
-      tool_calls: m.toolCalls,
-      tool_call_id: m.toolCallId,
-    })) as any;
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
       headers: this._getHeaders(),

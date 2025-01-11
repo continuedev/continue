@@ -57,16 +57,6 @@ export function toChatBody(
   messages: ChatMessage[],
   options: CompletionOptions,
 ): ChatCompletionCreateParams {
-  const tools = options.tools?.map((tool) => ({
-    type: tool.type,
-    function: {
-      name: tool.function.name,
-      description: tool.function.description,
-      parameters: tool.function.parameters,
-      strict: tool.function.strict,
-    },
-  }));
-
   const params: ChatCompletionCreateParams = {
     messages: messages.map(toChatMessage),
     model: options.model,
@@ -79,9 +69,19 @@ export function toChatBody(
     stop: options.stop,
     prediction: options.prediction,
   };
-  if (tools?.length) {
-    params.tools = tools;
+
+  if (options.tools?.length) {
+    params.tools = options.tools.map((tool) => ({
+      type: tool.type,
+      function: {
+        name: tool.function.name,
+        description: tool.function.description,
+        parameters: tool.function.parameters,
+        strict: tool.function.strict,
+      },
+    }));
   }
+
   return params;
 }
 
