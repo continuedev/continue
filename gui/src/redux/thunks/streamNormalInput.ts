@@ -27,12 +27,8 @@ export const streamNormalInput = createAsyncThunk<
     throw new Error("Default model not defined");
   }
 
-  console.log("YOO", messages);
   const includeTools =
-    useTools &&
-    modelSupportsTools(defaultModel.title, defaultModel.provider) &&
-    messages.length >= 2 &&
-    messages[messages.length - 2].role === "user";
+    useTools && modelSupportsTools(defaultModel.model, defaultModel.provider);
 
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(

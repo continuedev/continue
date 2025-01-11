@@ -11,15 +11,15 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
-  openai: (model) => {
-    if (
-      ["gpt-4", "o1", "chatgpt-4o-latest"].some((part) =>
-        model.toLowerCase().startsWith(part),
-      )
-    ) {
-      return true;
-    }
-  },
+  // openai: (model) => {
+  //   if (
+  //     ["gpt-4", "o1", "chatgpt-4o-latest"].some((part) =>
+  //       model.toLowerCase().startsWith(part),
+  //     )
+  //   ) {
+  //     return true;
+  //   }
+  // },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
     if (

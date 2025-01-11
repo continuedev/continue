@@ -23,7 +23,7 @@ export function toChatMessage(
   if (typeof message.content === "string") {
     return {
       role: message.role,
-      content: message.content,
+      content: message.content === "" ? " " : message.content, // LM Studio API doesn't accept empty strings
     };
   } else if (!message.content.some((item) => item.type !== "text")) {
     // If no multi-media is in the message, just send as text

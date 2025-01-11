@@ -365,15 +365,16 @@ class Ollama extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    const ollamaMessages = messages.map(this._convertToOllamaMessage);
     const chatOptions: OllamaChatOptions = {
       model: this._getModel(),
-      messages: messages.map(this._convertToOllamaMessage),
+      messages: ollamaMessages,
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
-    if (options.tools?.length) {
+    if (options.tools?.length && ollamaMessages.at(-1)?.role === "user") {
       chatOptions.tools = options.tools.map((tool) => ({
         type: "function",
         function: {
@@ -447,6 +448,7 @@ class Ollama extends BaseLLM {
             try {
               const j = JSON.parse(chunk) as OllamaChatResponse;
               const chatMessage = convertChatMessage(j);
+              yield chatMessage;
             } catch (e) {
               throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
             }

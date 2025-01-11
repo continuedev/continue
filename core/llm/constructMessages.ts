@@ -93,6 +93,9 @@ export function constructMessages(
   provider: string,
   useTools: boolean,
 ): ChatMessage[] {
+  const filteredHistory = history.filter(
+    (item) => item.message.role !== "system",
+  );
   const msgs: ChatMessage[] = [];
 
   const systemMessage = constructSystemPrompt(model, provider, useTools);
@@ -103,8 +106,8 @@ export function constructMessages(
     });
   }
 
-  for (let i = 0; i < history.length; i++) {
-    const historyItem = history[i];
+  for (let i = 0; i < filteredHistory.length; i++) {
+    const historyItem = filteredHistory[i];
 
     if (historyItem.message.role === "user") {
       // Gather context items for user messages

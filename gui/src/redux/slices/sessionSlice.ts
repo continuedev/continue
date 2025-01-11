@@ -134,6 +134,7 @@ export const sessionSlice = createSlice({
         state.mainEditorContentTrigger =
           state.history[state.history.length - 2].editorState;
         state.history = state.history.slice(0, -2);
+        // TODO is this logic correct for tool use conversations?
       }
     },
     // Trigger value picked up by editor with isMainInput to set its content
