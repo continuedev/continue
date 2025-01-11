@@ -253,6 +253,13 @@ class OpenAI extends BaseLLM {
       body.max_completion_tokens = undefined;
     }
 
+    if (body.tools?.length) {
+      // To ensure schema adherence: https://platform.openai.com/docs/guides/function-calling#parallel-function-calling-and-structured-outputs
+      // In practice, setting this to true and asking for multiple tool calls
+      // leads to "arguments" being something like '{"file": "test.ts"}{"file": "test.js"}'
+      body.parallel_tool_calls = false;
+    }
+
     return body;
   }
 
