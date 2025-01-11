@@ -1,3 +1,5 @@
+import { RangeInFileWithContents, SymbolWithRange } from "core";
+
 const terminalLanguages = ["bash", "sh"];
 const commonTerminalCommands = [
   "npm",
@@ -51,4 +53,40 @@ function childToText(child: any): string {
 
 export function childrenToText(children: any) {
   return children.map((child: any) => childToText(child)).join("");
+}
+
+export function matchCodeToSymbolOrFile(
+  content: string,
+  symbols: SymbolWithRange[],
+  rifs: RangeInFileWithContents[],
+): SymbolWithRange | RangeInFileWithContents | undefined {
+  // Insert file links for matching previous context items
+  // With some reasonable limitations on what might be a filename
+  if (rifs.length && content.includes(".") && content.length > 2) {
+    const match = rifs.find(
+      (rif) => rif.filepath.split("/").pop() === content, // Exact match for last segment of URI
+    );
+
+    if (match) {
+      return match;
+    }
+  }
+
+  // Insert symbols for exact matches
+  const exactSymbol = symbols.find((s) => s.name === content);
+  if (exactSymbol) {
+    return exactSymbol;
+  }
+
+  // Partial matches - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
+  const partialSymbol = symbols.find((s) => content.startsWith(s.name));
+  if (partialSymbol) {
+    return partialSymbol;
+  }
+}
+
+export function isSymbolNotRif(
+  item: SymbolWithRange | RangeInFileWithContents,
+): item is SymbolWithRange {
+  return (item as SymbolWithRange).type !== undefined;
 }

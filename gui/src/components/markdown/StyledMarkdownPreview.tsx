@@ -6,30 +6,30 @@ import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import styled from "styled-components";
 import { visit } from "unist-util-visit";
+import { v4 as uuidv4 } from "uuid";
 import {
   defaultBorderRadius,
   vscBackground,
   vscEditorBackground,
   vscForeground,
 } from "..";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { useAppSelector } from "../../redux/hooks";
+import { selectUIConfig } from "../../redux/slices/configSlice";
+import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 import { getFontSize, isJetBrains } from "../../util";
+import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
-import useUpdatingRef from "../../hooks/useUpdatingRef";
-import { remarkTables } from "./utils/remarkTables";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
-import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { useAppSelector } from "../../redux/hooks";
+import { isSymbolNotRif, matchCodeToSymbolOrFile } from "./utils";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
-import { selectUIConfig } from "../../redux/slices/configSlice";
-import { ToolTip } from "../gui/Tooltip";
-import { v4 as uuidv4 } from "uuid";
-import { ContextItemWithId, RangeInFileWithContents } from "core";
-import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
+import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
+import { remarkTables } from "./utils/remarkTables";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -301,30 +301,19 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           if (content) {
             const { symbols, rifs } = pastFileInfoRef.current;
 
-            // Insert file links for matching previous context items
-            // With some reasonable limitations on what might be a filename
-            if (rifs.length && content.includes(".") && content.length > 2) {
-              const match = rifs.find(
-                (rif) => rif.filepath.split("/").pop() === content, // Exact match for last segment of URI
-              );
-
-              if (match) {
-                return <FilenameLink rif={match} />;
-              }
-            }
-
-            // Insert symbols for exact matches
-            const exactSymbol = symbols.find((s) => s.name === content);
-            if (exactSymbol) {
-              return <SymbolLink content={content} symbol={exactSymbol} />;
-            }
-
-            // Partial matches - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
-            const partialSymbol = symbols.find((s) =>
-              content.startsWith(s.name),
+            const matchedSymbolOrFile = matchCodeToSymbolOrFile(
+              content,
+              symbols,
+              rifs,
             );
-            if (partialSymbol) {
-              return <SymbolLink content={content} symbol={partialSymbol} />;
+            if (matchedSymbolOrFile) {
+              if (isSymbolNotRif(matchedSymbolOrFile)) {
+                return (
+                  <SymbolLink content={content} symbol={matchedSymbolOrFile} />
+                );
+              } else {
+                return <FilenameLink rif={matchedSymbolOrFile} />;
+              }
             }
           }
           return <code {...codeProps}>{codeProps.children}</code>;
