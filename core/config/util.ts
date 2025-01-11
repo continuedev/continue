@@ -1,10 +1,15 @@
+import { execSync } from "child_process";
+import os from "os";
+
 import {
   ContextProviderWithParams,
   ContinueConfig,
+  IDE,
   ILLM,
   ModelDescription,
   ModelRoles,
 } from "../";
+import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
 
 function stringify(obj: any, indentation?: number): string {
@@ -95,4 +100,85 @@ export function getModelByRole<T extends keyof ModelRoles>(
   );
 
   return matchingModel;
+}
+
+/**
+ * This check is to determine if the user is on an unsupported CPU
+ * target for our Lance DB binaries.
+ *
+ * See here for details: https://github.com/continuedev/continue/issues/940
+ */
+export function isSupportedLanceDbCpuTarget(ide: IDE) {
+  const CPU_FEATURES_TO_CHECK = ["avx2", "fma"] as const;
+
+  const globalContext = new GlobalContext();
+  const globalContextVal = globalContext.get("isSupportedLanceDbCpuTarget");
+
+  // If we've already checked the CPU target, return the cached value
+  if (globalContextVal !== undefined) {
+    return globalContextVal;
+  }
+
+  const arch = os.arch();
+  const platform = os.platform();
+
+  // This check only applies to x64
+  //https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
+  if (arch !== "x64") {
+    globalContext.update("isSupportedLanceDbCpuTarget", true);
+    return true;
+  }
+
+  try {
+    const cpuFlags = (() => {
+      switch (platform) {
+        case "darwin":
+          return execSync("sysctl -n machdep.cpu.features")
+            .toString()
+            .toLowerCase();
+        case "linux":
+          return execSync("cat /proc/cpuinfo").toString().toLowerCase();
+        case "win32":
+          return execSync("wmic cpu get caption /format:list")
+            .toString()
+            .toLowerCase();
+        default:
+          return "";
+      }
+    })();
+
+    const isSupportedLanceDbCpuTarget = cpuFlags
+      ? CPU_FEATURES_TO_CHECK.every((feature) => cpuFlags.includes(feature))
+      : true;
+
+    // If it's not a supported CPU target, and it's the first time we are checking,
+    // show a toast to inform the user that we are going to disable indexing.
+    if (!isSupportedLanceDbCpuTarget) {
+      // We offload our async toast to `showUnsupportedCpuToast` to prevent making
+      // our config loading async upstream of `isSupportedLanceDbCpuTarget`
+      void showUnsupportedCpuToast(ide);
+    }
+
+    globalContext.update(
+      "isSupportedLanceDbCpuTarget",
+      isSupportedLanceDbCpuTarget,
+    );
+
+    return isSupportedLanceDbCpuTarget;
+  } catch (error) {
+    // If we can't determine CPU features, default to true
+    return true;
+  }
+}
+
+async function showUnsupportedCpuToast(ide: IDE) {
+  const shouldOpenLink = await ide.showToast(
+    "warning",
+    "Codebase indexing is disabled due to CPU incompatibility",
+    "Learn more",
+  );
+
+  if (shouldOpenLink) {
+    void ide.openUrl("https://github.com/continuedev/continue/pull/3551");
+  }
 }

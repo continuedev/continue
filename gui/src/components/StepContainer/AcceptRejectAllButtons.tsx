@@ -38,6 +38,7 @@ export default function AcceptRejectAllButtons({
       <button
         className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleAcceptOrReject("rejectDiff")}
+        data-testid="edit-reject-button"
       >
         <XMarkIcon className="mr-1 h-4 w-4 text-red-600" />
         {isSingleRangeEdit ? (
@@ -53,6 +54,7 @@ export default function AcceptRejectAllButtons({
       <button
         className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleAcceptOrReject("acceptDiff")}
+        data-testid="edit-accept-button"
       >
         <CheckIcon className="mr-1 h-4 w-4 text-green-600" />
         {isSingleRangeEdit ? (

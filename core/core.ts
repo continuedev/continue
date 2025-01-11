@@ -2,10 +2,12 @@ import path from "path";
 
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import ignore from "ignore";
+import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
+import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import {
   setupBestConfig,
   setupLocalConfig,
@@ -26,6 +28,7 @@ import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
+import { clipboardCache } from "./util/clipboardCache";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
@@ -35,18 +38,15 @@ import {
   getConfigJsonPath,
   setupInitialDotContinueDirectory,
 } from "./util/paths";
+import { localPathToUri } from "./util/pathToUri";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 
-import * as URI from "uri-js";
-import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { localPathToUri } from "./util/pathToUri";
-import { clipboardCache } from "./util/clipboardCache";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -299,7 +299,6 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      console.log("Load SUMBENU ITEMS", msg);
       const config = await this.config();
       if (!config) {
         return [];
@@ -384,9 +383,12 @@ export class Core {
     });
 
     on("clipboardCache/add", (msg) => {
-      console.log("ADD TO CLIPBOARD", msg);
-      clipboardCache.add(uuidv4(), msg.data.content);
-      this.messenger.send("refreshSubmenuItems", undefined);
+      const added = clipboardCache.add(uuidv4(), msg.data.content);
+      if (added) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["clipboard"],
+        });
+      }
     });
 
     async function* llmStreamChat(
@@ -665,7 +667,6 @@ export class Core {
           abortedMessageIds.delete(msg.messageId);
           break;
         }
-        console.log(diffLine);
         yield { content: diffLine };
       }
 
@@ -948,7 +949,9 @@ export class Core {
       }
     }
 
-    this.messenger.send("refreshSubmenuItems", undefined);
+    this.messenger.send("refreshSubmenuItems", {
+      providers: "dependsOnIndexing",
+    });
     this.indexingCancellationController = undefined;
   }
 
@@ -979,7 +982,9 @@ export class Core {
       }
     }
 
-    this.messenger.send("refreshSubmenuItems", undefined);
+    this.messenger.send("refreshSubmenuItems", {
+      providers: "dependsOnIndexing",
+    });
   }
 
   // private

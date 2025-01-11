@@ -16,11 +16,7 @@ describe("Autocomplete", () => {
     this.timeout(DEFAULT_TIMEOUT.XL);
 
     await GlobalActions.openTestWorkspace();
-    await new Workbench().executeCommand("Create: New File...");
-    await (
-      await InputBox.create(DEFAULT_TIMEOUT.MD)
-    ).selectQuickPick("Text File");
-    editor = (await new EditorView().openEditor("Untitled-1")) as TextEditor;
+    ({ editor } = await GlobalActions.createAndOpenNewTextFile());
   });
 
   afterEach(async function () {

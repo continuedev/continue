@@ -1,6 +1,4 @@
-import { TextEditor, WebDriver, WebView } from "vscode-extension-tester";
-
-import { TestUtils } from "../TestUtils";
+import { TextEditor } from "vscode-extension-tester";
 
 export class KeyboardShortcutsActions {
   /**
