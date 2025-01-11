@@ -94,10 +94,20 @@ export default function StepContainerPreToolbar(
       return;
     }
 
-    const fileUri = await inferResolvedUriFromRelativePath(
+    let fileUri = await inferResolvedUriFromRelativePath(
       props.relativeFilepath,
       ideMessenger.ide,
     );
+
+    // Sometimes the model will decide to only output the base name
+    // in which case we shouldn't create a new file if it matches the current file
+    const exists = await ideMessenger.ide.fileExists(fileUri);
+    if (!exists) {
+      const activeFile = await ideMessenger.ide.getCurrentFile();
+      if (activeFile && activeFile.path.endsWith(props.relativeFilepath)) {
+        fileUri = activeFile.path;
+      }
+    }
 
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
