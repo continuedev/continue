@@ -4,6 +4,8 @@ import { ConfigValidationError } from "../config/validation.js";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
+  ContextProviderName,
+  ContextSubmenuItem,
   IndexingProgressUpdate,
   IndexingStatus,
   PackageDocsResult,
@@ -21,7 +23,12 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   getDefaultModelTitle: [undefined, string];
   indexProgress: [IndexingProgressUpdate, void]; // Codebase
   "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
-  refreshSubmenuItems: [undefined, void];
+  refreshSubmenuItems: [
+    {
+      providers: "all" | "dependsOnIndexing" | ContextProviderName[];
+    },
+    void,
+  ];
   isContinueInputFocused: [undefined, boolean];
   addContextItem: [
     {
