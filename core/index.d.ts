@@ -216,6 +216,10 @@ export interface ContextSubmenuItem {
   metadata?: any;
 }
 
+export interface ContextSubmenuItemWithProvider extends ContextSubmenuItem {
+  providerTitle: string;
+}
+
 export interface SiteIndexingConfig {
   title: string;
   startUrl: string;
@@ -630,7 +634,7 @@ export interface IDE {
 
   openUrl(url: string): Promise<void>;
 
-  runCommand(command: string): Promise<void>;
+  runCommand(command: string, options?: TerminalOptions): Promise<void>;
 
   saveFile(fileUri: string): Promise<void>;
 
@@ -724,7 +728,6 @@ export type StepName =
 
 export type ContextProviderName =
   | "diff"
-  | "github"
   | "terminal"
   | "debugger"
   | "open"
@@ -751,6 +754,9 @@ export type ContextProviderName =
   | "issue"
   | "repo-map"
   | "url"
+  | "commit"
+  | "web"
+  | "discord"
   | "clipboard"
   | string;
 
@@ -1229,4 +1235,9 @@ export type PackageDocsResult = {
 } & (
   | { error: string; details?: never }
   | { details: PackageDetailsSuccess; error?: never }
-);
+  );
+
+export interface TerminalOptions {
+  reuseTerminal?: boolean,
+  terminalName?: string,
+}

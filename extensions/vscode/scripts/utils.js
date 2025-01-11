@@ -505,6 +505,26 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   }
 }
 
+async function copyScripts() {
+  process.chdir(path.join(continueDir, "extensions", "vscode"));
+  console.log("[info] Copying scripts from core");
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "../../../core/scripts"),
+      path.join(__dirname, "../out"),
+      { dereference: true },
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying script files", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+}
+
 module.exports = {
   copyConfigSchema,
   installNodeModules,
@@ -519,4 +539,5 @@ module.exports = {
   downloadSqliteBinary,
   downloadRipgrepBinary,
   copyTokenizers,
+  copyScripts
 };

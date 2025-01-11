@@ -1906,6 +1906,10 @@
                 "repo-map",
                 "greptile",
                 "web",
+                "gitlab-mr",
+                "discord",
+                "jira",
+                "commit",
                 "clipboard"
               ],
               "markdownEnumDescriptions": [
@@ -1932,7 +1936,9 @@
                 "Operating system and CPU Information",
                 "Map of files in the repository with important code highlights",
                 "Query your greptile index of the current repo",
-                "Search the web for sources related to your question"
+                "Search the web for sources related to your question",
+                "Reference changes and metadata from previous git commits",
+                "Reference the contents of the clipboard"
               ],
               "type": "string"
             },
@@ -2057,8 +2063,7 @@
                   }
                 }
               }
-            },
-            "required": ["params"]
+            }
           }
         },
         {
@@ -2077,6 +2082,73 @@
                     "type": "boolean",
                     "description": "If set to true, only 'pinned' files will be included.",
                     "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["repo-map"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeSignatures": {
+                    "type": "boolean",
+                    "description": "Include message signatures from repo-map",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["debugger"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "stackDepth": {
+                    "title": "Stack Depth",
+                    "description": "Stack trace depth to include in context",
+                    "default": 3,
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["diff"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "description": "Include diff from unstaged files",
+                    "default": true
                   }
                 }
               }
@@ -2317,7 +2389,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase", "folder"]
+                "enum": ["codebase", "folder", "docs"]
               }
             }
           },
@@ -2401,10 +2473,11 @@
                     "default": 3,
                     "type": "integer"
                   }
-                }
+                },
+                "required": ["host", "port", "user", "password", "database"]
               }
             },
-            "required": ["host", "port", "user", "password", "database"]
+            "required": ["params"]
           }
         },
         {
@@ -2431,10 +2504,41 @@
                     "default": "",
                     "type": "string"
                   }
+                },
+                "required": ["GreptileToken", "GithubToken"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["commit"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "Depth": {
+                    "title": "depth",
+                    "description": "How many previous commits should be loaded",
+                    "default": 50,
+                    "type": "number"
+                  },
+                  "LastXCommitsDepth": {
+                    "title": "LastXCommitsDepth",
+                    "description": "how many commits should be included when querying all recent commits",
+                    "default": 10,
+                    "type": "number"
+                  }
                 }
               }
             },
-            "required": ["GreptileToken", "GithubToken"]
+            "required": ["params"]
           }
         }
       ],

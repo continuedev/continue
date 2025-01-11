@@ -24,7 +24,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
       setShowApplied(true);
       const timer = setTimeout(() => {
         setShowApplied(false);
-      }, 2_000);
+      }, 5_000);
       return () => clearTimeout(timer);
     }
   }, [isClosed, isSuccessful]);

@@ -549,12 +549,14 @@ class IdeProtocolClient(
             val startChar = startOffset - document.getLineStartOffset(startLine)
             val endChar = endOffset - document.getLineStartOffset(endLine)
 
-            return@runReadAction RangeInFileWithContents(
-                virtualFile.url, Range(
-                    Position(startLine, startChar),
-                    Position(endLine, endChar)
-                ), selectedText
-            )
+            return@runReadAction virtualFile.toUriOrNull()?.let {
+                RangeInFileWithContents(
+                    it, Range(
+                        Position(startLine, startChar),
+                        Position(endLine, endChar)
+                    ), selectedText
+                )
+            }
         }
 
         return result

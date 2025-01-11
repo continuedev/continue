@@ -3,6 +3,7 @@ import { findUriInDirs } from "../../util/uri";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
 import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
+
 import {
   AutocompleteClipboardSnippet,
   AutocompleteCodeSnippet,
@@ -15,6 +16,7 @@ export interface SnippetPayload {
   importDefinitionSnippets: AutocompleteCodeSnippet[];
   ideSnippets: AutocompleteCodeSnippet[];
   recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
+  recentlyVisitedRangesSnippets: AutocompleteCodeSnippet[];
   diffSnippets: AutocompleteDiffSnippet[];
   clipboardSnippets: AutocompleteClipboardSnippet[];
 }
@@ -135,5 +137,6 @@ export const getAllSnippets = async ({
     recentlyEditedRangeSnippets,
     diffSnippets,
     clipboardSnippets,
+    recentlyVisitedRangesSnippets: helper.input.recentlyVisitedRanges,
   };
 };
