@@ -10,8 +10,8 @@ import {
   redDecorationType,
 } from "./decorations";
 
-import type { VerticalDiffCodeLens } from "./manager";
 import type { ApplyState, DiffLine } from "core";
+import type { VerticalDiffCodeLens } from "./manager";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
@@ -486,9 +486,12 @@ export class VerticalDiffHandler implements vscode.Disposable {
    * we have received all of the diff lines.
    */
   async reapplyWithMeyersDiff(diffLines: DiffLine[]) {
+    // Diff is messed up without this delay.
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // First, we reset the original diff by rejecting all pending diff blocks
-    for (const block of this.editorToVerticalDiffCodeLens.get(this.fileUri) ??
-      []) {
+    const blocks = this.editorToVerticalDiffCodeLens.get(this.fileUri) ?? [];
+    for (const block of blocks.reverse()) {
       await this.acceptRejectBlock(
         false,
         block.start,
