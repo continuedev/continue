@@ -12,6 +12,38 @@
       "title": "Mock",
       "provider": "mock",
       "model": "this field is not used"
+    },
+    {
+      "provider": "mock",
+      "title": "TOOL MOCK LLM",
+      "model": "claude-3-5-sonnet-latest",
+      "requestOptions": {
+        "extraBodyProperties": {
+          "chatStream": [
+            [
+              {
+                "role": "assistant",
+                "content": "I'm going to call a tool:"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "toolCalls": [
+                  {
+                    "id": "test_id",
+                    "type": "function",
+                    "function": {
+                      "name": "builtin_exact_search",
+                      "arguments": "{\"query\": \"\\\" won't be matched because of escaped quotes \\\"\"}"
+                    }
+                  }
+                ]
+              }
+            ],
+            ["REPEAT_LAST_MSG"]
+          ]
+        }
+      }
     }
   ],
   "analytics": {

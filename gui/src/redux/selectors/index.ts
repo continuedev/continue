@@ -24,7 +24,7 @@ export const selectSlashCommands = createSelector(
   },
 );
 
-export const selectContextProviderDescriptions = createSelector(
+export const selectSubmenuContextProviders = createSelector(
   [(state: RootState) => state.config.config.contextProviders],
   (providers) => {
     return providers?.filter((desc) => desc.type === "submenu") || [];

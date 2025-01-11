@@ -107,7 +107,7 @@ function IndexingProgress() {
   }
 
   return (
-    <div className="mt-6 flex flex-col">
+    <div className="mt-4 flex flex-col">
       <div className="mb-0 flex justify-between text-sm">
         <IndexingProgressTitleText update={update} />
         {update.status !== "loading" && (

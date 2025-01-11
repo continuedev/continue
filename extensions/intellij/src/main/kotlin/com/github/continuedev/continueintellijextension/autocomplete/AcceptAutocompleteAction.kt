@@ -22,4 +22,4 @@ class AcceptAutocompleteAction : EditorAction(object : EditorActionHandler() {
                 && autocompleteService.pendingCompletion?.text != null
         return enabled
     }
-}) {}
+})

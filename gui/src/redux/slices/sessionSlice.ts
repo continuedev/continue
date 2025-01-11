@@ -18,7 +18,8 @@ import {
   PromptLog,
   Session,
   SessionMetadata,
-  ToolCall,
+  ToolCallDelta,
+  ToolCallState,
 } from "core";
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { NEW_SESSION_TITLE } from "core/util/constants";
@@ -140,6 +141,8 @@ export const sessionSlice = createSlice({
         state.mainEditorContentTrigger =
           state.history[state.history.length - 2].editorState;
         state.history = state.history.slice(0, -2);
+        // TODO is this logic correct for tool use conversations?
+        // Maybe slice at last index of "user" role message?
       }
     },
     // Trigger value picked up by editor with isMainInput to set its content
@@ -289,16 +292,40 @@ export const sessionSlice = createSlice({
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
       if (state.history.length) {
-        const lastItem = state.history[state.history.length - 1];
-        const lastMessage = lastItem.message;
+        function toolCallDeltaToState(
+          toolCallDelta: ToolCallDelta,
+        ): ToolCallState {
+          const [_, parsedArgs] = incrementalParseJson(
+            toolCallDelta.function?.arguments ?? "{}",
+          );
+          return {
+            status: "generating",
+            toolCall: {
+              id: toolCallDelta.id ?? "",
+              type: toolCallDelta.type ?? "function",
+              function: {
+                name: toolCallDelta.function?.name ?? "",
+                arguments: toolCallDelta.function?.arguments ?? "",
+              },
+            },
+            toolCallId: toolCallDelta.id ?? "",
+            parsedArgs,
+          };
+        }
+
         for (const message of action.payload) {
+          const lastItem = state.history[state.history.length - 1];
+          const lastMessage = lastItem.message;
           if (
-            message.role &&
-            (lastMessage.role !== message.role ||
-              // This is when a tool call comes after assistant text
-              (lastMessage.content !== "" &&
-                message.role === "assistant" &&
-                message.toolCalls?.length))
+            lastMessage.role !== message.role ||
+            // This is for when a tool call comes immediately before/after tool call
+            (lastMessage.role === "assistant" &&
+              message.role === "assistant" &&
+              // Last message isn't completely new
+              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
+              // And there's a difference in tool call presence
+              (lastMessage.toolCalls?.length ?? 0) !==
+                (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -309,20 +336,21 @@ export const sessionSlice = createSlice({
               contextItems: [],
             };
             if (message.role === "assistant" && message.toolCalls?.[0]) {
-              const toolCalls = message.toolCalls?.[0];
-              if (toolCalls) {
-                const [_, parsedArgs] = incrementalParseJson(
-                  message.toolCalls[0].function?.arguments ?? "{}",
-                );
-                historyItem.toolCallState = {
-                  status: "generating",
-                  toolCall: message.toolCalls[0] as ToolCall,
-                  toolCallId: message.toolCalls[0].id as ToolCall["id"],
-                  parsedArgs,
-                };
-              }
-            }
+              const toolCallDelta = message.toolCalls[0];
 
+              if (
+                toolCallDelta.id &&
+                toolCallDelta.function?.arguments &&
+                toolCallDelta.function?.name &&
+                toolCallDelta.type
+              ) {
+                console.warn(
+                  "Received streamed tool call without required fields",
+                  toolCallDelta,
+                );
+              }
+              historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
+            }
             state.history.push(historyItem);
           } else {
             // Add to the existing message
@@ -330,40 +358,39 @@ export const sessionSlice = createSlice({
               lastMessage.content += renderChatMessage(message);
             } else if (
               message.role === "assistant" &&
-              message.toolCalls &&
+              message.toolCalls?.[0] &&
               lastMessage.role === "assistant"
             ) {
-              if (!lastMessage.toolCalls) {
-                lastMessage.toolCalls = [];
+              // Intentionally only supporting one tool call for now.
+              const toolCallDelta = message.toolCalls[0];
+
+              // Update message tool call with delta data
+              const newArgs =
+                (lastMessage.toolCalls?.[0]?.function?.arguments ?? "") +
+                (toolCallDelta.function?.arguments ?? "");
+              if (lastMessage.toolCalls?.[0]) {
+                lastMessage.toolCalls[0].function = {
+                  name:
+                    toolCallDelta.function?.name ??
+                    lastMessage.toolCalls[0].function?.name ??
+                    "",
+                  arguments: newArgs,
+                };
+              } else {
+                lastMessage.toolCalls = [toolCallDelta];
               }
-              message.toolCalls.forEach((toolCall, i) => {
-                if (lastMessage.toolCalls!.length <= i) {
-                  lastMessage.toolCalls!.push(toolCall);
-                } else {
-                  if (
-                    toolCall?.function?.arguments &&
-                    lastMessage?.toolCalls?.[i]?.function?.arguments &&
-                    lastItem.toolCallState
-                  ) {
-                    lastMessage.toolCalls[i].function!.arguments +=
-                      toolCall.function.arguments;
 
-                    const [_, parsedArgs] = incrementalParseJson(
-                      lastMessage.toolCalls[i].function!.arguments!,
-                    );
+              // Update current tool call state
+              if (!lastItem.toolCallState) {
+                console.warn(
+                  "Received streamed tool call response prior to initial tool call delta",
+                );
+                lastItem.toolCallState = toolCallDeltaToState(toolCallDelta);
+              }
 
-                    lastItem.toolCallState.parsedArgs = parsedArgs;
-                    lastItem.toolCallState.toolCall.function.arguments +=
-                      toolCall.function.arguments;
-                  } else {
-                    console.error(
-                      "Unexpected tool call format received - this message added during gui strict null checks",
-                      message,
-                      lastMessage,
-                    );
-                  }
-                }
-              });
+              const [_, parsedArgs] = incrementalParseJson(newArgs);
+              lastItem.toolCallState.parsedArgs = parsedArgs;
+              lastItem.toolCallState.toolCall.function.arguments = newArgs;
             }
           }
         }

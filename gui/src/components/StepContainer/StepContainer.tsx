@@ -35,9 +35,8 @@ export default function StepContainer(props: StepContainerProps) {
   );
   const uiConfig = useAppSelector(selectUIConfig);
 
-  const shouldHideActions =
-    (isStreaming && props.isLast) ||
-    historyItemAfterThis?.message.role === "assistant";
+  const hideActionSpace = historyItemAfterThis?.message.role === "assistant";
+  const hideActions = hideActionSpace || (isStreaming && props.isLast);
 
   // const isStepAheadOfCurCheckpoint =
   //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
@@ -100,18 +99,19 @@ export default function StepContainer(props: StepContainerProps) {
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </ContentDiv>
       {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on stream complete */}
-      <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
-        {!shouldHideActions && (
-          <ResponseActions
-            isTruncated={isTruncated}
-            onDelete={onDelete}
-            onContinueGeneration={onContinueGeneration}
-            index={props.index}
-            item={props.item}
-            shouldHideActions={shouldHideActions}
-          />
-        )}
-      </div>
+      {!hideActionSpace && (
+        <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
+          {!hideActions && (
+            <ResponseActions
+              isTruncated={isTruncated}
+              onDelete={onDelete}
+              onContinueGeneration={onContinueGeneration}
+              index={props.index}
+              item={props.item}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

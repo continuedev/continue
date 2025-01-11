@@ -79,10 +79,11 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
     if (!status) {
       return 0;
     }
-    return Math.min(100, Math.max(0, status.progress * 100));
+    return Math.min(100, Math.max(0, status.progress * 100)).toFixed(0);
   }, [status?.progress]);
 
   const Icon = STATUS_TO_ICON[status?.status];
+  const showProgressPercentage = progressPercentage !== "100";
 
   if (hasDeleted) return null;
 
@@ -116,19 +117,21 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
           <div className="text-xs text-stone-500">Pending...</div>
         ) : (
           <div className="flex flex-row items-center gap-1 text-stone-500">
-            <span className="text-xs">{progressPercentage.toFixed(0)}%</span>
+            {showProgressPercentage && (
+              <span className="text-xs">{progressPercentage}%</span>
+            )}
+            {status?.status !== "indexing" ? (
+              <TrashIcon
+                className="h-4 w-4 cursor-pointer text-stone-500 hover:brightness-125"
+                onClick={onDelete}
+              />
+            ) : null}
             {Icon ? (
               <Icon
                 className={`inline-block h-4 w-4 text-stone-500 ${
                   status?.status === "indexing" ? "animate-spin-slow" : ""
                 }`}
               ></Icon>
-            ) : null}
-            {status?.status !== "indexing" ? (
-              <TrashIcon
-                className="h-4 w-4 cursor-pointer text-stone-500"
-                onClick={onDelete}
-              />
             ) : null}
           </div>
         )}

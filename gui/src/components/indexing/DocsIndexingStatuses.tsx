@@ -26,10 +26,10 @@ function DocsIndexingStatuses() {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-row items-center justify-between">
-        <h3 className="mb-1 mt-0 text-xl">@docs indexes</h3>
+        <h3 className="mb-0 mt-0 text-xl">@docs indexes</h3>
         {configDocs.length ? (
           <SecondaryButton
-            className="flex h-7 flex-col items-center justify-center"
+            className="!my-0 flex h-7 flex-col items-center justify-center"
             onClick={() => {
               dispatch(setShowDialog(true));
               dispatch(setDialogMessage(<AddDocsDialog />));

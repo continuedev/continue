@@ -8,10 +8,28 @@ class ClipboardCache {
     this.order = [];
   }
 
-  add(id: string, content: string): void {
+  /*
+  Returns true if added, false if not.
+  */
+  add(id: string, content: string): boolean {
     if (!content) {
-      return;
+      return false;
     }
+
+    // Check if the content already exists in the cache
+    for (const [existingId, existingContent] of this.cache.entries()) {
+      if (existingContent === content) {
+        // Remove the existing entry with the same content
+        this.cache.delete(existingId);
+        const index = this.order.indexOf(existingId);
+        if (index > -1) {
+          this.order.splice(index, 1);
+        }
+        return false;
+      }
+    }
+
+    // Remove the oldest entry if the cache exceeds the maximum size
     if (this.order.length >= this.maxSize) {
       const oldest = this.order.pop();
       if (oldest) {
@@ -19,14 +37,13 @@ class ClipboardCache {
       }
     }
 
+    // Add the new entry to the cache and update the order
     this.cache.set(id, content);
     this.order.unshift(id);
+    return true;
   }
 
-  getNItems(count: number): {
-    id: string;
-    content: string;
-  }[] {
+  getNItems(count: number): { id: string; content: string }[] {
     return this.order.slice(0, count).map((id) => ({
       id,
       content: this.cache.get(id) || "",

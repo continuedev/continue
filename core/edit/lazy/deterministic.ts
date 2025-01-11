@@ -172,7 +172,7 @@ export async function deterministicApplyLazyEdit(
           oldText.slice(endIndex);
       } else {
         console.warn("No matching node found for lazy block");
-        return [];
+        return undefined;
       }
     }
   }

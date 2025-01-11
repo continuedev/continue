@@ -13,6 +13,7 @@ import {
   Problem,
   Range,
   RangeInFile,
+  TerminalOptions,
   Thread,
   ToastType,
 } from "../index.js";
@@ -190,7 +191,7 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  runCommand(command: string): Promise<void> {
+  runCommand(command: string, options?: TerminalOptions): Promise<void> {
     return Promise.resolve();
   }
 

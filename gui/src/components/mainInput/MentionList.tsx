@@ -2,17 +2,21 @@ import {
   ArrowRightIcon,
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
+  Bars3BottomLeftIcon,
   BoltIcon,
   BookOpenIcon,
+  BugAntIcon,
+  CircleStackIcon,
   CodeBracketIcon,
   CommandLineIcon,
+  CpuChipIcon,
   DocumentTextIcon,
-  ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
   FolderOpenIcon,
   GlobeAltIcon,
   MagnifyingGlassIcon,
+  PaperClipIcon,
   PlusIcon,
   SparklesIcon,
   TrashIcon,
@@ -43,6 +47,10 @@ import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
+import { DiscordIcon } from "../svg/DiscordIcon";
+import { GoogleIcon } from "../svg/GoogleIcon";
+import { GitlabIcon } from "../svg/GitlabIcon";
+import { GithubIcon } from "../svg/GithubIcon";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -56,14 +64,23 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   problems: ExclamationTriangleIcon,
   folder: FolderIcon,
   docs: BookOpenIcon,
-  issue: ExclamationCircleIcon,
-  trash: TrashIcon,
   web: GlobeAltIcon,
+  clipboard: PaperClipIcon,
+  database: CircleStackIcon,
+  postgres: CircleStackIcon,
+  debugger: BugAntIcon,
+  os: CpuChipIcon,
+  tree: Bars3BottomLeftIcon,
   "prompt-files": DocumentTextIcon,
   "repo-map": FolderIcon,
   "/clear": TrashIcon,
   "/share": ArrowUpOnSquareIcon,
   "/cmd": CommandLineIcon,
+  issue: GithubIcon,
+  discord: DiscordIcon,
+  google: GoogleIcon,
+  "gitlab-mr": GitlabIcon,
+  http: GlobeAltIcon,
 };
 
 export function getIconFromDropdownItem(

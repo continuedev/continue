@@ -13,6 +13,7 @@ import type {
   Problem,
   Range,
   RangeInFile,
+  TerminalOptions,
   Thread,
 } from "../..";
 
@@ -151,8 +152,8 @@ export class MessageIde implements IDE {
     await this.request("openUrl", url);
   }
 
-  async runCommand(command: string): Promise<void> {
-    await this.request("runCommand", { command });
+  async runCommand(command: string,  options?: TerminalOptions): Promise<void> {
+    await this.request("runCommand", { command, options });
   }
 
   async saveFile(fileUri: string): Promise<void> {

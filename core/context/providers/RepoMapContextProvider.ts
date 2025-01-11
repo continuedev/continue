@@ -38,7 +38,10 @@ class RepoMapContextProvider extends BaseContextProvider {
         content: await generateRepoMap(extras.llm, extras.ide, {
           dirUris: query === ENTIRE_PROJECT_ITEM.id ? undefined : [query],
           outputRelativeUriPaths: true,
-          includeSignatures: false,
+          // Doesn't ALWAYS depend on indexing, so not setting dependsOnIndexing = true, just checking for it
+          includeSignatures: extras.config.disableIndexing
+            ? false
+            : (this.options?.includeSignatures ?? false),
         }),
       },
     ];

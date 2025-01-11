@@ -16,6 +16,7 @@ import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamSlashCommand } from "./streamSlashCommand";
 import { streamThunkWrapper } from "./streamThunkWrapper";
+import { updateFileSymbolsFromFiles } from "./updateFileSymbols";
 
 const getSlashCommandForInput = (
   input: MessageContent,
@@ -83,6 +84,15 @@ export const streamResponseThunk = createAsyncThunk<
         const unwrapped = unwrapResult(result);
         const { selectedContextItems, selectedCode, content } = unwrapped;
 
+        // symbols for both context items AND selected codeblocks
+        const filesForSymbols = [
+          ...selectedContextItems
+            .filter((item) => item.uri?.type === "file" && item?.uri?.value)
+            .map((item) => item.uri!.value),
+          ...selectedCode.map((rif) => rif.filepath),
+        ];
+        dispatch(updateFileSymbolsFromFiles(filesForSymbols));
+
         dispatch(
           updateHistoryItemAtIndex({
             index: inputIndex,
@@ -100,7 +110,7 @@ export const streamResponseThunk = createAsyncThunk<
         // Construct messages from updated history
         const updatedHistory = getState().session.history;
         const messages = constructMessages(
-          updatedHistory,
+          [...updatedHistory],
           defaultModel.model,
           defaultModel.provider,
           useTools,

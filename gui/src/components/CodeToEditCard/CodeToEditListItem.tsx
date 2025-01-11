@@ -98,7 +98,7 @@ export default function CodeToEditListItem({
           </div>
         </div>
 
-        <div className="invisible flex items-center gap-1.5 group-hover:visible">
+        <div className="invisible flex items-center group-hover:visible">
           <div className={`flex items-center ${isInsertion ? "hidden" : ""}`}>
             {showCodeSnippet ? (
               <ChevronDownIcon

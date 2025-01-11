@@ -25,6 +25,7 @@ const {
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
   copyTokenizers,
+  copyScripts,
 } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -107,6 +108,9 @@ async function package(target, os, arch, exe) {
 
   // copy llama tokenizers to out
   copyTokenizers();
+
+  // Copy Linux scripts
+  await copyScripts();
 
   // *** Install @lancedb binary ***
   const lancePackageToInstall = {
