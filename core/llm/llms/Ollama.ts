@@ -1,4 +1,4 @@
-import { JSONSchema, JSONSchemaType } from "openai/lib/jsonschema.mjs";
+import { JSONSchema7Object, JSONSchema7Type } from "json-schema";
 
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
@@ -12,7 +12,7 @@ type OllamaChatMessage = {
   tool_calls?: {
     function: {
       name: string;
-      arguments: Record<string, JSONSchemaType>;
+      arguments: Record<string, JSONSchema7Type>;
     };
   }[];
 };
@@ -119,7 +119,7 @@ interface OllamaTool {
   function: {
     name: string;
     description?: string;
-    parameters?: JSONSchema;
+    parameters?: JSONSchema7Object;
   };
 }
 
