@@ -26,37 +26,41 @@ export function AssistantSelect(props: AssistantSelectProps) {
 
   return (
     <div className="border-lightgray flex min-w-0 flex-col border-0 border-r-[0.5px] border-solid pt-0">
-      {profiles.map((option, idx) => (
-        <Option
-          idx={idx}
-          disabled={false}
-          showConfigure={true}
-          selected={option.id === selectedProfile?.id}
-          onConfigure={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
+      <div className={`max-h-[300px] overflow-y-scroll`}>
+        {profiles.map((option, idx) => (
+          <Option
+            idx={idx}
+            disabled={false}
+            showConfigure={true}
+            selected={option.id === selectedProfile?.id}
+            onConfigure={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
 
-            ideMessenger.post("config/openProfile", {
-              profileId: option.id,
-            });
-          }}
-          onClick={() => dispatch(setProfileId(option.id))}
-        >
-          <div className="flex flex-grow items-center">
-            {option.id === "local" ? (
-              <DocumentIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-            ) : (
-              <SparklesIcon
-                className="mr-2 h-4 w-4 flex-shrink-0"
-                color={option.id === selectedProfile?.id ? "yellow" : undefined}
-              />
-            )}
-            <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 overflow-hidden text-ellipsis pr-2 text-xs sm:max-w-32">
-              {option.title}
-            </span>
-          </div>
-        </Option>
-      ))}
+              ideMessenger.post("config/openProfile", {
+                profileId: option.id,
+              });
+            }}
+            onClick={() => dispatch(setProfileId(option.id))}
+          >
+            <div className="flex flex-grow items-center">
+              {option.id === "local" ? (
+                <DocumentIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+              ) : (
+                <SparklesIcon
+                  className="mr-2 h-4 w-4 flex-shrink-0"
+                  color={
+                    option.id === selectedProfile?.id ? "yellow" : undefined
+                  }
+                />
+              )}
+              <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 overflow-hidden text-ellipsis pr-2 text-xs sm:max-w-32">
+                {option.title}
+              </span>
+            </div>
+          </Option>
+        ))}
+      </div>
 
       <div className="mt-auto w-full">
         <OptionDiv key={profiles.length} onClick={onNewAssistant}>

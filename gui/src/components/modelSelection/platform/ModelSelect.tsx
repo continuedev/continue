@@ -68,8 +68,8 @@ export function ModelSelect(props: ModelSelectProps) {
   }
 
   return (
-    <div className="xs:flex hidden h-full min-w-0 flex-col">
-      <div>
+    <div className="xs:flex hidden min-w-0 flex-col">
+      <div className={`max-h-[300px] overflow-y-scroll`}>
         {sortedOptions.map((option, idx) => (
           <Option
             idx={idx}

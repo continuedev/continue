@@ -1,3 +1,7 @@
+import crypto from "crypto";
+
+import { ControlPlaneSessionInfo } from "core/control-plane/client";
+import { controlPlaneEnv } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -16,6 +20,7 @@ import {
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
+import { SecretStorage } from "./SecretStorage";
 
 const AUTH_NAME = "Continue";
 
@@ -26,14 +31,6 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
     this.fire(uri);
   }
 }
-
-import { ControlPlaneSessionInfo } from "core/control-plane/client";
-import { controlPlaneEnv } from "core/control-plane/env";
-
-import crypto from "crypto";
-
-import { SecretStorage } from "./SecretStorage";
-
 // Function to generate a random string of specified length
 function generateRandomString(length: number): string {
   const possibleCharacters =
