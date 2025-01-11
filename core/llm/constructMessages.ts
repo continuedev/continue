@@ -71,20 +71,17 @@ function constructSystemPrompt(
   provider: string,
   useTools: boolean,
 ): string | null {
-  if (
-    useTools &&
-    CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))
-  ) {
-    return SYSTEM_MESSAGE + "\n\n" + TOOL_USE_RULES;
-  } else if (
-    CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))
-  ) {
-    return SYSTEM_MESSAGE;
-  } else if (useTools && modelSupportsTools(model, provider)) {
-    return TOOL_USE_RULES;
+  let systemMessage = "";
+  if (CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))) {
+    systemMessage = SYSTEM_MESSAGE;
   }
-
-  return null;
+  if (useTools && modelSupportsTools(model, provider)) {
+    if (systemMessage) {
+      systemMessage += "\n\n";
+    }
+    systemMessage += TOOL_USE_RULES;
+  }
+  return systemMessage || null;
 }
 
 const CANCELED_TOOL_CALL_MESSAGE =
