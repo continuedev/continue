@@ -19,6 +19,8 @@ import {
   Session,
   SessionMetadata,
   ToolCall,
+  ToolCallDelta,
+  ToolCallState,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
@@ -283,6 +285,28 @@ export const sessionSlice = createSlice({
       if (state.history.length) {
         const lastItem = state.history[state.history.length - 1];
         const lastMessage = lastItem.message;
+
+        function toolCallDeltaToState(
+          toolCallDelta: ToolCallDelta,
+        ): ToolCallState {
+          const [_, parsedArgs] = incrementalParseJson(
+            toolCallDelta.function?.arguments ?? "{}",
+          );
+          return {
+            status: "generating",
+            toolCall: {
+              id: toolCallDelta.id ?? "",
+              type: toolCallDelta.type ?? "function",
+              function: {
+                name: toolCallDelta.function?.name ?? "",
+                arguments: toolCallDelta.function?.arguments ?? "",
+              },
+            },
+            toolCallId: toolCallDelta.id ?? "",
+            parsedArgs,
+          };
+        }
+
         for (const message of action.payload) {
           if (
             message.role &&
@@ -301,20 +325,21 @@ export const sessionSlice = createSlice({
               contextItems: [],
             };
             if (message.role === "assistant" && message.toolCalls?.[0]) {
-              const toolCalls = message.toolCalls?.[0];
-              if (toolCalls) {
-                const [_, parsedArgs] = incrementalParseJson(
-                  message.toolCalls[0].function?.arguments ?? "{}",
-                );
-                historyItem.toolCallState = {
-                  status: "generating",
-                  toolCall: message.toolCalls[0] as ToolCall,
-                  toolCallId: message.toolCalls[0].id as ToolCall["id"],
-                  parsedArgs,
-                };
-              }
-            }
+              const toolCallDelta = message.toolCalls[0];
 
+              if (
+                toolCallDelta.id &&
+                toolCallDelta.function?.arguments &&
+                toolCallDelta.function?.name &&
+                toolCallDelta.type
+              ) {
+                console.warn(
+                  "Received streamed tool call without required fields",
+                  toolCallDelta,
+                );
+              }
+              historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
+            }
             state.history.push(historyItem);
           } else {
             // Add to the existing message
@@ -322,40 +347,39 @@ export const sessionSlice = createSlice({
               lastMessage.content += renderChatMessage(message);
             } else if (
               message.role === "assistant" &&
-              message.toolCalls &&
+              message.toolCalls?.[0] &&
               lastMessage.role === "assistant"
             ) {
-              if (!lastMessage.toolCalls) {
-                lastMessage.toolCalls = [];
+              // Intentionally only supporting one tool call for now.
+              const toolCallDelta = message.toolCalls[0];
+
+              // Update message tool call with delta data
+              const newArgs =
+                (lastMessage.toolCalls?.[0]?.function?.arguments ?? "") +
+                (toolCallDelta.function?.arguments ?? "");
+              if (lastMessage.toolCalls?.[0]) {
+                lastMessage.toolCalls[0].function = {
+                  name:
+                    toolCallDelta.function?.name ??
+                    lastMessage.toolCalls[0].function?.name ??
+                    "",
+                  arguments: newArgs,
+                };
+              } else {
+                lastMessage.toolCalls = [toolCallDelta];
               }
-              message.toolCalls.forEach((toolCall, i) => {
-                if (lastMessage.toolCalls!.length <= i) {
-                  lastMessage.toolCalls!.push(toolCall);
-                } else {
-                  if (
-                    toolCall?.function?.arguments &&
-                    lastMessage?.toolCalls?.[i]?.function?.arguments &&
-                    lastItem.toolCallState
-                  ) {
-                    lastMessage.toolCalls[i].function!.arguments +=
-                      toolCall.function.arguments;
 
-                    const [_, parsedArgs] = incrementalParseJson(
-                      lastMessage.toolCalls[i].function!.arguments!,
-                    );
+              // Update current tool call state
+              if (!lastItem.toolCallState) {
+                console.warn(
+                  "Received streamed tool call response prior to initial tool call delta",
+                );
+                lastItem.toolCallState = toolCallDeltaToState(toolCallDelta);
+              }
 
-                    lastItem.toolCallState.parsedArgs = parsedArgs;
-                    lastItem.toolCallState.toolCall.function.arguments +=
-                      toolCall.function.arguments;
-                  } else {
-                    console.error(
-                      "Unexpected tool call format received - this message added during gui strict null checks",
-                      message,
-                      lastMessage,
-                    );
-                  }
-                }
-              });
+              const [_, parsedArgs] = incrementalParseJson(newArgs);
+              lastItem.toolCallState.parsedArgs = parsedArgs;
+              lastItem.toolCallState.toolCall.function.arguments = newArgs;
             }
           }
         }

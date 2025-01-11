@@ -32,7 +32,7 @@ class DiscordContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "discord",
     displayTitle: "Discord",
-    description: "Reference Discord messages from a channel",
+    description: "Select a channel",
     type: "submenu",
   };
 

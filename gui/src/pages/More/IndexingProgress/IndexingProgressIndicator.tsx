@@ -21,16 +21,15 @@ const STATUS_TO_ICON: Record<IndexingProgressUpdate["status"], any> = {
 };
 
 function IndexingProgressIndicator({ update }: IndexingProgressIndicatorProps) {
-  const progressPercentage = getProgressPercentage(update.progress);
+  const progressPercentage = getProgressPercentage(update.progress).toFixed(0);
   const Icon = STATUS_TO_ICON[update.status];
   const animateIcon = update.status === "indexing";
-  const showProgress = update.status !== "disabled";
+  const showProgress =
+    update.status !== "disabled" && progressPercentage !== "100";
 
   return (
     <div className="flex items-center justify-between gap-1 text-stone-500">
-      {showProgress && (
-        <span className="text-xs">{progressPercentage.toFixed(0)}%</span>
-      )}
+      {showProgress && <span className="text-xs">{progressPercentage}%</span>}
 
       {Icon && (
         <div className="flex items-center">

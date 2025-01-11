@@ -4,7 +4,12 @@ description: Tool use and customization
 keywords: [tool, use, function calling, claude, automatic]
 ---
 
-Tools allow Continue to take action in your IDE and beyond (when you give permission). Currently, they are only supported with [Anthropic](./model-providers/top-level/anthropic.md). To use tools, click on the icon in the input toolbar like below.
+Tools allow Continue to take action in your IDE and beyond (when you give permission). Currently, they are only supported for the following providers:
+
+- [Anthropic](./model-providers/top-level/anthropic.md) - see recommended models [here](https://docs.anthropic.com/en/docs/build-with-claude/tool-use#choosing-a-model).
+- [Ollama](./model-providers/top-level/ollama.md) - see recommended models [here](https://ollama.com/search?c=tools).
+
+To use tools, click on the icon in the input toolbar like below.
 
 ![tools](/img/tool-use-example.png)
 

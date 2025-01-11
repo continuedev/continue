@@ -10,6 +10,7 @@ import {
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
+import { modelSupportsTools } from "core/llm/autodetect";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -32,17 +33,11 @@ export const streamNormalInput = createAsyncThunk<
     defaultModel.title,
     streamAborter.signal,
     messages,
-    useTools
+    useTools && modelSupportsTools(defaultModel.title, defaultModel.provider)
       ? {
-          tools: Object.keys(toolSettings)
-            .filter((tool) => toolSettings[tool] !== "disabled")
-            .map((toolName) =>
-              state.config.config.tools.find(
-                (tool) => tool.function.name === toolName,
-              ),
-            )
-            .filter((tool) => !!tool)
-            .map((tool) => tool!), // for type safety
+          tools: state.config.config.tools.filter(
+            (tool) => toolSettings[tool.function.name] !== "disabled",
+          ),
         }
       : {},
   );

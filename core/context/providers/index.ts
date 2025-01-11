@@ -1,7 +1,7 @@
 import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
-import ClipboardContextProvider from "./ClipboardContextProvider";
 
+import ClipboardContextProvider from "./ClipboardContextProvider";
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
 import CurrentFileContextProvider from "./CurrentFileContextProvider";

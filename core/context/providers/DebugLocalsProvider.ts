@@ -11,7 +11,7 @@ class DebugLocalsProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "debugger",
     displayTitle: "Debugger",
-    description: "Reference the contents of the local variables in the debugger",
+    description: "Local variables",
     type: "submenu",
     renderInlineAs: "",
   };

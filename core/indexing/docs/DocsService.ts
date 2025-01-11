@@ -580,9 +580,9 @@ export default class DocsService {
 
       void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
 
-      if (this.messenger) {
-        this.messenger.send("refreshSubmenuItems", undefined);
-      }
+      this.messenger?.send("refreshSubmenuItems", {
+        providers: ["docs"],
+      });
     } catch (e) {
       console.error("Error indexing docs", e);
       this.handleStatusUpdate({
@@ -1055,6 +1055,8 @@ export default class DocsService {
     this.abort(startUrl);
     await this.deleteIndexes(startUrl);
     this.deleteFromConfig(startUrl);
-    this.messenger?.send("refreshSubmenuItems", undefined);
+    this.messenger?.send("refreshSubmenuItems", {
+      providers: ["docs"],
+    });
   }
 }
