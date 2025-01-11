@@ -1,11 +1,11 @@
 import { expect } from "chai";
 import {
   EditorView,
-  WebView,
-  WebDriver,
   Key,
-  WebElement,
   VSBrowser,
+  WebDriver,
+  WebElement,
+  WebView,
   until,
 } from "vscode-extension-tester";
 
@@ -191,6 +191,20 @@ describe("GUI Test", () => {
         ),
       ]);
     }).timeout(DEFAULT_TIMEOUT.XL);
+  });
+
+  describe.skip("Chat with tools", () => {
+    it("should render tool call", async () => {
+      await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
+
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+
+      await TestUtils.waitForSuccess(
+        () => GUISelectors.getThreadMessageByText(view, "No matches found"), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+      );
+    });
   });
 
   describe("Chat Paths", () => {
