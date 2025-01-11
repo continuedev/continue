@@ -4,26 +4,28 @@ import {
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-const Diff = require("diff");
 
 import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
+import { RecentlyVisitedRangesService } from "./RecentlyVisitedRangesService";
 import {
   StatusBarStatus,
   getStatusBarStatus,
   setupStatusBar,
   stopStatusBarLoading,
 } from "./statusBar";
-import * as URI from "uri-js";
 
-import type { IDE } from "core";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { startLocalOllama } from "core/util/ollamaHelper";
+import type { IDE } from "core";
+
+const Diff = require("diff");
 
 interface DiffType {
   count: number;
@@ -75,6 +77,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
+  private recentlyVisitedRanges: RecentlyVisitedRangesService;
   private recentlyEditedTracker = new RecentlyEditedTracker();
 
   constructor(
@@ -90,6 +93,7 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
+    this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
@@ -131,30 +135,6 @@ export class ContinueCompletionProvider
     }
 
     let injectDetails: string | undefined = undefined;
-    // Here we could use the details from the intellisense dropdown
-    // and place them just above the line being typed but because
-    // we don't have control over the formatting of the details and
-    // they could be especially long, not doing this for now
-    // if (context.selectedCompletionInfo) {
-    //   const results: any = await vscode.commands.executeCommand(
-    //     "vscode.executeCompletionItemProvider",
-    //     document.uri,
-    //     position,
-    //     null,
-    //     1,
-    //   );
-    //   if (results?.items) {
-    //     injectDetails = results.items?.[0]?.detail;
-    //     // const label = results?.items?.[0].label;
-    //     // const workspaceSymbols = (
-    //     //   (await vscode.commands.executeCommand(
-    //     //     "vscode.executeWorkspaceSymbolProvider",
-    //     //     label,
-    //     //   )) as any
-    //     // ).filter((symbol: any) => symbol.name === label);
-    //     // console.log(label, "=>", workspaceSymbols);
-    //   }
-    // }
 
     // The first time intellisense dropdown shows up, and the first choice is selected,
     // we should not consider this. Only once user explicitly moves down the list
@@ -218,17 +198,17 @@ export class ContinueCompletionProvider
       let manuallyPassPrefix: string | undefined = undefined;
 
       const input: AutocompleteInput = {
-        isUntitledFile: document.isUntitled,
-        completionId: uuidv4(),
-        filepath: document.uri.toString(),
         pos,
-        recentlyEditedFiles: [],
-        recentlyEditedRanges:
-          await this.recentlyEditedTracker.getRecentlyEditedRanges(),
         manuallyPassFileContents,
         manuallyPassPrefix,
         selectedCompletionInfo,
         injectDetails,
+        isUntitledFile: document.isUntitled,
+        completionId: uuidv4(),
+        filepath: document.uri.toString(),
+        recentlyVisitedRanges: this.recentlyVisitedRanges.getSnippets(),
+        recentlyEditedRanges:
+          await this.recentlyEditedTracker.getRecentlyEditedRanges(),
       };
 
       setupStatusBar(undefined, true);
