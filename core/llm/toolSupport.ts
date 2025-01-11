@@ -11,6 +11,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  openai: (model) => {
+    // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
+    if (model.toLowerCase().startsWith("gpt-4")) {
+      return true;
+    }
+  },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
     if (

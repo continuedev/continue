@@ -334,15 +334,6 @@ export function getLogsDirPath(): string {
   return logsPath;
 }
 
-export function getLogFilePath(): string {
-  const logFilePath = path.join(getContinueGlobalPath(), "continue.log");
-  // Make sure the file/directory exist
-  if (!fs.existsSync(logFilePath)) {
-    fs.writeFileSync(logFilePath, "");
-  }
-  return logFilePath;
-}
-
 export function getCoreLogsPath(): string {
   return path.join(getLogsDirPath(), "core.log");
 }

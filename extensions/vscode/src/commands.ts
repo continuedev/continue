@@ -10,11 +10,7 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
-import {
-  getConfigJsonPath,
-  getDevDataFilePath,
-  getLogFilePath,
-} from "core/util/paths";
+import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
@@ -651,8 +647,7 @@ const getCommandsMap: (
     },
     "continue.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
-      const logFilePath = getLogFilePath();
-      await vscode.window.showTextDocument(vscode.Uri.file(logFilePath));
+      vscode.commands.executeCommand("workbench.action.toggleDevTools");
     },
     "continue.debugTerminal": async () => {
       captureCommandTelemetry("debugTerminal");
