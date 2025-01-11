@@ -12,11 +12,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     }
   },
   openai: (model) => {
-    if (
-      ["gpt-4", "o1", "chatgpt-4o-latest"].some((part) =>
-        model.toLowerCase().startsWith(part),
-      )
-    ) {
+    // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
+    if (model.toLowerCase().startsWith("gpt-4")) {
       return true;
     }
   },
