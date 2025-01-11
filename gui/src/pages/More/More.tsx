@@ -13,7 +13,7 @@ import MoreHelpRow from "./MoreHelpRow";
 import IndexingProgress from "./IndexingProgress";
 import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses";
 import PageHeader from "../../components/PageHeader";
-import { useAppDispatch } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { saveCurrentSession } from "../../redux/thunks/session";
 
 function MorePage() {
@@ -21,6 +21,9 @@ function MorePage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
+  const disableIndexing = useAppSelector(
+    (state) => state.config.config.disableIndexing,
+  );
 
   return (
     <div className="overflow-y-scroll">
@@ -34,8 +37,15 @@ function MorePage() {
               Local embeddings of your codebase
             </span>
           </div>
-          <IndexingProgress />
+          {disableIndexing ? (
+            <div className="pb-2 pt-5 text-center font-semibold">
+              Indexing is disabled
+            </div>
+          ) : (
+            <IndexingProgress />
+          )}
         </div>
+
         <div className="flex flex-col py-5">
           <DocsIndexingStatuses />
         </div>
