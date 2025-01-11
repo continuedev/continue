@@ -374,6 +374,7 @@ class Ollama extends BaseLLM {
       stream: options.stream,
       // format: options.format, // Not currently in base completion options
     };
+    // This logic is because tools can ONLY be included with user message for ollama
     if (options.tools?.length && ollamaMessages.at(-1)?.role === "user") {
       chatOptions.tools = options.tools.map((tool) => ({
         type: "function",

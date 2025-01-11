@@ -1,3 +1,4 @@
+import { FimCreateParamsStreaming } from "@continuedev/openai-adapters/dist/apis/base";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -6,7 +7,6 @@ import {
   CompletionCreateParams,
 } from "openai/resources/index";
 
-import { FimCreateParamsStreaming } from "@continuedev/openai-adapters/dist/apis/base";
 import { ChatMessage, CompletionOptions } from "..";
 
 export function toChatMessage(
@@ -30,11 +30,12 @@ export function toChatMessage(
     role: message.role,
     content:
       typeof message.content === "string"
-        ? message.content === ""
-          ? " "
-          : message.content
+        ? message.content || " " // LM Studio (and other providers) don't accept empty content
         : !message.content.some((item) => item.type !== "text")
-          ? message.content.map((item) => item.text).join("")
+          ? // If no multi-media is in the message, just send as text
+            // for compatibility with OpenAI-"compatible" servers
+            // that don't support multi-media format
+            message.content.map((item) => item.text).join("") || " "
           : message.content.map((part) => {
               const msg: any = {
                 type: part.type,
@@ -48,9 +49,9 @@ export function toChatMessage(
             }),
   };
   if (
+    msg.role === "assistant" &&
     message.role === "assistant" &&
-    message.toolCalls &&
-    msg.role === "assistant"
+    message.toolCalls
   ) {
     msg.tool_calls = message.toolCalls.map((toolCall) => ({
       id: toolCall.id!,
@@ -62,37 +63,6 @@ export function toChatMessage(
     }));
   }
   return msg;
-  // if (typeof message.content === "string") {
-  //   return {
-  //     role: message.role,
-  //     content: message.content === "" ? " " : message.content, // LM Studio API doesn't accept empty strings
-  //   };
-  // } else if (!message.content.some((item) => item.type !== "text")) {
-  //   // If no multi-media is in the message, just send as text
-  //   // for compatibility with OpenAI-"compatible" servers
-  //   // that don't support multi-media format
-  //   return {
-  //     ...message,
-  //     content: message.content.map((item) => item.text).join(""),
-  //   };
-  // }
-
-  // const parts = message.content.map((part) => {
-  //   const msg: any = {
-  //     type: part.type,
-  //     text: part.text,
-  //   };
-  //   if (part.type === "imageUrl") {
-  //     msg.image_url = { ...part.imageUrl, detail: "auto" };
-  //     msg.type = "image_url";
-  //   }
-  //   return msg;
-  // });
-
-  // return {
-  //   ...message,
-  //   content: parts,
-  // };
 }
 
 export function toChatBody(

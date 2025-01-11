@@ -134,6 +134,7 @@ export const sessionSlice = createSlice({
           state.history[state.history.length - 2].editorState;
         state.history = state.history.slice(0, -2);
         // TODO is this logic correct for tool use conversations?
+        // Maybe slice at last index of "user" role message?
       }
     },
     // Trigger value picked up by editor with isMainInput to set its content

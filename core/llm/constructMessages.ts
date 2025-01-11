@@ -101,7 +101,7 @@ export function constructMessages(
   const systemMessage = constructSystemPrompt(model, provider, useTools);
   if (systemMessage) {
     msgs.push({
-      role: "system" as const,
+      role: "system",
       content: systemMessage,
     });
   }
