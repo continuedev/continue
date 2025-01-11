@@ -81,7 +81,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useAppSelector(
     (state) => state.config.config.contextProviders,
   );
-  const useTools = useAppSelector((state) => state.ui.useTools);
   const editModeState = useAppSelector((state) => state.editModeState);
 
   const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
@@ -112,9 +111,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         hideTools: true,
         enterText: editModeState.editStatus === "accepting" ? "Retry" : "Edit",
       }
-    : {
-        // hideTools: false,
-      };
+    : {};
 
   return (
     <div className={`${props.hidden ? "hidden" : ""}`}>
