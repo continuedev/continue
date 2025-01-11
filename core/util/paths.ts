@@ -301,8 +301,8 @@ export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
   return dir;
 }
 
-export function internalBetaPathExists(): boolean {
-  const sPath = path.join(getContinueGlobalPath(), ".internal_beta");
+export function usePlatformPathExists(): boolean {
+  const sPath = path.join(getContinueGlobalPath(), ".use_platform");
   return fs.existsSync(sPath);
 }
 

@@ -63,6 +63,7 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
+import { usePlatform } from "../control-plane/flags";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -570,6 +571,7 @@ function finalToBrowserConfig(
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
+    usePlatform: usePlatform(),
   };
 }
 

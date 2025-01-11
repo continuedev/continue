@@ -1,1 +1,5 @@
-export const USE_PLATFORM = true;
+import { usePlatformPathExists } from "../util/paths";
+
+export function usePlatform(): boolean {
+  return usePlatformPathExists();
+}

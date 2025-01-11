@@ -6,7 +6,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
-import { USE_PLATFORM } from "core/control-plane/flags";
 import { streamResponse } from "core/llm/stream";
 import { stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
@@ -41,6 +40,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectUsePlatform } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
@@ -217,6 +217,7 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
+  const usePlatform = useAppSelector(selectUsePlatform);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -541,7 +542,7 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  {USE_PLATFORM ? (
+                  {usePlatform ? (
                     <PlatformOnboardingCard />
                   ) : (
                     <OnboardingCard />

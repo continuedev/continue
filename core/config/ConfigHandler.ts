@@ -14,18 +14,20 @@ import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath } from "../util/paths.js";
 
+import { pathToFileURL } from "url";
+import { usePlatform } from "../control-plane/flags.js";
 import { ConfigResult } from "./load.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
 } from "./onboarding.js";
+import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
-import { pathToFileURL } from "url";
 
 export type { ProfileDescription };
 
@@ -99,51 +101,97 @@ export class ConfigHandler {
   }
 
   private async fetchControlPlaneProfiles() {
-    // Get the profiles and create their lifecycle managers
-    this.controlPlaneClient
-      .listAssistants()
-      .then(async (assistants) => {
-        this.profiles = this.profiles.filter(
-          (profile) => profile.profileId === "local",
-        );
-        assistants.forEach((assistant) => {
-          const profileLoader = new PlatformProfileLoader(
-            assistant.configYaml,
-            assistant.ownerSlug,
-            assistant.packageSlug,
-            this.controlPlaneClient,
-            this.ide,
-            this.ideSettingsPromise,
-            this.writeLog,
-            this.reloadConfig.bind(this),
+    if (usePlatform()) {
+      // Get the profiles and create their lifecycle managers
+      this.controlPlaneClient
+        .listAssistants()
+        .then(async (assistants) => {
+          this.profiles = this.profiles.filter(
+            (profile) => profile.profileId === "local",
           );
-          this.profiles.push(new ProfileLifecycleManager(profileLoader));
+          assistants.forEach((assistant) => {
+            const profileLoader = new PlatformProfileLoader(
+              assistant.configYaml,
+              assistant.ownerSlug,
+              assistant.packageSlug,
+              this.controlPlaneClient,
+              this.ide,
+              this.ideSettingsPromise,
+              this.writeLog,
+              this.reloadConfig.bind(this),
+            );
+            this.profiles.push(new ProfileLifecycleManager(profileLoader));
+          });
+
+          this.notifyProfileListeners(
+            this.profiles.map((profile) => profile.profileDescription),
+          );
+
+          // Check the last selected workspace, and reload if it isn't local
+          const workspaceId = await this.getWorkspaceId();
+          const lastSelectedWorkspaceIds =
+            this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+          const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
+          if (selectedWorkspaceId) {
+            this.selectedProfileId = selectedWorkspaceId;
+            await this.loadConfig();
+          } else {
+            // Otherwise we stick with local profile, and record choice
+            lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
+            this.globalContext.update(
+              "lastSelectedProfileForWorkspace",
+              lastSelectedWorkspaceIds,
+            );
+          }
+        })
+        .catch((e) => {
+          console.error("Failed to list assistants: ", e);
         });
-
-        this.notifyProfileListeners(
-          this.profiles.map((profile) => profile.profileDescription),
-        );
-
-        // Check the last selected workspace, and reload if it isn't local
-        const workspaceId = await this.getWorkspaceId();
-        const lastSelectedWorkspaceIds =
-          this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
-        const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
-        if (selectedWorkspaceId) {
-          this.selectedProfileId = selectedWorkspaceId;
-          await this.loadConfig();
-        } else {
-          // Otherwise we stick with local profile, and record choice
-          lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
-          this.globalContext.update(
-            "lastSelectedProfileForWorkspace",
-            lastSelectedWorkspaceIds,
+    } else {
+      this.controlPlaneClient
+        .listWorkspaces()
+        .then(async (workspaces) => {
+          this.profiles = this.profiles.filter(
+            (profile) => profile.profileId === "local",
           );
-        }
-      })
-      .catch((e) => {
-        console.error("Failed to list assistants: ", e);
-      });
+          workspaces.forEach((workspace) => {
+            const profileLoader = new ControlPlaneProfileLoader(
+              workspace.id,
+              workspace.name,
+              this.controlPlaneClient,
+              this.ide,
+              this.ideSettingsPromise,
+              this.writeLog,
+              this.reloadConfig.bind(this),
+            );
+            this.profiles.push(new ProfileLifecycleManager(profileLoader));
+          });
+
+          this.notifyProfileListeners(
+            this.profiles.map((profile) => profile.profileDescription),
+          );
+
+          // Check the last selected workspace, and reload if it isn't local
+          const workspaceId = await this.getWorkspaceId();
+          const lastSelectedWorkspaceIds =
+            this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+          const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
+          if (selectedWorkspaceId) {
+            this.selectedProfileId = selectedWorkspaceId;
+            await this.loadConfig();
+          } else {
+            // Otherwise we stick with local profile, and record choice
+            lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
+            this.globalContext.update(
+              "lastSelectedProfileForWorkspace",
+              lastSelectedWorkspaceIds,
+            );
+          }
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+    }
   }
 
   async setSelectedProfile(profileId: string) {

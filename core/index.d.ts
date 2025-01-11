@@ -1200,6 +1200,7 @@ export interface BrowserSerializedContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  usePlatform: boolean;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
@@ -1237,9 +1238,9 @@ export type PackageDocsResult = {
 } & (
   | { error: string; details?: never }
   | { details: PackageDetailsSuccess; error?: never }
-  );
+);
 
 export interface TerminalOptions {
-  reuseTerminal?: boolean,
-  terminalName?: string,
+  reuseTerminal?: boolean;
+  terminalName?: string;
 }

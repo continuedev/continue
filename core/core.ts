@@ -44,7 +44,7 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
-import { USE_PLATFORM } from "./control-plane/flags";
+import { usePlatform } from "./control-plane/flags";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -103,7 +103,7 @@ export class Core {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
-      useOnboarding: USE_PLATFORM,
+      useOnboarding: usePlatform(),
     });
 
     this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);

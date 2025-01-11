@@ -1,3 +1,5 @@
+import { usePlatform } from "./flags";
+
 interface ControlPlaneEnv {
   DEFAULT_CONTROL_PLANE_PROXY_URL: string;
   CONTROL_PLANE_URL: string;
@@ -34,6 +36,15 @@ const STAGING_ENV: ControlPlaneEnv = {
   APP_URL: "https://app-preview.continue.dev",
 };
 
+const TEST_ENV: ControlPlaneEnv = {
+  DEFAULT_CONTROL_PLANE_PROXY_URL:
+    "https://control-plane-api.continue-dev.tools/",
+  CONTROL_PLANE_URL: "https://control-plane-api.continue-dev.tools/",
+  AUTH_TYPE: WORKOS_ENV_ID_STAGING,
+  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
+  APP_URL: "https://app-test.continue.dev",
+};
+
 const LOCAL_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL: "http://localhost:3001/",
   CONTROL_PLANE_URL: "http://localhost:3001/",
@@ -47,4 +58,6 @@ export const controlPlaneEnv =
     ? LOCAL_ENV
     : process.env.CONTROL_PLANE_ENV === "staging"
       ? STAGING_ENV
-      : PRODUCTION_ENV;
+      : process.env.CONTROL_PLANE_ENV === "test" || usePlatform()
+        ? TEST_ENV
+        : PRODUCTION_ENV;
