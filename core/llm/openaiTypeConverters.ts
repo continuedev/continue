@@ -19,38 +19,80 @@ export function toChatMessage(
       tool_call_id: message.toolCallId,
     };
   }
-
-  if (typeof message.content === "string") {
+  if (message.role === "system") {
     return {
-      role: message.role,
-      content: message.content === "" ? " " : message.content, // LM Studio API doesn't accept empty strings
-    };
-  } else if (!message.content.some((item) => item.type !== "text")) {
-    // If no multi-media is in the message, just send as text
-    // for compatibility with OpenAI-"compatible" servers
-    // that don't support multi-media format
-    return {
-      ...message,
-      content: message.content.map((item) => item.text).join(""),
+      role: "system",
+      content: message.content,
     };
   }
 
-  const parts = message.content.map((part) => {
-    const msg: any = {
-      type: part.type,
-      text: part.text,
-    };
-    if (part.type === "imageUrl") {
-      msg.image_url = { ...part.imageUrl, detail: "auto" };
-      msg.type = "image_url";
-    }
-    return msg;
-  });
-
-  return {
-    ...message,
-    content: parts,
+  let msg: ChatCompletionMessageParam = {
+    role: message.role,
+    content:
+      typeof message.content === "string"
+        ? message.content === ""
+          ? " "
+          : message.content
+        : !message.content.some((item) => item.type !== "text")
+          ? message.content.map((item) => item.text).join("")
+          : message.content.map((part) => {
+              const msg: any = {
+                type: part.type,
+                text: part.text,
+              };
+              if (part.type === "imageUrl") {
+                msg.image_url = { ...part.imageUrl, detail: "auto" };
+                msg.type = "image_url";
+              }
+              return msg;
+            }),
   };
+  if (
+    message.role === "assistant" &&
+    message.toolCalls &&
+    msg.role === "assistant"
+  ) {
+    msg.tool_calls = message.toolCalls.map((toolCall) => ({
+      id: toolCall.id!,
+      type: toolCall.type!,
+      function: {
+        name: toolCall.function?.name!,
+        arguments: toolCall.function?.arguments!,
+      },
+    }));
+  }
+  return msg;
+  // if (typeof message.content === "string") {
+  //   return {
+  //     role: message.role,
+  //     content: message.content === "" ? " " : message.content, // LM Studio API doesn't accept empty strings
+  //   };
+  // } else if (!message.content.some((item) => item.type !== "text")) {
+  //   // If no multi-media is in the message, just send as text
+  //   // for compatibility with OpenAI-"compatible" servers
+  //   // that don't support multi-media format
+  //   return {
+  //     ...message,
+  //     content: message.content.map((item) => item.text).join(""),
+  //   };
+  // }
+
+  // const parts = message.content.map((part) => {
+  //   const msg: any = {
+  //     type: part.type,
+  //     text: part.text,
+  //   };
+  //   if (part.type === "imageUrl") {
+  //     msg.image_url = { ...part.imageUrl, detail: "auto" };
+  //     msg.type = "image_url";
+  //   }
+  //   return msg;
+  // });
+
+  // return {
+  //   ...message,
+  //   content: parts,
+  // };
 }
 
 export function toChatBody(

@@ -18,7 +18,6 @@ import {
   PromptLog,
   Session,
   SessionMetadata,
-  ToolCall,
   ToolCallDelta,
   ToolCallState,
 } from "core";
@@ -284,9 +283,6 @@ export const sessionSlice = createSlice({
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
       if (state.history.length) {
-        const lastItem = state.history[state.history.length - 1];
-        const lastMessage = lastItem.message;
-
         function toolCallDeltaToState(
           toolCallDelta: ToolCallDelta,
         ): ToolCallState {
@@ -309,13 +305,18 @@ export const sessionSlice = createSlice({
         }
 
         for (const message of action.payload) {
+          const lastItem = state.history[state.history.length - 1];
+          const lastMessage = lastItem.message;
           if (
-            message.role &&
-            (lastMessage.role !== message.role ||
-              // This is when a tool call comes after assistant text
-              (lastMessage.content !== "" &&
-                message.role === "assistant" &&
-                message.toolCalls?.length))
+            lastMessage.role !== message.role ||
+            // This is for when a tool call comes immediately before/after tool call
+            (lastMessage.role === "assistant" &&
+              message.role === "assistant" &&
+              // Last message isn't completely new
+              !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
+              // And there's a difference in tool call presence
+              (lastMessage.toolCalls?.length ?? 0) !==
+                (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {

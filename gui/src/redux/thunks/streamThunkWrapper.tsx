@@ -17,6 +17,7 @@ export const streamThunkWrapper = createAsyncThunk<
     dispatch(setDialogMessage(<StreamErrorDialog error={e} />));
     dispatch(setShowDialog(true));
   } finally {
+    console.log(getState().session.history);
     dispatch(setInactive());
     const state = getState();
     if (state.session.mode === "chat") {
