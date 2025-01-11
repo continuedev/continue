@@ -754,6 +754,7 @@ export type ContextProviderName =
   | "issue"
   | "repo-map"
   | "url"
+  | "commit"
   | "web"
   | "discord"
   | "clipboard"
