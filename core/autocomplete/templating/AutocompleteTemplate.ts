@@ -111,13 +111,13 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
           return snippet.content;
         }
 
-        return `+++++ ${relativePaths[i]}\n${snippet.content}`;
+        return `+++++ ${relativePaths[i].uri} \n${snippet.content}`;
       })
       .join("\n\n");
 
     return [
       `${otherFiles}\n\n+++++ ${
-        relativePaths[relativePaths.length - 1]
+        relativePaths[relativePaths.length - 1].uri
       }\n${prefix}`,
       suffix,
     ];
