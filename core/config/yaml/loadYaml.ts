@@ -75,11 +75,6 @@ function loadConfigYaml(
     };
   }
 
-  for (const workspaceConfig of workspaceConfigs) {
-    const rendered = renderTemplateVars(workspaceConfig);
-    config = extendConfig(config, YAML.parse(rendered) as ConfigYaml);
-  }
-
   // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
   return {
     config,
