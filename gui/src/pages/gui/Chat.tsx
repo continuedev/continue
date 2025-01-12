@@ -53,6 +53,7 @@ import {
   setDialogEntryOn,
   setDialogMessage,
   setShowDialog,
+  setTTSActive,
 } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
@@ -71,6 +72,7 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { loadLastSession } from "../../redux/thunks/session";
+import PiperTTSClient from "../../redux/util/piperTTS";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -243,7 +245,7 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (defaultModel?.provider === "free-trial") {
+     if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
         if (u) {
           setLocalStorage("ftc", u + 1);
@@ -459,7 +461,14 @@ export function Chat() {
             <StopButton
               className=""
               onClick={() => {
-                ideMessenger.post("tts/kill", undefined);
+                if(!PiperTTSClient.audio?.paused){
+                  PiperTTSClient.audio.pause();
+                }else if(window.speechSynthesis.speaking){                  
+                  window.speechSynthesis.cancel();
+                }else{
+                  ideMessenger.post("tts/kill", undefined);
+                }
+                dispatch(setTTSActive(false));
               }}
             >
               ■ Stop TTS

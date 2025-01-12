@@ -3064,9 +3064,22 @@
               }
             },
             "readResponseTTS": {
-              "type": "boolean",
-              "default": true,
-              "description": "Automatically read LLM chat responses aloud using system TTS models"
+              "type": "object",
+              "description": "Automatically read LLM chat responses aloud using system TTS models",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "default": "native"
+                },
+                "lang": {
+                  "type": "string",
+                  "default": "en-US"
+                },
+                "flush": {
+                  "type": "boolean",
+                  "default": false
+                }
+              }
             },
             "promptPath": {
               "type": "string"

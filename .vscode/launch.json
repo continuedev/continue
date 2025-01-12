@@ -14,7 +14,8 @@
         // Pass a directory to manually test in
         "${workspaceFolder}/manual-testing-sandbox",
         "${workspaceFolder}/manual-testing-sandbox/test.js",
-        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
+        "--disable-extensions"
       ],
       "pauseForSourceMap": false,
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],

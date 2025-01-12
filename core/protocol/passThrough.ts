@@ -72,6 +72,8 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "isContinueInputFocused",
     "didChangeAvailableProfiles",
     "setTTSActive",
+    "setTTSNative",
+    "setPiperTTS",
     "getWebviewHistoryLength",
     "getCurrentSessionId",
     "signInToControlPlane",

@@ -20,6 +20,7 @@ type UIState = {
   useTools: boolean;
   toolSettings: { [toolName: string]: ToolSetting };
   ttsActive: boolean;
+  ttsUtterance:SpeechSynthesisUtterance,
 };
 
 export const DEFAULT_TOOL_SETTING: ToolSetting = "allowedWithPermission";
@@ -33,6 +34,7 @@ export const uiSlice = createSlice({
     onboardingCard: defaultOnboardingCardState,
     shouldAddFileForEditing: false,
     ttsActive: false,
+    ttsUtterance:null,
     useTools: false,
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
@@ -97,6 +99,9 @@ export const uiSlice = createSlice({
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
+    setTTSUtterance: (state, { payload }: PayloadAction<SpeechSynthesisUtterance>) => {
+      state.ttsUtterance = payload;
+    },
   },
 });
 
@@ -109,6 +114,7 @@ export const {
   toggleToolSetting,
   addTool,
   setTTSActive,
+  setTTSUtterance,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

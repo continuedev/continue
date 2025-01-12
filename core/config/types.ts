@@ -1049,7 +1049,7 @@ declare global {
     /**
      * Automatically read LLM chat responses aloud using system TTS models
      */
-    readResponseTTS?: boolean;
+    readResponseTTS?: {type:string,lang?:string,flush?:boolean};
   
     /**
      * If set to true, we will attempt to pull down and install an instance of Chromium

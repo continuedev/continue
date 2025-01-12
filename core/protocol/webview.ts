@@ -31,6 +31,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     void,
   ];
   setTTSActive: [boolean, void];
+  setTTSNative:[{lang:string,message:string}, boolean];
+  setPiperTTS:[{lang:string,message:string,flush:boolean}, void];
   getWebviewHistoryLength: [undefined, number];
   getCurrentSessionId: [undefined, string];
   signInToControlPlane: [undefined, void];

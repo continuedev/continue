@@ -36,45 +36,47 @@ export class TTS {
   static handle: ChildProcess | undefined = undefined;
   static messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
 
-  static async read(message: string) {
+  static async read(message: string,lang: string) {
     message = sanitizeMessageForTTS(message);
-
-    try {
-      // Kill any active TTS processes
-      await TTS.kill();
-    } catch (e) {
-      console.warn("Error killing TTS process: ", e);
-      return;
-    }
-
-    switch (TTS.os) {
-      case "darwin":
-        TTS.handle = exec(`say "${message}"`);
-        break;
-      case "win32":
-        // Replace single quotes on windows
-        TTS.handle = exec(
-          `powershell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('${message.replace(
-            /'/g,
-            "''",
-          )}')"`,
-        );
-        break;
-      case "linux":
-        TTS.handle = exec(`espeak "${message}"`);
-        break;
-      default:
-        console.log(
-          "Text-to-speech is not supported on this operating system.",
-        );
+    const native = await TTS.messenger.request("setTTSNative",{lang,message});
+    if(!native){
+      try {
+        // Kill any active TTS processes
+        await TTS.kill();
+      } catch (e) {
+        console.warn("Error killing TTS process: ", e);
         return;
-    }
+      }
 
-    void TTS.messenger.request("setTTSActive", true);
+      switch (TTS.os) {
+        case "darwin":
+          TTS.handle = exec(`say "${message}"`);
+          break;
+        case "win32":
+          // Replace single quotes on windows
+          TTS.handle = exec(
+            `powershell -Command "Add-Type -AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('${message.replace(
+              /'/g,
+              "''",
+            )}')"`,
+          );
+          break;
+        case "linux":
+          TTS.handle = exec(`espeak "${message}"`);
+          break;
+        default:
+          console.log(
+            "Text-to-speech is not supported on this operating system.",
+          );
+          return;
+      }
 
-    TTS.handle?.once("exit", () => {
-      void TTS.messenger.request("setTTSActive", false);
-    });
+      void TTS.messenger.request("setTTSActive", true);
+
+      TTS.handle?.once("exit", () => {
+        void TTS.messenger.request("setTTSActive", false);
+      });
+  }
   }
 
   static async kill(): Promise<void> {

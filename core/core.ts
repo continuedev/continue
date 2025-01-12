@@ -37,7 +37,7 @@ import {
 } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
-import { TTS } from "./util/tts";
+import { sanitizeMessageForTTS, TTS } from "./util/tts";
 
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -392,7 +392,8 @@ export class Core {
       }
 
       // Stop TTS on new StreamChat
-      if (config.experimental?.readResponseTTS) {
+      
+      if (config.experimental?.readResponseTTS?.type==="native") {
         void TTS.kill();
       }
 
@@ -426,9 +427,18 @@ export class Core {
         next = await gen.next();
       }
 
-      if (config.experimental?.readResponseTTS && "completion" in next.value) {
-        void TTS.read(next.value?.completion);
+      if("completion" in next.value){
+        let message=next.value?.completion;
+        const lang=config.experimental?.readResponseTTS?.lang??"en-US";
+        const flush=config.experimental?.readResponseTTS?.flush??false;
+        if (config.experimental?.readResponseTTS?.type==="native" ) {
+          void TTS.read(message,lang);
+        }else if (config.experimental?.readResponseTTS?.type==="piperTTS" ) {
+          message = sanitizeMessageForTTS(message);
+          void TTS.messenger.request("setPiperTTS",{lang,message,flush});
+        }
       }
+
 
       void Telemetry.capture(
         "chat",
