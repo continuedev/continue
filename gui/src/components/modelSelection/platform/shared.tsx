@@ -101,7 +101,7 @@ export function Option({
       <div className="flex w-full flex-col gap-0.5">
         <div className="flex w-full items-center justify-between">
           {children}
-          <div className="ml-5 flex items-center">
+          <div className="ml-2 flex items-center">
             {showConfigure && (
               <StyledCog6ToothIcon $hovered={hovered} onClick={onConfigure} />
             )}

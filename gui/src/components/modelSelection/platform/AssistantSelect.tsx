@@ -43,7 +43,7 @@ export function AssistantSelect(props: AssistantSelectProps) {
             }}
             onClick={() => dispatch(setProfileId(option.id))}
           >
-            <div className="flex flex-grow items-center">
+            <div className="flex min-w-0 items-center">
               {option.id === "local" ? (
                 <DocumentIcon className="mr-2 h-4 w-4 flex-shrink-0" />
               ) : (
@@ -54,9 +54,7 @@ export function AssistantSelect(props: AssistantSelectProps) {
                   }
                 />
               )}
-              <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 overflow-hidden text-ellipsis pr-2 text-xs sm:max-w-32">
-                {option.title}
-              </span>
+              <span className="flex-1 truncate text-xs">{option.title}</span>
             </div>
           </Option>
         ))}
