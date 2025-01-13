@@ -16,6 +16,8 @@ import {
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
+import { TTSNative } from "../redux/thunks/ttsNative";
+import { PiperTTS } from "../redux/thunks/piperTTS";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
@@ -177,9 +179,43 @@ function useSetup() {
     dispatch(setInactive());
   });
 
-  useWebviewListener("setTTSActive", async (status) => {
-    dispatch(setTTSActive(status));
+  useWebviewListener("setTTSActive", async (status) => {    
+    dispatch(setTTSActive(status));   
   });
+  useWebviewListener("setTTSNative", async (data) => {
+    try{
+      const synth = window.speechSynthesis;
+      if(synth){
+        const voices=synth.getVoices();
+        if (voices.length>0) {
+          dispatch(TTSNative(data));
+          return true;        
+        }else{
+          return await new Promise((resolve,reject)=>{
+            const timeout=setTimeout(()=>{resolve(false);},5000);
+            synth.onvoiceschanged=()=>{
+              clearTimeout(timeout);
+              const voices=synth.getVoices();
+              if (voices.length>0) {
+                dispatch(TTSNative(data));
+                resolve(true);
+              } else {
+                  resolve(false);
+              }
+            };
+          });
+        }
+      }else{
+        return false;
+      }
+    }catch(e){
+      console.error(e);
+      return false;
+    }
+  }); 
+  useWebviewListener("setPiperTTS", async (data) => {   
+    dispatch(PiperTTS(data));
+  });   
 
   useWebviewListener("configError", async (error) => {
     dispatch(setConfigError(error));

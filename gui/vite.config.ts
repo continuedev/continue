@@ -4,11 +4,34 @@ import { defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  assetsInclude: [
+    './assets/piper/ort-wasm-simd-threaded.wasm',
+    './assets/piper/piper_phonemize.wasm',
+    './assets/piper/piper_phonemize.data',
+  ],
+  worker:{
+    format:"es",
+    rollupOptions:{    
+      output:{
+        entryFileNames: 'assets/worker.js',
+        inlineDynamicImports: true,     
+      }
+    }
+  }, 
+  optimizeDeps: {
+    include: ["@mintplex-labs/piper-tts-web"],
+    esbuildOptions: {
+      define: {
+        global: "globalThis"
+      },
+      plugins: []
+    }
+  },
   plugins: [react(), tailwindcss()],
   build: {
-    // Change the output .js filename to not include a hash
+    // Change the output .js filename to not include a hash    
     rollupOptions: {
-      // external: ["vscode-webview"],
+      // external: ["vscode-webview"],      
       output: {
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,
