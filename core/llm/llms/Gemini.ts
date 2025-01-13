@@ -1,12 +1,21 @@
+import { r } from "tar";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   MessagePart,
+  ToolCallDelta,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
+import {
+  GeminiChatContentPart,
+  GeminiChatRequestBody,
+  GeminiChatResponse,
+  GeminiGenerationConfig,
+  GeminiToolFunctionDeclaration,
+} from "./gemini-types.js";
 
 class Gemini extends BaseLLM {
   static providerName = "gemini";
@@ -19,7 +28,7 @@ class Gemini extends BaseLLM {
   };
 
   // Function to convert completion options to Gemini format
-  public convertArgs(options: CompletionOptions) {
+  public convertArgs(options: CompletionOptions): GeminiGenerationConfig {
     // should be public for use within VertexAI
     const finalOptions: any = {}; // Initialize an empty object
 
@@ -42,7 +51,7 @@ class Gemini extends BaseLLM {
         .slice(0, this.maxStopWords ?? Gemini.defaultOptions.maxStopWords);
     }
 
-    return { generationConfig: finalOptions }; // Wrap options under 'generationConfig'
+    return finalOptions;
   }
 
   protected async *_streamComplete(
@@ -59,7 +68,7 @@ class Gemini extends BaseLLM {
     }
   }
 
-  public removeSystemMessage(messages: ChatMessage[]) {
+  public removeSystemMessage(messages: ChatMessage[]): ChatMessage[] {
     // should be public for use within VertexAI
     const msgs = [...messages];
 
@@ -92,8 +101,8 @@ class Gemini extends BaseLLM {
       ? this.removeSystemMessage(messages)
       : messages;
 
-    if (options.model.includes("gemini")) {
-      for await (const message of this.streamChatGemini(
+    if (options.model.includes("bison")) {
+      for await (const message of this.streamChatBison(
         convertedMsgs,
         signal,
         options,
@@ -101,7 +110,7 @@ class Gemini extends BaseLLM {
         yield message;
       }
     } else {
-      for await (const message of this.streamChatBison(
+      for await (const message of this.streamChatGemini(
         convertedMsgs,
         signal,
         options,
@@ -111,7 +120,7 @@ class Gemini extends BaseLLM {
     }
   }
 
-  continuePartToGeminiPart(part: MessagePart) {
+  continuePartToGeminiPart(part: MessagePart): GeminiChatContentPart {
     return part.type === "text"
       ? {
           text: part.text,
@@ -135,39 +144,93 @@ class Gemini extends BaseLLM {
     );
     // This feels hacky to repeat code from above function but was the quickest
     // way to ensure system message re-formatting isn't done if user has specified v1
-    const apiBase =
-      this.apiBase ||
-      Gemini.defaultOptions?.apiBase ||
-      "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
+    const apiBase = this.apiBase || Gemini.defaultOptions.apiBase!; // Determine if it's a v1 API call based on apiBase
     const isV1API = apiBase.includes("/v1/");
 
-    const contents = messages
-      .map((msg) => {
-        if (msg.role === "system" && !isV1API) {
-          return null; // Don't include system message in contents
-        }
-        if (msg.role === "tool") {
-          return null;
-        }
-        return {
-          role: msg.role === "assistant" ? "model" : "user",
-          parts:
-            typeof msg.content === "string"
-              ? [{ text: msg.content }]
-              : msg.content.map(this.continuePartToGeminiPart),
-        };
-      })
-      .filter((c) => c !== null);
-
-    const body = {
-      ...this.convertArgs(options),
-      contents,
-      // if this.systemMessage is defined, reformat it for Gemini API
-      ...(this.systemMessage &&
-        !isV1API && {
-          systemInstruction: { parts: [{ text: this.systemMessage }] },
+    // Convert chat messages to contents
+    const body: GeminiChatRequestBody = {
+      contents: messages
+        .filter((msg) => !(msg.role === "system" && isV1API))
+        .map((msg) => {
+          if (msg.role === "tool") {
+            return {
+              role: "user",
+              parts: [
+                {
+                  functionResponse: {
+                    name: msg.toolCallId, // FIX SHOULD BE NAME NOT ID
+                    response: {
+                      output: msg.content, // "output" key is opinionated - not all functions will output objects
+                    },
+                  },
+                },
+              ],
+            };
+          }
+          return {
+            role:
+              msg.role === "assistant" ? ("model" as const) : ("user" as const),
+            parts:
+              typeof msg.content === "string"
+                ? [{ text: msg.content }]
+                : msg.content.map(this.continuePartToGeminiPart),
+          };
         }),
     };
+    if (options) {
+      body.generationConfig = this.convertArgs(options);
+    }
+
+    // https://ai.google.dev/gemini-api/docs/api-versions
+    if (!isV1API) {
+      if (this.systemMessage) {
+        body.systemInstruction = { parts: [{ text: this.systemMessage }] };
+      }
+      // Convert and add tools if present
+      if (options.tools?.length) {
+        // Choosing to map all tools to the functionDeclarations of one tool
+        // Rather than map each tool to its own tool + functionDeclaration
+        // Same difference
+        const functions: GeminiToolFunctionDeclaration[] = [];
+        options.tools.forEach((tool) => {
+          if (tool.function.description && tool.function.name) {
+            const fn: GeminiToolFunctionDeclaration = {
+              description: tool.function.description,
+              name: tool.function.name,
+            };
+
+            if (
+              tool.function.parameters &&
+              "type" in tool.function.parameters
+            ) {
+              if (tool.function.parameters.type === "object") {
+                // Gemini can't take an empty object
+                // So if empty object param is present just don't add parameters
+                if (
+                  JSON.stringify(tool.function.parameters.properties) === "{}"
+                ) {
+                  functions.push(fn);
+                  return;
+                }
+              }
+              fn.parameters = {
+                type: tool.function.parameters.type.toUpperCase(),
+                ...tool.function.parameters,
+              };
+            }
+            functions.push(fn);
+          }
+        });
+        if (functions.length) {
+          body.tools = [
+            {
+              functionDeclarations: functions,
+            },
+          ];
+        }
+      }
+    }
+
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
@@ -192,24 +255,68 @@ class Gemini extends BaseLLM {
       let foundIncomplete = false;
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
-        let data;
+        let data: GeminiChatResponse;
         try {
-          data = JSON.parse(part);
+          data = JSON.parse(part) as GeminiChatResponse;
         } catch (e) {
           foundIncomplete = true;
           continue; // yo!
         }
-        if (data.error) {
+
+        if ("error" in data) {
           throw new Error(data.error.message);
         }
+
         // Check for existence of each level before accessing the final 'text' property
-        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-          // Incrementally stream the content to make it smoother
-          const content = data.candidates[0].content.parts[0].text;
-          yield {
-            role: "assistant",
-            content,
-          };
+        const content = data?.candidates?.[0]?.content;
+        if (content) {
+          const supportedParts: MessagePart[] = [];
+          const toolCalls: ToolCallDelta[] = [];
+
+          for (const part of content.parts) {
+            if ("text" in part) {
+              supportedParts.push({ type: "text", text: part.text });
+            } else if ("inlineData" in part) {
+              // TODO does this image url conversion actually work?
+              supportedParts.push({
+                type: "imageUrl",
+                imageUrl: {
+                  url: `data:image/jpeg;base64,${part.inlineData.data}`,
+                },
+              });
+            } else if ("functionCall" in part) {
+              // Handle function call
+              toolCalls.push({
+                type: "function",
+                id: "", // Not supported by gemini
+                function: {
+                  name: part.functionCall.name,
+                  arguments:
+                    typeof part.functionCall.args === "string"
+                      ? part.functionCall.args
+                      : JSON.stringify(part.functionCall.args),
+                },
+              });
+            } else if ("functionResponse" in part) {
+              // TODO hypothetically order could be off here
+              // Where function response is in the middle of something
+              yield {
+                role: "tool",
+                content: part.functionResponse.response.output as string,
+                toolCallId: part.functionResponse.name,
+              };
+            } else {
+              console.warn("Unsupported gemini part type received", part);
+            }
+          }
+          if (supportedParts.length || toolCalls.length) {
+            // Incrementally  stream the content to make it smoother
+            yield {
+              role: "assistant",
+              content: supportedParts.length ? supportedParts : "",
+              ...(toolCalls.length ? { toolCalls } : {}),
+            };
+          }
         } else {
           // Handle the case where the expected data structure is not found
           console.warn("Unexpected response format:", data);
