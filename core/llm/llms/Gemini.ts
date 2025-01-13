@@ -1,5 +1,6 @@
 import { r } from "tar";
 import {
+  AssistantChatMessage,
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -153,12 +154,24 @@ class Gemini extends BaseLLM {
         .filter((msg) => !(msg.role === "system" && isV1API))
         .map((msg) => {
           if (msg.role === "tool") {
+            let fn_name = "";
+            const lastToolCallMessage = messages.findLast(
+              (msg) => "toolCalls" in msg && msg.toolCalls?.[0]?.function?.name,
+            ) as AssistantChatMessage;
+            if (lastToolCallMessage) {
+              fn_name = lastToolCallMessage.toolCalls![0]!.function!.name!;
+            }
+            if (!fn_name) {
+              console.warn(
+                "Sending tool call response for unidentified tool call",
+              );
+            }
             return {
               role: "user",
               parts: [
                 {
                   functionResponse: {
-                    name: msg.toolCallId, // FIX SHOULD BE NAME NOT ID
+                    name: fn_name || "unknown",
                     response: {
                       output: msg.content, // "output" key is opinionated - not all functions will output objects
                     },
@@ -167,7 +180,7 @@ class Gemini extends BaseLLM {
               ],
             };
           }
-          return {
+          const assistantMsg = {
             role:
               msg.role === "assistant" ? ("model" as const) : ("user" as const),
             parts:
@@ -175,6 +188,20 @@ class Gemini extends BaseLLM {
                 ? [{ text: msg.content }]
                 : msg.content.map(this.continuePartToGeminiPart),
           };
+          if (msg.role === "assistant" && msg.toolCalls) {
+            msg.toolCalls.forEach((toolCall) => {
+              if (toolCall.function?.name && toolCall.function?.arguments) {
+                assistantMsg.parts.push({
+                  functionCall: {
+                    name: toolCall.function.name,
+                    args: JSON.parse(toolCall.function.arguments),
+                  },
+                });
+              }
+            });
+          }
+
+          return assistantMsg;
         }),
     };
     if (options) {
@@ -202,7 +229,16 @@ class Gemini extends BaseLLM {
             if (
               tool.function.parameters &&
               "type" in tool.function.parameters
+              // && typeof tool.function.parameters.type === "string"
             ) {
+              // const paramType =  "TYPE_UNSPECIFIED"
+              // | "STRING"
+              // | "NUMBER"
+              // | "INTEGER"
+              // | "BOOLEAN"
+              // | "ARRAY"
+              // | "OBJECT"
+
               if (tool.function.parameters.type === "object") {
                 // Gemini can't take an empty object
                 // So if empty object param is present just don't add parameters
