@@ -49,14 +49,14 @@ async function main(event) {
     const stored = await TTS.stored();
     const voiceKey=stored.find(voice => {
       const _voice = voice.replace(/[_]/g, '-');
-      return _voice.includes(lang);
+      return voice===lang || _voice.includes(lang);
     });
     if(voiceKey){
       return {key:voiceKey,storedSize:stored.length}
     }
     const voices = await TTS.voices();
     voices.forEach((voice:ExtendedVoice) => (voice.is_stored = stored.includes(voice.key)));
-    const voice:ExtendedVoice|{key:TTS.VoiceId,storedSize?:number}=voices.find(_voice=>_voice.key.replace(/[_]/g, '-').includes(lang)) ?? {key:stored[0]};
+    const voice:ExtendedVoice|{key:TTS.VoiceId,storedSize?:number}=voices.find(_voice=>_voice.key===lang||_voice.key.replace(/[_]/g, '-').includes(lang)) ?? {key:stored[0]};
     if(voice){
       voice.storedSize=stored.length;
       self.postMessage({ type: "voice", voice });

@@ -181,28 +181,33 @@ function useSetup() {
     dispatch(setTTSActive(status));   
   });
   useWebviewListener("setTTSNative", async (data) => {
-    const synth = window.speechSynthesis;
-    if(synth){
-      const voices=synth.getVoices();
-      if (voices.length>0) {
-        dispatch(TTSNative(data));
-        return true;        
+    try{
+      const synth = window.speechSynthesis;
+      if(synth){
+        const voices=synth.getVoices();
+        if (voices.length>0) {
+          dispatch(TTSNative(data));
+          return true;        
+        }else{
+          return await new Promise((resolve,reject)=>{
+            const timeout=setTimeout(()=>{resolve(false);},5000);
+            synth.onvoiceschanged=()=>{
+              clearTimeout(timeout);
+              const voices=synth.getVoices();
+              if (voices.length>0) {
+                dispatch(TTSNative(data));
+                resolve(true);
+              } else {
+                  resolve(false);
+              }
+            };
+          });
+        }
       }else{
-        return await new Promise((resolve,reject)=>{
-          const timeout=setTimeout(()=>{resolve(false);},5000);
-          synth.onvoiceschanged=()=>{
-            clearTimeout(timeout);
-            const voices=synth.getVoices();
-            if (voices.length>0) {
-              dispatch(TTSNative(data));
-              resolve(true);
-            } else {
-              resolve(false);
-            }
-          };
-        });
+        return false;
       }
-    }else{
+    }catch(e){
+      console.error(e);
       return false;
     }
   }); 
