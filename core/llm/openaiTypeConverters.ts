@@ -40,7 +40,9 @@ export function toChatMessage(
       content:
         typeof message.content === "string"
           ? message.content || " " // LM Studio (and other providers) don't accept empty content
-          : message.content.filter((part) => part.type === "text"),
+          : message.content
+              .filter((part) => part.type === "text")
+              .map((part) => part as TextMessagePart), // can remove with newer typescript version
     };
 
     if (message.toolCalls) {

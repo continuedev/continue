@@ -57,7 +57,7 @@ class Asksage extends BaseLLM {
           ? message.content
           : message.content
               .filter((part) => part.type === "text")
-              .map((part) => part.text)
+              .map((part) => (part as TextMessagePart).text)
               .join(""),
     };
   }

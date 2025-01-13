@@ -17,6 +17,7 @@ import {
   GeminiGenerationConfig,
   GeminiToolFunctionDeclaration,
 } from "./gemini-types.js";
+import { findLast } from "../../util/findLast.js";
 
 class Gemini extends BaseLLM {
   static providerName = "gemini";
@@ -155,7 +156,8 @@ class Gemini extends BaseLLM {
         .map((msg) => {
           if (msg.role === "tool") {
             let fn_name = "";
-            const lastToolCallMessage = messages.findLast(
+            const lastToolCallMessage = findLast(
+              messages,
               (msg) => "toolCalls" in msg && msg.toolCalls?.[0]?.function?.name,
             ) as AssistantChatMessage;
             if (lastToolCallMessage) {
