@@ -871,6 +871,7 @@ export interface BaseCompletionOptions {
   stream?: boolean;
   prediction?: Prediction;
   tools?: Tool[];
+  tailFreeSampling?: number;
 }
 
 export interface ModelCapability {
