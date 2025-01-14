@@ -139,6 +139,20 @@ context:
 
 ---
 
+### `rules`
+
+List of rules that the LLM should follow. These are inserted into the system message for all chat requests.
+
+Example
+
+```yaml title="config.yaml"
+rules:
+  - Always annotate Python functions with their parameter and return types
+  - Always write Google style docstrings for functions and classes
+```
+
+---
+
 ### `docs`
 
 List of documentation sites to index.
