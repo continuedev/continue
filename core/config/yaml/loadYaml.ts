@@ -31,6 +31,9 @@ import { getConfigYamlPath, getContinueDotEnv } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
+import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
+import FileContextProvider from "../../context/providers/FileContextProvider";
+import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
 import { ControlPlaneClient } from "../../control-plane/client";
 import { llmsFromModelConfig } from "./models";
 
@@ -109,10 +112,24 @@ async function configYamlToContinueConfig(
     models: [],
     tabAutocompleteModels: [],
     tools: [],
+    systemMessage: config.rules?.join("\n"),
     embeddingsProvider: new TransformersJsEmbeddingsProvider(),
     experimental: {
-      modelContextProtocolServers: [],
+      modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
+        transport: {
+          type: "stdio",
+          command: mcpServer.command,
+          args: mcpServer.args ?? [],
+          env: mcpServer.env,
+        },
+      })),
     },
+    docs: config.docs?.map((doc) => ({
+      title: doc.name,
+      startUrl: doc.startUrl,
+      rootUrl: doc.rootUrl,
+      faviconUrl: doc.faviconUrl,
+    })),
   };
 
   // Models
@@ -168,18 +185,33 @@ async function configYamlToContinueConfig(
 
   // TODO: Split into model roles.
 
-  // Context
+  // Context providers
+  const codebaseContextParams: IContextProvider[] =
+    (config.context || []).find((cp) => cp.uses === "codebase")?.with || {};
+  const DEFAULT_CONTEXT_PROVIDERS = [
+    new FileContextProvider({}),
+    new CodebaseContextProvider(codebaseContextParams),
+    new PromptFilesContextProvider({}),
+  ];
+
+  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
+    ({ description: { title } }) => title,
+  );
+
   continueConfig.contextProviders = config.context
     ?.map((context) => {
       const cls = contextProviderClassFromName(context.uses) as any;
       if (!cls) {
-        console.warn(`Unknown context provider ${context.uses}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.uses)) {
+          console.warn(`Unknown context provider ${context.uses}`);
+        }
         return undefined;
       }
       const instance: IContextProvider = new cls(context.with ?? {});
       return instance;
     })
     .filter((p) => !!p) as IContextProvider[];
+  continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
   // Embeddings Provider
   const embedConfig = config.models?.find((model) =>
