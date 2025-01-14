@@ -19,6 +19,7 @@ class LlamaCpp extends BaseLLM {
       top_k: options.topK,
       top_p: options.topP,
       temperature: options.temperature,
+      tfs_z: options.tailFreeSampling,
     };
 
     return finalOptions;

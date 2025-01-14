@@ -264,6 +264,7 @@ class Ollama extends BaseLLM {
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
       min_p: options.minP,
+      tfs_z: options.tailFreeSampling,
     };
   }
 
