@@ -802,6 +802,42 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
+  gemini20FlashExp: {
+    title: "Gemini 2.0 Flash Experimental",
+    description: "Experimental version of Gemini 2.0 Flash with improved performance",
+    params: {
+      model: "gemini-2.0-flash-exp",
+      contextLength: 1_048_576,
+      title: "Gemini 2.0 Flash Experimental",
+    },
+    providerOptions: ["gemini"],
+    icon: "gemini.png",
+    isOpenSource: false,
+  },
+  gemini20FlashThinkingExp: {
+    title: "Gemini 2.0 Flash Thinking Experimental",
+    description: "Experimental version of Gemini 2.0 Flash optimized for reasoning tasks",
+    params: {
+      model: "gemini-2.0-flash-thinking-exp",
+      contextLength: 32_767,
+      title: "Gemini 2.0 Flash Thinking Experimental",
+    },
+    providerOptions: ["gemini"],
+    icon: "gemini.png",
+    isOpenSource: false,
+  },
+  geminiExp1206: {
+    title: "Gemini Experimental 1206",
+    description: "Experimental release (December 6th, 2024) of Gemini with extended context",
+    params: {
+      model: "gemini-exp-1206",
+      contextLength: 2_097_152,
+      title: "Gemini Experimental 1206",
+    },
+    providerOptions: ["gemini"],
+    icon: "gemini.png",
+    isOpenSource: false,
+  },
   commandR: {
     title: "Command R",
     description:
