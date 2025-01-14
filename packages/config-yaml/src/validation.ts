@@ -10,6 +10,12 @@ export interface ConfigValidationError {
   message: string;
 }
 
+export interface ConfigResult<T> {
+  config: T | undefined;
+  errors: ConfigValidationError[] | undefined;
+  configLoadInterrupted: boolean;
+}
+
 export function validateConfigYaml(
   config: ConfigYaml,
 ): ConfigValidationError[] {

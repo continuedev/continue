@@ -132,7 +132,7 @@ export function convertJsonToYamlConfig(configJson: ConfigJson): ConfigYaml {
     version: "0.0.1",
     models,
     context,
-    rules: configJson.systemMessage,
+    rules: configJson.systemMessage ? [configJson.systemMessage] : undefined,
     prompts,
     mcpServers,
     docs,

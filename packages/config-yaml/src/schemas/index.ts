@@ -48,9 +48,13 @@ export const configYamlSchema = z.object({
   data: z.array(dataSchema).optional(),
   tools: z.array(toolSchema).optional(),
   mcpServers: z.array(mcpServerSchema).optional(),
-  rules: z.string().optional(),
+  rules: z.array(z.string()).optional(),
   prompts: z.array(promptSchema).optional(),
   docs: z.array(docSchema).optional(),
 });
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
+
+export const clientConfigYamlSchema = configYamlSchema.omit({ packages: true });
+
+export type ClientConfigYaml = z.infer<typeof clientConfigYamlSchema>;

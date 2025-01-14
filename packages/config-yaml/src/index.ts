@@ -92,6 +92,17 @@ export function fillTemplateVariables(
 }
 
 export { convertJsonToYamlConfig } from "./converter.js";
-export { ConfigYaml, configYamlSchema } from "./schemas/index.js";
+export { resolveSecretsOnClient } from "./resolveSecretsOnClient.js";
+export {
+  ClientConfigYaml,
+  clientConfigYamlSchema,
+  ConfigYaml,
+  configYamlSchema,
+} from "./schemas/index.js";
 export type { ModelConfig } from "./schemas/models.js";
-export { validateConfigYaml } from "./validation.js";
+export {
+  ConfigResult,
+  ConfigValidationError,
+  validateConfigYaml,
+  ValidationLevel,
+} from "./validation.js";
