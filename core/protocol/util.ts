@@ -17,7 +17,7 @@ export type WebviewSingleMessage<T> =
   | SuccessWebviewSingleMessage<T>;
 
 export type WebviewSingleProtocolMessage<T extends keyof FromWebviewProtocol> =
-  WebviewSingleMessage<FromWebviewProtocol[T][0]>;
+  WebviewSingleMessage<FromWebviewProtocol[T][1]>;
 
 // Generators
 export type GeneratorYieldType<T> =
