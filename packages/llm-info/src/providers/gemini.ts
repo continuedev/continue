@@ -12,7 +12,7 @@ export const Gemini: ModelProvider = {
       recommendedFor: ["chat"],
     },
     {
-      model: "gemini-1.5-pro",
+      model: "gemini-1.5-pro", 
       displayName: "Gemini 1.5 Pro",
       contextLength: 2097152,
       maxCompletionTokens: 8192,
@@ -20,10 +20,38 @@ export const Gemini: ModelProvider = {
       recommendedFor: ["chat"],
     },
     {
-      model: "gemini-1.0-pro",
+      model: "gemini-1.0-pro", // Gemini 1.0 Pro will be discontinued on February 15th, 2025.
       displayName: "Gemini 1.0 Pro",
       regex: /gemini-1\.0-pro/i,
     },
+    {
+      model: "gemini-2.0-flash-exp",
+      displayName: "Gemini 2.0 Flash Experimental",
+      contextLength: 1048576,
+      maxCompletionTokens: 8192,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.0-flash-exp/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "gemini-2.0-flash-thinking-exp",
+      displayName: "Gemini 2.0 Flash Thinking Experimental",
+      contextLength: 32767,
+      maxCompletionTokens: 8192,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.0-flash-thinking-exp/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "gemini-exp-1206",
+      displayName: "Gemini Experimental 1206",
+      contextLength: 2097152,
+      maxCompletionTokens: 8192,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-exp-1206/i,
+      recommendedFor: ["chat"],
+    },
+    
     // embed
     {
       model: "models/text-embedding-004",
