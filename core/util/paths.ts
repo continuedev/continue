@@ -306,6 +306,13 @@ export function usePlatformPathExists(): boolean {
   return fs.existsSync(sPath);
 }
 
+export function readUsePlatform(): string | undefined {
+  const sPath = path.join(getContinueGlobalPath(), ".use_platform");
+  if (fs.existsSync(sPath)) {
+    return fs.readFileSync(sPath, "utf8");
+  }
+}
+
 export function getConfigJsonPathForRemote(
   remoteConfigServerUrl: string,
 ): string {

@@ -1,3 +1,4 @@
+import { readUsePlatform } from "../util/paths";
 import { usePlatform } from "./flags";
 
 interface ControlPlaneEnv {
@@ -52,11 +53,17 @@ const LOCAL_ENV: ControlPlaneEnv = {
   APP_URL: "http://localhost:3000/",
 };
 
-export const controlPlaneEnv =
-  process.env.CONTROL_PLANE_ENV === "local"
+function getControlPlaneEnv(): ControlPlaneEnv {
+  const usePlatformFileEnv = readUsePlatform();
+  const env = usePlatformFileEnv || process.env.CONTROL_PLANE_ENV;
+
+  return env === "local"
     ? LOCAL_ENV
-    : process.env.CONTROL_PLANE_ENV === "staging"
+    : env === "staging"
       ? STAGING_ENV
-      : process.env.CONTROL_PLANE_ENV === "test" || usePlatform()
+      : env === "test" || usePlatform()
         ? TEST_ENV
         : PRODUCTION_ENV;
+}
+
+export const controlPlaneEnv = getControlPlaneEnv();
