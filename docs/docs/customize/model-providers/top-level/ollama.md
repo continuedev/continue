@@ -64,7 +64,7 @@ To configure a remote instance of Ollama, add the `"apiBase"` property to your m
     {
       "title": "Llama3.1 8B",
       "provider": "ollama",
-      "model": "llama3.1:8b"
+      "model": "llama3.1:8b",
       "apiBase": "http://<my endpoint>:11434"
     }
   ]
