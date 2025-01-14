@@ -28,7 +28,7 @@ We recommend configuring **Gemini 1.5 Pro** as your chat model.
 
 ### Other Available Models
 
-- **Gemini 1.5 Flash** - Fast and versatile multimodal model with 1M token context length
+**Gemini 1.5 Flash** - Fast and versatile multimodal model with 1M token context length
 ```json title="config.json"
 {
   "title": "Gemini 1.5 Flash",
@@ -42,7 +42,7 @@ We recommend configuring **Gemini 1.5 Pro** as your chat model.
 
 The following experimental models are also available:
 
-- **Gemini 2.0 Flash Experimental** - Experimental version with 1M token context length
+**Gemini 2.0 Flash Experimental** - Experimental version with 1M token context length
 ```json title="config.json"
 {
   "title": "Gemini 2.0 Flash Experimental",
@@ -52,7 +52,7 @@ The following experimental models are also available:
 }
 ```
 
-- **Gemini 2.0 Flash Thinking Experimental** - Optimized for reasoning tasks with 32K context
+**Gemini 2.0 Flash Thinking Experimental** - Optimized for reasoning tasks with 32K context
 ```json title="config.json"
 {
   "title": "Gemini 2.0 Flash Thinking Experimental",
@@ -62,7 +62,7 @@ The following experimental models are also available:
 }
 ```
 
-- **Gemini Experimental 1206** - Experimental release with 2M token context length
+**Gemini Experimental 1206** - Experimental release with 2M token context length
 ```json title="config.json"
 {
   "title": "Gemini Experimental 1206",
