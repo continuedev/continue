@@ -187,6 +187,7 @@ export class IdeMessenger implements IIdeMessenger {
     let done = false;
     let returnVal: GeneratorReturnType<FromWebviewProtocol[T][1]> | undefined =
       undefined;
+    let error: string | null = null;
 
     // This handler receieves individual WebviewMessengerResults
     // And pushes them to buffer
@@ -196,7 +197,9 @@ export class IdeMessenger implements IIdeMessenger {
       if (event.data.messageId === messageId) {
         const responseData = event.data.data;
         if ("error" in responseData) {
-          throw new Error(responseData.error);
+          error = responseData.error;
+          return;
+          // throw new Error(responseData.error);
         }
         if (responseData.done) {
           window.removeEventListener("message", handler);
@@ -216,6 +219,9 @@ export class IdeMessenger implements IIdeMessenger {
 
     try {
       while (!done) {
+        if (error) {
+          throw error;
+        }
         if (buffer.length > index) {
           const chunks = buffer.slice(index);
           index = buffer.length;
