@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - "extensions/intellij/**"
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
