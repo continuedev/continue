@@ -179,8 +179,8 @@ class ContinuePluginSelectionListener(
             val lineStartOffset = document.getLineStartOffset(lineNumber)
             val lineEndOffset = document.getLineEndOffset(lineNumber)
             val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset)).trimEnd()
-            val endOfLinePos = LogicalPosition(lineNumber, lineText.length)
-            return editor.logicalPositionToXY(endOfLinePos).x
+            val visualPosition = editor.offsetToVisualPosition(lineStartOffset + lineText.length)
+            return editor.visualPositionToXY(visualPosition).x
         }
 
         val offset = 40
