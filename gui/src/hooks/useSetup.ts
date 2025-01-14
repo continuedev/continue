@@ -3,7 +3,7 @@ import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { BrowserSerializedContinueConfig } from "core";
-import { ConfigResult } from "core/config/load";
+import { ConfigResult } from "../../../packages/config-yaml/dist";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setConfigError, setConfigResult } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";

@@ -1,6 +1,7 @@
 import fs from "fs";
 
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas";
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas";
 import {
   ContinueConfig,
   ContinueRcJson,
@@ -16,8 +17,7 @@ import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
-import { ConfigResult, loadFullConfigNode } from "../load";
-import { ConfigValidationError } from "../validation";
+import { loadFullConfigNode } from "../load";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
@@ -27,7 +27,7 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: ClientConfigYaml | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {
@@ -54,6 +54,7 @@ export default async function doLoadConfig(
       workOsAccessToken,
       overrideConfigYaml,
       platformConfigMetadata,
+      controlPlaneClient,
     );
     newConfig = result.config;
     errors = result.errors;

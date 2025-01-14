@@ -125,7 +125,7 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileId,
+        profileId: this.configHandler.currentProfile.profileDescription.id,
       });
     });
 
@@ -379,7 +379,7 @@ export class Core {
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.currentProfile.profileId,
+        profileId: this.configHandler.currentProfile.profileDescription.id,
       };
     });
 

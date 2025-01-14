@@ -63,6 +63,7 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import { usePlatform } from "../control-plane/flags";
 import {
   defaultContextProvidersJetBrains,
@@ -72,13 +73,7 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { isSupportedLanceDbCpuTarget } from "./util";
-import { ConfigValidationError, validateConfig } from "./validation.js";
-
-export interface ConfigResult<T> {
-  config: T | undefined;
-  errors: ConfigValidationError[] | undefined;
-  configLoadInterrupted: boolean;
-}
+import { validateConfig } from "./validation.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");

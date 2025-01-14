@@ -1,8 +1,13 @@
 import { Popover } from "@headlessui/react";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  DocumentIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "../..";
+import { useAuth } from "../../../context/Auth";
 import AddModelForm from "../../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -56,6 +61,8 @@ function AssistantAndModelSelect() {
   const selectedProfileId = useAppSelector(
     (store) => store.session.selectedProfileId,
   );
+
+  const { profiles, selectedProfile } = useAuth();
 
   useEffect(() => {
     const handleResize = () => calculatePosition();
@@ -131,9 +138,29 @@ function AssistantAndModelSelect() {
           onClick={calculatePosition}
         >
           <div className="flex max-w-[33vw] items-center gap-0.5 text-gray-400 transition-colors duration-200">
-            <span className="truncate">
-              {modelSelectTitle(defaultModel) || "Select model"}{" "}
-            </span>
+            {selectedProfile?.id === "local" ? (
+              <>
+                <DocumentIcon
+                  className="mr-1 h-4 w-4 flex-shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="truncate">
+                  {modelSelectTitle(defaultModel) || "Select model"}
+                </span>
+              </>
+            ) : (
+              <>
+                <SparklesIcon
+                  className="mr-1 h-4 w-4 flex-shrink-0"
+                  aria-hidden="true"
+                />
+                <span className="truncate">
+                  {selectedProfile?.title || "Select assistant"}
+                  {" / "}
+                  {modelSelectTitle(defaultModel) || "Select model"}
+                </span>
+              </>
+            )}
             <ChevronDownIcon
               className="h-3 w-3 flex-shrink-0"
               aria-hidden="true"
@@ -146,7 +173,13 @@ function AssistantAndModelSelect() {
             className="flex max-w-[90vw] overflow-hidden"
             style={{ zIndex: 1000 }}
           >
-            <AssistantSelect />
+            <AssistantSelect
+              onClose={() => {
+                if (buttonRef.current) {
+                  buttonRef.current.click();
+                }
+              }}
+            />
             <ModelSelect
               selectedProfileId={selectedProfileId}
               onClickAddModel={onClickAddModel}

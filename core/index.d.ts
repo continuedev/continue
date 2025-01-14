@@ -684,6 +684,11 @@ export interface IDE {
 
   getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
+  // Secret Storage
+  readSecrets(keys: string[]): Promise<Record<string, string>>;
+
+  writeSecrets(secrets: { [key: string]: string }): Promise<void>;
+
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
 

@@ -171,7 +171,7 @@ export class VsCodeExtension {
           const result = await this.configHandler.getSerializedConfig();
           this.sidebar.webviewProtocol?.request("configUpdate", {
             result,
-            profileId: this.configHandler.currentProfile.profileId,
+            profileId: this.configHandler.currentProfile.profileDescription.id,
           });
 
           this.tabAutocompleteModel.clearLlm();

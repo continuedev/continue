@@ -8,11 +8,15 @@ import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
+import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { setProfileId } from "../../../redux/thunks/setProfileId";
 import { getFontSize, getMetaKeyLabel } from "../../../util";
+import AboutAssistantDialog from "../../dialogs/AboutAssistantDialog";
 import { Divider, Option, OptionDiv } from "./shared";
 
-interface AssistantSelectProps {}
+interface AssistantSelectProps {
+  onClose: () => void;
+}
 
 export function AssistantSelect(props: AssistantSelectProps) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -21,7 +25,7 @@ export function AssistantSelect(props: AssistantSelectProps) {
   const dispatch = useAppDispatch();
 
   function onNewAssistant() {
-    ideMessenger.post("openUrl", "https://app.continue.dev/new");
+    ideMessenger.post("openUrl", "https://app-test.continue.dev/new");
   }
 
   return (
@@ -29,18 +33,38 @@ export function AssistantSelect(props: AssistantSelectProps) {
       <div className={`max-h-[300px]`}>
         {profiles.map((option, idx) => (
           <Option
+            key={idx}
             idx={idx}
-            disabled={false}
+            disabled={!!option.errors?.length}
             showConfigure={true}
             selected={option.id === selectedProfile?.id}
+            onLink={
+              option.id !== "local"
+                ? (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    ideMessenger.post("config/openProfile", {
+                      profileId: option.id,
+                    });
+                  }
+                : undefined
+            }
             onConfigure={(e) => {
               e.stopPropagation();
               e.preventDefault();
 
-              ideMessenger.post("config/openProfile", {
-                profileId: option.id,
-              });
+              if (option.id === "local") {
+                ideMessenger.post("config/openProfile", {
+                  profileId: option.id,
+                });
+              } else {
+                props.onClose();
+                dispatch(setDialogMessage(<AboutAssistantDialog />));
+                dispatch(setShowDialog(true));
+              }
             }}
+            errors={option.errors}
             onClick={() => dispatch(setProfileId(option.id))}
           >
             <div className="flex min-w-0 items-center">

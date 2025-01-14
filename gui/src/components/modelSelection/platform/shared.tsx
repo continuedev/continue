@@ -1,7 +1,13 @@
-import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowTopRightOnSquareIcon,
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import { useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray } from "../..";
+import { ConfigValidationError } from "../../../../../packages/config-yaml/dist";
+import { ToolTip } from "../../gui/Tooltip";
 
 export const OptionDiv = styled.div<{
   isDisabled?: boolean;
@@ -49,8 +55,10 @@ interface ModelOptionProps {
   disabled: boolean;
   selected: boolean;
   showConfigure: boolean;
+  onLink?: (e: any) => void;
   onConfigure: (e: any) => void;
   onClick: () => void;
+  errors?: ConfigValidationError[];
 }
 
 const IconBase = styled.div<{ $hovered: boolean }>`
@@ -69,6 +77,12 @@ const IconBase = styled.div<{ $hovered: boolean }>`
 `;
 
 const StyledCog6ToothIcon = styled(IconBase).attrs({ as: Cog6ToothIcon })``;
+const StyledArrowTopRightOnSquareIcon = styled(IconBase).attrs({
+  as: ArrowTopRightOnSquareIcon,
+})``;
+const StyledExclamationTriangleIcon = styled(IconBase).attrs({
+  as: ExclamationTriangleIcon,
+})``;
 
 export function Option({
   onConfigure,
@@ -77,7 +91,9 @@ export function Option({
   disabled,
   onClick,
   showConfigure,
+  onLink,
   selected,
+  errors,
 }: ModelOptionProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -96,15 +112,34 @@ export function Option({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       isSelected={selected}
-      onClick={handleOptionClick}
+      onClick={!disabled ? handleOptionClick : undefined}
     >
       <div className="flex w-full flex-col gap-0.5">
         <div className="flex w-full items-center justify-between">
           {children}
           <div className="ml-2 flex items-center">
-            {showConfigure && (
+            {!errors?.length && showConfigure && (
               <StyledCog6ToothIcon $hovered={hovered} onClick={onConfigure} />
             )}
+            {!errors?.length && onLink && (
+              <StyledArrowTopRightOnSquareIcon
+                $hovered={hovered}
+                onClick={onLink}
+              />
+            )}
+            {errors?.length ? (
+              <>
+                <StyledExclamationTriangleIcon
+                  data-tooltip-id={`${idx}-errors-tooltip`}
+                  $hovered={hovered}
+                  className="text-red-500"
+                />
+                <ToolTip id={`${idx}-errors-tooltip`}>
+                  <div className="font-semibold">Errors</div>
+                  {JSON.stringify(errors, null, 2)}
+                </ToolTip>
+              </>
+            ) : null}
           </div>
         </div>
       </div>

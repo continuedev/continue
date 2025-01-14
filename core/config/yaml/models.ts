@@ -8,21 +8,11 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 const AUTODETECT = "AUTODETECT";
 
-const ALWAYS_LOCAL_PROVIDERS = [
-  "ollama",
-  "lmstudio",
-  "llamafile",
-  "llama.cpp",
-  "msty",
-];
-
 function useContinueProxy(
   model: ModelConfig,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
 ): boolean {
-  return (
-    !!platformConfigMetadata && !ALWAYS_LOCAL_PROVIDERS.includes(model.provider)
-  );
+  return !!platformConfigMetadata && model.apiKeySecret !== undefined;
 }
 
 function getModelClass(

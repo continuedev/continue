@@ -1,14 +1,18 @@
+import { ConfigResult } from "@continuedev/config-yaml";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
-import { ConfigResult } from "../load.js";
 
+import { ProfileDescription } from "../ProfileLifecycleManager.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
 export default class LocalProfileLoader implements IProfileLoader {
   static ID = "local";
-  profileId = LocalProfileLoader.ID;
-  profileTitle = "Local Config";
+  description: ProfileDescription = {
+    id: LocalProfileLoader.ID,
+    title: "Local Config",
+    errors: undefined,
+  };
 
   constructor(
     private ide: IDE,
@@ -18,7 +22,7 @@ export default class LocalProfileLoader implements IProfileLoader {
   ) {}
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    return doLoadConfig(
+    const result = await doLoadConfig(
       this.ide,
       this.ideSettingsPromise,
       this.controlPlaneClient,
@@ -27,6 +31,10 @@ export default class LocalProfileLoader implements IProfileLoader {
       undefined,
       undefined,
     );
+
+    this.description.errors = result.errors;
+
+    return result;
   }
 
   setIsActive(isActive: boolean): void {}

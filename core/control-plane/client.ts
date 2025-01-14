@@ -1,9 +1,10 @@
 import { ConfigJson } from "@continuedev/config-types";
+import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { ModelDescription } from "../index.js";
 
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
+import { ConfigResult } from "@continuedev/config-yaml";
 import { controlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
@@ -88,9 +89,10 @@ export class ControlPlaneClient {
 
   public async listAssistants(): Promise<
     {
-      configYaml: ConfigYaml;
+      configResult: ConfigResult<ClientConfigYaml>;
       ownerSlug: string;
       packageSlug: string;
+      iconUrl: string;
     }[]
   > {
     const userId = await this.userId;
@@ -118,5 +120,22 @@ export class ControlPlaneClient {
       method: "GET",
     });
     return ((await resp.json()) as any).settings;
+  }
+
+  async syncSecrets(secretNames: string[]): Promise<Record<string, string>> {
+    const userId = await this.userId;
+    if (!userId) {
+      throw new Error("No user id");
+    }
+
+    try {
+      const resp = await this.request("ide/sync-secrets", {
+        method: "POST",
+        body: JSON.stringify({ secretNames }),
+      });
+      return (await resp.json()) as any;
+    } catch (e) {
+      return {};
+    }
   }
 }

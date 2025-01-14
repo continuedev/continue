@@ -104,5 +104,4 @@ export {
   ConfigResult,
   ConfigValidationError,
   validateConfigYaml,
-  ValidationLevel,
 } from "./validation.js";

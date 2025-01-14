@@ -89,6 +89,7 @@ const initialState: SessionState = {
     {
       id: "local",
       title: "Local",
+      errors: undefined,
     },
   ],
   curCheckpointIndex: 0,
