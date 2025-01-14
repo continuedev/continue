@@ -117,7 +117,7 @@ nvm use
 
 #### VS Code
 
-1. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
+1. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`(Need install Visual Studio on Windows system, enable the "Desktop development with C++", and check the "Windows 10 SDK" to support C++ development.)
 
 2. Start debugging:
 
