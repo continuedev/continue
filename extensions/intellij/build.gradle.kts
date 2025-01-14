@@ -105,13 +105,10 @@ tasks {
     wrapper { gradleVersion = properties("gradleVersion").get() }
 
     patchPluginXml {
-        version = properties("pluginVersion")
-        sinceBuild = properties("pluginSinceBuild")
-        untilBuild = properties("pluginUntilBuild")
-
-        // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's
-        // manifest
-        pluginDescription =
+        version.set(properties("pluginVersion"))
+        sinceBuild.set(properties("pluginSinceBuild"))
+        untilBuild.set(properties("pluginUntilBuild"))
+        pluginDescription.set(
             providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
                 val start = "<!-- Plugin description -->"
                 val end = "<!-- Plugin description end -->"
@@ -125,6 +122,7 @@ tasks {
                     subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
                 }
             }
+        )
     }
 
     // Configure UI tests plugin

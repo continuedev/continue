@@ -34,7 +34,7 @@ class Autocomplete {
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
-    // @Test
+    @Test
     @Video
     fun displayCompletion(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
         welcomeFrame {
