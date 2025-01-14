@@ -113,10 +113,18 @@ class FreeTrial extends BaseLLM {
     }
 
     const parts = message.content.map((part) => {
+      if (part.type === "imageUrl") {
+        return {
+          type: "image_url",
+          image_url: {
+            url: part.imageUrl.url,
+            detail: "low",
+          },
+        };
+      }
       return {
-        type: part.type,
+        type: "text",
         text: part.text,
-        image_url: { ...part.imageUrl, detail: "low" },
       };
     });
     return {

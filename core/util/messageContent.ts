@@ -3,6 +3,7 @@ import {
   ContextItem,
   MessageContent,
   MessagePart,
+  TextMessagePart,
 } from "../index";
 
 export function stripImages(messageContent: MessageContent): string {
@@ -12,7 +13,7 @@ export function stripImages(messageContent: MessageContent): string {
 
   return messageContent
     .filter((part) => part.type === "text")
-    .map((part) => part.text)
+    .map((part) => (part as TextMessagePart).text)
     .join("\n");
 }
 

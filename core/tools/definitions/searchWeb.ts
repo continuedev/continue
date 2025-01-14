@@ -13,7 +13,7 @@ export const searchWebTool: Tool = {
       "Performs a web search, returning top results. This tool should only be called for questions that require external knowledge. Common programming questions do not require web search.",
     parameters: {
       type: "object",
-      required: ["query"],
+      required: ["repo_url"],
       properties: {
         repo_url: {
           type: "string",
