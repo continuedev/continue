@@ -18,10 +18,11 @@ See also
 
 Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current `config.json` file. If a `config.yaml` file is present, it will be loaded instead of `config.json`.
 
-Give your configuration a name using the `name` field:
+Give your configuration a `name` and a `version`:
 
 ```yaml title="config.yaml"
 name: my-configuration
+version: 0.0.1
 ```
 
 ### 2. Map Models

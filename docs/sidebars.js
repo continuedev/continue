@@ -138,16 +138,16 @@ const sidebars = {
       label: "Reference",
       href: "/reference",
     },
-    {
-      type: "link",
-      label: "YAML Reference",
-      href: "/yaml-reference",
-    },
-    {
-      type: "link",
-      label: "YAML Migration",
-      href: "/yaml-migration",
-    },
+    // {
+    //   type: "link",
+    //   label: "YAML Reference",
+    //   href: "/yaml-reference",
+    // },
+    // {
+    //   type: "link",
+    //   label: "YAML Migration",
+    //   href: "/yaml-migration",
+    // },
   ],
 };
 

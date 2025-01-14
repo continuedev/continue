@@ -13,7 +13,7 @@ Continue can be configured using a YAML file `config.yaml` which for local confi
 Below are details for each property that can be set in `config.yaml`.
 
 :::info
-Config YAML does not work alongside `config.json` - it replaces it. View the **[Migration Guide](/yaml-migration)**
+Config YAML does not work alongside `config.json` - it replaces it. View the **[Migration Guide](/yaml-migration)**. `config.yaml` currently only works in VS Code pre-release.
 :::
 
 **All properties at all levels are optional unless explicitly marked as required.**
@@ -24,10 +24,13 @@ The top-level properties in the `config.yaml` configuration file are:
 
 - [`name`](#name) (**required**)
 <!-- - [`packages`](#packages) -->
+- [`version`](#version) (**required**)
 - [`models`](#models)
 - [`context`](#context)
-<!-- - [`data`](#data) -->
-- [`tools`](#tools)
+- [`rules`](#rules)
+- [`docs`](#docs)
+  <!-- - [`data`](#data) -->
+  <!-- - [`tools`](#tools) -->
 - [`mcpServers`](#mcpservers)
 
 ---
@@ -39,6 +42,10 @@ The `name` property specifies the name of your project or configuration.
 ```yaml title="config.yaml"
 name: MyProject
 ```
+
+### `version`
+
+The `version` property specifies the version of your project or configuration.
 
 ---
 
@@ -84,26 +91,22 @@ The `models` section defines the language models used in your configuration. Mod
 
 ```yaml title="config.yaml"
 models:
-  - name: GPT-3.5 Turbo
+  - name: GPT-4o
     provider: openai
-    model: gpt-3.5-turbo
+    model: gpt-4o
     roles:
       - chat
-      - autocomplete
+      - edit
+      - apply
     defaultCompletionOptions:
       temperature: 0.7
       maxTokens: 1500
-    requestOptions:
-      headers:
-        Authorization: Bearer YOUR_API_KEY
-  - name: Custom LLM
-    provider: custom
-    model: my-custom-model
+
+  - name: Codestral
+    provider: mistral
+    model: codestral-latest
     roles:
-      - summarize
-    defaultCompletionOptions:
-      temperature: 0.3
-      topP: 0.9
+      - autocomplete
 ```
 
 ---
@@ -123,12 +126,38 @@ More information about usage/params for each context provider can be found [here
 
 ```yaml title="config.yaml"
 context:
-  - uses: diff
-  - uses: docs
+  - uses: files
+  - uses: code
+  - uses: codebase
     with:
-      startUrl: https://docs.example.com/start
-      rootUrl: https://docs.example.com
-      maxDepth: 2
+      nFinal: 10
+  - uses: docs
+  - uses: diff
+  - uses: folder
+  - uses: terminal
+```
+
+---
+
+### `docs`
+
+List of documentation sites to index.
+
+**Properties:**
+
+- `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
+- `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
+- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
+- `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+
+Example
+
+```yaml title="config.yaml"
+docs:
+  - name: Continue
+    startUrl: https://docs.continue.dev/intro
+    rootUrl: https://docs.continue.dev
+    favicon: https://docs.continue.dev/favicon.ico
 ```
 
 ---
@@ -171,13 +200,12 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 
 ```yaml title="config.yaml"
 mcpServers:
-  - name: DevelopmentServer
-    command: npm
+  - name: My MCP Server
+    command: uvx
     args:
-      - run
-      - dev
-    env:
-      PORT: "3000"
+      - mcp-server-sqlite
+      - --db-path
+      - /Users/NAME/test.db
 ```
 
 <!-- ### `data`

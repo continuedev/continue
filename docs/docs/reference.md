@@ -251,16 +251,6 @@ Example
 ]
 ```
 
-### `analytics`
-
-Configuration for analytics tracking.
-
-**Properties:**
-
-- `provider`: Analytics provider (`"posthog"` or `"logstash"`).
-- `url`: URL for analytics data.
-- `clientKey`: Client key for analytics.
-
 ### `slashCommands`
 
 Custom commands initiated by typing "/" in the sidebar. Commands include predefined functionality or may be user-defined.
