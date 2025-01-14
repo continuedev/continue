@@ -13,7 +13,6 @@ const config = {
     experimental_faster: true,
   },
 
-
   title: "Continue",
   tagline:
     "the open-source library for accelerating software development with language models",
