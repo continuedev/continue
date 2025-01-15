@@ -207,6 +207,18 @@ describe("GUI Test", () => {
     });
   });
 
+  describe("Repeat back the system message", () => {
+    it("should repeat back the system message", async () => {
+      await GUIActions.selectModelFromDropdown(view, "SYSTEM MESSAGE MOCK LLM");
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+      await TestUtils.waitForSuccess(() =>
+        GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
+      );
+    });
+  });
+
   describe("Chat Paths", () => {
     it("Send many messages → chat auto scrolls → go to history → open previous chat → it is scrolled to the bottom", async () => {
       for (let i = 0; i <= 20; i++) {
