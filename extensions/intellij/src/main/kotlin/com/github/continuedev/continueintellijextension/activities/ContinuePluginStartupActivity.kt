@@ -10,7 +10,7 @@ import com.github.continuedev.continueintellijextension.listeners.ContinuePlugin
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.SettingsListener
-import com.intellij.openapi.Disposable
+import com.github.continuedev.continueintellijextension.utils.toUriOrNull
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ApplicationNamesInfo
@@ -162,7 +162,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                 override fun after(events: List<VFileEvent>) {
                     // Collect all relevant URIs for deletions
                     val deletedURIs = events.filterIsInstance<VFileDeleteEvent>()
-                        .map { event -> event.file.url }
+                        .mapNotNull { event -> event.file.toUriOrNull() }
 
                     // Send "files/deleted" message if there are any deletions
                     if (deletedURIs.isNotEmpty()) {
@@ -172,7 +172,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Collect all relevant URIs for content changes
                     val changedURIs = events.filterIsInstance<VFileContentChangeEvent>()
-                        .map { event -> event.file.url }
+                        .mapNotNull { event -> event.file.toUriOrNull() }
 
                     // Send "files/changed" message if there are any content changes
                     if (changedURIs.isNotEmpty()) {
@@ -220,7 +220,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             // Reload the WebView
             continuePluginService?.let { pluginService ->
                 val allModulePaths = ModuleManager.getInstance(project).modules
-                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.url } }
+                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.mapNotNull { it.toUriOrNull() } }
 
                 val topLevelModulePaths = allModulePaths
                     .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }

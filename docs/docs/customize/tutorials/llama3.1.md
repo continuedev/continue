@@ -71,28 +71,6 @@ Together AI provides fast and reliable inference of open-source models. You'll b
 }
 ```
 
-
-## Novita AI
-
-[Novita AI](https://novita.ai?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) offers an affordable, reliable, and simple inference platform with scalable [LLM API](https://novita.ai/docs/model-api/reference/introduction.html), empowering developers to build AI applications. Try the [Novita AI Llama 3 API Demo](https://novita.ai/model-api/product/llm-api/playground/meta-llama-llama-3.1-70b-instruct?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link) today!
-
-1. Create an account [here](https://novita.ai/user/login?&redirect=/&utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link)
-2. Copy your API key that appears on the welcome screen
-3. Update your Continue config file like this:
-
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Llama 3.1 405b",
-      "provider": "novita",
-      "model": "meta-llama/llama-3.1-405b-instruct",
-      "apiKey": "<API_KEY>"
-    }
-  ]
-}
-```
-
 ## Replicate
 
 Replicate makes it easy to host and run open-source AI with an API.

@@ -17,7 +17,6 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     if (!toolCallState) {
       return;
     }
-    console.log("calling tool", toolCallState.toolCall);
 
     if (toolCallState.status !== "generated") {
       return;

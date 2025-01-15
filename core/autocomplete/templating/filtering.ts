@@ -5,6 +5,7 @@ import {
   AutocompleteSnippet,
 } from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
+
 import { isValidSnippet } from "./validation";
 
 const getRemainingTokenCount = (helper: HelperVars): number => {
@@ -44,6 +45,7 @@ export const getSnippets = (
   const snippets = [
     ...payload.diffSnippets,
     ...payload.clipboardSnippets,
+    ...payload.recentlyVisitedRangesSnippets,
     ...shuffleArray(
       filterSnippetsAlreadyInCaretWindow(
         [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],

@@ -82,6 +82,7 @@ class DocsContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const nRetrieve = this.options?.nRetrieve ?? DocsContextProvider.nRetrieve;
+    const useReranking = this.options?.useReranking ?? true;
 
     // Get docs service
     const docsService = DocsService.getSingleton();
@@ -104,8 +105,8 @@ class DocsContextProvider extends BaseContextProvider {
     // We found chunks, so check if there's a favicon for the docs page
     const favicon = await docsService.getFavicon(query);
 
-    // Rerank if there's a rerankder
-    if (extras.reranker) {
+    // Rerank if there's a reranker
+    if (useReranking && extras.reranker) {
       chunks = await this._rerankChunks(
         chunks,
         extras.reranker,

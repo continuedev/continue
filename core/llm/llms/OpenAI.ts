@@ -253,6 +253,13 @@ class OpenAI extends BaseLLM {
       body.max_completion_tokens = undefined;
     }
 
+    if (body.tools?.length) {
+      // To ensure schema adherence: https://platform.openai.com/docs/guides/function-calling#parallel-function-calling-and-structured-outputs
+      // In practice, setting this to true and asking for multiple tool calls
+      // leads to "arguments" being something like '{"file": "test.ts"}{"file": "test.js"}'
+      body.parallel_tool_calls = false;
+    }
+
     return body;
   }
 
@@ -309,14 +316,6 @@ class OpenAI extends BaseLLM {
 
     const body = this._convertArgs(options, messages);
 
-    // Empty messages cause an error in LM Studio
-    body.messages = body.messages.map((m: any) => ({
-      ...m,
-      content: m.content === "" ? " " : m.content,
-      // We call it toolCalls, they call it tool_calls
-      tool_calls: m.toolCalls,
-      tool_call_id: m.toolCallId,
-    })) as any;
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
       headers: this._getHeaders(),

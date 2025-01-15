@@ -35,6 +35,7 @@ const saveSubsetFilters = [
   // Don't persist any of the edit state for now
   createFilter("editModeState", []),
   createFilter("config", ["defaultModelTitle"]),
+  createFilter("ui", ["toolSettings", "useTools"]),
 ];
 
 const migrations: MigrationManifest = {

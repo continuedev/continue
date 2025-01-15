@@ -1,8 +1,9 @@
-import { TextEditor } from "vscode-extension-tester";
-import { TestUtils } from "../TestUtils";
-import { AutocompleteSelectors } from "../selectors/Autocomplete.selectors";
 import { expect } from "chai";
+import { TextEditor } from "vscode-extension-tester";
+
 import { DEFAULT_TIMEOUT } from "../constants";
+import { AutocompleteSelectors } from "../selectors/Autocomplete.selectors";
+import { TestUtils } from "../TestUtils";
 
 export class AutocompleteActions {
   public static async testCompletions(editor: TextEditor) {

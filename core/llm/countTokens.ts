@@ -448,11 +448,7 @@ function compileChatMessages(
     functionTokens + maxTokens + TOKEN_BUFFER_FOR_SAFETY,
   );
 
-  if (
-    systemMessage &&
-    history.length >= 2 &&
-    history[history.length - 2].role === "system"
-  ) {
+  if (history.length >= 2 && history[history.length - 2].role === "system") {
     const movedSystemMessage = history.splice(-2, 1)[0];
     history.unshift(movedSystemMessage);
   }

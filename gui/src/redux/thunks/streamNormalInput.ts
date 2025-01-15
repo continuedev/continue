@@ -10,6 +10,7 @@ import {
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
+import { modelSupportsTools } from "core/llm/autodetect";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -22,27 +23,23 @@ export const streamNormalInput = createAsyncThunk<
   const toolSettings = state.ui.toolSettings;
   const streamAborter = state.session.streamAborter;
   const useTools = state.ui.useTools;
-
   if (!defaultModel) {
     throw new Error("Default model not defined");
   }
+
+  const includeTools =
+    useTools && modelSupportsTools(defaultModel.model, defaultModel.provider);
 
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(
     defaultModel.title,
     streamAborter.signal,
     messages,
-    useTools
+    includeTools
       ? {
-          tools: Object.keys(toolSettings)
-            .filter((tool) => toolSettings[tool] !== "disabled")
-            .map((toolName) =>
-              state.config.config.tools.find(
-                (tool) => tool.function.name === toolName,
-              ),
-            )
-            .filter((tool) => !!tool)
-            .map((tool) => tool!), // for type safety
+          tools: state.config.config.tools.filter(
+            (tool) => toolSettings[tool.function.name] !== "disabled",
+          ),
         }
       : {},
   );

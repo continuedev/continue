@@ -251,16 +251,6 @@ Example
 ]
 ```
 
-### `analytics`
-
-Configuration for analytics tracking.
-
-**Properties:**
-
-- `provider`: Analytics provider (`"posthog"` or `"logstash"`).
-- `url`: URL for analytics data.
-- `clientKey`: Client key for analytics.
-
 ### `slashCommands`
 
 Custom commands initiated by typing "/" in the sidebar. Commands include predefined functionality or may be user-defined.
@@ -419,8 +409,8 @@ Several experimental config parameters are available, as described below:
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
-  - `fixGrammar`: Prompt for fixing grammar or spelling.
 - `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
+- `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#model-context-protocol)
 
 Example
 
@@ -442,7 +432,16 @@ Example
       "fixGrammar": "Fix grammar in the above but allow for typos."
     },
     "readResponseTTS": false,
-    "useChromiumForDocsCrawling": true
+    "useChromiumForDocsCrawling": true,
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
   }
 }
 ```

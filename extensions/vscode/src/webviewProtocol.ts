@@ -78,7 +78,7 @@ export class VsCodeWebviewProtocol
               status: "success",
             });
           } else {
-            respond({ done: true, content: response || {}, status: "success" });
+            respond({ done: true, content: response ?? {}, status: "success" });
           }
         } catch (e: any) {
           respond({ done: true, error: e.message, status: "error" });

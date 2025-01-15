@@ -99,7 +99,6 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("toggleDevTools", (msg) => {
-      vscode.commands.executeCommand("workbench.action.toggleDevTools");
       vscode.commands.executeCommand("continue.viewLogs");
     });
     this.onWebview("reloadWindow", (msg) => {

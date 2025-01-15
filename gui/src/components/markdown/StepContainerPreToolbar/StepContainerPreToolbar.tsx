@@ -1,11 +1,18 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
-import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
+import { lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import {
+  selectApplyStateByStreamId,
+  selectIsInEditMode,
+} from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
 import { childrenToText, isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
@@ -13,13 +20,6 @@ import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
-import { useAppSelector } from "../../../redux/hooks";
-import { selectDefaultModel } from "../../../redux/slices/configSlice";
-import {
-  selectApplyStateByStreamId,
-  selectIsInEditMode,
-} from "../../../redux/slices/sessionSlice";
-import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 
 const TopDiv = styled.div`
   outline: 0.5px solid rgba(153, 153, 152);
@@ -94,10 +94,20 @@ export default function StepContainerPreToolbar(
       return;
     }
 
-    const fileUri = await inferResolvedUriFromRelativePath(
+    let fileUri = await inferResolvedUriFromRelativePath(
       props.relativeFilepath,
       ideMessenger.ide,
     );
+
+    // Sometimes the model will decide to only output the base name
+    // in which case we shouldn't create a new file if it matches the current file
+    const exists = await ideMessenger.ide.fileExists(fileUri);
+    if (!exists) {
+      const activeFile = await ideMessenger.ide.getCurrentFile();
+      if (activeFile && activeFile.path.endsWith(props.relativeFilepath)) {
+        fileUri = activeFile.path;
+      }
+    }
 
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
@@ -131,18 +141,19 @@ export default function StepContainerPreToolbar(
     }
   }, [props.children, codeBlockContent]);
 
-  useEffect(() => {
-    const hasCompletedGenerating =
-      wasGeneratingRef.current && !isGeneratingCodeBlock;
+  // Temporarily disabling auto apply for Edit mode
+  // useEffect(() => {
+  //   const hasCompletedGenerating =
+  //     wasGeneratingRef.current && !isGeneratingCodeBlock;
 
-    const shouldAutoApply = hasCompletedGenerating && isInEditMode;
+  //   const shouldAutoApply = hasCompletedGenerating && isInEditMode;
 
-    if (shouldAutoApply) {
-      onClickApply();
-    }
+  //   if (shouldAutoApply) {
+  //     onClickApply();
+  //   }
 
-    wasGeneratingRef.current = isGeneratingCodeBlock;
-  }, [isGeneratingCodeBlock]);
+  //   wasGeneratingRef.current = isGeneratingCodeBlock;
+  // }, [isGeneratingCodeBlock]);
 
   async function onClickAcceptApply() {
     const fileUri = await inferResolvedUriFromRelativePath(

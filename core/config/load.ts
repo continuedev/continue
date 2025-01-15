@@ -33,7 +33,6 @@ import {
 } from "../commands/index.js";
 import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
@@ -46,6 +45,8 @@ import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
 import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
+import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
+import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
 import { allTools } from "../tools";
 import { copyOf } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
@@ -61,8 +62,6 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
-import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
-import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -70,6 +69,7 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
+// import { isSupportedLanceDbCpuTarget } from "./util";
 import { ConfigValidationError, validateConfig } from "./validation.js";
 
 export interface ConfigResult<T> {
@@ -112,6 +112,7 @@ function loadSerializedConfig(
   ideSettings: IdeSettings,
   ideType: IdeType,
   overrideConfigJson: SerializedContinueConfig | undefined,
+  ide: IDE,
 ): ConfigResult<SerializedContinueConfig> {
   const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
@@ -174,6 +175,11 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
+  // Temporarily disabling this check until we can verify the commands are accuarate
+  // if (!isSupportedLanceDbCpuTarget(ide)) {
+  //   config.disableIndexing = true;
+  // }
+
   return { config, errors, configLoadInterrupted: false };
 }
 
@@ -228,6 +234,13 @@ function isContextProviderWithParams(
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
+
+const getCodebaseProvider = async (params: any) => {
+  const { default: CodebaseContextProvider } = await import(
+    "../context/providers/CodebaseContextProvider"
+  );
+  return new CodebaseContextProvider(params);
+};
 
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
@@ -388,9 +401,14 @@ async function intermediateToFinalConfig(
         | ContextProviderWithParams
         | undefined
     )?.params || {};
+
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
-    new CodebaseContextProvider(codebaseContextParams),
+    // Add codebase provider if indexing is enabled
+    ...(!config.disableIndexing
+      ? [await getCodebaseProvider(codebaseContextParams)]
+      : []),
+    // Add prompt files provider if enabled
     ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
   ];
 
@@ -767,6 +785,7 @@ async function loadFullConfigNode(
     ideSettings,
     ideType,
     overrideConfigJson,
+    ide,
   );
 
   if (!serialized || configLoadInterrupted) {
