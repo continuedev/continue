@@ -699,7 +699,7 @@ export abstract class BaseLLM implements ILLM {
     // See these threads:
     // - https://github.com/continuedev/continue/issues/3698
     // - https://community.openai.com/t/streaming-support-for-o1-o1-2024-12-17-resulting-in-400-unsupported-value/1085043
-    if (completionOptions.model.startsWith("o1")) {
+    if (completionOptions.model === "o1") {
       completionOptions.stream = false;
     }
 
