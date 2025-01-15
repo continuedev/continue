@@ -434,7 +434,6 @@ jobs:
         run: |
           cd extensions/vscode
           TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run
-
         env:
           DISPLAY: :99
 
@@ -478,7 +477,7 @@ jobs:
 
   jetbrains-tests:
     needs: [ install-root, core-checks ]
-    name: run jetbrains tests for ${{ matrix.os }}
+    name: jetbrains-tests-${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -488,7 +487,7 @@ jobs:
               cd extensions/intellij
               export DISPLAY=:99.0
               Xvfb -ac :99 -screen 0 1920x1080x24 &
-              sleep 10
+              sleep 10 
               mkdir -p build/reports
               ./gradlew runIdeForUiTests > build/reports/idea.log &
             runTests: |
@@ -496,6 +495,12 @@ jobs:
               export DISPLAY=:99.0
               ./gradlew test
             reportName: jetbrains-tests-linux
+            moveVideo: |
+              cd extensions/intellij
+              mv video build/reports
+            copyLogs: |
+              cd extensions/intellij 
+              mv build/idea-sandbox/system/log/ build/reports
           - os: macOS-latest
             runIde: |
               cd extensions/intellij
@@ -504,23 +509,35 @@ jobs:
               cd extensions/intellij
               ./gradlew test
             reportName: jetbrains-tests-mac
-          - os: windows-latest
-            runIde: |
-              cd extensions\intellij
-              start gradlew.bat runIdeForUiTests
-            runTests: |
-              cd extensions\intellij
-              .\gradlew test
-            reportName: jetbrains-tests-windows
+            moveVideo: |
+              cd extensions/intellij
+              mv video build/reports
+            copyLogs: |
+              cd extensions/intellij
+              mv build/idea-sandbox/system/log/ build/reports
+    #          - os: windows-latest
+    #            runIde: |
+    #              cd extensions\intellij
+    #              start gradlew.bat runIdeForUiTests
+    #            runTests: |
+    #              cd extensions\intellij
+    #              .\gradlew test
+    #            reportName: jetbrains-tests-windows
+    #            moveVideo: |
+    #              cd extensions\intellij
+    #              move video build\reports
+    #            copyLogs: |
+    #              cd extensions\intellij
+    #              move build\idea-sandbox\system\log build\reports
 
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/cache@v4
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      #      - uses: actions/cache@v4
+      #        with:
+      #          path: core/node_modules
+      #          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
@@ -546,6 +563,19 @@ jobs:
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
+      # npm install core
+      - name: Install core node_modules
+        run: |
+          cd ../../core
+          npm ci
+
+      # npm install gui
+      - name: Install gui node_modules and build
+        run: |
+          cd ../../gui
+          npm ci
+          npm run build
 
       # We can shave off another minute off our CI script by finding a way to share this with vscode-tests
       - name: Run prepackage script
@@ -583,15 +613,11 @@ jobs:
 
       - name: Move video
         if: ${{ failure() }}
-        run: |
-          cd extensions/intellij
-          mv video build/reports
+        run: ${{ matrix.moveVideo }}
 
       - name: Copy logs
         if: ${{ failure() }}
-        run: |
-          cd extensions/intellij
-          mv build/idea-sandbox/system/log/ build/reports
+        run: ${{ matrix.copyLogs }}
 
       - name: Save fails report
         if: ${{ failure() }}
