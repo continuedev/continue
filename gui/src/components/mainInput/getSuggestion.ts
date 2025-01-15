@@ -7,7 +7,7 @@ import {
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import { IIdeMessenger } from "../../context/IdeMessenger";
-import MentionList from "./MentionList";
+import { MentionList } from "./MentionList";
 import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
 import { TIPPY_DIV_ID } from "./TipTapEditor";
 
