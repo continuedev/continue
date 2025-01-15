@@ -125,7 +125,7 @@ class FileSystemIde implements IDE {
   }
 
   isTelemetryEnabled(): Promise<boolean> {
-    return Promise.resolve(true);
+    return Promise.resolve(false);
   }
 
   getUniqueId(): Promise<string> {
