@@ -375,7 +375,7 @@ jobs:
           path: extensions/vscode/e2e/storage
 
   vscode-e2e-tests:
-    name: ${{ matrix.test_file }}"
+    name: ${{ matrix.test_file }} (${{ matrix.continue_folder }})
     needs:
       [
         vscode-download-e2e-dependencies,
@@ -389,6 +389,7 @@ jobs:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
+        continue_folder: ["test-continue", "test-continue-yaml"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -437,85 +438,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run
-
-        env:
-          DISPLAY: :99
-
-      - name: Upload e2e test screenshots
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-failure-screenshots
-          path: extensions/vscode/e2e/storage/screenshots
-
-  # We run all of the e2e tests a second time with config.yaml instead of config.json
-  # The only change is the environment variable specifying to use the test-continue-yaml
-  # folder rather than test-continue, which contains a config.yaml instead of config.json
-  vscode-e2e-tests-yaml:
-    name: ${{ matrix.test_file }}"
-    needs:
-      [
-        vscode-download-e2e-dependencies,
-        vscode-get-test-file-matrix,
-        vscode-package-extension,
-        install-vscode,
-        install-core,
-      ]
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/cache@v4
-        id: vscode-node-modules-cache
-        with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
-
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: vscode-extension-build
-          path: extensions/vscode/build
-
-      - name: Download e2e dependencies
-        uses: actions/download-artifact@v4
-        with:
-          name: vscode-e2e-dependencies
-          path: extensions/vscode/e2e/storage
-
-      - name: Fix VSCode binary permissions
-        run: |
-          chmod +x extensions/vscode/e2e/storage/VSCode-linux-x64/code
-          chmod +x extensions/vscode/e2e/storage/chromedriver-linux64/chromedriver
-
-      - name: Set up SSH
-        env:
-          SSH_KEY: ${{ secrets.GH_ACTIONS_SSH_TEST_KEY_PEM }}
-          SSH_HOST: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
-          echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
-
-      - name: Set up Xvfb
-        run: |
-          Xvfb :99 &
-          export DISPLAY=:99
-
-      - name: Run e2e tests
-        run: |
-          cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run-yaml
+          TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run${{ matrix.continue_folder == 'continue-test-yaml' && '-yaml' || '' }}
 
         env:
           DISPLAY: :99
