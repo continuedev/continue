@@ -479,31 +479,38 @@ jobs:
   jetbrains-tests:
     needs: [ install-root, core-checks ]
     name: run jetbrains tests for ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: extensions/intellij
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
             runIde: |
+              cd extensions/intellij
               export DISPLAY=:99.0
               Xvfb -ac :99 -screen 0 1920x1080x24 &
               sleep 10
               mkdir -p build/reports
               ./gradlew runIdeForUiTests > build/reports/idea.log &
             runTests: |
+              cd extensions/intellij
               export DISPLAY=:99.0
               ./gradlew test
             reportName: jetbrains-tests-linux
           - os: macOS-latest
-            runIde: ./gradlew runIdeForUiTests &
-            runTests: ./gradlew test
+            runIde: |
+              cd extensions/intellij
+              ./gradlew runIdeForUiTests &
+            runTests: |
+              cd extensions/intellij
+              ./gradlew test
             reportName: jetbrains-tests-mac
           - os: windows-latest
-            runIde: start gradlew.bat runIdeForUiTests
-            runTests: .\gradlew test
+            runIde: |
+              cd extensions\intellij
+              start gradlew.bat runIdeForUiTests
+            runTests: |
+              cd extensions\intellij
+              .\gradlew test
             reportName: jetbrains-tests-windows
 
     runs-on: ${{ matrix.os }}
@@ -576,17 +583,22 @@ jobs:
 
       - name: Move video
         if: ${{ failure() }}
-        run: mv video build/reports
+        run: |
+          cd extensions/intellij
+          mv video build/reports
 
       - name: Copy logs
         if: ${{ failure() }}
-        run: mv build/idea-sandbox/system/log/ build/reports
+        run: |
+          cd extensions/intellij
+          mv build/idea-sandbox/system/log/ build/reports
 
       - name: Save fails report
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
           name: jb-failure-report
-          path: ${{ github.workspace }}/extensions/intellij/build/reports
+          path: |
+            ${{ github.workspace }}/extensions/intellij/build/reports
 
 
