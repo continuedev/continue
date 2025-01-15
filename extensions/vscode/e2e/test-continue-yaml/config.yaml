@@ -1,6 +1,9 @@
 name: Test Config
 version: 0.0.1
 
+rules:
+  - TEST_SYS_MSG
+
 models:
   - name: TEST LLM
     provider: test
@@ -40,6 +43,14 @@ models:
       - chat
       - edit
       - apply
+
+  - name: SYSTEM MESSAGE MOCK LLM
+    provider: mock
+    model: claude-3-5-sonnet-latest
+    requestOptions:
+      extraBodyProperties:
+        chatStream:
+          - - REPEAT_SYSTEM_MSG
 
 context:
   - uses: docs
