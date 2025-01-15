@@ -1,3 +1,4 @@
+import { ConfigValidationError } from "@continuedev/config-yaml";
 import {
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
@@ -6,7 +7,6 @@ import {
 import { useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray } from "../..";
-import { ConfigValidationError } from "../../../../../packages/config-yaml/dist";
 import { ToolTip } from "../../gui/Tooltip";
 
 export const OptionDiv = styled.div<{

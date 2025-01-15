@@ -1,10 +1,7 @@
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { BrowserSerializedContinueConfig } from "core";
 import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
-import {
-  ConfigResult,
-  ConfigValidationError,
-} from "../../../../packages/config-yaml/dist";
 
 export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
