@@ -2,7 +2,10 @@ import { createWriteStream } from "fs";
 import * as fs from "fs/promises";
 import * as path from 'path';
 import { Readable } from "stream";
+
+import fetch from "node-fetch";
 import { CancellationToken, Progress } from "vscode";
+
 import { checkFileExists } from './fsUtils';
 
 export async function downloadFileFromUrl(
@@ -33,7 +36,7 @@ export async function downloadFileFromUrl(
 
   const writer = createWriteStream(destinationPath);
   await new Promise((resolve, reject) => {
-    const reader = Readable.fromWeb(body);
+    const reader = Readable.from(body);
 
     reader.on('data', (chunk) => {
       downloadedBytes += chunk.length;
