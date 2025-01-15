@@ -3,20 +3,57 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { IDE, IdeSettings, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";
+import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 const AUTODETECT = "AUTODETECT";
+
+function useContinueProxy(
+  model: ModelConfig,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
+): boolean {
+  return !!platformConfigMetadata && model.apiKeySecret !== undefined;
+}
+
+function getModelClass(
+  model: ModelConfig,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
+): (typeof LLMClasses)[number] | undefined {
+  if (useContinueProxy(model, platformConfigMetadata)) {
+    return ContinueProxy;
+  }
+  return LLMClasses.find((llm) => llm.providerName === model.provider);
+}
+
+function getContinueProxyModelName(
+  ownerSlug: string,
+  packageSlug: string,
+  model: ModelConfig,
+): string {
+  return `${ownerSlug}/${packageSlug}/${model.provider}/${model.model}`;
+}
 
 async function modelConfigToBaseLLM(
   model: ModelConfig,
   uniqueId: string,
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
 ): Promise<BaseLLM | undefined> {
-  const cls = LLMClasses.find((llm) => llm.providerName === model.provider);
+  const cls = getModelClass(model, platformConfigMetadata);
 
   if (!cls) {
     return undefined;
   }
+
+  const usingContinueProxy = useContinueProxy(model, platformConfigMetadata);
+  const modelName = usingContinueProxy
+    ? getContinueProxyModelName(
+        platformConfigMetadata!.ownerSlug,
+        platformConfigMetadata!.packageSlug,
+        model,
+      )
+    : model.model;
 
   let options: LLMOptions = {
     ...model,
@@ -30,6 +67,7 @@ async function modelConfigToBaseLLM(
     writeLog,
     uniqueId,
     title: model.name,
+    model: modelName,
   };
 
   const llm = new cls(options);
@@ -43,6 +81,7 @@ async function autodetectModels(
   uniqueId: string,
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
 ): Promise<BaseLLM[]> {
   try {
     const modelNames = await llm.listModels();
@@ -62,6 +101,7 @@ async function autodetectModels(
           uniqueId,
           ideSettings,
           writeLog,
+          platformConfigMetadata,
         );
       }),
     );
@@ -78,12 +118,14 @@ export async function llmsFromModelConfig(
   uniqueId: string,
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
 ): Promise<BaseLLM[]> {
   const baseLlm = await modelConfigToBaseLLM(
     model,
     uniqueId,
     ideSettings,
     writeLog,
+    platformConfigMetadata,
   );
   if (!baseLlm) {
     return [];
@@ -97,6 +139,7 @@ export async function llmsFromModelConfig(
       uniqueId,
       ideSettings,
       writeLog,
+      platformConfigMetadata,
     );
     return models;
   } else {

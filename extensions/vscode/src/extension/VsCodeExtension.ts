@@ -171,7 +171,7 @@ export class VsCodeExtension {
           const result = await this.configHandler.getSerializedConfig();
           this.sidebar.webviewProtocol?.request("configUpdate", {
             result,
-            profileId: this.configHandler.currentProfile.profileId,
+            profileId: this.configHandler.currentProfile.profileDescription.id,
           });
 
           this.tabAutocompleteModel.clearLlm();
@@ -301,7 +301,7 @@ export class VsCodeExtension {
           true,
         );
 
-        const sessionInfo = await getControlPlaneSessionInfo(true);
+        const sessionInfo = await getControlPlaneSessionInfo(true, false);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
           void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
             sessionInfo,

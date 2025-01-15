@@ -1,11 +1,8 @@
-import { ConfigResult } from "../config/load.js";
-import { ConfigValidationError } from "../config/validation.js";
-
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
   ContextProviderName,
-  ContextSubmenuItem,
   IndexingProgressUpdate,
   IndexingStatus,
   PackageDocsResult,

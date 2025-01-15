@@ -113,6 +113,10 @@ class OpenAI extends BaseLLM {
     };
   }
 
+  protected extraBodyProperties(): Record<string, any> {
+    return {};
+  }
+
   protected getMaxStopWords(): number {
     const url = new URL(this.apiBase!);
 
@@ -278,6 +282,7 @@ class OpenAI extends BaseLLM {
       body: JSON.stringify({
         ...args,
         stream: true,
+        ...this.extraBodyProperties(),
       }),
       signal,
     });
@@ -319,7 +324,10 @@ class OpenAI extends BaseLLM {
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
       headers: this._getHeaders(),
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        ...this.extraBodyProperties(),
+      }),
       signal,
     });
 
@@ -358,6 +366,7 @@ class OpenAI extends BaseLLM {
         presence_penalty: options.presencePenalty,
         stop: options.stop,
         stream: true,
+        ...this.extraBodyProperties(),
       }),
       headers: {
         "Content-Type": "application/json",
@@ -404,6 +413,7 @@ class OpenAI extends BaseLLM {
       body: JSON.stringify({
         input: chunks,
         model: this.model,
+        ...this.extraBodyProperties(),
       }),
       headers: {
         Authorization: `Bearer ${this.apiKey}`,

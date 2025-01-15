@@ -301,9 +301,16 @@ export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
   return dir;
 }
 
-export function internalBetaPathExists(): boolean {
-  const sPath = path.join(getContinueGlobalPath(), ".internal_beta");
+export function usePlatformPathExists(): boolean {
+  const sPath = path.join(getContinueGlobalPath(), ".use_platform");
   return fs.existsSync(sPath);
+}
+
+export function readUsePlatform(): string | undefined {
+  const sPath = path.join(getContinueGlobalPath(), ".use_platform");
+  if (fs.existsSync(sPath)) {
+    return fs.readFileSync(sPath, "utf8");
+  }
 }
 
 export function getConfigJsonPathForRemote(

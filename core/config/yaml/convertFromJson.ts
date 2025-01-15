@@ -8,6 +8,7 @@ export function convertConfigJsonToConfigYaml(
 ): ConfigYaml {
   return {
     name: "Local Config",
+    version: "1.0.0",
     models: [
       ...configJson.models.map(
         (model): ModelConfig => ({

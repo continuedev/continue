@@ -10,7 +10,7 @@ import {
   vscInputBackground,
 } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseActiveFile } from "../../redux/selectors";
+import { selectUseActiveFile, selectUsePlatform } from "../../redux/selectors";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
@@ -26,6 +26,7 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
+import AssistantAndModelSelect from "../modelSelection/platform/AssistantAndModelSelect";
 import HoverItem from "./InputToolbar/HoverItem";
 import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
 
@@ -96,6 +97,8 @@ function InputToolbar(props: InputToolbarProps) {
     modelSupportsTools(defaultModel.model, defaultModel.provider) &&
     !props.toolbarOptions?.hideTools;
 
+  const usePlatform = useAppSelector(selectUsePlatform);
+
   const supportsImages =
     defaultModel &&
     modelSupportsImages(
@@ -114,7 +117,7 @@ function InputToolbar(props: InputToolbarProps) {
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
-          <ModelSelect />
+          {usePlatform ? <AssistantAndModelSelect /> : <ModelSelect />}
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
               (supportsImages && (

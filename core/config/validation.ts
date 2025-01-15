@@ -1,10 +1,6 @@
+import { ConfigValidationError } from "@continuedev/config-yaml";
 import { ModelDescription, SerializedContinueConfig } from "../";
 import { Telemetry } from "../util/posthog";
-
-export interface ConfigValidationError {
-  fatal: boolean;
-  message: string;
-}
 
 /**
  * Validates a SerializedContinueConfig object to ensure all properties are correctly formed.

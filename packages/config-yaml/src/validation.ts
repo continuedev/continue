@@ -1,13 +1,14 @@
 import { ConfigYaml, configYamlSchema } from "./schemas/index.js";
 
-export enum ValidationLevel {
-  Warning,
-  Error,
+export interface ConfigValidationError {
+  fatal: boolean;
+  message: string;
 }
 
-export interface ConfigValidationError {
-  level: ValidationLevel;
-  message: string;
+export interface ConfigResult<T> {
+  config: T | undefined;
+  errors: ConfigValidationError[] | undefined;
+  configLoadInterrupted: boolean;
 }
 
 export function validateConfigYaml(
@@ -20,7 +21,7 @@ export function validateConfigYaml(
   } catch (e: any) {
     return [
       {
-        level: ValidationLevel.Error,
+        fatal: true,
         message: e.message,
       },
     ];
@@ -38,7 +39,7 @@ export function validateConfigYaml(
 
       if (difference < 1000) {
         errors.push({
-          level: ValidationLevel.Warning,
+          fatal: false,
           message: `Model "${model.name}" has a contextLength of ${model.defaultCompletionOptions?.contextLength} and a maxTokens of ${model.defaultCompletionOptions?.maxTokens}. This leaves only ${difference} tokens for input context and will likely result in your inputs being truncated.`,
         });
       }
@@ -60,7 +61,7 @@ export function validateConfigYaml(
         !modelName.toLowerCase().includes("coder")
       ) {
         errors.push({
-          level: ValidationLevel.Warning,
+          fatal: false,
           message: `${model.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
         });
       }

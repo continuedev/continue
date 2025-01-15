@@ -29,6 +29,14 @@ export class MessageIde implements IDE {
     ) => void,
   ) {}
 
+  async readSecrets(keys: string[]): Promise<Record<string, string>> {
+    return this.request("readSecrets", { keys });
+  }
+
+  async writeSecrets(secrets: { [key: string]: string }): Promise<void> {
+    return this.request("writeSecrets", { secrets });
+  }
+
   fileExists(fileUri: string): Promise<boolean> {
     return this.request("fileExists", { filepath: fileUri });
   }
@@ -152,7 +160,7 @@ export class MessageIde implements IDE {
     await this.request("openUrl", url);
   }
 
-  async runCommand(command: string,  options?: TerminalOptions): Promise<void> {
+  async runCommand(command: string, options?: TerminalOptions): Promise<void> {
     await this.request("runCommand", { command, options });
   }
 

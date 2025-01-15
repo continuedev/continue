@@ -44,7 +44,7 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
-
+import { usePlatform } from "./control-plane/flags";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -103,6 +103,7 @@ export class Core {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
+      useOnboarding: usePlatform(),
     });
 
     this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
@@ -124,7 +125,7 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileId,
+        profileId: this.configHandler.currentProfile.profileDescription.id,
       });
     });
 
@@ -378,7 +379,7 @@ export class Core {
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.currentProfile.profileId,
+        profileId: this.configHandler.currentProfile.profileDescription.id,
       };
     });
 

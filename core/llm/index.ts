@@ -117,6 +117,7 @@ export abstract class BaseLLM implements ILLM {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+  apiKeySecret?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
@@ -194,6 +195,7 @@ export abstract class BaseLLM implements ILLM {
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
+    this.apiKeySecret = options.apiKeySecret;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
     this.cacheBehavior = options.cacheBehavior;
