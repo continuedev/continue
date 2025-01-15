@@ -11,6 +11,8 @@ import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { saveCurrentSession } from "../../../redux/thunks/session";
 
+const disableContinueOnboarding = true;
+
 export interface UseOnboardingCard {
   show: OnboardingCardState["show"];
   activeTab: OnboardingCardState["activeTab"];
@@ -41,6 +43,9 @@ export function useOnboardingCard(): UseOnboardingCard {
   }
 
   async function open(tab: TabTitle) {
+    if (disableContinueOnboarding) {
+      return;
+    }
     navigate("/");
     dispatch(setOnboardingCard({ show: true, activeTab: tab }));
   }
@@ -59,7 +64,7 @@ export function useOnboardingCard(): UseOnboardingCard {
   }
 
   return {
-    show,
+    show: !disableContinueOnboarding && show,
     setActiveTab,
     open,
     close,
