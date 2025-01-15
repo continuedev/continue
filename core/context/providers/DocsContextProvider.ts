@@ -20,7 +20,10 @@ class DocsContextProvider extends BaseContextProvider {
     displayTitle: "Docs",
     description: "Type to search docs",
     type: "submenu",
-    renderInlineAs: "<docs-context-provider>",
+    // Todo: consider a different renderInline so that when multiple docs are referenced in one message,
+    // Or the doc has an odd name unrelated to the content
+    // The name of the doc itself doesn't skew the embedding results
+    // renderInlineAs: "<docs-context-provider>",
   };
 
   constructor(options: any) {
