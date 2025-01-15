@@ -452,7 +452,14 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.gemini15Pro, models.geminiPro, models.gemini15Flash],
+    packages: [
+      models.gemini15Pro,
+      models.geminiPro,
+      models.gemini15Flash,
+      models.gemini20FlashExp,
+      models.gemini20FlashThinkingExp,
+      models.geminiExp1206
+    ],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
   xAI: {
