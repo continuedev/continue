@@ -129,7 +129,7 @@ export class SetupGranitePage {
         // Panel view type
         "modelSetup",
         // Panel title
-        "Setup IBM Granite Models",
+        "Setup Granite.Code",
         // The editor column the panel should be displayed in
         ViewColumn.One,
         // Extra panel configurations
@@ -419,7 +419,8 @@ export class SetupGranitePage {
     }
 
     // Display Continue Chat UI next
-    commands.executeCommand("continue.continueGUIView.focus");
+    await commands.executeCommand("continue.continueGUIView.focus");
+    await commands.executeCommand("granite.showTutorial");
   }
 
 }

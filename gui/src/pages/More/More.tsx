@@ -53,6 +53,23 @@ function MorePage() {
         <div className="py-5">
           <h3 className="mb-4 mt-0 text-xl">Help center</h3>
           <div className="-mx-4 flex flex-col">
+
+          <MoreHelpRow
+              title="Setup Wizard"
+              description="Open the Granite Setup Wizard"
+              Icon={DocumentArrowUpIcon}
+              onClick={async () => {
+                navigate("/");
+                // Used to clear the chat panel before showing onboarding card
+                await dispatch(
+                  saveCurrentSession({
+                    openNewSession: true,
+                  }),
+                );
+                ideMessenger.post("showSetupWizard", undefined);
+              }}
+            />
+
             <MoreHelpRow
               title="Documentation"
               description="Learn how to configure and use Continue"

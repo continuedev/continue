@@ -238,6 +238,10 @@ export class VsCodeMessenger {
       await showTutorial(this.ide);
     });
 
+    this.onWebview("showSetupWizard", async (msg) => {
+      await vscode.commands.executeCommand("granite.setup");
+    });
+
     this.onWebview(
       "overwriteFile",
       async ({ data: { prevFileContent, filepath } }) => {

@@ -25,6 +25,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   ];
   overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
+  showSetupWizard: [undefined, void];
   showFile: [{ filepath: string }, void];
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
