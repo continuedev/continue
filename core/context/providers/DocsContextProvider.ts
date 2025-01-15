@@ -20,6 +20,7 @@ class DocsContextProvider extends BaseContextProvider {
     displayTitle: "Docs",
     description: "Type to search docs",
     type: "submenu",
+    renderInlineAs: "<docs-context-provider>",
   };
 
   constructor(options: any) {
@@ -80,6 +81,7 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    const nRetrieve = this.options?.nRetrieve ?? DocsContextProvider.nRetrieve;
     const useReranking = this.options?.useReranking ?? true;
 
     // Get docs service
@@ -94,7 +96,7 @@ class DocsContextProvider extends BaseContextProvider {
     let chunks = await docsService.retrieveChunksFromQuery(
       extras.fullInput, // confusing: fullInput = the query, query = startUrl in this case
       query,
-      this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
+      nRetrieve,
     );
     if (!chunks?.length) {
       return [];

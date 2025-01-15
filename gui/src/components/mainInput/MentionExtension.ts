@@ -31,6 +31,7 @@ export const Mention = Node.create<MentionOptions>({
         char: "@",
         pluginKey: MentionPluginKey,
         command: ({ editor, range, props }) => {
+          console.log(props);
           // increase range.to by one when the next node is of type "text"
           // and starts with a space character
           const nodeAfter = editor.view.state.selection.$to.nodeAfter;
@@ -116,7 +117,7 @@ export const Mention = Node.create<MentionOptions>({
         default: null,
         parseHTML: (element) => element.getAttribute("data-renderInlineAs"),
         renderHTML: (attributes) => {
-          if (!attributes.renderInlineAs) {
+          if (typeof attributes.renderInlineAs !== "string") {
             return {};
           }
 
