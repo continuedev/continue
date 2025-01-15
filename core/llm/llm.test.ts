@@ -2,12 +2,12 @@ import * as dotenv from "dotenv";
 
 import { CompletionOptions } from "..";
 
-import OpenAI from "./llms/OpenAI";
-
-import { BaseLLM } from ".";
 import Anthropic from "./llms/Anthropic";
 import Gemini from "./llms/Gemini";
 import Mistral from "./llms/Mistral";
+import OpenAI from "./llms/OpenAI";
+
+import { BaseLLM } from ".";
 
 dotenv.config();
 
