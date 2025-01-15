@@ -478,7 +478,35 @@ jobs:
 
   jetbrains-tests:
     needs: [ install-root, core-checks ]
-    runs-on: ubuntu-latest
+    name: run jetbrains tests for ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: extensions/intellij
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            runIde: |
+              export DISPLAY=:99.0
+              Xvfb -ac :99 -screen 0 1920x1080x24 &
+              sleep 10
+              mkdir -p build/reports
+              ./gradlew runIdeForUiTests > build/reports/idea.log &
+            runTests: |
+              export DISPLAY=:99.0
+              ./gradlew test
+            reportName: jetbrains-tests-linux
+          - os: macOS-latest
+            runIde: ./gradlew runIdeForUiTests &
+            runTests: ./gradlew test
+            reportName: jetbrains-tests-mac
+          - os: windows-latest
+            runIde: start gradlew.bat runIdeForUiTests
+            runTests: .\gradlew test
+            reportName: jetbrains-tests-windows
+
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -534,13 +562,7 @@ jobs:
           npm run build
 
       - name: Start test IDE
-        run: |
-          cd extensions/intellij
-          export DISPLAY=:99.0
-          Xvfb -ac :99 -screen 0 1920x1080x24 &
-          sleep 10
-          mkdir -p build/reports
-          ./gradlew runIdeForUiTests &
+        run: ${{ matrix.runIde }}
 
       - name: Wait for JB connection
         uses: jtalk/url-health-check-action@v3
@@ -550,29 +572,21 @@ jobs:
           retry-delay: 5s
 
       - name: Run tests
-        run: |
-          cd extensions/intellij
-          export DISPLAY=:99.0
-          ./gradlew test
+        run: ${{ matrix.runTests }}
 
       - name: Move video
         if: ${{ failure() }}
-        run: |
-          cd extensions/intellij
-          mv video build/reports
+        run: mv video build/reports
 
       - name: Copy logs
         if: ${{ failure() }}
-        run: |
-          cd extensions/intellij
-          mv build/idea-sandbox/system/log/ build/reports
+        run: mv build/idea-sandbox/system/log/ build/reports
 
       - name: Save fails report
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
         with:
           name: jb-failure-report
-          path: |
-            ${{ github.workspace }}/extensions/intellij/build/reports
+          path: ${{ github.workspace }}/extensions/intellij/build/reports
 
 
