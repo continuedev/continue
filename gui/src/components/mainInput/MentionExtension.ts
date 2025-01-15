@@ -31,7 +31,6 @@ export const Mention = Node.create<MentionOptions>({
         char: "@",
         pluginKey: MentionPluginKey,
         command: ({ editor, range, props }) => {
-          console.log(props);
           // increase range.to by one when the next node is of type "text"
           // and starts with a space character
           const nodeAfter = editor.view.state.selection.$to.nodeAfter;

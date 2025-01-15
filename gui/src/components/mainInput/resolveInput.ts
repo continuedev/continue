@@ -52,7 +52,6 @@ async function resolveEditorContent({
     for (const p of editorState.content) {
       if (p.type === "paragraph") {
         const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
-        console.log("PARAGRAPH RESOLVE", ctxItems);
         // Only take the first slash command\
         if (foundSlashCommand && typeof slashCommand === "undefined") {
           slashCommand = foundSlashCommand;
@@ -137,7 +136,6 @@ async function resolveEditorContent({
     }
   }
 
-  console.log(stripImages(parts), contextItems);
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {
     const result = await ideMessenger.request("context/getContextItems", {
@@ -218,7 +216,6 @@ function resolveParagraph(
     if (child.type === "text") {
       text += text === "" ? child.text?.trimStart() : child.text;
     } else if (child.type === "mention") {
-      console.log("CHILD", child);
       text +=
         typeof child.attrs?.renderInlineAs === "string"
           ? child.attrs.renderInlineAs

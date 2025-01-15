@@ -39,13 +39,11 @@ class DocsCrawler {
     maxRequestsPerCrawl: number = this.MAX_REQUESTS_PER_CRAWL,
   ): AsyncGenerator<PageData, undefined, undefined> {
     if (startUrl.host === this.GITHUB_HOST) {
-      console.log("GITHUB DETECTED: Using Github");
       yield* new GitHubCrawler(startUrl).crawl();
       return;
     }
 
     try {
-      console.log(`Crawling ${startUrl.toString()}: Trying default crawler`);
       const pageData = await new DefaultCrawler(startUrl).crawl();
       if (pageData.length > 0) {
         yield* pageData;
@@ -56,11 +54,9 @@ class DocsCrawler {
     }
 
     if (this.shouldUseChromium()) {
-      console.log(`Crawling ${startUrl.toString()}: Trying chromium crawler`);
       yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
     } else {
       let didCrawlSinglePage = false;
-      console.log(`Crawling ${startUrl.toString()}: Trying cheerio crawler`);
 
       for await (const pageData of new CheerioCrawler(
         startUrl,
@@ -77,10 +73,6 @@ class DocsCrawler {
         this.chromiumInstaller.shouldProposeUseChromiumOnCrawlFailure();
 
       if (shouldProposeUseChromium) {
-        console.log(
-          `Crawling ${startUrl.toString()}: Cheerio failed: proposing chromium crawler`,
-        );
-
         const didInstall =
           await this.chromiumInstaller.proposeAndAttemptInstall(
             startUrl.toString(),
