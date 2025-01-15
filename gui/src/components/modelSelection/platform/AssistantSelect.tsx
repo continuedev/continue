@@ -65,6 +65,11 @@ export function AssistantSelect(props: AssistantSelectProps) {
               }
             }}
             errors={option.errors}
+            onClickError={() => {
+              ideMessenger.post("config/openProfile", {
+                profileId: option.id,
+              });
+            }}
             onClick={() => dispatch(setProfileId(option.id))}
           >
             <div className="flex min-w-0 items-center">

@@ -59,6 +59,7 @@ interface ModelOptionProps {
   onConfigure: (e: any) => void;
   onClick: () => void;
   errors?: ConfigValidationError[];
+  onClickError?: (e: any) => void;
 }
 
 const IconBase = styled.div<{ $hovered: boolean }>`
@@ -94,6 +95,7 @@ export function Option({
   onLink,
   selected,
   errors,
+  onClickError,
 }: ModelOptionProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -132,7 +134,8 @@ export function Option({
                 <StyledExclamationTriangleIcon
                   data-tooltip-id={`${idx}-errors-tooltip`}
                   $hovered={hovered}
-                  className="text-red-500"
+                  className="cursor-pointer text-red-500"
+                  onClick={onClickError}
                 />
                 <ToolTip id={`${idx}-errors-tooltip`}>
                   <div className="font-semibold">Errors</div>
