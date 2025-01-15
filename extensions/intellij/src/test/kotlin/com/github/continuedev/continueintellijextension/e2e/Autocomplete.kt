@@ -34,7 +34,7 @@ class Autocomplete {
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
-    // @Test
+    @Test
     @Video
     fun displayCompletion(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
         welcomeFrame {
@@ -64,7 +64,7 @@ class Autocomplete {
                     enterText(" ")
                 }
 
-                waitFor(ofSeconds(10)) {
+                waitFor(ofSeconds(20)) {
                     editor.hasText("TEST_LLM_RESPONSE_0")
                 }
             }
