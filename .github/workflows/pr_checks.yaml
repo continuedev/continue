@@ -567,13 +567,13 @@ jobs:
       # npm install core
       - name: Install core node_modules
         run: |
-          cd ../../core
+          cd core
           npm ci
 
       # npm install gui
       - name: Install gui node_modules and build
         run: |
-          cd ../../gui
+          cd gui
           npm ci
           npm run build
 
