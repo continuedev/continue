@@ -245,6 +245,11 @@ class OpenAI extends BaseLLM {
       body.messages = formatMessageForO1(body.messages);
     }
 
+    if (body.model === "o1") {
+      // o1 doesn't support streaming
+      body.stream = false;
+    }
+
     if (body.prediction && this.supportsPrediction(body.model)) {
       if (body.presence_penalty) {
         // prediction doesn't support > 0

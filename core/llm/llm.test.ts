@@ -167,9 +167,9 @@ describe("LLM", () => {
     new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1-preview" }),
     { skip: false },
   );
-  // testLLM(new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1" }), {
-  //   skip: false,
-  // });
+  testLLM(new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1" }), {
+    skip: false,
+  });
   testLLM(
     new Gemini({
       model: "gemini-2.0-flash-exp",
