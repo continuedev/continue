@@ -81,6 +81,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   google: GoogleIcon,
   "gitlab-mr": GitlabIcon,
   http: GlobeAltIcon,
+  trash: TrashIcon,
 };
 
 export function getIconFromDropdownItem(
@@ -451,7 +452,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         />
                       )}
                     {item.subActions?.map((subAction) => {
-                      const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
+                      const Icon = getIconFromDropdownItem(
+                        subAction.icon,
+                        "action",
+                      );
                       return (
                         <HeaderButtonWithToolTip
                           onClick={(e) => {

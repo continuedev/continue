@@ -65,7 +65,6 @@ function useSetup() {
       if (result.status === "error") {
         return;
       }
-      console.log("Config loaded", result.content);
       await handleConfigUpdate(initial, result.content);
     },
     [ideMessenger, handleConfigUpdate],
