@@ -73,6 +73,7 @@ import {
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 // import { isSupportedLanceDbCpuTarget } from "./util";
 import { validateConfig } from "./validation.js";
+import { localPathToUri } from "../util/pathToUri";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -813,7 +814,7 @@ async function loadFullConfigNode(
           "Could not load config.ts as absolute path, retrying as file url ...",
         );
         try {
-          module = await import(`file://${configJsPath}`);
+          module = await import(localPathToUri(configJsPath));
         } catch (e) {
           throw new Error("Could not load config.ts as file url either", {
             cause: e,
