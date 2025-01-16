@@ -39,6 +39,7 @@ async function modelConfigToBaseLLM(
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
+  systemMessage: string | undefined,
 ): Promise<BaseLLM | undefined> {
   const cls = getModelClass(model, platformConfigMetadata);
 
@@ -68,6 +69,7 @@ async function modelConfigToBaseLLM(
     uniqueId,
     title: model.name,
     model: modelName,
+    systemMessage,
   };
 
   const llm = new cls(options);
@@ -82,6 +84,7 @@ async function autodetectModels(
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
+  systemMessage: string | undefined,
 ): Promise<BaseLLM[]> {
   try {
     const modelNames = await llm.listModels();
@@ -102,6 +105,7 @@ async function autodetectModels(
           ideSettings,
           writeLog,
           platformConfigMetadata,
+          systemMessage,
         );
       }),
     );
@@ -119,6 +123,7 @@ export async function llmsFromModelConfig(
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
+  systemMessage: string | undefined,
 ): Promise<BaseLLM[]> {
   const baseLlm = await modelConfigToBaseLLM(
     model,
@@ -126,6 +131,7 @@ export async function llmsFromModelConfig(
     ideSettings,
     writeLog,
     platformConfigMetadata,
+    systemMessage,
   );
   if (!baseLlm) {
     return [];
@@ -140,6 +146,7 @@ export async function llmsFromModelConfig(
       ideSettings,
       writeLog,
       platformConfigMetadata,
+      systemMessage,
     );
     return models;
   } else {

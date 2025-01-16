@@ -147,6 +147,7 @@ async function configYamlToContinueConfig(
         ideSettings,
         writeLog,
         platformConfigMetadata,
+        continueConfig.systemMessage,
       );
       continueConfig.models.push(...llms);
     }
@@ -160,6 +161,7 @@ async function configYamlToContinueConfig(
         ideSettings,
         writeLog,
         platformConfigMetadata,
+        continueConfig.systemMessage,
       );
       continueConfig.tabAutocompleteModels?.push(...llms);
     }
