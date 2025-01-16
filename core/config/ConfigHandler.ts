@@ -14,6 +14,7 @@ import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath } from "../util/paths.js";
 
+import { localPathToUri } from "../util/pathToUri.js";
 import { ConfigResult } from "./load.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
@@ -25,7 +26,6 @@ import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
-import { pathToFileURL } from "url";
 
 export type { ProfileDescription };
 
@@ -89,7 +89,7 @@ export class ConfigHandler {
   async openConfigProfile(profileId?: string) {
     let openProfileId = profileId || this.selectedProfileId;
     if (openProfileId === "local") {
-      await this.ide.openFile(pathToFileURL(getConfigJsonPath()).toString());
+      await this.ide.openFile(localPathToUri(getConfigJsonPath()));
     } else {
       await this.ide.openUrl(
         "https://app.continue.dev/",
