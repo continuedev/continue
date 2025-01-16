@@ -230,7 +230,7 @@ Rather than with `customCommands`, you can now use the `prompts` field to define
 
 **After**
 
-````yaml title="config.yaml"
+```yaml title="config.yaml"
 prompts:
   - name: check
     description: Check for mistakes in my code
@@ -264,7 +264,7 @@ Documentation is largely the same, but the `title` property has been replaced wi
     }
   ]
 }
-````
+```
 
 **After**
 
