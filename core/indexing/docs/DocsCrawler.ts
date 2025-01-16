@@ -1,7 +1,5 @@
 import { URL } from "node:url";
 
-// @ts-ignore
-// @prettier-ignore
 import { ContinueConfig, IDE } from "../..";
 
 import CheerioCrawler from "./crawlers/CheerioCrawler";
@@ -14,6 +12,8 @@ export type PageData = {
   path: string;
   content: string;
 };
+
+export type DocsCrawlerType = "default" | "cheerio" | "chromium" | "github";
 
 class DocsCrawler {
   private readonly GITHUB_HOST = "github.com";
@@ -42,11 +42,7 @@ class DocsCrawler {
   */
   async *crawl(
     startUrl: URL,
-  ): AsyncGenerator<
-    PageData,
-    "default" | "chromium" | "cheerio" | "github",
-    undefined
-  > {
+  ): AsyncGenerator<PageData, DocsCrawlerType, undefined> {
     if (startUrl.host === this.GITHUB_HOST) {
       yield* new GitHubCrawler(startUrl, this.githubToken).crawl();
       return "github";

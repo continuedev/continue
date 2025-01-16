@@ -30,7 +30,7 @@ import {
   htmlPageToArticleWithChunks,
   markdownPageToArticleWithChunks,
 } from "./article";
-import DocsCrawler, { PageData } from "./DocsCrawler";
+import DocsCrawler, { DocsCrawlerType, PageData } from "./DocsCrawler";
 import { ConfigResult } from "@continuedev/config-yaml";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {
@@ -435,7 +435,7 @@ export default class DocsService {
       let processedPages = 0;
       let estimatedProgress = 0;
       let done = false;
-      let usedCrawler: string | undefined = undefined;
+      let usedCrawler: DocsCrawlerType | undefined = undefined;
 
       const docsCrawler = new DocsCrawler(
         this.ide,
