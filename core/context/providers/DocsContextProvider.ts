@@ -89,6 +89,7 @@ class DocsContextProvider extends BaseContextProvider {
       return [];
     }
     await docsService.isInitialized;
+    docsService.setGithubToken(this.options?.githubToken);
 
     // Get chunks
     let chunks = await docsService.retrieveChunksFromQuery(

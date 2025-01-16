@@ -6,11 +6,17 @@ import { PageData } from "../DocsCrawler";
 
 class GitHubCrawler {
   private readonly markdownRegex = new RegExp(/\.(md|mdx)$/);
-  private octokit = new Octokit({ auth: undefined });
+  private octokit: Octokit;
 
-  constructor(private readonly startUrl: URL) {}
+  constructor(
+    private readonly startUrl: URL,
+    private readonly githubToken: string | undefined,
+  ) {
+    this.octokit = new Octokit({ auth: this.githubToken });
+  }
 
   async *crawl(): AsyncGenerator<PageData> {
+    console.log("CRAWLING", this.startUrl);
     console.debug(
       `[${
         (this.constructor as any).name
@@ -19,6 +25,7 @@ class GitHubCrawler {
     const urlStr = this.startUrl.toString();
     const [_, owner, repo] = this.startUrl.pathname.split("/");
     const branch = await this.getGithubRepoDefaultBranch(owner, repo);
+
     const paths = await this.getGitHubRepoPaths(owner, repo, branch);
 
     for await (const path of paths) {

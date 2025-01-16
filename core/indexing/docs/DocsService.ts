@@ -93,6 +93,7 @@ export default class DocsService {
   private sqliteDb?: Database;
 
   private ideInfoPromise: Promise<IdeInfo>;
+  private githubToken?: string;
 
   constructor(
     configHandler: ConfigHandler,
@@ -101,6 +102,10 @@ export default class DocsService {
   ) {
     this.ideInfoPromise = this.ide.getIdeInfo();
     this.isInitialized = this.init(configHandler);
+  }
+
+  setGithubToken(token: string) {
+    this.githubToken = token;
   }
 
   // Singleton pattern: only one service globally
@@ -437,6 +442,7 @@ export default class DocsService {
         maxDepth,
         undefined,
         useLocalCrawling,
+        this.githubToken,
       );
       for await (const page of docsCrawler.crawl(new URL(startUrl))) {
         estimatedProgress += 1 / 2 ** (processedPages + 1);
@@ -588,10 +594,19 @@ export default class DocsService {
         providers: ["docs"],
       });
     } catch (e) {
+      let description = `Error getting docs from: ${siteIndexingConfig.startUrl}`;
+      if (e instanceof Error) {
+        if (
+          e.message.includes("github.com") &&
+          e.message.includes("rate limit")
+        ) {
+          description = "Github rate limit exceeded";
+        }
+      }
       console.error("Error indexing docs", e);
       this.handleStatusUpdate({
         ...fixedStatus,
-        description: `Error getting docs from: ${siteIndexingConfig.startUrl}`,
+        description,
         status: "failed",
         progress: 1,
       });
@@ -810,9 +825,7 @@ export default class DocsService {
           if (
             // currentStatus?.status === "complete" &&
             oldConfigDoc &&
-            (oldConfigDoc.maxDepth !== doc.maxDepth ||
-              oldConfigDoc.title !== doc.title ||
-              oldConfigDoc.faviconUrl !== doc.faviconUrl)
+            !this.siteIndexingConfigsAreEqual(oldConfigDoc, doc)
           ) {
             changedDocs.push(doc);
           } else {
@@ -982,16 +995,24 @@ export default class DocsService {
     );
   }
 
+  private siteIndexingConfigsAreEqual(
+    config1: SiteIndexingConfig,
+    config2: SiteIndexingConfig,
+  ) {
+    return (
+      config1.startUrl === config2.startUrl &&
+      config1.faviconUrl === config2.faviconUrl &&
+      config1.title === config2.title &&
+      config1.maxDepth === config2.maxDepth &&
+      config1.useLocalCrawling === config2.useLocalCrawling
+    );
+  }
+
   private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
-    const doesEquivalentDocExist = this.config.docs?.some(
-      (doc) =>
-        doc.startUrl === siteIndexingConfig.startUrl &&
-        doc.faviconUrl === siteIndexingConfig.faviconUrl &&
-        siteIndexingConfig.title === doc.title &&
-        siteIndexingConfig.maxDepth === doc.maxDepth &&
-        siteIndexingConfig.useLocalCrawling === doc.useLocalCrawling,
+    const doesEquivalentDocExist = this.config.docs?.some((doc) =>
+      this.siteIndexingConfigsAreEqual(doc, siteIndexingConfig),
     );
 
     if (!doesEquivalentDocExist) {

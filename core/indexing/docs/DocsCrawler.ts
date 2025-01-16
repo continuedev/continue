@@ -25,6 +25,7 @@ class DocsCrawler {
     private readonly maxDepth: number = 4,
     private readonly maxRequestsPerCrawl: number = 1000,
     private readonly useLocalCrawling: boolean = false,
+    private readonly githubToken: string | undefined = undefined,
   ) {
     this.chromiumInstaller = new ChromiumInstaller(this.ide, this.config);
   }
@@ -47,7 +48,7 @@ class DocsCrawler {
     undefined
   > {
     if (startUrl.host === this.GITHUB_HOST) {
-      yield* new GitHubCrawler(startUrl).crawl();
+      yield* new GitHubCrawler(startUrl, this.githubToken).crawl();
       return "github";
     }
 
