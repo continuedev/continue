@@ -210,6 +210,41 @@ rules:
   - Always give concise responses
 ```
 
+### Prompts
+
+Rather than with `customCommands`, you can now use the `prompts` field to define custom prompts.
+
+**Before**
+
+```json title="config.json"
+{
+  "customCommands": [
+    {
+      "name": "check",
+      "description": "Check for mistakes in my code",
+      "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
+    }
+  ]
+}
+```
+
+**After**
+
+````yaml title="config.yaml"
+prompts:
+  - name: check
+    description: Check for mistakes in my code
+    prompt: |
+      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
+        - Syntax errors
+        - Logic errors
+        - Security vulnerabilities
+        - Performance issues
+        - Anything else that looks wrong
+
+      Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found.
+```
+
 ### Documentation
 
 Documentation is largely the same, but the `title` property has been replaced with `name`. The `startUrl`, `rootUrl`, and `faviconUrl` properties remain.
@@ -229,7 +264,7 @@ Documentation is largely the same, but the `title` property has been replaced wi
     }
   ]
 }
-```
+````
 
 **After**
 
