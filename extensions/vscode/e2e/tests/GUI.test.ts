@@ -222,16 +222,15 @@ describe("GUI Test", () => {
       const contextItemsPeek = await GUISelectors.getContextItemsPeek(view);
       await contextItemsPeek.click();
 
-      let firstContextItemInPeek: WebElement;
       await TestUtils.waitForSuccess(async () => {
-        firstContextItemInPeek =
+        const firstContextItemInPeek =
           await GUISelectors.getFirstContextItemsPeekItem(view);
         await firstContextItemInPeek.click();
-      });
 
-      // Check that item is there with correct name
-      const description = await firstContextItemInPeek.getText();
-      expect(description).to.include("Terminal");
+        // Check that item is there with correct name
+        const description = await firstContextItemInPeek.getText();
+        expect(description).to.include("Terminal");
+      });
 
       // Check that the contents match what we expect (repeated back by the mock LLM)
       await TestUtils.waitForSuccess(() => {
