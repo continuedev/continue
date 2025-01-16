@@ -7,7 +7,7 @@ import { PageData } from "../DocsCrawler";
 class GitHubCrawler {
   private readonly markdownRegex = new RegExp(/\.(md|mdx)$/);
   private octokit: Octokit;
-  private FILES_TO_SKIP = [/TEMPLATE\.md$/];
+  private FILES_TO_SKIP = [/TEMPLATE\.md$/, /template\.md$/];
 
   constructor(
     private readonly startUrl: URL,
@@ -33,12 +33,8 @@ class GitHubCrawler {
       }
       const content = await this.getGithubRepoFileContent(path, owner, repo);
 
-      const fullUrl = this.startUrl;
+      const fullUrl = new URL(this.startUrl.toString());
       fullUrl.pathname += `/tree/${branch}/${path}`;
-      // const fullUrl = new URL(
-      //   `/tree/${branch}/${path}`,
-      //   this.startUrl,
-      // ).toString();
       yield { path, url: fullUrl.toString(), content: content ?? "" };
     }
   }
