@@ -154,6 +154,10 @@ class OpenAI extends BaseLLM {
       finalOptions.messages = formatMessageForO1(finalOptions.messages);
     }
 
+    if (options.model === "o1") {
+      finalOptions.stream = false;
+    }
+
     if (options.prediction && this.supportsPrediction(options.model)) {
       if (finalOptions.presence_penalty) {
         // prediction doesn't support > 0
