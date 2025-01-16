@@ -26,8 +26,12 @@ import {
 import { Telemetry } from "../../util/posthog";
 
 import { ConfigResult } from "../../config/load";
-import { Article, chunkArticle, pageToArticle } from "./article";
-import DocsCrawler from "./DocsCrawler";
+import {
+  ArticleWithChunks,
+  htmlPageToArticleWithChunks,
+  markdownPageToArticleWithChunks,
+} from "./article";
+import DocsCrawler, { PageData } from "./DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {
   downloadFromS3,
@@ -426,11 +430,13 @@ export default class DocsService {
         progress: 0,
       });
 
-      const articles: Article[] = [];
+      // Crawl pages to get page data
+      const pages: PageData[] = [];
       let processedPages = 0;
       let estimatedProgress = 0;
+      let done = false;
+      let usedCrawler: string | undefined = undefined;
 
-      // Crawl pages and retrieve info as articles
       const docsCrawler = new DocsCrawler(
         this.ide,
         this.config,
@@ -439,42 +445,65 @@ export default class DocsService {
         useLocalCrawling,
         this.githubToken,
       );
-      for await (const page of docsCrawler.crawl(new URL(startUrl))) {
-        estimatedProgress += 1 / 2 ** (processedPages + 1);
+      const crawlerGen = docsCrawler.crawl(new URL(startUrl));
 
-        // NOTE - during "indexing" phase, check if aborted before each status update
-        if (this.shouldCancel(startUrl, startedWithEmbedder)) {
-          return;
+      while (!done) {
+        const result = await crawlerGen.next();
+        if (result.done) {
+          done = true;
+          usedCrawler = result.value;
+        } else {
+          const page = result.value;
+          estimatedProgress += 1 / 2 ** (processedPages + 1);
+
+          // NOTE - during "indexing" phase, check if aborted before each status update
+          if (this.shouldCancel(startUrl, startedWithEmbedder)) {
+            return;
+          }
+          this.handleStatusUpdate({
+            ...fixedStatus,
+            description: `Finding subpages (${page.path})`,
+            status: "indexing",
+            progress:
+              0.15 * estimatedProgress +
+              Math.min(0.35, (0.35 * processedPages) / 500),
+            // For the first 50%, 15% is sum of series 1/(2^n) and the other 35% is based on number of files/ 500 max
+          });
+
+          pages.push(page);
+
+          processedPages++;
+
+          // Locks down GUI if no sleeping
+          // Wait proportional to how many docs are indexing
+          const toWait = 100 * this.docsIndexingQueue.size + 50;
+          await new Promise((resolve) => setTimeout(resolve, toWait));
         }
-        this.handleStatusUpdate({
-          ...fixedStatus,
-          description: `Finding subpages (${page.path})`,
-          status: "indexing",
-          progress:
-            0.15 * estimatedProgress +
-            Math.min(0.35, (0.35 * processedPages) / 500),
-          // For the first 50%, 15% is sum of series 1/(2^n) and the other 35% is based on number of files/ 500 max
-        });
-
-        const article = pageToArticle(page);
-        if (!article) {
-          continue;
-        }
-        articles.push(article);
-
-        processedPages++;
-
-        // Locks down GUI if no sleeping
-        // Wait proportional to how many docs are indexing
-        const toWait = 100 * this.docsIndexingQueue.size + 50;
-        await new Promise((resolve) => setTimeout(resolve, toWait));
       }
 
       void Telemetry.capture("docs_pages_crawled", {
         count: processedPages,
       });
 
+      // Chunk pages based on which crawler was used
+      const articles: ArticleWithChunks[] = [];
       const chunks: Chunk[] = [];
+      const articleChunker =
+        usedCrawler === "github"
+          ? markdownPageToArticleWithChunks
+          : htmlPageToArticleWithChunks;
+      for (const page of pages) {
+        const articleWithChunks = await articleChunker(
+          page,
+          provider.maxEmbeddingChunkSize,
+        );
+        if (articleWithChunks) {
+          articles.push(articleWithChunks);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+
+      // const chunks: Chunk[] = [];
       const embeddings: number[][] = [];
 
       // Create embeddings of retrieved articles
@@ -487,29 +516,18 @@ export default class DocsService {
         this.handleStatusUpdate({
           ...fixedStatus,
           status: "indexing",
-          description: `Creating Embeddings: ${article.subpath}`,
+          description: `Creating Embeddings: ${article.article.subpath}`,
           progress: 0.5 + 0.3 * (i / articles.length), // 50% -> 80%
         });
 
         try {
-          const chunkedArticle = chunkArticle(
-            article,
-            provider.maxEmbeddingChunkSize,
-          );
-
-          const chunkedArticleContents = chunkedArticle.map(
-            (chunk) => chunk.content,
-          );
-
-          chunks.push(...chunkedArticle);
-
           const subpathEmbeddings = await provider.embed(
-            chunkedArticleContents,
+            article.chunks.map((c) => c.content),
           );
 
           embeddings.push(...subpathEmbeddings);
         } catch (e) {
-          console.warn("Error chunking article: ", e);
+          console.warn("Error embedding article chunks: ", e);
         }
       }
 
