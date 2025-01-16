@@ -362,7 +362,7 @@ export default class DocsService {
       console.warn("Attempting to add/index docs when indexing is disabled");
       return;
     }
-    const { startUrl, useLocalIndexing, maxDepth } = siteIndexingConfig;
+    const { startUrl, useLocalCrawling, maxDepth } = siteIndexingConfig;
 
     const canUsePreindexedDocs = await this.canUsePreindexedDocs();
     if (canUsePreindexedDocs) {
@@ -436,7 +436,7 @@ export default class DocsService {
         this.config,
         maxDepth,
         undefined,
-        useLocalIndexing,
+        useLocalCrawling,
       );
       for await (const page of docsCrawler.crawl(new URL(startUrl))) {
         estimatedProgress += 1 / 2 ** (processedPages + 1);
@@ -989,9 +989,9 @@ export default class DocsService {
       (doc) =>
         doc.startUrl === siteIndexingConfig.startUrl &&
         doc.faviconUrl === siteIndexingConfig.faviconUrl &&
-        siteIndexingConfig.title === doc.title,
-      // siteIndexingConfig.maxDepth === doc.maxDepth &&
-      // doc.rootUrl === siteIndexingConfig.rootUrl,
+        siteIndexingConfig.title === doc.title &&
+        siteIndexingConfig.maxDepth === doc.maxDepth &&
+        siteIndexingConfig.useLocalCrawling === doc.useLocalCrawling,
     );
 
     if (!doesEquivalentDocExist) {

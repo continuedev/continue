@@ -88,11 +88,7 @@ For bulk documentation site adds or edits, we recommend editing your global conf
 }
 ```
 
-- `title`: The name of the documentation site, used for identification in the UI.
-- `startUrl`: The URL where the indexing process should begin.
-- `faviconUrl`: Optional. The URL of the site's favicon, used for visual identification in the UI.
-- `useLocalCrawling`: Optional. Skip the default indexer and attempt local crawling for this documentation site.
-<!-- - `rootUrl`: (Optional) The base URL of the documentation site, used to determine which pages to index. -->
+See [the config reference](../../reference) for all documentation site configuration options.
 
 Indexing will re-sync upon saving the configuration file.
 
@@ -260,6 +256,7 @@ The following configuration example includes:
       "title": "My Private Docs",
       "startUrl": "http://10.2.1.2/docs",
       "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
+      "maxDepth": 4,
       "useLocalCrawling": true
     }
   ],

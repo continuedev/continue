@@ -22,9 +22,9 @@ class DocsCrawler {
   constructor(
     private readonly ide: IDE,
     private readonly config: ContinueConfig,
-    private readonly maxDepth: number = 5,
+    private readonly maxDepth: number = 4,
     private readonly maxRequestsPerCrawl: number = 1000,
-    private readonly useLocalIndexing: boolean = false,
+    private readonly useLocalCrawling: boolean = false,
   ) {
     this.chromiumInstaller = new ChromiumInstaller(this.ide, this.config);
   }
@@ -51,7 +51,7 @@ class DocsCrawler {
       return "github";
     }
 
-    if (!this.useLocalIndexing) {
+    if (!this.useLocalCrawling) {
       try {
         const pageData = await new DefaultCrawler(
           startUrl,
