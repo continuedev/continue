@@ -177,16 +177,14 @@ export async function markdownPageToArticleWithChunks(
     const chunks: Chunk[] = [];
     const chunker = markdownChunker(page.content, maxChunkSize, 1);
     for await (const chunk of chunker) {
-      const fullUrl = new URL(
-        `${page.path}#${cleanFragment(chunk.otherMetadata?.title)}`,
-        page.url,
-      ).toString();
+      const fullUrl = new URL(page.url);
+      fullUrl.hash = `#${cleanFragment(chunk.otherMetadata?.title)}`;
 
       chunks.push({
         ...chunk,
         index,
-        filepath: fullUrl,
-        digest: fullUrl,
+        filepath: fullUrl.toString(),
+        digest: fullUrl.toString(),
       });
       index++;
     }

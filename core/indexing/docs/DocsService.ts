@@ -500,7 +500,8 @@ export default class DocsService {
         if (articleWithChunks) {
           articles.push(articleWithChunks);
         }
-        await new Promise((resolve) => setTimeout(resolve, 10));
+        const toWait = 20 * this.docsIndexingQueue.size + 10;
+        await new Promise((resolve) => setTimeout(resolve, toWait));
       }
 
       // const chunks: Chunk[] = [];
@@ -524,8 +525,10 @@ export default class DocsService {
           const subpathEmbeddings = await provider.embed(
             article.chunks.map((c) => c.content),
           );
-
+          chunks.push(...article.chunks);
           embeddings.push(...subpathEmbeddings);
+          const toWait = 100 * this.docsIndexingQueue.size + 50;
+          await new Promise((resolve) => setTimeout(resolve, toWait));
         } catch (e) {
           console.warn("Error embedding article chunks: ", e);
         }
