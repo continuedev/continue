@@ -51,9 +51,26 @@ models:
       extraBodyProperties:
         chatStream:
           - - REPEAT_SYSTEM_MSG
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: LAST MESSAGE MOCK LLM
+    provider: mock
+    model: claude-3-5-sonnet-latest
+    requestOptions:
+      extraBodyProperties:
+        chatStream:
+          - - REPEAT_LAST_MSG
+    roles:
+      - chat
+      - edit
+      - apply
 
 context:
   - uses: docs
   - uses: diff
   - uses: url
   - uses: folder
+  - uses: terminal
