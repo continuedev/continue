@@ -62,6 +62,8 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { usePlatform } from "../control-plane/flags";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -70,13 +72,7 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 // import { isSupportedLanceDbCpuTarget } from "./util";
-import { ConfigValidationError, validateConfig } from "./validation.js";
-
-export interface ConfigResult<T> {
-  config: T | undefined;
-  errors: ConfigValidationError[] | undefined;
-  configLoadInterrupted: boolean;
-}
+import { validateConfig } from "./validation.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -229,7 +225,7 @@ function isModelDescription(
   return (llm as ModelDescription).title !== undefined;
 }
 
-function isContextProviderWithParams(
+export function isContextProviderWithParams(
   contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
@@ -582,6 +578,7 @@ function finalToBrowserConfig(
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
+    usePlatform: usePlatform(),
   };
 }
 
