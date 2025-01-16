@@ -73,8 +73,6 @@ export type AddParams = {
     - delete
     - reindex all
     - add/index one
-  - Currently a full reindex deletes all docs rather than storing PER embeddings provider
-  - The last successful embeddings provider is stored in global context and updated AFTER an indexing process is successful
 */
 export default class DocsService {
   static lanceTableName = "docs";
@@ -200,6 +198,7 @@ export default class DocsService {
     }
   }
 
+  // Used to check periodically during indexing if should cancel indexing
   shouldCancel(startUrl: string, startedWithEmbedder: string) {
     // Check if aborted
     const isAborted = this.statuses.get(startUrl)?.status === "aborted";
@@ -218,21 +217,6 @@ export default class DocsService {
     }
     return false;
   }
-
-  // NOTE Pausing not supported for docs yet
-  // setPaused(startUrl: string, pause: boolean) {
-  //   const status = this.statuses.get(startUrl);
-  //   if (status) {
-  //     this.handleStatusUpdate({
-  //       ...status,
-  //       status: pause ? "paused" : "indexing",
-  //     });
-  //   }
-  // }
-
-  // isPaused(startUrl: string) {
-  //   return this.statuses.get(startUrl)?.status === "paused";
-  // }
 
   /*
    * Currently, we generate and host embeddings for pre-indexed docs using transformers.
@@ -255,14 +239,29 @@ export default class DocsService {
     return isPreIndexedDocsProvider && !canUsePreindexedDocs;
   }
 
-  async getEmbeddingsProvider(isPreIndexedDoc: boolean = false): Promise<ILLM> {
-    const canUsePreindexedDocs = await this.canUsePreindexedDocs();
+  // Determines if using preIndexed and returns proper embeddings provider
+  async getEmbeddingsProvider(startUrl: string) {
+    // Conditions for using a pre-indexed doc
 
-    if (canUsePreindexedDocs && isPreIndexedDoc) {
-      return DocsService.preIndexedDocsEmbeddingsProvider;
+    // Must be in pre indexed docs file
+    const preIndexedDoc = preIndexedDocs[startUrl];
+    if (preIndexedDoc) {
+      // Most not be overriden by config
+      if (!this.config?.docs?.find((doc) => doc.startUrl === startUrl)) {
+        // Must be supported
+        const canUsePreindexedDocs = await this.canUsePreindexedDocs();
+        if (canUsePreindexedDocs) {
+          return {
+            provider: DocsService.preIndexedDocsEmbeddingsProvider,
+            isPreindexed: true,
+          };
+        }
+      }
     }
-
-    return this.config.embeddingsProvider;
+    return {
+      provider: this.config.embeddingsProvider,
+      isPreindexed: false,
+    };
   }
 
   private async handleConfigUpdate({
@@ -369,14 +368,11 @@ export default class DocsService {
     }
     const { startUrl, useLocalCrawling, maxDepth } = siteIndexingConfig;
 
-    const canUsePreindexedDocs = await this.canUsePreindexedDocs();
-    if (canUsePreindexedDocs) {
-      const preIndexedDoc = preIndexedDocs[startUrl];
-      const isPreIndexedDoc = !!preIndexedDoc;
-      if (isPreIndexedDoc) {
-        console.warn("Can not override pre-indexed start urls");
-        return;
-      }
+    const { isPreindexed, provider } =
+      await this.getEmbeddingsProvider(startUrl);
+    if (isPreindexed) {
+      console.warn("Attempted to indexAndAdd pre-indexed doc");
+      return;
     }
 
     // Queue - indexAndAdd is invoked circularly by config edits. This prevents duplicate runs
@@ -384,8 +380,7 @@ export default class DocsService {
       return;
     }
 
-    const embeddingsProvider = await this.getEmbeddingsProvider();
-    const startedWithEmbedder = this.config.embeddingsProvider.embeddingId;
+    const startedWithEmbedder = provider.embeddingId;
     const indexExists = await this.hasMetadata(startUrl);
 
     // Build status update - most of it is fixed values
@@ -395,7 +390,7 @@ export default class DocsService {
     > = {
       type: "docs",
       id: siteIndexingConfig.startUrl,
-      embeddingsProviderId: embeddingsProvider.embeddingId,
+      embeddingsProviderId: provider.embeddingId,
       isReindexing: reIndex && indexExists,
       title: siteIndexingConfig.title,
       debugInfo: `max depth: ${siteIndexingConfig.maxDepth}`,
@@ -499,7 +494,7 @@ export default class DocsService {
         try {
           const chunkedArticle = chunkArticle(
             article,
-            embeddingsProvider.maxEmbeddingChunkSize,
+            provider.maxEmbeddingChunkSize,
           );
 
           const chunkedArticleContents = chunkedArticle.map(
@@ -508,7 +503,7 @@ export default class DocsService {
 
           chunks.push(...chunkedArticle);
 
-          const subpathEmbeddings = await embeddingsProvider.embed(
+          const subpathEmbeddings = await provider.embed(
             chunkedArticleContents,
           );
 
@@ -520,7 +515,7 @@ export default class DocsService {
 
       if (embeddings.length === 0) {
         console.error(
-          `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
+          `No embeddings were created for site: ${startUrl}\n Num chunks: ${chunks.length}`,
         );
 
         if (this.shouldCancel(startUrl, startedWithEmbedder)) {
@@ -528,7 +523,7 @@ export default class DocsService {
         }
         this.handleStatusUpdate({
           ...fixedStatus,
-          description: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
+          description: `No embeddings were created for site: ${startUrl}`,
           status: "failed",
           progress: 1,
         });
@@ -619,11 +614,12 @@ export default class DocsService {
   // And pre-indexed embeddings are supported
   // Fetch pre-indexed embeddings from S3, add to Lance, and then search those
   private async fetchAndAddPreIndexedDocEmbeddings(title: string) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(true);
-
     const data = await downloadFromS3(
       S3Buckets.continueIndexedDocs,
-      getS3Filename(embeddingsProvider.embeddingId, title),
+      getS3Filename(
+        DocsService.preIndexedDocsEmbeddingsProvider.embeddingId,
+        title,
+      ),
     );
 
     const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
@@ -664,19 +660,18 @@ export default class DocsService {
       return [];
     }
 
-    const preIndexedDoc = preIndexedDocs[startUrl];
-    if (!!preIndexedDoc) {
+    const { isPreindexed, provider } =
+      await this.getEmbeddingsProvider(startUrl);
+
+    if (isPreindexed) {
       void Telemetry.capture("docs_pre_indexed_doc_used", {
-        doc: preIndexedDoc["title"],
+        doc: preIndexedDocs[startUrl]!["title"],
       });
     }
 
-    const embeddingsProvider =
-      await this.getEmbeddingsProvider(!!preIndexedDoc);
+    const [vector] = await provider.embed([query]);
 
-    const [vector] = await embeddingsProvider.embed([query]);
-
-    return await this.retrieveChunks(startUrl, vector, nRetrieve);
+    return await this.retrieveChunks(startUrl, vector, nRetrieve, isPreindexed);
   }
 
   // This is split into its own function so that it can be recursive
@@ -685,15 +680,13 @@ export default class DocsService {
     startUrl: string,
     vector: number[],
     nRetrieve: number,
+    isPreindexed: boolean,
     isRetry: boolean = false,
   ): Promise<Chunk[]> {
-    const preIndexedDoc = preIndexedDocs[startUrl];
-    const isPreIndexedDoc = !!preIndexedDoc;
-
     // Lance doesn't have an embeddingsprovider column, instead it includes it in the table name
     const table = await this.getOrCreateLanceTable({
       initializationVector: vector,
-      isPreIndexedDoc,
+      startUrl,
     });
 
     let docs: LanceDbDocsRow[] = [];
@@ -708,18 +701,14 @@ export default class DocsService {
     }
 
     // No docs are found for preindexed? try fetching once
-    if (docs.length === 0 && isPreIndexedDoc) {
+    if (docs.length === 0 && isPreindexed) {
       if (isRetry) {
         return [];
       }
-      await this.fetchAndAddPreIndexedDocEmbeddings(preIndexedDoc.title);
-      return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
-    }
-
-    if (isPreIndexedDoc) {
-      void Telemetry.capture("docs_pre_indexed_doc_used", {
-        doc: preIndexedDoc["title"],
-      });
+      await this.fetchAndAddPreIndexedDocEmbeddings(
+        preIndexedDocs[startUrl]!["title"],
+      );
+      return await this.retrieveChunks(startUrl, vector, nRetrieve, true, true);
     }
 
     return docs.map((doc) => ({
@@ -821,9 +810,8 @@ export default class DocsService {
           const oldConfigDoc = oldConfigDocs.find(
             (d) => d.startUrl === doc.startUrl,
           );
-          // const currentStatus = this.statuses.get(doc.startUrl);
+
           if (
-            // currentStatus?.status === "complete" &&
             oldConfigDoc &&
             !this.siteIndexingConfigsAreEqual(oldConfigDoc, doc)
           ) {
@@ -845,7 +833,10 @@ export default class DocsService {
             });
           }
         } else {
-          newDocs.push(doc);
+          const currentStatus = this.statuses.get(doc.startUrl);
+          if (currentStatus?.status !== "failed") {
+            newDocs.push(doc);
+          }
         }
       }
 
@@ -909,10 +900,7 @@ export default class DocsService {
     return name.replace(/[^a-zA-Z0-9_.-]/g, "_");
   }
 
-  private async getLanceTableName(isPreIndexedDoc: boolean) {
-    const embeddingsProvider =
-      await this.getEmbeddingsProvider(isPreIndexedDoc);
-
+  private async getLanceTableName(embeddingsProvider: ILLM) {
     const tableName = this.sanitizeLanceTableName(
       `${DocsService.lanceTableName}${embeddingsProvider.embeddingId}`,
     );
@@ -922,15 +910,16 @@ export default class DocsService {
 
   private async getOrCreateLanceTable({
     initializationVector,
-    isPreIndexedDoc,
+    startUrl,
   }: {
     initializationVector: number[];
-    isPreIndexedDoc?: boolean;
+    startUrl: string;
   }) {
     const conn = await lancedb.connect(getLanceDbPath());
     const tableNames = await conn.tableNames();
+    const { provider } = await this.getEmbeddingsProvider(startUrl);
     const tableNameFromEmbeddingsProvider =
-      await this.getLanceTableName(!!isPreIndexedDoc);
+      await this.getLanceTableName(provider);
 
     if (!tableNames.includes(tableNameFromEmbeddingsProvider)) {
       if (initializationVector) {
@@ -961,16 +950,16 @@ export default class DocsService {
     embeddings,
   }: AddParams) {
     const sampleVector = embeddings[0];
-    const isPreIndexedDoc = !!preIndexedDocs[siteIndexingConfig.startUrl];
+    const { startUrl } = siteIndexingConfig;
 
     const table = await this.getOrCreateLanceTable({
-      isPreIndexedDoc,
+      startUrl,
       initializationVector: sampleVector,
     });
 
     const rows: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
       vector: embeddings[i],
-      starturl: siteIndexingConfig.startUrl,
+      starturl: startUrl,
       title: chunk.otherMetadata?.title || siteIndexingConfig.title,
       content: chunk.content,
       path: chunk.filepath,
@@ -1070,7 +1059,7 @@ export default class DocsService {
     }
   }
 
-  async deleteIndexes(startUrl: string) {
+  private async deleteIndexes(startUrl: string) {
     await this.deleteEmbeddingsFromLance(startUrl);
     await this.deleteMetadataFromSqlite(startUrl);
   }

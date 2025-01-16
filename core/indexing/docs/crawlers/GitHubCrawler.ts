@@ -16,7 +16,6 @@ class GitHubCrawler {
   }
 
   async *crawl(): AsyncGenerator<PageData> {
-    console.log("CRAWLING", this.startUrl);
     console.debug(
       `[${
         (this.constructor as any).name
