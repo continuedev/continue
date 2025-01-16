@@ -208,7 +208,7 @@ describe("GUI Test", () => {
   });
 
   describe.only("Context providers", () => {
-    it("should successfully use the diff context provider", async () => {
+    it("should successfully use the terminal context provider", async () => {
       await GUIActions.selectModelFromDropdown(view, "LAST MESSAGE MOCK LLM");
 
       // Enter just the context provider in the input and send

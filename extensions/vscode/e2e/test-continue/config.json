@@ -90,6 +90,9 @@
     },
     {
       "name": "folder"
+    },
+    {
+      "name": "terminal"
     }
   ],
   "docs": []
