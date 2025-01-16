@@ -207,7 +207,7 @@ describe("GUI Test", () => {
     });
   });
 
-  describe.only("Context providers", () => {
+  describe("Context providers", () => {
     it("should successfully use the terminal context provider", async () => {
       await GUIActions.selectModelFromDropdown(view, "LAST MESSAGE MOCK LLM");
 
@@ -221,10 +221,13 @@ describe("GUI Test", () => {
       // Open the context items peek
       const contextItemsPeek = await GUISelectors.getContextItemsPeek(view);
       await contextItemsPeek.click();
-      const firstContextItemInPeek =
-        await GUISelectors.getFirstContextItemsPeekItem(view);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      await firstContextItemInPeek.click();
+
+      let firstContextItemInPeek: WebElement;
+      await TestUtils.waitForSuccess(async () => {
+        firstContextItemInPeek =
+          await GUISelectors.getFirstContextItemsPeekItem(view);
+        await firstContextItemInPeek.click();
+      });
 
       // Check that item is there with correct name
       const description = await firstContextItemInPeek.getText();

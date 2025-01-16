@@ -375,7 +375,7 @@ jobs:
           path: extensions/vscode/e2e/storage
 
   vscode-e2e-tests:
-    name: ${{ matrix.test_file }} (${{ matrix.continue_folder }})
+    name: ${{ matrix.test_file }} (${{ matrix.command }})
     needs:
       [
         vscode-download-e2e-dependencies,
@@ -389,7 +389,7 @@ jobs:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
-        continue_folder: ["test-continue", "test-continue-yaml"]
+        command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -438,7 +438,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run${{ matrix.continue_folder == 'continue-test-yaml' && '-yaml' || '' }}
+          TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
 
         env:
           DISPLAY: :99
