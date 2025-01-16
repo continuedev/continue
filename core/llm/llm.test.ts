@@ -1,13 +1,12 @@
 import * as dotenv from "dotenv";
 
-import { CompletionOptions } from "..";
+import { AssistantChatMessage, CompletionOptions } from "..";
 
+import { BaseLLM } from ".";
 import Anthropic from "./llms/Anthropic";
 import Gemini from "./llms/Gemini";
 import Mistral from "./llms/Mistral";
 import OpenAI from "./llms/OpenAI";
-
-import { BaseLLM } from ".";
 
 dotenv.config();
 
@@ -23,7 +22,11 @@ const COMPLETION_OPTIONS: Partial<CompletionOptions> = {
 
 function testLLM(
   llm: BaseLLM,
-  { skip, testFim }: { skip?: boolean; testFim?: boolean },
+  {
+    skip,
+    testFim,
+    testToolCall,
+  }: { skip?: boolean; testFim?: boolean; testToolCall?: boolean },
 ) {
   if (skip) {
     return;
@@ -82,6 +85,66 @@ function testLLM(
         return;
       });
     }
+
+    if (testToolCall) {
+      test("Tool Call works", async () => {
+        let args = "";
+        let isFirstChunk = true;
+        for await (const chunk of llm.streamChat(
+          [{ role: "user", content: "Hi, my name is Nate." }],
+          new AbortController().signal,
+          {
+            tools: [
+              {
+                displayTitle: "Say Hello",
+                function: {
+                  name: "say_hello",
+                  description: "Say Hello",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      name: {
+                        type: "string",
+                        description: "The name of the person to greet",
+                      },
+                    },
+                  },
+                },
+                type: "function",
+                wouldLikeTo: "Say hello",
+                readonly: true,
+              },
+            ],
+            toolChoice: {
+              type: "function",
+              function: {
+                name: "say_hello",
+              },
+            },
+          },
+        )) {
+          const typedChunk = chunk as AssistantChatMessage;
+          if (!typedChunk.toolCalls) {
+            continue;
+          }
+          const toolCall = typedChunk.toolCalls[0];
+          args += toolCall.function?.arguments ?? "";
+
+          expect(chunk.role).toBe("assistant");
+          expect(chunk.content).toBe("");
+          expect(typedChunk.toolCalls).toHaveLength(1);
+
+          if (isFirstChunk) {
+            isFirstChunk = false;
+            expect(toolCall.id).toBeDefined();
+            expect(toolCall.function!.name).toBe("say_hello");
+          }
+        }
+
+        const parsedArgs = JSON.parse(args);
+        expect(parsedArgs.name).toBe("Nate");
+      });
+    }
   });
 }
 
@@ -91,12 +154,15 @@ describe("LLM", () => {
       model: "claude-3-5-sonnet-latest",
       apiKey: process.env.ANTHROPIC_API_KEY,
     }),
-    { skip: false },
+    {
+      skip: false,
+      testToolCall: true,
+    },
   );
-  testLLM(
-    new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" }),
-    { skip: false },
-  );
+  testLLM(new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o" }), {
+    skip: false,
+    testToolCall: true,
+  });
   testLLM(
     new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1-preview" }),
     { skip: false },

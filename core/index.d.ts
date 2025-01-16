@@ -860,6 +860,13 @@ export interface Tool {
   uri?: string;
 }
 
+interface ToolChoice {
+  type: "function";
+  function: {
+    name: string;
+  };
+}
+
 export interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -877,6 +884,7 @@ export interface BaseCompletionOptions {
   stream?: boolean;
   prediction?: Prediction;
   tools?: Tool[];
+  toolChoice?: ToolChoice;
 }
 
 export interface ModelCapability {
