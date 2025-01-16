@@ -16,13 +16,15 @@ export type PageData = {
 };
 
 class DocsCrawler {
-  private readonly MAX_REQUESTS_PER_CRAWL = 1000;
   private readonly GITHUB_HOST = "github.com";
   private readonly chromiumInstaller: ChromiumInstaller;
 
   constructor(
     private readonly ide: IDE,
     private readonly config: ContinueConfig,
+    private readonly maxDepth: number = 5,
+    private readonly maxRequestsPerCrawl: number = 1000,
+    private readonly useLocalIndexing: boolean = false,
   ) {
     this.chromiumInstaller = new ChromiumInstaller(this.ide, this.config);
   }
@@ -34,33 +36,51 @@ class DocsCrawler {
     );
   }
 
+  /*
+    Returns the type of crawler used in the end
+  */
   async *crawl(
     startUrl: URL,
-    maxRequestsPerCrawl: number = this.MAX_REQUESTS_PER_CRAWL,
-  ): AsyncGenerator<PageData, undefined, undefined> {
+  ): AsyncGenerator<
+    PageData,
+    "default" | "chromium" | "cheerio" | "github",
+    undefined
+  > {
     if (startUrl.host === this.GITHUB_HOST) {
       yield* new GitHubCrawler(startUrl).crawl();
-      return;
+      return "github";
     }
 
-    try {
-      const pageData = await new DefaultCrawler(startUrl).crawl();
-      if (pageData.length > 0) {
-        yield* pageData;
-        return;
+    if (!this.useLocalIndexing) {
+      try {
+        const pageData = await new DefaultCrawler(
+          startUrl,
+          this.maxRequestsPerCrawl,
+          this.maxDepth,
+        ).crawl();
+        if (pageData.length > 0) {
+          yield* pageData;
+          return "default";
+        }
+      } catch (e) {
+        console.error("Default crawler failed, trying backup: ", e);
       }
-    } catch (e) {
-      console.error("Default crawler failed, trying backup: ", e);
     }
 
     if (this.shouldUseChromium()) {
-      yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
+      yield* new ChromiumCrawler(
+        startUrl,
+        this.maxRequestsPerCrawl,
+        this.maxDepth,
+      ).crawl();
+      return "chromium";
     } else {
       let didCrawlSinglePage = false;
 
       for await (const pageData of new CheerioCrawler(
         startUrl,
-        maxRequestsPerCrawl,
+        this.maxRequestsPerCrawl,
+        this.maxDepth,
       ).crawl()) {
         yield pageData;
         didCrawlSinglePage = true;
@@ -84,17 +104,19 @@ class DocsCrawler {
             `Successfully installed Chromium! Retrying crawl of: ${startUrl.toString()}`,
           );
 
-          yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
+          yield* new ChromiumCrawler(
+            startUrl,
+            this.maxRequestsPerCrawl,
+            this.maxDepth,
+          ).crawl();
+          return "chromium";
         }
       }
+
+      return "cheerio";
     }
   }
 }
 
 export default DocsCrawler;
-export {
-  CheerioCrawler,
-  ChromiumCrawler,
-  ChromiumInstaller,
-  GitHubCrawler,
-};
+export { CheerioCrawler, ChromiumCrawler, ChromiumInstaller, GitHubCrawler };

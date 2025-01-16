@@ -92,7 +92,6 @@ export default class DocsService {
   private config!: ContinueConfig;
   private sqliteDb?: Database;
 
-  private docsCrawler!: DocsCrawler;
   private ideInfoPromise: Promise<IdeInfo>;
 
   constructor(
@@ -268,8 +267,6 @@ export default class DocsService {
       const oldConfig = this.config;
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
 
-      this.docsCrawler = new DocsCrawler(this.ide, newConfig);
-
       if (this.config.disableIndexing) {
         return;
       }
@@ -365,7 +362,7 @@ export default class DocsService {
       console.warn("Attempting to add/index docs when indexing is disabled");
       return;
     }
-    const { startUrl } = siteIndexingConfig;
+    const { startUrl, useLocalIndexing, maxDepth } = siteIndexingConfig;
 
     const canUsePreindexedDocs = await this.canUsePreindexedDocs();
     if (canUsePreindexedDocs) {
@@ -434,7 +431,14 @@ export default class DocsService {
       let estimatedProgress = 0;
 
       // Crawl pages and retrieve info as articles
-      for await (const page of this.docsCrawler.crawl(new URL(startUrl))) {
+      const docsCrawler = new DocsCrawler(
+        this.ide,
+        this.config,
+        maxDepth,
+        undefined,
+        useLocalIndexing,
+      );
+      for await (const page of docsCrawler.crawl(new URL(startUrl))) {
         estimatedProgress += 1 / 2 ** (processedPages + 1);
 
         // NOTE - during "indexing" phase, check if aborted before each status update

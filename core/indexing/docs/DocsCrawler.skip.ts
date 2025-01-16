@@ -32,7 +32,7 @@ describe.skip("DocsCrawler", () => {
     config = result.config!;
     mockIde = new FileSystemIde(process.cwd());
     chromiumInstaller = new ChromiumInstaller(mockIde, config);
-    docsCrawler = new DocsCrawler(mockIde, config);
+    docsCrawler = new DocsCrawler(mockIde, config, 5, 5, false);
 
     // Make sure we have Chromium pulled down before beginning tests
     await chromiumInstaller.install();
@@ -53,10 +53,7 @@ describe.skip("DocsCrawler", () => {
         async () => {
           const crawlResults: PageData[] = [];
 
-          for await (const page of docsCrawler.crawl(
-            new URL(url),
-            NUM_PAGES_TO_CRAWL,
-          )) {
+          for await (const page of docsCrawler.crawl(new URL(url))) {
             crawlResults.push(page);
           }
 

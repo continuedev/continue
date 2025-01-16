@@ -226,13 +226,7 @@ export interface SiteIndexingConfig {
   rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
-}
-
-export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl?: string;
-  title: string;
-  maxDepth?: number;
+  useLocalIndexing?: boolean;
 }
 
 export interface IContextProvider {
@@ -1235,9 +1229,9 @@ export type PackageDocsResult = {
 } & (
   | { error: string; details?: never }
   | { details: PackageDetailsSuccess; error?: never }
-  );
+);
 
 export interface TerminalOptions {
-  reuseTerminal?: boolean,
-  terminalName?: string,
+  reuseTerminal?: boolean;
+  terminalName?: string;
 }
