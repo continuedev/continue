@@ -454,6 +454,7 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+  apiKeySecret?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
@@ -677,6 +678,11 @@ export interface IDE {
 
   getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
+  // Secret Storage
+  readSecrets(keys: string[]): Promise<Record<string, string>>;
+
+  writeSecrets(secrets: { [key: string]: string }): Promise<void>;
+
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
 
@@ -848,6 +854,13 @@ export interface Tool {
   uri?: string;
 }
 
+interface ToolChoice {
+  type: "function";
+  function: {
+    name: string;
+  };
+}
+
 export interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -865,6 +878,7 @@ export interface BaseCompletionOptions {
   stream?: boolean;
   prediction?: Prediction;
   tools?: Tool[];
+  toolChoice?: ToolChoice;
 }
 
 export interface ModelCapability {
@@ -876,6 +890,7 @@ export interface ModelDescription {
   provider: string;
   model: string;
   apiKey?: string;
+  apiKeySecret?: string;
   apiBase?: string;
   contextLength?: number;
   maxStopWords?: number;
@@ -1192,6 +1207,7 @@ export interface BrowserSerializedContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  usePlatform: boolean;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

@@ -25,13 +25,13 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 
-import { ConfigResult } from "../../config/load";
 import {
   ArticleWithChunks,
   htmlPageToArticleWithChunks,
   markdownPageToArticleWithChunks,
 } from "./article";
 import DocsCrawler, { PageData } from "./DocsCrawler";
+import { ConfigResult } from "@continuedev/config-yaml";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {
   downloadFromS3,

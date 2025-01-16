@@ -14,7 +14,7 @@ See also
 - [JSON Continue Config Reference](/reference)
 - [YAML Continue Config Reference](/yaml-reference)
 
-### 1. Create YAML file
+## Create YAML file
 
 Create a `config.yaml` file in your Continue Global Directory (`~/.continue` on Mac, `%USERPROFILE%\.continue`) alongside your current `config.json` file. If a `config.yaml` file is present, it will be loaded instead of `config.json`.
 
@@ -25,14 +25,14 @@ name: my-configuration
 version: 0.0.1
 ```
 
-### 2. Map Models
+### Models
 
 Add all model configurations in `config.json`, including models in `models`, `tabAutocompleteModel`, `embeddingsProvider`, and `reranker`, to the `models` section of your new YAML config file. A new `roles` YAML field specifies which roles a model can be used for, with possible values `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`.
 
-- `models` in config should have `roles: chat`
-- `tabAutocompleteModel`(s) in config should have `roles: autocomplete`
-- `embeddingsProvider` in config should have `roles: embed`
-- `reranker` in config should have `roles: rerank`
+- `models` in config should have `roles: [chat]`
+- `tabAutocompleteModel`(s) in config should have `roles: [autocomplete]`
+- `embeddingsProvider` in config should have `roles: [embed]`
+- `reranker` in config should have `roles: [rerank]`
 - `experimental.modelRoles` is replaced by simply adding roles to the model
   - `inlineEdit` -> e.g. `roles: [chat, edit]`
   - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
@@ -103,46 +103,56 @@ models:
   - name: GPT-4
     provider: openai
     model: gpt-4
+    apiKey: <API_KEY>
     defaultCompletionOptions:
       temperature: 0.5
-      maxTokens: 2000'
-    roles: [chat, edit]
-    apiKey: <API_KEY>
+      maxTokens: 2000
+    roles:
+      - chat
+      - edit
+
   - name: My Voyage Reranker
     provider: voyage
-    roles: rerank
     apiKey: <API_KEY>
+    roles:
+      - rerank
+
   - name: My Starcoder
     provider: ollama
     model: starcoder2:3b
-    roles: autocomplete
+    roles:
+      - autocomplete
+
   - name: My Ada Embedder
     provider: openai
-    roles: embed
     apiKey: <API_KEY>
+    roles:
+      - embed
+
   - name: Ollama Autodetect
     provider: ollama
     model: AUTODETECT
+
   - name: My Open AI Compatible Model - Apply
     provider: openai
-    apiBase: http://3.3.3.3/v1
     model: my-openai-compatible-model
+    apiBase: http://3.3.3.3/v1
     requestOptions:
       headers:
         X-Auth-Token: <API_KEY>
-    roles: [chat, apply]
+    roles:
+      - chat
+      - apply
 ```
 
 Note that the `repoMapFileSelection` experimental model role has been deprecated.
 
-### 3. Map Context Providers
+### Context Providers
 
-The JSON `contextProviders` and `docs` fields are replaced by the YAML `context` array.
+The JSON `contextProviders` field is replaced by the YAML `context` array.
 
 - JSON `name` maps to `uses`
 - JSON `params` map to `with`
-- Use multiple `docs` entries rather than the array of docs in the JSON format
-<!-- TODO is this docs not correct ?^ -->
 
 **Before**
 
@@ -150,10 +160,7 @@ The JSON `contextProviders` and `docs` fields are replaced by the YAML `context`
 {
   "contextProviders": [
     {
-      "name": "docs",
-      "params": {
-        "startUrl": "https://docs.continue.dev/intro"
-      }
+      "name": "docs"
     },
     {
       "name": "codebase",
@@ -166,7 +173,86 @@ The JSON `contextProviders` and `docs` fields are replaced by the YAML `context`
       "name": "diff",
       "params": {}
     }
-  ],
+  ]
+}
+```
+
+**After**
+
+```yaml title="config.yaml"
+context:
+  - uses: docs
+
+  - uses: codebase
+    with:
+      nRetrieve: 30
+      nFinal: 3
+
+  - uses: diff
+```
+
+### System Message
+
+The `systemMessage` property has been replaced with a `rules` property that takes an array of strings.
+
+**Before**
+
+```json title="config.json"
+{
+  "systemMessage": "Always give concise responses"
+}
+```
+
+**After**
+
+```yaml title="config.yaml"
+rules:
+  - Always give concise responses
+```
+
+### Prompts
+
+Rather than with `customCommands`, you can now use the `prompts` field to define custom prompts.
+
+**Before**
+
+```json title="config.json"
+{
+  "customCommands": [
+    {
+      "name": "check",
+      "description": "Check for mistakes in my code",
+      "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
+    }
+  ]
+}
+```
+
+**After**
+
+```yaml title="config.yaml"
+prompts:
+  - name: check
+    description: Check for mistakes in my code
+    prompt: |
+      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
+        - Syntax errors
+        - Logic errors
+        - Security vulnerabilities
+        - Performance issues
+        - Anything else that looks wrong
+
+      Once you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found.
+```
+
+### Documentation
+
+Documentation is largely the same, but the `title` property has been replaced with `name`. The `startUrl`, `rootUrl`, and `faviconUrl` properties remain.
+
+**Before**
+
+```json title="config.json"
+{
   "docs": [
     {
       "startUrl": "https://docs.nestjs.com/",
@@ -183,23 +269,15 @@ The JSON `contextProviders` and `docs` fields are replaced by the YAML `context`
 **After**
 
 ```yaml title="config.yaml"
-context:
-  - uses: docs
-    with:
-      startUrl: https://docs.nestjs.com/
-      title: nest.js
-  - uses: docs
-    with:
-      startUrl: https://mysite.com/docs/
-      title: My Site
-  - uses: codebase
-    with:
-      nRetrieve: 30
-      nFinal: 3
-  - uses: diff
+docs:
+  - name: nest.js
+    startUrl: https://docs.nestjs.com/
+
+  - name: My site
+    startUrl: https://mysite.com/docs/
 ```
 
-## Map MCP Servers
+### MCP Servers
 
 <!-- TODO this is definitely wrong -->
 
@@ -220,7 +298,10 @@ context:
         "transport": {
           "type": "stdio",
           "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"],
+          "env": {
+            "KEY": "<VALUE>"
+          }
         }
       }
     ]
@@ -238,13 +319,15 @@ mcpServers:
       - mcp-server-sqlite
       - --db-path
       - /Users/NAME/test.db
+    env:
+      KEY: <VALUE>
 ```
 
 ---
 
 ## Deprecated configuration options
 
-The following top-level fields from `config.json` have been deprecated
+The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
 
 - Slash commands (JSON `slashCommands`)
 - top-level `requestOptions`
@@ -257,7 +340,6 @@ The following top-level fields from `config.json` have been deprecated
 - `allowAnonymousTelemetry` (moved to user/IDE level)
 - `ui` (moved to user/IDE level)
 - `userToken`
-- `systemMessage`
 - `disableIndexing` (moved to user/IDE level)
 
 ## New Configuration options
