@@ -552,7 +552,7 @@ jobs:
         with:
           url: http://127.0.0.1:8082
           max-attempts: 15
-          retry-delay: 5s
+          retry-delay: 30s
 
       - name: Run tests
         run: |
