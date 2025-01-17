@@ -3,42 +3,66 @@ title: DeepSeek
 slug: ../deepseek
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 :::info
-
 You can get an API key from the [DeepSeek console](https://www.deepseek.com/).
-
 :::
 
 ## Chat model
 
 We recommend configuring **DeepSeek Chat** as your chat model.
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "DeepSeek Chat",
-      "provider": "deepseek",
-      "model": "deepseek-chat",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+		```yaml title="config.yaml"
+		models:
+		  - name: DeepSeek Chat
+		    provider: deepseek
+		    model: deepseek-chat
+		    apiKey: [API_KEY]
+		```
+	</TabItem>
+	<TabItem value="json" label="JSON">
+		```json title="config.json (Deprecated)"
+		"models": [
+		  {
+		    "title": "DeepSeek Chat",
+		    "provider": "deepseek",
+		    "model": "deepseek-chat",
+		    "apiKey": "[API_KEY]"
+		  }
+		]
+		```
+	</TabItem>
+</Tabs>
 
 ## Autocomplete model
 
 We recommend configuring **DeepSeek Coder** as your autocomplete model.
 
-```json title="config.json (Deprecated)"
-{
-  "tabAutocompleteModel": {
-    "title": "DeepSeek Coder",
-    "provider": "deepseek",
-    "model": "deepseek-coder"
-  }
-}
-```
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+		```yaml title="config.yaml"
+		models:
+		  - name: DeepSeek Coder
+		    provider: deepseek
+		    model: deepseek-coder
+		    roles:
+		      - autocomplete
+		```
+	</TabItem>
+	<TabItem value="json" label="JSON">
+		```json title="config.json (Deprecated)"
+		"tabAutocompleteModel": {
+		  "title": "DeepSeek Coder",
+		  "provider": "deepseek",
+		  "model": "deepseek-coder"
+		}
+		```
+	</TabItem>
+</Tabs>
 
 ## Embeddings model
 

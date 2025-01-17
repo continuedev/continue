@@ -14,50 +14,90 @@ You need to enable the [Vertex AI API](https://console.cloud.google.com/marketpl
 
 We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Claude 3.5 Sonnet",
-      "provider": "vertexai",
-      "model": "claude-3-5-sonnet-20240620",
-      "projectId": "[PROJECT_ID]",
-      "region": "us-east5"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="Package or config.yaml"
+    models:
+      - name: Claude 3.5 Sonnet
+        provider: vertexai
+        model: claude-3-5-sonnet-20240620
+        projectId: [PROJECT_ID]
+        region: us-east5
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json (Deprecated)"
+      "models": [
+        {
+          "title": "Claude 3.5 Sonnet",
+          "provider": "vertexai",
+          "model": "claude-3-5-sonnet-20240620",
+          "projectId": "[PROJECT_ID]",
+          "region": "us-east5"
+        }
+      ]
+    ```
+    </TabItem>
+</Tabs>
 
 ## Autocomplete model
 
 We recommend configuring **Codestral** or **code-gecko** as your autocomplete model.
 
-```json title="config.json (Deprecated)"
-{
-  "tabAutocompleteModel": {
-    "title": "Codestral (Vertex AI)",
-    "provider": "vertexai",
-    "model": "codestral",
-    "projectId": "[PROJECT_ID]",
-    "region": "us-central1"
-  }
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Codestral (Vertex AI)
+        provider: vertexai
+        model: codestral
+        projectId: [PROJECT_ID]
+        region: us-central1
+        roles:
+          - autocomplete
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json (Deprecated)"
+      "tabAutocompleteModel": {
+          "title": "Codestral (Vertex AI)",
+          "provider": "vertexai",
+          "model": "codestral",
+          "projectId": "[PROJECT_ID]",
+          "region": "us-central1"
+      }
+    ```
+    </TabItem>
+</Tabs>
 
 ## Embeddings model
 
 We recommend configuring **text-embedding-004** as your embeddings model.
 
-```json title="config.json (Deprecated)"
-{
-  "embeddingsProvider": {
-    "provider": "vertexai",
-    "model": "text-embedding-004",
-    "projectId": "[PROJECT_ID]",
-    "region": "us-central1"
-  }
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+        ```yaml title="config.yaml"
+        models:
+          - name: Text Embedding-004
+            provider: vertexai
+            model: text-embedding-004
+            projectId: [PROJECT_ID]
+            region: us-central1
+            roles:
+              - embed
+        ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+        ```json title="config.json (Deprecated)"
+          "embeddingsProvider": {
+            "provider": "vertexai",
+            "model": "text-embedding-004",
+            "projectId": "[PROJECT_ID]",
+            "region": "us-central1"
+          }
+        ```
+    </TabItem>
+</Tabs>
 
 ## Reranking model
 
