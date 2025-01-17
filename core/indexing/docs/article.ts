@@ -4,7 +4,7 @@ import { JSDOM } from "jsdom";
 import { Chunk } from "../../";
 import { cleanFragment, cleanHeader, markdownChunker } from "../chunk/markdown";
 
-import { type PageData } from "./DocsCrawler";
+import { type PageData } from "./crawlers/DocsCrawler";
 
 export type ArticleComponent = {
   title: string;

@@ -30,7 +30,7 @@ import {
   htmlPageToArticleWithChunks,
   markdownPageToArticleWithChunks,
 } from "./article";
-import DocsCrawler, { DocsCrawlerType, PageData } from "./DocsCrawler";
+import DocsCrawler, { DocsCrawlerType, PageData } from "./crawlers/DocsCrawler";
 import { ConfigResult } from "@continuedev/config-yaml";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {

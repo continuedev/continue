@@ -2,7 +2,7 @@ import { URL } from "node:url";
 
 import * as cheerio from "cheerio";
 
-import { PageData } from "../DocsCrawler";
+import { PageData } from "./DocsCrawler";
 
 export default class CheerioCrawler {
   private readonly IGNORE_PATHS_ENDING_IN = [

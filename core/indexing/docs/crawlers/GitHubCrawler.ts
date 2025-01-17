@@ -2,7 +2,7 @@ import { URL } from "node:url";
 
 import { Octokit } from "@octokit/rest";
 
-import { PageData } from "../DocsCrawler";
+import { PageData } from "./DocsCrawler";
 
 class GitHubCrawler {
   private readonly markdownRegex = new RegExp(/\.(md|mdx)$/);

@@ -1,4 +1,4 @@
-export const githubTestRepos: string[] = [
+export const commonDocsRepos: string[] = [
   //   "https://github.com/freeCodeCamp/freeCodeCamp",
   "https://github.com/996icu/996.ICU",
   //   "https://github.com/vuejs/vue",
@@ -49,4 +49,16 @@ export const githubTestRepos: string[] = [
   //   "https://github.com/elastic/elasticsearch",
   //   "https://github.com/RocketChat/Rocket.Chat",
   //   "https://github.com/open-source-labs/reactime",
+];
+
+export const commonDocsSites = [
+  "https://docs.nestjs.com/",
+  "https://go.dev/doc/",
+  "https://clickhouse.com/docs",
+];
+
+export const failingDocsSites = [
+  "https://www.tensorflow.org/api_docs",
+  "https://docs.anthropic.com/en/docs",
+  "https://www.rust-lang.org/learn",
 ];

@@ -1,11 +1,11 @@
 import { URL } from "node:url";
 
-import { ContinueConfig, IDE } from "../..";
+import { ContinueConfig, IDE } from "../../..";
 
-import CheerioCrawler from "./crawlers/CheerioCrawler";
-import { ChromiumCrawler, ChromiumInstaller } from "./crawlers/ChromiumCrawler";
-import { DefaultCrawler } from "./crawlers/DefaultCrawler";
-import GitHubCrawler from "./crawlers/GitHubCrawler";
+import CheerioCrawler from "./CheerioCrawler";
+import { ChromiumCrawler, ChromiumInstaller } from "./ChromiumCrawler";
+import { DefaultCrawler } from "./DefaultCrawler";
+import GitHubCrawler from "./GitHubCrawler";
 
 export type PageData = {
   url: string;
