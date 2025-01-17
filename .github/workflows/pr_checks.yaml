@@ -482,7 +482,7 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [ install-root, core-checks ]
+    needs: [install-root, core-checks]
     name: jetbrains-tests-${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -602,7 +602,7 @@ jobs:
       # npm install binary
       - name: Install binary node_modules
         run: |
-          cd ../../binary
+          cd binary
           npm ci
 
       - name: Build the binaries
