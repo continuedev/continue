@@ -97,7 +97,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   install-gui:
-    needs: [install-root, install-core]
+    needs: [ install-root, install-core ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -158,7 +158,7 @@ jobs:
           npx tsc --noEmit
 
   binary-checks:
-    needs: [install-root, install-core]
+    needs: [ install-root, install-core ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -194,7 +194,7 @@ jobs:
           npx tsc --noEmit
 
   install-vscode:
-    needs: [install-root, install-core]
+    needs: [ install-root, install-core ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -283,7 +283,7 @@ jobs:
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
-    needs: [install-root, install-vscode]
+    needs: [ install-root, install-vscode ]
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
@@ -312,7 +312,7 @@ jobs:
 
   vscode-package-extension:
     runs-on: ubuntu-latest
-    needs: [install-vscode, install-core]
+    needs: [ install-vscode, install-core ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -344,7 +344,7 @@ jobs:
 
   vscode-download-e2e-dependencies:
     runs-on: ubuntu-latest
-    needs: [install-vscode, install-core]
+    needs: [ install-vscode, install-core ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -390,7 +390,7 @@ jobs:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
-        command: ["e2e:ci:run", "e2e:ci:run-yaml"]
+        command: [ "e2e:ci:run", "e2e:ci:run-yaml" ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -451,7 +451,7 @@ jobs:
           path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
-    needs: [install-gui, install-core]
+    needs: [ install-gui, install-core ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -482,68 +482,15 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [install-root, core-checks]
-    name: jetbrains-tests-${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            runIde: |
-              cd extensions/intellij
-              export DISPLAY=:99.0
-              Xvfb -ac :99 -screen 0 1920x1080x24 &
-              sleep 10 
-              mkdir -p build/reports
-              ./gradlew runIdeForUiTests &
-            runTests: |
-              cd extensions/intellij
-              export DISPLAY=:99.0
-              ./gradlew test
-            reportName: jetbrains-tests-linux
-            moveVideo: |
-              cd extensions/intellij
-              mv video build/reports
-            copyLogs: |
-              cd extensions/intellij 
-              mv build/idea-sandbox/system/log/ build/reports
-          - os: macOS-latest
-            runIde: |
-              cd extensions/intellij
-              ./gradlew runIdeForUiTests &
-            runTests: |
-              cd extensions/intellij
-              ./gradlew test
-            reportName: jetbrains-tests-mac
-            moveVideo: |
-              cd extensions/intellij
-              mv video build/reports
-            copyLogs: |
-              cd extensions/intellij
-              mv build/idea-sandbox/system/log/ build/reports
-    #          - os: windows-latest
-    #            runIde: |
-    #              cd extensions\intellij
-    #              start gradlew.bat runIdeForUiTests
-    #            runTests: |
-    #              cd extensions\intellij
-    #              .\gradlew test
-    #            reportName: jetbrains-tests-windows
-    #            moveVideo: |
-    #              cd extensions\intellij
-    #              move video build\reports
-    #            copyLogs: |
-    #              cd extensions\intellij
-    #              move build\idea-sandbox\system\log build\reports
-
-    runs-on: ${{ matrix.os }}
+    needs: [ install-root, core-checks ]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      #      - uses: actions/cache@v4
-      #        with:
-      #          path: core/node_modules
-      #          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
@@ -570,19 +517,6 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      # npm install core
-      - name: Install core node_modules
-        run: |
-          cd core
-          npm ci
-
-      # npm install gui
-      - name: Install gui node_modules and build
-        run: |
-          cd gui
-          npm ci
-          npm run build
-
       # We can shave off another minute off our CI script by finding a way to share this with vscode-tests
       - name: Run prepackage script
         run: |
@@ -599,19 +533,19 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      # npm install binary
-      - name: Install binary node_modules
-        run: |
-          cd binary
-          npm ci
-
       - name: Build the binaries
         run: |
           cd binary
           npm run build
 
       - name: Start test IDE
-        run: ${{ matrix.runIde }}
+        run: |
+          cd extensions/intellij
+          export DISPLAY=:99.0
+          Xvfb -ac :99 -screen 0 1920x1080x24 &
+          sleep 10
+          mkdir -p build/reports
+          ./gradlew runIdeForUiTests &
 
       - name: Wait for JB connection
         uses: jtalk/url-health-check-action@v3
@@ -621,15 +555,22 @@ jobs:
           retry-delay: 5s
 
       - name: Run tests
-        run: ${{ matrix.runTests }}
+        run: |
+          cd extensions/intellij
+          export DISPLAY=:99.0
+          ./gradlew test
 
       - name: Move video
         if: ${{ failure() }}
-        run: ${{ matrix.moveVideo }}
+        run: |
+          cd extensions/intellij
+          mv video build/reports
 
       - name: Copy logs
         if: ${{ failure() }}
-        run: ${{ matrix.copyLogs }}
+        run: |
+          cd extensions/intellij
+          mv build/idea-sandbox/system/log/ build/reports
 
       - name: Save fails report
         if: ${{ failure() }}
