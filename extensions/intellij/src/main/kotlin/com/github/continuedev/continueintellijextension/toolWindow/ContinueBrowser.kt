@@ -28,11 +28,15 @@ class ContinueBrowser(val project: Project, url: String) {
     }
 
     val browser: JBCefBrowser
+    private var browserInitialized = false
+
 
     init {
         val isOSREnabled = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
 
         this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build()
+
+
 
         registerAppSchemeHandler()
         browser.loadURL(url);
@@ -40,6 +44,21 @@ class ContinueBrowser(val project: Project, url: String) {
 
         // Listen for events sent from browser
         val myJSQueryOpenInBrowser = JBCefJSQuery.create((browser as JBCefBrowserBase?)!!)
+
+        browser.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
+            override fun onLoadingStateChange(
+                browser: CefBrowser?,
+                isLoading: Boolean,
+                canGoBack: Boolean,
+                canGoForward: Boolean
+            ) {
+                if (!isLoading) {
+                    // The page has finished loading
+                    executeJavaScript(browser, myJSQueryOpenInBrowser)
+                    browserInitialized = true
+                }
+            }
+        }, browser.cefBrowser)
 
         myJSQueryOpenInBrowser.addHandler { msg: String? ->
             val parser = JsonParser()
@@ -114,6 +133,12 @@ class ContinueBrowser(val project: Project, url: String) {
         data: Any?,
         messageId: String = uuid()
     ) {
+        if (!browserInitialized) {
+            println("Browser not yet initialized, cannot send message to webview")
+            return
+        }
+
+
         val jsonData = Gson().toJson(
             mapOf(
                 "messageId" to messageId,
