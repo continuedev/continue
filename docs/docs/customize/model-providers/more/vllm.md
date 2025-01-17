@@ -15,7 +15,7 @@ We recommend configuring **Llama3.1 8B** as your chat model.
     {
       "title": "Llama3.1 8B Instruct",
       "provider": "vllm",
-      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct"
+      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
       "apiBase": "http://<vllm chat endpoint>/v1"
     }
   ]

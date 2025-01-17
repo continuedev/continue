@@ -30,6 +30,12 @@ class Anthropic extends BaseLLM {
         description: tool.function.description,
         input_schema: tool.function.parameters,
       })),
+      tool_choice: options.toolChoice
+        ? {
+            type: "tool",
+            name: options.toolChoice.function.name,
+          }
+        : undefined,
     };
 
     return finalOptions;
