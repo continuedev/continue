@@ -4,6 +4,13 @@ description: Shortcuts that can be activated by prefacing your input with '/'
 keywords: [slash command, custom commands, step]
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+:::info
+Slash commands can currently only be added using [`config.json`](../json-reference.md), which has been deprecated in favor of the [`YAML Config Format`](../reference.md). We recommend looking into [Prompt Files](../customize/deep-dives//prompt-files.md) to achieve similar functionality.
+:::
+
 Slash commands are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
 
 ![slash-commands](/img/slash-commands.png)
@@ -109,23 +116,36 @@ The onboard slash command helps to familiarize yourself with a new project by an
 
 ### Model Context Protocol
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports MCP "prompts" by creating slash commands. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then configure your `config.json` like this:
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports MCP "prompts" by creating slash commands. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
 
-```json title="config.json (Deprecated)"
-{
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
+  mcpServers:
+  - name: My MCP Server
+    command: uvx
+    args:
+      - mcp-server-sqlite
+      - --db-path
+      - /Users/NAME/test.db
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "experimental": {
+      "modelContextProtocolServers": [
+        {
+          "transport": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+          }  
         }
-      }
-    ]
-  }
-}
-```
+      ]
+    }
+  ```
+  </TabItem>
+</Tabs>
 
 ### Build your own Slash Command
 

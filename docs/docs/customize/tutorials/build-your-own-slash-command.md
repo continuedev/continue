@@ -2,6 +2,10 @@
 title: Build your own slash command
 ---
 
+:::info
+Slash commands can currently only be added using [`config.json`](../json-reference.md) or `config.ts`, which have been deprecated in favor of the [`YAML Config Format`](../reference.md). We recommend looking into [Prompt Files](../customize/deep-dives//prompt-files.md) to achieve similar functionality.
+:::
+
 There are two ways to add custom slash commands:
 
 1. With natural language prompts - this is simpler and only requires writing a string or string template.
@@ -19,9 +23,9 @@ Custom commands are great when you are frequently reusing a prompt. For example,
 
 ```json title="config.json (Deprecated)"
 customCommands=[{
-        "name": "check",
-        "description": "Check for mistakes in my code",
-        "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
+    "name": "check",
+    "description": "Check for mistakes in my code",
+    "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
 }]
 ```
 

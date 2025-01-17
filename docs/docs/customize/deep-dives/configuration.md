@@ -23,7 +23,7 @@ In the vast majority of cases, you will only need to edit `config.json`. However
 
 ## `config.json`
 
-See the full reference for `config.json` [here](../../reference.md).
+See the full reference for `config.json` [here](../../json-reference.md).
 
 ## `.continuerc.json`
 

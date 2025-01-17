@@ -11,8 +11,8 @@ Continue's YAML configuration format provides more readable, maintainable, consi
 See also
 
 - [Intro to YAML](https://yaml.org/)
-- [JSON Continue Config Reference](/reference)
-- [YAML Continue Config Reference](/yaml-reference)
+- [JSON Continue Config Reference](/json-reference)
+- [YAML Continue Config Reference](/reference)
 
 ## Create YAML file
 
@@ -278,8 +278,6 @@ docs:
 ```
 
 ### MCP Servers
-
-<!-- TODO this is definitely wrong -->
 
 **Properties:**
 
