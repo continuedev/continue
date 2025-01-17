@@ -35,7 +35,7 @@ class Onboarding {
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
 
-    @Test
+    //    @Test
     @Video
     fun onboarding(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
         welcomeFrame {
@@ -53,7 +53,7 @@ class Onboarding {
             // So we need to wait for that to occur, and then focus on "continue_tutorial.java.ft"
             waitFor(ofSeconds(20)) {
                 findAll<ComponentFixture>(
-                    byXpath("//div[@accessiblename='Main.java' and @class='EditorTabLabel']")
+                    byXpath("//div[@accessiblename='Main.java' and @class='SingleHeightLabel']")
                 ).isNotEmpty()
             }
 

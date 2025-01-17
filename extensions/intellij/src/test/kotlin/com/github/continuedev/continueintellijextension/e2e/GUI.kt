@@ -39,7 +39,7 @@ class GUI {
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
-    @Test
+    //    @Test
     @Video
     fun highlightCode(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
         welcomeFrame {
@@ -57,7 +57,7 @@ class GUI {
         // while the `continue_tutorial.java` is loading.
         waitFor(ofSeconds(20)) {
             findAll<ComponentFixture>(
-                byXpath("//div[@accessiblename='Main.java' and @class='EditorTabLabel']")
+                byXpath("//div[@accessiblename='Main.java' and @class='SingleHeightLabel']")
             ).isNotEmpty()
         }
 

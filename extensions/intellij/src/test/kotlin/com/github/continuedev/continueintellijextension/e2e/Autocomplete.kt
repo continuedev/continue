@@ -50,7 +50,7 @@ class Autocomplete {
         // Our "continue_tutorial.java.ft" tab loads first, but then "Main.java" takes focus.
         waitFor(ofSeconds(20)) {
             findAll<ComponentFixture>(
-                byXpath("//div[@accessiblename='Main.java' and @class='EditorTabLabel']")
+                byXpath("//div[@accessiblename='Main.java' and @class='SingleHeightLabel']")
             ).isNotEmpty()
         }
 
