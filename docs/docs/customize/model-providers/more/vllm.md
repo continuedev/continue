@@ -5,6 +5,7 @@ vLLM is an open-source library for fast LLM inference which typically is used to
 ```shell
 vllm serve meta-llama/Meta-Llama-3.1-8B-Instruct
 ```
+
 ## Chat model
 
 We recommend configuring **Llama3.1 8B** as your chat model.
@@ -54,6 +55,5 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
 ## Reranking model
 
 [Click here](../../model-types/reranking.md) to see a list of reranking model providers.
-
 
 The continue implementation uses [OpenAI](../top-level/openai.md) under the hood. [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)

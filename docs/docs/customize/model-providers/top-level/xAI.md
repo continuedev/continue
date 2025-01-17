@@ -43,11 +43,3 @@ xAI currently does not offer any embeddings models.
 xAI currently does not offer any reranking models.
 
 [Click here](../../model-types/reranking.md) to see a list of reranking model providers.
-
-## Legacy Completions
-
-To force usage of `chat/completions` instead of `completions` endpoint you can set
-
-```json
-"useLegacyCompletionsEndpoint": false
-```

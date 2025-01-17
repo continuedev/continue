@@ -23,7 +23,7 @@ To let you balance speed and safety, each tool can be set to 1 of 3 modes:
 
 Currently custom tools can be configured using the [Model Context Protocol](https://modelcontextprotocol.io/introduction), a standard proposed by Anthropic to unify prompts, context, and tool use. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then configure your `config.json` like this:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "experimental": {
     "modelContextProtocolServers": [

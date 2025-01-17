@@ -79,7 +79,7 @@ To find this information in _Azure AI Foundry_, first select the model that you 
 
 For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
-```json
+```json title="config.json"
 {
   "title": "GPT-4o Azure",
   "model": "gpt-4o",

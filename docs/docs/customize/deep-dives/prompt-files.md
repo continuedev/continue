@@ -16,7 +16,7 @@ Below is a quick example of setting up a prompt file to de
 2. Add a file called `rails.prompt` to this folder.
 3. Write the following contents to `rails.prompt` and save.
 
-```
+```.prompt
 name: Rails Project
 description: Information about this project
 ---

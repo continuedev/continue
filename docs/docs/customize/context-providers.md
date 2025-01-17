@@ -302,7 +302,7 @@ Reference the architecture and platform of your current operating system.
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then configure your `config.json` like this:
 
-```json
+```json title="config.json"
 {
   "experimental": {
     "modelContextProtocolServers": [

@@ -111,7 +111,7 @@ The onboard slash command helps to familiarize yourself with a new project by an
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports MCP "prompts" by creating slash commands. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then configure your `config.json` like this:
 
-```json
+```json title="config.json"
 {
   "experimental": {
     "modelContextProtocolServers": [
@@ -128,4 +128,5 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 ```
 
 ### Build your own Slash Command
+
 You can build your own slash command by following [this tutorial](/customize/tutorials/build-your-own-slash-command).

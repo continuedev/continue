@@ -12,7 +12,7 @@ The [`@Docs` context provider](customize/context-providers.md#docs) allows you t
 
 To enable the `@Docs` context provider, you need to add it to the list of context providers in your `config.json` file.
 
-```json
+```json title="config.json"
 {
   "contextProviders": [
     {
@@ -53,7 +53,7 @@ To add multiple documentation sites, we recommend adding them in bulk to your `c
 
 The [configuration schema for docs](https://github.com/continuedev/continue/blob/v0.9.212-vscode/extensions/vscode/config_schema.json#L1943-L1973) is as follows:
 
-```json
+```json title="config.json"
 "docs": [
     {
     "title": "Continue",

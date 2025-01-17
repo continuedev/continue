@@ -7,7 +7,7 @@ keywords: [autocomplete]
 
 If you want to have the best autocomplete experience, we recommend using Codestral, which is available through the [Mistral API](https://console.mistral.ai/). To do this, obtain an API key and add it to your `config.json`:
 
-```json
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "Codestral",

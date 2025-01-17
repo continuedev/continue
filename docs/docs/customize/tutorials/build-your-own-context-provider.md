@@ -107,17 +107,19 @@ const ReadMeContextProvider: CustomContextProvider = {
     const { ide } = args;
 
     // Filter all workspace files for READMEs
-    const workspaceDirs = await ide.getWorkspaceDirs()
+    const workspaceDirs = await ide.getWorkspaceDirs();
 
     const allFiles = await Promise.all(
-      workspaceDirs.map(dir => ide.subprocess(`find ${dir} -name "README.md"`)),
+      workspaceDirs.map((dir) =>
+        ide.subprocess(`find ${dir} -name "README.md"`),
+      ),
     );
 
     // 'readmes' now contains an array of file paths for each README.md file found in the workspace,
     // excluding those in 'node_modules'
     const readmes = allFiles
-      .flatMap(mds => mds[0].split("\n"))
-      .filter(file => file.trim() !== '' && !file.includes("/node_modules/"))
+      .flatMap((mds) => mds[0].split("\n"))
+      .filter((file) => file.trim() !== "" && !file.includes("/node_modules/"));
 
     // Return the items that will be shown in the dropdown
     return readmes.map((filepath) => {
@@ -182,7 +184,7 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
 
 If you'd like to write a context provider in a language other than TypeScript, you can use the "http" context provider to call a server that hosts your own code. Add the context provider to `config.json` like this:
 
-```json
+```json title="config.json"
 {
   "name": "http",
   "params": {

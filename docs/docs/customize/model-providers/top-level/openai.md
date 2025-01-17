@@ -86,8 +86,18 @@ If you are using an OpenAI compatible server / API, you can change the `apiBase`
 }
 ```
 
-To force usage of `chat/completions` instead of `completions` endpoint you can set
+To force usage of `chat/completions` instead of `completions` endpoint you can set:
 
-```json
-"useLegacyCompletionsEndpoint": false
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "OpenAI-compatible server / API",
+      "provider": "openai",
+      "model": "MODEL_NAME",
+      "apiBase": "http://localhost:8000/v1",
+      "useLegacyCompletionsEndpoint": true
+    }
+  ]
+}
 ```
