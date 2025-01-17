@@ -48,7 +48,7 @@ dependencies {
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.automation-remarks:video-recorder-junit5:2.0")
 
-    
+
     // Exclude vulnerable Log4j from all dependencies
     configurations.all {
         resolutionStrategy {
@@ -59,7 +59,7 @@ dependencies {
             }
         }
     }
-    
+
     // Add Log4j 2.x explicitly
     implementation("org.apache.logging.log4j:log4j-core:2.20.0")
     implementation("org.apache.logging.log4j:log4j-api:2.20.0")
@@ -163,9 +163,9 @@ tasks {
         // This is to ensure we load the GUI with OSR enabled. We have logic that
         // renders with OSR disabled below a particular IDE version.
         // See ContinueExtensionSettingsService.kt for more info.
-        intellij {
-            version.set("2024.1")
-        }
+//        intellij {
+//            version.set("2024.1")
+//        }
     }
 
     signPlugin {
