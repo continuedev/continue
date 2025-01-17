@@ -593,6 +593,12 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
+      # npm install binary
+      - name: Install binary node_modules
+        run: |
+          cd ../../binary
+          npm ci
+
       - name: Build the binaries
         run: |
           cd binary
