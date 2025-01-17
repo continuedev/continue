@@ -2,6 +2,7 @@
 title: Function Network
 slug: ../function-network
 ---
+
 # Function Network
 
 > Private, Affordable User-Owned AI
@@ -16,7 +17,7 @@ To get an API key, login to the Function Network Developer Platform. If you don'
 
 Function Network supports a number of models for chat. We recommend using LLama 3.1 70b or Qwen2.5-Coder-32B-Instruct.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -35,7 +36,7 @@ Function Network supports a number of models for chat. We recommend using LLama 
 
 Function Network supports a number of models for autocomplete. We recommend using Llama 3.1 8b or Qwen2.5-Coder-1.5B.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Deepseek Coder 6.7b",
@@ -50,7 +51,7 @@ Function Network supports a number of models for autocomplete. We recommend usin
 
 Function Network supports a number of models for embeddings. We recommend using baai/bge-base-en-v1.5.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "function-network",

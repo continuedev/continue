@@ -7,7 +7,7 @@ keywords: [autocomplete]
 
 If you want to have the best autocomplete experience, we recommend using Codestral, which is available through the [Mistral API](https://console.mistral.ai/). To do this, obtain an API key and add it to your `config.json`:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Codestral",
@@ -32,7 +32,7 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 
 All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
@@ -71,7 +71,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 
 ### Full example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",

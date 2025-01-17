@@ -10,7 +10,7 @@ vllm serve meta-llama/Meta-Llama-3.1-8B-Instruct
 
 We recommend configuring **Llama3.1 8B** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -27,7 +27,7 @@ We recommend configuring **Llama3.1 8B** as your chat model.
 
 We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Qwen2.5-Coder 1.5B",
@@ -42,7 +42,7 @@ We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
 
 We recommend configuring **Nomic Embed Text** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "vllm",

@@ -13,7 +13,7 @@ You can get an API key from the [Mistral Dashboard](https://console.mistral.ai).
 
 We recommend configuring **Mistral Large** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -30,7 +30,7 @@ We recommend configuring **Mistral Large** as your chat model.
 
 We recommend configuring **Codestral** as your autocomplete model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Codestral",
@@ -45,7 +45,7 @@ We recommend configuring **Codestral** as your autocomplete model.
 
 We recommend configuring **Mistral Embed** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "mistral",

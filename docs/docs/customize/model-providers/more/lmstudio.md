@@ -2,7 +2,7 @@
 
 [LM Studio](https://lmstudio.ai) is an application for Mac, Windows, and Linux that makes it easy to locally run open-source models and comes with a great UI. To get started with LM Studio, download from the website, use the UI to download a model, and then start the local inference server. Continue can then be configured to use the `LMStudio` LLM class:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -18,7 +18,7 @@
 
 LMStudio supports embeddings endpoints, and comes with the `nomic-ai/nomic-embed-text-v1.5-GGUF` model (as of Nov 2024, check your models)
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "lmstudio",
@@ -31,7 +31,7 @@ LMStudio supports embeddings endpoints, and comes with the `nomic-ai/nomic-embed
 
 To configure a remote instance of LM Studio, add the `"apiBase"` property to your model in config.json:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "title": "LM Studio",
   "model": "codestral",

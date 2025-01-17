@@ -6,7 +6,7 @@
 
 IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to [this guide](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/ollama_quickstart.html) from IPEX-LLM official documentation about how to install and run Ollama serve accelerated by IPEX-LLM on Intel GPU. You can then configure Continue to use the IPEX-LLM accelerated `"ollama"` provider as follows:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -20,7 +20,7 @@ IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to
 
 If you would like to reach the Ollama service from another machine, make sure you set or export the environment variable `OLLAMA_HOST=0.0.0.0` before executing the command `ollama serve`. Then, in the Continue configuration, set `'apiBase'` to correspond with the IP address / port of the remote machine. That is, Continue can be configured to be:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

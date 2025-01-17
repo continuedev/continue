@@ -6,7 +6,7 @@ Before using Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/a
 
 We recommend configuring **Command-R Plus** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -29,7 +29,7 @@ Cohere currently does not offer any autocomplete models.
 
 We recommend configuring **embed-english-v3.0** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "cohere",
@@ -43,7 +43,7 @@ We recommend configuring **embed-english-v3.0** as your embeddings model.
 
 We recommend configuring **rerank-english-v3.0** as your reranking model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "cohere",

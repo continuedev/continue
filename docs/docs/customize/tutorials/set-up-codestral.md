@@ -16,7 +16,7 @@ keywords: [codestral, mistral, model setup]
 
 4. To use Codestral as your model for both `autocomplete` and `chat`, replace `[API_KEY]` with your Mistral API key below and add it to your `config.json` file:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

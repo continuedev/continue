@@ -10,7 +10,7 @@ To get an Ask Sage API key login to the Ask Sage platform (If you don't have an 
 
 To use the Ask Sage models, the following configuration is required to the `config.json` file:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

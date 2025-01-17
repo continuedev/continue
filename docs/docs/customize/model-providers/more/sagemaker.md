@@ -4,7 +4,7 @@ SageMaker can be used for both chat and embedding models. Chat models are suppor
 
 To setup SageMaker as a chat model provider, add the following to your `config.json` file:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -17,7 +17,7 @@ To setup SageMaker as a chat model provider, add the following to your `config.j
   "embeddingsProvider": {
     "provider": "sagemaker",
     "model": "mxbai-embed-large-v1-endpoint"
-  },
+  }
 }
 ```
 

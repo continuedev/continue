@@ -8,7 +8,7 @@ Available models can be found on the [Nebius AI Studio models page](https://stud
 
 ## Chat model
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -25,7 +25,7 @@ Available models can be found on the [Nebius AI Studio models page](https://stud
 
 Available models can be found on the [Nebius AI Studio embeddings page](https://studio.nebius.ai/models/embedding)
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "nebius",

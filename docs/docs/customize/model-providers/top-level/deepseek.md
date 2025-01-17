@@ -13,7 +13,7 @@ You can get an API key from the [DeepSeek console](https://www.deepseek.com/).
 
 We recommend configuring **DeepSeek Chat** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -30,7 +30,7 @@ We recommend configuring **DeepSeek Chat** as your chat model.
 
 We recommend configuring **DeepSeek Coder** as your autocomplete model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "DeepSeek Coder",

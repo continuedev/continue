@@ -2,7 +2,7 @@
 
 A [llamafile](https://github.com/Mozilla-Ocho/llamafile#readme) is a self-contained binary that can run an open-source LLM. You can configure this provider in your config.json as follows:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

@@ -9,7 +9,7 @@ Amazon Bedrock is a fully managed service on AWS that provides access to foundat
 
 We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -22,10 +22,12 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
   ]
 }
 ```
+
 > If you run into the following error when connecting to the new Claude 3.5 Sonnet 2 models from AWS - `400 Invocation of model ID anthropic.claude-3-5-sonnet-20241022-v2:0 with on-demand throughput isn’t supported. Retry your request with the ID or ARN of an inference profile that contains this model.`
 
 > You can fix this using the following config.json
-```json title="config.json"
+
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -49,7 +51,7 @@ Bedrock currently does not offer any autocomplete models.
 
 We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazon.com/bedrock/latest/devguide/models.html#amazon.titan-embed-text-v2-0) as your embeddings model.
 
-```json title="~/.continue/config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "title": "Embeddings Model",
@@ -64,7 +66,7 @@ We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazo
 
 We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may also use `amazon.rerank-v1:0`.
 
-```json title="~/.continue/config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "bedrock",
@@ -92,7 +94,7 @@ aws_session_token = pqrstuvwxyz # Optional: means short term creds.
 
 To setup Bedrock using custom imported models, add the following to your `config.json` file:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

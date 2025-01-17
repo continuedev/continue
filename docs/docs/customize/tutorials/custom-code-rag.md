@@ -124,7 +124,7 @@ async def create_item(item: ContextProviderInput):
 
 After you've set up your server, you can configure Continue to use it by adding the "http" context provider to your `contextProviders` array in `config.json`:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "name": "http",
   "params": {

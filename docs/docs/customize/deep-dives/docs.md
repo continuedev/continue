@@ -12,7 +12,7 @@ The [`@Docs` context provider](customize/context-providers.md#docs) allows you t
 
 To enable the `@Docs` context provider, you need to add it to the list of context providers in your `config.json` file.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -53,7 +53,7 @@ To add multiple documentation sites, we recommend adding them in bulk to your `c
 
 The [configuration schema for docs](https://github.com/continuedev/continue/blob/v0.9.212-vscode/extensions/vscode/config_schema.json#L1943-L1973) is as follows:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 "docs": [
     {
     "title": "Continue",
@@ -73,7 +73,7 @@ The [configuration schema for docs](https://github.com/continuedev/continue/blob
 
 As with [@Codebase context provider configuration](https://docs.continue.dev/customize/deep-dives/codebase#configuration), you can adjust the behavior of the docs context provider with the `nRetrieve`, `nFinal`, and `useReranking`
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -94,7 +94,7 @@ By default, we use a lighter weight tool to crawl documentation sites that canno
 
 If you want to crawl a site that is dynamically generated, or you get an error while attempting to crawl a site, you can enable the experimental `useChromiumForDocsCrawling` feature in your `config.json`. This will download and install Chromium to `~/.continue/.utils`.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 "experimental": {
     "useChromiumForDocsCrawling": true
 }

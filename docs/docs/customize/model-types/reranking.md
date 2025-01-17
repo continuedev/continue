@@ -17,7 +17,7 @@ If you have the ability to use any model, we recommend `rerank-2` by Voyage AI, 
 
 Voyage AI offers the best reranking model for code with their `rerank-2` model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "voyage",
@@ -33,7 +33,7 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
 
 See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rerank-2).
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "cohere",
@@ -49,7 +49,7 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
 
 If you only have access to a single LLM, then you can use it as a reranker. This is discouraged unless truly necessary, because it will be much more expensive and still less accurate than any of the above models trained specifically for the task. Note that this will not work if you are using a local model, for example with Ollama, because too many parallel requests need to be made.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "llm",
@@ -66,7 +66,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
 
 [Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own [reranker endpoint](https://huggingface.github.io/text-embeddings-inference/#/Text%20Embeddings%20Inference/rerank). You can configure your reranker as follows:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "huggingface-tei",
@@ -84,7 +84,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
 
 Continue offers a free trial of Voyage AI's reranking model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "free-trial"

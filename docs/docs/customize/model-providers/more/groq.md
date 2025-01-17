@@ -5,7 +5,7 @@ Groq provides the fastest available inference for open-source language models, i
 1. Obtain an API key [here](https://console.groq.com/keys)
 2. Update your Continue config file like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

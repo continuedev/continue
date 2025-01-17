@@ -4,7 +4,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
 
 ## Config Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -19,7 +19,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
 
 ## Tab Autocomplete Config Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": [
     {

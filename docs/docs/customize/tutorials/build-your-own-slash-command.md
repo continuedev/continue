@@ -17,7 +17,7 @@ You can add custom slash commands by adding to the `customCommands` property in 
 
 Custom commands are great when you are frequently reusing a prompt. For example, if you've crafted a great prompt and frequently ask the LLM to check for mistakes in your code, you could add a command like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 customCommands=[{
         "name": "check",
         "description": "Check for mistakes in my code",

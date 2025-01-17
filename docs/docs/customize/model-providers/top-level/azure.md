@@ -15,7 +15,7 @@ For details on OpenAI model setup, see [Azure OpenAI Service configuration](#gen
 
 We recommend configuring **GPT-4o** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 "models": [{
     "title": "GPT-4o",
     "provider": "azure",
@@ -30,7 +30,7 @@ We recommend configuring **GPT-4o** as your chat model.
 
 We recommend configuring **Codestral** as your autocomplete model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Codestral",
@@ -44,7 +44,7 @@ We recommend configuring **Codestral** as your autocomplete model.
 
 We recommend configuring **text-embedding-3-large** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-3-large",
@@ -79,7 +79,7 @@ To find this information in _Azure AI Foundry_, first select the model that you 
 
 For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "title": "GPT-4o Azure",
   "model": "gpt-4o",

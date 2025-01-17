@@ -13,7 +13,7 @@ You need to enable the [Vertex AI API](https://console.cloud.google.com/marketpl
 
 We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -31,7 +31,7 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
 We recommend configuring **Codestral** or **code-gecko** as your autocomplete model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Codestral (Vertex AI)",
@@ -47,7 +47,7 @@ We recommend configuring **Codestral** or **code-gecko** as your autocomplete mo
 
 We recommend configuring **text-embedding-004** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "vertexai",

@@ -46,7 +46,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
 
 **Before**
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -156,7 +156,7 @@ The JSON `contextProviders` field is replaced by the YAML `context` array.
 
 **Before**
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -197,7 +197,7 @@ The `systemMessage` property has been replaced with a `rules` property that take
 
 **Before**
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "systemMessage": "Always give concise responses"
 }
@@ -216,7 +216,7 @@ Rather than with `customCommands`, you can now use the `prompts` field to define
 
 **Before**
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "customCommands": [
     {
@@ -251,7 +251,7 @@ Documentation is largely the same, but the `title` property has been replaced wi
 
 **Before**
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "docs": [
     {
@@ -290,7 +290,7 @@ docs:
 
 **Before**
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "experimental": {
     "modelContextProtocolServers": [

@@ -85,7 +85,7 @@ If your keyboard shortcuts are not resolving, you may have other commands that a
 
 If you're seeing a `fetch failed` error and your network requires custom certificates, you will need to configure them in `config.json`. In each of the objects in the `"models"` array, add `requestOptions.caBundlePath` like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

@@ -13,7 +13,7 @@ You can get an API key from the [OpenAI console](https://platform.openai.com/acc
 
 We recommend configuring **GPT-4o** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -36,7 +36,7 @@ OpenAI currently does not offer any autocomplete models.
 
 We recommend configuring **text-embedding-3-large** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "openai",
@@ -72,7 +72,7 @@ OpenAI compatible APIs
 
 If you are using an OpenAI compatible server / API, you can change the `apiBase` like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -88,7 +88,7 @@ If you are using an OpenAI compatible server / API, you can change the `apiBase`
 
 To force usage of `chat/completions` instead of `completions` endpoint you can set:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

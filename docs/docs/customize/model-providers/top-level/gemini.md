@@ -13,7 +13,7 @@ You can get an API key from the [Google AI Studio](https://aistudio.google.com/)
 
 We recommend configuring **Gemini 1.5 Pro** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -36,7 +36,7 @@ Gemini currently does not offer any autocomplete models.
 
 We recommend configuring **text-embedding-004** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "gemini",

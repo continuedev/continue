@@ -184,7 +184,7 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
 
 If you'd like to write a context provider in a language other than TypeScript, you can use the "http" context provider to call a server that hosts your own code. Add the context provider to `config.json` like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "name": "http",
   "params": {

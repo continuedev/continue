@@ -15,7 +15,7 @@ Read the [quickstart documentation here](https://www.scaleway.com/en/docs/ai-dat
 We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
 [Click here](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/) to see the list of available chat models.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -38,7 +38,7 @@ Scaleway currently does not offer any autocomplete models.
 
 We recommend configuring **BGE-Multilingual-Gemma2** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "scaleway",

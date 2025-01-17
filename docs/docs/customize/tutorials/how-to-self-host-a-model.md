@@ -20,7 +20,7 @@ However, if neither of these are the case, you will need to wire up a new LLM ob
 
 Basic authentication can be done with any provider using the `apiKey` field:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -37,7 +37,7 @@ This translates to the header `"Authorization": "Bearer xxx"`.
 
 If you need to send custom headers for authentication, you may use the `requestOptions.headers` property like in this example with Ollama:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -56,7 +56,7 @@ If you need to send custom headers for authentication, you may use the `requestO
 
 Similarly if your model requires a Certificate for authentication, you may use the `requestOptions.clientCertificate` property like in the example below:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

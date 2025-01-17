@@ -41,7 +41,7 @@ _(AWS Only)_
 
 Example:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -66,7 +66,7 @@ Specifies the model or models for tab autocompletion, defaulting to an Ollama in
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "My Starcoder",
@@ -96,7 +96,7 @@ Specifies options for tab autocompletion behavior.
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteOptions": {
     "debounceDelay": 500,
@@ -127,7 +127,7 @@ Embeddings model settings - the model used for @Codebase and @docs.
 
 Example:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "openai",
@@ -160,7 +160,7 @@ Parameters that control the behavior of text generation and completion settings.
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "completionOptions": {
     "stream": false,
@@ -190,7 +190,7 @@ Default HTTP request options that apply to all models and context providers, unl
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "requestOptions": {
     "headers": {
@@ -214,7 +214,7 @@ Configuration for the reranker model used in response ranking.
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "reranker": {
     "name": "voyage",
@@ -240,7 +240,7 @@ List of documentation sites to index.
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 "docs": [
     {
     "title": "Continue",
@@ -264,7 +264,7 @@ Custom commands initiated by typing "/" in the sidebar. Commands include predefi
 
 Example:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "slashCommands": [
     {
@@ -295,7 +295,7 @@ User-defined commands for prompt shortcuts in the sidebar, allowing quick access
 
 Example:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "customCommands": [
     {
@@ -318,7 +318,7 @@ List of the pre-defined context providers that will show up as options while typ
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -359,7 +359,7 @@ Customizable UI settings to control interface appearance and behavior.
 
 Example:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "ui": {
     "codeBlockToolbarPosition": "bottom",
@@ -414,7 +414,7 @@ Several experimental config parameters are available, as described below:
 
 Example
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "experimental": {
     "modelRoles": {

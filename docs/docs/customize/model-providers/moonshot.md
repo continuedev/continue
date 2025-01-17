@@ -9,7 +9,7 @@ To use Moonshot AI models, you need to:
 1. Get an API key from [Moonshot AI Platform](https://platform.moonshot.cn/)
 2. Add the following configuration to your `config.json`:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -42,7 +42,7 @@ Moonshot AI currently provides the following models:
 
 Here's a complete configuration example:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

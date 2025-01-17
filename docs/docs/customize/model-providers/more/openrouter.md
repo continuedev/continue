@@ -4,7 +4,7 @@ OpenRouter is a unified interface for commercial and open-source models, giving 
 
 Change `~/.continue/config.json` to look like the following.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -22,7 +22,7 @@ To utilize features such as provider preferences or model routing configuration,
 
 For example, to prevent extra long prompts from being compressed, you can explicitly turn off the feature like so:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

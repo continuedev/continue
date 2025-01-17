@@ -12,7 +12,7 @@ You can get an API key from the [Silicon Cloud](https://cloud.siliconflow.cn/acc
 
 We recommend configuring **Qwen/Qwen2.5-Coder-32B-Instruct** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -29,7 +29,7 @@ We recommend configuring **Qwen/Qwen2.5-Coder-32B-Instruct** as your chat model.
 
 We recommend configuring **Qwen/Qwen2.5-Coder-7B-Instruct** as your autocomplete model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "tabAutocompleteModel": {
     "title": "Qwen",

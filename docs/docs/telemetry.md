@@ -28,7 +28,7 @@ The following usage information is collected and reported:
 
 You can disable anonymous telemetry by modifying the `config.json` file located in the `~/.continue` directory. This file typically includes the following entry:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "allowAnonymousTelemetry": true
 }

@@ -6,7 +6,7 @@ Cerebras Inference uses specialized silicon to provides fast inference.
 2. Create and copy the API key for use in Continue.
 3. Update your Continue config file:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

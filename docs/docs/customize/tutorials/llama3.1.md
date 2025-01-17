@@ -18,7 +18,7 @@ Ollama is the fastest way to get up and running with local language models. We r
 2. Open a terminal and run `ollama run llama3.1:8b`
 3. Change your Continue config file like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -37,7 +37,7 @@ Groq provides the fastest available inference for open-source language models, i
 1. Obtain an API key [here](https://console.groq.com/keys)
 2. Update your Continue config file like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -58,7 +58,7 @@ Together AI provides fast and reliable inference of open-source models. You'll b
 2. Copy your API key that appears on the welcome screen
 3. Update your Continue config file like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -78,7 +78,7 @@ Replicate makes it easy to host and run open-source AI with an API.
 1. Get your Replicate API key [here](https://replicate.ai/)
 2. Change your Continue config file like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -120,7 +120,7 @@ Cerebras Inference uses specialized silicon to provides fast inference for the L
 2. Create and copy the API key for use in Continue.
 3. Update your Continue config file:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

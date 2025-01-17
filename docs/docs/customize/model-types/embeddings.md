@@ -27,7 +27,7 @@ If you want to generate embeddings locally, we recommend using `nomic-embed-text
 
 After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "voyage",
@@ -45,7 +45,7 @@ See [here](../model-providers/top-level/ollama.md#embeddings-model) for instruct
 
 [Transformers.js](https://huggingface.co/docs/transformers.js/index) is a JavaScript port of the popular [Transformers](https://huggingface.co/transformers/) library. It allows embeddings to be calculated entirely locally. The model used is `all-MiniLM-L6-v2`, which is shipped alongside the Continue extension.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "transformers.js"
@@ -57,7 +57,7 @@ See [here](../model-providers/top-level/ollama.md#embeddings-model) for instruct
 
 [Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own embeddings endpoint. You can configure embeddings to use your endpoint as follows:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "huggingface-tei",

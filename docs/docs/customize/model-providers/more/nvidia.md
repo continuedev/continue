@@ -12,7 +12,7 @@ title: NVIDIA
 
 We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -35,7 +35,7 @@ NVIDIA currently does not offer any autocomplete models.
 
 We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "embeddingsProvider": {
     "provider": "nvidia",

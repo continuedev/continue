@@ -40,7 +40,7 @@ Here are use cases where it is not useful:
 
 There are a few options that let you configure the behavior of the codebase context provider. These can be set in `config.json`, and are the same for the codebase, docs, and folder context providers:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {

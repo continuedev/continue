@@ -18,7 +18,7 @@ To use any of the built-in context providers, open `config.json` and add it to t
 
 Reference any file in your current workspace.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -32,7 +32,7 @@ Reference any file in your current workspace.
 
 Reference specific functions or classes from throughout your project.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -46,7 +46,7 @@ Reference specific functions or classes from throughout your project.
 
 Reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -60,7 +60,7 @@ Reference all of the changes you've made to your current branch. This is useful 
 
 Reference the currently open file.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -74,7 +74,7 @@ Reference the currently open file.
 
 Reference the last command you ran in your IDE's terminal and its output.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -88,7 +88,7 @@ Reference the last command you ran in your IDE's terminal and its output.
 
 Reference the contents from any documentation site.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -106,7 +106,7 @@ To use it, you need to add a documentation site to your `config.json`. See the [
 
 Reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -125,7 +125,7 @@ Reference relevant pages from across the web, automatically determined from your
 
 Optionally, set "n" to limit the number of results returned (default 6).
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -142,7 +142,7 @@ Optionally, set "n" to limit the number of results returned (default 6).
 
 Reference the most relevant snippets from your codebase.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -158,7 +158,7 @@ Read more about indexing and retrieval [here](../customize/deep-dives/codebase.m
 
 Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -172,7 +172,7 @@ Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
 
 Reference the results of codebase search, just like the results you would get from VS Code search.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -188,7 +188,7 @@ This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripg
 
 Reference the markdown converted contents of a given URL.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -202,7 +202,7 @@ Reference the markdown converted contents of a given URL.
 
 Reference recent clipboard items
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -216,7 +216,7 @@ Reference recent clipboard items
 
 Reference the structure of your current workspace.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -230,7 +230,7 @@ Reference the structure of your current workspace.
 
 Get Problems from the current file.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -244,7 +244,7 @@ Get Problems from the current file.
 
 Reference the contents of the local variables in the debugger. Currently only available in VS Code.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -265,7 +265,7 @@ Reference the outline of your codebase. By default, signatures are included alon
 
 `includeSignatures` params can be set to false to exclude signatures. This could be necessary for large codebases and/or to reduce context size significantly. Signatures will not be included if indexing is disabled.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -288,7 +288,7 @@ This context provider is inpsired by [Aider's repository map](https://aider.chat
 
 Reference the architecture and platform of your current operating system.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -302,7 +302,7 @@ Reference the architecture and platform of your current operating system.
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then configure your `config.json` like this:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "experimental": {
     "modelContextProtocolServers": [
@@ -328,7 +328,7 @@ See [Prompt Files](/customize/deep-dives/prompt-files). Prompt files are not add
 
 Reference the conversation in a GitHub issue.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -353,7 +353,7 @@ Make sure to include your own [GitHub personal access token](https://docs.github
 
 Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -407,7 +407,7 @@ Available connection types:
 
 Reference the schema of a table, and some sample rows
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -436,7 +436,7 @@ By default, the `schema` filter is set to `public`, and the `sampleRows` is set 
 
 Reference the results of a Google search.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -457,7 +457,7 @@ Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
 Reference an open MR for this branch on GitLab.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -476,7 +476,7 @@ You will need to create a [personal access token](https://docs.gitlab.com/ee/use
 
 You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -498,7 +498,7 @@ If you select some code to be edited, you can have the context provider filter o
 
 Reference the conversation in a Jira issue.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -520,7 +520,7 @@ This context provider supports both Jira API version 2 and 3. It will use versio
 that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
 to set the API Version to 2 using the `apiVersion` property.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -547,7 +547,7 @@ You can override this query by setting the `issueQuery` parameter.
 
 Reference the messages in a Discord channel.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -577,7 +577,7 @@ Make sure to include your own [Bot Token](https://discord.com/developers/applica
 
 The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -622,7 +622,7 @@ The response 200 OK should be a JSON object with the following structure:
 
 Reference specific git commit metadata and diff or all of the recent commits.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -643,7 +643,7 @@ The LastXCommitsDepth is how many recent commits will be included, defaults to 1
 
 Reference recent clipboard items
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {
@@ -657,7 +657,7 @@ Reference recent clipboard items
 
 Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "contextProviders": [
     {

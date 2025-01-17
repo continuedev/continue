@@ -13,7 +13,7 @@ You can get an API key from the [xAI console](https://console.x.ai/)
 
 We recommend configuring **grok-beta** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {

@@ -13,7 +13,7 @@ You can get an API key from the [Anthropic console](https://console.anthropic.co
 
 We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
@@ -50,7 +50,7 @@ Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/do
 
 To enable caching of the system message and the turn-by-turn conversation, update your your model configuration as following:
 
-```json title="config.json"
+```json title="config.json (Deprecated)"
 {
   "models": [
     {
