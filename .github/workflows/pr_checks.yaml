@@ -3,7 +3,8 @@ name: PR checks
 on:
   pull_request_target:
     branches:
-      - main
+      - granite/customization
+      - granite/integration
     paths:
       - "extensions/intellij/**"
       - "extensions/vscode/**"
@@ -13,9 +14,10 @@ on:
 
   push:
     branches:
-      - main
+      - granite/customization
+      - granite/integration
     paths:
-      - "extensions/intellij/**"
+      # - "extensions/intellij/**"
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
@@ -548,6 +550,7 @@ jobs:
           npm test
 
   jetbrains-tests:
+    # Don't run for granite/customization
     needs: [install-root, core-checks]
     runs-on: ubuntu-latest
     steps:
