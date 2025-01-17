@@ -66,7 +66,10 @@ const ModelList: React.FC<ModelListProps> = ({ className, label, value, onChange
         }),
     };
 
-    const formatOptionLabel = (modelOption: ModelOption, { context }: { context: 'menu' | 'value' }) => {
+    const formatOptionLabel = (modelOption: ModelOption | undefined, { context }: { context: 'menu' | 'value' }) => {
+        if (modelOption === undefined)
+            return <div></div>
+
         const isSelected = value === modelOption.value;
         const color = isSelected && context === 'menu' ? 'var(--vscode-quickInputList-focusForeground)' : 'var(--vscode-menu-foreground)';
         const style = {
