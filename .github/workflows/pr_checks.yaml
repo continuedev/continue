@@ -495,7 +495,7 @@ jobs:
               Xvfb -ac :99 -screen 0 1920x1080x24 &
               sleep 10 
               mkdir -p build/reports
-              ./gradlew runIdeForUiTests > build/reports/idea.log &
+              ./gradlew runIdeForUiTests &
             runTests: |
               cd extensions/intellij
               export DISPLAY=:99.0
