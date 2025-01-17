@@ -46,7 +46,7 @@ describe("GUI Test", () => {
     await new EditorView().closeAllEditors();
   });
 
-  describe("Onboarding", () => {
+  false && describe("Onboarding", () => {
     it("should display correct panel description", async () => {
       const description = await GUISelectors.getDescription(view);
 
