@@ -15,4 +15,4 @@ Otherwise, some of the next best options are:
 
 - [GPT-4o](../model-providers/top-level/openai.mdx)
 - [Gemini 1.5 Pro](../model-providers/top-level/gemini.mdx)
-- [Llama3.1 405B](../tutorials/llama3.1.md)
+- [Llama3.1 405B](../tutorials/llama3.1.mdx)

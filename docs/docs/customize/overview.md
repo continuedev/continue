@@ -25,7 +25,7 @@ You can easily access config file from the Continue Chat sidebar. Open the sideb
 
 ![configure-continue](/img/configure-continue.png)
 
-When editing this file, you can see the available options suggested as you type, or you can check the [full reference](./deep-dives/configuration.mdx).
+When editing this file, you can see the available options suggested as you type, or you can check the [full reference](./deep-dives/configuration.md).
 
 :::info
 

@@ -3,7 +3,7 @@ title: Build your own context provider
 ---
 
 :::info
-Custom context providers are added through `~/config.ts`, which has been deprecated in favor of the [`YAML Config Format`](../reference.md). We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) and [MCP Servers](../context-providers.mdx#modelcontextprotocol) to achieve similar functionality.
+Custom context providers are added through `~/config.ts`, which has been deprecated in favor of the [`YAML Config Format`](../../reference.md). We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) and [MCP Servers](../context-providers.mdx#modelcontextprotocol) to achieve similar functionality.
 :::
 
 ## Introductory Example

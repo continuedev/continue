@@ -27,7 +27,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `contextLength`: Maximum context length of the model, typically in tokens (default: 2048).
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `template`: Chat template to format messages. Auto-detected for most models but can be overridden. See intelliJ suggestions.
-- `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](/model-setup/configuration#customizing-the-edit-prompt).
+- `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. (DEPRECATED)
 - `completionOptions`: Model-specific completion options, same format as top-level [`completionOptions`](#completionoptions), which they override.
 - `systemMessage`: A system message that will precede responses from the LLM.
 - `requestOptions`: Model-specific HTTP request options, same format as top-level [`requestOptions`](#requestoptions), which they override.
