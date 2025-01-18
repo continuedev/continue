@@ -15,6 +15,7 @@ import {
   getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
 } from "core/util/uri";
+import { providers } from "../pages/AddNewModel/configs/providers";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -28,12 +29,10 @@ interface SubtextContextProvidersContextType {
     providerTitle: string | undefined,
     query: string,
   ) => ContextSubmenuItemWithProvider[];
-  initialLoadComplete: boolean;
 }
 
 const initialContextProviders: SubtextContextProvidersContextType = {
   getSubmenuContextItems: () => [],
-  initialLoadComplete: false,
 };
 
 const SubmenuContextProvidersContext =
@@ -118,8 +117,7 @@ export const SubmenuContextProvidersProvider = ({
     };
   }, [ideMessenger]);
 
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const providersLoading = useRef(new Map<string, boolean>()).current;
 
   const getSubmenuContextItems = useCallback(
     (
@@ -176,8 +174,8 @@ export const SubmenuContextProvidersProvider = ({
               };
             });
 
-          if (fallbackItems.length === 0 && !initialLoadComplete) {
-            return [
+          if (fallbackItems.length === 0) {
+            const loadingFiller = [
               {
                 id: "loading",
                 title: "Loading...",
@@ -185,6 +183,19 @@ export const SubmenuContextProvidersProvider = ({
                 providerTitle: providerTitle || "unknown",
               },
             ];
+
+            // If getting for all providers
+            if (!providerTitle) {
+              // then show loading if ANY loading
+              if (providersLoading.size > 0) {
+                return loadingFiller;
+              }
+            } else {
+              // Otherwise just check if the provider is loading
+              if (providersLoading.get(providerTitle)) {
+                return loadingFiller;
+              }
+            }
           }
 
           return fallbackItems;
@@ -203,17 +214,20 @@ export const SubmenuContextProvidersProvider = ({
         return [];
       }
     },
-    [fallbackResults, minisearches, initialLoadComplete],
+    [fallbackResults, minisearches],
   );
 
   const loadSubmenuItems = useCallback(
     async (providers: "dependsOnIndexing" | "all" | ContextProviderName[]) => {
-      setIsLoading(true);
-
       await Promise.allSettled(
         submenuContextProviders.map(
           async (description: ContextProviderDescription) => {
             try {
+              if (providersLoading.get(description.title)) {
+                return;
+              }
+              providersLoading.set(description.title, true);
+
               const refreshProvider =
                 providers === "all"
                   ? true
@@ -288,12 +302,12 @@ export const SubmenuContextProvidersProvider = ({
                 "Error details:",
                 JSON.stringify(error, Object.getOwnPropertyNames(error)),
               );
+            } finally {
+              providersLoading.set(description.title, false);
             }
           },
         ),
       );
-      setInitialLoadComplete(true);
-      setIsLoading(false);
     },
     [submenuContextProviders, disableIndexing],
   );
@@ -301,15 +315,9 @@ export const SubmenuContextProvidersProvider = ({
   useWebviewListener(
     "refreshSubmenuItems",
     async (data) => {
-      if (isLoading) {
-        return;
-      }
-      if (data.providers === "all") {
-        setInitialLoadComplete(false);
-      }
       await loadSubmenuItems(data.providers);
     },
-    [isLoading, loadSubmenuItems],
+    [loadSubmenuItems],
   );
 
   useEffect(() => {
@@ -320,7 +328,6 @@ export const SubmenuContextProvidersProvider = ({
     <SubmenuContextProvidersContext.Provider
       value={{
         getSubmenuContextItems,
-        initialLoadComplete,
       }}
     >
       {children}
