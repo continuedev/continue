@@ -70,7 +70,6 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import { isSupportedLanceDbCpuTarget } from "./util";
 import { ConfigValidationError, validateConfig } from "./validation.js";
 
 export interface ConfigResult<T> {
@@ -176,9 +175,9 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  if (!isSupportedLanceDbCpuTarget(ide)) {
-    config.disableIndexing = true;
-  }
+  // if (!isSupportedLanceDbCpuTarget(ide)) {
+  //   config.disableIndexing = true;
+  // }
 
   return { config, errors, configLoadInterrupted: false };
 }
