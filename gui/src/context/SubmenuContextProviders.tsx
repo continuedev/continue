@@ -117,7 +117,7 @@ export const SubmenuContextProvidersProvider = ({
     };
   }, [ideMessenger]);
 
-  const providersLoading = useRef(new Map<string, boolean>()).current;
+  const providersLoading = useRef(new Set<string>()).current;
 
   const getSubmenuContextItems = useCallback(
     (
@@ -192,7 +192,7 @@ export const SubmenuContextProvidersProvider = ({
               }
             } else {
               // Otherwise just check if the provider is loading
-              if (providersLoading.get(providerTitle)) {
+              if (providersLoading.has(providerTitle)) {
                 return loadingFiller;
               }
             }
@@ -223,10 +223,10 @@ export const SubmenuContextProvidersProvider = ({
         submenuContextProviders.map(
           async (description: ContextProviderDescription) => {
             try {
-              if (providersLoading.get(description.title)) {
+              if (providersLoading.has(description.title)) {
                 return;
               }
-              providersLoading.set(description.title, true);
+              providersLoading.add(description.title);
 
               const refreshProvider =
                 providers === "all"
@@ -303,7 +303,7 @@ export const SubmenuContextProvidersProvider = ({
                 JSON.stringify(error, Object.getOwnPropertyNames(error)),
               );
             } finally {
-              providersLoading.set(description.title, false);
+              providersLoading.delete(description.title);
             }
           },
         ),
