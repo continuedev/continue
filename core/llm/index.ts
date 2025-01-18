@@ -28,6 +28,7 @@ import { renderChatMessage } from "../util/messageContent.js";
 import { Telemetry } from "../util/posthog.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -55,7 +56,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { isOllamaInstalled } from "../util/ollamaHelper.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -415,10 +415,9 @@ export abstract class BaseLLM implements ILLM {
             e.code === "ECONNREFUSED" &&
             e.message.includes("http://127.0.0.1:11434")
           ) {
-            const message = (await isOllamaInstalled()) ?
-              "Unable to connect to local Ollama instance. Ollama may not be running." :
-              "Unable to connect to local Ollama instance. Ollama may not be installed or may not running."
-            ;
+            const message = (await isOllamaInstalled())
+              ? "Unable to connect to local Ollama instance. Ollama may not be running."
+              : "Unable to connect to local Ollama instance. Ollama may not be installed or may not running.";
             throw new Error(message);
           }
         }
@@ -441,6 +440,10 @@ export abstract class BaseLLM implements ILLM {
       this.completionOptions,
       options,
     );
+
+    if (completionOptions.model === "o1") {
+      completionOptions.stream = false;
+    }
 
     return { completionOptions, log, raw };
   }
