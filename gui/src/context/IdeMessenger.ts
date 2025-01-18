@@ -1,16 +1,16 @@
 import { ChatMessage, IDE, LLMFullCompletionOptions, PromptLog } from "core";
 import type { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
-import { WebviewMessengerResult } from "core/protocol/util";
-import { MessageIde } from "core/protocol/messenger/messageIde";
-import { Message } from "core/protocol/messenger";
-import { createContext } from "react";
-import { v4 as uuidv4 } from "uuid";
-import "vscode-webview";
-import { isJetBrains } from "../util";
 import {
   AsyncGeneratorYieldType,
   ProtocolGeneratorYield,
 } from "core/protocol/core";
+import { Message } from "core/protocol/messenger";
+import { MessageIde } from "core/protocol/messenger/messageIde";
+import { WebviewMessengerResult } from "core/protocol/util";
+import { createContext } from "react";
+import { v4 as uuidv4 } from "uuid";
+import "vscode-webview";
+import { isJetBrains } from "../util";
 
 interface vscode {
   postMessage(message: any): vscode;
@@ -252,10 +252,10 @@ export class IdeMessenger implements IIdeMessenger {
     }
 
     return {
-      modelTitle: next.value.content?.modelTitle,
-      prompt: next.value.content?.prompt,
-      completion: next.value.content?.completion,
-      completionOptions: next.value.content?.completionOptions,
+      modelTitle: next.value?.content?.modelTitle,
+      prompt: next.value?.content?.prompt,
+      completion: next.value?.content?.completion,
+      completionOptions: next.value?.content?.completionOptions,
     };
   }
 }
