@@ -126,6 +126,7 @@ export const SubmenuContextProvidersProvider = ({
     ): ContextSubmenuItemWithProvider[] => {
       try {
         // 1. Search using minisearch
+        debugger;
         let searchResults: (SearchResult & ContextSubmenuItemWithProvider)[] =
           [];
 
@@ -310,14 +311,22 @@ export const SubmenuContextProvidersProvider = ({
   useWebviewListener(
     "refreshSubmenuItems",
     async (data) => {
-      await loadSubmenuItems(data.providers);
+      loadSubmenuItems(data.providers);
     },
     [loadSubmenuItems],
   );
 
+  // Reload all submenu items on the initial config load
+  // TODO - could refresh on any change
+  const initialLoad = useRef(false);
+  const config = useAppSelector((store) => store.config.config);
   useEffect(() => {
+    if (!config?.contextProviders?.length || initialLoad.current) {
+      return;
+    }
     void loadSubmenuItems("all");
-  }, [loadSubmenuItems]);
+    initialLoad.current = true;
+  }, [loadSubmenuItems, config, initialLoad]);
 
   return (
     <SubmenuContextProvidersContext.Provider
