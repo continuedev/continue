@@ -177,6 +177,7 @@ export class IdeMessenger implements IIdeMessenger {
     this.post(messageType, data, messageId);
 
     const buffer: GenYield[] = [];
+    let error: string | null = null;
     let index = 0;
     let done = false;
     let returnVal = undefined;
@@ -186,6 +187,12 @@ export class IdeMessenger implements IIdeMessenger {
     }) => {
       if (event.data.messageId === messageId) {
         const responseData = event.data.data;
+
+        if ("error" in responseData && typeof responseData.error === "string") {
+          error = responseData.error;
+          return;
+        }
+
         if (responseData.done) {
           window.removeEventListener("message", handler);
           done = true;
@@ -204,6 +211,10 @@ export class IdeMessenger implements IIdeMessenger {
 
     try {
       while (!done) {
+        if (error) {
+          throw new Error(error);
+        }
+
         if (buffer.length > index) {
           const chunks = buffer.slice(index);
           index = buffer.length;
