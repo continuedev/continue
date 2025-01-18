@@ -217,95 +217,91 @@ export const SubmenuContextProvidersProvider = ({
   );
 
   const loadSubmenuItems = useCallback(
-    async (providers: "dependsOnIndexing" | "all" | ContextProviderName[]) => {
-      await Promise.allSettled(
-        submenuContextProviders.map(
-          async (description: ContextProviderDescription) => {
-            try {
-              if (providersLoading.has(description.title)) {
-                return;
-              }
-              providersLoading.add(description.title);
-
-              const refreshProvider =
-                providers === "all"
-                  ? true
-                  : providers === "dependsOnIndexing"
-                    ? description.dependsOnIndexing
-                    : providers.includes(description.title);
-
-              if (!refreshProvider) {
-                return;
-              }
-
-              if (description.dependsOnIndexing && disableIndexing) {
-                console.debug(
-                  `Skipping ${description.title} provider due to disabled indexing`,
-                );
-                return;
-              }
-              const result = await ideMessenger.request(
-                "context/loadSubmenuItems",
-                {
-                  title: description.title,
-                },
-              );
-
-              if (result.status === "error") {
-                throw new Error(result.error);
-              }
-              const submenuItems = result.content;
-              const providerTitle = description.title;
-
-              const itemsWithProvider = submenuItems.map((item) => ({
-                ...item,
-                providerTitle,
-              }));
-
-              const minisearch = new MiniSearch<ContextSubmenuItemWithProvider>(
-                {
-                  fields: ["title", "description"],
-                  storeFields: ["id", "title", "description", "providerTitle"],
-                },
-              );
-
-              minisearch.addAll(
-                submenuItems.map((item) => ({ ...item, providerTitle })),
-              );
-
-              setMinisearches((prev) => ({
-                ...prev,
-                [providerTitle]: minisearch,
-              }));
-
-              if (providerTitle === "file") {
-                setFallbackResults((prev) => ({
-                  ...prev,
-                  file: deduplicateArray(
-                    [...lastOpenFilesRef.current, ...(prev.file ?? [])],
-                    (a, b) => a.id === b.id,
-                  ),
-                }));
-              } else {
-                setFallbackResults((prev) => ({
-                  ...prev,
-                  [providerTitle]: itemsWithProvider,
-                }));
-              }
-            } catch (error) {
-              console.error(
-                `Error loading items for ${description.title}:`,
-                error,
-              );
-              console.error(
-                "Error details:",
-                JSON.stringify(error, Object.getOwnPropertyNames(error)),
-              );
-            } finally {
-              providersLoading.delete(description.title);
+    (providers: "dependsOnIndexing" | "all" | ContextProviderName[]) => {
+      submenuContextProviders.forEach(
+        async (description: ContextProviderDescription) => {
+          try {
+            if (providersLoading.has(description.title)) {
+              return;
             }
-          },
-        ),
+            providersLoading.add(description.title);
+
+            const refreshProvider =
+              providers === "all"
+                ? true
+                : providers === "dependsOnIndexing"
+                  ? description.dependsOnIndexing
+                  : providers.includes(description.title);
+
+            if (!refreshProvider) {
+              return;
+            }
+
+            if (description.dependsOnIndexing && disableIndexing) {
+              console.debug(
+                `Skipping ${description.title} provider due to disabled indexing`,
+              );
+              return;
+            }
+            const result = await ideMessenger.request(
+              "context/loadSubmenuItems",
+              {
+                title: description.title,
+              },
+            );
+
+            if (result.status === "error") {
+              throw new Error(result.error);
+            }
+            const submenuItems = result.content;
+            const providerTitle = description.title;
+
+            const itemsWithProvider = submenuItems.map((item) => ({
+              ...item,
+              providerTitle,
+            }));
+
+            const minisearch = new MiniSearch<ContextSubmenuItemWithProvider>({
+              fields: ["title", "description"],
+              storeFields: ["id", "title", "description", "providerTitle"],
+            });
+
+            minisearch.addAll(
+              submenuItems.map((item) => ({ ...item, providerTitle })),
+            );
+
+            setMinisearches((prev) => ({
+              ...prev,
+              [providerTitle]: minisearch,
+            }));
+
+            if (providerTitle === "file") {
+              setFallbackResults((prev) => ({
+                ...prev,
+                file: deduplicateArray(
+                  [...lastOpenFilesRef.current, ...(prev.file ?? [])],
+                  (a, b) => a.id === b.id,
+                ),
+              }));
+            } else {
+              setFallbackResults((prev) => ({
+                ...prev,
+                [providerTitle]: itemsWithProvider,
+              }));
+            }
+          } catch (error) {
+            console.error(
+              `Error loading items for ${description.title}:`,
+              error,
+            );
+            console.error(
+              "Error details:",
+              JSON.stringify(error, Object.getOwnPropertyNames(error)),
+            );
+          } finally {
+            providersLoading.delete(description.title);
+          }
+        },
       );
     },
     [submenuContextProviders, disableIndexing, providersLoading],
