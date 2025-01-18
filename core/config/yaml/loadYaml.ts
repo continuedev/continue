@@ -1,13 +1,12 @@
 import fs from "node:fs";
-import path from "path";
 
 import {
-  extendConfig,
+  ConfigResult,
   fillTemplateVariables,
+  resolveSecretsOnClient,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas";
-import { ValidationLevel } from "@continuedev/config-yaml/dist/validation";
+import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as YAML from "yaml";
 
@@ -26,23 +25,17 @@ import { contextProviderClassFromName } from "../../context/providers/index";
 import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
-import {
-  getConfigYamlPath,
-  getContinueDotEnv,
-  readAllGlobalPromptFiles,
-} from "../../util/paths";
-import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
-import { ConfigValidationError } from "../validation.js";
-
-import { llmsFromModelConfig } from "./models";
-import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
+import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
+import { getConfigYamlPath, getContinueDotEnv } from "../../util/paths";
+import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
+import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
-export interface ConfigResult<T> {
-  config: T | undefined;
-  errors: ConfigValidationError[] | undefined;
-  configLoadInterrupted: boolean;
-}
+import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
+import FileContextProvider from "../../context/providers/FileContextProvider";
+import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
+import { ControlPlaneClient } from "../../control-plane/client";
+import { llmsFromModelConfig } from "./models";
 
 function renderTemplateVars(configYaml: string): string {
   const data: Record<string, string> = {};
@@ -60,28 +53,20 @@ function renderTemplateVars(configYaml: string): string {
 
 function loadConfigYaml(
   workspaceConfigs: string[],
-  ideSettings: IdeSettings,
-  ideType: IdeType,
   rawYaml: string,
-): ConfigResult<ConfigYaml> {
-  const renderedYaml = renderTemplateVars(rawYaml);
-  let config = YAML.parse(renderedYaml) as ConfigYaml;
+  overrideConfigYaml: ClientConfigYaml | undefined,
+): ConfigResult<ClientConfigYaml> {
+  let config =
+    overrideConfigYaml ??
+    (YAML.parse(renderTemplateVars(rawYaml)) as ClientConfigYaml);
   const errors = validateConfigYaml(config);
 
-  if (errors?.some((error) => error.level === ValidationLevel.Error)) {
+  if (errors?.some((error) => error.fatal)) {
     return {
-      errors: errors.map((error) => ({
-        message: error.message,
-        fatal: error.level === ValidationLevel.Error,
-      })),
+      errors,
       config: undefined,
       configLoadInterrupted: true,
     };
-  }
-
-  for (const workspaceConfig of workspaceConfigs) {
-    const rendered = renderTemplateVars(workspaceConfig);
-    config = extendConfig(config, YAML.parse(rendered) as ConfigYaml);
   }
 
   // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
@@ -89,7 +74,7 @@ function loadConfigYaml(
     config,
     errors: errors.map((error) => ({
       message: error.message,
-      fatal: error.level === ValidationLevel.Error,
+      fatal: error.fatal,
     })),
     configLoadInterrupted: false,
   };
@@ -113,12 +98,13 @@ async function slashCommandsFromV1PromptFiles(
 }
 
 async function configYamlToContinueConfig(
-  config: ConfigYaml,
+  config: ClientConfigYaml,
   ide: IDE,
   ideSettings: IdeSettings,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   const continueConfig: ContinueConfig = {
@@ -126,10 +112,24 @@ async function configYamlToContinueConfig(
     models: [],
     tabAutocompleteModels: [],
     tools: [],
+    systemMessage: config.rules?.join("\n"),
     embeddingsProvider: new TransformersJsEmbeddingsProvider(),
     experimental: {
-      modelContextProtocolServers: [],
+      modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
+        transport: {
+          type: "stdio",
+          command: mcpServer.command,
+          args: mcpServer.args ?? [],
+          env: mcpServer.env,
+        },
+      })),
     },
+    docs: config.docs?.map((doc) => ({
+      title: doc.name,
+      startUrl: doc.startUrl,
+      rootUrl: doc.rootUrl,
+      faviconUrl: doc.faviconUrl,
+    })),
   };
 
   // Models
@@ -146,9 +146,13 @@ async function configYamlToContinueConfig(
         uniqueId,
         ideSettings,
         writeLog,
+        platformConfigMetadata,
+        continueConfig.systemMessage,
       );
       continueConfig.models.push(...llms);
-    } else if (model.roles?.includes("autocomplete")) {
+    }
+
+    if (model.roles?.includes("autocomplete")) {
       // Autocomplete models array
       const llms = await llmsFromModelConfig(
         model,
@@ -156,6 +160,8 @@ async function configYamlToContinueConfig(
         uniqueId,
         ideSettings,
         writeLog,
+        platformConfigMetadata,
+        continueConfig.systemMessage,
       );
       continueConfig.tabAutocompleteModels?.push(...llms);
     }
@@ -181,18 +187,33 @@ async function configYamlToContinueConfig(
 
   // TODO: Split into model roles.
 
-  // Context
+  // Context providers
+  const codebaseContextParams: IContextProvider[] =
+    (config.context || []).find((cp) => cp.uses === "codebase")?.with || {};
+  const DEFAULT_CONTEXT_PROVIDERS = [
+    new FileContextProvider({}),
+    new CodebaseContextProvider(codebaseContextParams),
+    new PromptFilesContextProvider({}),
+  ];
+
+  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
+    ({ description: { title } }) => title,
+  );
+
   continueConfig.contextProviders = config.context
     ?.map((context) => {
       const cls = contextProviderClassFromName(context.uses) as any;
       if (!cls) {
-        console.warn(`Unknown context provider ${context.uses}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.uses)) {
+          console.warn(`Unknown context provider ${context.uses}`);
+        }
         return undefined;
       }
       const instance: IContextProvider = new cls(context.with ?? {});
       return instance;
     })
     .filter((p) => !!p) as IContextProvider[];
+  continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
   // Embeddings Provider
   const embedConfig = config.models?.find((model) =>
@@ -283,16 +304,20 @@ export async function loadContinueConfigFromYaml(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
-  overrideConfigYaml: string | undefined,
+  overrideConfigYaml: ClientConfigYaml | undefined,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
+  controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<ContinueConfig>> {
   const configYamlPath = getConfigYamlPath(ideType);
-  const rawYaml = fs.readFileSync(configYamlPath, "utf-8");
+  const rawYaml =
+    overrideConfigYaml === undefined
+      ? fs.readFileSync(configYamlPath, "utf-8")
+      : "";
 
-  const configYamlResult = await loadConfigYaml(
+  const configYamlResult = loadConfigYaml(
     workspaceConfigs,
-    ideSettings,
-    ideType,
-    overrideConfigYaml ?? rawYaml,
+    rawYaml,
+    overrideConfigYaml,
   );
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
@@ -303,13 +328,24 @@ export async function loadContinueConfigFromYaml(
     };
   }
 
-  const continueConfig = await configYamlToContinueConfig(
+  const configYaml = await resolveSecretsOnClient(
     configYamlResult.config,
+    ide.readSecrets.bind(ide),
+    async (secretNames: string[]) => {
+      const secretValues = await controlPlaneClient.syncSecrets(secretNames);
+      await ide.writeSecrets(secretValues);
+      return secretValues;
+    },
+  );
+
+  const continueConfig = await configYamlToContinueConfig(
+    configYaml,
     ide,
     ideSettings,
     uniqueId,
     writeLog,
     workOsAccessToken,
+    platformConfigMetadata,
   );
 
   const systemPromptDotFile = await getSystemPromptDotFile(ide);

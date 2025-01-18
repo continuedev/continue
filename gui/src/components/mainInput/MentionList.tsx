@@ -46,11 +46,11 @@ import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { ComboBoxItem, ComboBoxItemType } from "./types";
 import { DiscordIcon } from "../svg/DiscordIcon";
-import { GoogleIcon } from "../svg/GoogleIcon";
-import { GitlabIcon } from "../svg/GitlabIcon";
 import { GithubIcon } from "../svg/GithubIcon";
+import { GitlabIcon } from "../svg/GitlabIcon";
+import { GoogleIcon } from "../svg/GoogleIcon";
+import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -81,6 +81,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   google: GoogleIcon,
   "gitlab-mr": GitlabIcon,
   http: GlobeAltIcon,
+  trash: TrashIcon,
 };
 
 export function getIconFromDropdownItem(
@@ -413,6 +414,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                 key={index}
                 onClick={() => selectItem(index)}
                 onMouseEnter={() => setSelectedIndex(index)}
+                data-testid="context-provider-dropdown-item"
               >
                 <span className="flex w-full items-center justify-between">
                   <div className="flex items-center justify-center">
@@ -451,7 +453,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         />
                       )}
                     {item.subActions?.map((subAction) => {
-                      const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
+                      const Icon = getIconFromDropdownItem(
+                        subAction.icon,
+                        "action",
+                      );
                       return (
                         <HeaderButtonWithToolTip
                           onClick={(e) => {

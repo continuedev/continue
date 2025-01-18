@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - "extensions/intellij/**"
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
@@ -274,6 +275,11 @@ jobs:
         run: |
           cd core
           npm test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
@@ -370,7 +376,7 @@ jobs:
           path: extensions/vscode/e2e/storage
 
   vscode-e2e-tests:
-    name: ${{ matrix.test_file }}"
+    name: ${{ matrix.test_file }} (${{ matrix.command }})
     needs:
       [
         vscode-download-e2e-dependencies,
@@ -384,6 +390,7 @@ jobs:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
+        command: [ "e2e:ci:run", "e2e:ci:run-yaml" ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -432,8 +439,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run
-
+          TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 
@@ -546,7 +552,7 @@ jobs:
         with:
           url: http://127.0.0.1:8082
           max-attempts: 15
-          retry-delay: 5s
+          retry-delay: 30s
 
       - name: Run tests
         run: |
@@ -573,5 +579,3 @@ jobs:
           name: jb-failure-report
           path: |
             ${{ github.workspace }}/extensions/intellij/build/reports
-
-

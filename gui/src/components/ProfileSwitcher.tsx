@@ -7,7 +7,7 @@ import { UserCircleIcon as UserCircleIconSolid } from "@heroicons/react/24/solid
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -21,11 +21,10 @@ import {
 import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useAppSelector } from "../redux/hooks";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
-import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
-import { useAppSelector } from "../redux/hooks";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -148,9 +147,6 @@ function ProfileSwitcher() {
 
       const shouldShowPopup =
         !lastControlServerBetaEnabledStatus && enableControlServerBeta;
-      if (shouldShowPopup) {
-        ideMessenger.ide.showToast("info", "Continue for Teams enabled");
-      }
     });
   }, []);
 

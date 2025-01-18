@@ -80,6 +80,7 @@ export function toChatBody(
     stream: options.stream ?? true,
     stop: options.stop,
     prediction: options.prediction,
+    tool_choice: options.toolChoice,
   };
 
   if (options.tools?.length) {

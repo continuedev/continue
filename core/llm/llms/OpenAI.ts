@@ -113,6 +113,10 @@ class OpenAI extends BaseLLM {
     };
   }
 
+  protected extraBodyProperties(): Record<string, any> {
+    return {};
+  }
+
   protected getMaxStopWords(): number {
     const url = new URL(this.apiBase!);
 
@@ -148,6 +152,10 @@ class OpenAI extends BaseLLM {
 
       // b) don't support system message
       finalOptions.messages = formatMessageForO1(finalOptions.messages);
+    }
+
+    if (options.model === "o1") {
+      finalOptions.stream = false;
     }
 
     if (options.prediction && this.supportsPrediction(options.model)) {
@@ -241,6 +249,11 @@ class OpenAI extends BaseLLM {
       body.messages = formatMessageForO1(body.messages);
     }
 
+    if (body.model === "o1") {
+      // o1 doesn't support streaming
+      body.stream = false;
+    }
+
     if (body.prediction && this.supportsPrediction(body.model)) {
       if (body.presence_penalty) {
         // prediction doesn't support > 0
@@ -278,6 +291,7 @@ class OpenAI extends BaseLLM {
       body: JSON.stringify({
         ...args,
         stream: true,
+        ...this.extraBodyProperties(),
       }),
       signal,
     });
@@ -319,7 +333,10 @@ class OpenAI extends BaseLLM {
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
       headers: this._getHeaders(),
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        ...this.extraBodyProperties(),
+      }),
       signal,
     });
 
@@ -358,6 +375,7 @@ class OpenAI extends BaseLLM {
         presence_penalty: options.presencePenalty,
         stop: options.stop,
         stream: true,
+        ...this.extraBodyProperties(),
       }),
       headers: {
         "Content-Type": "application/json",
@@ -404,6 +422,7 @@ class OpenAI extends BaseLLM {
       body: JSON.stringify({
         input: chunks,
         model: this.model,
+        ...this.extraBodyProperties(),
       }),
       headers: {
         Authorization: `Bearer ${this.apiKey}`,

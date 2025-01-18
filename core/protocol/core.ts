@@ -1,7 +1,4 @@
-import { AutocompleteInput } from "../autocomplete/util/types";
-import { ProfileDescription } from "../config/ConfigHandler";
-import { ConfigResult } from "../config/load";
-
+import { ConfigResult } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -23,6 +20,8 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { AutocompleteInput } from "../autocomplete/util/types";
+import { ProfileDescription } from "../config/ConfigHandler";
 
 export type OnboardingModes =
   | "Local"

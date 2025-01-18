@@ -107,6 +107,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
     <div
       onClick={openContextItem}
       className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      data-testid="context-items-peek-item"
     >
       <div className="flex w-full items-center">
         {getContextItemIcon()}
@@ -161,6 +162,7 @@ function ContextItemsPeek({
       <div
         className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
         onClick={() => setOpen((prev) => !prev)}
+        data-testid="context-items-peek"
       >
         <div className="relative mr-1 h-4 w-4">
           <ChevronRightIcon

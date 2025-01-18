@@ -25,7 +25,7 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 
-import { ConfigResult } from "../../config/load";
+import { ConfigResult } from "@continuedev/config-yaml";
 import { Article, chunkArticle, pageToArticle } from "./article";
 import DocsCrawler from "./DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
