@@ -5,6 +5,9 @@ keywords: [embedding]
 sidebar_position: 3
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
 In Continue, embeddings are generated during indexing and then used by [@Codebase](../deep-dives/codebase.mdx) to perform similarity search over your codebase.
