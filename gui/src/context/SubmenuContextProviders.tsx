@@ -126,7 +126,6 @@ export const SubmenuContextProvidersProvider = ({
     ): ContextSubmenuItemWithProvider[] => {
       try {
         // 1. Search using minisearch
-        debugger;
         let searchResults: (SearchResult & ContextSubmenuItemWithProvider)[] =
           [];
 
