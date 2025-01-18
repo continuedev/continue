@@ -12,7 +12,7 @@ Hugging Face Inference Endpoints are an easy way to setup instances of open-sour
 		  - name: Hugging Face Inference API
 		    provider: huggingface-inference-api
 		    model: MODEL_NAME
-		    apiKeySecret: HF_TOKEN
+		    apiKey:  ${{ secrets.HF_API_KEY }}
 		    apiBase: HF_URL_BASE
 		```
 	</TabItem>

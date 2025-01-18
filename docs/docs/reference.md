@@ -116,7 +116,7 @@ models:
 
 The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
 
-More information about usage/params for each context provider can be found [here](/customize/context-providers)
+More information about usage/params for each context provider can be found [here](/customize/context-providers.mdx)
 
 **Properties:**
 

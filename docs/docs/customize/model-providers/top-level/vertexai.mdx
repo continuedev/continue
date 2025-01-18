@@ -21,7 +21,7 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
       - name: Claude 3.5 Sonnet
         provider: vertexai
         model: claude-3-5-sonnet-20240620
-        projectId: [PROJECT_ID]
+        projectId: <PROJECT_ID>
         region: us-east5
     ```
     </TabItem>
@@ -51,7 +51,7 @@ We recommend configuring **Codestral** or **code-gecko** as your autocomplete mo
       - name: Codestral (Vertex AI)
         provider: vertexai
         model: codestral
-        projectId: [PROJECT_ID]
+        projectId: <PROJECT_ID>
         region: us-central1
         roles:
           - autocomplete
@@ -81,7 +81,7 @@ We recommend configuring **text-embedding-004** as your embeddings model.
           - name: Text Embedding-004
             provider: vertexai
             model: text-embedding-004
-            projectId: [PROJECT_ID]
+            projectId: <PROJECT_ID>
             region: us-central1
             roles:
               - embed
@@ -103,4 +103,4 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 
 Vertex AI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.

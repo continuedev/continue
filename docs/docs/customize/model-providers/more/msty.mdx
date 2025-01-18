@@ -5,18 +5,27 @@ import TabItem from "@theme/TabItem";
 
 [Msty](https://msty.app/) is an application for Windows, Mac, and Linux that makes it really easy to run online as well as local open-source models, including Llama-2, DeepSeek Coder, etc. No need to fidget with your terminal, run a command, or anything. Just download the app from the website, click a button, and you are up and running. Continue can then be configured to use the `Msty` LLM class:
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Msty",
-      "provider": "msty",
-      "model": "deepseek-coder:6.7b",
-      "completionOptions": {}
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Msty
+      provider: msty
+      model: deepseek-coder:6.7b
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Msty",
+        "provider": "msty",
+        "model": "deepseek-coder:6.7b",
+      }
+    ]
+  ```
+  </TabItem>
+</Tabs>
 
 ## Completion Options
 
@@ -33,21 +42,34 @@ In addition to the model type, you can also configure some of the parameters tha
 
 If you need to send custom headers for authentication, you may use the `requestOptions.headers` property like this:
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Msty",
-      "provider": "msty",
-      "model": "deepseek-coder:6.7b",
-      "requestOptions": {
-        "headers": {
-          "Authorization": "Bearer xxx"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Msty
+      provider: msty
+      model: deepseek-coder:6.7b
+      requestOptions:
+        headers:
+          Authorization: Bearer xxx
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Msty",
+        "provider": "msty",
+        "model": "deepseek-coder:6.7b",
+        "requestOptions": {
+          "headers": {
+            "Authorization": "Bearer xxx"
+          }
         }
       }
-    }
-  ]
-}
-```
+    ]
+  ```
+  </TabItem>
+</Tabs>
 
 [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Msty.ts)

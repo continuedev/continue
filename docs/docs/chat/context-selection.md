@@ -27,7 +27,7 @@ You can include a folder in your current workspace as context by typing [`@Folde
 
 ## Codebase search
 
-You can automatically include relevant files from your codebase as context by typing [`@Codebase`](../customize/context-providers.mdx#codebase). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.md).
+You can automatically include relevant files from your codebase as context by typing [`@Codebase`](../customize/context-providers.mdx#codebase). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.mdx).
 
 ## Documentation site
 

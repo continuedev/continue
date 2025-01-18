@@ -15,7 +15,7 @@ As an example, say you are working on solving a new GitHub Issue. You type '@Iss
 
 ## Built-in Context Providers
 
-To use any of the built-in context providers, open `config.json` and add it to the `contextProviders` list.
+You can add any built-in context-providers in your config file as shown below:
 
 ### `@File`
 
@@ -151,7 +151,7 @@ Reference the contents from any documentation site.
 
 Note that this will only enable the `@Docs` context provider.
 
-To use it, you need to add a documentation site to your `config.json`. See the [docs](../customize/deep-dives/docs.md) page for more information.
+To use it, you need to add a documentation site to your config file. See the [docs](../customize/deep-dives/docs.md) page for more information.
 
 ### `@Open`
 
@@ -231,7 +231,7 @@ Reference the most relevant snippets from your codebase.
   </TabItem>
 </Tabs>
 
-Read more about indexing and retrieval [here](../customize/deep-dives/codebase.md).
+Read more about indexing and retrieval [here](../customize/deep-dives/codebase.mdx).
 
 ### `@Folder`
 
@@ -276,8 +276,6 @@ Reference the results of codebase search, just like the results you would get fr
   ```
   </TabItem>
 </Tabs>
-
-This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
 
 This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
 
@@ -492,7 +490,7 @@ You'll then be able to type "@" and see "MCP" in the context providers dropdown.
 
 ### Prompt Files
 
-See [Prompt Files](/customize/deep-dives/prompt-files). Prompt files are not added directly to the config file; prompt files are parsed and injected into the config automatically, to be used like other context providers.
+See [Prompt Files](/customize/deep-dives/prompt-file.mdx). Prompt files are not added directly to the config file; prompt files are parsed and injected into the config automatically, to be used like other context providers.
 
 ### `@Issue`
 

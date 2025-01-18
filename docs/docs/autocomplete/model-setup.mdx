@@ -23,7 +23,7 @@ For the best Autocomplete experience, we recommend using Codestral through the [
     - name: Codestral
       provider: mistral
       model: codestral-latest 
-      apiKey: YOUR_API_KEY
+      apiKey: CODESTRAL_API_KEY
       roles:
         - autocomplete
   ```
@@ -46,7 +46,7 @@ The API keys for Codestral and the general Mistral APIs are different. If you ar
 
 ## Local, offline / self-hosted experience
 
-For those preferring local execution or self-hosting,`Qwen2.5-Coder 1.5B` offers a good balance of performance and quality for most users (e.g. using [Ollama](../customize/model-providers/top-level/ollama.md) or [LM Studio](../customize/model-providers/more/lmstudio.md)).
+For those preferring local execution or self-hosting,`Qwen2.5-Coder 1.5B` offers a good balance of performance and quality for most users (e.g. using [Ollama](../customize/model-providers/top-level/ollama.mdx) or [LM Studio](../customize/model-providers/more/lmstudio.mdx)).
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -110,4 +110,4 @@ When using a remote instance you need to set the `"apiBase"` value in the config
 
 ## Other experiences
 
-There are many more models and providers you can use with Autocomplete. Check them out [here](../customize/model-types/autocomplete.md). You can also see more examples of Autocomplete configuration [here](../customize/deep-dives/autocomplete.md)
+There are many more models and providers you can use with Autocomplete. Check them out [here](../customize/model-types/autocomplete.md). You can also see more examples of Autocomplete configuration [here](../customize/deep-dives/autocomplete.mdx)

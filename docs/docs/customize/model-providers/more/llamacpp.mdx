@@ -11,17 +11,28 @@ Run the llama.cpp server binary to start the API server. If running on a remote 
 
 After it's up and running, change `~/.continue/config.json` to look like this:
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Llama CPP",
-      "provider": "llama.cpp",
-      "model": "MODEL_NAME",
-      "apiBase": "http://localhost:8080"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Llama CPP
+      provider: llama.cpp
+      model: MODEL_NAME
+      apiBase: http://localhost:8080
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Llama CPP",
+        "provider": "llama.cpp",
+        "model": "MODEL_NAME",
+        "apiBase": "http://localhost:8080"
+      }
+    ]
+  ```
+  </TabItem>
+</Tabs>
 
 [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/LlamaCpp.ts)

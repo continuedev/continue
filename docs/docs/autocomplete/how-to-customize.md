@@ -19,4 +19,4 @@ Continue offers a handful of parameters in [`config.json` (Deprecated)](../json-
 - `prefixPercentage`: Defines the proportion of the prompt dedicated to the code before the cursor.
 - `multilineCompletions`: Controls whether suggestions can span multiple lines ("always", "never", or "auto").
 
-For a comprehensive guide on all configuration options and their impacts, see the [Autocomplete deep dive](../customize/deep-dives/autocomplete.md).
+For a comprehensive guide on all configuration options and their impacts, see the [Autocomplete deep dive](../customize/deep-dives/autocomplete.mdx).

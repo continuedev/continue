@@ -21,7 +21,7 @@ We recommend configuring **grok-beta** as your chat model.
     - name: Grok Beta
       provider: xAI
       model: grok-beta
-      apiKey: <API_KEY>
+      apiKey: ${{ secrets.GROK_API_KEY }}
   ```
   </TabItem>
 	<TabItem value="json" label="JSON">
@@ -31,7 +31,7 @@ We recommend configuring **grok-beta** as your chat model.
           "title": "Grok Beta",
           "provider": "xAI",
           "model": "grok-beta",
-          "apiKey": "[API_KEY]"
+          "apiKey": "<API_KEY>"
         }
       ]
     ```
@@ -48,10 +48,10 @@ xAI currently does not offer any autocomplete models.
 
 xAI currently does not offer any embeddings models.
 
-[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
+[Click here](../../model-types/embeddings.mdx) to see a list of embeddings model providers.
 
 ## Reranking model
 
 xAI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.

@@ -21,7 +21,7 @@ We recommend configuring **DeepSeek Chat** as your chat model.
 		  - name: DeepSeek Chat
 		    provider: deepseek
 		    model: deepseek-chat
-		    apiKey: [API_KEY]
+		    apiKey: ${{ secrets.DEEPSEEK_API_KEY }}
 		```
 	</TabItem>
 	<TabItem value="json" label="JSON">
@@ -68,10 +68,10 @@ We recommend configuring **DeepSeek Coder** as your autocomplete model.
 
 DeepSeek currently does not offer any embeddings models.
 
-[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
+[Click here](../../model-types/embeddings.mdx) to see a list of embeddings model providers.
 
 ## Reranking model
 
 DeepSeek currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.

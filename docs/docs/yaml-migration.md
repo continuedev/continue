@@ -37,11 +37,10 @@ Add all model configurations in `config.json`, including models in `models`, `ta
   - `inlineEdit` -> e.g. `roles: [chat, edit]`
   - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
 
-Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/yaml-reference#requestoptions)
+Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/reference#requestoptions)
 
-Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/yaml-reference#completionoptions)
+Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/reference#completionoptions)
 
-<!-- TODO - API KEY -> apiKeySecret? -->
 <!-- TODO - ollama autodetect supported? -->
 
 **Before**
@@ -103,7 +102,7 @@ models:
   - name: GPT-4
     provider: openai
     model: gpt-4
-    apiKey: <API_KEY>
+    apiKey: ${{ secrets.OPENAI_KEY }}
     defaultCompletionOptions:
       temperature: 0.5
       maxTokens: 2000
@@ -113,7 +112,7 @@ models:
 
   - name: My Voyage Reranker
     provider: voyage
-    apiKey: <API_KEY>
+    apiKey: ${{ secrets.VOYAGE_KEY }}
     roles:
       - rerank
 
@@ -125,7 +124,7 @@ models:
 
   - name: My Ada Embedder
     provider: openai
-    apiKey: <API_KEY>
+    apiKey: ${{ secrets.ADA_API_KEY }}
     roles:
       - embed
 
@@ -139,7 +138,7 @@ models:
     apiBase: http://3.3.3.3/v1
     requestOptions:
       headers:
-        X-Auth-Token: <API_KEY>
+        X-Auth-Token: ${{ secrets.CUSTOM_API_KEY }}
     roles:
       - chat
       - apply
@@ -325,13 +324,16 @@ mcpServers:
 
 ## Deprecated configuration options
 
-The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
+The following top-level fields are not yet supported in the YAML config file, and you will need to stick with `config.json` to use them for now
 
 - Slash commands (JSON `slashCommands`)
 - top-level `requestOptions`
 - top-level `completionOptions`
 - `tabAutocompleteOptions`
 - `analytics`
+
+The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
+
 - `customCommands`
 - `disableSessionTitles`
 - `experimental`
@@ -342,4 +344,4 @@ The following top-level fields from `config.json` have been deprecated. Most UI-
 
 ## New Configuration options
 
-The YAML configuration format offers new configuration options not available in the JSON format. See the [YAML Config Reference](/yaml-reference) for more information.
+The YAML configuration format offers new configuration options not available in the JSON format. See the [YAML Config Reference](./reference) for more information.

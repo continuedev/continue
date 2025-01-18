@@ -26,24 +26,14 @@ The following usage information is collected and reported:
 
 ## How to Opt Out
 
-You can disable anonymous telemetry by modifying the `config.json` file located in the `~/.continue` directory. This file typically includes the following entry:
-
-```json title="config.json (Deprecated)"
-{
-  "allowAnonymousTelemetry": true
-}
-```
-
-To opt out, change the value of `allowAnonymousTelemetry` to `false`. Alternatively, you can disable telemetry through your VS Code settings by unchecking the "Continue: Telemetry Enabled" box.
-
-### Steps to Disable Telemetry via Configuration File
+### Via `config.json` File
 
 1. Open the `~/.continue/config.json` file in your text editor.
-2. Locate the `"allowAnonymousTelemetry"` setting.
+2. Locate and/or add the `"allowAnonymousTelemetry"` setting.
 3. Change the value from `true` to `false`.
 4. Save the file.
 
-### Steps to Disable Telemetry via VS Code Settings
+### Via VS Code Settings
 
 1. Open VS Code.
 2. Navigate to `File` > `Preferences` > `Settings` (or use the keyboard shortcut <kbd>ctrl</kbd> + <kbd>,</kbd> on Windows/Linux or <kbd>cmd</kbd> + <kbd>,</kbd> on macOS).

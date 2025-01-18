@@ -14,18 +14,29 @@ You can get an API key from the [Anthropic console](https://console.anthropic.co
 
 We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Claude 3.5 Sonnet",
-      "provider": "anthropic",
-      "model": "claude-3-5-sonnet-latest",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-latest",
+        "apiKey": "[API_KEY]"
+      }
+    ]
+  ```
+  </TabItem>
+</Tabs>
 
 ## Autocomplete model
 
@@ -37,13 +48,13 @@ Anthropic currently does not offer any autocomplete models.
 
 Anthropic currently does not offer any embeddings models.
 
-[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
+[Click here](../../model-types/embeddings.mdx) to see a list of embeddings model providers.
 
 ## Reranking model
 
 Anthropic currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.
 
 ## Prompt caching
 
@@ -51,11 +62,25 @@ Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/do
 
 To enable caching of the system message and the turn-by-turn conversation, update your your model configuration as following:
 
-```json title="config.json (Deprecated)"
-{
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Anthropic
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
+      roles:
+        - chat
+      cacheBehavior:
+        cacheSystemMessage: true
+        cacheConversation: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
   "models": [
     {
-      // Enable prompt caching
       "cacheBehavior": {
         "cacheSystemMessage": true,
         "cacheConversation": true
@@ -66,5 +91,6 @@ To enable caching of the system message and the turn-by-turn conversation, updat
       "apiKey": "[API_KEY]"
     }
   ]
-}
-```
+  ```
+  </TabItem>
+</Tabs>

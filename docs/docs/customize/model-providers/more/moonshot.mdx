@@ -10,20 +10,31 @@ import TabItem from "@theme/TabItem";
 To use Moonshot AI models, you need to:
 
 1. Get an API key from [Moonshot AI Platform](https://platform.moonshot.cn/)
-2. Add the following configuration to your `config.json`:
+2. Add the following configuration:
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Moonshot",
-      "provider": "moonshot",
-      "model": "moonshot-v1-8k",
-      "apiKey": "YOUR_API_KEY"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+    ```yaml title="Package or config.yaml"
+    models:
+      - name: Moonshot
+        provider: moonshot
+        model: moonshot-v1-8k
+        apiKey: apiKey: ${{ secrets.MOONSHOT_API_KEY }}
+    ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+    ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Moonshot",
+        "provider": "moonshot",
+        "model": "moonshot-v1-8k",
+        "apiKey": "YOUR_API_KEY"
+      }
+    ]
+    ```
+  </TabItem>
+</Tabs>
 
 ## Available Models
 
@@ -45,20 +56,35 @@ Moonshot AI currently provides the following models:
 
 Here's a complete configuration example:
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Moonshot-8K",
-      "provider": "moonshot",
-      "model": "moonshot-v1-8k",
-      "apiKey": "YOUR_API_KEY",
-      "completionOptions": {
-        "temperature": 0.7,
-        "topP": 0.95,
-        "maxTokens": 2048
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Moonshot-8K
+      provider: moonshot
+      model: moonshot-v1-8k
+      apiKey: apiKey: ${{ secrets.MOONSHOT_API_KEY }}
+      defaultCompletionOptions:
+        temperature: 0.7
+        topP: 0.95
+        maxTokens: 2048
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Moonshot-8K",
+        "provider": "moonshot",
+        "model": "moonshot-v1-8k",
+        "apiKey": "YOUR_API_KEY",
+        "completionOptions": {
+          "temperature": 0.7,
+          "topP": 0.95,
+          "maxTokens": 2048
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  ```
+  </TabItem>
+</Tabs>

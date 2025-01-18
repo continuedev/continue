@@ -7,34 +7,58 @@ Kindo offers centralized control over your organization's AI operations, ensurin
 
 ## Config Example
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Claude 3.5 Sonnet",
-      "provider": "kindo",
-      "model": "claude-3-5-sonnet",
-      "apiKey": "<KINDO_API_KEY>"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: kindo
+      model: claude-3-5-sonnet
+      apiKey: ${{ secrets.KINDO_API_KEY }}
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet",
+        "provider": "kindo",
+        "model": "claude-3-5-sonnet",
+        "apiKey": "<KINDO_API_KEY>"
+      }
+    ]
+  ```
+  </TabItem>
+</Tabs>
 
 ## Tab Autocomplete Config Example
 
-```json title="config.json (Deprecated)"
-{
-  "tabAutocompleteModel": [
-    {
-      "title": "WhiteRabbitNeo",
-      "provider": "kindo",
-      "model": "/models/WhiteRabbitNeo-33B-DeepSeekCoder",
-      "apiKey": "<KINDO_API_KEY>",
-      "template": "none"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+    ```yaml title="Package or config.yaml"
+    models:
+      - name: WhiteRabbitNeo
+        provider: kindo
+        model: /models/WhiteRabbitNeo-33B-DeepSeekCoder
+        apiKey: ${{ secrets.KINDO_API_KEY }}
+        roles:
+          - autocomplete
+    ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+    ```json title="config.json (Deprecated)"
+      "tabAutocompleteModel": [
+        {
+          "title": "WhiteRabbitNeo",
+          "provider": "kindo",
+          "model": "/models/WhiteRabbitNeo-33B-DeepSeekCoder",
+          "apiKey": "<KINDO_API_KEY>",
+          "template": "none"
+        }
+      ]
+    ```
+  </TabItem>
+</Tabs>
 
 ## Security
 

@@ -18,11 +18,6 @@ There are two ways to add custom slash commands:
 
 ### Custom Slash Commands with `config.ts`
 
-<!-- TODO: We need a config.ts reference -->
-<!-- :::tip[config.ts]
-Before adding a custom slash command, we recommend reading the [introduction to `config.ts`](../customize/deep-dives/ways-to-configure.md).
-::: -->
-
 If you want to go a step further than writing custom commands with natural language, you can write a custom function that returns the response. This requires using `config.ts` instead of `config.json`.
 
 To do this, push a new `SlashCommand` object to the `slashCommands` list. This object contains "name", the name that you will type to invoke the slash command, "description", the description seen in the dropdown menu, and "run". The `run` function is any async generator that should yield strings as you want them to be streamed to the UI. As an argument to the function, you have access to a `ContinueSDK` object with utilities such as access to certain information/actions within the IDE, the current language model, and a few other utilities. For example, here is a slash command that generates a commit message:
@@ -51,11 +46,6 @@ export function modifyConfig(config: Config): Config {
 }
 ```
 
-<!-- TODO: We need a config.ts reference -->
-<!-- For full `config.ts` reference, see [here](reference/config-ts.md). -->
-
 ## Other custom actions
 
 Currently the other action triggers are not open for configuration, but we plan to allow this via .prompt files in the future.
-
-<!-- For any actions defined in a .prompt file, you can [configure a specific model](TODO). -->

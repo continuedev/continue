@@ -18,16 +18,16 @@ For the best overall Chat experience, you will want to use a 400B+ parameter mod
 
 ### Claude Sonnet 3.5 from Anthropic
 
-Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customize/model-providers/top-level/anthropic.md).
+Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customize/model-providers/top-level/anthropic.mdx).
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   models:
-  - title: Claude 3.5 Sonnet
+  - name: Claude 3.5 Sonnet
     provider: anthropic
     model: claude-3-5-sonnet-latest
-    apiKeySecret: ANTHROPIC_API_KEY
+    apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -46,7 +46,7 @@ Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customiz
 
 ### Llama 3.1 405B from Meta
 
-If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your best option right now. You will need to decide if you use it through a SaaS model provider (e.g. [Together](../customize/model-providers/more/together.md) or [Groq](../customize/model-providers/more/groq.md)) or self-host it (e.g. using [vLLM](../customize/model-providers//more/vllm.md) or [Ollama](../customize/model-providers/top-level/ollama.md)).
+If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your best option right now. You will need to decide if you use it through a SaaS model provider (e.g. [Together](../customize/model-providers/more/together.mdx) or [Groq](../customize/model-providers/more/groq.mdx)) or self-host it (e.g. using [vLLM](../customize/model-providers//more/vllm.mdx) or [Ollama](../customize/model-providers/top-level/ollama.mdx)).
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -54,35 +54,35 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
         <TabItem value="Together">
         ```yaml title="Package or config.yaml"
         models:
-            - title: "Llama 3.1 405B"
-                provider: "together"
-                model: "llama3.1-405b"
-                apiKeySecret: "TOGETHER_API_KEY"
+          - name: "Llama 3.1 405B"
+            provider: "together"
+            model: "llama3.1-405b"
+            apiKey: ${{ secrets.TOGETHER_API_KEY }}
         ```
         </TabItem>
         <TabItem value="Groq">
         ```yaml title="Package or config.yaml"
         models:
-            - title: "Llama 3.1 405B"
-                provider: "groq"
-                model: "llama3.1-405b"
-                apiKeySecret: "GROQ_API_KEY"
+          - name: "Llama 3.1 405B"
+            provider: "groq"
+            model: "llama3.1-405b"
+            apiKey: ${{ secrets.GROQ_API_KEY }}
         ```
         </TabItem>
         <TabItem value="vLLM">
         ```yaml title="Package or config.yaml"
         models:
-            - title: "Llama 3.1 405B"
-                provider: "vllm"
-                model: "llama3.1-405b"
+          - name: "Llama 3.1 405B"
+            provider: "vllm"
+            model: "llama3.1-405b"
         ```
         </TabItem>
         <TabItem value="Ollama">
         ```yaml title="Package or config.yaml"
         models:
-            - title: "Llama 3.1 405B"
-                provider: "ollama"
-                model: "llama3.1:405b"
+          - name: "Llama 3.1 405B"
+            provider: "ollama"
+            model: "llama3.1:405b"
         ```
         </TabItem>
     </Tabs>
@@ -141,16 +141,16 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
 
 ### GPT-4o from OpenAI
 
-If you prefer to use a model from [OpenAI](../customize/model-providers/top-level/openai.md), then we recommend GPT-4o.
+If you prefer to use a model from [OpenAI](../customize/model-providers/top-level/openai.mdx), then we recommend GPT-4o.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
     models:
-        - title: GPT-4o
-            provider: openai
-            model: ''
-            apiKey: [OPENAI_API_KEY]
+      - name: GPT-4o
+        provider: openai
+        model: ''
+        apiKey: ${{ secrets.OPENAI_API_KEY }}
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -169,28 +169,28 @@ If you prefer to use a model from [OpenAI](../customize/model-providers/top-leve
 
 ### Gemini 1.5 Pro from Google
 
-If you prefer to use a model from [Google](../customize/model-providers/top-level/gemini.md), then we recommend Gemini 1.5 Pro.
+If you prefer to use a model from [Google](../customize/model-providers/top-level/gemini.mdx), then we recommend Gemini 1.5 Pro.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
     models:
-        - title: Gemini 1.5 Pro
+      - name: Gemini 1.5 Pro
         provider: gemini
         model: gemini-1.5-pro-latest
-        apiKey: [GEMINI_API_KEY]
+        apiKey: ${{ secrets.GEMINI_API_KEY }}
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
     ```json title="config.json (Deprecated)"
-    "models": [
+        "models": [
         {
-        "title": "Gemini 1.5 Pro",
-        "provider": "gemini",
-        "model": "gemini-1.5-pro-latest",
-        "apiKey": "[GEMINI_API_KEY]"
+            "title": "Gemini 1.5 Pro",
+            "provider": "gemini",
+            "model": "gemini-1.5-pro-latest",
+            "apiKey": "[GEMINI_API_KEY]"
         }
-    ]
+        ]
     ```
   </TabItem>
 </Tabs>
@@ -201,7 +201,7 @@ For the best local, offline Chat experience, you will want to use a model that i
 
 ### Llama 3.1 8B
 
-If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../customize/model-providers/top-level/ollama.md) or [LM Studio](../customize/model-providers/more/lmstudio.md)).
+If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../customize/model-providers/top-level/ollama.mdx) or [LM Studio](../customize/model-providers/more/lmstudio.mdx)).
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -209,17 +209,17 @@ If your local machine can run an 8B parameter model, then we recommend running L
         <TabItem value="Ollama">
         ```yaml title="Package or config.yaml"
         models:
-            - title: Llama 3.1 8B
-                provider: ollama
-                model: llama3.1:8b
+          - name: Llama 3.1 8B
+            provider: ollama
+            model: llama3.1:8b
         ```
         </TabItem>
         <TabItem value="LM Studio">
         ```yaml title="Package or config.yaml"
         models:
-            - title: Llama 3.1 8B
-                provider: lmstudio
-                model: llama3.1:8b
+          - name: Llama 3.1 8B
+            provider: lmstudio
+            model: llama3.1:8b
         ```
         </TabItem>
     </Tabs>
@@ -254,7 +254,7 @@ If your local machine can run an 8B parameter model, then we recommend running L
 
 ### DeepSeek Coder 2 16B
 
-If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../customize/model-providers/top-level/ollama.md) or [LM Studio](../customize/model-providers/more/lmstudio.md)).
+If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../customize/model-providers/top-level/ollama.mdx) or [LM Studio](../customize/model-providers/more/lmstudio.mdx)).
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -262,17 +262,17 @@ If your local machine can run a 16B parameter model, then we recommend running D
         <TabItem value="Ollama">
         ```yaml title="Package or config.yaml"
         models:
-            - title: DeepSeek Coder 2 16B
-                provider: ollama
-                model: deepseek-coder-v2:16b
+          - name: DeepSeek Coder 2 16B
+            provider: ollama
+            model: deepseek-coder-v2:16b
         ```
         </TabItem>
         <TabItem value="LM Studio">
         ```yaml title="Package or config.yaml"
         models:
-            - title: DeepSeek Coder 2 16B
-                provider: lmstudio
-                model: deepseek-coder-v2:16b
+          - name: DeepSeek Coder 2 16B
+            provider: lmstudio
+            model: deepseek-coder-v2:16b
         ```
         </TabItem>
     </Tabs>

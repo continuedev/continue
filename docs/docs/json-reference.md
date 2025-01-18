@@ -5,7 +5,7 @@ keywords: [config, config_schema.json, json]
 ---
 
 :::info
-`config.json` has been deprecated in favor of the [`YAML Config Format`](./yaml-reference). See the [migration guide](./yaml-migration).
+`config.json` has been deprecated in favor of the [`YAML Config Format`](./reference). See the [migration guide](./yaml-migration).
 :::
 
 Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
@@ -27,7 +27,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `contextLength`: Maximum context length of the model, typically in tokens (default: 2048).
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `template`: Chat template to format messages. Auto-detected for most models but can be overridden. See intelliJ suggestions.
-- `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt).
+- `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](/model-setup/configuration#customizing-the-edit-prompt).
 - `completionOptions`: Model-specific completion options, same format as top-level [`completionOptions`](#completionoptions), which they override.
 - `systemMessage`: A system message that will precede responses from the LLM.
 - `requestOptions`: Model-specific HTTP request options, same format as top-level [`requestOptions`](#requestoptions), which they override.

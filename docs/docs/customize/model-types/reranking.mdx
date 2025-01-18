@@ -10,7 +10,7 @@ import TabItem from "@theme/TabItem";
 
 A "reranking model" is trained to take two pieces of text (often a user question and a document) and return a relevancy score between 0 and 1, estimating how useful the document will be in answering the question. Rerankers are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, reranking is used by [@Codebase](../deep-dives/codebase.md) in order to select the most relevant code snippets after vector search.
+In Continue, reranking is used by [@Codebase](../deep-dives/codebase.mdx) in order to select the most relevant code snippets after vector search.
 
 ## Recommended reranking models
 
@@ -26,7 +26,7 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
   models:
     - name: My Voyage Reranker
       provider: voyage
-      apiKey: <VOYAGE_API_KEY>
+      apiKey: ${{ secrets.VOYAGE_API_KEY }}
       model: rerank-2
       roles:
         - rerank
@@ -56,7 +56,7 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
     - name: Cohere Reranker
       provider: cohere
       model: rerank-english-v3.0
-      apiKey: <COHERE_API_KEY>
+      apiKey: ${{ secrets.COHERE_API_KEY }}
       roles:
         - rerank
   ```
@@ -114,7 +114,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
       - name: Huggingface-tei Reranker
         provider: huggingface-tei
         apiBase: http://localhost:8080
-        apiKey: <TEI_API_KEY>
+        apiKey: ${{ secrets.HUGGINGFACE_TEI_API_KEY }}
         roles:
           - rerank
     ```

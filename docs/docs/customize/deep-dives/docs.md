@@ -71,7 +71,7 @@ The [configuration schema for docs](https://github.com/continuedev/continue/blob
 
 ## Configuration
 
-As with [@Codebase context provider configuration](https://docs.continue.dev/customize/deep-dives/codebase#configuration), you can adjust the behavior of the docs context provider with the `nRetrieve`, `nFinal`, and `useReranking`
+As with [@Codebase context provider configuration](../deep-dives/codebase.mdx#configuration), you can adjust the behavior of the docs context provider with the `nRetrieve`, `nFinal`, and `useReranking`
 
 ```json title="config.json (Deprecated)"
 {

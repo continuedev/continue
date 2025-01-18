@@ -21,7 +21,7 @@ We recommend configuring **Mistral Large** as your chat model.
     - name: Mistral Large
       provider: mistral
       model: mistral-large-latest 
-      apiKeySecret: MISTRAL_API_KEY
+      apiKey: MISTRAL_API_KEY
       roles:
         - chat
   ```
@@ -79,7 +79,7 @@ We recommend configuring **Mistral Embed** as your embeddings model.
     - name: Mistral Embed
       provider: mistral
       model: mistral-embed
-      apiKeySecret: MISTRAL_API_KEY 
+      apiKey: MISTRAL_API_KEY 
       apiBase: https://api.mistral.ai/v1
       roles:
         - embed
@@ -101,4 +101,4 @@ We recommend configuring **Mistral Embed** as your embeddings model.
 
 Mistral currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.

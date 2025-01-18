@@ -16,18 +16,29 @@ Read the [quickstart documentation here](https://www.scaleway.com/en/docs/ai-dat
 We recommend configuring **Qwen2.5-Coder-32B-Instruct** as your chat model.
 [Click here](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/) to see the list of available chat models.
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Qwen2.5-Coder-32B-Instruct",
-      "provider": "scaleway",
-      "model": "qwen2.5-coder-32b-instruct",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="Package or config.yaml"
+    models:
+      - name: Qwen2.5-Coder-32B-Instruct
+        provider: scaleway
+        model: qwen2.5-coder-32b-instruct
+        apiKey: ${{ secrets.SCALEWAY_API_KEY }}
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Qwen2.5-Coder-32B-Instruct",
+        "provider": "scaleway",
+        "model": "qwen2.5-coder-32b-instruct",
+        "apiKey": "[API_KEY]"
+      }
+    ]
+    ```
+    </TabItem>
+</Tabs>
 
 ## Autocomplete model
 
@@ -39,12 +50,25 @@ Scaleway currently does not offer any autocomplete models.
 
 We recommend configuring **BGE-Multilingual-Gemma2** as your embeddings model.
 
-```json title="config.json (Deprecated)"
-{
-  "embeddingsProvider": {
-    "provider": "scaleway",
-    "model": "bge-multilingual-gemma2",
-    "apiKey": "[API_KEY]"
-  }
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: BGE Multilingual Gemma2
+      provider: scaleway
+      model: bge-multilingual-gemma2
+      apiKey: ${{ secrets.SCALEWAY_API_KEY }}
+      roles: 
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "embeddingsProvider": {
+      "provider": "scaleway",
+      "model": "bge-multilingual-gemma2",
+      "apiKey": "[API_KEY]"
+    }
+  ```
+  </TabItem>
+</Tabs>

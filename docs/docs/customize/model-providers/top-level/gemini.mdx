@@ -21,9 +21,7 @@ We recommend configuring **Gemini 1.5 Pro** as your chat model.
     - name: Gemini 1.5 Pro
       provider: gemini
       model: gemini-1.5-pro-latest
-      apiKey: "[API_KEY]"
-      roles:
-        - chat
+      apiKey: ${{ secrets.GEMINI_API_KEY }}
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -57,7 +55,7 @@ We recommend configuring **text-embedding-004** as your embeddings model.
     - name: Gemini Embeddings
       provider: gemini
       model: models/text-embedding-004 
-      apiKey: "[API_KEY]"
+      apiKey: ${{ secrets.GEMINI_API_KEY }}
       roles:
         - embed
   ```
@@ -77,4 +75,4 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 
 Gemini currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.

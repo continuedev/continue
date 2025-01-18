@@ -13,18 +13,29 @@ import TabItem from "@theme/TabItem";
 
 We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Nemotron-4-340B-Instruct",
-      "provider": "nvidia",
-      "model": "nvidia-nemotron-4-340b-instruct",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Nemotron-4-340B-Instruct
+      provider: nvidia
+      model: nvidia-nemotron-4-340b-instruct
+      apiKey: ${{ secrets.NVIDIA_API_KEY }}
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "Nemotron-4-340B-Instruct",
+        "provider": "nvidia",
+        "model": "nvidia-nemotron-4-340b-instruct",
+        "apiKey": "[API_KEY]"
+      }
+    ]
+  ```
+  </TabItem>
+</Tabs>
 
 ## Autocomplete model
 
@@ -36,18 +47,31 @@ NVIDIA currently does not offer any autocomplete models.
 
 We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings model.
 
-```json title="config.json (Deprecated)"
-{
-  "embeddingsProvider": {
-    "provider": "nvidia",
-    "model": "nvidia/nv-embedqa-mistral-7b-v2",
-    "apiKey": "[API_KEY]"
-  }
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Nvidia Embedder
+      provider: nvidia
+      model: nvidia/nv-embedqa-mistral-7b-v2
+      apiKey: ${{ secrets.NVIDIA_API_KEY }}
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "embeddingsProvider": {
+      "provider": "nvidia",
+      "model": "nvidia/nv-embedqa-mistral-7b-v2",
+      "apiKey": "[API_KEY]"
+    }
+  ```
+  </TabItem>
+</Tabs>
 
 ## Reranking model
 
 NVIDIA currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.

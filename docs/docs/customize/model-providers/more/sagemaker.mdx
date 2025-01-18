@@ -5,24 +5,42 @@ import TabItem from "@theme/TabItem";
 
 SageMaker can be used for both chat and embedding models. Chat models are supported for endpoints deployed with [LMI](https://docs.djl.ai/docs/serving/serving/docs/lmi/index.html), and embedding models are supported for endpoints deployed with [HuggingFace TEI](https://huggingface.co/blog/sagemaker-huggingface-embedding)
 
-To setup SageMaker as a chat model provider, add the following to your `config.json` file:
+Here is an example Sagemaker configuration setup:
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "deepseek-6.7b-instruct",
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: deepseek-6.7b-instruct
+      provider: sagemaker
+      model: lmi-model-deepseek-coder-xxxxxxx
+      region: us-west-2
+      roles:
+        - chat
+    - name: mxbai-embed
+      provider: sagemaker
+      model: mxbai-embed-large-v1-endpoint
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "models": [
+      {
+        "title": "deepseek-6.7b-instruct",
+        "provider": "sagemaker",
+        "model": "lmi-model-deepseek-coder-xxxxxxx",
+        "region": "us-west-2"
+      }
+    ],
+    "embeddingsProvider": {
       "provider": "sagemaker",
-      "model": "lmi-model-deepseek-coder-xxxxxxx",
-      "region": "us-west-2"
+      "model": "mxbai-embed-large-v1-endpoint"
     }
-  ],
-  "embeddingsProvider": {
-    "provider": "sagemaker",
-    "model": "mxbai-embed-large-v1-endpoint"
-  }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 The value in model should be the SageMaker endpoint name you deployed.
 

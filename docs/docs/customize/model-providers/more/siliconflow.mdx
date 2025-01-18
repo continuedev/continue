@@ -13,33 +13,67 @@ You can get an API key from the [Silicon Cloud](https://cloud.siliconflow.cn/acc
 
 We recommend configuring **Qwen/Qwen2.5-Coder-32B-Instruct** as your chat model.
 
-```json title="config.json (Deprecated)"
-{
-  "models": [
-    {
-      "title": "Qwen",
-      "provider": "siliconflow",
-      "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Qwen
+        provider: siliconflow
+        model: Qwen/Qwen2.5-Coder-32B-Instruct
+        apiKey: ${{ secrets.SILICONFLOW_API_KEY }}
+        roles:
+          - chat
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json (Deprecated)"
+      "models": [
+        {
+          "title": "Qwen",
+          "provider": "siliconflow",
+          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+          "apiKey": "[API_KEY]"
+        }
+      ]
+    ```
+    </TabItem>
+</Tabs>
 
 ## Autocomplete model
 
 We recommend configuring **Qwen/Qwen2.5-Coder-7B-Instruct** as your autocomplete model.
 
-```json title="config.json (Deprecated)"
-{
-  "tabAutocompleteModel": {
-    "title": "Qwen",
-    "provider": "siliconflow",
-    "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
-    "apiKey": "[API_KEY]"
-  }
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Qwen
+        provider: siliconflow
+        model: Qwen/Qwen2.5-Coder-32B-Instruct
+        apiKey: ${{ secrets.SILICONFLOW_API_KEY }}
+        roles: 
+          - autocomplete
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json (Deprecated)"
+      "models": [
+        {
+          "title": "Qwen",
+          "provider": "siliconflow",
+          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+          "apiKey": "[API_KEY]"
+        }
+      ]
+      "tabAutocompleteModel": {
+        "title": "Qwen",
+        "provider": "siliconflow",
+        "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
+        "apiKey": "[API_KEY]"
+      }
+    ```
+    </TabItem>
+</Tabs>
 
 ## Embeddings model
 

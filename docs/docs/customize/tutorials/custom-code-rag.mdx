@@ -1,6 +1,9 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 # Custom code RAG
 
-While Continue comes with [@Codebase](../deep-dives/codebase.md) out of the box, you might wish to set up your own vector database and build a custom retrieval-augmented generation (RAG) system. This can allow you to access code that is not available locally, to index code a single time across all users, or to include custom logic. In this guide, we'll walk you through the steps it takes to build this.
+While Continue comes with [@Codebase](../deep-dives/codebase.mdx) out of the box, you might wish to set up your own vector database and build a custom retrieval-augmented generation (RAG) system. This can allow you to access code that is not available locally, to index code a single time across all users, or to include custom logic. In this guide, we'll walk you through the steps it takes to build this.
 
 ## Step 1: Choose an embeddings model
 
@@ -122,19 +125,36 @@ async def create_item(item: ContextProviderInput):
     return context_items
 ```
 
-After you've set up your server, you can configure Continue to use it by adding the "http" context provider to your `contextProviders` array in `config.json`:
+After you've set up your server, you can configure Continue to use it by adding the "http" context provider to your `contextProviders` array in your configuration:
 
-```json title="config.json (Deprecated)"
-{
-  "name": "http",
-  "params": {
-    "url": "https://myserver.com/retrieve",
-    "title": "http",
-    "description": "Custom HTTP Context Provider",
-    "displayTitle": "My Custom Context"
-  }
-}
-```
+<Tabs groupId="config-example">
+<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - uses: http
+      with:
+        url: https://myserver.com/retrieve
+        name: http
+        description: Custom HTTP Context Provider
+        displayTitle: My Custom Context
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json (Deprecated)"
+    "contextProviders": [
+      {
+        "name": "http",
+        "params": {
+          "url": "https://myserver.com/retrieve",
+          "title": "http",
+          "description": "Custom HTTP Context Provider",
+          "displayTitle": "My Custom Context"
+        }
+      }
+    ]
+  ```
+  </TabItem>
+</Tabs>
 
 ## Step 7 (Bonus): Set up reranking
 
