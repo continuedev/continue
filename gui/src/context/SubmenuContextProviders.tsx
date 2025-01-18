@@ -317,7 +317,7 @@ export const SubmenuContextProvidersProvider = ({
 
   useEffect(() => {
     void loadSubmenuItems("all");
-  }, []);
+  }, [loadSubmenuItems]);
 
   return (
     <SubmenuContextProvidersContext.Provider
