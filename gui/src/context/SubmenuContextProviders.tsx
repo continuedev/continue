@@ -15,7 +15,6 @@ import {
   getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
 } from "core/util/uri";
-import { providers } from "../pages/AddNewModel/configs/providers";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -309,7 +308,7 @@ export const SubmenuContextProvidersProvider = ({
         ),
       );
     },
-    [submenuContextProviders, disableIndexing],
+    [submenuContextProviders, disableIndexing, providersLoading],
   );
 
   useWebviewListener(
