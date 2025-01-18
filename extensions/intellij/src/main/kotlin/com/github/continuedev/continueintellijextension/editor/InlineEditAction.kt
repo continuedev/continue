@@ -128,11 +128,14 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     // Get list of model titles
     val continuePluginService = project.service<ContinuePluginService>()
     val modelTitles = mutableListOf<String>()
+
     continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val config = response as Map<String, Any>
-        val models = (config["config"] as Map<String, Any>)["models"] as List<Map<String, Any>>
+        val result = (response as Map<String, Any>)["result"] as Map<String, Any>
+        val config = result["config"] as Map<String, Any>
+        val models = config["models"] as List<Map<String, Any>>
         modelTitles.addAll(models.map { it["title"] as String })
     }
+
     val maxWaitTime = 200
     val startTime = System.currentTimeMillis()
     while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
@@ -427,7 +430,7 @@ class CustomPanel(
                     }
 
                     selectedIndex =
-                        if(itemCount == 0) -1 else continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
+                        if (itemCount == 0) -1 else continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
                             if (modelTitles.isEmpty()) -1
                             else {
                                 val index = modelTitles.indexOf(it)

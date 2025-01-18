@@ -1,4 +1,5 @@
 import { By, WebDriver, WebView } from "vscode-extension-tester";
+
 import { SelectorUtils } from "./SelectorUtils";
 
 export class GUISelectors {
@@ -39,6 +40,24 @@ export class GUISelectors {
 
   public static getModelDropdownButton(view: WebView) {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
+  }
+
+  public static getFirstContextProviderDropdownItem(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "context-provider-dropdown-item",
+    );
+  }
+
+  public static getContextItemsPeek(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "context-items-peek");
+  }
+
+  public static getFirstContextItemsPeekItem(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "context-items-peek-item",
+    );
   }
 
   public static getNthHistoryTableRow(view: WebView, index: number) {

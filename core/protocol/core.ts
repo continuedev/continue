@@ -1,6 +1,7 @@
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
 
+import { ConfigResult } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -21,7 +22,6 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
-import { ConfigResult } from "../config/load";
 
 export type ProtocolGeneratorYield<T> = {
   done?: boolean;

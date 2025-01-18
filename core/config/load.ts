@@ -33,7 +33,6 @@ import {
 } from "../commands/index.js";
 import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
@@ -63,6 +62,8 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { usePlatform } from "../control-plane/flags";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -231,11 +232,18 @@ function isModelDescription(
   return (llm as ModelDescription).title !== undefined;
 }
 
-function isContextProviderWithParams(
+export function isContextProviderWithParams(
   contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
+
+const getCodebaseProvider = async (params: any) => {
+  const { default: CodebaseContextProvider } = await import(
+    "../context/providers/CodebaseContextProvider"
+  );
+  return new CodebaseContextProvider(params);
+};
 
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
@@ -396,9 +404,14 @@ async function intermediateToFinalConfig(
         | ContextProviderWithParams
         | undefined
     )?.params || {};
+
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
-    new CodebaseContextProvider(codebaseContextParams),
+    // Add codebase provider if indexing is enabled
+    ...(!config.disableIndexing
+      ? [await getCodebaseProvider(codebaseContextParams)]
+      : []),
+    // Add prompt files provider if enabled
     ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
   ];
 
@@ -572,6 +585,7 @@ function finalToBrowserConfig(
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
+    usePlatform: usePlatform(),
   };
 }
 

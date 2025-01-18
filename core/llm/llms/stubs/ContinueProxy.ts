@@ -10,10 +10,32 @@ class ContinueProxy extends OpenAI {
     this.apiBase = new URL("openai/v1/", value.controlPlaneProxyUrl).toString();
   }
 
+  // The apiKey and apiBase are set to the values for the proxy,
+  // but we need to keep track of the actual values that the proxy will use
+  // to call whatever LLM API is chosen
+  private actualApiBase?: string;
+  private actualApiKey?: string;
+
+  constructor(options: LLMOptions) {
+    super(options);
+    this.actualApiBase = options.apiBase;
+    this.actualApiKey = options.apiKey;
+  }
+
   static providerName = "continue-proxy";
   static defaultOptions: Partial<LLMOptions> = {
     useLegacyCompletionsEndpoint: false,
   };
+
+  protected extraBodyProperties(): Record<string, any> {
+    return {
+      continueProperties: {
+        apiKey: this.actualApiKey,
+        apiBase: this.actualApiBase,
+        apiKeySecret: this.apiKeySecret,
+      },
+    };
+  }
 
   protected _getHeaders() {
     const headers: any = super._getHeaders();

@@ -22,6 +22,7 @@ import {
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
+import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
   ProfileDescription,
   ProfileLifecycleManager,
@@ -57,7 +58,7 @@ export class ConfigHandler {
       writeLog,
     );
     this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
-    this.selectedProfileId = localProfileLoader.profileId;
+    this.selectedProfileId = localProfileLoader.description.id;
 
     // Always load local profile immediately in case control plane doesn't load
     try {
@@ -77,13 +78,16 @@ export class ConfigHandler {
 
   get currentProfile() {
     return (
-      this.profiles.find((p) => p.profileId === this.selectedProfileId) ??
-      this.fallbackProfile
+      this.profiles.find(
+        (p) => p.profileDescription.id === this.selectedProfileId,
+      ) ?? this.fallbackProfile
     );
   }
 
   get inactiveProfiles() {
-    return this.profiles.filter((p) => p.profileId !== this.selectedProfileId);
+    return this.profiles.filter(
+      (p) => p.profileDescription.id !== this.selectedProfileId,
+    );
   }
 
   async openConfigProfile(profileId?: string) {
@@ -91,25 +95,23 @@ export class ConfigHandler {
     if (openProfileId === "local") {
       await this.ide.openFile(localPathToUri(getConfigJsonPath()));
     } else {
-      await this.ide.openUrl(
-        "https://app.continue.dev/",
-        // `https://app.continue.dev/workspaces/${openProfileId}/chat`,
-      );
+      await this.ide.openUrl(`${controlPlaneEnv.APP_URL}${openProfileId}`);
     }
   }
 
-  private async fetchControlPlaneProfiles() {
+  private async loadPlatformProfiles() {
     // Get the profiles and create their lifecycle managers
     this.controlPlaneClient
-      .listWorkspaces()
-      .then(async (workspaces) => {
+      .listAssistants()
+      .then(async (assistants) => {
         this.profiles = this.profiles.filter(
-          (profile) => profile.profileId === "local",
+          (profile) => profile.profileDescription.id === "local",
         );
-        workspaces.forEach((workspace) => {
-          const profileLoader = new ControlPlaneProfileLoader(
-            workspace.id,
-            workspace.name,
+        assistants.forEach((assistant) => {
+          const profileLoader = new PlatformProfileLoader(
+            assistant.configResult,
+            assistant.ownerSlug,
+            assistant.packageSlug,
             this.controlPlaneClient,
             this.ide,
             this.ideSettingsPromise,
@@ -141,8 +143,65 @@ export class ConfigHandler {
         }
       })
       .catch((e) => {
-        console.error(e);
+        console.error("Failed to list assistants: ", e);
       });
+  }
+
+  private platformProfilesRefreshInterval: NodeJS.Timeout | undefined;
+
+  private async fetchControlPlaneProfiles() {
+    if (usePlatform()) {
+      clearInterval(this.platformProfilesRefreshInterval);
+      await this.loadPlatformProfiles();
+      this.platformProfilesRefreshInterval = setInterval(
+        this.loadPlatformProfiles.bind(this),
+        PlatformProfileLoader.RELOAD_INTERVAL,
+      );
+    } else {
+      this.controlPlaneClient
+        .listWorkspaces()
+        .then(async (workspaces) => {
+          this.profiles = this.profiles.filter(
+            (profile) => profile.profileDescription.id === "local",
+          );
+          workspaces.forEach((workspace) => {
+            const profileLoader = new ControlPlaneProfileLoader(
+              workspace.id,
+              workspace.name,
+              this.controlPlaneClient,
+              this.ide,
+              this.ideSettingsPromise,
+              this.writeLog,
+              this.reloadConfig.bind(this),
+            );
+            this.profiles.push(new ProfileLifecycleManager(profileLoader));
+          });
+
+          this.notifyProfileListeners(
+            this.profiles.map((profile) => profile.profileDescription),
+          );
+
+          // Check the last selected workspace, and reload if it isn't local
+          const workspaceId = await this.getWorkspaceId();
+          const lastSelectedWorkspaceIds =
+            this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+          const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
+          if (selectedWorkspaceId) {
+            this.selectedProfileId = selectedWorkspaceId;
+            await this.loadConfig();
+          } else {
+            // Otherwise we stick with local profile, and record choice
+            lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
+            this.globalContext.update(
+              "lastSelectedProfileForWorkspace",
+              lastSelectedWorkspaceIds,
+            );
+          }
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+    }
   }
 
   async setSelectedProfile(profileId: string) {
