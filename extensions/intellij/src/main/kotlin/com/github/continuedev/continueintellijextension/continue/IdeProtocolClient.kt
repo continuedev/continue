@@ -26,7 +26,9 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.lang.IllegalStateException
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 
 class IdeProtocolClient(
@@ -439,23 +441,27 @@ class IdeProtocolClient(
                                     null,
                                     null
                                 ) { response ->
-                                    val result = (response as Map<String, Any>)["result"] as Map<String, Any>
-                                    val config = result["config"] as Map<String, Any>
-                                    val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
+                                    try {
+                                        val result = (response as Map<String, Any>)["result"] as Map<String, Any>
+                                        val config = result["config"] as Map<String, Any>
+                                        val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
 
-                                    if (applyCodeBlockModel != null) {
-                                        continuation.resume(applyCodeBlockModel)
-                                    }
+                                        if (applyCodeBlockModel != null) {
+                                            continuation.resume(applyCodeBlockModel)
+                                        }
 
-                                    val models =
-                                        config["models"] as List<Map<String, Any>>
-                                    val curSelectedModel = models.find { it["title"] == params.curSelectedModelTitle }
+                                        val models =
+                                            config["models"] as List<Map<String, Any>>
+                                        val curSelectedModel = models.find { it["title"] == params.curSelectedModelTitle }
 
-//                                    continuation.resume(curSelectedModel)
-                                    if (curSelectedModel == null) {
-                                        return@request
-                                    } else {
-                                        continuation.resume(curSelectedModel)
+//                                      continuation.resume(curSelectedModel)
+                                        if (curSelectedModel == null) {
+                                            continuation.resumeWithException(IllegalStateException("Model '${params.curSelectedModelTitle}' not found in config."))
+                                        } else {
+                                            continuation.resume(curSelectedModel)
+                                        }
+                                    } catch (e: Exception) {
+                                        continuation.resumeWithException(e)
                                     }
                                 }
                             }
