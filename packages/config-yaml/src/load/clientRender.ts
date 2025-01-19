@@ -1,7 +1,11 @@
 import * as YAML from "yaml";
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
-import { encodeSecretLocation } from "../interfaces/SecretResult.js";
-import { FQSN, decodeFQSN, encodeFQSN } from "../interfaces/slugs.js";
+import {
+  decodeSecretLocation,
+  encodeSecretLocation,
+  SecretLocation,
+} from "../interfaces/SecretResult.js";
+import { decodeFQSN, encodeFQSN, FQSN } from "../interfaces/slugs.js";
 import { ConfigYaml } from "../schemas/index.js";
 import {
   fillTemplateVariables,
@@ -54,6 +58,44 @@ export async function clientRender(
   const renderedYaml = fillTemplateVariables(rawYaml, secretsTemplateData);
 
   // 6. The rendered YAML is parsed and validated again
-  const finalParsedYaml = parseConfigYaml(renderedYaml);
-  return finalParsedYaml;
+  const parsedYaml = parseConfigYaml(renderedYaml);
+
+  // 7. We update any of the items with the proxy version if there are un-rendered secrets
+  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml);
+  return finalConfig;
+}
+
+function getUnrenderedSecretLocation(
+  value: string | undefined,
+): SecretLocation | undefined {
+  if (!value) return undefined;
+
+  const templateVars = getTemplateVariables(value);
+  if (templateVars.length === 1) {
+    const secretLocationEncoded = templateVars[0].split("secrets.")[1];
+    const secretLocation = decodeSecretLocation(secretLocationEncoded);
+    return secretLocation;
+  }
+
+  return undefined;
+}
+
+function useProxyForUnrenderedSecrets(config: ConfigYaml): ConfigYaml {
+  if (config.models) {
+    for (let i = 0; i < config.models.length; i++) {
+      const apiKeyLocation = getUnrenderedSecretLocation(
+        config.models[i].apiKey,
+      );
+      if (apiKeyLocation) {
+        config.models[i] = {
+          ...config.models[i],
+          provider: "continue-proxy",
+          apiKeyLocation: encodeSecretLocation(apiKeyLocation),
+          apiKey: undefined,
+        };
+      }
+    }
+  }
+
+  return config;
 }

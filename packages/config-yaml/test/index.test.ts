@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { decodeSecretLocation, resolveSecretLocationInProxy } from "../dist";
 import {
   clientRender,
   FQSN,
@@ -13,6 +14,7 @@ import {
   SecretType,
   unrollAssistant,
 } from "../src";
+import exp = require("constants");
 
 // Test e2e flows from raw yaml -> unroll -> client render -> resolve secrets on proxy
 describe("E2E Scenarios", () => {
@@ -22,6 +24,10 @@ describe("E2E Scenarios", () => {
 
   const packageSecrets: Record<string, string> = {
     ANTHROPIC_API_KEY: "sk-ant",
+  };
+
+  const proxyEnvSecrets: Record<string, string> = {
+    ANTHROPIC_API_KEY: "sk-ant-env",
   };
 
   const localUserSecretStore: SecretStore = {
@@ -42,6 +48,15 @@ describe("E2E Scenarios", () => {
           resolveFQSN("test-user", "test-org", fqsn, platformSecretStore),
         ),
       );
+    },
+  };
+
+  const environmentSecretStore: SecretStore = {
+    get: async function (secretName: string): Promise<string | undefined> {
+      return proxyEnvSecrets[secretName];
+    },
+    set: function (secretName: string, secretValue: string): Promise<void> {
+      throw new Error("Function not implemented.");
     },
   };
 
@@ -96,11 +111,33 @@ describe("E2E Scenarios", () => {
       platformClient,
     );
 
-    // Test that user secrets were injected and other secrets remain templated
+    // Test that user secrets were injected and others were changed to use proxy
+    const anthropicSecretLocation = "package:test-org/models/ANTHROPIC_API_KEY";
     expect(clientRendered.models?.[0].apiKey).toBe("sk-123");
     expect(clientRendered.models?.[1].apiKey).toBe("sk-456");
-    expect(clientRendered.models?.[2].apiKey).toBe(
-      "${{ secrets.package:test-org/models/ANTHROPIC_API_KEY }}",
+    expect(clientRendered.models?.[2].provider).toBe("continue-proxy");
+    expect((clientRendered.models?.[2] as any).apiKeyLocation).toBe(
+      anthropicSecretLocation,
     );
+    expect(clientRendered.models?.[2].apiKey).toBeUndefined();
+
+    // Test that proxy can correctly resolve secrets
+    const secretLocation = decodeSecretLocation(anthropicSecretLocation);
+
+    // With environment
+    const secretValue = await resolveSecretLocationInProxy(
+      secretLocation,
+      platformSecretStore,
+      environmentSecretStore,
+    );
+    expect(secretValue).toBe("sk-ant-env");
+
+    // Without environment
+    const secretValue2 = await resolveSecretLocationInProxy(
+      secretLocation,
+      platformSecretStore,
+      undefined,
+    );
+    expect(secretValue2).toBe("sk-ant");
   });
 });
