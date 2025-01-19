@@ -1,4 +1,3 @@
-import * as YAML from "yaml";
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
 import {
   decodeSecretLocation,
@@ -14,14 +13,12 @@ import {
 } from "./unroll.js";
 
 export async function clientRender(
-  unrolledConfig: ConfigYaml,
+  unrolledConfigContent: string,
   secretStore: SecretStore,
   platformClient: PlatformClient,
 ): Promise<ConfigYaml> {
-  const rawYaml = YAML.stringify(unrolledConfig);
-
   // 1. First we need to get a list of all the FQSNs that are required to render the config
-  const secrets = getTemplateVariables(rawYaml);
+  const secrets = getTemplateVariables(unrolledConfigContent);
 
   // 2. Then, we will check which of the secrets are found in the local personal secret store. Here we’re checking for anything that matches the last part of the FQSN, not worrying about the owner/package/owner/package slugs
   const secretsTemplateData: Record<string, string> = {};
@@ -55,7 +52,10 @@ export async function clientRender(
   }
 
   // 5. User secrets are rendered in place of the template variable. Others remain templated, but replaced with the specific location where they are to be found (`${{ secrets.<secretLocation> }}` instead of `${{ secrets.<FQSN> }}`)
-  const renderedYaml = fillTemplateVariables(rawYaml, secretsTemplateData);
+  const renderedYaml = fillTemplateVariables(
+    unrolledConfigContent,
+    secretsTemplateData,
+  );
 
   // 6. The rendered YAML is parsed and validated again
   const parsedYaml = parseConfigYaml(renderedYaml);

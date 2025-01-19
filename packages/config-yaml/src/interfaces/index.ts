@@ -29,7 +29,6 @@ export interface PlatformSecretStore {
 
 export async function resolveFQSN(
   currentUserSlug: string,
-  currentUserOrgSlug: string,
   fqsn: FQSN,
   platformSecretStore: PlatformSecretStore,
 ): Promise<SecretResult> {
@@ -50,11 +49,11 @@ export async function resolveFQSN(
       secretName: fqsn.secretName,
     },
     // Then organization
-    {
+    ...reversedSlugs.map((slug) => ({
       secretType: SecretType.Organization as const,
-      orgSlug: currentUserOrgSlug,
+      orgSlug: slug.ownerSlug,
       secretName: fqsn.secretName,
-    },
+    })),
   ];
 
   // Then try to get the secret from each location

@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as YAML from "yaml";
 import { decodeSecretLocation, resolveSecretLocationInProxy } from "../dist";
 import {
   clientRender,
@@ -45,7 +46,7 @@ describe("E2E Scenarios", () => {
     ): Promise<(SecretResult | undefined)[]> {
       return await Promise.all(
         fqsns.map((fqsn) =>
-          resolveFQSN("test-user", "test-org", fqsn, platformSecretStore),
+          resolveFQSN("test-user", fqsn, platformSecretStore),
         ),
       );
     },
@@ -106,7 +107,7 @@ describe("E2E Scenarios", () => {
     );
 
     const clientRendered = await clientRender(
-      unrolledConfig,
+      YAML.stringify(unrolledConfig),
       localUserSecretStore,
       platformClient,
     );
