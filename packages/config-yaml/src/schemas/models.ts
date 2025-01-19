@@ -48,7 +48,6 @@ export const modelSchema = z.object({
   model: z.string(),
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
-  apiKeySecret: z.string().optional(),
   roles: modelRolesSchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
