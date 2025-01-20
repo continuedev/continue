@@ -14,9 +14,11 @@ import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath } from "../util/paths.js";
 
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, ConfigYaml } from "@continuedev/config-yaml";
+import * as YAML from "yaml";
 import { controlPlaneEnv } from "../control-plane/env.js";
 import { usePlatform } from "../control-plane/flags.js";
+import { localPathToUri } from "../util/pathToUri.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
@@ -28,7 +30,7 @@ import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
-import { localPathToUri } from "../util/pathToUri.js";
+import { clientRenderHelper } from "./yaml/clientRender.js";
 
 export type { ProfileDescription };
 
@@ -109,19 +111,30 @@ export class ConfigHandler {
         this.profiles = this.profiles.filter(
           (profile) => profile.profileDescription.id === "local",
         );
-        assistants.forEach((assistant) => {
-          const profileLoader = new PlatformProfileLoader(
-            assistant.configResult,
-            assistant.ownerSlug,
-            assistant.packageSlug,
-            this.controlPlaneClient,
-            this.ide,
-            this.ideSettingsPromise,
-            this.writeLog,
-            this.reloadConfig.bind(this),
-          );
-          this.profiles.push(new ProfileLifecycleManager(profileLoader));
-        });
+        await Promise.all(
+          assistants.map(async (assistant) => {
+            let renderedConfig: ConfigYaml | undefined = undefined;
+            if (assistant.configResult.config) {
+              renderedConfig = await clientRenderHelper(
+                YAML.stringify(assistant.configResult.config),
+                this.ide,
+                this.controlPlaneClient,
+              );
+            }
+
+            const profileLoader = new PlatformProfileLoader(
+              { ...assistant.configResult, config: renderedConfig },
+              assistant.ownerSlug,
+              assistant.packageSlug,
+              this.controlPlaneClient,
+              this.ide,
+              this.ideSettingsPromise,
+              this.writeLog,
+              this.reloadConfig.bind(this),
+            );
+            this.profiles.push(new ProfileLifecycleManager(profileLoader));
+          }),
+        );
 
         this.notifyProfileListeners(
           this.profiles.map((profile) => profile.profileDescription),

@@ -28,7 +28,7 @@ export function clientRenderHelper(
   };
 
   const platformClient: PlatformClient = {
-    resolveFQSNs: controlPlaneClient.resolveFQSNs,
+    resolveFQSNs: controlPlaneClient.resolveFQSNs.bind(controlPlaneClient),
   };
 
   return clientRender(unrolledAssistant, ideSecretStore, platformClient);

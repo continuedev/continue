@@ -39,7 +39,17 @@ export async function clientRender(
 
   // 4. (back to the client) Any “user” secrets that were returned back are added to the local secret store so we don’t have to request them again
   for (const secretResult of secretResults) {
-    if (!secretResult?.found) continue;
+    if (!secretResult) {
+      continue;
+    }
+
+    if (!secretResult.found) {
+      // When a secret isn't found anywhere, we keep it templated as just the secret name
+      // in case it can be found in the on-prem proxy's env
+      secretsTemplateData["secrets." + encodeFQSN(secretResult.fqsn)] =
+        `\${{ secrets.${secretResult.fqsn.secretName} }}`;
+      continue;
+    }
 
     if ("value" in secretResult) {
       secretStore.set(secretResult.fqsn.secretName, secretResult.value);
@@ -73,8 +83,14 @@ function getUnrenderedSecretLocation(
   const templateVars = getTemplateVariables(value);
   if (templateVars.length === 1) {
     const secretLocationEncoded = templateVars[0].split("secrets.")[1];
-    const secretLocation = decodeSecretLocation(secretLocationEncoded);
-    return secretLocation;
+    try {
+      const secretLocation = decodeSecretLocation(secretLocationEncoded);
+      return secretLocation;
+    } catch (e) {
+      // If it's templated but not a valid secret location, leave it be
+      // in case on-prem proxy has the secret in an env variable
+      return undefined;
+    }
   }
 
   return undefined;
