@@ -177,6 +177,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
+    if: github.event.inputs.publish_build == 'true'
     needs:
       - build
     steps:
