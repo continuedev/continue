@@ -3,25 +3,13 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { IDE, IdeSettings, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 const AUTODETECT = "AUTODETECT";
 
-function useContinueProxy(
-  model: ModelConfig,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-): boolean {
-  return !!platformConfigMetadata && model.apiKeySecret !== undefined;
-}
-
 function getModelClass(
   model: ModelConfig,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
 ): (typeof LLMClasses)[number] | undefined {
-  if (useContinueProxy(model, platformConfigMetadata)) {
-    return ContinueProxy;
-  }
   return LLMClasses.find((llm) => llm.providerName === model.provider);
 }
 
@@ -41,13 +29,13 @@ async function modelConfigToBaseLLM(
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   systemMessage: string | undefined,
 ): Promise<BaseLLM | undefined> {
-  const cls = getModelClass(model, platformConfigMetadata);
+  const cls = getModelClass(model);
 
   if (!cls) {
     return undefined;
   }
 
-  const usingContinueProxy = useContinueProxy(model, platformConfigMetadata);
+  const usingContinueProxy = model.provider === "continue-proxy";
   const modelName = usingContinueProxy
     ? getContinueProxyModelName(
         platformConfigMetadata!.ownerSlug,

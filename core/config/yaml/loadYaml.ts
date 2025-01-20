@@ -2,13 +2,10 @@ import fs from "node:fs";
 
 import {
   ConfigResult,
-  fillTemplateVariables,
-  resolveSecretsOnClient,
+  ConfigYaml,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
-import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
-import * as YAML from "yaml";
 
 import {
   BrowserSerializedContinueConfig,
@@ -21,44 +18,33 @@ import {
 } from "../..";
 import { AllRerankers } from "../../context/allRerankers";
 import { MCPManagerSingleton } from "../../context/mcp";
+import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
+import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
+import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
+import { ControlPlaneClient } from "../../control-plane/client";
 import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
-import { getConfigYamlPath, getContinueDotEnv } from "../../util/paths";
+import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
-import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
-import FileContextProvider from "../../context/providers/FileContextProvider";
-import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
-import { ControlPlaneClient } from "../../control-plane/client";
+import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
 
-function renderTemplateVars(configYaml: string): string {
-  const data: Record<string, string> = {};
-
-  // env.*
-  const envVars = getContinueDotEnv();
-  Object.entries(envVars).forEach(([key, value]) => {
-    data[`env.${key}`] = value;
-  });
-
-  // secrets.* not filled in
-
-  return fillTemplateVariables(configYaml, data);
-}
-
-function loadConfigYaml(
+async function loadConfigYaml(
   workspaceConfigs: string[],
   rawYaml: string,
-  overrideConfigYaml: ClientConfigYaml | undefined,
-): ConfigResult<ClientConfigYaml> {
+  overrideConfigYaml: ConfigYaml | undefined,
+  ide: IDE,
+  controlPlaneClient: ControlPlaneClient,
+): Promise<ConfigResult<ConfigYaml>> {
   let config =
     overrideConfigYaml ??
-    (YAML.parse(renderTemplateVars(rawYaml)) as ClientConfigYaml);
+    (await clientRenderHelper(rawYaml, ide, controlPlaneClient));
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
@@ -98,7 +84,7 @@ async function slashCommandsFromV1PromptFiles(
 }
 
 async function configYamlToContinueConfig(
-  config: ClientConfigYaml,
+  config: ConfigYaml,
   ide: IDE,
   ideSettings: IdeSettings,
   uniqueId: string,
@@ -304,7 +290,7 @@ export async function loadContinueConfigFromYaml(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
-  overrideConfigYaml: ClientConfigYaml | undefined,
+  overrideConfigYaml: ConfigYaml | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<ContinueConfig>> {
@@ -314,10 +300,12 @@ export async function loadContinueConfigFromYaml(
       ? fs.readFileSync(configYamlPath, "utf-8")
       : "";
 
-  const configYamlResult = loadConfigYaml(
+  const configYamlResult = await loadConfigYaml(
     workspaceConfigs,
     rawYaml,
     overrideConfigYaml,
+    ide,
+    controlPlaneClient,
   );
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
@@ -328,18 +316,8 @@ export async function loadContinueConfigFromYaml(
     };
   }
 
-  const configYaml = await resolveSecretsOnClient(
-    configYamlResult.config,
-    ide.readSecrets.bind(ide),
-    async (secretNames: string[]) => {
-      const secretValues = await controlPlaneClient.syncSecrets(secretNames);
-      await ide.writeSecrets(secretValues);
-      return secretValues;
-    },
-  );
-
   const continueConfig = await configYamlToContinueConfig(
-    configYaml,
+    configYamlResult.config,
     ide,
     ideSettings,
     uniqueId,
