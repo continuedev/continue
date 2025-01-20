@@ -105,28 +105,28 @@ describe.skip("DocsService Integration Tests", () => {
     expect(retrievedChunks.length).toBe(0);
   });
 
-  test("Reindexes when changing embeddings provider", async () => {
-    const originalEmbeddingsProvider =
-      await docsService.getEmbeddingsProvider();
+  // test("Reindexes when changing embeddings provider", async () => {
+  //   const originalEmbeddingsProvider =
+  //     await docsService.getEmbeddingsProvider();
 
-    // Change embeddings provider
-    editConfigJson((config) => ({
-      ...config,
-      embeddingsProvider: {
-        provider: FreeTrial.providerName,
-      },
-    }));
+  //   // Change embeddings provider
+  //   editConfigJson((config) => ({
+  //     ...config,
+  //     embeddingsProvider: {
+  //       provider: FreeTrial.providerName,
+  //     },
+  //   }));
 
-    await getReloadedConfig();
+  //   await getReloadedConfig();
 
-    const newEmbeddingsProvider = await docsService.getEmbeddingsProvider();
+  //   const { provider, isPreindexed} = await docsService.getEmbeddingsProvider();
 
-    // Verify reindexing
-    const [originalVector] = await originalEmbeddingsProvider.embed(["test"]);
-    const [newMockVector] = await newEmbeddingsProvider.embed(["test"]);
+  //   // Verify reindexing
+  //   const [originalVector] = await originalEmbeddingsProvider.embed(["test"]);
+  //   const [newMockVector] = await provider.embed(["test"]);
 
-    expect(originalVector).not.toEqual(newMockVector);
-  });
+  //   expect(originalVector).not.toEqual(newMockVector);
+  // });
 
   test("Handles pulling down and adding pre-indexed docs", async () => {
     const preIndexedDoc = Object.values(preIndexedDocs)[0];

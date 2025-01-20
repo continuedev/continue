@@ -223,16 +223,10 @@ export interface ContextSubmenuItemWithProvider extends ContextSubmenuItem {
 export interface SiteIndexingConfig {
   title: string;
   startUrl: string;
-  rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
-}
-
-export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl?: string;
-  title: string;
-  maxDepth?: number;
+  useLocalCrawling?: boolean;
+  rootUrl?: string; // Currently only used by preindexed docs
 }
 
 export interface IContextProvider {
