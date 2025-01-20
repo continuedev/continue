@@ -95,15 +95,16 @@ class WatsonX extends BaseLLM {
     }
 
     const parts = message.content.map((part) => {
-      const msg: any = {
-        type: part.type,
+      if (part.type === "imageUrl") {
+        return {
+          type: "image_url",
+          image_url: { ...part.imageUrl, detail: "low" },
+        };
+      }
+      return {
+        type: "text",
         text: part.text,
       };
-      if (part.type === "imageUrl") {
-        msg.image_url = { ...part.imageUrl, detail: "low" };
-        msg.type = "image_url";
-      }
-      return msg;
     });
     return {
       ...message,

@@ -439,7 +439,8 @@ class IdeProtocolClient(
                                     null,
                                     null
                                 ) { response ->
-                                    val config = (response as Map<String, Any>)["config"] as Map<String, Any>
+                                    val result = (response as Map<String, Any>)["result"] as Map<String, Any>
+                                    val config = result["config"] as Map<String, Any>
                                     val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
 
                                     if (applyCodeBlockModel != null) {

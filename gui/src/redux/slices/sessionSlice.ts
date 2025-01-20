@@ -21,14 +21,15 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import { ProfileDescription } from "core/config/ConfigHandler";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
+import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
-import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -44,6 +45,7 @@ type SessionState = {
   title: string;
   id: string;
   selectedProfileId: string;
+  availableProfiles: ProfileDescription[];
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
@@ -83,6 +85,13 @@ const initialState: SessionState = {
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
   selectedProfileId: "local",
+  availableProfiles: [
+    {
+      id: "local",
+      title: "Local",
+      errors: undefined,
+    },
+  ],
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   codeToEdit: [],
@@ -323,13 +332,13 @@ export const sessionSlice = createSlice({
             const historyItem: ChatHistoryItemWithMessageId = {
               message: {
                 ...message,
+                content: renderChatMessage(message),
                 id: uuidv4(),
               },
               contextItems: [],
             };
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
-
               if (
                 toolCallDelta.id &&
                 toolCallDelta.function?.arguments &&
@@ -347,6 +356,8 @@ export const sessionSlice = createSlice({
           } else {
             // Add to the existing message
             if (message.content) {
+              // Note this only works because new message above
+              // was already rendered from parts to string
               lastMessage.content += renderChatMessage(message);
             } else if (
               message.role === "assistant" &&
@@ -504,8 +515,19 @@ export const sessionSlice = createSlice({
         selectedProfileId: payload,
       };
     },
-    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
-      state.curCheckpointIndex = payload;
+    setAvailableProfiles: (
+      state,
+      { payload }: PayloadAction<ProfileDescription[]>,
+    ) => {
+      return {
+        ...state,
+        availableProfiles: payload,
+        selectedProfileId: payload.find(
+          (profile) => profile.id === state.selectedProfileId,
+        )
+          ? state.selectedProfileId
+          : payload[0]?.id,
+      };
     },
     updateCurCheckpoint: (
       state,
@@ -515,6 +537,9 @@ export const sessionSlice = createSlice({
       if (checkpoint) {
         checkpoint[payload.filepath] = payload.content;
       }
+    },
+    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
+      state.curCheckpointIndex = payload;
     },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(
@@ -618,6 +643,9 @@ export const sessionSlice = createSlice({
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
     },
+    selectAvailableProfiles: (state) => {
+      return state.availableProfiles;
+    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -681,6 +709,7 @@ export const {
   removeCodeToEdit,
   setCalling,
   cancelToolCall,
+  setAvailableProfiles,
   acceptToolCall,
   setToolGenerated,
   setToolCallOutput,
@@ -696,6 +725,7 @@ export const {
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
+  selectAvailableProfiles,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

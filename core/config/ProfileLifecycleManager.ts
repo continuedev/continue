@@ -1,15 +1,17 @@
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
 } from "../index.js";
 
-import { ConfigResult, finalToBrowserConfig } from "./load.js";
+import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 
 export interface ProfileDescription {
   title: string;
   id: string;
+  errors: ConfigValidationError[] | undefined;
 }
 
 export class ProfileLifecycleManager {
@@ -19,19 +21,8 @@ export class ProfileLifecycleManager {
 
   constructor(private readonly profileLoader: IProfileLoader) {}
 
-  get profileId() {
-    return this.profileLoader.profileId;
-  }
-
-  get profileTitle() {
-    return this.profileLoader.profileTitle;
-  }
-
   get profileDescription(): ProfileDescription {
-    return {
-      title: this.profileTitle,
-      id: this.profileId,
-    };
+    return this.profileLoader.description;
   }
 
   clearConfig() {
@@ -71,14 +62,10 @@ export class ProfileLifecycleManager {
         result.config.contextProviders = (
           result.config.contextProviders ?? []
         ).concat(additionalContextProviders);
-
-        this.savedConfigResult = result;
-        resolve(result);
-      } else if (result.errors) {
-        reject(
-          `Error in config.json: ${result.errors.map((item) => item.message).join(" | ")}`,
-        );
       }
+
+      this.savedConfigResult = result;
+      resolve(result);
     });
 
     // Wait for the config promise to resolve

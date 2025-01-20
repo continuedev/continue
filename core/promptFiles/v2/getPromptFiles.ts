@@ -16,11 +16,11 @@ export async function getPromptFilesFromDir(
       return [];
     }
 
-    const paths = await walkDir(dir, ide, { ignoreFiles: [] });
-    const promptFilePaths = paths.filter((p) => p.endsWith(".prompt"));
-    const results = promptFilePaths.map(async (path) => {
-      const content = await ide.readFile(path); // make a try catch
-      return { path, content };
+    const uris = await walkDir(dir, ide, { ignoreFiles: [] });
+    const promptFilePaths = uris.filter((p) => p.endsWith(".prompt"));
+    const results = promptFilePaths.map(async (uri) => {
+      const content = await ide.readFile(uri); // make a try catch
+      return { path: uri, content };
     });
     return Promise.all(results);
   } catch (e) {

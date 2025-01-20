@@ -28,6 +28,8 @@ class DocsContextProvider extends BaseContextProvider {
 
   constructor(options: any) {
     super(options);
+    const docsService = DocsService.getSingleton();
+    docsService?.setGithubToken(this.options?.githubToken);
   }
 
   private async _rerankChunks(
@@ -178,6 +180,10 @@ class DocsContextProvider extends BaseContextProvider {
     const canUsePreindexedDocs = await docsService.canUsePreindexedDocs();
     if (canUsePreindexedDocs) {
       for (const { startUrl, title } of Object.values(preIndexedDocs)) {
+        // Skip if overridden in config
+        if (docs.find((d) => d.startUrl === startUrl)) {
+          continue;
+        }
         submenuItemsMap.set(startUrl, {
           title,
           id: startUrl,
