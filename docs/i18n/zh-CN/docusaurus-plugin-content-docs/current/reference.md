@@ -83,7 +83,6 @@ Specifies options for tab autocompletion behavior.
 **Properties:**
 
 - `disable`: If `true`, disables tab autocomplete (default: `false`).
-- `useFileSuffix`: If `true`, includes file suffix in the prompt.
 - `maxPromptTokens`: Maximum number of tokens for the prompt.
 - `debounceDelay`: Delay (in ms) before triggering autocomplete.
 - `maxSuffixPercentage`: Maximum percentage of prompt for suffix.

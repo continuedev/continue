@@ -902,7 +902,6 @@ declare global {
   
   export interface TabAutocompleteOptions {
     disable: boolean;
-    useFileSuffix: boolean;
     maxPromptTokens: number;
     debounceDelay: number;
     maxSuffixPercentage: number;
