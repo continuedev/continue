@@ -25,7 +25,8 @@ Each model has specific configuration options tailored to its provider and funct
 - `template`: Chat template to format messages. Auto-detected for most models but can be overridden. See intelliJ suggestions.
 - `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt).
 - `completionOptions`: Model-specific completion options, same format as top-level [`completionOptions`](#completionoptions), which they override.
-- `systemMessage`: A system message that will precede responses from the LLM.
+- `systemMessage`: A system message that will precede responses from the LLM. (Note: this property has higher precendence than the root `systemMessage` property)
+- `replaceSystemMessage`: If `true`, replaces the system message with the one specified in the model config's `systemMessage` property or with the root `systemMessage` property. If `false`, appends the `systemMessage` to the default system message, if any exists for the model. (default: `false`)
 - `requestOptions`: Model-specific HTTP request options, same format as top-level [`requestOptions`](#requestoptions), which they override.
 - `apiType`: Specifies the type of API (`openai` or `azure`).
 - `apiVersion`: Azure API version (e.g., `2023-07-01-preview`).
@@ -381,7 +382,7 @@ An optional token that identifies the user, primarily for authenticated services
 
 ### `systemMessage`
 
-Defines a system message that appears before every response from the language model, providing guidance or context.
+Defines a system message that appears before every response from the language model, providing guidance or context. Note: `systemMessage` in the model config takes precedence over this setting.
 
 ### `disableIndexing`
 
