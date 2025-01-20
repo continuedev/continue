@@ -71,7 +71,6 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   debugger: BugAntIcon,
   os: CpuChipIcon,
   tree: Bars3BottomLeftIcon,
-  trash: TrashIcon,
   "prompt-files": DocumentTextIcon,
   "repo-map": FolderIcon,
   "/clear": TrashIcon,
@@ -82,6 +81,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   google: GoogleIcon,
   "gitlab-mr": GitlabIcon,
   http: GlobeAltIcon,
+  trash: TrashIcon,
 };
 
 export function getIconFromDropdownItem(
@@ -190,199 +190,209 @@ interface MentionListProps {
   onClose: () => void;
 }
 
-export const MentionList = forwardRef<any, MentionListProps>(
-  (props: MentionListProps, ref) => {
-    const dispatch = useDispatch();
+const MentionList = forwardRef((props: MentionListProps, ref) => {
+  const dispatch = useDispatch();
 
-    const ideMessenger = useContext(IdeMessengerContext);
+  const ideMessenger = useContext(IdeMessengerContext);
 
-    const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-    const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
-      undefined,
-    );
-    const [querySubmenuItem, setQuerySubmenuItem] = useState<
-      ComboBoxItem | undefined
-    >(undefined);
+  const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
+    undefined,
+  );
+  const [querySubmenuItem, setQuerySubmenuItem] = useState<
+    ComboBoxItem | undefined
+  >(undefined);
 
-    const [allItems, setAllItems] = useState<ComboBoxItem[]>([]);
+  const [allItems, setAllItems] = useState<ComboBoxItem[]>([]);
 
-    useEffect(() => {
-      const items = [...props.items];
-      if (subMenuTitle === "Type to search docs") {
-        items.push({
-          title: "Add Docs",
-          type: "action",
-          action: () => {
-            dispatch(setShowDialog(true));
-            dispatch(setDialogMessage(<AddDocsDialog />));
+  useEffect(() => {
+    const items = [...props.items];
+    if (subMenuTitle === "Type to search docs") {
+      items.push({
+        title: "Add Docs",
+        type: "action",
+        action: () => {
+          dispatch(setShowDialog(true));
+          dispatch(setDialogMessage(<AddDocsDialog />));
 
-            // Delete back to last '@'
-            const { tr } = props.editor.view.state;
-            const text = tr.doc.textBetween(0, tr.selection.from);
-            const start = text.lastIndexOf("@");
+          // Delete back to last '@'
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          props.editor.view.dispatch(
+            tr.delete(start, tr.selection.from).scrollIntoView(),
+          );
+        },
+        description: "Add a new documentation source",
+      });
+    } else if (subMenuTitle === ".prompt files") {
+      items.push({
+        title: "New .prompt file",
+        type: "action",
+        action: () => {
+          ideMessenger.post("config/newPromptFile", undefined);
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          if (start !== -1) {
             props.editor.view.dispatch(
               tr.delete(start, tr.selection.from).scrollIntoView(),
             );
-          },
-          description: "Add a new documentation source",
-        });
-      } else if (subMenuTitle === ".prompt files") {
-        items.push({
-          title: "New .prompt file",
-          type: "action",
-          action: () => {
-            ideMessenger.post("config/newPromptFile", undefined);
-            const { tr } = props.editor.view.state;
-            const text = tr.doc.textBetween(0, tr.selection.from);
-            const start = text.lastIndexOf("@");
-            if (start !== -1) {
-              props.editor.view.dispatch(
-                tr.delete(start, tr.selection.from).scrollIntoView(),
-              );
-            }
-            props.onClose(); // Escape the mention list after creating a new prompt file
-          },
-          description: "Create a new .prompt file",
-        });
-      }
-
-      setAllItems(items);
-    }, [subMenuTitle, props.items, props.editor]);
-
-    const queryInputRef = useRef<HTMLTextAreaElement>(null);
-
-    useEffect(() => {
-      if (queryInputRef.current) {
-        queryInputRef.current.focus();
-      }
-    }, [querySubmenuItem]);
-
-    const selectItem = (index: number) => {
-      const item = allItems[index];
-
-      if (item.type === "action" && item.action) {
-        item.action();
-        return;
-      }
-
-      if (
-        item.type === "contextProvider" &&
-        item.contextProvider?.type === "submenu"
-      ) {
-        setSubMenuTitle(item.description);
-        if (item.id) {
-          props.enterSubmenu?.(props.editor, item.id);
-        }
-        return;
-      }
-
-      if (item.contextProvider?.type === "query") {
-        // update editor to complete context provider title
-        const { tr } = props.editor.view.state;
-        const text = tr.doc.textBetween(0, tr.selection.from);
-        const partialText = text.slice(text.lastIndexOf("@") + 1);
-        const remainingText = item.title.slice(partialText.length);
-        props.editor.view.dispatch(
-          tr.insertText(remainingText, tr.selection.from),
-        );
-
-        setSubMenuTitle(item.description);
-        setQuerySubmenuItem(item);
-        return;
-      }
-
-      if (item) {
-        props.command({ ...item, itemType: item.type });
-      }
-    };
-
-    const totalItems = allItems.length;
-
-    const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
-
-    const upHandler = () => {
-      setSelectedIndex((prevIndex) => {
-        const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
-        itemRefs.current[newIndex]?.scrollIntoView({
-          behavior: "instant" as ScrollBehavior,
-          block: "nearest",
-        });
-        return newIndex;
-      });
-    };
-
-    const downHandler = () => {
-      setSelectedIndex((prevIndex) => {
-        const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
-        itemRefs.current[newIndex]?.scrollIntoView({
-          behavior: "instant" as ScrollBehavior,
-          block: "nearest",
-        });
-        return newIndex;
-      });
-    };
-
-    const enterHandler = () => {
-      selectItem(selectedIndex);
-    };
-
-    useEffect(() => setSelectedIndex(0), [allItems]);
-
-    useImperativeHandle(ref, () => ({
-      onKeyDown: ({ event }: { event: KeyboardEvent }) => {
-        if (event.key === "ArrowUp") {
-          upHandler();
-          return true;
-        }
-
-        if (event.key === "ArrowDown") {
-          downHandler();
-          return true;
-        }
-
-        if (event.key === "Enter" || event.key === "Tab") {
-          enterHandler();
-          event.stopPropagation();
-          event.preventDefault();
-          return true;
-        }
-
-        if (event.key === "Escape") {
-          event.preventDefault();
-          event.stopPropagation();
-          return true;
-        }
-
-        if (event.key === " ") {
-          if (allItems.length === 1) {
-            enterHandler();
-            return true;
           }
+          props.onClose(); // Escape the mention list after creating a new prompt file
+        },
+        description: "Create a new .prompt file",
+      });
+    }
+
+    setAllItems(items);
+  }, [subMenuTitle, props.items, props.editor]);
+
+  const queryInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (queryInputRef.current) {
+      queryInputRef.current.focus();
+    }
+  }, [querySubmenuItem]);
+
+  const selectItem = (index: number) => {
+    const item = allItems[index];
+
+    if (item.type === "action" && item.action) {
+      item.action();
+      return;
+    }
+
+    if (
+      item.type === "contextProvider" &&
+      item.contextProvider?.type === "submenu"
+    ) {
+      setSubMenuTitle(item.description);
+      if (item.id) {
+        props.enterSubmenu?.(props.editor, item.id);
+      }
+      return;
+    }
+
+    if (item.contextProvider?.type === "query") {
+      // update editor to complete context provider title
+      const { tr } = props.editor.view.state;
+      const text = tr.doc.textBetween(0, tr.selection.from);
+      const partialText = text.slice(text.lastIndexOf("@") + 1);
+      const remainingText = item.title.slice(partialText.length);
+      props.editor.view.dispatch(
+        tr.insertText(remainingText, tr.selection.from),
+      );
+
+      setSubMenuTitle(item.description);
+      setQuerySubmenuItem(item);
+      return;
+    }
+
+    if (item) {
+      props.command({ ...item, itemType: item.type });
+    }
+  };
+
+  const totalItems = allItems.length;
+
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const upHandler = () => {
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
+  };
+
+  const downHandler = () => {
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
+  };
+
+  const enterHandler = () => {
+    selectItem(selectedIndex);
+  };
+
+  useEffect(() => setSelectedIndex(0), [allItems]);
+
+  useImperativeHandle(ref, () => ({
+    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
+      if (event.key === "ArrowUp") {
+        upHandler();
+        return true;
+      }
+
+      if (event.key === "ArrowDown") {
+        downHandler();
+        return true;
+      }
+
+      if (event.key === "Enter" || event.key === "Tab") {
+        enterHandler();
+        event.stopPropagation();
+        event.preventDefault();
+        return true;
+      }
+
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        return true;
+      }
+
+      if (event.key === " ") {
+        if (allItems.length === 1) {
+          enterHandler();
+          return true;
         }
+      }
 
-        return false;
-      },
-    }));
+      return false;
+    },
+  }));
 
-    const showFileIconForItem = (item: ComboBoxItem) => {
-      return ["file", "code"].includes(item.type);
-    };
+  const showFileIconForItem = (item: ComboBoxItem) => {
+    return ["file", "code"].includes(item.type);
+  };
 
-    useEffect(() => {
-      itemRefs.current = itemRefs.current.slice(0, allItems.length);
-    }, [allItems]);
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, allItems.length);
+  }, [allItems]);
 
-    return (
-      <ItemsDiv>
-        {querySubmenuItem ? (
-          <QueryInput
-            rows={1}
-            ref={queryInputRef}
-            placeholder={querySubmenuItem.description}
-            onKeyDown={(e) => {
-              if (!queryInputRef.current) {
-                return;
+  return (
+    <ItemsDiv>
+      {querySubmenuItem ? (
+        <QueryInput
+          rows={1}
+          ref={queryInputRef}
+          placeholder={querySubmenuItem.description}
+          onKeyDown={(e) => {
+            if (!queryInputRef.current) {
+              return;
+            }
+            if (e.key === "Enter") {
+              if (e.shiftKey) {
+                queryInputRef.current.innerText += "\n";
+              } else {
+                props.command({
+                  ...querySubmenuItem,
+                  itemType: querySubmenuItem.type,
+                  query: queryInputRef.current.value,
+                  label: `${querySubmenuItem.label}: ${queryInputRef.current.value}`,
+                });
               }
             } else if (e.key === "Escape") {
               setQuerySubmenuItem(undefined);
@@ -462,15 +472,16 @@ export const MentionList = forwardRef<any, MentionListProps>(
                       );
                     })}
                   </span>
-                </ItemDiv>
-              ))
-            ) : (
-              <ItemDiv className="item">No results</ItemDiv>
-            )}
-            {/* </CustomScrollbarDiv> */}
-          </>
-        )}
-      </ItemsDiv>
-    );
-  },
-);
+                </span>
+              </ItemDiv>
+            ))
+          ) : (
+            <ItemDiv className="item">No results</ItemDiv>
+          )}
+          {/* </CustomScrollbarDiv> */}
+        </>
+      )}
+    </ItemsDiv>
+  );
+});
+export default MentionList;
