@@ -41,7 +41,7 @@ class RepoMapContextProvider extends BaseContextProvider {
           // Doesn't ALWAYS depend on indexing, so not setting dependsOnIndexing = true, just checking for it
           includeSignatures: extras.config.disableIndexing
             ? false
-            : (this.options?.includeSignatures ?? false),
+            : (this.options?.includeSignatures ?? true),
         }),
       },
     ];

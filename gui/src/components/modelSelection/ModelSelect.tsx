@@ -6,17 +6,17 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { MouseEvent, useContext, useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useContext, useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  Divider,
-  lightGray,
-  vscInputBackground,
-} from "..";
+import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
+import { useAppSelector } from "../../redux/hooks";
+import {
+  selectDefaultModel,
+  setDefaultModel,
+} from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import {
   getFontSize,
@@ -24,11 +24,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
-import { useAppSelector } from "../../redux/hooks";
-import {
-  selectDefaultModel,
-  setDefaultModel,
-} from "../../redux/slices/configSlice";
+import { Divider } from "./platform/shared";
 
 interface ModelOptionProps {
   option: Option;
@@ -144,7 +140,7 @@ function ModelOption({
   const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
-  function onClickDelete(e: MouseEvent) {
+  function onClickDelete(e: any) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -164,7 +160,7 @@ function ModelOption({
     );
   }
 
-  function onClickGear(e: MouseEvent) {
+  function onClickGear(e: any) {
     e.stopPropagation();
     e.preventDefault();
 
@@ -173,7 +169,7 @@ function ModelOption({
     });
   }
 
-  function handleOptionClick(e: MouseEvent) {
+  function handleOptionClick(e: any) {
     if (showMissingApiKeyMsg) {
       e.preventDefault();
       e.stopPropagation();

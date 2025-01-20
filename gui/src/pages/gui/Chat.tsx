@@ -32,6 +32,7 @@ import {
   OnboardingCard,
   useOnboardingCard,
 } from "../../components/OnboardingCard";
+import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform/PlatformOnboardingCard";
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
@@ -39,6 +40,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectUsePlatform } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
@@ -57,6 +59,7 @@ import {
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
@@ -70,7 +73,6 @@ import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import { loadLastSession } from "../../redux/thunks/session";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -215,6 +217,7 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
+  const usePlatform = useAppSelector(selectUsePlatform);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -539,7 +542,11 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  <OnboardingCard />
+                  {usePlatform ? (
+                    <PlatformOnboardingCard />
+                  ) : (
+                    <OnboardingCard />
+                  )}
                 </div>
               )}
 
