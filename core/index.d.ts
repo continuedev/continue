@@ -223,16 +223,10 @@ export interface ContextSubmenuItemWithProvider extends ContextSubmenuItem {
 export interface SiteIndexingConfig {
   title: string;
   startUrl: string;
-  rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
-}
-
-export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl?: string;
-  title: string;
-  maxDepth?: number;
+  useLocalCrawling?: boolean;
+  rootUrl?: string; // Currently only used by preindexed docs
 }
 
 export interface IContextProvider {
@@ -306,11 +300,17 @@ export interface CompletionOptions extends BaseCompletionOptions {
 
 export type ChatMessageRole = "user" | "assistant" | "system" | "tool";
 
-export interface MessagePart {
-  type: "text" | "imageUrl";
-  text?: string;
-  imageUrl?: { url: string };
-}
+export type TextMessagePart = {
+  type: "text";
+  text: string;
+};
+
+export type ImageMessagePart = {
+  type: "imageUrl";
+  imageUrl: { url: string };
+};
+
+export type MessagePart = TextMessagePart | ImageMessagePart;
 
 export type MessageContent = string | MessagePart[];
 

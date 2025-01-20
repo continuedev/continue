@@ -233,8 +233,8 @@ List of documentation sites to index.
 
 - `title` (**required**): Title of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
-- `maxDepth`: Maximum depth for crawling. Default `3`
+<!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
 
 Example
@@ -244,7 +244,6 @@ Example
     {
     "title": "Continue",
     "startUrl": "https://docs.continue.dev/intro",
-    "rootUrl": "https://docs.continue.dev",
     "faviconUrl": "https://docs.continue.dev/favicon.ico",
   }
 ]
