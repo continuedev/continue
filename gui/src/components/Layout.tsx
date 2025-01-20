@@ -151,11 +151,7 @@ const Layout = () => {
     "incrementFtc",
     async () => {
       const u = getLocalStorage("ftc");
-      if (u) {
-        setLocalStorage("ftc", u + 1);
-      } else {
-        setLocalStorage("ftc", 1);
-      }
+      setLocalStorage("ftc", (u ?? 0) + 1);
     },
     [],
   );

@@ -247,21 +247,18 @@ export function Chat() {
       editorToClearOnSend?: Editor,
     ) => {
       if (defaultModel?.provider === "free-trial") {
-        const u = getLocalStorage("ftc");
-        if (u) {
-          setLocalStorage("ftc", u + 1);
-
-          if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-            onboardingCard.open("Best");
-            posthog?.capture("ftc_reached");
-            ideMessenger.ide.showToast(
-              "info",
-              "You've reached the free trial limit. Please configure a model to continue.",
-            );
-            return;
-          }
-        } else {
-          setLocalStorage("ftc", 1);
+        const u = getLocalStorage("ftc") ?? 0;
+        setLocalStorage("ftc", u + 1);
+        if (u === FREE_TRIAL_LIMIT_REQUESTS) {
+          posthog?.capture("ftc_reached");
+        }
+        if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
+          onboardingCard.open("Best");
+          ideMessenger.ide.showToast(
+            "info",
+            "You've reached the free trial limit. Please configure a model to continue.",
+          );
+          return;
         }
       }
 

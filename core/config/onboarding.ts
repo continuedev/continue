@@ -9,7 +9,7 @@ export const LOCAL_ONBOARDING_CHAT_MODEL = "llama3.1:8b";
 export const LOCAL_ONBOARDING_CHAT_TITLE = "Llama 3.1 8B";
 
 /**
- * We set the "best" chat + autocopmlete models by default
+ * We set the "best" chat + autocomplete models by default
  * whenever a user doesn't have a config.json
  */
 export function setupBestConfig(
