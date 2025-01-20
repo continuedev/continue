@@ -47,6 +47,7 @@ function AddDocsDialog() {
 
   const sortedDocsSuggestions = useMemo(() => {
     const docsFromConfig = configDocs ?? [];
+    // Don't show suggestions that are already in the config, indexing, and/or pre-indexed
     const filtered = docsSuggestions.filter((sug) => {
       const startUrl = sug.details?.docsLink;
       return (
