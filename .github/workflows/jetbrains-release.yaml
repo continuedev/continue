@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
     inputs:
       publish_build:
-        description: `Whether or not to publish the built extension to the JetBrains marketplace`
+        description: 'Whether or not to publish the built extension to the JetBrains marketplace'
         required: true
         default: false
 
