@@ -374,6 +374,10 @@ const config = {
             from: "/reference/Model Providers/openrouter",
           },
           {
+            to: "/customize/model-providers/more/geekai",
+            from: "/reference/Model Providers/geekai",
+          },
+          {
             to: "/customize/model-providers/more/replicatellm",
             from: "/reference/Model Providers/replicatellm",
           },

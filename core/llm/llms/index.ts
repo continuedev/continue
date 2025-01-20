@@ -22,6 +22,7 @@ import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import FunctionNetwork from "./FunctionNetwork";
+import GeekAI from "./GeekAI";
 import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
@@ -88,6 +89,7 @@ export const LLMClasses = [
   Azure,
   WatsonX,
   OpenRouter,
+  GeekAI,
   Nvidia,
   Vllm,
   SambaNova,
