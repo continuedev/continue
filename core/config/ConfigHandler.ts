@@ -15,7 +15,6 @@ import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath } from "../util/paths.js";
 
 import { ConfigResult } from "@continuedev/config-yaml";
-import { pathToFileURL } from "url";
 import { controlPlaneEnv } from "../control-plane/env.js";
 import { usePlatform } from "../control-plane/flags.js";
 import {
@@ -29,6 +28,7 @@ import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
+import { localPathToUri } from "../util/pathToUri.js";
 
 export type { ProfileDescription };
 
@@ -95,7 +95,7 @@ export class ConfigHandler {
   async openConfigProfile(profileId?: string) {
     let openProfileId = profileId || this.selectedProfileId;
     if (openProfileId === "local") {
-      await this.ide.openFile(pathToFileURL(getConfigJsonPath()).toString());
+      await this.ide.openFile(localPathToUri(getConfigJsonPath()));
     } else {
       await this.ide.openUrl(`${controlPlaneEnv.APP_URL}${openProfileId}`);
     }
