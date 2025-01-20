@@ -1,6 +1,10 @@
 import * as fs from "fs";
 import * as YAML from "yaml";
-import { decodeSecretLocation, resolveSecretLocationInProxy } from "../dist";
+import {
+  decodeSecretLocation,
+  encodeSecretLocation,
+  resolveSecretLocationInProxy,
+} from "../dist";
 import {
   clientRender,
   FQSN,
@@ -24,11 +28,13 @@ describe("E2E Scenarios", () => {
   };
 
   const packageSecrets: Record<string, string> = {
-    ANTHROPIC_API_KEY: "sk-ant",
+    "test-org/assistant/ANTHROPIC_API_KEY": "sk-ant",
+    "test-org/models/GEMINI_API_KEY": "gemini-api-key",
   };
 
   const proxyEnvSecrets: Record<string, string> = {
     ANTHROPIC_API_KEY: "sk-ant-env",
+    GEMINI_API_KEY: "gemini-api-key-env",
   };
 
   const localUserSecretStore: SecretStore = {
@@ -66,7 +72,9 @@ describe("E2E Scenarios", () => {
       secretLocation: SecretLocation,
     ): Promise<string | undefined> {
       if (secretLocation.secretType === SecretType.Package) {
-        return packageSecrets[secretLocation.secretName];
+        return packageSecrets[
+          encodeSecretLocation(secretLocation).split(":")[1]
+        ];
       } else if (secretLocation.secretType === SecretType.User) {
         return userSecrets[secretLocation.secretName];
       } else {
@@ -92,13 +100,16 @@ describe("E2E Scenarios", () => {
     );
 
     // Test that packages were correctly unrolled and params replaced
-    expect(unrolledConfig.models?.length).toBe(3);
+    expect(unrolledConfig.models?.length).toBe(4);
     expect(unrolledConfig.models?.[0].apiKey).toBe(
       "${{ secrets.test-org/assistant/OPENAI_API_KEY }}",
     );
     expect(unrolledConfig.models?.[1].apiKey).toBe("sk-456");
     expect(unrolledConfig.models?.[2].apiKey).toBe(
       "${{ secrets.test-org/assistant/test-org/models/ANTHROPIC_API_KEY }}",
+    );
+    expect(unrolledConfig.models?.[3].apiKey).toBe(
+      "${{ secrets.test-org/assistant/test-org/models/GEMINI_API_KEY }}",
     );
 
     expect(unrolledConfig.rules?.length).toBe(3);
@@ -113,7 +124,9 @@ describe("E2E Scenarios", () => {
     );
 
     // Test that user secrets were injected and others were changed to use proxy
-    const anthropicSecretLocation = "package:test-org/models/ANTHROPIC_API_KEY";
+    const anthropicSecretLocation =
+      "package:test-org/assistant/ANTHROPIC_API_KEY";
+    const geminiSecretLocation = "package:test-org/models/GEMINI_API_KEY";
     expect(clientRendered.models?.[0].apiKey).toBe("sk-123");
     expect(clientRendered.models?.[1].apiKey).toBe("sk-456");
     expect(clientRendered.models?.[2].provider).toBe("continue-proxy");
@@ -121,24 +134,45 @@ describe("E2E Scenarios", () => {
       anthropicSecretLocation,
     );
     expect(clientRendered.models?.[2].apiKey).toBeUndefined();
+    expect(clientRendered.models?.[3].provider).toBe("continue-proxy");
+    expect((clientRendered.models?.[3] as any).apiKeyLocation).toBe(
+      geminiSecretLocation,
+    );
+    expect(clientRendered.models?.[3].apiKey).toBeUndefined();
 
     // Test that proxy can correctly resolve secrets
-    const secretLocation = decodeSecretLocation(anthropicSecretLocation);
+    const decodedAnthropicSecretLocation = decodeSecretLocation(
+      anthropicSecretLocation,
+    );
+    const decodedGeminiSecretLocation =
+      decodeSecretLocation(geminiSecretLocation);
 
     // With environment
-    const secretValue = await resolveSecretLocationInProxy(
-      secretLocation,
+    const antSecretValue = await resolveSecretLocationInProxy(
+      decodedAnthropicSecretLocation,
       platformSecretStore,
       environmentSecretStore,
     );
-    expect(secretValue).toBe("sk-ant-env");
+    expect(antSecretValue).toBe("sk-ant-env");
+    const geminiSecretValue = await resolveSecretLocationInProxy(
+      decodedGeminiSecretLocation,
+      platformSecretStore,
+      environmentSecretStore,
+    );
+    expect(geminiSecretValue).toBe("gemini-api-key-env");
 
     // Without environment
-    const secretValue2 = await resolveSecretLocationInProxy(
-      secretLocation,
+    const antSecretValue2 = await resolveSecretLocationInProxy(
+      decodedAnthropicSecretLocation,
       platformSecretStore,
       undefined,
     );
-    expect(secretValue2).toBe("sk-ant");
+    expect(antSecretValue2).toBe("sk-ant");
+    const geminiSecretValue2 = await resolveSecretLocationInProxy(
+      decodedGeminiSecretLocation,
+      platformSecretStore,
+      undefined,
+    );
+    expect(geminiSecretValue2).toBe("gemini-api-key");
   });
 });

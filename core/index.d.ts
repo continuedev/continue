@@ -460,7 +460,7 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
-  apiKeySecret?: string;
+  apiKeyLocation?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
@@ -896,7 +896,7 @@ export interface ModelDescription {
   provider: string;
   model: string;
   apiKey?: string;
-  apiKeySecret?: string;
+  apiKeyLocation?: string;
   apiBase?: string;
   contextLength?: number;
   maxStopWords?: number;

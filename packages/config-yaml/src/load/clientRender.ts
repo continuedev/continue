@@ -87,8 +87,11 @@ function getUnrenderedSecretLocation(
       const secretLocation = decodeSecretLocation(secretLocationEncoded);
       return secretLocation;
     } catch (e) {
-      // If it's templated but not a valid secret location, leave it be
+      // If it's a templated secret but not a valid secret location, leave it be
       // in case on-prem proxy has the secret in an env variable
+      if (templateVars[0].startsWith("secrets.")) {
+        return undefined; // TODO
+      }
       return undefined;
     }
   }

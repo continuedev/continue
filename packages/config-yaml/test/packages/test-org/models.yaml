@@ -11,3 +11,8 @@ models:
     provider: anthropic
     model: claude-3-5-sonnet-latest
     apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
+
+  - name: gemini
+    provider: gemini
+    model: gemini
+    apiKey: ${{ secrets.GEMINI_API_KEY }}
