@@ -306,11 +306,17 @@ export interface CompletionOptions extends BaseCompletionOptions {
 
 export type ChatMessageRole = "user" | "assistant" | "system" | "tool";
 
-export interface MessagePart {
-  type: "text" | "imageUrl";
-  text?: string;
-  imageUrl?: { url: string };
-}
+export type TextMessagePart = {
+  type: "text";
+  text: string;
+};
+
+export type ImageMessagePart = {
+  type: "imageUrl";
+  imageUrl: { url: string };
+};
+
+export type MessagePart = TextMessagePart | ImageMessagePart;
 
 export type MessageContent = string | MessagePart[];
 
