@@ -230,6 +230,19 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["deepseek"],
     isOpenSource: false,
   },
+  deepseekReasonerApi: {
+    title: "DeepSeek Reasoner",
+    description:
+      "An open-source reasoning model which generates a chain of thought to enhance the accuracy of its responses.",
+    params: {
+      title: "DeepSeek Reasoner",
+      model: "deepseek-reasoner",
+      contextLength: 64_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["deepseek"],
+    isOpenSource: true,
+  },
   deepseekCoder2Lite: {
     title: "DeepSeek Coder 2 Lite",
     description:
