@@ -70,8 +70,12 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ github.event.pull_request.head.repo.fork && 'production' || '' }}
     steps:
+      - name: Print whether fork
+        run: |
+          echo "Fork: ${github.event.pull_request.head.repo.fork}"
+
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
