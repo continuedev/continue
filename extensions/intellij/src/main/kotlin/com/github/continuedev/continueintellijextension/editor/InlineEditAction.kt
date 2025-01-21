@@ -130,7 +130,8 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val modelTitles = mutableListOf<String>()
 
     continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val result = (response as Map<String, Any>)["result"] as Map<String, Any>
+        val content = (response as Map<String, Any>)["content"] as Map<String, Any>
+        val result = content["result"] as Map<String, Any>
         val config = result["config"] as Map<String, Any>
         val models = config["models"] as List<Map<String, Any>>
         modelTitles.addAll(models.map { it["title"] as String })
