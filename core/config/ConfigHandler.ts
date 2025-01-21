@@ -301,6 +301,9 @@ export class ConfigHandler {
   }
 
   async llmFromTitle(title?: string): Promise<ILLM> {
+    if (!title) {
+      throw new Error("No model found");
+    }
     const { config } = await this.loadConfig();
     const model = config?.models.find((m) => m.title === title);
     if (!model) {

@@ -132,17 +132,14 @@ export class Core {
 
     this.configHandler.onConfigUpdate(
       async ({ config, errors, configLoadInterrupted }) => {
-        if (!configLoadInterrupted && config) {
-          this.messenger.send("configUpdate", {
-            result: {
-              config: finalToBrowserConfig(config),
-              configLoadInterrupted,
-              errors,
-            },
-            profileId: this.configHandler.currentProfile.profileDescription.id,
-          });
-        }
-        this.messenger.send("configError", errors);
+        this.messenger.send("configUpdate", {
+          result: {
+            config: config && finalToBrowserConfig(config),
+            configLoadInterrupted,
+            errors,
+          },
+          profileId: this.configHandler.currentProfile.profileDescription.id,
+        });
       },
     );
 

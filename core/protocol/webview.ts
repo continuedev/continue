@@ -16,7 +16,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
-  getDefaultModelTitle: [undefined, string];
+  getDefaultModelTitle: [undefined, string | undefined];
   indexProgress: [IndexingProgressUpdate, void]; // Codebase
   "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
   refreshSubmenuItems: [

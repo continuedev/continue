@@ -34,7 +34,7 @@ export const gatherContext = createAsyncThunk<
     const defaultContextProviders =
       state.config.config.experimental?.defaultContext ?? [];
 
-    if (!state.config.defaultModelTitle) {
+    if (!defaultModel) {
       console.error(
         "gatherContext thunk: Cannot gather context, no model selected",
       );
@@ -49,12 +49,12 @@ export const gatherContext = createAsyncThunk<
         ideMessenger: extra.ideMessenger,
         defaultContextProviders,
         dispatch,
-        selectedModelTitle: state.config.defaultModelTitle,
+        selectedModelTitle: defaultModel.title,
       });
 
     // Automatically use currently open file
     if (!modifiers.noContext) {
-      const usingFreeTrial = defaultModel?.provider === "free-trial";
+      const usingFreeTrial = defaultModel.provider === "free-trial";
 
       const currentFile = await extra.ideMessenger.ide.getCurrentFile();
       if (currentFile) {

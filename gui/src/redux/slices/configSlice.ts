@@ -6,28 +6,30 @@ import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
 export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
   config: BrowserSerializedContinueConfig;
-  defaultModelTitle: string;
+  defaultModelTitle?: string;
+};
+
+const emptyConfig = {
+  slashCommands: [
+    {
+      name: "share",
+      description: "Export the current chat session to markdown",
+    },
+    {
+      name: "cmd",
+      description: "Generate a shell command",
+    },
+  ],
+  contextProviders: [],
+  models: [],
+  tools: [],
+  usePlatform: false,
 };
 
 const initialState: ConfigState = {
   configError: undefined,
-  defaultModelTitle: "GPT-4",
-  config: {
-    slashCommands: [
-      {
-        name: "share",
-        description: "Export the current chat session to markdown",
-      },
-      {
-        name: "cmd",
-        description: "Generate a shell command",
-      },
-    ],
-    contextProviders: [],
-    models: [],
-    tools: [],
-    usePlatform: false,
-  },
+  defaultModelTitle: undefined,
+  config: emptyConfig,
 };
 
 export const configSlice = createSlice({
@@ -43,17 +45,19 @@ export const configSlice = createSlice({
       const { config, errors } = result;
       state.configError = errors;
 
+      // If an error is found in config on save,
+      // We must invalidate the GUI config too,
+      // Since core won't be able to load config
+      // Don't invalidate the loaded config
       if (!config) {
-        return;
+        state.config = emptyConfig;
+        state.defaultModelTitle = undefined;
+      } else {
+        state.config = config;
+        state.defaultModelTitle =
+          config.models.find((model) => model.title === state.defaultModelTitle)
+            ?.title || config.models[0]?.title;
       }
-
-      const defaultModelTitle =
-        config.models.find((model) => model.title === state.defaultModelTitle)
-          ?.title ||
-        config.models[0]?.title ||
-        "";
-      state.config = config;
-      state.defaultModelTitle = defaultModelTitle;
     },
     updateConfig: (
       state,

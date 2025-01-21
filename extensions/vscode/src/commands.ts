@@ -340,13 +340,12 @@ const getCommandsMap: (
       throw new Error("Config not loaded");
     }
 
-    const defaultModelTitle = await sidebar.webviewProtocol.request(
-      "getDefaultModelTitle",
-      undefined,
-    );
-
     const modelTitle =
-      getModelByRole(config, "inlineEdit")?.title ?? defaultModelTitle;
+      getModelByRole(config, "inlineEdit")?.title ??
+      (await sidebar.webviewProtocol.request(
+        "getDefaultModelTitle",
+        undefined,
+      ));
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 

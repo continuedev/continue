@@ -305,6 +305,10 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
+    if (!selectedModelTitle) {
+      console.error("No selected model title");
+      return;
+    }
     const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
       modifiers: {
