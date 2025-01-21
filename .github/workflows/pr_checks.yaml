@@ -585,7 +585,7 @@ jobs:
           path: |
             ${{ github.workspace }}/extensions/intellij/build/reports
 
-  check:
+  require-all-checks-to-pass:
     if: always()
     runs-on: ubuntu-latest
     needs:
