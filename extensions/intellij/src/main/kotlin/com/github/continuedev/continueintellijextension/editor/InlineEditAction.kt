@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
+import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -489,14 +490,14 @@ class CustomPanel(
                 }
 
             val leftButton =
-                CustomButton("Reject All (${getMetaKeyLabel()}⇧⌫)") { onReject() }
+                CustomButton("Reject All (${getMetaKeyLabel()}${getShiftKeyLabel()}⌫)") { onReject() }
                     .apply {
                         background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
                         foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
                     }
 
             val rightButton =
-                CustomButton("Accept All (${getMetaKeyLabel()}⇧⏎)") { onAccept() }
+                CustomButton("Accept All (${getMetaKeyLabel()}${getShiftKeyLabel()}⏎)") { onAccept() }
                     .apply {
                         background = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
                         foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
