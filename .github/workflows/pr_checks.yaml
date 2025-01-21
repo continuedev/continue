@@ -74,7 +74,7 @@ jobs:
     steps:
       - name: Print whether fork
         run: |
-          echo "Fork: ${github.event.pull_request.head.repo.fork}"
+          echo "Fork: ${{ github.event.pull_request.head.repo.fork }}"
 
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
