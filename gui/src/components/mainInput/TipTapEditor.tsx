@@ -350,7 +350,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }).configure({
         HTMLAttributes: {
-          class: "object-contain max-h-[210px] max-w-full",
+          class: "object-contain max-h-[210px] max-w-full mx-1",
         },
       }),
       Placeholder.configure({
