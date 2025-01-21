@@ -167,13 +167,13 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val prefix = editor.document.getText(TextRange(0, startOffset))
     val highlighted = editor.document.getText(TextRange(startOffset, endOffset))
     val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
-    val lineNumber = max(0, startLineNumber - 1)
+    val lineNumber = if (startLineNumber == 0) 0 else max(0, startLineNumber - 1)
 
     // Un-highlight the selected text
     selectionModel.removeSelection()
 
     // Get indentation width in pixels
-    val indentationLineNum = lineNumber + 1
+    val indentationLineNum = if (startLineNumber == 0) 0 else lineNumber + 1
     val lineStart = editor.document.getLineStartOffset(indentationLineNum)
     val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
     val text = editor.document.getText(TextRange(lineStart, lineEnd))
