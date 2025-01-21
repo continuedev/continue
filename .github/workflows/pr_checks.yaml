@@ -70,7 +70,7 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'production' || '' }}
+    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
     steps:
       - name: Print whether fork
         run: |
