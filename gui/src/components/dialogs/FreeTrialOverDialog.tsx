@@ -2,6 +2,8 @@ import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { Button, SecondaryButton } from "..";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { useAppSelector } from "../../redux/hooks";
+import { useEffect } from "react";
 
 interface FreeTrialOverDialogProps {
   onConfirm: () => void;
@@ -14,6 +16,14 @@ interface FreeTrialOverDialogProps {
 
 function FreeTrialOverDialog(props: FreeTrialOverDialogProps) {
   const dispatch = useDispatch();
+  const history = useAppSelector((store) => store.session.history);
+
+  useEffect(() => {
+    if (history.length === 0) {
+      dispatch(setShowDialog(false));
+      dispatch(setDialogMessage(undefined));
+    }
+  }, [history]);
 
   return (
     <div className="p-4 pt-0">

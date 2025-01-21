@@ -247,12 +247,18 @@ export function Chat() {
       editorToClearOnSend?: Editor,
     ) => {
       if (defaultModel?.provider === "free-trial") {
+        dispatch(setDialogMessage(<PlatformOnboardingCard />));
+        dispatch(setShowDialog(true));
+        return;
         const u = getLocalStorage("ftc") ?? 0;
         setLocalStorage("ftc", u + 1);
         if (u === FREE_TRIAL_LIMIT_REQUESTS) {
           posthog?.capture("ftc_reached");
         }
         if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
+          if (usePlatform) {
+          } else {
+          }
           onboardingCard.open("Best");
           ideMessenger.ide.showToast(
             "info",
@@ -298,6 +304,7 @@ export function Chat() {
       streamResponse,
       isSingleRangeEditOrInsertion,
       codeToEdit,
+      usePlatform,
     ],
   );
 
