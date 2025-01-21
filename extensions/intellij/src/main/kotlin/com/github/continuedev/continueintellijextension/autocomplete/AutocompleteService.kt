@@ -108,7 +108,8 @@ class AutocompleteService(private val project: Project) {
             ({ response ->
                 widget?.setLoading(false)
 
-                val completions = response as List<*>
+                val responseObject = response as Map<*, *>
+                val completions = responseObject["content"] as List<*>
 
                 if (completions.isNotEmpty()) {
                     val completion = completions[0].toString()
