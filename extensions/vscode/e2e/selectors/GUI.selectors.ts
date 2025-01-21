@@ -79,6 +79,31 @@ export class GUISelectors {
     );
   }
 
+  public static getOnboardingTabButton(view: WebView, title: string) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `onboarding-tab-${title}`,
+    );
+  }
+
+  public static getBestChatApiKeyInput(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "best-chat-api-key-input",
+    );
+  }
+
+  public static getBestAutocompleteApiKeyInput(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "best-autocomplete-api-key-input",
+    );
+  }
+
+  public static getTutorialCard(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "tutorial-card");
+  }
+
   public static getThreadMessageByText(view: WebView, text: string) {
     return view.findWebElement(
       By.xpath(`//*[@class="thread-message"]//*[contains(text(), "${text}")]`),
