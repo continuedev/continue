@@ -132,7 +132,12 @@ export class ConfigHandler {
               this.writeLog,
               this.reloadConfig.bind(this),
             );
-            this.profiles.push(new ProfileLifecycleManager(profileLoader));
+            this.profiles = [
+              ...this.profiles.filter(
+                (profile) => profile.profileDescription.id === "local",
+              ),
+              new ProfileLifecycleManager(profileLoader),
+            ];
           }),
         );
 
