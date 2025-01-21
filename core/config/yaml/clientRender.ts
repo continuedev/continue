@@ -7,7 +7,7 @@ import {
 import { IDE } from "../..";
 import { ControlPlaneClient } from "../../control-plane/client";
 
-export function clientRenderHelper(
+export async function clientRenderHelper(
   unrolledAssistant: string,
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
@@ -31,5 +31,10 @@ export function clientRenderHelper(
     resolveFQSNs: controlPlaneClient.resolveFQSNs.bind(controlPlaneClient),
   };
 
-  return clientRender(unrolledAssistant, ideSecretStore, platformClient);
+  const userId = await controlPlaneClient.userId;
+  return await clientRender(
+    unrolledAssistant,
+    ideSecretStore,
+    userId ? platformClient : undefined,
+  );
 }

@@ -31,7 +31,7 @@ function FilenameLink({ rif }: FilenameLinkProps) {
     );
     relPathOrBasename = relativePathOrBasename;
   } catch (e) {
-    return getUriPathBasename(rif.filepath);
+    return <span>{getUriPathBasename(rif.filepath)}</span>;
   }
 
   return (
