@@ -6,7 +6,7 @@ import com.github.continuedev.continueintellijextension.fixtures.idea
 import com.github.continuedev.continueintellijextension.fixtures.welcomeFrame
 import com.github.continuedev.continueintellijextension.utils.RemoteRobotExtension
 import com.github.continuedev.continueintellijextension.utils.StepsLogger
-import com.github.continuedev.continueintellijextension.utils.getMetaKey
+import com.github.continuedev.continueintellijextension.utils.*
 import com.intellij.remoterobot.RemoteRobot
 import com.intellij.remoterobot.fixtures.ComponentFixture
 import com.intellij.remoterobot.search.locators.byXpath
@@ -18,9 +18,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import java.awt.event.KeyEvent
 import java.awt.event.KeyEvent.VK_I
-import java.awt.event.KeyEvent.VK_J
 import java.time.Duration.ofMinutes
 import java.time.Duration.ofSeconds
 
@@ -81,10 +79,15 @@ class InlineEdit {
                 val enterBtn = find<ComponentFixture>(byXpath("//div[@class='CustomButton']"))
                 enterBtn.click()
 
-                find<ComponentFixture>(byXpath("//div[@text='⌥⇧N']")).isShowing
-                find<ComponentFixture>(byXpath("//div[@text='⌥⇧Y']")).isShowing
-                find<ComponentFixture>(byXpath("//div[@text='Accept All (⌘⇧⏎)']")).isShowing
-                find<ComponentFixture>(byXpath("//div[@text='Reject All (⌘⇧⌫)']")).isShowing
+                val rejectText = "${getAltKeyLabel()}${getShiftKeyLabel()}N"
+                val acceptText = "${getAltKeyLabel()}${getShiftKeyLabel()}Y"
+                val acceptAllText = "Accept All (${getMetaKeyLabel()}${getShiftKeyLabel()}⏎)"
+                val rejectAllText = "Reject All (${getMetaKeyLabel()}${getShiftKeyLabel()}⌫)"
+
+                find<ComponentFixture>(byXpath("//div[@text='$rejectText']")).isShowing
+                find<ComponentFixture>(byXpath("//div[@text='$acceptText']")).isShowing
+                find<ComponentFixture>(byXpath("//div[@text='$acceptAllText']")).isShowing
+                find<ComponentFixture>(byXpath("//div[@text='$rejectAllText']")).isShowing
             }
         }
     }
