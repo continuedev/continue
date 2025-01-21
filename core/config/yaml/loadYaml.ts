@@ -32,6 +32,7 @@ import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
+import { allTools } from "../../tools";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
 
@@ -97,7 +98,7 @@ async function configYamlToContinueConfig(
     slashCommands: await slashCommandsFromV1PromptFiles(ide),
     models: [],
     tabAutocompleteModels: [],
-    tools: [],
+    tools: allTools,
     systemMessage: config.rules?.join("\n"),
     embeddingsProvider: new TransformersJsEmbeddingsProvider(),
     experimental: {
