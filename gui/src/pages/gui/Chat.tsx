@@ -257,14 +257,23 @@ export function Chat() {
           posthog?.capture("ftc_reached");
         }
         if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
+          // Show this message whether using platform or not
+          // So that something happens if in new chat
+          ideMessenger.ide.showToast(
+            "error",
+            "You've reached the free trial limit. Please configure a model to continue.",
+          );
+
           // Card in chat will only show if no history
-          onboardingCard.open("Quickstart");
+          // Also, note that platform card ignore the "Best", always opens to main tab
+          onboardingCard.open("Best");
 
           // If history, show the dialog, which will automatically close if there is not history
           if (history.length) {
             dispatch(setDialogMessage(<FreeTrialOverDialog />));
             dispatch(setShowDialog(true));
           }
+          return;
         }
       }
 

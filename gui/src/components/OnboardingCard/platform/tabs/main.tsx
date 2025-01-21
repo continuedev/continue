@@ -3,12 +3,16 @@ import { Button, ButtonSubtext } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import ContinueLogo from "../../../gui/ContinueLogo";
 import { useOnboardingCard } from "../../hooks";
+import { hasPassedFTL } from "../../../../util/freeTrial";
+import { useContext } from "react";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 
 export default function MainTab({
   onRemainLocal,
 }: {
   onRemainLocal: () => void;
 }) {
+  const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const auth = useAuth();
 
@@ -20,30 +24,53 @@ export default function MainTab({
     });
   }
 
+  function openPastFreeTrialOnboarding() {
+    // NATE TODO - add custom onboarding process handling here
+    ideMessenger.post("openUrl", "app.continue.dev/onboard?freeTrialStatus=1");
+  }
+
+  const pastFreeTrialLimit = hasPassedFTL();
+
   return (
     <div className="xs:px-0 flex w-full max-w-full flex-col items-center justify-center px-4 text-center">
       <div className="xs:flex hidden">
         <ContinueLogo height={75} />
       </div>
 
-      <p className="xs:w-3/4 w-full text-sm">
-        Log in to quickly build your first custom AI code assistant
-      </p>
+      {pastFreeTrialLimit ? (
+        <>
+          <p className="xs:w-3/4 w-full text-sm">
+            You've reached the free trial limit. Visit the Continue Platform to
+            select a Coding Assistant.
+          </p>
+          <Button
+            onClick={openPastFreeTrialOnboarding}
+            className="mt-4 grid w-full grid-flow-col items-center gap-2"
+          >
+            Go to Continue Platform
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="xs:w-3/4 w-full text-sm">
+            Log in to quickly build your first custom AI code assistant
+          </p>
 
-      <div className="mt-4 w-full">
-        <Button
-          onClick={onGetStarted}
-          className="grid w-full grid-flow-col items-center gap-2"
-        >
-          Get started
-        </Button>
-        <ButtonSubtext onClick={onRemainLocal}>
-          <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
-            <span>Or, remain local</span>
-            <ChevronRightIcon className="h-3 w-3" />
-          </div>
-        </ButtonSubtext>
-      </div>
+          <Button
+            onClick={onGetStarted}
+            className="mt-4 grid w-full grid-flow-col items-center gap-2"
+          >
+            Get started
+          </Button>
+        </>
+      )}
+
+      <ButtonSubtext onClick={onRemainLocal}>
+        <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
+          <span>Or, remain local</span>
+          <ChevronRightIcon className="h-3 w-3" />
+        </div>
+      </ButtonSubtext>
     </div>
   );
 }
