@@ -1,22 +1,15 @@
 import { useDispatch } from "react-redux";
-import styled from "styled-components";
-import { Button, SecondaryButton } from "..";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { useAppSelector } from "../../redux/hooks";
 import { useEffect } from "react";
+import { selectUsePlatform } from "../../redux/selectors";
+import { PlatformOnboardingCard } from "../OnboardingCard/platform/PlatformOnboardingCard";
+import { OnboardingCard } from "../OnboardingCard";
 
-interface FreeTrialOverDialogProps {
-  onConfirm: () => void;
-  onCancel?: () => void;
-  text: string;
-  title?: string;
-  hideCancelButton?: boolean;
-  confirmText?: string;
-}
-
-function FreeTrialOverDialog(props: FreeTrialOverDialogProps) {
+function FreeTrialOverDialog() {
   const dispatch = useDispatch();
   const history = useAppSelector((store) => store.session.history);
+  const usePlatform = useAppSelector(selectUsePlatform);
 
   useEffect(() => {
     if (history.length === 0) {
@@ -25,40 +18,11 @@ function FreeTrialOverDialog(props: FreeTrialOverDialogProps) {
     }
   }, [history]);
 
-  return (
-    <div className="p-4 pt-0">
-      <h1 className="mb-1 text-center text-xl">
-        {props.title ?? "Confirmation"}
-      </h1>
-      <p className="text-center text-base" style={{ whiteSpace: "pre-wrap" }}>
-        {props.text}
-      </p>
-
-      <div className="w/1/2 flex justify-end gap-2">
-        {!!props.hideCancelButton || (
-          <SecondaryButton
-            className="text-lightgray"
-            onClick={() => {
-              dispatch(setShowDialog(false));
-              dispatch(setDialogMessage(undefined));
-              props.onCancel?.();
-            }}
-          >
-            Cancel
-          </SecondaryButton>
-        )}
-        <Button
-          onClick={() => {
-            props.onConfirm();
-            dispatch(setShowDialog(false));
-            dispatch(setDialogMessage(undefined));
-          }}
-        >
-          {props.confirmText ?? "Confirm"}
-        </Button>
-      </div>
-    </div>
-  );
+  if (usePlatform) {
+    return <PlatformOnboardingCard isDialog />;
+  } else {
+    return <OnboardingCard isDialog />;
+  }
 }
 
 export default FreeTrialOverDialog;

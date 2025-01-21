@@ -66,13 +66,17 @@ import {
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
+import {
+  FREE_TRIAL_LIMIT_REQUESTS,
+  incrementFreeTrialCount,
+} from "../../util/freeTrial";
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
+import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -247,24 +251,20 @@ export function Chat() {
       editorToClearOnSend?: Editor,
     ) => {
       if (defaultModel?.provider === "free-trial") {
-        dispatch(setDialogMessage(<PlatformOnboardingCard />));
-        dispatch(setShowDialog(true));
-        return;
-        const u = getLocalStorage("ftc") ?? 0;
-        setLocalStorage("ftc", u + 1);
-        if (u === FREE_TRIAL_LIMIT_REQUESTS) {
+        const newCount = incrementFreeTrialCount();
+
+        if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
           posthog?.capture("ftc_reached");
         }
-        if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-          if (usePlatform) {
-          } else {
+        if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
+          // Card in chat will only show if no history
+          onboardingCard.open("Quickstart");
+
+          // If history, show the dialog, which will automatically close if there is not history
+          if (history.length) {
+            dispatch(setDialogMessage(<FreeTrialOverDialog />));
+            dispatch(setShowDialog(true));
           }
-          onboardingCard.open("Best");
-          ideMessenger.ide.showToast(
-            "info",
-            "You've reached the free trial limit. Please configure a model to continue.",
-          );
-          return;
         }
       }
 
@@ -304,7 +304,6 @@ export function Chat() {
       streamResponse,
       isSingleRangeEditOrInsertion,
       codeToEdit,
-      usePlatform,
     ],
   );
 
