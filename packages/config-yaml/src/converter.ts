@@ -65,7 +65,6 @@ function convertCustomCommand(
     name: cmd.name,
     description: cmd.description,
     prompt: (cmd as any).prompt, // The type is wrong in @continuedev/config-types
-    type: "slash-command",
   };
 }
 
