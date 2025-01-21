@@ -2,7 +2,7 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { StyledActionButton } from "../..";
@@ -19,15 +19,10 @@ export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [status, setStatus] = useState<OllamaConnectionStatuses>(
-    OllamaConnectionStatuses.WaitingToDownload,
+    isOllamaConnected
+      ? OllamaConnectionStatuses.Connected
+      : OllamaConnectionStatuses.WaitingToDownload,
   );
-  useEffect(() => {
-    if (isOllamaConnected) {
-      setStatus(OllamaConnectionStatuses.Connected);
-    } else if (status !== OllamaConnectionStatuses.Downloading) {
-      setStatus(OllamaConnectionStatuses.WaitingToDownload);
-    }
-  }, [status, isOllamaConnected]);
 
   function onClickDownload() {
     ideMessenger.post("openUrl", downloadUrl);

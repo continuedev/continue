@@ -46,7 +46,7 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
 
   return (
     <StyledCard
-      className="xs:py-4 xs:px-4 relative flex-1 px-2 py-3"
+      className="xs:py-4 xs:px-4 relative px-2 py-3"
       data-testid="onboarding-card"
     >
       <OnboardingCardTabs
