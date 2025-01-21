@@ -54,7 +54,7 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
         onTabClick={onboardingCard.setActiveTab}
       />
       {!isDialog && (
-        <CloseButton onClick={onboardingCard.close}>
+        <CloseButton onClick={() => onboardingCard.close()}>
           <XMarkIcon className="mt-1.5 hidden h-5 w-5 hover:brightness-125 sm:flex" />
         </CloseButton>
       )}

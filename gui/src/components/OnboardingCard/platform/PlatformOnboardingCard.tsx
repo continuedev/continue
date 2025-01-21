@@ -24,7 +24,7 @@ export interface OnboardingCardState {
 }
 
 interface OnboardingCardProps {
-  isDialog?: boolean;
+  isDialog: boolean;
 }
 
 export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
@@ -39,14 +39,17 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
   return (
     <StyledCard className="xs:py-4 xs:px-4 relative px-2 py-3">
       {!isDialog && (
-        <CloseButton onClick={onboardingCard.close}>
+        <CloseButton onClick={() => onboardingCard.close()}>
           <XMarkIcon className="mt-1.5 hidden h-5 w-5 hover:brightness-125 sm:flex" />
         </CloseButton>
       )}
       <div className="content py-4">
         <div className="flex h-full w-full items-center justify-center">
           {currentTab === "main" ? (
-            <MainTab onRemainLocal={() => setCurrentTab("local")} />
+            <MainTab
+              onRemainLocal={() => setCurrentTab("local")}
+              isDialog={isDialog}
+            />
           ) : (
             <div className="mt-4">
               <Alert type="info">
@@ -59,7 +62,7 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
                 </a>
               </Alert>
 
-              <OnboardingLocalTab />
+              <OnboardingLocalTab isDialog={isDialog} />
             </div>
           )}
         </div>

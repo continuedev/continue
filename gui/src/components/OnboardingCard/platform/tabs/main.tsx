@@ -9,8 +9,10 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 
 export default function MainTab({
   onRemainLocal,
+  isDialog,
 }: {
   onRemainLocal: () => void;
+  isDialog: boolean;
 }) {
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
@@ -19,7 +21,7 @@ export default function MainTab({
   function onGetStarted() {
     auth.login(true).then((success) => {
       if (success) {
-        onboardingCard.close();
+        onboardingCard.close(isDialog);
       }
     });
   }
@@ -27,6 +29,7 @@ export default function MainTab({
   function openPastFreeTrialOnboarding() {
     // NATE TODO - add custom onboarding process handling here
     ideMessenger.post("openUrl", "app.continue.dev/onboard?freeTrialStatus=1");
+    onboardingCard.close(isDialog);
   }
 
   const pastFreeTrialLimit = hasPassedFTL();
