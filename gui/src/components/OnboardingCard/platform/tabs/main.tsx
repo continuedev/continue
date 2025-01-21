@@ -27,8 +27,9 @@ export default function MainTab({
   }
 
   function openPastFreeTrialOnboarding() {
-    // NATE TODO - add custom onboarding process handling here
-    ideMessenger.post("openUrl", "app.continue.dev/onboard?freeTrialStatus=1");
+    ideMessenger.post("controlPlane/openUrl", {
+      path: "setup-models",
+    });
     onboardingCard.close(isDialog);
   }
 
