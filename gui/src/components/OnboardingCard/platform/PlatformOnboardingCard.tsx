@@ -8,8 +8,6 @@ import { TabTitle } from "../components/OnboardingCardTabs";
 import { useOnboardingCard } from "../hooks";
 import OnboardingLocalTab from "../tabs/OnboardingLocalTab";
 import MainTab from "./tabs/main";
-import { hasPassedFTL } from "../../../util/freeTrial";
-import { useAppSelector } from "../../../redux/hooks";
 
 const StyledCard = styled.div`
   margin: auto;
@@ -36,17 +34,7 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
     setLocalStorage("onboardingStatus", "Started");
   }
 
-  const isPastFreeTrialLimit = hasPassedFTL();
-  const isShowingDialog = useAppSelector((store) => store.ui.showDialog);
-
   const [currentTab, setCurrentTab] = useState<"main" | "local">("main");
-
-  // A version of this pops up in a dialog
-  // so that history doesn't disappear or jump
-  // If free trial limit is reached mid-chat
-  if (isPastFreeTrialLimit && isShowingDialog) {
-    return null;
-  }
 
   return (
     <StyledCard className="xs:py-4 xs:px-4 relative px-2 py-3">

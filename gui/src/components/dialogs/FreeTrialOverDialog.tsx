@@ -18,11 +18,15 @@ function FreeTrialOverDialog() {
     }
   }, [history]);
 
-  if (usePlatform) {
-    return <PlatformOnboardingCard isDialog />;
-  } else {
-    return <OnboardingCard isDialog />;
-  }
+  return (
+    <div className="flex-1">
+      {usePlatform ? (
+        <PlatformOnboardingCard isDialog />
+      ) : (
+        <OnboardingCard isDialog />
+      )}
+    </div>
+  );
 }
 
 export default FreeTrialOverDialog;

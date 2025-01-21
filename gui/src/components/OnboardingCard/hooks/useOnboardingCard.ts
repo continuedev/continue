@@ -38,14 +38,6 @@ export function useOnboardingCard(): UseOnboardingCard {
 
   async function open(tab: TabTitle) {
     navigate("/");
-
-    // Used to clear the chat panel before showing onboarding card
-    dispatch(
-      saveCurrentSession({
-        openNewSession: true,
-      }),
-    );
-
     dispatch(setOnboardingCard({ show: true, activeTab: tab }));
   }
 
