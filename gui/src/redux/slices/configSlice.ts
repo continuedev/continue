@@ -61,12 +61,6 @@ export const configSlice = createSlice({
     ) => {
       state.config = config;
     },
-    setConfigError: (
-      state,
-      { payload: error }: PayloadAction<ConfigValidationError[] | undefined>,
-    ) => {
-      state.configError = error;
-    },
     setDefaultModel: (
       state,
       { payload }: PayloadAction<{ title: string; force?: boolean }>,
@@ -118,7 +112,6 @@ export const {
   cycleDefaultModel,
   updateConfig,
   setConfigResult,
-  setConfigError,
 } = configSlice.actions;
 
 export const {

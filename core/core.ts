@@ -55,6 +55,7 @@ import {
 import { usePlatform } from "./control-plane/flags";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { finalToBrowserConfig } from "./config/load";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -129,13 +130,21 @@ export class Core {
       this.messenger,
     );
 
-    this.configHandler.onConfigUpdate(async (result) => {
-      const serializedResult = await this.configHandler.getSerializedConfig();
-      this.messenger.send("configUpdate", {
-        result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileDescription.id,
-      });
-    });
+    this.configHandler.onConfigUpdate(
+      async ({ config, errors, configLoadInterrupted }) => {
+        if (!configLoadInterrupted && config) {
+          this.messenger.send("configUpdate", {
+            result: {
+              config: finalToBrowserConfig(config),
+              configLoadInterrupted,
+              errors,
+            },
+            profileId: this.configHandler.currentProfile.profileDescription.id,
+          });
+        }
+        this.messenger.send("configError", errors);
+      },
+    );
 
     this.configHandler.onDidChangeAvailableProfiles((profiles) =>
       this.messenger.send("didChangeAvailableProfiles", { profiles }),

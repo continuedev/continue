@@ -161,18 +161,12 @@ export class VsCodeExtension {
     });
 
     this.configHandler.onConfigUpdate(
-      async ({ config: newConfig, errors, configLoadInterrupted }) => {
+      async ({ config: newConfig, configLoadInterrupted }) => {
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);
         } else if (newConfig) {
           setupStatusBar(undefined, undefined, false);
-
-          const result = await this.configHandler.getSerializedConfig();
-          this.sidebar.webviewProtocol?.request("configUpdate", {
-            result,
-            profileId: this.configHandler.currentProfile.profileDescription.id,
-          });
 
           this.tabAutocompleteModel.clearLlm();
 
@@ -182,8 +176,6 @@ export class VsCodeExtension {
             newConfig,
           );
         }
-
-        this.sidebar.webviewProtocol?.request("configError", errors);
       },
     );
 

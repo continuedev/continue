@@ -16,7 +16,6 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
-  configError: [ConfigValidationError[] | undefined, void];
   getDefaultModelTitle: [undefined, string];
   indexProgress: [IndexingProgressUpdate, void]; // Codebase
   "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
