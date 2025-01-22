@@ -509,6 +509,10 @@ class Ollama extends BaseLLM {
       this.getEndpoint("api/tags"),
       {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.apiKey}`,
+        },
       },
     );
     const data = await response.json();
