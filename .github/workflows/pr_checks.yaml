@@ -398,7 +398,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: node-version-k
+        with:
+          node-version-file: ".nvmrc"
 
       - uses: actions/cache@v4
         id: vscode-node-modules-cache
