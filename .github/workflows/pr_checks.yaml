@@ -21,6 +21,9 @@ on:
       - "gui/**"
       - ".github/workflows/**"
 
+# Tests requiring secrets need approval from maintainers
+environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
+
 jobs:
   install-root:
     runs-on: ubuntu-latest
@@ -70,7 +73,6 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
     steps:
       - name: Print whether fork
         run: |
@@ -399,8 +401,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
+        with: node-version-k
 
       - uses: actions/cache@v4
         id: vscode-node-modules-cache
@@ -585,6 +586,9 @@ jobs:
           path: |
             ${{ github.workspace }}/extensions/intellij/build/reports
 
+  # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
+  # This action at least lets us manage the list of required tests via source control
+  # so that creators of new jobs can add them to this list
   require-all-checks-to-pass:
     if: always()
     runs-on: ubuntu-latest
