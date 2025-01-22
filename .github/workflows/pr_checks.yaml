@@ -21,9 +21,6 @@ on:
       - "gui/**"
       - ".github/workflows/**"
 
-# Tests requiring secrets need approval from maintainers
-environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
-
 jobs:
   install-root:
     runs-on: ubuntu-latest
@@ -73,11 +70,9 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
+    # Tests requiring secrets need approval from maintainers
+    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
     steps:
-      - name: Print whether fork
-        run: |
-          echo "Fork: ${{ github.event.pull_request.head.repo.fork }}"
-
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -393,6 +388,8 @@ jobs:
         install-core,
       ]
     runs-on: ubuntu-latest
+    # Tests requiring secrets need approval from maintainers
+    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
     strategy:
       fail-fast: false
       matrix:
