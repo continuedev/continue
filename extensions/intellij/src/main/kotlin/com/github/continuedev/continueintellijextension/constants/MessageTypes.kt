@@ -2,13 +2,6 @@ package com.github.continuedev.continueintellijextension.constants
 
 class MessageTypes {
     companion object {
-        val generatorTypes = listOf(
-            "llm/streamComplete",
-            "llm/streamChat",
-            "command/run",
-            "streamDiffLines"
-        )
-
         val ideMessageTypes = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",

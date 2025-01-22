@@ -1,7 +1,10 @@
 import fs from "fs";
 
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
-import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas";
+import {
+  ConfigResult,
+  ConfigValidationError,
+  ConfigYaml,
+} from "@continuedev/config-yaml";
 import {
   ContinueConfig,
   ContinueRcJson,
@@ -27,7 +30,7 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: ClientConfigYaml | undefined,
+  overrideConfigYaml: ConfigYaml | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {

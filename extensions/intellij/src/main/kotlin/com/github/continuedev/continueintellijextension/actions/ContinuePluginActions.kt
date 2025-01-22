@@ -79,7 +79,7 @@ fun getContinuePluginService(project: Project?): ContinuePluginService? {
 fun focusContinueInput(project: Project?) {
     val continuePluginService = getContinuePluginService(project) ?: return
     continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-    continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
+    continuePluginService.sendToWebview("focusContinueInputWithoutClear", null)
 
     continuePluginService.ideProtocolClient?.sendHighlightedCode()
 }
