@@ -135,11 +135,14 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  if (config.ui?.getChatTitles === undefined) {
-    config.ui = {
-      ...config.ui,
-      getChatTitles: true,
-    };
+  // Deprecated getChatTitles property should be accounted for
+  // This is noted in docs
+  if (
+    config.ui &&
+    "getChatTitles" in config.ui &&
+    config.ui.getChatTitles === false
+  ) {
+    config.disableSessionTitles = true;
   }
 
   if (ideSettings.remoteConfigServerUrl) {
