@@ -54,7 +54,6 @@ class FileSystemIde implements IDE {
       userToken: "",
       enableControlServerBeta: false,
       pauseCodebaseIndexOnStart: false,
-      enableDebugLogs: false,
     };
   }
   async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {

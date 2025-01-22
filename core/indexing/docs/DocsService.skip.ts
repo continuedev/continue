@@ -45,7 +45,6 @@ describe.skip("DocsService Integration Tests", () => {
         enableControlServerBeta: false,
         pauseCodebaseIndexOnStart: false,
         ideSettings: {} as any,
-        enableDebugLogs: false,
         remoteConfigServerUrl: "",
       }),
       async () => {},
