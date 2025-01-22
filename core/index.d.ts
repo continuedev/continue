@@ -584,7 +584,6 @@ export interface IdeSettings {
   userToken: string;
   enableControlServerBeta: boolean;
   pauseCodebaseIndexOnStart: boolean;
-  enableDebugLogs: boolean;
 }
 
 export interface FileStats {

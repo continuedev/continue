@@ -572,7 +572,6 @@ declare global {
     userToken: string;
     enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
-    enableDebugLogs: boolean;
   }
   
   export interface IDE {

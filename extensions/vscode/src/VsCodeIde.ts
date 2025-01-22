@@ -640,7 +640,6 @@ class VsCodeIde implements IDE {
         "pauseCodebaseIndexOnStart",
         false,
       ),
-      enableDebugLogs: false,
       // settings.get<boolean>(
       //   "enableControlServerBeta",
       //   false,
