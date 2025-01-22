@@ -871,8 +871,10 @@ export class Core {
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
       const ignoreInstance = ignore().add(defaultIgnoreFile);
-      let rootDirectory = await this.ide.getWorkspaceDirs();
-      const relativeFilePath = path.relative(rootDirectory[0], filepath);
+      const [rootDirectory] = await this.ide.getWorkspaceDirs();
+      if (!rootDirectory)
+        return; // Not in a workspace
+      const relativeFilePath = path.relative(rootDirectory, filepath);
       try {
         if (!ignoreInstance.ignores(relativeFilePath)) {
           recentlyEditedFilesCache.set(filepath, filepath);
