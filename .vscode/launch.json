@@ -38,6 +38,7 @@
       "internalConsoleOptions": "openOnSessionStart",
       "cwd": "${workspaceFolder}/binary",
       "env": {
+        // "CONTROL_PLANE_ENV": "test",
         "CONTINUE_DEVELOPMENT": "true",
         "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
       }
