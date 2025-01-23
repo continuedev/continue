@@ -195,8 +195,7 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               {status?.description}
             </span>
           )}
-          {process.env.NODE_ENV === "development" &&
-          status?.status === "complete" ? (
+          {status?.status === "complete" ? (
             <EyeIcon
               className="h-4 w-4 cursor-pointer text-stone-500"
               onClick={() => {
