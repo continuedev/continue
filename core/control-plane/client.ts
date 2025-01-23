@@ -1,10 +1,10 @@
 import { ConfigJson } from "@continuedev/config-types";
-import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
+import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { ModelDescription } from "../index.js";
 
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, FQSN, SecretResult } from "@continuedev/config-yaml";
 import { controlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
@@ -37,6 +37,19 @@ export class ControlPlaneClient {
       ControlPlaneSessionInfo | undefined
     >,
   ) {}
+
+  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+    const userId = await this.userId;
+    if (!userId) {
+      throw new Error("No user id");
+    }
+
+    const resp = await this.request("ide/sync-secrets", {
+      method: "POST",
+      body: JSON.stringify({ fqsns }),
+    });
+    return (await resp.json()) as any;
+  }
 
   get userId(): Promise<string | undefined> {
     return this.sessionInfoPromise.then(
@@ -89,7 +102,7 @@ export class ControlPlaneClient {
 
   public async listAssistants(): Promise<
     {
-      configResult: ConfigResult<ClientConfigYaml>;
+      configResult: ConfigResult<ConfigYaml>;
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;

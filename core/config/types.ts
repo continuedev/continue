@@ -945,7 +945,6 @@ declare global {
     fontSize?: number;
     displayRawMarkdown?: boolean;
     showChatScrollbar?: boolean;
-    getChatTitles?: boolean;
     codeWrap?: boolean;
   }
   

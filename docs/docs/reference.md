@@ -344,6 +344,8 @@ Example
 
 Prevents generating summary titles for each chat session when set to `true`.
 
+Note that if the deprecated setting `ui.getChatTitles` is set to `false`, it will override this.
+
 ### `ui`
 
 Customizable UI settings to control interface appearance and behavior.
