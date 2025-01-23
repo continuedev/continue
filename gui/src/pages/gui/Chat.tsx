@@ -554,7 +554,7 @@ export function Chat() {
                 </div>
               )}
 
-              {showTutorialCard !== false && !onboardingCard.open && (
+              {showTutorialCard !== false && !onboardingCard.show && (
                 <div className="flex w-full justify-center">
                   <TutorialCard onClose={closeTutorialCard} />
                 </div>

@@ -1,10 +1,12 @@
-import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
+import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
+import * as YAML from "yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
 
 import { ConfigResult } from "@continuedev/config-yaml";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
+import { clientRenderHelper } from "../yaml/clientRender.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -24,7 +26,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
   description: ProfileDescription;
 
   constructor(
-    private configResult: ConfigResult<ClientConfigYaml>,
+    private configResult: ConfigResult<ConfigYaml>,
     private readonly ownerSlug: string,
     private readonly packageSlug: string,
     private readonly controlPlaneClient: ControlPlaneClient,
@@ -49,8 +51,18 @@ export default class PlatformProfileLoader implements IProfileLoader {
       if (!newConfigResult) {
         return;
       }
+
+      let renderedConfig: ConfigYaml | undefined = undefined;
+      if (newConfigResult.config) {
+        renderedConfig = await clientRenderHelper(
+          YAML.stringify(newConfigResult.config),
+          this.ide,
+          this.controlPlaneClient,
+        );
+      }
+
       this.configResult = {
-        config: newConfigResult.config,
+        config: renderedConfig,
         errors: newConfigResult.errors,
         configLoadInterrupted: false,
       };

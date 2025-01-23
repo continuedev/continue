@@ -167,7 +167,7 @@ export const saveCurrentSession = createAsyncThunk<
     let title = state.session.title;
     if (title === NEW_SESSION_TITLE) {
       const defaultModel = selectDefaultModel(state);
-      if (state.config.config?.ui?.getChatTitles && defaultModel) {
+      if (!state.config.config?.disableSessionTitles && defaultModel) {
         let assistantResponse = state.session.history
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
@@ -189,7 +189,7 @@ export const saveCurrentSession = createAsyncThunk<
           }
         }
       }
-      // Fallbacks if above doesn't work out or getChatTitles = false
+      // Fallbacks if above doesn't work out or session titles disabled
       if (title === NEW_SESSION_TITLE) {
         title = getChatTitleFromMessage(state.session.history[0].message);
       }
