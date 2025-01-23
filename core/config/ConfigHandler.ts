@@ -1,3 +1,5 @@
+import * as fs from "node:fs";
+
 import {
   ControlPlaneClient,
   ControlPlaneSessionInfo,
@@ -12,7 +14,7 @@ import {
 } from "../index.js";
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
-import { getConfigJsonPath } from "../util/paths.js";
+import { getConfigJsonPath, getConfigYamlPath } from "../util/paths.js";
 
 import { ConfigResult, ConfigYaml } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
@@ -97,7 +99,13 @@ export class ConfigHandler {
   async openConfigProfile(profileId?: string) {
     let openProfileId = profileId || this.selectedProfileId;
     if (openProfileId === "local") {
-      await this.ide.openFile(localPathToUri(getConfigJsonPath()));
+      const ideInfo = await this.ide.getIdeInfo();
+      const configYamlPath = getConfigYamlPath(ideInfo.ideType);
+      if (fs.existsSync(configYamlPath)) {
+        await this.ide.openFile(localPathToUri(configYamlPath));
+      } else {
+        await this.ide.openFile(localPathToUri(getConfigJsonPath()));
+      }
     } else {
       await this.ide.openUrl(`${controlPlaneEnv.APP_URL}${openProfileId}`);
     }
