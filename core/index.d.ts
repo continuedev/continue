@@ -826,7 +826,7 @@ export interface SlashCommandDescription {
 export interface CustomCommand {
   name: string;
   prompt: string;
-  description: string;
+  description?: string;
 }
 
 export interface Prediction {

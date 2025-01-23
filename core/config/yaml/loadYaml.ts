@@ -32,6 +32,7 @@ import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
+import { slashFromCustomCommand } from "../../commands";
 import { allTools } from "../../tools";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
@@ -95,7 +96,10 @@ async function configYamlToContinueConfig(
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   const continueConfig: ContinueConfig = {
-    slashCommands: await slashCommandsFromV1PromptFiles(ide),
+    slashCommands: [
+      ...(await slashCommandsFromV1PromptFiles(ide)),
+      ...(config.prompts?.map(slashFromCustomCommand) ?? []),
+    ],
     models: [],
     tabAutocompleteModels: [],
     tools: allTools,
