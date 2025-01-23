@@ -555,9 +555,9 @@ export function Chat() {
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
                   {usePlatform ? (
-                    <PlatformOnboardingCard />
+                    <PlatformOnboardingCard isDialog={false} />
                   ) : (
-                    <OnboardingCard />
+                    <OnboardingCard isDialog={false} />
                   )}
                 </div>
               )}
