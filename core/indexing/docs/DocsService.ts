@@ -40,7 +40,7 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
-import { ConfigResult } from "@continuedev/config-types";
+import { ConfigResult } from "@continuedev/config-yaml";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -713,8 +713,8 @@ export default class DocsService {
     const db = await this.getOrCreateSqliteDb();
 
     try {
-
-      const { isPreindexed, provider } = await this.getEmbeddingsProvider(startUrl);
+      const { isPreindexed, provider } =
+        await this.getEmbeddingsProvider(startUrl);
       const preIndexedDoc = preIndexedDocs[startUrl];
       const isPreIndexedDoc = !!preIndexedDoc;
 
