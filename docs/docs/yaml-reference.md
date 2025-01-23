@@ -28,6 +28,7 @@ The top-level properties in the `config.yaml` configuration file are:
 - [`models`](#models)
 - [`context`](#context)
 - [`rules`](#rules)
+- [`prompts`](#prompts)
 - [`docs`](#docs)
   <!-- - [`data`](#data) -->
   <!-- - [`tools`](#tools) -->
@@ -153,6 +154,23 @@ rules:
 
 ---
 
+### `prompts`
+
+A list of custom prompts that can be invoked from the chat window. Each prompt has a name, description, and the actual prompt text.
+
+```yaml title="config.yaml"
+prompts:
+  - name: check
+    description: Check for mistakes in my code
+    prompt: |
+      Please read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:
+        - Syntax errors
+        - Logic errors
+        - Security vulnerabilities
+```
+
+---
+
 ### `docs`
 
 List of documentation sites to index.
@@ -161,8 +179,10 @@ List of documentation sites to index.
 
 - `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
+<!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `maxDepth`: M
+- `useLocalCrawling`: Force use of local crawling
 
 Example
 
@@ -170,15 +190,12 @@ Example
 docs:
   - name: Continue
     startUrl: https://docs.continue.dev/intro
-    rootUrl: https://docs.continue.dev
     favicon: https://docs.continue.dev/favicon.ico
 ```
 
 ---
 
-### `tools`
-
-<!-- TODO how does this actually work -->
+<!-- ### `tools`
 
 The `tools` section specifies external tools or APIs that can be used within your configuration.
 
@@ -195,7 +212,7 @@ tools:
     apiKey: YOUR_API_KEY
 ```
 
----
+--- -->
 
 ### `mcpServers`
 
@@ -247,6 +264,7 @@ Putting it all together, here's a complete example of a `config.yaml` configurat
 
 ```yaml title="config.yaml"
 name: MyProject
+version: 0.0.1
 
 models:
   - name: GPT-4
@@ -261,6 +279,7 @@ models:
     requestOptions:
       headers:
         Authorization: Bearer YOUR_OPENAI_API_KEY
+
   - name: Ollama Starcoder
     provider: ollama
     model: starcoder
@@ -271,17 +290,25 @@ models:
       stop:
         - "\n"
 
+rules:
+  - Give concise responses
+  - Always assume TypeScript rather than JavaScript
+
+prompts:
+  - name: test
+    description: Unit test a function
+    prompt: |
+      Please write a complete suite of unit tests for this function. You should use the Jest testing framework.  The tests should cover all possible edge cases and should be as thorough as possible.  You should also include a description of each test case.
+
 context:
   - uses: diff
+  - uses: file
+  - uses: codebase
+  - uses: code
   - uses: docs
     with:
       startUrl: https://docs.example.com/introduction
-      rootUrl: https://docs.example.com
       maxDepth: 3
-
-tools:
-  - url: https://api.exampletool.com
-    apiKey: YOUR_TOOL_API_KEY
 
 mcpServers:
   - name: DevServer

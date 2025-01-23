@@ -1,8 +1,10 @@
 import { ConfigJson } from "@continuedev/config-types";
+import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { ModelDescription } from "../index.js";
 
+import { ConfigResult, FQSN, SecretResult } from "@continuedev/config-yaml";
 import { controlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
@@ -35,6 +37,19 @@ export class ControlPlaneClient {
       ControlPlaneSessionInfo | undefined
     >,
   ) {}
+
+  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+    const userId = await this.userId;
+    if (!userId) {
+      throw new Error("No user id");
+    }
+
+    const resp = await this.request("ide/sync-secrets", {
+      method: "POST",
+      body: JSON.stringify({ fqsns }),
+    });
+    return (await resp.json()) as any;
+  }
 
   get userId(): Promise<string | undefined> {
     return this.sessionInfoPromise.then(
@@ -85,6 +100,29 @@ export class ControlPlaneClient {
     }
   }
 
+  public async listAssistants(): Promise<
+    {
+      configResult: ConfigResult<ConfigYaml>;
+      ownerSlug: string;
+      packageSlug: string;
+      iconUrl: string;
+    }[]
+  > {
+    const userId = await this.userId;
+    if (!userId) {
+      return [];
+    }
+
+    try {
+      const resp = await this.request("ide/list-assistants", {
+        method: "GET",
+      });
+      return (await resp.json()) as any;
+    } catch (e) {
+      return [];
+    }
+  }
+
   async getSettingsForWorkspace(workspaceId: string): Promise<ConfigJson> {
     const userId = await this.userId;
     if (!userId) {
@@ -95,5 +133,22 @@ export class ControlPlaneClient {
       method: "GET",
     });
     return ((await resp.json()) as any).settings;
+  }
+
+  async syncSecrets(secretNames: string[]): Promise<Record<string, string>> {
+    const userId = await this.userId;
+    if (!userId) {
+      throw new Error("No user id");
+    }
+
+    try {
+      const resp = await this.request("ide/sync-secrets", {
+        method: "POST",
+        body: JSON.stringify({ secretNames }),
+      });
+      return (await resp.json()) as any;
+    } catch (e) {
+      return {};
+    }
   }
 }

@@ -176,9 +176,23 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               }[status?.status]}
         </span>
 
-        <span className="lines lines-1 text-right text-xs text-stone-500">
-          {status?.description}
-        </span>
+        {status?.description === "Github rate limit exceeded" ? (
+          <span
+            className="lines lines-1 cursor-pointer text-right text-xs text-stone-500 underline"
+            onClick={() =>
+              ideMessenger.post(
+                "openUrl",
+                "https://docs.continue.dev/customize/deep-dives/docs#github",
+              )
+            }
+          >
+            {status.description}
+          </span>
+        ) : (
+          <span className="lines lines-1 text-right text-xs text-stone-500">
+            {status?.description}
+          </span>
+        )}
       </div>
     </div>
   );
