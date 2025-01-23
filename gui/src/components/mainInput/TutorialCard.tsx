@@ -44,7 +44,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
-    <TutorialCardDiv>
+    <TutorialCardDiv data-testid={`tutorial-card`}>
       <CloseButton onClick={onClose}>
         <XMarkIcon className="h-5 w-5" />
       </CloseButton>
@@ -57,10 +57,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
               <span
                 className="cursor-pointer underline"
                 onClick={() =>
-                  ideMessenger.post(
-                    "vscode/openMoveRightMarkdown",
-                    undefined,
-                  )
+                  ideMessenger.post("vscode/openMoveRightMarkdown", undefined)
                 }
               >
                 Move Chat panel to the right

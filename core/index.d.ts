@@ -994,7 +994,6 @@ export interface ContinueUIConfig {
   fontSize?: number;
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
-  getChatTitles?: boolean;
   codeWrap?: boolean;
 }
 
