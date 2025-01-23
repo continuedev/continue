@@ -115,6 +115,7 @@ class MessageTypes {
             "profiles/switch",
             "didChangeSelectedProfile",
             "tools/call",
+            "controlPlane/openUrl"
         )
     }
 }
