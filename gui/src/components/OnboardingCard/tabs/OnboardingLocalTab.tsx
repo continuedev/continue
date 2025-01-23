@@ -14,14 +14,20 @@ import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
 import { setDefaultModel } from "../../../redux/slices/configSlice";
+import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 
 const OLLAMA_CHECK_INTERVAL_MS = 3000;
 
-function OnboardingLocalTab() {
+interface OnboardingLocalTabProps {
+  isDialog?: boolean;
+}
+
+function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const { submitOnboarding } = useSubmitOnboarding(
     hasPassedFTL() ? "LocalAfterFreeTrial" : "Local",
+    isDialog,
   );
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
@@ -116,6 +122,11 @@ function OnboardingLocalTab() {
         <Button
           onClick={() => {
             submitOnboarding();
+
+            if (isDialog) {
+              dispatch(setDialogMessage(undefined));
+              dispatch(setShowDialog(false));
+            }
 
             // Set the selected model to the local chat model
             dispatch(
