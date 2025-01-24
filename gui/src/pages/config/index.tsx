@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
@@ -11,10 +11,11 @@ import {
 import { updateConfig } from "../../redux/slices/configSlice";
 import ToggleSwitch from "../../components/gui/Switch";
 import { useAuth } from "../../context/Auth";
-import { Button } from "../../components";
+import { Button, Input } from "../../components";
 import { getFontSize } from "../../util";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
+import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 function ConfigPage() {
   useNavigationListener();
@@ -22,7 +23,7 @@ function ConfigPage() {
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const { profiles, selectedProfile, controlServerBetaEnabled } = useAuth();
+  const { selectedProfile } = useAuth();
   const config = useAppSelector((state) => state.config.config);
 
   function handleUpdate(sharedConfig: Partial<SharedConfigSchema>) {
@@ -30,17 +31,8 @@ function ConfigPage() {
       updateConfig(modifyContinueConfigWithSharedConfig(config, sharedConfig)),
     );
     ideMessenger.post("config/updateSharedConfig", sharedConfig);
-
-    // TODO: Optimistic update in redux
-    // dispatch(updateConfig({
-    //   ...config,
-    //   ...(sharedConfig.)
-    // }))
   }
 
-  // Account for default values
-  // TODO - duplicate defaults here, should consolidate defaults to one place
-  // And write defaults earlier in the config process
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
@@ -56,8 +48,48 @@ function ConfigPage() {
   const codeBlockToolbarPosition = config.ui?.codeBlockToolbarPosition ?? "top";
   const useAutocompleteMultilineCompletions =
     config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
-
   const fontSize = getFontSize();
+
+  // Disable autocomplete
+  const disableAutocompleteInFiles = (
+    config.tabAutocompleteOptions?.disableInFiles ?? []
+  ).join(", ");
+  const [formDisableAutocomplete, setFormDisableAutocomplete] = useState(
+    disableAutocompleteInFiles,
+  );
+  const cancelChangeDisableAutocomplete = () => {
+    setFormDisableAutocomplete(disableAutocompleteInFiles);
+  };
+  const handleDisableAutocompleteSubmit = () => {
+    handleUpdate({
+      disableAutocompleteInFiles: formDisableAutocomplete
+        .split(",")
+        .map((val) => val.trim())
+        .filter((val) => !!val),
+    });
+  };
+
+  useEffect(() => {
+    // Necessary so that reformatted/trimmed values don't cause dirty state
+    setFormDisableAutocomplete(disableAutocompleteInFiles);
+  }, [disableAutocompleteInFiles]);
+
+  // Workspace prompts
+  const promptPath = config.experimental?.promptPath || "";
+  const [formPromptPath, setFormPromptPath] = useState(promptPath);
+  const cancelChangePromptPath = () => {
+    setFormPromptPath(promptPath);
+  };
+  const handleSubmitPromptPath = () => {
+    handleUpdate({
+      promptPath: formPromptPath || "",
+    });
+  };
+
+  useEffect(() => {
+    // Necessary so that reformatted/trimmed values don't cause dirty state
+    setFormPromptPath(promptPath);
+  }, [promptPath]);
 
   function handleOpenConfig() {
     if (!selectedProfile) {
@@ -150,11 +182,6 @@ function ConfigPage() {
               text="Show Chat Scrollbar"
             />
 
-            {/* disableAutocompleteInFiles: z.array(z.string()), */}
-
-            {/* promptPath: z.string(), */}
-
-            {/* Other */}
             <ToggleSwitch
               isToggled={useAutocompleteCache}
               onToggle={() =>
@@ -165,7 +192,6 @@ function ConfigPage() {
               text="Use Autocomplete Cache"
             />
 
-            {/* Other */}
             <ToggleSwitch
               isToggled={useChromiumForDocsCrawling}
               onToggle={() =>
@@ -225,6 +251,93 @@ function ConfigPage() {
                 max={50}
               />
             </label>
+
+            <form
+              className="flex flex-col items-end gap-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmitPromptPath();
+              }}
+            >
+              <label className="flex flex-row items-center justify-end gap-3">
+                <span className="text-right">Workspace prompts path</span>
+                <Input
+                  value={formPromptPath}
+                  className="max-w-[100px]"
+                  onChange={(e) => {
+                    setFormPromptPath(e.target.value);
+                  }}
+                />
+                <div className="flex h-full flex-col">
+                  {formPromptPath !== promptPath ? (
+                    <>
+                      <div
+                        onClick={handleSubmitPromptPath}
+                        className="cursor-pointer"
+                      >
+                        <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
+                      </div>
+                      <div
+                        onClick={cancelChangePromptPath}
+                        className="cursor-pointer"
+                      >
+                        <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
+                    </div>
+                  )}
+                </div>
+              </label>
+            </form>
+
+            <form
+              className="flex flex-col items-end gap-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleDisableAutocompleteSubmit();
+              }}
+            >
+              <label className="flex flex-row items-center justify-end gap-3">
+                <span className="text-right">
+                  Disable autocomplete in files
+                </span>
+                <Input
+                  value={formDisableAutocomplete}
+                  className="max-w-[100px]"
+                  onChange={(e) => {
+                    setFormDisableAutocomplete(e.target.value);
+                  }}
+                />
+                <div className="flex h-full flex-col">
+                  {formDisableAutocomplete !== disableAutocompleteInFiles ? (
+                    <>
+                      <div
+                        onClick={handleDisableAutocompleteSubmit}
+                        className="cursor-pointer"
+                      >
+                        <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
+                      </div>
+                      <div
+                        onClick={cancelChangeDisableAutocomplete}
+                        className="cursor-pointer"
+                      >
+                        <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
+                    </div>
+                  )}
+                </div>
+              </label>
+              <span className="text-vsc-foreground-muted text-xs">
+                Comma-separated list of path matchers
+              </span>
+            </form>
           </div>
         </div>
       )}
