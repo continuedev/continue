@@ -10,7 +10,7 @@ export default class LocalProfileLoader implements IProfileLoader {
   static ID = "local";
   description: ProfileDescription = {
     id: LocalProfileLoader.ID,
-    profileType: LocalProfileLoader.ID,
+    profileType: "local",
     fullSlug: {
       ownerSlug: "",
       packageSlug: "",

@@ -90,6 +90,12 @@ const initialState: SessionState = {
       id: "local",
       title: "Local",
       errors: undefined,
+      profileType: "local",
+      fullSlug: {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
     },
   ],
   curCheckpointIndex: 0,

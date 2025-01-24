@@ -16,10 +16,9 @@ import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath, getConfigYamlPath } from "../util/paths.js";
 
-import { ConfigResult, ConfigYaml } from "@continuedev/config-yaml";
+import { ConfigResult, ConfigYaml, FullSlug } from "@continuedev/config-yaml";
 import * as YAML from "yaml";
-import { controlPlaneEnv } from "../control-plane/env.js";
-import { usePlatform } from "../control-plane/flags.js";
+import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
 import { localPathToUri } from "../util/pathToUri.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
@@ -27,7 +26,7 @@ import {
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
-import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
+import PlatformProfileLoader from "./profile/PlatformProfileLoader.1.js";
 import {
   ProfileDescription,
   ProfileLifecycleManager,
@@ -63,7 +62,7 @@ export class ConfigHandler {
       controlPlaneClient,
       writeLog,
     );
-    this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
+    this.profiles = [new ProfileLifecycleManager(localProfileLoader, this.ide)];
     this.selectedProfileId = localProfileLoader.description.id;
 
     // Always load local profile immediately in case control plane doesn't load
@@ -107,7 +106,8 @@ export class ConfigHandler {
         await this.ide.openFile(localPathToUri(getConfigJsonPath()));
       }
     } else {
-      await this.ide.openUrl(`${controlPlaneEnv.APP_URL}${openProfileId}`);
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
   }
 
@@ -145,7 +145,7 @@ export class ConfigHandler {
               ...this.profiles.filter(
                 (profile) => profile.profileDescription.id === "local",
               ),
-              new ProfileLifecycleManager(profileLoader),
+              new ProfileLifecycleManager(profileLoader, this.ide),
             ];
           }),
         );
@@ -177,15 +177,49 @@ export class ConfigHandler {
   }
 
   private platformProfilesRefreshInterval: NodeJS.Timeout | undefined;
+  // We use this to keep track of whether we should reload the assistants
+  private lastFullSlugsList: FullSlug[] = [];
+
+  private fullSlugsListsDiffer(a: FullSlug[], b: FullSlug[]): boolean {
+    if (a.length !== b.length) {
+      return true;
+    }
+    for (let i = 0; i < a.length; i++) {
+      if (a[i].ownerSlug !== b[i].ownerSlug) {
+        return true;
+      }
+      if (a[i].packageSlug !== b[i].packageSlug) {
+        return true;
+      }
+      if (a[i].versionSlug !== b[i].versionSlug) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private async fetchControlPlaneProfiles() {
-    if (usePlatform()) {
+    if (await useHub(this.ideSettingsPromise)) {
       clearInterval(this.platformProfilesRefreshInterval);
       await this.loadPlatformProfiles();
-      this.platformProfilesRefreshInterval = setInterval(
-        this.loadPlatformProfiles.bind(this),
-        PlatformProfileLoader.RELOAD_INTERVAL,
-      );
+
+      // Every 5 seconds we ask the platform whether there are any assistant updates in the last 5 seconds
+      // If so, we do the full (more expensive) reload
+      this.platformProfilesRefreshInterval = setInterval(async () => {
+        const newFullSlugsList =
+          await this.controlPlaneClient.listAssistantFullSlugs();
+
+        if (newFullSlugsList) {
+          const shouldReload = this.fullSlugsListsDiffer(
+            newFullSlugsList,
+            this.lastFullSlugsList,
+          );
+          if (shouldReload) {
+            await this.loadPlatformProfiles();
+          }
+          this.lastFullSlugsList = newFullSlugsList;
+        }
+      }, PlatformProfileLoader.RELOAD_INTERVAL);
     } else {
       this.controlPlaneClient
         .listWorkspaces()
@@ -203,7 +237,9 @@ export class ConfigHandler {
               this.writeLog,
               this.reloadConfig.bind(this),
             );
-            this.profiles.push(new ProfileLifecycleManager(profileLoader));
+            this.profiles.push(
+              new ProfileLifecycleManager(profileLoader, this.ide),
+            );
           });
 
           this.notifyProfileListeners(
@@ -258,11 +294,12 @@ export class ConfigHandler {
     void this.reloadConfig();
   }
 
-  updateControlPlaneSessionInfo(
+  async updateControlPlaneSessionInfo(
     sessionInfo: ControlPlaneSessionInfo | undefined,
   ) {
     this.controlPlaneClient = new ControlPlaneClient(
       Promise.resolve(sessionInfo),
+      this.ideSettingsPromise,
     );
     this.fetchControlPlaneProfiles().catch((e) => {
       console.error("Failed to fetch control plane profiles: ", e);
