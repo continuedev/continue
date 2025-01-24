@@ -106,7 +106,7 @@ function ConfigPage() {
       <h1 className="text-center">Continue Config</h1>
 
       {!selectedProfile ? (
-        <p>No config profile selected</p>
+        <p className="text-center">No config profile selected</p>
       ) : (
         <div className="flex flex-col items-center justify-center gap-2 px-3">
           <div>
