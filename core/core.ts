@@ -54,6 +54,7 @@ import {
 
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { controlPlaneEnv } from "./control-plane/env";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -294,6 +295,13 @@ export class Core {
 
     on("config/addContextProvider", async (msg) => {
       addContextProvider(msg.data);
+    });
+
+    on("controlPlane/openUrl", async (msg) => {
+      await this.messenger.request(
+        "openUrl",
+        `${controlPlaneEnv.APP_URL}${msg.data.path}`,
+      );
     });
 
     // Context providers
