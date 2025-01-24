@@ -425,6 +425,11 @@ interface ToolCallState {
   output?: ContextItem[];
 }
 
+interface Reasoning {
+  active: boolean;
+  text: string;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   contextItems: ContextItemWithId[];
@@ -435,6 +440,7 @@ export interface ChatHistoryItem {
   isGatheringContext?: boolean;
   checkpoint?: Checkpoint;
   isBeforeCheckpoint?: boolean;
+  reasoning?: Reasoning;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
