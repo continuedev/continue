@@ -26,7 +26,7 @@ import {
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
-import PlatformProfileLoader from "./profile/PlatformProfileLoader.1.js";
+import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
   ProfileDescription,
   ProfileLifecycleManager,
@@ -116,10 +116,7 @@ export class ConfigHandler {
     this.controlPlaneClient
       .listAssistants()
       .then(async (assistants) => {
-        this.profiles = this.profiles.filter(
-          (profile) => profile.profileDescription.id === "local",
-        );
-        await Promise.all(
+        const hubProfiles = await Promise.all(
           assistants.map(async (assistant) => {
             let renderedConfig: ConfigYaml | undefined = undefined;
             if (assistant.configResult.config) {
@@ -141,14 +138,17 @@ export class ConfigHandler {
               this.writeLog,
               this.reloadConfig.bind(this),
             );
-            this.profiles = [
-              ...this.profiles.filter(
-                (profile) => profile.profileDescription.id === "local",
-              ),
-              new ProfileLifecycleManager(profileLoader, this.ide),
-            ];
+
+            return new ProfileLifecycleManager(profileLoader, this.ide);
           }),
         );
+
+        this.profiles = [
+          ...this.profiles.filter(
+            (profile) => profile.profileDescription.id === "local",
+          ),
+          ...hubProfiles,
+        ];
 
         this.notifyProfileListeners(
           this.profiles.map((profile) => profile.profileDescription),

@@ -583,7 +583,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
-  continueTestEnvironment: "none" | "production" | "test";
+  continueTestEnvironment: "none" | "production" | "test" | "local";
   pauseCodebaseIndexOnStart: boolean;
   enableDebugLogs: boolean;
 }

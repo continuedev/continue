@@ -101,7 +101,8 @@
           "enum": [
             "none",
             "production",
-            "test"
+            "test",
+            "local"
           ],
           "default": "none",
           "description": "Continue test environment"

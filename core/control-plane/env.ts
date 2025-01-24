@@ -75,7 +75,9 @@ export function getControlPlaneEnvSync(
       ? "hub"
       : ideTestEnvironment === "test"
         ? "test"
-        : process.env.CONTROL_PLANE_ENV;
+        : ideTestEnvironment === "local"
+          ? "local"
+          : process.env.CONTROL_PLANE_ENV;
 
   return env === "local"
     ? LOCAL_ENV
