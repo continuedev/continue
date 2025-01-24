@@ -193,4 +193,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];
+  "controlPlane/openUrl": [{ path: string }, void];
 };

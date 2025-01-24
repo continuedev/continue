@@ -52,7 +52,7 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import { usePlatform } from "./control-plane/flags";
+import { getControlPlaneEnv } from "./control-plane/env";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -111,10 +111,13 @@ export class Core {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
-      useOnboarding: usePlatform(),
+      useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
+    this.controlPlaneClient = new ControlPlaneClient(
+      sessionInfoPromise,
+      ideSettingsPromise,
+    );
 
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -297,6 +300,11 @@ export class Core {
     on("config/updateSharedConfig", async (msg) => {
       this.globalContext.updateSharedConfig(msg.data);
       await this.configHandler.reloadConfig();
+    });
+
+    on("controlPlane/openUrl", async (msg) => {
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
     });
 
     // Context providers
@@ -870,7 +878,7 @@ export class Core {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage();
+      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
       return { url };
     });
 

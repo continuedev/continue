@@ -135,13 +135,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     useState(false);
 
   useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ enableControlServerBeta }) => {
-      setControlServerBetaEnabled(enableControlServerBeta);
-      dispatch(setLastControlServerBetaEnabledStatus(enableControlServerBeta));
+    ideMessenger.ide
+      .getIdeSettings()
+      .then(({ enableControlServerBeta, continueTestEnvironment }) => {
+        const enabled =
+          enableControlServerBeta || continueTestEnvironment !== "none";
+        setControlServerBetaEnabled(enabled);
+        dispatch(setLastControlServerBetaEnabledStatus(enabled));
 
-      const shouldShowPopup =
-        !lastControlServerBetaEnabledStatus && enableControlServerBeta;
-    });
+        const shouldShowPopup = !lastControlServerBetaEnabledStatus && enabled;
+      });
   }, []);
 
   useWebviewListener(

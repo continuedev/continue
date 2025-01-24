@@ -63,7 +63,6 @@ import {
 } from "../util/paths";
 
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
-import { usePlatform } from "../control-plane/flags";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -71,12 +70,14 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-// import { isSupportedLanceDbCpuTarget } from "./util";
-import { validateConfig } from "./validation.js";
+import { useHub } from "../control-plane/env";
 import { localPathToUri } from "../util/pathToUri";
 import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
+import { validateConfig } from "./validation.js";
 
-export function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
+export function resolveSerializedConfig(
+  filepath: string,
+): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
@@ -547,9 +548,10 @@ async function intermediateToFinalConfig(
   return { config: continueConfig, errors };
 }
 
-function finalToBrowserConfig(
+async function finalToBrowserConfig(
   final: ContinueConfig,
-): BrowserSerializedContinueConfig {
+  ide: IDE,
+): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     models: final.models.map((m) => ({
@@ -582,8 +584,8 @@ function finalToBrowserConfig(
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
-    usePlatform: usePlatform(),
     tabAutocompleteOptions: final.tabAutocompleteOptions,
+    usePlatform: await useHub(ide.getIdeSettings()),
   };
 }
 
