@@ -111,11 +111,10 @@ function loadSerializedConfig(
   overrideConfigJson: SerializedContinueConfig | undefined,
   ide: IDE,
 ): ConfigResult<SerializedContinueConfig> {
-  const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
     try {
-      config = resolveSerializedConfig(configPath);
+      config = resolveSerializedConfig(getConfigJsonPath(ideType));
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
@@ -766,7 +765,7 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   return readConfigJs();
 }
 
-async function loadFullConfigNode(
+async function loadContinueConfigFromJson(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
@@ -876,6 +875,6 @@ async function loadFullConfigNode(
 export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
-  loadFullConfigNode,
+  loadContinueConfigFromJson,
   type BrowserSerializedContinueConfig,
 };

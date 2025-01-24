@@ -22,6 +22,7 @@ import type {
 } from "../";
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
+import { SharedConfigSchema } from "../config/SharedConfig";
 
 export type OnboardingModes =
   | "Local"
@@ -70,6 +71,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];
+  "config/updateSharedConfig": [values: SharedConfigSchema, void];
   "context/getContextItems": [
     {
       name: string;
