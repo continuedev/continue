@@ -8,11 +8,13 @@ import {
   modifyContinueConfigWithSharedConfig,
   SharedConfigSchema,
 } from "core/config/sharedConfig";
-import { Switch } from "@headlessui/react";
 import { updateConfig } from "../../redux/slices/configSlice";
 import ToggleSwitch from "../../components/gui/Switch";
 import { useAuth } from "../../context/Auth";
 import { Button } from "../../components";
+import { getFontSize } from "../../util";
+import NumberInput from "../../components/gui/NumberInput";
+import { Select } from "../../components/gui/Select";
 
 function ConfigPage() {
   useNavigationListener();
@@ -37,6 +39,8 @@ function ConfigPage() {
   }
 
   // Account for default values
+  // TODO - duplicate defaults here, should consolidate defaults to one place
+  // And write defaults earlier in the config process
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
@@ -49,6 +53,11 @@ function ConfigPage() {
   const useAutocompleteCache = config.tabAutocompleteOptions?.useCache ?? false;
   const useChromiumForDocsCrawling =
     config.experimental?.useChromiumForDocsCrawling ?? false;
+  const codeBlockToolbarPosition = config.ui?.codeBlockToolbarPosition ?? "top";
+  const useAutocompleteMultilineCompletions =
+    config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
+
+  const fontSize = getFontSize();
 
   function handleOpenConfig() {
     if (!selectedProfile) {
@@ -62,117 +71,161 @@ function ConfigPage() {
   return (
     <div className="overflow-y-scroll px-2">
       <PageHeader onClick={() => navigate("/")} title="Chat" />
-      <h1 className="text-center">Continue Configuration</h1>
+      <h1 className="text-center">Continue Config</h1>
 
       {!selectedProfile ? (
         <p>No config profile selected</p>
       ) : (
-        <div className="flex flex-col gap-2 px-3">
-          <Button onClick={handleOpenConfig}>
-            {selectedProfile.id === "local" ? "Open Config File" : "Nooooo"}
-          </Button>
+        <div className="flex flex-col items-center justify-center gap-2 px-3">
+          <div>
+            <Button onClick={handleOpenConfig}>
+              {selectedProfile.id === "local" ? "Open Config File" : "Nooooo"}
+            </Button>
+          </div>
           <h2 className="text-center">Other Settings</h2>
-          <ToggleSwitch
-            isToggled={codeWrap}
-            onToggle={() =>
-              handleUpdate({
-                codeWrap: !codeWrap,
-              })
-            }
-            text="Wrap Codeblocks"
-          ></ToggleSwitch>
-          <ToggleSwitch
-            isToggled={displayRawMarkdown}
-            onToggle={() =>
-              handleUpdate({
-                displayRawMarkdown: !displayRawMarkdown,
-              })
-            }
-            text="Display Raw Markdown"
-          ></ToggleSwitch>
-          <ToggleSwitch
-            isToggled={allowAnonymousTelemetry}
-            onToggle={() =>
-              handleUpdate({
-                allowAnonymousTelemetry: !allowAnonymousTelemetry,
-              })
-            }
-            text="Allow Anonymous Telemetry"
-          ></ToggleSwitch>
-          <ToggleSwitch
-            isToggled={disableIndexing}
-            onToggle={() =>
-              handleUpdate({
-                disableIndexing: !disableIndexing,
-              })
-            }
-            text="Disable Indexing"
-          ></ToggleSwitch>
+          <div className="flex flex-col items-end gap-2">
+            <ToggleSwitch
+              isToggled={codeWrap}
+              onToggle={() =>
+                handleUpdate({
+                  codeWrap: !codeWrap,
+                })
+              }
+              text="Wrap Codeblocks"
+            />
+            <ToggleSwitch
+              isToggled={displayRawMarkdown}
+              onToggle={() =>
+                handleUpdate({
+                  displayRawMarkdown: !displayRawMarkdown,
+                })
+              }
+              text="Display Raw Markdown"
+            />
+            <ToggleSwitch
+              isToggled={allowAnonymousTelemetry}
+              onToggle={() =>
+                handleUpdate({
+                  allowAnonymousTelemetry: !allowAnonymousTelemetry,
+                })
+              }
+              text="Allow Anonymous Telemetry"
+            />
+            <ToggleSwitch
+              isToggled={disableIndexing}
+              onToggle={() =>
+                handleUpdate({
+                  disableIndexing: !disableIndexing,
+                })
+              }
+              text="Disable Indexing"
+            />
 
-          <ToggleSwitch
-            isToggled={disableSessionTitles}
-            onToggle={() =>
-              handleUpdate({
-                disableSessionTitles: !disableSessionTitles,
-              })
-            }
-            text="Disable Session Titles"
-          ></ToggleSwitch>
+            <ToggleSwitch
+              isToggled={disableSessionTitles}
+              onToggle={() =>
+                handleUpdate({
+                  disableSessionTitles: !disableSessionTitles,
+                })
+              }
+              text="Disable Session Titles"
+            />
+            <ToggleSwitch
+              isToggled={readResponseTTS}
+              onToggle={() =>
+                handleUpdate({
+                  readResponseTTS: !readResponseTTS,
+                })
+              }
+              text="Response Text to Speech"
+            />
 
-          <ToggleSwitch
-            isToggled={readResponseTTS}
-            onToggle={() =>
-              handleUpdate({
-                readResponseTTS: !readResponseTTS,
-              })
-            }
-            text="Read Response TTS"
-          ></ToggleSwitch>
+            <ToggleSwitch
+              isToggled={showChatScrollbar}
+              onToggle={() =>
+                handleUpdate({
+                  showChatScrollbar: !showChatScrollbar,
+                })
+              }
+              text="Show Chat Scrollbar"
+            />
 
-          <ToggleSwitch
-            isToggled={showChatScrollbar}
-            onToggle={() =>
-              handleUpdate({
-                showChatScrollbar: !showChatScrollbar,
-              })
-            }
-            text="Show Chat Scrollbar"
-          ></ToggleSwitch>
+            {/* disableAutocompleteInFiles: z.array(z.string()), */}
 
-          {/* <label>
-          fontSize
-          <input></input>
-        </label> */}
+            {/* promptPath: z.string(), */}
 
-          {/* codeBlockToolbarPosition: z.enum(["top", "bottom"]), */}
+            {/* Other */}
+            <ToggleSwitch
+              isToggled={useAutocompleteCache}
+              onToggle={() =>
+                handleUpdate({
+                  useAutocompleteCache: !useAutocompleteCache,
+                })
+              }
+              text="Use Autocomplete Cache"
+            />
 
-          {/* disableAutocompleteInFiles: z.array(z.string()), */}
+            {/* Other */}
+            <ToggleSwitch
+              isToggled={useChromiumForDocsCrawling}
+              onToggle={() =>
+                handleUpdate({
+                  useChromiumForDocsCrawling: !useChromiumForDocsCrawling,
+                })
+              }
+              text="Use Chromium for Docs Crawling"
+            />
 
-          {/* promptPath: z.string(), */}
+            <label className="flex items-center justify-end gap-3">
+              <span className="text-right">Codeblock Actions Position</span>
+              <Select
+                value={codeBlockToolbarPosition}
+                onChange={(e) =>
+                  handleUpdate({
+                    codeBlockToolbarPosition: e.target.value as
+                      | "top"
+                      | "bottom",
+                  })
+                }
+              >
+                <option value="top">Top</option>
+                <option value="bottom">Bottom</option>
+              </Select>
+            </label>
 
-          {/* useAutocompleteMultilineCompletions: z.enum(["always", "never", "auto"]), */}
+            <label className="flex items-center justify-end gap-3">
+              <span className="text-right">Multiline Autocompletions</span>
+              <Select
+                value={useAutocompleteMultilineCompletions}
+                onChange={(e) =>
+                  handleUpdate({
+                    useAutocompleteMultilineCompletions: e.target.value as
+                      | "auto"
+                      | "always"
+                      | "never",
+                  })
+                }
+              >
+                <option value="auto">Auto</option>
+                <option value="always">Always</option>
+                <option value="never">Never</option>
+              </Select>
+            </label>
 
-          {/* Other */}
-          <ToggleSwitch
-            isToggled={useAutocompleteCache}
-            onToggle={() =>
-              handleUpdate({
-                useAutocompleteCache: !useAutocompleteCache,
-              })
-            }
-            text="Use Chromium for Docs Crawling"
-          ></ToggleSwitch>
-
-          {/* Other */}
-          <ToggleSwitch
-            isToggled={useChromiumForDocsCrawling}
-            onToggle={() =>
-              handleUpdate({
-                useChromiumForDocsCrawling: !useChromiumForDocsCrawling,
-              })
-            }
-            text="Use Chromium for Docs Crawling"
-          ></ToggleSwitch>
+            <label className="flex items-center justify-end gap-3">
+              <span className="text-right">Font Size</span>
+              <NumberInput
+                value={fontSize}
+                onChange={(val) =>
+                  handleUpdate({
+                    fontSize: val,
+                  })
+                }
+                min={7}
+                max={50}
+              />
+            </label>
+          </div>
         </div>
       )}
     </div>

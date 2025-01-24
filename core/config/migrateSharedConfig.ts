@@ -7,12 +7,16 @@ import { SharedConfigSchema } from "./sharedConfig";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
 import { resolveSerializedConfig } from "./load";
+import { deduplicateArray } from "../util";
 
 /*
   This migration function eliminates deprecated values from the json file
   And writes them to the shared config
 */
 export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
+  const globalContext = new GlobalContext();
+  const currentSharedConfig = globalContext.getSharedConfig(); // for merging security concerns
+
   try {
     let config = resolveSerializedConfig(filepath);
     const shareConfigUpdates: SharedConfigSchema = {};
@@ -21,21 +25,30 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
 
     const { allowAnonymousTelemetry, ...withoutAllowTelemetry } = config;
     if (allowAnonymousTelemetry !== undefined) {
-      shareConfigUpdates.allowAnonymousTelemetry = allowAnonymousTelemetry;
+      if (currentSharedConfig.allowAnonymousTelemetry !== false) {
+        // safe merge for security
+        shareConfigUpdates.allowAnonymousTelemetry = allowAnonymousTelemetry;
+      }
       config = withoutAllowTelemetry;
       effected = true;
     }
 
     const { disableIndexing, ...withoutDisableIndexing } = config;
     if (disableIndexing !== undefined) {
-      shareConfigUpdates.disableIndexing = disableIndexing;
+      if (currentSharedConfig.disableIndexing !== true) {
+        // safe merge for security
+        shareConfigUpdates.disableIndexing = disableIndexing;
+      }
       config = withoutDisableIndexing;
       effected = true;
     }
 
     const { disableSessionTitles, ...withoutDisableSessionTitles } = config;
     if (config.disableSessionTitles !== undefined) {
-      shareConfigUpdates.disableSessionTitles = config.disableSessionTitles;
+      if (currentSharedConfig.disableSessionTitles !== true) {
+        // safe merge for security
+        shareConfigUpdates.disableSessionTitles = config.disableSessionTitles;
+      }
       config = withoutDisableSessionTitles;
       effected = true;
     }
@@ -62,15 +75,31 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
 
       const { disableInFiles, ...withoutDisableInFiles } = migratedAutocomplete;
       if (disableInFiles !== undefined) {
+        if (currentSharedConfig.disableAutocompleteInFiles !== undefined) {
+          // safe merge for security
+          shareConfigUpdates.disableAutocompleteInFiles = deduplicateArray(
+            [
+              ...currentSharedConfig.disableAutocompleteInFiles,
+              ...disableInFiles,
+            ],
+            (a, b) => a === b,
+          );
+        } else {
+          shareConfigUpdates.disableAutocompleteInFiles = disableInFiles;
+        }
         shareConfigUpdates.disableAutocompleteInFiles = disableInFiles;
         migratedAutocomplete = withoutDisableInFiles;
         effected = true;
       }
 
-      config = {
-        ...withoutAutocompleteOptions,
-        tabAutocompleteOptions: migratedAutocomplete,
-      };
+      if (Object.keys(migratedAutocomplete).length > 0) {
+        config = {
+          ...withoutAutocompleteOptions,
+          tabAutocompleteOptions: migratedAutocomplete,
+        };
+      } else {
+        config = withoutAutocompleteOptions;
+      }
     }
 
     const { experimental, ...withoutExperimental } = config;
@@ -99,10 +128,14 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
         effected = true;
       }
 
-      config = {
-        ...withoutExperimental,
-        experimental: migratedExperimental,
-      };
+      if (Object.keys(migratedExperimental).length > 0) {
+        config = {
+          ...withoutExperimental,
+          experimental: migratedExperimental,
+        };
+      } else {
+        config = withoutExperimental;
+      }
     }
 
     const { ui, ...withoutUI } = config;
@@ -145,10 +178,14 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
         effected = true;
       }
 
-      config = {
-        ...withoutUI,
-        ui: migratedUI,
-      };
+      if (Object.keys(migratedUI).length > 0) {
+        config = {
+          ...withoutUI,
+          ui: migratedUI,
+        };
+      } else {
+        config = withoutUI;
+      }
     }
 
     if (effected) {
