@@ -213,7 +213,7 @@
         "group": "Continue"
       },
       {
-        "command": "continue.openConfig",
+        "command": "continue.openConfigPage",
         "category": "Continue",
         "title": "Open Continue Config",
         "icon": "$(gear)",
@@ -522,7 +522,7 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.openConfig",
+          "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         },
