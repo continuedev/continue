@@ -4,7 +4,7 @@ import {
   salvageSharedConfig,
   sharedConfigSchema,
   SharedConfigSchema,
-} from "../config/SharedConfig";
+} from "../config/sharedConfig";
 
 import { getGlobalContextFilePath } from "./paths";
 

@@ -282,6 +282,7 @@ async function configYamlToContinueConfig(
   });
 
   // Apply shared config
+  // TODO: override several of these values with user/org shared config
   const sharedConfig = new GlobalContext().getSharedConfig();
   continueConfig.tabAutocompleteOptions = sharedConfig.tabAutocompleteOptions;
   continueConfig.ui = {
@@ -294,11 +295,11 @@ async function configYamlToContinueConfig(
   continueConfig.allowAnonymousTelemetry = sharedConfig.allowAnonymousTelemetry;
   continueConfig.disableIndexing = sharedConfig.disableIndexing;
   continueConfig.disableSessionTitles = sharedConfig.disableSessionTitles;
-  continueConfig.experimental!.useChromiumForDocsCrawling = sharedConfig.useChromiumForDocsCrawling;
+  continueConfig.experimental!.useChromiumForDocsCrawling =
+    sharedConfig.useChromiumForDocsCrawling;
   continueConfig.experimental!.readResponseTTS = sharedConfig.readResponseTTS;
   continueConfig.experimental!.promptPath = sharedConfig.promptPath;
 
-  
   return continueConfig;
 }
 
