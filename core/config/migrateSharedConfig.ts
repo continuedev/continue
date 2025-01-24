@@ -178,6 +178,16 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
         effected = true;
       }
 
+      // Ancient param to overwrite disableSessionTitles
+      if ("getChatTitles" in migratedUI) {
+        const { getChatTitles, ...withoutChatTitles } = migratedUI;
+        if (getChatTitles === false) {
+          shareConfigUpdates.disableSessionTitles = true;
+          migratedUI = withoutChatTitles;
+          effected = true;
+        }
+      }
+
       if (Object.keys(migratedUI).length > 0) {
         config = {
           ...withoutUI,

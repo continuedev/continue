@@ -88,10 +88,7 @@ Specifies options for tab autocompletion behavior.
 - `maxSuffixPercentage`: Maximum percentage of prompt for suffix.
 - `prefixPercentage`: Percentage of input for prefix.
 - `template`: Template string for autocomplete, using Mustache templating. You can use the `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}`, and `{{{ language }}}` variables.
-- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`).
-- `useCache`: If `true`, caches completions.
 - `onlyMyCode`: If `true`, only includes code within the repository.
-- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled.
 
 Example
 
@@ -340,42 +337,6 @@ Example
 }
 ```
 
-### `disableSessionTitles`
-
-Prevents generating summary titles for each chat session when set to `true`.
-
-Note that if the deprecated setting `ui.getChatTitles` is set to `false`, it will override this.
-
-### `ui`
-
-Customizable UI settings to control interface appearance and behavior.
-
-**Properties:**
-
-- `codeBlockToolbarPosition`: Sets the toolbar position within code blocks, either `top` (default) or `bottom`.
-- `fontSize`: Specifies font size for UI elements.
-- `displayRawMarkdown`: If `true`, shows raw markdown in responses.
-- `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
-- `codeWrap`: If `true`, enables text wrapping in code blocks.
-
-Example:
-
-```json title="config.json"
-{
-  "ui": {
-    "codeBlockToolbarPosition": "bottom",
-    "fontSize": 14,
-    "displayRawMarkdown": false,
-    "showChatScrollbar": false,
-    "codeWrap": false
-  }
-}
-```
-
-### `allowAnonymousTelemetry`
-
-When `true`, anonymous usage data is collected using Posthog, to improve features. Default is `true`.
-
 ### `userToken`
 
 An optional token that identifies the user, primarily for authenticated services.
@@ -383,10 +344,6 @@ An optional token that identifies the user, primarily for authenticated services
 ### `systemMessage`
 
 Defines a system message that appears before every response from the language model, providing guidance or context.
-
-### `disableIndexing`
-
-Prevents indexing of the codebase, useful primarily for debugging purposes.
 
 ### `experimental`
 
@@ -399,8 +356,6 @@ Several experimental config parameters are available, as described below:
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
-- `readResponseTTS`: If `true`, reads LLM responses aloud with TTS. Default is `true`.
-- `promptPath`: Change the path to custom prompt files from the default ".prompts"
 - `quickActions`: Array of custom quick actions
   - `title` (**required**): Display title for the quick action.
   - `prompt` (**required**): Prompt for quick action.
@@ -410,7 +365,6 @@ Several experimental config parameters are available, as described below:
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
-- `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
 - `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#model-context-protocol)
 
 Example
@@ -421,7 +375,6 @@ Example
     "modelRoles": {
       "inlineEdit": "Edit Model"
     },
-    "promptPath": "custom/.prompts",
     "quickActions": [
       {
         "title": "Tags",
@@ -432,8 +385,6 @@ Example
     "contextMenuPrompts": {
       "fixGrammar": "Fix grammar in the above but allow for typos."
     },
-    "readResponseTTS": false,
-    "useChromiumForDocsCrawling": true,
     "modelContextProtocolServers": [
       {
         "transport": {
@@ -447,10 +398,27 @@ Example
 }
 ```
 
-### Deprecated settings
+### Fully deprecated settings
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the Config Page (Gear Icon)
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [Config Page](TODO). If found in `config.json`, they will be migrated to the [Config Page](TODO) and removed from `config.json`.
 
+- `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
+- `promptPath`: This value will override during migration.
+- `disableIndexing`: This value will be migrated to the safest merged value (`true` if either are `true`).
+- `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
+- `tabAutocompleteOptions`
+  - `useCache`: This value will override during migration.
+  - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
+  - `multilineCompletions`: This value will override during migration.
+- `experimental`
+  - `useChromiumForDocsCrawling`: This value will override during migration.
+  - `readResponseTTS`: This value will override during migration.
+- `ui` - all will override during migration
 
-If config.json is 
-For security purposes, ifsome settings present in `config.json` will always  migrated from the old config if any config.json is detected
+  - `codeBlockToolbarPosition`
+  - `fontSize`
+  - `codeWrap`
+  - `displayRawMarkdown`
+  - `showChatScrollbar`
+
+  See [Config Page](TODO) for more information about each option.
