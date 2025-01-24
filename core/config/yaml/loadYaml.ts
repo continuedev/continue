@@ -121,6 +121,7 @@ async function configYamlToContinueConfig(
       rootUrl: doc.rootUrl,
       faviconUrl: doc.faviconUrl,
     })),
+    contextProviders: [],
   };
 
   // Models
@@ -191,7 +192,7 @@ async function configYamlToContinueConfig(
     ({ description: { title } }) => title,
   );
 
-  continueConfig.contextProviders = config.context
+  continueConfig.contextProviders = (config.context
     ?.map((context) => {
       const cls = contextProviderClassFromName(context.uses) as any;
       if (!cls) {
@@ -203,7 +204,7 @@ async function configYamlToContinueConfig(
       const instance: IContextProvider = new cls(context.with ?? {});
       return instance;
     })
-    .filter((p) => !!p) as IContextProvider[];
+    .filter((p) => !!p) ?? []) as IContextProvider[];
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
   // Embeddings Provider
