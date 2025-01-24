@@ -1,4 +1,8 @@
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import {
+  ConfigResult,
+  ConfigValidationError,
+  FullSlug,
+} from "@continuedev/config-yaml";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -9,6 +13,8 @@ import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 
 export interface ProfileDescription {
+  fullSlug: FullSlug;
+  profileType: string;
   title: string;
   id: string;
   errors: ConfigValidationError[] | undefined;

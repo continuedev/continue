@@ -134,6 +134,7 @@ export class ConfigHandler {
               { ...assistant.configResult, config: renderedConfig },
               assistant.ownerSlug,
               assistant.packageSlug,
+              assistant.configResult.config?.version ?? "latest",
               this.controlPlaneClient,
               this.ide,
               this.ideSettingsPromise,

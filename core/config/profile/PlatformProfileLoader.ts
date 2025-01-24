@@ -29,6 +29,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
     private configResult: ConfigResult<ConfigYaml>,
     private readonly ownerSlug: string,
     private readonly packageSlug: string,
+    versionSlug: string,
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
@@ -37,7 +38,13 @@ export default class PlatformProfileLoader implements IProfileLoader {
   ) {
     this.description = {
       id: `${ownerSlug}/${packageSlug}`,
-      title: `${ownerSlug}/${packageSlug}`,
+      profileType: "platform",
+      fullSlug: {
+        ownerSlug,
+        packageSlug,
+        versionSlug,
+      },
+      title: `${ownerSlug}/${packageSlug}@${versionSlug}`,
       errors: configResult.errors,
     };
 
