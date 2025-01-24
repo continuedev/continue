@@ -31,6 +31,12 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
   ) {
     this.description = {
       id: workspaceId,
+      profileType: "control-plane",
+      fullSlug: {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
       title: workspaceTitle,
       errors: undefined,
     };

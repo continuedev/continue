@@ -52,10 +52,9 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import { usePlatform } from "./control-plane/flags";
+import { getControlPlaneEnv } from "./control-plane/env";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { controlPlaneEnv } from "./control-plane/env";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -112,10 +111,13 @@ export class Core {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
-      useOnboarding: usePlatform(),
+      useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
+    this.controlPlaneClient = new ControlPlaneClient(
+      sessionInfoPromise,
+      ideSettingsPromise,
+    );
 
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -296,10 +298,8 @@ export class Core {
     });
 
     on("controlPlane/openUrl", async (msg) => {
-      await this.messenger.request(
-        "openUrl",
-        `${controlPlaneEnv.APP_URL}${msg.data.path}`,
-      );
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
     });
 
     // Context providers
@@ -873,7 +873,7 @@ export class Core {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage();
+      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
       return { url };
     });
 

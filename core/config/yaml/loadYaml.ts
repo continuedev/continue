@@ -32,6 +32,7 @@ import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
+import { slashFromCustomCommand } from "../../commands";
 import { allTools } from "../../tools";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
@@ -95,7 +96,10 @@ async function configYamlToContinueConfig(
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   const continueConfig: ContinueConfig = {
-    slashCommands: await slashCommandsFromV1PromptFiles(ide),
+    slashCommands: [
+      ...(await slashCommandsFromV1PromptFiles(ide)),
+      ...(config.prompts?.map(slashFromCustomCommand) ?? []),
+    ],
     models: [],
     tabAutocompleteModels: [],
     tools: allTools,
@@ -117,6 +121,7 @@ async function configYamlToContinueConfig(
       rootUrl: doc.rootUrl,
       faviconUrl: doc.faviconUrl,
     })),
+    contextProviders: [],
   };
 
   // Models
@@ -187,7 +192,7 @@ async function configYamlToContinueConfig(
     ({ description: { title } }) => title,
   );
 
-  continueConfig.contextProviders = config.context
+  continueConfig.contextProviders = (config.context
     ?.map((context) => {
       const cls = contextProviderClassFromName(context.uses) as any;
       if (!cls) {
@@ -199,7 +204,7 @@ async function configYamlToContinueConfig(
       const instance: IContextProvider = new cls(context.with ?? {});
       return instance;
     })
-    .filter((p) => !!p) as IContextProvider[];
+    .filter((p) => !!p) ?? []) as IContextProvider[];
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
   // Embeddings Provider
