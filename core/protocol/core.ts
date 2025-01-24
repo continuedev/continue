@@ -22,7 +22,7 @@ import type {
 } from "../";
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
-import { SharedConfigSchema } from "../config/SharedConfig";
+import { SharedConfigSchema } from "../config/sharedConfig";
 
 export type OnboardingModes =
   | "Local"

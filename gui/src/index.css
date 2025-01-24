@@ -79,6 +79,7 @@ body {
   word-break: break-word;
   overflow: hidden;
   line-height: 1.375;
+  text-overflow: ellipsis;
 }
 
 .lines-3 {

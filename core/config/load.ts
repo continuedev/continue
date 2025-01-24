@@ -74,8 +74,9 @@ import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 // import { isSupportedLanceDbCpuTarget } from "./util";
 import { validateConfig } from "./validation.js";
 import { localPathToUri } from "../util/pathToUri";
+import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
 
-function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
+export function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
@@ -582,6 +583,7 @@ function finalToBrowserConfig(
     docs: final.docs,
     tools: final.tools,
     usePlatform: usePlatform(),
+    tabAutocompleteOptions: final.tabAutocompleteOptions,
   };
 }
 
@@ -797,8 +799,16 @@ async function loadContinueConfigFromJson(
     serialized.systemMessage = systemPromptDotFile;
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    serialized,
+    sharedConfig,
+  );
+
   // Convert serialized to intermediate config
-  let intermediate = await serializedToIntermediateConfig(serialized, ide);
+  let intermediate = await serializedToIntermediateConfig(withShared, ide);
 
   // Apply config.ts to modify intermediate config
   const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);

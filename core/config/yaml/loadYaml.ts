@@ -36,6 +36,7 @@ import { allTools } from "../../tools";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
 import { GlobalContext } from "../../util/GlobalContext";
+import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
 
 async function loadConfigYaml(
   workspaceConfigs: string[],
@@ -281,25 +282,6 @@ async function configYamlToContinueConfig(
     clearTimeout(mcpConnectionTimeout);
   });
 
-  // Apply shared config
-  // TODO: override several of these values with user/org shared config
-  const sharedConfig = new GlobalContext().getSharedConfig();
-  continueConfig.tabAutocompleteOptions = sharedConfig.tabAutocompleteOptions;
-  continueConfig.ui = {
-    codeBlockToolbarPosition: sharedConfig.codeBlockToolbarPosition,
-    fontSize: sharedConfig.fontSize,
-    codeWrap: sharedConfig.codeWrap,
-    displayRawMarkdown: sharedConfig.displayRawMarkdown,
-    showChatScrollbar: sharedConfig.showChatScrollbar,
-  };
-  continueConfig.allowAnonymousTelemetry = sharedConfig.allowAnonymousTelemetry;
-  continueConfig.disableIndexing = sharedConfig.disableIndexing;
-  continueConfig.disableSessionTitles = sharedConfig.disableSessionTitles;
-  continueConfig.experimental!.useChromiumForDocsCrawling =
-    sharedConfig.useChromiumForDocsCrawling;
-  continueConfig.experimental!.readResponseTTS = sharedConfig.readResponseTTS;
-  continueConfig.experimental!.promptPath = sharedConfig.promptPath;
-
   return continueConfig;
 }
 
@@ -355,8 +337,16 @@ export async function loadContinueConfigFromYaml(
     }
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    continueConfig,
+    sharedConfig,
+  );
+
   return {
-    config: continueConfig,
+    config: withShared,
     errors: configYamlResult.errors,
     configLoadInterrupted: false,
   };

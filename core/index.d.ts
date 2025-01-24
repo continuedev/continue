@@ -1211,6 +1211,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   usePlatform: boolean;
+  tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

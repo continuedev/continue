@@ -446,3 +446,11 @@ Example
   }
 }
 ```
+
+### Deprecated settings
+
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the Config Page (Gear Icon)
+
+
+If config.json is 
+For security purposes, ifsome settings present in `config.json` will always  migrated from the old config if any config.json is detected
