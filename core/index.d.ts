@@ -428,6 +428,8 @@ interface ToolCallState {
 interface Reasoning {
   active: boolean;
   text: string;
+  startAt: number;
+  endAt?: number;
 }
 
 export interface ChatHistoryItem {

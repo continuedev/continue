@@ -1,6 +1,6 @@
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/util/messageContent";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscBackground, vscQuickInputBackground, } from "..";
 import { getFontSize } from "../../util";
@@ -45,13 +45,28 @@ const ContentDiv = styled.div<{ fontSize?: number }>`
 
 export default function Reasoning(props: ReasoningProps) {
   const [open, setOpen] = useState(false);
+  const [reasoningTime, setReasoningTime] = useState("");
+
+  useEffect(() => {
+    if (!props.item.reasoning) return;
+
+    const interval = setInterval(() => {
+      const startAt = props.item.reasoning?.startAt || Date.now();
+      const endAt = props.item.reasoning?.endAt || Date.now();
+      const diff = endAt - startAt;
+      const diffString = `${(diff / 1000).toFixed(1)}s`;
+      setReasoningTime(diffString)
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [props.item.reasoning?.startAt, props.item.reasoning?.endAt])
 
   if (!props.item.reasoning?.text) {
     return null;
   }
 
   return <>
-    <SpoilerButton onClick={() => setOpen(!open)}> {open ? "Hide reasoning" : "Show reasoning"}</SpoilerButton>
+    <SpoilerButton onClick={() => setOpen(!open)}> {open ? "Hide" : "Show"}  reasoning: {reasoningTime} </SpoilerButton>
     {open && (<ContentDiv>
       <StyledMarkdownPreview
         isRenderingInStepContainer

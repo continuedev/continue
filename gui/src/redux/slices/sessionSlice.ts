@@ -365,6 +365,7 @@ export const sessionSlice = createSlice({
               const messageContent = renderChatMessage(message);
               if (messageContent.includes("<think>")) {
                 lastItem.reasoning = {
+                  startAt: Date.now(),
                   active: true,
                   text: messageContent.replace("<think>", "").trim(),
                 }
@@ -372,6 +373,7 @@ export const sessionSlice = createSlice({
                 const [reasoningEnd, answerStart] = messageContent.split("</think>");
                 lastItem.reasoning.text += reasoningEnd.trimEnd();
                 lastItem.reasoning.active = false;
+                lastItem.reasoning.endAt = Date.now();
                 lastMessage.content += answerStart.trimStart();
               } else if (lastItem.reasoning?.active) {
                 lastItem.reasoning.text += messageContent;
