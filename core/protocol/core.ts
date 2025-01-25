@@ -71,7 +71,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];
-  "config/updateSharedConfig": [values: SharedConfigSchema, void];
+  "config/updateSharedConfig": [SharedConfigSchema, void];
   "context/getContextItems": [
     {
       name: string;
