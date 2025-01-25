@@ -1,9 +1,9 @@
-import { ConfigYaml } from "../schemas/index.js";
+import { Assistant } from "../schemas/index.js";
 
 export function mergePackages(
-  current: ConfigYaml,
-  incoming: ConfigYaml,
-): ConfigYaml {
+  current: Assistant,
+  incoming: Assistant,
+): Assistant {
   return {
     ...current,
     models: [...(current.models ?? []), ...(incoming.models ?? [])],

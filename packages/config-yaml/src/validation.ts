@@ -1,4 +1,4 @@
-import { ConfigYaml, configYamlSchema } from "./schemas/index.js";
+import { Assistant, assistantSchema } from "./schemas/index.js";
 
 export interface ConfigValidationError {
   fatal: boolean;
@@ -11,13 +11,11 @@ export interface ConfigResult<T> {
   configLoadInterrupted: boolean;
 }
 
-export function validateConfigYaml(
-  config: ConfigYaml,
-): ConfigValidationError[] {
+export function validateConfigYaml(config: Assistant): ConfigValidationError[] {
   const errors: ConfigValidationError[] = [];
 
   try {
-    configYamlSchema.parse(config);
+    assistantSchema.parse(config);
   } catch (e: any) {
     return [
       {

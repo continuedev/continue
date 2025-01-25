@@ -5,13 +5,13 @@ import {
   decodeFullSlug,
   encodePackageSlug,
 } from "../interfaces/slugs.js";
-import { ConfigYaml, configYamlSchema } from "../schemas/index.js";
+import { Assistant, assistantSchema } from "../schemas/index.js";
 import { mergePackages } from "./merge.js";
 
-export function parseConfigYaml(configYaml: string): ConfigYaml {
+export function parseConfigYaml(configYaml: string): Assistant {
   try {
     const parsed = YAML.parse(configYaml);
-    const result = configYamlSchema.parse(parsed);
+    const result = assistantSchema.parse(parsed);
     return result;
   } catch (e: any) {
     throw new Error(`Failed to parse config yaml: ${e.message}`);
@@ -44,10 +44,10 @@ export function fillTemplateVariables(
 }
 
 export async function unrollImportedPackage(
-  pkgImport: NonNullable<ConfigYaml["packages"]>[number],
+  pkgImport: NonNullable<Assistant["packages"]>[number],
   parentPackages: PackageSlug[],
   registry: Registry,
-): Promise<ConfigYaml> {
+): Promise<Assistant> {
   const { uses, with: params } = pkgImport;
 
   const fullSlug = decodeFullSlug(uses);
@@ -121,7 +121,7 @@ export async function unrollPackageFromContent(
   params: Record<string, string> | undefined,
   packagePath: PackageSlug[],
   registry: Registry,
-): Promise<ConfigYaml> {
+): Promise<Assistant> {
   // Collect template data
   const templateData: TemplateData = {
     // params are passed from the parent package
@@ -160,7 +160,7 @@ export async function unrollPackageFromContent(
 export async function unrollAssistant(
   fullSlug: string,
   registry: Registry,
-): Promise<ConfigYaml> {
+): Promise<Assistant> {
   const packageSlug = decodeFullSlug(fullSlug);
   return await unrollImportedPackage(
     {
