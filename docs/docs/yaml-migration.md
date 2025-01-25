@@ -327,7 +327,7 @@ mcpServers:
 
 ## Deprecated configuration options
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the Config Page (Gear Icon). If found in `config.json`, they will be migrated to the new [config page](TODO) and removed from `config.json`.
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the Config Page (Gear Icon). If found in `config.json`, they will be migrated to the new [config page](/) and removed from `config.json`.
 
 See the [JSON Config Reference](./reference#fully-deprecated-settings) for more information on fully deprecated options.
 

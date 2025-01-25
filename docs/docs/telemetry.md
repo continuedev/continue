@@ -26,6 +26,6 @@ The following usage information is collected and reported:
 
 ## How to Opt Out
 
-You can disable anonymous telemetry by visiting the [Config Page](TODO) and toggling "Allow Anonymous Telemetry" off.
+You can disable anonymous telemetry by visiting the [Config Page](/) and toggling "Allow Anonymous Telemetry" off.
 
 Alternatively in VS Code, you can disable telemetry through your VS Code settings by unchecking the "Continue: Telemetry Enabled" box (this will override the Config Page settings).
