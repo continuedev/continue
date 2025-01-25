@@ -151,8 +151,8 @@ Note that the `repoMapFileSelection` experimental model role has been deprecated
 
 The JSON `contextProviders` field is replaced by the YAML `context` array.
 
-- JSON `name` maps to `uses`
-- JSON `params` map to `with`
+- JSON `name` maps to `provider`
+- JSON `params` map to `params`
 
 **Before**
 
@@ -181,14 +181,14 @@ The JSON `contextProviders` field is replaced by the YAML `context` array.
 
 ```yaml title="config.yaml"
 context:
-  - uses: docs
+  - provider: docs
 
-  - uses: codebase
-    with:
+  - provider: codebase
+    params:
       nRetrieve: 30
       nFinal: 3
 
-  - uses: diff
+  - params: diff
 ```
 
 ### System Message
@@ -337,7 +337,7 @@ The following top-level fields from `config.json` have been deprecated. Most UI-
 - `customCommands`
 - `disableSessionTitles`
 - `experimental`
-- `allowAnonymousTelemetry` (moved to user/IDE level)
+- `allowAnonymousTelemetry` (automatically migrated to IDE settings)
 - `ui` (moved to user/IDE level)
 - `userToken`
 - `disableIndexing` (moved to user/IDE level)
