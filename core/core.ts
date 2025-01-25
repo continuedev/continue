@@ -873,7 +873,10 @@ export class Core {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
+      const url = await getAuthUrlForTokenPage(
+        ideSettingsPromise,
+        msg.data.useOnboarding,
+      );
       return { url };
     });
 

@@ -97,7 +97,7 @@ class IdeProtocolClient(
                             val sessionInfo = authService.loadControlPlaneSessionInfo()
                             respond(sessionInfo)
                         } else {
-                            authService.startAuthFlow(project)
+                            authService.startAuthFlow(project, params.useOnboarding)
                             respond(null)
                         }
                     }

@@ -196,7 +196,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
             connection.subscribe(AuthListener.TOPIC, object : AuthListener {
                 override fun startAuthFlow() {
-                    authService.startAuthFlow(project)
+                    authService.startAuthFlow(project, false)
                 }
 
                 override fun handleUpdatedSessionInfo(sessionInfo: ControlPlaneSessionInfo?) {

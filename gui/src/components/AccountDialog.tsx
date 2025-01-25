@@ -53,7 +53,7 @@ export default function AccountDialog() {
     );
   }
 
-  if (!controlServerBetaEnabled) {
+  if (!controlServerBetaEnabled && !session) {
     return (
       <div className="p-4 pt-0">
         <h1 className="mb-1 text-2xl">Account</h1>
@@ -89,53 +89,57 @@ export default function AccountDialog() {
         </span>
       </div>
 
-      <div className="w-full">
-        <span className="mb-1 block text-sm">Current workspace</span>
+      {controlServerBetaEnabled && (
+        <div className="w-full">
+          <span className="mb-1 block text-sm">Current workspace</span>
 
-        <Listbox value={"local"} onChange={changeProfileId}>
-          {({ open }) => (
-            <div className="relative w-full">
-              <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
-                <span className="lines lines-1">{selectedProfile?.title}</span>
-                <div className="pointer-events-none flex items-center">
-                  <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
-                </div>
-              </Listbox.Button>
+          <Listbox value={"local"} onChange={changeProfileId}>
+            {({ open }) => (
+              <div className="relative w-full">
+                <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
+                  <span className="lines lines-1">
+                    {selectedProfile?.title}
+                  </span>
+                  <div className="pointer-events-none flex items-center">
+                    <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
+                  </div>
+                </Listbox.Button>
 
-              <Transition
-                as={Fragment}
-                show={open}
-                enter="transition ease-out duration-100"
-                enterFrom="transform opacity-0 scale-95"
-                enterTo="transform opacity-100 scale-100"
-                leave="transition ease-in duration-75"
-                leaveFrom="transform opacity-100 scale-100"
-                leaveTo="transform opacity-0 scale-95"
-              >
-                <Listbox.Options className="bg-vsc-background max-h-80vh absolute mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
-                  {profiles.map((option, idx) => (
-                    <StyledListboxOption
-                      key={idx}
-                      selected={selectedProfile?.id === option.id}
-                      value={option.id}
-                      className="w-full"
-                    >
-                      <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
-                        {option.title}
-                      </span>
-                    </StyledListboxOption>
-                  ))}
-                  {profiles.length === 0 && (
-                    <div className="px-4 py-2">
-                      <i>No workspaces found</i>
-                    </div>
-                  )}
-                </Listbox.Options>
-              </Transition>
-            </div>
-          )}
-        </Listbox>
-      </div>
+                <Transition
+                  as={Fragment}
+                  show={open}
+                  enter="transition ease-out duration-100"
+                  enterFrom="transform opacity-0 scale-95"
+                  enterTo="transform opacity-100 scale-100"
+                  leave="transition ease-in duration-75"
+                  leaveFrom="transform opacity-100 scale-100"
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <Listbox.Options className="bg-vsc-background max-h-80vh absolute mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
+                    {profiles.map((option, idx) => (
+                      <StyledListboxOption
+                        key={idx}
+                        selected={selectedProfile?.id === option.id}
+                        value={option.id}
+                        className="w-full"
+                      >
+                        <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
+                          {option.title}
+                        </span>
+                      </StyledListboxOption>
+                    ))}
+                    {profiles.length === 0 && (
+                      <div className="px-4 py-2">
+                        <i>No workspaces found</i>
+                      </div>
+                    )}
+                  </Listbox.Options>
+                </Transition>
+              </div>
+            )}
+          </Listbox>
+        </div>
+      )}
 
       <div className="flex w-full justify-end gap-2">
         <SecondaryButton className="w-auto" onClick={logout}>
