@@ -1,13 +1,10 @@
 import * as z from "zod";
+export * from "./models.js";
 import { modelSchema } from "./models.js";
 
 const packageSchema = z.object({
   uses: z.string(),
   with: z.any().optional(),
-});
-
-export const dataSchema = z.object({
-  provider: z.string(),
 });
 
 export const contextSchema = z.object({
@@ -42,13 +39,20 @@ const docSchema = z.object({
   faviconUrl: z.string().optional(),
 });
 
+const dataDestinationSchema = z.object({
+  destination: z.string().url(),
+  apiKey: z.string().optional(),
+  headers: z.record(z.string()).optional(),
+  fields: z.array(z.string()),
+});
+
 export const configYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
   packages: z.array(packageSchema).optional(),
   models: z.array(modelSchema).optional(),
   context: z.array(contextSchema).optional(),
-  data: z.array(dataSchema).optional(),
+  data: z.array(dataDestinationSchema).optional(),
   tools: z.array(toolSchema).optional(),
   mcpServers: z.array(mcpServerSchema).optional(),
   rules: z.array(z.string()).optional(),
