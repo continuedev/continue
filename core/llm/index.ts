@@ -21,8 +21,8 @@ import {
   RequestOptions,
   TemplateType,
 } from "../index.js";
-import { logDevData } from "../util/devdata.js";
-import { DevDataSqliteDb } from "../util/devdataSqlite.js";
+import { DataLogger } from "../data/log.js";
+import { DevDataSqliteDb } from "../data/devdataSqlite.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
@@ -339,11 +339,14 @@ export abstract class BaseLLM implements ILLM {
       generatedTokens,
     );
 
-    logDevData("tokens_generated", {
-      model: model,
-      provider: this.providerName,
-      promptTokens: promptTokens,
-      generatedTokens: generatedTokens,
+    void DataLogger.getInstance().logDevData({
+      schema: "tokens_generated",
+      data: {
+        model: model,
+        provider: this.providerName,
+        promptTokens: promptTokens,
+        generatedTokens: generatedTokens,
+      },
     });
   }
 

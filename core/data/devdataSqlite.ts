@@ -5,7 +5,7 @@ import sqlite3 from "sqlite3";
 
 import { DatabaseConnection } from "../indexing/refreshIndex.js";
 
-import { getDevDataSqlitePath } from "./paths.js";
+import { getDevDataSqlitePath } from "../util/paths.js";
 
 export class DevDataSqliteDb {
   static db: DatabaseConnection | null = null;

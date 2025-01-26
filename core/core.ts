@@ -29,8 +29,8 @@ import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
-import { logDevData } from "./util/devdata";
-import { DevDataSqliteDb } from "./util/devdataSqlite";
+import { DataLogger } from "./data/log";
+import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import {
@@ -144,6 +144,10 @@ export class Core {
       this.messenger.send("didChangeAvailableProfiles", { profiles }),
     );
 
+    // Dev Data Logger
+    const dataLogger = DataLogger.getInstance();
+    dataLogger.core = this;
+
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;
     this.codebaseIndexerPromise = new Promise(
@@ -253,8 +257,8 @@ export class Core {
     });
 
     // Dev data
-    on("devdata/log", (msg) => {
-      logDevData(msg.data.tableName, msg.data.data);
+    on("devdata/log", async (msg) => {
+      void DataLogger.getInstance().logDevData(msg.data);
     });
 
     // Edit config

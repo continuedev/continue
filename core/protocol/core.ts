@@ -22,6 +22,7 @@ import type {
 } from "../";
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
+import { DevDataLogEvent } from "../data/schemas";
 
 export type OnboardingModes =
   | "Local"
@@ -47,7 +48,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
-  "devdata/log": [{ tableName: string; data: any }, void];
+  "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
     {

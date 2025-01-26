@@ -1,6 +1,6 @@
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-
+import { DataDestination } from "@continuedev/config-yaml";
 declare global {
   interface Window {
     ide?: "vscode";
@@ -1118,6 +1118,7 @@ export interface SerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  data: DataDestination[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1170,6 +1171,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
+  data: DataDestination[];
 }
 
 // in the actual Continue source code
@@ -1193,6 +1195,7 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  data: DataDestination[];
 }
 
 export interface BrowserSerializedContinueConfig {
