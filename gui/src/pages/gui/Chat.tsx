@@ -66,13 +66,17 @@ import {
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
+import {
+  FREE_TRIAL_LIMIT_REQUESTS,
+  incrementFreeTrialCount,
+} from "../../util/freeTrial";
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
+import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -247,21 +251,29 @@ export function Chat() {
       editorToClearOnSend?: Editor,
     ) => {
       if (defaultModel?.provider === "free-trial") {
-        const u = getLocalStorage("ftc");
-        if (u) {
-          setLocalStorage("ftc", u + 1);
+        const newCount = incrementFreeTrialCount();
 
-          if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-            onboardingCard.open("Best");
-            posthog?.capture("ftc_reached");
-            ideMessenger.ide.showToast(
-              "info",
-              "You've reached the free trial limit. Please configure a model to continue.",
-            );
-            return;
+        if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
+          posthog?.capture("ftc_reached");
+        }
+        if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
+          // Show this message whether using platform or not
+          // So that something happens if in new chat
+          ideMessenger.ide.showToast(
+            "error",
+            "You've reached the free trial limit. Please configure a model to continue.",
+          );
+
+          // Card in chat will only show if no history
+          // Also, note that platform card ignore the "Best", always opens to main tab
+          onboardingCard.open("Best");
+
+          // If history, show the dialog, which will automatically close if there is not history
+          if (history.length) {
+            dispatch(setDialogMessage(<FreeTrialOverDialog />));
+            dispatch(setShowDialog(true));
           }
-        } else {
-          setLocalStorage("ftc", 1);
+          return;
         }
       }
 
@@ -543,14 +555,14 @@ export function Chat() {
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
                   {usePlatform ? (
-                    <PlatformOnboardingCard />
+                    <PlatformOnboardingCard isDialog={false} />
                   ) : (
-                    <OnboardingCard />
+                    <OnboardingCard isDialog={false} />
                   )}
                 </div>
               )}
 
-              {showTutorialCard !== false && !onboardingCard.open && (
+              {showTutorialCard !== false && !onboardingCard.show && (
                 <div className="flex w-full justify-center">
                   <TutorialCard onClose={closeTutorialCard} />
                 </div>
