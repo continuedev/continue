@@ -155,7 +155,7 @@ function AssistantAndModelSelect() {
                   aria-hidden="true"
                 />
                 <span className="truncate">
-                  {selectedProfile?.title || "Select assistant"}
+                  {selectedProfile?.fullSlug.packageSlug || "Select assistant"}
                   {" / "}
                   {modelSelectTitle(defaultModel) || "Select model"}
                 </span>

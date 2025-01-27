@@ -63,7 +63,6 @@ import {
 } from "../util/paths";
 
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
-import { usePlatform } from "../control-plane/flags";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -72,6 +71,8 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 // import { isSupportedLanceDbCpuTarget } from "./util";
+import { useHub } from "../control-plane/env";
+import { localPathToUri } from "../util/pathToUri";
 import { validateConfig } from "./validation.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -134,11 +135,14 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  if (config.ui?.getChatTitles === undefined) {
-    config.ui = {
-      ...config.ui,
-      getChatTitles: true,
-    };
+  // Deprecated getChatTitles property should be accounted for
+  // This is noted in docs
+  if (
+    config.ui &&
+    "getChatTitles" in config.ui &&
+    config.ui.getChatTitles === false
+  ) {
+    config.disableSessionTitles = true;
   }
 
   if (ideSettings.remoteConfigServerUrl) {
@@ -543,9 +547,10 @@ async function intermediateToFinalConfig(
   return { config: continueConfig, errors };
 }
 
-function finalToBrowserConfig(
+async function finalToBrowserConfig(
   final: ContinueConfig,
-): BrowserSerializedContinueConfig {
+  ide: IDE,
+): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     models: final.models.map((m) => ({
@@ -578,7 +583,7 @@ function finalToBrowserConfig(
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
-    usePlatform: usePlatform(),
+    usePlatform: await useHub(ide.getIdeSettings()),
   };
 }
 
@@ -813,7 +818,7 @@ async function loadFullConfigNode(
           "Could not load config.ts as absolute path, retrying as file url ...",
         );
         try {
-          module = await import(`file://${configJsPath}`);
+          module = await import(localPathToUri(configJsPath));
         } catch (e) {
           throw new Error("Could not load config.ts as file url either", {
             cause: e,

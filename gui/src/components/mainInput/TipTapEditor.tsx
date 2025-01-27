@@ -303,7 +303,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         "Images need to be in jpg or png format and less than 10MB in size.",
       ]);
     }
-    return undefined;
   }
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
@@ -351,7 +350,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }).configure({
         HTMLAttributes: {
-          class: "editor-image bg-black object-contain max-h-[250px] w-full",
+          class: "object-contain max-h-[210px] max-w-full mx-1",
         },
       }),
       Placeholder.configure({
@@ -802,7 +801,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       const contextItem = rifWithContentsToContextItem(
         data.rangeInFileWithContents,
       );
-      console.log(contextItem);
+
       let index = 0;
       for (const el of editor.getJSON()?.content ?? []) {
         if (el.attrs?.item?.name === contextItem.name) {

@@ -90,6 +90,12 @@ const initialState: SessionState = {
       id: "local",
       title: "Local",
       errors: undefined,
+      profileType: "local",
+      fullSlug: {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
     },
   ],
   curCheckpointIndex: 0,
@@ -332,13 +338,13 @@ export const sessionSlice = createSlice({
             const historyItem: ChatHistoryItemWithMessageId = {
               message: {
                 ...message,
+                content: renderChatMessage(message),
                 id: uuidv4(),
               },
               contextItems: [],
             };
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
-
               if (
                 toolCallDelta.id &&
                 toolCallDelta.function?.arguments &&
@@ -356,6 +362,8 @@ export const sessionSlice = createSlice({
           } else {
             // Add to the existing message
             if (message.content) {
+              // Note this only works because new message above
+              // was already rendered from parts to string
               lastMessage.content += renderChatMessage(message);
             } else if (
               message.role === "assistant" &&

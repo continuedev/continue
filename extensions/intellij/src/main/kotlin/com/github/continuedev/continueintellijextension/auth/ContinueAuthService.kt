@@ -135,7 +135,7 @@ class ContinueAuthService {
     private fun openSignInPage(project: Project) {
         val coreMessenger = project.service<ContinuePluginService>().coreMessenger
         coreMessenger?.request("auth/getAuthUrl", null, null) { response ->
-            val authUrl = (response as? Map<*, *>)?.get("url") as? String
+            val authUrl = ((response as? Map<*, *>)?.get("content") as? Map<*, *>)?.get("url") as? String
             if (authUrl != null) {
                 // Open the auth URL in the browser
                 Desktop.getDesktop().browse(java.net.URI(authUrl))
