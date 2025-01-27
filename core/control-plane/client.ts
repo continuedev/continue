@@ -1,10 +1,10 @@
 import { ConfigJson } from "@continuedev/config-types";
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import fetch, { RequestInit, Response } from "node-fetch";
 
 import { IdeSettings, ModelDescription } from "../index.js";
 
 import {
+  AssistantUnrolled,
   ConfigResult,
   FQSN,
   FullSlug,
@@ -109,7 +109,7 @@ export class ControlPlaneClient {
 
   public async listAssistants(): Promise<
     {
-      configResult: ConfigResult<ConfigYaml>;
+      configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;
