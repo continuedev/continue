@@ -1,8 +1,8 @@
 import fs from "fs";
 
-import { IContextProvider } from "core";
+import { IContextProvider, IdeSettings } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
+import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/protocol/messenger";
@@ -171,7 +171,7 @@ export class VsCodeExtension {
           const result = await this.configHandler.getSerializedConfig();
           this.sidebar.webviewProtocol?.request("configUpdate", {
             result,
-            profileId: this.configHandler.currentProfile.profileId,
+            profileId: this.configHandler.currentProfile.profileDescription.id,
           });
 
           this.tabAutocompleteModel.clearLlm();
@@ -294,14 +294,15 @@ export class VsCodeExtension {
 
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {
-      if (e.provider.id === controlPlaneEnv.AUTH_TYPE) {
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      if (e.provider.id === env.AUTH_TYPE) {
         vscode.commands.executeCommand(
           "setContext",
           "continue.isSignedInToControlPlane",
           true,
         );
 
-        const sessionInfo = await getControlPlaneSessionInfo(true);
+        const sessionInfo = await getControlPlaneSessionInfo(true, false);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
           void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
             sessionInfo,
@@ -374,6 +375,9 @@ export class VsCodeExtension {
       void this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
+    const originalValue = vscode.workspace
+      .getConfiguration(EXTENSION_NAME)
+      .get<IdeSettings["continueTestEnvironment"]>("continueTestEnvironment");
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = this.ide.getIdeSettingsSync();
@@ -381,6 +385,10 @@ export class VsCodeExtension {
         void webviewProtocol.request("didChangeIdeSettings", {
           settings,
         });
+
+        if (settings.continueTestEnvironment !== originalValue) {
+          await vscode.commands.executeCommand("workbench.action.reloadWindow");
+        }
       }
     });
   }

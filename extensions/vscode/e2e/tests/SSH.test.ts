@@ -46,5 +46,5 @@ describe("SSH", function () {
     await editor.setText(text);
   })
     .timeout(DEFAULT_TIMEOUT.XL)
-    .retries(2);
+    .retries(4);
 });

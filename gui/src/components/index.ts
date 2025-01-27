@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { getFontSize, isJetBrains } from "../util";
 
 export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
@@ -296,11 +296,6 @@ export const HeaderButton = styled.button<{
   justify-content: center;
   gap: 4px;
   padding: 2px;
-`;
-
-export const Divider = styled.div`
-  height: 1px;
-  background-color: ${lightGray};
 `;
 
 export const StyledActionButton = styled.div`

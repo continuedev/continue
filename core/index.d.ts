@@ -223,16 +223,10 @@ export interface ContextSubmenuItemWithProvider extends ContextSubmenuItem {
 export interface SiteIndexingConfig {
   title: string;
   startUrl: string;
-  rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
-}
-
-export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl?: string;
-  title: string;
-  maxDepth?: number;
+  useLocalCrawling?: boolean;
+  rootUrl?: string; // Currently only used by preindexed docs
 }
 
 export interface IContextProvider {
@@ -306,11 +300,17 @@ export interface CompletionOptions extends BaseCompletionOptions {
 
 export type ChatMessageRole = "user" | "assistant" | "system" | "tool";
 
-export interface MessagePart {
-  type: "text" | "imageUrl";
-  text?: string;
-  imageUrl?: { url: string };
-}
+export type TextMessagePart = {
+  type: "text";
+  text: string;
+};
+
+export type ImageMessagePart = {
+  type: "imageUrl";
+  imageUrl: { url: string };
+};
+
+export type MessagePart = TextMessagePart | ImageMessagePart;
 
 export type MessageContent = string | MessagePart[];
 
@@ -460,6 +460,7 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+  apiKeyLocation?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
@@ -582,6 +583,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
+  continueTestEnvironment: "none" | "production" | "test" | "local";
   pauseCodebaseIndexOnStart: boolean;
   enableDebugLogs: boolean;
 }
@@ -682,6 +684,11 @@ export interface IDE {
   getFileStats(files: string[]): Promise<FileStatsMap>;
 
   getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
+
+  // Secret Storage
+  readSecrets(keys: string[]): Promise<Record<string, string>>;
+
+  writeSecrets(secrets: { [key: string]: string }): Promise<void>;
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
@@ -820,7 +827,7 @@ export interface SlashCommandDescription {
 export interface CustomCommand {
   name: string;
   prompt: string;
-  description: string;
+  description?: string;
 }
 
 export interface Prediction {
@@ -854,6 +861,13 @@ export interface Tool {
   uri?: string;
 }
 
+interface ToolChoice {
+  type: "function";
+  function: {
+    name: string;
+  };
+}
+
 export interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -871,6 +885,7 @@ export interface BaseCompletionOptions {
   stream?: boolean;
   prediction?: Prediction;
   tools?: Tool[];
+  toolChoice?: ToolChoice;
 }
 
 export interface ModelCapability {
@@ -882,6 +897,7 @@ export interface ModelDescription {
   provider: string;
   model: string;
   apiKey?: string;
+  apiKeyLocation?: string;
   apiBase?: string;
   contextLength?: number;
   maxStopWords?: number;
@@ -971,7 +987,6 @@ export interface ContinueUIConfig {
   fontSize?: number;
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
-  getChatTitles?: boolean;
   codeWrap?: boolean;
 }
 
@@ -1198,6 +1213,7 @@ export interface BrowserSerializedContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  usePlatform: boolean;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
@@ -1235,9 +1251,9 @@ export type PackageDocsResult = {
 } & (
   | { error: string; details?: never }
   | { details: PackageDetailsSuccess; error?: never }
-  );
+);
 
 export interface TerminalOptions {
-  reuseTerminal?: boolean,
-  terminalName?: string,
+  reuseTerminal?: boolean;
+  terminalName?: string;
 }
