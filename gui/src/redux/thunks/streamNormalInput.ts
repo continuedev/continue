@@ -52,13 +52,12 @@ export const streamNormalInput = createAsyncThunk<
       break;
     }
 
-    const updates = next.value;
-    dispatch(streamUpdate(updates));
+    dispatch(streamUpdate(next.value));
     next = await gen.next();
   }
 
   // Attach prompt log
-  if (next.done) {
+  if (next.done && next.value) {
     dispatch(addPromptCompletionPair([next.value]));
   }
 

@@ -2,13 +2,6 @@ package com.github.continuedev.continueintellijextension.constants
 
 class MessageTypes {
     companion object {
-        val generatorTypes = listOf(
-            "llm/streamComplete",
-            "llm/streamChat",
-            "command/run",
-            "streamDiffLines"
-        )
-
         val ideMessageTypes = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",
@@ -53,6 +46,7 @@ class MessageTypes {
         // Note: If updating these values, make a corresponding update in
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
+            "configError",
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress", // Codebase
@@ -122,6 +116,7 @@ class MessageTypes {
             "profiles/switch",
             "didChangeSelectedProfile",
             "tools/call",
+            "controlPlane/openUrl"
         )
     }
 }

@@ -108,7 +108,9 @@ class AutocompleteService(private val project: Project) {
             ({ response ->
                 widget?.setLoading(false)
 
-                val completions = response as List<*>
+                val responseObject = response as Map<*, *>
+                val completions = responseObject["content"] as List<*>
+
                 if (completions.isNotEmpty()) {
                     val completion = completions[0].toString()
                     val finalTextToInsert = deduplicateCompletion(editor, offset, completion)
@@ -297,13 +299,12 @@ class AutocompleteService(private val project: Project) {
     }
 
     private fun isInjectedFile(editor: Editor): Boolean {
-        return ApplicationManager.getApplication().executeOnPooledThread<Boolean> {
-            ApplicationManager.getApplication().runReadAction<Boolean> {
-                val psiFile =
-                    PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@runReadAction false
-                return@runReadAction psiFile.isInjectedText()
-            }
-        }.get()
+        val psiFile = runReadAction { PsiDocumentManager.getInstance(project).getPsiFile(editor.document) }
+        if (psiFile == null) {
+            return false
+        }
+        val response = runReadAction { psiFile.isInjectedText() }
+        return response
     }
 
     fun hideCompletions(editor: Editor) {

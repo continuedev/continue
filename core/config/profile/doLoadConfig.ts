@@ -1,6 +1,11 @@
 import fs from "fs";
 
 import {
+  ConfigResult,
+  ConfigValidationError,
+  ConfigYaml,
+} from "@continuedev/config-yaml";
+import {
   ContinueConfig,
   ContinueRcJson,
   IDE,
@@ -9,15 +14,15 @@ import {
 } from "../../";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { controlPlaneEnv } from "../../control-plane/env.js";
+import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
-import { ConfigResult, loadFullConfigNode } from "../load";
-import { ConfigValidationError } from "../validation";
+import { loadFullConfigNode } from "../load";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
+import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -25,6 +30,8 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
+  overrideConfigYaml: ConfigYaml | undefined,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
@@ -39,7 +46,7 @@ export default async function doLoadConfig(
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
-  if (fs.existsSync(configYamlPath)) {
+  if (fs.existsSync(configYamlPath) || overrideConfigYaml) {
     const result = await loadContinueConfigFromYaml(
       ide,
       workspaceConfigs.map((c) => JSON.stringify(c)),
@@ -48,8 +55,9 @@ export default async function doLoadConfig(
       uniqueId,
       writeLog,
       workOsAccessToken,
-      undefined,
-      // overrideConfigYaml, TODO
+      overrideConfigYaml,
+      platformConfigMetadata,
+      controlPlaneClient,
     );
     newConfig = result.config;
     errors = result.errors;
@@ -91,9 +99,11 @@ export default async function doLoadConfig(
   const controlPlane = (newConfig as any).controlPlane;
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
+
+  const env = await getControlPlaneEnv(ideSettingsPromise);
   let controlPlaneProxyUrl: string = useOnPremProxy
     ? controlPlane?.proxyUrl
-    : controlPlaneEnv.DEFAULT_CONTROL_PLANE_PROXY_URL;
+    : env.DEFAULT_CONTROL_PLANE_PROXY_URL;
 
   if (!controlPlaneProxyUrl.endsWith("/")) {
     controlPlaneProxyUrl += "/";

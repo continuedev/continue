@@ -43,8 +43,16 @@ import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
-import { type ContextItemId, type IDE, type IndexingProgressUpdate } from ".";
+import {
+  ChatMessage,
+  DiffLine,
+  PromptLog,
+  type ContextItemId,
+  type IDE,
+  type IndexingProgressUpdate,
+} from ".";
 
+import { getControlPlaneEnv } from "./control-plane/env";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -103,9 +111,13 @@ export class Core {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
+      useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
+    this.controlPlaneClient = new ControlPlaneClient(
+      sessionInfoPromise,
+      ideSettingsPromise,
+    );
 
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -124,7 +136,7 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileId,
+        profileId: this.configHandler.currentProfile.profileDescription.id,
       });
     });
 
@@ -285,6 +297,11 @@ export class Core {
       addContextProvider(msg.data);
     });
 
+    on("controlPlane/openUrl", async (msg) => {
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+    });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);
@@ -378,7 +395,7 @@ export class Core {
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.currentProfile.profileId,
+        profileId: this.configHandler.currentProfile.profileDescription.id,
       };
     });
 
@@ -395,7 +412,7 @@ export class Core {
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
-    ) {
+    ): AsyncGenerator<ChatMessage, PromptLog> {
       const { config } = await configHandler.loadConfig();
       if (!config) {
         throw new Error("Config not loaded");
@@ -431,7 +448,7 @@ export class Core {
 
         const chunk = next.value;
 
-        yield { content: chunk };
+        yield chunk;
         next = await gen.next();
       }
 
@@ -448,7 +465,11 @@ export class Core {
         true,
       );
 
-      return { done: true, content: next.value };
+      if (!next.done) {
+        throw new Error("Will never happen");
+      }
+
+      return next.value;
     }
 
     on("llm/streamChat", (msg) =>
@@ -458,9 +479,8 @@ export class Core {
     async function* llmStreamComplete(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
-
       msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
-    ) {
+    ): AsyncGenerator<string, PromptLog> {
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
         msg.data.prompt,
@@ -482,11 +502,13 @@ export class Core {
           });
           break;
         }
-        yield { content: next.value };
+        yield next.value;
         next = await gen.next();
       }
-
-      return { done: true, content: next.value };
+      if (!next.done) {
+        throw new Error("This will never happen");
+      }
+      return next.value;
     }
 
     on("llm/streamComplete", (msg) =>
@@ -548,7 +570,7 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["command/run"][0]>,
       messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-    ) {
+    ): AsyncGenerator<string> {
       const {
         input,
         history,
@@ -613,7 +635,7 @@ export class Core {
             break;
           }
           if (content) {
-            yield { content };
+            yield content;
           }
         }
       } catch (e) {
@@ -621,7 +643,6 @@ export class Core {
       } finally {
         clearInterval(checkActiveInterval);
       }
-      yield { done: true, content: "" };
     }
     on("command/run", (msg) =>
       runNodeJsSlashCommand(
@@ -652,7 +673,7 @@ export class Core {
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
-    ) {
+    ): AsyncGenerator<DiffLine> {
       const data = msg.data;
       const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
       for await (const diffLine of streamDiffLines(
@@ -667,10 +688,8 @@ export class Core {
           abortedMessageIds.delete(msg.messageId);
           break;
         }
-        yield { content: diffLine };
+        yield diffLine;
       }
-
-      return { done: true };
     }
 
     on("streamDiffLines", (msg) =>
@@ -854,7 +873,7 @@ export class Core {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage();
+      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
       return { url };
     });
 

@@ -152,6 +152,8 @@ This will generate a .zip file in `./build/distributions` with the version defin
 The e2e tests are written using [intellij-ui-test-robot](`https://github.com/JetBrains/intellij-ui-test-robot`). The
 README for this project has a lot of helpful info on how to use the library.
 
+Note that these tests fully take control of your mouse while executing.
+
 #### Setup
 
 If you are on macOS, you'll need to give IntelliJ permission to control your computer in order to run the e2e tests.
@@ -174,7 +176,18 @@ to run.
 
 #### Identifying selectors
 
-While the `runIdeForUiTests` task is runnung, you can visit the following URL
+While the `runIdeForUiTests` task is running, you can visit the following URL
 to view the UI hierarchy of the running IDE:
 
 http://127.0.0.1:8082/
+
+#### Rebuilding the extension
+
+To rebuild the extension with the latest source code, run the following:
+
+```sh
+./gradlew buildPlugin
+```
+
+This will update the contents of the extension that is loaded into the test IDE from
+`build/idea-sandbox/plugins-uiTest/continue-intellij-extension`

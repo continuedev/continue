@@ -32,6 +32,7 @@ import {
   OnboardingCard,
   useOnboardingCard,
 } from "../../components/OnboardingCard";
+import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform/PlatformOnboardingCard";
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
@@ -39,6 +40,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectUsePlatform } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
@@ -57,20 +59,24 @@ import {
 import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
+import {
+  FREE_TRIAL_LIMIT_REQUESTS,
+  incrementFreeTrialCount,
+} from "../../util/freeTrial";
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import { loadLastSession } from "../../redux/thunks/session";
+import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -215,6 +221,7 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
+  const usePlatform = useAppSelector(selectUsePlatform);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -244,21 +251,29 @@ export function Chat() {
       editorToClearOnSend?: Editor,
     ) => {
       if (defaultModel?.provider === "free-trial") {
-        const u = getLocalStorage("ftc");
-        if (u) {
-          setLocalStorage("ftc", u + 1);
+        const newCount = incrementFreeTrialCount();
 
-          if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-            onboardingCard.open("Best");
-            posthog?.capture("ftc_reached");
-            ideMessenger.ide.showToast(
-              "info",
-              "You've reached the free trial limit. Please configure a model to continue.",
-            );
-            return;
+        if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
+          posthog?.capture("ftc_reached");
+        }
+        if (newCount >= FREE_TRIAL_LIMIT_REQUESTS) {
+          // Show this message whether using platform or not
+          // So that something happens if in new chat
+          ideMessenger.ide.showToast(
+            "error",
+            "You've reached the free trial limit. Please configure a model to continue.",
+          );
+
+          // Card in chat will only show if no history
+          // Also, note that platform card ignore the "Best", always opens to main tab
+          onboardingCard.open("Best");
+
+          // If history, show the dialog, which will automatically close if there is not history
+          if (history.length) {
+            dispatch(setDialogMessage(<FreeTrialOverDialog />));
+            dispatch(setShowDialog(true));
           }
-        } else {
-          setLocalStorage("ftc", 1);
+          return;
         }
       }
 
@@ -539,11 +554,15 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  <OnboardingCard />
+                  {usePlatform ? (
+                    <PlatformOnboardingCard isDialog={false} />
+                  ) : (
+                    <OnboardingCard isDialog={false} />
+                  )}
                 </div>
               )}
 
-              {showTutorialCard !== false && !onboardingCard.open && (
+              {showTutorialCard !== false && !onboardingCard.show && (
                 <div className="flex w-full justify-center">
                   <TutorialCard onClose={closeTutorialCard} />
                 </div>

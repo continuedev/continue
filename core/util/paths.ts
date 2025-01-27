@@ -301,11 +301,6 @@ export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
   return dir;
 }
 
-export function internalBetaPathExists(): boolean {
-  const sPath = path.join(getContinueGlobalPath(), ".internal_beta");
-  return fs.existsSync(sPath);
-}
-
 export function getConfigJsonPathForRemote(
   remoteConfigServerUrl: string,
 ): string {

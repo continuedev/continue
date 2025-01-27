@@ -6,7 +6,13 @@ name: JetBrains Release
 
 on:
   release:
-    types: [prereleased]
+    types: [ prereleased ]
+  workflow_dispatch:
+    inputs:
+      publish_build:
+        description: 'Whether or not to publish the built extension to the JetBrains marketplace'
+        required: true
+        default: false
 
 defaults:
   run:
@@ -34,7 +40,7 @@ jobs:
   # Prepare and publish the plugin to JetBrains Marketplace repository
   build:
     needs: check_release_name
-    if: needs.check_release_name.outputs.should_run == 'true'
+    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
     name: Build Plugin
     runs-on: macos-latest
     permissions:
@@ -175,6 +181,7 @@ jobs:
 
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin
+        if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -184,6 +191,7 @@ jobs:
         run: ./gradlew publishPlugin
 
       - name: Publish Stable Plugin
+        if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -337,7 +345,7 @@ jobs:
   # Run tests and upload a code coverage report
   test:
     name: Test
-    needs: [build]
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       # Check out current repository
@@ -379,7 +387,7 @@ jobs:
   inspectCode:
     if: false
     name: Inspect code
-    needs: [build]
+    needs: [ build ]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -414,7 +422,7 @@ jobs:
   verify:
     if: false
     name: Verify plugin
-    needs: [build]
+    needs: [ build ]
     runs-on: ubuntu-latest
     steps:
       # Free GitHub Actions Environment Disk Space

@@ -220,16 +220,8 @@ declare global {
   export interface SiteIndexingConfig {
     title: string;
     startUrl: string;
-    rootUrl?: string;
     maxDepth?: number;
     faviconUrl?: string;
-  }
-  
-  export interface SiteIndexingConfig {
-    startUrl: string;
-    rootUrl?: string;
-    title: string;
-    maxDepth?: number;
   }
   
   export interface IContextProvider {
@@ -955,7 +947,6 @@ declare global {
     fontSize?: number;
     displayRawMarkdown?: boolean;
     showChatScrollbar?: boolean;
-    getChatTitles?: boolean;
     codeWrap?: boolean;
   }
   

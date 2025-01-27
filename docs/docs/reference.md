@@ -234,9 +234,10 @@ List of documentation sites to index.
 
 - `title` (**required**): Title of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
-- `maxDepth`: Maximum depth for crawling. Default `3`
+<!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
 Example
 
@@ -245,21 +246,10 @@ Example
     {
     "title": "Continue",
     "startUrl": "https://docs.continue.dev/intro",
-    "rootUrl": "https://docs.continue.dev",
     "faviconUrl": "https://docs.continue.dev/favicon.ico",
   }
 ]
 ```
-
-### `analytics`
-
-Configuration for analytics tracking.
-
-**Properties:**
-
-- `provider`: Analytics provider (`"posthog"` or `"logstash"`).
-- `url`: URL for analytics data.
-- `clientKey`: Client key for analytics.
 
 ### `slashCommands`
 
@@ -355,6 +345,8 @@ Example
 
 Prevents generating summary titles for each chat session when set to `true`.
 
+Note that if the deprecated setting `ui.getChatTitles` is set to `false`, it will override this.
+
 ### `ui`
 
 Customizable UI settings to control interface appearance and behavior.
@@ -420,6 +412,7 @@ Several experimental config parameters are available, as described below:
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
 - `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
+- `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#model-context-protocol)
 
 Example
 
@@ -441,7 +434,16 @@ Example
       "fixGrammar": "Fix grammar in the above but allow for typos."
     },
     "readResponseTTS": false,
-    "useChromiumForDocsCrawling": true
+    "useChromiumForDocsCrawling": true,
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
   }
 }
 ```
