@@ -12,6 +12,18 @@
   --vscode-editor-background: rgb(30, 30, 30);
   --vscode-editor-foreground: rgb(197, 200, 198);
   --vscode-textBlockQuote-background: rgba(255, 255, 255, 1);
+
+  /* These vars control the colors of the kbd tag 3d keycap */
+  --kbd-keycap-bg-color: #414859;
+  --kbd-keycap-border-color: #495265;
+  --kbd-text-color: #88b4b4;
+  --kbd-shadow-color: #2e3341;
+  --kbd-shadow-color-outer: #373e4b;
+  --kbd-shadow-tint: rgba(173, 212, 247, 0.4);
+
+  /* Monospaced font for keycaps */
+  --ifm-font-family-monospace: ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 html,
@@ -91,4 +103,28 @@ body {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
+}
+
+kbd {
+  display: inline-block;
+  padding: 0.3em 0.4em;
+  margin: 0.1em 0.4em;
+  font-family: var(
+    --ifm-font-family-monospace
+  ); /* You might need to define this variable */
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 0.8;
+  color: var(--kbd-text-color);
+  text-align: center;
+  white-space: nowrap;
+  background-color: var(--kbd-keycap-bg-color);
+  border: 1px solid var(--kbd-keycap-border-color);
+  border-radius: 0.3em;
+  box-shadow:
+    0 2px 0 1px var(--kbd-shadow-color),
+    0 3px 0 2px var(--kbd-shadow-color-outer),
+    0 4px 6px var(--kbd-shadow-tint);
+  position: relative;
+  top: 0;
 }
