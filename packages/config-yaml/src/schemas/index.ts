@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { modelSchema } from "./models.js";
+import { modelSchema, partialModelSchema } from "./models.js";
 
 export const dataSchema = z.object({
   destination: z.string(),
@@ -38,30 +38,66 @@ const docSchema = z.object({
   faviconUrl: z.string().optional(),
 });
 
-export const blockItemWrapperSchema = <T extends z.ZodType>(schema: T) =>
+export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.object({
     uses: z.string(),
     with: z.record(z.string()).optional(),
-    override: schema.optional(),
+    override: schema.partial().optional(),
   });
 
-export const blockOrSchema = <T extends z.ZodType>(schema: T) =>
+export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.union([schema, blockItemWrapperSchema(schema)]);
 
-export const assistantSchema = z.object({
+export const assistantRolledSchema = z.object({
   name: z.string(),
   version: z.string(),
-  models: z.array(blockOrSchema(modelSchema)).optional(),
+  models: z
+    .array(
+      z.union([
+        modelSchema,
+        z.object({
+          uses: z.string(),
+          with: z.record(z.string()).optional(),
+          override: partialModelSchema.optional(),
+        }),
+      ]),
+    )
+    .optional(),
   context: z.array(blockOrSchema(contextSchema)).optional(),
   data: z.array(blockOrSchema(dataSchema)).optional(),
   tools: z.array(blockOrSchema(toolSchema)).optional(),
   mcpServers: z.array(blockOrSchema(mcpServerSchema)).optional(),
-  rules: z.array(z.string()).optional(),
+  rules: z
+    .array(
+      z.union([
+        z.string(),
+        z.object({
+          uses: z.string(),
+          with: z.record(z.string()).optional(),
+        }),
+      ]),
+    )
+    .optional(),
   prompts: z.array(blockOrSchema(promptSchema)).optional(),
   docs: z.array(blockOrSchema(docSchema)).optional(),
 });
 
-export type Assistant = z.infer<typeof assistantSchema>;
+export type AssistantRolled = z.infer<typeof assistantRolledSchema>;
+
+export const assistantUnrolledSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  models: z.array(modelSchema).optional(),
+  context: z.array(contextSchema).optional(),
+  data: z.array(dataSchema).optional(),
+  tools: z.array(toolSchema).optional(),
+  mcpServers: z.array(mcpServerSchema).optional(),
+  rules: z.array(z.string()).optional(),
+  prompts: z.array(promptSchema).optional(),
+  docs: z.array(docSchema).optional(),
+});
+
+export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
 
 export const blockSchema = z
   .object({

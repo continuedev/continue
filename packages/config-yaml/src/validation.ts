@@ -1,4 +1,4 @@
-import { Assistant, assistantSchema } from "./schemas/index.js";
+import { AssistantRolled, assistantRolledSchema } from "./schemas/index.js";
 
 export interface ConfigValidationError {
   fatal: boolean;
@@ -11,11 +11,13 @@ export interface ConfigResult<T> {
   configLoadInterrupted: boolean;
 }
 
-export function validateConfigYaml(config: Assistant): ConfigValidationError[] {
+export function validateConfigYaml(
+  config: AssistantRolled,
+): ConfigValidationError[] {
   const errors: ConfigValidationError[] = [];
 
   try {
-    assistantSchema.parse(config);
+    assistantRolledSchema.parse(config);
   } catch (e: any) {
     return [
       {
@@ -26,6 +28,9 @@ export function validateConfigYaml(config: Assistant): ConfigValidationError[] {
   }
 
   config.models?.forEach((model) => {
+    if ("uses" in model) {
+      return;
+    }
     // Max tokens not too close to context length
     if (
       model.defaultCompletionOptions?.contextLength &&

@@ -1,9 +1,9 @@
-import { Assistant } from "../schemas/index.js";
+import { AssistantRolled } from "../schemas/index.js";
 
 export function mergePackages(
-  current: Assistant,
-  incoming: Assistant,
-): Assistant {
+  current: AssistantRolled,
+  incoming: AssistantRolled,
+): AssistantRolled {
   return {
     ...current,
     models: [...(current.models ?? []), ...(incoming.models ?? [])],

@@ -5,18 +5,18 @@ import {
   SecretLocation,
 } from "../interfaces/SecretResult.js";
 import { decodeFQSN, encodeFQSN, FQSN } from "../interfaces/slugs.js";
-import { Assistant } from "../schemas/index.js";
+import { AssistantUnrolled } from "../schemas/index.js";
 import {
   fillTemplateVariables,
   getTemplateVariables,
-  parseConfigYaml,
+  parseAssistantUnrolled,
 } from "./unroll.js";
 
 export async function clientRender(
   unrolledConfigContent: string,
   secretStore: SecretStore,
   platformClient?: PlatformClient,
-): Promise<Assistant> {
+): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
   const secrets = getTemplateVariables(unrolledConfigContent);
 
@@ -71,7 +71,7 @@ export async function clientRender(
   );
 
   // 6. The rendered YAML is parsed and validated again
-  const parsedYaml = parseConfigYaml(renderedYaml);
+  const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
   const finalConfig = useProxyForUnrenderedSecrets(parsedYaml);
@@ -102,7 +102,9 @@ function getUnrenderedSecretLocation(
   return undefined;
 }
 
-function useProxyForUnrenderedSecrets(config: Assistant): Assistant {
+function useProxyForUnrenderedSecrets(
+  config: AssistantUnrolled,
+): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
       const apiKeyLocation = getUnrenderedSecretLocation(
