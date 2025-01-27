@@ -1,10 +1,10 @@
 import { ConfigJson } from "@continuedev/config-types";
-import { AssistantRolled } from "./schemas/index.js";
+import { ConfigYaml } from "./schemas/index.js";
 import { ModelRoles } from "./schemas/models.js";
 
-type ModelYaml = NonNullable<AssistantRolled["models"]>[number];
-type ContextYaml = NonNullable<AssistantRolled["context"]>[number];
-type PromptYaml = NonNullable<AssistantRolled["prompts"]>[number];
+type ModelYaml = NonNullable<ConfigYaml["models"]>[number];
+type ContextYaml = NonNullable<ConfigYaml["context"]>[number];
+type PromptYaml = NonNullable<ConfigYaml["prompts"]>[number];
 
 function convertModel(
   m: ConfigJson["models"][number],
@@ -68,9 +68,7 @@ function convertCustomCommand(
   };
 }
 
-function convertMcp(
-  mcp: any,
-): NonNullable<AssistantRolled["mcpServers"]>[number] {
+function convertMcp(mcp: any): NonNullable<ConfigYaml["mcpServers"]>[number] {
   const { transport } = mcp;
   const { command, args, env } = transport;
 
@@ -84,7 +82,7 @@ function convertMcp(
 
 function convertDoc(
   doc: NonNullable<ConfigJson["docs"]>[number],
-): NonNullable<AssistantRolled["docs"]>[number] {
+): NonNullable<ConfigYaml["docs"]>[number] {
   return {
     name: doc.title,
     startUrl: doc.startUrl,
@@ -93,9 +91,7 @@ function convertDoc(
   };
 }
 
-export function convertJsonToYamlConfig(
-  configJson: ConfigJson,
-): AssistantRolled {
+export function convertJsonToYamlConfig(configJson: ConfigJson): ConfigYaml {
   // models
   const models = configJson.models.map((m) => convertModel(m, ["chat"]));
   const autocompleteModels = Array.isArray(configJson.tabAutocompleteModel)
@@ -130,7 +126,7 @@ export function convertJsonToYamlConfig(
   // docs
   const docs = configJson.docs?.map(convertDoc);
 
-  const configYaml: AssistantRolled = {
+  const configYaml: ConfigYaml = {
     name: "Continue Config",
     version: "0.0.1",
     models,

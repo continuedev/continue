@@ -1,4 +1,4 @@
-import { AssistantRolled, assistantRolledSchema } from "./schemas/index.js";
+import { ConfigYaml, configYamlSchema } from "./schemas/index.js";
 
 export interface ConfigValidationError {
   fatal: boolean;
@@ -12,12 +12,12 @@ export interface ConfigResult<T> {
 }
 
 export function validateConfigYaml(
-  config: AssistantRolled,
+  config: ConfigYaml,
 ): ConfigValidationError[] {
   const errors: ConfigValidationError[] = [];
 
   try {
-    assistantRolledSchema.parse(config);
+    configYamlSchema.parse(config);
   } catch (e: any) {
     return [
       {

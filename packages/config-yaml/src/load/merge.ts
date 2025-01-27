@@ -1,9 +1,9 @@
-import { AssistantRolled } from "../schemas/index.js";
+import { ConfigYaml } from "../schemas/index.js";
 
 export function mergePackages(
-  current: AssistantRolled,
-  incoming: AssistantRolled,
-): AssistantRolled {
+  current: ConfigYaml,
+  incoming: ConfigYaml,
+): ConfigYaml {
   return {
     ...current,
     models: [...(current.models ?? []), ...(incoming.models ?? [])],

@@ -48,7 +48,7 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
 export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.union([schema, blockItemWrapperSchema(schema)]);
 
-export const assistantRolledSchema = z.object({
+export const configYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
   models: z
@@ -82,7 +82,7 @@ export const assistantRolledSchema = z.object({
   docs: z.array(blockOrSchema(docSchema)).optional(),
 });
 
-export type AssistantRolled = z.infer<typeof assistantRolledSchema>;
+export type ConfigYaml = z.infer<typeof configYamlSchema>;
 
 export const assistantUnrolledSchema = z.object({
   name: z.string(),

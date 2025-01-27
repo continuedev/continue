@@ -7,18 +7,18 @@ import {
   PackageSlug,
 } from "../interfaces/slugs.js";
 import {
-  AssistantRolled,
-  assistantRolledSchema,
   AssistantUnrolled,
   assistantUnrolledSchema,
   Block,
   blockSchema,
+  ConfigYaml,
+  configYamlSchema,
 } from "../schemas/index.js";
 
-export function parseAssistantRolled(configYaml: string): AssistantRolled {
+export function parseConfigYaml(configYaml: string): ConfigYaml {
   try {
     const parsed = YAML.parse(configYaml);
-    const result = assistantRolledSchema.parse(parsed);
+    const result = configYamlSchema.parse(parsed);
     return result;
   } catch (e: any) {
     console.log(configYaml);
@@ -123,9 +123,6 @@ function extractFQSNMap(
   return secretToFQSNMap(secrets, parentPackages);
 }
 
-/**
- * Loading an assistant is equivalent to loading a package without params
- */
 export async function unrollAssistant(
   fullSlug: string,
   registry: Registry,
@@ -134,25 +131,32 @@ export async function unrollAssistant(
 
   // Request the content from the registry
   const rawContent = await registry.getContent(assistantSlug);
+  return unrollAssistantFromContent(assistantSlug, rawContent, registry);
+}
 
+export async function unrollAssistantFromContent(
+  assistantSlug: FullSlug,
+  rawYaml: string,
+  registry: Registry,
+): Promise<AssistantUnrolled> {
   // Convert the raw YAML to unrolled config
   const templateData: TemplateData = {
     // no inputs to an assistant
     inputs: {},
     // at this stage, secrets are mapped to a (still templated) FQSN
-    secrets: extractFQSNMap(rawContent, [assistantSlug]),
+    secrets: extractFQSNMap(rawYaml, [assistantSlug]),
     // Built-in variables
     continue: {},
   };
 
   // Render the template
   const templatedYaml = fillTemplateVariables(
-    rawContent,
+    rawYaml,
     flattenTemplateData(templateData),
   );
 
   // Parse string to Zod-validated YAML
-  let parsedYaml = parseAssistantRolled(templatedYaml);
+  let parsedYaml = parseConfigYaml(templatedYaml);
 
   // Unroll blocks
   const unrolledAssistant = await unrollBlocks(
@@ -165,7 +169,7 @@ export async function unrollAssistant(
 }
 
 export async function unrollBlocks(
-  assistant: AssistantRolled,
+  assistant: ConfigYaml,
   assistantFullSlug: FullSlug,
   registry: Registry,
 ): Promise<AssistantUnrolled> {
@@ -174,10 +178,7 @@ export async function unrollBlocks(
     version: assistant.version,
   };
 
-  const sections: (keyof Omit<
-    AssistantRolled,
-    "name" | "version" | "rules"
-  >)[] = [
+  const sections: (keyof Omit<ConfigYaml, "name" | "version" | "rules">)[] = [
     "models",
     "context",
     "data",
