@@ -227,8 +227,7 @@ export class QuickEdit {
       }
       let model = await this.getCurModelTitle();
 
-      const logger = DataLogger.getInstance();
-      void logger.logDevData({
+      void DataLogger.getInstance().logDevData({
         schema: "quickEdit",
         data: {
           prompt,

@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
+import { DevDataSchemaName, localDevDataFileNamesMap } from "../data/schemas";
 
 dotenv.config();
 
@@ -210,8 +211,8 @@ export function getDevDataSqlitePath(): string {
   return path.join(devDataPath(), "devdata.sqlite");
 }
 
-export function getDevDataFilePath(fileName: string): string {
-  return path.join(devDataPath(), `${fileName}.jsonl`);
+export function getDevDataFilePath(schema: DevDataSchemaName): string {
+  return path.join(devDataPath(), `${localDevDataFileNamesMap[schema]}.jsonl`);
 }
 
 export function editConfigJson(
@@ -374,11 +375,11 @@ export function getEsbuildBinaryPath(): string {
 }
 
 export function setupInitialDotContinueDirectory() {
-  const devDataTypes = [
+  const devDataTypes: DevDataSchemaName[] = [
     "chat",
     "autocomplete",
     "quickEdit",
-    "tokens_generated",
+    "tokensGenerated",
   ];
   devDataTypes.forEach((p) => {
     const devDataPath = getDevDataFilePath(p);

@@ -33,6 +33,7 @@ export const chatDevDataSchema = z.object({
 });
 
 export const autocompleteDevDataSchema = z.object({
+  // Tab autocomplete options - TODO - old json version?
   disable: z.boolean(),
   useFileSuffix: z.boolean(),
   maxPromptTokens: z.number(),
@@ -49,10 +50,27 @@ export const autocompleteDevDataSchema = z.object({
   useRecentlyEdited: z.boolean(),
   disableInFiles: z.array(z.string()).optional(),
   useImports: z.boolean().optional(),
+
+  // Other
+  accepted: z.boolean().optional(),
+  time: z.number(),
+  prefix: z.string(),
+  suffix: z.string(),
+  prompt: z.string(),
+  completion: z.string(),
+  modelProvider: z.string(),
+  modelName: z.string(),
+  completionOptions: z.unknown(), // Using z.unknown() for `any` type
+  cacheHit: z.boolean(),
+  filepath: z.string(),
+  gitRepo: z.string().optional(),
+  completionId: z.string(),
+  uniqueId: z.string(),
+  timestamp: z.number(),
 });
 
 export const devDataSchemas = z.object({
-  tokens_generated: tokensGeneratedDevDataSchema,
+  tokensGenerated: tokensGeneratedDevDataSchema,
   chat: chatDevDataSchema,
   quickEdit: quickEditDevDataSchema,
   autocomplete: autocompleteDevDataSchema,
@@ -68,3 +86,11 @@ export type DevDataLogEvent = {
     data: DevDataSchemas[K];
   };
 }[DevDataSchemaName];
+
+// This is because of tokens_generated snake case file name
+export const localDevDataFileNamesMap: Record<DevDataSchemaName, string> = {
+  tokensGenerated: "tokens_generated",
+  chat: "chat",
+  quickEdit: "quickEdit",
+  autocomplete: "autocomplete",
+};
