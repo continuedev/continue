@@ -36,6 +36,7 @@ const saveSubsetFilters = [
   createFilter("editModeState", []),
   createFilter("config", ["defaultModelTitle"]),
   createFilter("ui", ["toolSettings", "useTools"]),
+  createFilter("indexing", []),
 ];
 
 const migrations: MigrationManifest = {

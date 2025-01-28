@@ -6,7 +6,7 @@ keywords: [config, yaml, configuration, customize, customization]
 
 # Config YAML Reference
 
-<!-- TODO - data and packages sections -->
+<!-- TODO - data section -->
 
 Continue can be configured using a YAML file `config.yaml` which for local configuration can be placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
 
@@ -23,7 +23,6 @@ Config YAML does not work alongside `config.json` - it replaces it. View the **[
 The top-level properties in the `config.yaml` configuration file are:
 
 - [`name`](#name) (**required**)
-<!-- - [`packages`](#packages) -->
 - [`version`](#version) (**required**)
 - [`models`](#models)
 - [`context`](#context)
@@ -120,22 +119,22 @@ More information about usage/params for each context provider can be found [here
 
 **Properties:**
 
-- `uses` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
-- `with`: Optional parameters to configure the context provider's behavior.
+- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
+- `params`: Optional parameters to configure the context provider's behavior.
 
 **Example:**
 
 ```yaml title="config.yaml"
 context:
-  - uses: files
-  - uses: code
-  - uses: codebase
-    with:
+  - provider: files
+  - provider: code
+  - provider: codebase
+    params:
       nFinal: 10
-  - uses: docs
-  - uses: diff
-  - uses: folder
-  - uses: terminal
+  - provider: docs
+  - provider: diff
+  - provider: folder
+  - provider: terminal
 ```
 
 ---
@@ -301,12 +300,12 @@ prompts:
       Please write a complete suite of unit tests for this function. You should use the Jest testing framework.  The tests should cover all possible edge cases and should be as thorough as possible.  You should also include a description of each test case.
 
 context:
-  - uses: diff
-  - uses: file
-  - uses: codebase
-  - uses: code
-  - uses: docs
-    with:
+  - provider: diff
+  - provider: file
+  - provider: codebase
+  - provider: code
+  - provider: docs
+    params:
       startUrl: https://docs.example.com/introduction
       maxDepth: 3
 

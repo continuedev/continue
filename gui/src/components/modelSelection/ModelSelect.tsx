@@ -332,7 +332,9 @@ function ModelSelect() {
           $showabove={showAbove}
           className="z-50 max-w-[90vw]"
         >
-          <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
+          <div
+            className={`max-h-[${MAX_HEIGHT_PX}px] no-scrollbar overflow-y-scroll`}
+          >
             {sortedOptions.map((option, idx) => (
               <ModelOption
                 option={option}
@@ -345,6 +347,8 @@ function ModelSelect() {
           </div>
 
           <div className="mt-auto">
+            <Divider className="!my-0" />
+
             {selectedProfileId === "local" && (
               <>
                 <StyledListboxOption
