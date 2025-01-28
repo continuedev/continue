@@ -113,7 +113,8 @@ class NewContinueSessionAction : AnAction() {
 class ViewHistoryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.sendToWebview("viewHistory", null)
+        val params = mapOf("path" to "/history", "toggle" to true)
+        continuePluginService.sendToWebview("navigateTo", params)
     }
 }
 
