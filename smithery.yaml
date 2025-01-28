@@ -1,0 +1,18 @@
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
+
+startCommand:
+  type: stdio
+  configSchema:
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
+    required:
+      - targetPlatform
+    properties:
+      targetPlatform:
+        type: string
+        default: linux-x64
+        description: The target platform for the binary.
+  commandFunction:
+    # A function that produces the CLI command to start the MCP on stdio.
+    |-
+    config => ({ command: '/app/bin/' + config.targetPlatform + '/continue-binary' })
