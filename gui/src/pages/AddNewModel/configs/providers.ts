@@ -900,4 +900,25 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
   },
+  "vscode-lm": {
+    title: "VSCode Language Models",
+    provider: "vscode-lm",
+    description: "Use language models provided by VSCode extension GitHub Copilot",
+    longDescription: "This provider allows you to use language models that are made available through VSCode extension GitHub Copilot. The models available will depend on which extensions you have installed and configured.",
+    icon: "vscode.png",
+    tags: [],
+    packages: [
+      {
+        title: "VSCode LM",
+        description: "Use any language model provided by VSCode extensions, like copilot/gpt-4o, copilot/claude-3.5-sonnet, copilot/o1-mini, copilot/o1-ga etc.",
+        params: {
+          model: "copilot/gpt-4o",
+          contextLength: 128000,
+          title: "VSCode LM",
+        },
+        isOpenSource: false,
+      }
+    ],
+    collectInputFor: [],
+  },
 };
