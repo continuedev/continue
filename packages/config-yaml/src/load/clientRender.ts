@@ -45,14 +45,6 @@ export async function clientRender(
         continue;
       }
 
-      if (!secretResult.found) {
-        // When a secret isn't found anywhere, we keep it templated as just the secret name
-        // in case it can be found in the on-prem proxy's env
-        secretsTemplateData["secrets." + encodeFQSN(secretResult.fqsn)] =
-          `\${{ secrets.${secretResult.fqsn.secretName} }}`;
-        continue;
-      }
-
       if ("value" in secretResult) {
         secretStore.set(secretResult.fqsn.secretName, secretResult.value);
       }
