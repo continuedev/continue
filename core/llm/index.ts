@@ -1,3 +1,6 @@
+import * as fs from "fs";
+import * as path from "path";
+
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -56,6 +59,9 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
+
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "package.json"), "utf8"));
+const VERSION = packageJson.version;
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -351,10 +357,18 @@ export abstract class BaseLLM implements ILLM {
     // Custom Node.js fetch
     const customFetch = async (input: URL | RequestInfo, init: any) => {
       try {
+        const requestOptions = {
+          ...(this.requestOptions ?? {}),
+          headers: {
+            ...(this.requestOptions?.headers ?? {}),
+            "User-Agent": `Continue-test/${VERSION}`,
+          },
+        };
+
         const resp = await fetchwithRequestOptions(
           new URL(input as any),
           { ...init },
-          { ...this.requestOptions },
+          requestOptions,
         );
 
         // Error mapping to be more helpful
