@@ -64,4 +64,20 @@ export const modelSchema = z.union([
   }),
 ]);
 
+export const partialModelSchema = z.union([
+  z
+    .object({
+      ...baseModelFields,
+      provider: z.literal("continue-proxy"),
+      apiKeyLocation: z.string(),
+    })
+    .partial(),
+  z
+    .object({
+      ...baseModelFields,
+      provider: z.string().refine((val) => val !== "continue-proxy"),
+    })
+    .partial(),
+]);
+
 export type ModelConfig = z.infer<typeof modelSchema>;

@@ -1,4 +1,4 @@
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
+import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas/index.js";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
@@ -24,7 +24,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
   description: ProfileDescription;
 
   constructor(
-    private configResult: ConfigResult<ConfigYaml>,
+    private configResult: ConfigResult<AssistantUnrolled>,
     private readonly ownerSlug: string,
     private readonly packageSlug: string,
     versionSlug: string,
