@@ -83,16 +83,16 @@ Specifies options for tab autocompletion behavior.
 **Properties:**
 
 - `disable`: If `true`, disables tab autocomplete (default: `false`).
-- `useFileSuffix`: If `true`, includes file suffix in the prompt.
-- `maxPromptTokens`: Maximum number of tokens for the prompt.
-- `debounceDelay`: Delay (in ms) before triggering autocomplete.
-- `maxSuffixPercentage`: Maximum percentage of prompt for suffix.
-- `prefixPercentage`: Percentage of input for prefix.
+- `useFileSuffix`: If `true`, includes file suffix in the prompt (default: `true`).
+- `maxPromptTokens`: Maximum number of tokens for the prompt (default: `1024`).
+- `debounceDelay`: Delay (in ms) before triggering autocomplete (default: `350`).
+- `maxSuffixPercentage`: Maximum percentage of prompt for suffix (default: `0.2`).
+- `prefixPercentage`: Percentage of input for prefix (default: `0.3`).
 - `template`: Template string for autocomplete, using Mustache templating.
-- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`).
-- `useCache`: If `true`, caches completions.
-- `onlyMyCode`: If `true`, only includes code within the repository.
-- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled.
+- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`) (default: `auto`).
+- `useCache`: If `true`, caches completions (default: `true`).
+- `onlyMyCode`: If `true`, only includes code within the repository (default: `true`).
+- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled (default: `[]`).
 
 Example
 
