@@ -111,7 +111,7 @@ export class ConfigHandler {
       }
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
+      await this.ide.openUrl(`${env.APP_URL}platform/${openProfileId}`);
     }
   }
 
