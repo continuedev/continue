@@ -3,6 +3,7 @@ import * as fs from "fs";
 import os from "os";
 import path from "path";
 
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as JSONC from "comment-json";
 import * as tar from "tar";
@@ -38,6 +39,7 @@ import CustomContextProviderClass from "../context/providers/CustomContextProvid
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
 import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
+import { useHub } from "../control-plane/env";
 import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
@@ -61,8 +63,8 @@ import {
   getContinueDotEnv,
   getEsbuildBinaryPath,
 } from "../util/paths";
+import { localPathToUri } from "../util/pathToUri";
 
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -70,9 +72,7 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-// import { isSupportedLanceDbCpuTarget } from "./util";
-import { useHub } from "../control-plane/env";
-import { localPathToUri } from "../util/pathToUri";
+import { isSupportedLanceDbCpuTargetForLinux } from "./util";
 import { validateConfig } from "./validation.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -175,10 +175,9 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  // Temporarily disabling this check until we can verify the commands are accuarate
-  // if (!isSupportedLanceDbCpuTarget(ide)) {
-  //   config.disableIndexing = true;
-  // }
+  if (os.platform() === "linux" && !isSupportedLanceDbCpuTargetForLinux(ide)) {
+    config.disableIndexing = true;
+  }
 
   return { config, errors, configLoadInterrupted: false };
 }

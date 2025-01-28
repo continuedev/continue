@@ -108,11 +108,13 @@ export function getModelByRole<T extends keyof ModelRoles>(
  *
  * See here for details: https://github.com/continuedev/continue/issues/940
  */
-export function isSupportedLanceDbCpuTarget(ide: IDE) {
+export function isSupportedLanceDbCpuTargetForLinux(ide: IDE) {
   const CPU_FEATURES_TO_CHECK = ["avx2", "fma"] as const;
 
   const globalContext = new GlobalContext();
-  const globalContextVal = globalContext.get("isSupportedLanceDbCpuTarget");
+  const globalContextVal = globalContext.get(
+    "isSupportedLanceDbCpuTargetForLinux",
+  );
 
   // If we've already checked the CPU target, return the cached value
   if (globalContextVal !== undefined) {
@@ -120,51 +122,35 @@ export function isSupportedLanceDbCpuTarget(ide: IDE) {
   }
 
   const arch = os.arch();
-  const platform = os.platform();
 
   // This check only applies to x64
   //https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
   if (arch !== "x64") {
-    globalContext.update("isSupportedLanceDbCpuTarget", true);
+    globalContext.update("isSupportedLanceDbCpuTargetForLinux", true);
     return true;
   }
 
   try {
-    const cpuFlags = (() => {
-      switch (platform) {
-        case "darwin":
-          return execSync("sysctl -n machdep.cpu.features")
-            .toString()
-            .toLowerCase();
-        case "linux":
-          return execSync("cat /proc/cpuinfo").toString().toLowerCase();
-        case "win32":
-          return execSync("wmic cpu get caption /format:list")
-            .toString()
-            .toLowerCase();
-        default:
-          return "";
-      }
-    })();
+    const cpuFlags = execSync("cat /proc/cpuinfo").toString().toLowerCase();
 
-    const isSupportedLanceDbCpuTarget = cpuFlags
+    const isSupportedLanceDbCpuTargetForLinux = cpuFlags
       ? CPU_FEATURES_TO_CHECK.every((feature) => cpuFlags.includes(feature))
       : true;
 
     // If it's not a supported CPU target, and it's the first time we are checking,
     // show a toast to inform the user that we are going to disable indexing.
-    if (!isSupportedLanceDbCpuTarget) {
+    if (!isSupportedLanceDbCpuTargetForLinux) {
       // We offload our async toast to `showUnsupportedCpuToast` to prevent making
-      // our config loading async upstream of `isSupportedLanceDbCpuTarget`
+      // our config loading async upstream of `isSupportedLanceDbCpuTargetForLinux`
       void showUnsupportedCpuToast(ide);
     }
 
     globalContext.update(
-      "isSupportedLanceDbCpuTarget",
-      isSupportedLanceDbCpuTarget,
+      "isSupportedLanceDbCpuTargetForLinux",
+      isSupportedLanceDbCpuTargetForLinux,
     );
 
-    return isSupportedLanceDbCpuTarget;
+    return isSupportedLanceDbCpuTargetForLinux;
   } catch (error) {
     // If we can't determine CPU features, default to true
     return true;
