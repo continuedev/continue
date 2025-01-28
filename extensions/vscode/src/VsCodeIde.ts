@@ -636,6 +636,9 @@ class VsCodeIde implements IDE {
         "enableContinueForTeams",
         false,
       ),
+      continueTestEnvironment: settings.get<
+        IdeSettings["continueTestEnvironment"]
+      >("continueTestEnvironment", "none"),
       pauseCodebaseIndexOnStart: settings.get<boolean>(
         "pauseCodebaseIndexOnStart",
         false,

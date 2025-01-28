@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import {
+  By,
   EditorView,
   Key,
   VSBrowser,
@@ -52,6 +53,45 @@ describe("GUI Test", () => {
       expect(await description.getText()).has.string(
         "Quickly get up and running using our API keys.",
       );
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
+    it("should display tutorial card after accepting onboarding quick start", async () => {
+      // Get paragraph with text Best
+      const bestTab = await GUISelectors.getOnboardingTabButton(view, "Best");
+      await bestTab.click();
+
+      const anthropicInput = await TestUtils.waitForSuccess(
+        async () => await GUISelectors.getBestChatApiKeyInput(view),
+      );
+      anthropicInput.sendKeys("invalid_api_key");
+
+      const mistralInput =
+        await GUISelectors.getBestAutocompleteApiKeyInput(view);
+      mistralInput.sendKeys("invalid_api_key");
+
+      // Get button with text "Connect" and click it
+      const connectButton = await view.findWebElement(
+        By.xpath("//button[text()='Connect']"),
+      );
+      await connectButton.click();
+
+      await TestUtils.waitForSuccess(
+        async () => await GUISelectors.getTutorialCard(view),
+      );
+
+      // TODO validate that claude has been added to list
+
+      // Skip testing Quick Start because github auth opens external app and breaks test
+      // const quickStartButton = await view.findWebElement(
+      //   By.xpath("//*[contains(text(), 'Get started using our API keys')]")
+      // );
+      // await quickStartButton.click();
+      // await view.switchBack();
+      // const allowButton = await TestUtils.waitForSuccess(
+      //   async () => await driver.findElement(By.xpath(`//a[contains(text(), "Allow")]`))
+      // );
+      // await allowButton.click();
+      // ({ view, driver } = await GUIActions.switchToReactIframe());
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
