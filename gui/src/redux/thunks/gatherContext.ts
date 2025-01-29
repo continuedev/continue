@@ -10,6 +10,7 @@ import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
+import * as URI from "uri-js";
 
 export const gatherContext = createAsyncThunk<
   {
@@ -66,27 +67,27 @@ export const gatherContext = createAsyncThunk<
             .join("\n");
         }
         if (
-          !selectedContextItems.find(
-            (item) => item.uri?.value === currentFile.path,
+          // don't add the file if it's already in the context items
+          !selectedContextItems.find((item) =>
+            URI.equal(item.uri?.value ?? "", currentFile.path),
           )
         ) {
-          // don't add the file if it's already in the context items
+          const { relativePathOrBasename, uri } = findUriInDirs(
+            currentFile.path,
+            await extra.ideMessenger.ide.getWorkspaceDirs(),
+          );
+          const basename = getUriPathBasename(currentFile.path);
           selectedContextItems.unshift({
-            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${
-              findUriInDirs(
-                currentFile.path,
-                await extra.ideMessenger.ide.getWorkspaceDirs(),
-              ).relativePathOrBasename
-            }\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getUriPathBasename(currentFile.path)}`,
-            description: currentFile.path,
+            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${relativePathOrBasename}\n${currentFileContents}\n\`\`\``,
+            name: `Active file: ${basename}`,
+            description: relativePathOrBasename,
             id: {
-              itemId: currentFile.path,
+              itemId: uri,
               providerTitle: "file",
             },
             uri: {
               type: "file",
-              value: currentFile.path,
+              value: uri,
             },
           });
         }
