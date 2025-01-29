@@ -200,11 +200,11 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
 
     if (effected) {
       new GlobalContext().updateSharedConfig(shareConfigUpdates);
+      editConfigJson(() => config);
       void ide.showToast(
         "warning",
-        "Migrated deprecated Continue JSON settings. Edit in the Config Page",
+        "Migrated deprecated Continue JSON settings. Edit in the Settings Page",
       );
-      editConfigJson(() => config);
     }
   } catch (e) {
     throw new Error(`Migration: Failed to parse config.json: ${e}`);

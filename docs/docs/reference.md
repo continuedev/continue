@@ -400,7 +400,7 @@ Example
 
 ### Fully deprecated settings
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [Config Page](/). If found in `config.json`, they will be migrated to the [Config Page](/) and removed from `config.json`.
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
 
 - `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
 - `promptPath`: This value will override during migration.
@@ -421,4 +421,4 @@ Some deprecated `config.json` settings are no longer stored in config and have b
   - `displayRawMarkdown`
   - `showChatScrollbar`
 
-  See [Config Page](/) for more information about each option.
+  See [User Settings Page](./customize/settings.md) for more information about each option.

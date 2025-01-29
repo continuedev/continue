@@ -153,7 +153,7 @@ If your documentation is private, you can skip the default crawler and use a loc
 }
 ```
 
-The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [Config Page](/) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler.
+The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../settings.md) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler.
 
 Further notes:
 
@@ -226,7 +226,6 @@ The following configuration example includes:
 - A custom embeddings provider
 - A reranker model available, with reranking parameters customized
 - A Github token to enable Github crawling
-- Chromium enabled as a backup for private documentation
 
 ```json title="config.json"
 {
@@ -268,4 +267,4 @@ The following configuration example includes:
 }
 ```
 
-[Config Page](/)
+This could also involve enabling Chromium as a backup for local documentation the [User Settings Page](../settings.md).
