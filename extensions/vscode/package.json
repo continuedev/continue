@@ -96,16 +96,10 @@
           "default": false,
           "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
         },
-        "continue.continueTestEnvironment": {
-          "type": "string",
-          "enum": [
-            "none",
-            "production",
-            "test",
-            "local"
-          ],
-          "default": "none",
-          "description": "Continue test environment"
+        "continue.enableContinueHub": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Continue Hub (internal)"
         },
         "continue.showInlineTip": {
           "type": "boolean",
