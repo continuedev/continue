@@ -1,8 +1,8 @@
 import fs from "node:fs";
 
 import {
+  AssistantUnrolled,
   ConfigResult,
-  ConfigYaml,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
@@ -42,10 +42,10 @@ import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
 async function loadConfigYaml(
   workspaceConfigs: string[],
   rawYaml: string,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
-): Promise<ConfigResult<ConfigYaml>> {
+): Promise<ConfigResult<AssistantUnrolled>> {
   let config =
     overrideConfigYaml ??
     (await clientRenderHelper(rawYaml, ide, controlPlaneClient));
@@ -88,7 +88,7 @@ async function slashCommandsFromV1PromptFiles(
 }
 
 async function configYamlToContinueConfig(
-  config: ConfigYaml,
+  config: AssistantUnrolled,
   ide: IDE,
   ideSettings: IdeSettings,
   uniqueId: string,
@@ -183,7 +183,8 @@ async function configYamlToContinueConfig(
 
   // Context providers
   const codebaseContextParams: IContextProvider[] =
-    (config.context || []).find((cp) => cp.uses === "codebase")?.with || {};
+    (config.context || []).find((cp) => cp.provider === "codebase")?.params ||
+    {};
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),
@@ -196,14 +197,14 @@ async function configYamlToContinueConfig(
 
   continueConfig.contextProviders = (config.context
     ?.map((context) => {
-      const cls = contextProviderClassFromName(context.uses) as any;
+      const cls = contextProviderClassFromName(context.provider) as any;
       if (!cls) {
-        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.uses)) {
-          console.warn(`Unknown context provider ${context.uses}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
+          console.warn(`Unknown context provider ${context.provider}`);
         }
         return undefined;
       }
-      const instance: IContextProvider = new cls(context.with ?? {});
+      const instance: IContextProvider = new cls(context.params ?? {});
       return instance;
     })
     .filter((p) => !!p) ?? []) as IContextProvider[];
@@ -298,7 +299,7 @@ export async function loadContinueConfigFromYaml(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<ContinueConfig>> {

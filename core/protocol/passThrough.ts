@@ -53,6 +53,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "indexing/setPaused",
     "docs/getSuggestedDocs",
     "docs/initStatuses",
+    "docs/getDetails",
     //
     "completeOnboarding",
     "addAutocompleteModel",

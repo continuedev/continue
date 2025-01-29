@@ -151,8 +151,8 @@ Note that the `repoMapFileSelection` experimental model role has been deprecated
 
 The JSON `contextProviders` field is replaced by the YAML `context` array.
 
-- JSON `name` maps to `uses`
-- JSON `params` map to `with`
+- JSON `name` maps to `provider`
+- JSON `params` map to `params`
 
 **Before**
 
@@ -181,14 +181,14 @@ The JSON `contextProviders` field is replaced by the YAML `context` array.
 
 ```yaml title="config.yaml"
 context:
-  - uses: docs
+  - provider: docs
 
-  - uses: codebase
-    with:
+  - provider: codebase
+    params:
       nRetrieve: 30
       nFinal: 3
 
-  - uses: diff
+  - params: diff
 ```
 
 ### System Message

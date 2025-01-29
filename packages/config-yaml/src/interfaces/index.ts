@@ -69,7 +69,7 @@ export async function resolveFQSN(
           secretLocation,
           value: secret,
         };
-      } else {
+      } else if (secretLocation.secretType !== SecretType.NotFound) {
         return {
           found: true,
           fqsn,
@@ -81,6 +81,10 @@ export async function resolveFQSN(
 
   return {
     found: false,
+    secretLocation: {
+      secretName: fqsn.secretName,
+      secretType: SecretType.NotFound,
+    },
     fqsn,
   };
 }

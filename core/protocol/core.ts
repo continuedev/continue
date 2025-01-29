@@ -7,6 +7,7 @@ import type {
   ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
+  DocsIndexingDetails,
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
@@ -182,7 +183,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
   "docs/getSuggestedDocs": [undefined, void];
   "docs/initStatuses": [undefined, void];
-
+  "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];

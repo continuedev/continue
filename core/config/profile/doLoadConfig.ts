@@ -1,9 +1,9 @@
 import fs from "fs";
 
 import {
+  AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
-  ConfigYaml,
 } from "@continuedev/config-yaml";
 import {
   ContinueConfig,
@@ -31,7 +31,7 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {

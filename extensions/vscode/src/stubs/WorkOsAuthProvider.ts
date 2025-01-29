@@ -20,17 +20,15 @@ import {
   workspace,
 } from "vscode";
 
-import { IdeSettings } from "core";
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
 
 const AUTH_NAME = "Continue";
 
 const controlPlaneEnv = getControlPlaneEnvSync(
-  workspace
-    .getConfiguration(EXTENSION_NAME)
-    .get<IdeSettings["continueTestEnvironment"]>("continueTestEnvironment") ??
-    "none",
+  workspace.getConfiguration(EXTENSION_NAME).get<boolean>("enableContinueHub")
+    ? "production"
+    : "none",
 );
 
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
