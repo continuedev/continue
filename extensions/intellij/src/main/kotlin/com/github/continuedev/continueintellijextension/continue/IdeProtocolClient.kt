@@ -66,6 +66,10 @@ class IdeProtocolClient(
 
             try {
                 when (messageType) {
+                    "toggleDevTools" -> {
+                        continuePluginService.continuePluginWindow?.browser?.browser?.openDevtools()
+                    }
+
                     "showTutorial" -> {
                         showTutorial(project)
                     }
