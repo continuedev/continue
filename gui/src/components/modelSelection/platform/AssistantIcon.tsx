@@ -9,7 +9,7 @@ export interface AssistantIconProps {
 export default function AssistantIcon({ assistant }: AssistantIconProps) {
   if (isLocalProfile(assistant)) {
     return <ComputerDesktopIcon />;
-  } else if (!assistant.iconUrl) {
+  } else if (assistant.iconUrl) {
     return <img src={assistant.iconUrl} />;
   } else {
     return <SparklesIcon />;
