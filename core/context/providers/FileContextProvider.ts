@@ -38,7 +38,7 @@ class FileContextProvider extends BaseContextProvider {
     return [
       {
         name: basename,
-        description: query,
+        description: relativePathOrBasename,
         content: `\`\`\`${relativePathOrBasename}\n${content}\n\`\`\``,
         uri: {
           type: "file",
