@@ -42,6 +42,38 @@
     "extensions/.continue-debug": true
     // "sync/**": true
   },
-  "eslint.workingDirectories": ["./core"],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "eslint.workingDirectories": [
+    "./core"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "postgresdb",
+      "database": "postgresdb",
+      "username": "admin",
+      "password": "EsKuEl42"
+    },
+    {
+      "mssqlOptions": {
+        "appName": "SQLTools",
+        "useUTC": true,
+        "encrypt": true
+      },
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 1433,
+      "driver": "MSSQL",
+      "name": "sqlserver (sakila)",
+      "database": "sakila",
+      "username": "sa",
+      "password": "EsKuEl42"
+    }
+  ]
 }
