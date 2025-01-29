@@ -51,7 +51,11 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
   }
 
   return (
-    <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden border-0 border-r-[0.5px] border-solid pt-0">
+    <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
+      <div className="pb-0.5 pl-3.5 pt-2 font-semibold">
+        Available Assistants
+      </div>
+
       <div className={`max-h-[300px]`}>
         {profiles.map((profile, idx) => (
           <Option
