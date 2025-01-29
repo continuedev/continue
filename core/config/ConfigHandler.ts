@@ -1,9 +1,17 @@
 import * as fs from "node:fs";
 
 import {
+  AssistantUnrolled,
+  ConfigResult,
+  FullSlug,
+} from "@continuedev/config-yaml";
+import * as YAML from "yaml";
+
+import {
   ControlPlaneClient,
   ControlPlaneSessionInfo,
 } from "../control-plane/client.js";
+import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -15,15 +23,8 @@ import {
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath, getConfigYamlPath } from "../util/paths.js";
-
-import {
-  AssistantUnrolled,
-  ConfigResult,
-  FullSlug,
-} from "@continuedev/config-yaml";
-import * as YAML from "yaml";
-import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
 import { localPathToUri } from "../util/pathToUri.js";
+
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
@@ -135,6 +136,7 @@ export class ConfigHandler {
               { ...assistant.configResult, config: renderedConfig },
               assistant.ownerSlug,
               assistant.packageSlug,
+              assistant.iconUrl,
               assistant.configResult.config?.version ?? "latest",
               this.controlPlaneClient,
               this.ide,
