@@ -534,12 +534,12 @@
         {
           "command": "continue.signInToControlPlane",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.continueTestEnvironment !== 'none') && !continue.isSignedInToControlPlane"
+          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && !continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openAccountDialog",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.continueTestEnvironment !== 'none') && continue.isSignedInToControlPlane"
+          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openMorePage",
