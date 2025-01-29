@@ -19,6 +19,7 @@ import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFile
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
+import { getControlPlaneEnv } from "./control-plane/env";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
@@ -52,11 +53,8 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import { usePlatform } from "./control-plane/flags";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
-import { finalToBrowserConfig } from "./config/load";
-import { controlPlaneEnv } from "./control-plane/env";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -113,10 +111,13 @@ export class Core {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
-      useOnboarding: usePlatform(),
+      useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
+    this.controlPlaneClient = new ControlPlaneClient(
+      sessionInfoPromise,
+      ideSettingsPromise,
+    );
 
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -131,18 +132,13 @@ export class Core {
       this.messenger,
     );
 
-    this.configHandler.onConfigUpdate(
-      async ({ config, errors, configLoadInterrupted }) => {
-        this.messenger.send("configUpdate", {
-          result: {
-            config: config && finalToBrowserConfig(config),
-            configLoadInterrupted,
-            errors,
-          },
-          profileId: this.configHandler.currentProfile.profileDescription.id,
-        });
-      },
-    );
+    this.configHandler.onConfigUpdate(async (result) => {
+      const serializedResult = await this.configHandler.getSerializedConfig();
+      this.messenger.send("configUpdate", {
+        result: serializedResult,
+        profileId: this.configHandler.currentProfile.profileDescription.id,
+      });
+    });
 
     this.configHandler.onDidChangeAvailableProfiles((profiles) =>
       this.messenger.send("didChangeAvailableProfiles", { profiles }),
@@ -302,10 +298,8 @@ export class Core {
     });
 
     on("controlPlane/openUrl", async (msg) => {
-      await this.messenger.request(
-        "openUrl",
-        `${controlPlaneEnv.APP_URL}${msg.data.path}`,
-      );
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
     });
 
     // Context providers
@@ -869,6 +863,9 @@ export class Core {
     on("docs/initStatuses", async (msg) => {
       void this.docsService.initStatuses();
     });
+    on("docs/getDetails", async (msg) => {
+      return await this.docsService.getDetails(msg.data.startUrl);
+    });
     //
 
     on("didChangeSelectedProfile", (msg) => {
@@ -879,7 +876,7 @@ export class Core {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage();
+      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
       return { url };
     });
 

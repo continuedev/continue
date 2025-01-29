@@ -229,6 +229,14 @@ export interface SiteIndexingConfig {
   rootUrl?: string; // Currently only used by preindexed docs
 }
 
+export interface DocsIndexingDetails {
+  startUrl: string;
+  config: SiteIndexingConfig;
+  indexingStatus: IndexingStatus | undefined;
+  chunks: Chunk[];
+  isPreIndexedDoc: boolean;
+}
+
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 
@@ -583,6 +591,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
+  continueTestEnvironment: "none" | "production" | "test" | "local";
   pauseCodebaseIndexOnStart: boolean;
   enableDebugLogs: boolean;
 }
@@ -826,7 +835,7 @@ export interface SlashCommandDescription {
 export interface CustomCommand {
   name: string;
   prompt: string;
-  description: string;
+  description?: string;
 }
 
 export interface Prediction {

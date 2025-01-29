@@ -69,8 +69,8 @@ models:
       - apply
 
 context:
-  - uses: docs
-  - uses: diff
-  - uses: url
-  - uses: folder
-  - uses: terminal
+  - provider: docs
+  - provider: diff
+  - provider: url
+  - provider: folder
+  - provider: terminal

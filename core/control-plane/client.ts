@@ -1,11 +1,16 @@
 import { ConfigJson } from "@continuedev/config-types";
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
 import fetch, { RequestInit, Response } from "node-fetch";
 
-import { ModelDescription } from "../index.js";
+import { IdeSettings, ModelDescription } from "../index.js";
 
-import { ConfigResult, FQSN, SecretResult } from "@continuedev/config-yaml";
-import { controlPlaneEnv } from "./env.js";
+import {
+  AssistantUnrolled,
+  ConfigResult,
+  FQSN,
+  FullSlug,
+  SecretResult,
+} from "@continuedev/config-yaml";
+import { getControlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -27,7 +32,6 @@ export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 export class ControlPlaneClient {
-  private static URL = controlPlaneEnv.CONTROL_PLANE_URL;
   private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
 
   private lastAccessTokenRefresh = 0;
@@ -36,6 +40,7 @@ export class ControlPlaneClient {
     private readonly sessionInfoPromise: Promise<
       ControlPlaneSessionInfo | undefined
     >,
+    private readonly ideSettingsPromise: Promise<IdeSettings>,
   ) {}
 
   async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
@@ -66,7 +71,9 @@ export class ControlPlaneClient {
     if (!accessToken) {
       throw new Error("No access token");
     }
-    const url = new URL(path, ControlPlaneClient.URL).toString();
+
+    const env = await getControlPlaneEnv(this.ideSettingsPromise);
+    const url = new URL(path, env.CONTROL_PLANE_URL).toString();
     const resp = await fetch(url, {
       ...init,
       headers: {
@@ -102,7 +109,7 @@ export class ControlPlaneClient {
 
   public async listAssistants(): Promise<
     {
-      configResult: ConfigResult<ConfigYaml>;
+      configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;
@@ -120,6 +127,23 @@ export class ControlPlaneClient {
       return (await resp.json()) as any;
     } catch (e) {
       return [];
+    }
+  }
+
+  public async listAssistantFullSlugs(): Promise<FullSlug[] | null> {
+    const userId = await this.userId;
+    if (!userId) {
+      return null;
+    }
+
+    try {
+      const resp = await this.request("ide/list-assistant-full-slugs", {
+        method: "GET",
+      });
+      const { fullSlugs } = (await resp.json()) as any;
+      return fullSlugs;
+    } catch (e) {
+      return null;
     }
   }
 

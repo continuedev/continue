@@ -1,9 +1,9 @@
 import fs from "fs";
 
 import {
+  AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
-  ConfigYaml,
 } from "@continuedev/config-yaml";
 import {
   ContinueConfig,
@@ -14,7 +14,7 @@ import {
 } from "../../";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { controlPlaneEnv } from "../../control-plane/env.js";
+import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigYamlPath } from "../../util/paths";
@@ -30,7 +30,7 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {
@@ -99,9 +99,11 @@ export default async function doLoadConfig(
   const controlPlane = (newConfig as any).controlPlane;
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
+
+  const env = await getControlPlaneEnv(ideSettingsPromise);
   let controlPlaneProxyUrl: string = useOnPremProxy
     ? controlPlane?.proxyUrl
-    : controlPlaneEnv.DEFAULT_CONTROL_PLANE_PROXY_URL;
+    : env.DEFAULT_CONTROL_PLANE_PROXY_URL;
 
   if (!controlPlaneProxyUrl.endsWith("/")) {
     controlPlaneProxyUrl += "/";
