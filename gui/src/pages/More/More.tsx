@@ -15,15 +15,20 @@ import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses
 import PageHeader from "../../components/PageHeader";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import { updateConfig } from "../../redux/slices/configSlice";
 
 function MorePage() {
   useNavigationListener();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const disableIndexing = useAppSelector(
-    (state) => state.config.config.disableIndexing,
-  );
+  const config = useAppSelector((store) => store.config.config);
+  const { disableIndexing } = config;
+  function openConfig() {
+    // `undefined` will open the config for the current profile
+    const profileId = undefined;
+    ideMessenger.post("config/openProfile", { profileId });
+  }
 
   return (
     <div className="overflow-y-scroll">
@@ -37,9 +42,23 @@ function MorePage() {
               Local embeddings of your codebase
             </span>
           </div>
-          {disableIndexing ? (
-            <div className="pb-2 pt-5 text-center font-semibold">
-              Indexing is disabled
+          {!disableIndexing ? (
+            <div className="pb-2 pt-5">
+              <p className="py-1 text-center font-semibold">
+                Indexing is disabled
+              </p>
+              <p className="text-lightgray cursor-pointer text-center text-xs">
+                <span
+                  className="underline hover:brightness-125"
+                  onClick={openConfig}
+                >
+                  Open your config{" "}
+                </span>
+                <span>
+                  and set <code>disableIndexing</code> to <code>true</code> to
+                  enable indexing
+                </span>
+              </p>
             </div>
           ) : (
             <IndexingProgress />
