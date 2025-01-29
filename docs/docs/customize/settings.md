@@ -6,7 +6,7 @@ keywords: [config, settings, configuration, customize, customization, sidebar]
 
 # The User Settings Page
 
-The User Settings page can be accessed by clicking the gear icon in the header of the Continue sidebar.
+The **User Settings page** can be accessed by clicking the gear icon in the header of the Continue sidebar.
 
 ![slash-commands](/img/header-buttons.png)
 
@@ -14,9 +14,9 @@ Which takes you to this page:
 
 ![User Settings Page](/img/settings-page.png)
 
-Click the "Open [your config location]" button to open your configuration file.
+Click the `Open Config File` button to open your configuration file. See the [Configuration Reference](../reference.md) for more information.
 
-Below that, the following settings are available:
+Below that, the following settings which are not part of a configuration file are available:
 
 - `Wrap Codeblocks`: If on, enables text wrapping in code blocks. Off by default.
 - `Display Raw Markdown`: If on, shows raw markdown in responses. Off by default.
@@ -31,6 +31,4 @@ Below that, the following settings are available:
 - `Multiline Autocompletions`: Controls multiline completions for autocomplete. Can be set to `always`, `never`, or `auto`. Defaults to `auto`
 - `Font Size`: Specifies base font size for UI elements
 - `Workspace prompts path`: Where to find Prompt Files in a workspace - replaces the default .continue/prompts
-- `Disable autocomplete in files`: List of comma-separated glob pattern to disable autocomplete in matching files. E.g., "_/.md, _/.txt"
-
-For other configuration such as models and context, see [Configuration](../customize/deep-dives/configuration.md)
+- `Disable autocomplete in files`: List of comma-separated glob pattern to disable autocomplete in matching files. E.g., "\_/.md, \*/.txt"
