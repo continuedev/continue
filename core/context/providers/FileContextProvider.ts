@@ -10,7 +10,7 @@ import { walkDirs } from "../../indexing/walkDir";
 import {
   getUriPathBasename,
   getShortestUniqueRelativeUriPaths,
-  findUriInDirs,
+  getUriDescription,
 } from "../../util/uri";
 
 const MAX_SUBMENU_ITEMS = 10_000;
@@ -29,16 +29,17 @@ class FileContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     // Assume the query is a filepath
     const fileUri = query.trim();
-    const basename = getUriPathBasename(fileUri);
-    const { relativePathOrBasename } = findUriInDirs(
+    const content = await extras.ide.readFile(fileUri);
+
+    const { relativePathOrBasename, last2Parts, baseName } = getUriDescription(
       fileUri,
       await extras.ide.getWorkspaceDirs(),
     );
-    const content = await extras.ide.readFile(fileUri);
+
     return [
       {
-        name: basename,
-        description: relativePathOrBasename,
+        name: baseName,
+        description: last2Parts,
         content: `\`\`\`${relativePathOrBasename}\n${content}\n\`\`\``,
         uri: {
           type: "file",

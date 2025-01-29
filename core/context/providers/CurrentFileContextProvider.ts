@@ -4,7 +4,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../";
-import { findUriInDirs, getUriPathBasename } from "../../util/uri";
+import { getUriDescription } from "../../util/uri";
 
 class CurrentFileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -23,11 +23,11 @@ class CurrentFileContextProvider extends BaseContextProvider {
     if (!currentFile) {
       return [];
     }
-    const { relativePathOrBasename } = findUriInDirs(
+
+    const { relativePathOrBasename, last2Parts, baseName } = getUriDescription(
       currentFile.path,
       await extras.ide.getWorkspaceDirs(),
     );
-    const baseName = getUriPathBasename(currentFile.path);
 
     let prefix = "This is the currently open file:";
     let name = baseName;
@@ -41,7 +41,7 @@ class CurrentFileContextProvider extends BaseContextProvider {
 
     return [
       {
-        description: relativePathOrBasename,
+        description: last2Parts,
         content: `${prefix}\n\n\`\`\`${relativePathOrBasename}\n${currentFile.contents}\n\`\`\``,
         name,
         uri: {
