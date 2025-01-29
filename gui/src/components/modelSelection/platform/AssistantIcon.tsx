@@ -10,7 +10,7 @@ export default function AssistantIcon({ assistant }: AssistantIconProps) {
   if (isLocalProfile(assistant)) {
     return <ComputerDesktopIcon />;
   } else if (assistant.iconUrl) {
-    return <img src={assistant.iconUrl} />;
+    return <img src={assistant.iconUrl} className="rounded-full" />;
   } else {
     return <SparklesIcon />;
   }
