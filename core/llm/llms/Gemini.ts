@@ -410,11 +410,7 @@ class Gemini extends BaseLLM {
                 content: "",
                 toolCalls: [part.data],
               };
-              // Add delay to ensure tool call is processed
-              await new Promise(resolve => setTimeout(resolve, 100));
             } else if (part.type === 'tool') {
-              // Add delay before tool response to ensure tool call was processed
-              await new Promise(resolve => setTimeout(resolve, 100));
               yield part.data;
             }
           }
