@@ -867,6 +867,9 @@ export class Core {
     on("docs/initStatuses", async (msg) => {
       void this.docsService.initStatuses();
     });
+    on("docs/getDetails", async (msg) => {
+      return await this.docsService.getDetails(msg.data.startUrl);
+    });
     //
 
     on("didChangeSelectedProfile", (msg) => {
