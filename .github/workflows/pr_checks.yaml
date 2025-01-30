@@ -1,7 +1,7 @@
 name: PR checks
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
     paths:
@@ -22,10 +22,22 @@ on:
       - ".github/workflows/**"
 
 jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+
   install-root:
+    needs: validate-pr
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          # This is important - it switches from the base repo to the fork
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -45,6 +57,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -70,10 +86,13 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
-    # Tests requiring secrets need approval from maintainers
     environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -103,6 +122,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -134,6 +157,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -164,6 +191,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -200,6 +231,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -233,6 +268,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -264,6 +303,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -290,6 +333,9 @@ jobs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Cache node modules
         uses: actions/cache@v3
@@ -317,6 +363,10 @@ jobs:
     needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -349,6 +399,10 @@ jobs:
     needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -397,6 +451,10 @@ jobs:
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -459,6 +517,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -490,6 +552,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/cache@v4
         with:
