@@ -97,6 +97,7 @@ export const defaultConfig: SerializedContinueConfig = {
   tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
+  data: [],
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
@@ -104,4 +105,5 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
   tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
+  data: [],
 };
