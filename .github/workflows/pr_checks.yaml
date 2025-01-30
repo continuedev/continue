@@ -70,8 +70,8 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
-    # Tests requiring secrets need approval from maintainers
-    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
+    # Tests requiring secrets need approval from maintainers.
+    environment: ${{ github.event.pull_request.head.repo.fork == true && 'tests-requiring-secrets' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
