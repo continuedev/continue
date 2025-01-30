@@ -1,3 +1,4 @@
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/util/messageContent";
 import { useEffect, useState } from "react";
@@ -10,7 +11,6 @@ import {
 } from "..";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 
 interface ReasoningProps {
   item: ChatHistoryItem;
@@ -49,6 +49,7 @@ const ButtonContent = styled.div`
 const ContentDiv = styled.div<{ fontSize?: number }>`
   margin: 4px;
   padding: 4px;
+  padding-bottom: 6px;
   font-size: ${getFontSize()}px;
   overflow: hidden;
   border-left: 4px solid ${lightGray};
