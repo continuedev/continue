@@ -16,7 +16,11 @@ import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath, getConfigYamlPath } from "../util/paths.js";
 
-import { ConfigResult, ConfigYaml, FullSlug } from "@continuedev/config-yaml";
+import {
+  AssistantUnrolled,
+  ConfigResult,
+  FullSlug,
+} from "@continuedev/config-yaml";
 import * as YAML from "yaml";
 import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
 import { localPathToUri } from "../util/pathToUri.js";
@@ -107,7 +111,7 @@ export class ConfigHandler {
       }
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
+      await this.ide.openUrl(`${env.APP_URL}platform/${openProfileId}`);
     }
   }
 
@@ -118,7 +122,7 @@ export class ConfigHandler {
       .then(async (assistants) => {
         const hubProfiles = await Promise.all(
           assistants.map(async (assistant) => {
-            let renderedConfig: ConfigYaml | undefined = undefined;
+            let renderedConfig: AssistantUnrolled | undefined = undefined;
             if (assistant.configResult.config) {
               renderedConfig = await clientRenderHelper(
                 YAML.stringify(assistant.configResult.config),

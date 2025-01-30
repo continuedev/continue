@@ -58,16 +58,17 @@ This is just another object like the ones in the `"models"` array of `config.jso
 
 This object allows you to customize the behavior of tab-autocomplete. The available options are shown below, and you can find their default values [here](https://github.com/continuedev/continue/blob/fbeb2e4fe15d4b434a30a136f74b672485c852d9/core/util/parameters.ts).
 
-- `disable`: Disable autocomplete (can also be done from IDE settings)
+- `disable`: Disable autocomplete (can also be done from IDE settings) (default: `false`)
 - `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
-- `useFileSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
-- `maxPromptTokens`: The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context. (Number)
-- `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
-- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
-- `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number)
-- `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
-- `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes.
-- `disableInFiles`: A list of glob patterns for files in which you want to disable tab autocomplete.
+- `useFileSuffix`: Determines whether to use the file suffix in the prompt. (Boolean) (default: `true`)
+- `maxPromptTokens`: The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context. (Number) (default: `1024`)
+- `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number) (default: `0.3`)
+- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number) (default: `0.2`)
+- `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number) (default: `350`)
+- `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto". (default: `auto`)
+- `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes. (default: `true`)
+- `disableInFiles`: A list of glob patterns for files in which you want to disable tab autocomplete. (default: `[]`)
+- `onlyMyCode`: If `true`, only includes code within the repository (default: `true`).
 
 ### Full example
 
