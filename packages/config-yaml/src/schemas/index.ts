@@ -38,6 +38,12 @@ const docSchema = z.object({
   faviconUrl: z.string().optional(),
 });
 
+const basePropertiesSchema = z.object({
+  name: z.string(),
+  version: z.string(),
+  schema: z.string().optional(),
+});
+
 export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.object({
     uses: z.string(),
@@ -48,73 +54,68 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
 export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.union([schema, blockItemWrapperSchema(schema)]);
 
-export const configYamlSchema = z.object({
-  name: z.string(),
-  version: z.string(),
-  models: z
-    .array(
-      z.union([
-        modelSchema,
-        z.object({
-          uses: z.string(),
-          with: z.record(z.string()).optional(),
-          override: partialModelSchema.optional(),
-        }),
-      ]),
-    )
-    .optional(),
-  context: z.array(blockOrSchema(contextSchema)).optional(),
-  data: z.array(blockOrSchema(dataSchema)).optional(),
-  tools: z.array(blockOrSchema(toolSchema)).optional(),
-  mcpServers: z.array(blockOrSchema(mcpServerSchema)).optional(),
-  rules: z
-    .array(
-      z.union([
-        z.string(),
-        z.object({
-          uses: z.string(),
-          with: z.record(z.string()).optional(),
-        }),
-      ]),
-    )
-    .optional(),
-  prompts: z.array(blockOrSchema(promptSchema)).optional(),
-  docs: z.array(blockOrSchema(docSchema)).optional(),
-});
+export const configYamlSchema = z
+  .object({
+    models: z
+      .array(
+        z.union([
+          modelSchema,
+          z.object({
+            uses: z.string(),
+            with: z.record(z.string()).optional(),
+            override: partialModelSchema.optional(),
+          }),
+        ]),
+      )
+      .optional(),
+    context: z.array(blockOrSchema(contextSchema)).optional(),
+    data: z.array(blockOrSchema(dataSchema)).optional(),
+    tools: z.array(blockOrSchema(toolSchema)).optional(),
+    mcpServers: z.array(blockOrSchema(mcpServerSchema)).optional(),
+    rules: z
+      .array(
+        z.union([
+          z.string(),
+          z.object({
+            uses: z.string(),
+            with: z.record(z.string()).optional(),
+          }),
+        ]),
+      )
+      .optional(),
+    prompts: z.array(blockOrSchema(promptSchema)).optional(),
+    docs: z.array(blockOrSchema(docSchema)).optional(),
+  })
+  .extend(basePropertiesSchema.shape);
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
 
-export const assistantUnrolledSchema = z.object({
-  name: z.string(),
-  version: z.string(),
-  models: z.array(modelSchema).optional(),
-  context: z.array(contextSchema).optional(),
-  data: z.array(dataSchema).optional(),
-  tools: z.array(toolSchema).optional(),
-  mcpServers: z.array(mcpServerSchema).optional(),
-  rules: z.array(z.string()).optional(),
-  prompts: z.array(promptSchema).optional(),
-  docs: z.array(docSchema).optional(),
-});
+export const assistantUnrolledSchema = z
+  .object({
+    models: z.array(modelSchema).optional(),
+    context: z.array(contextSchema).optional(),
+    data: z.array(dataSchema).optional(),
+    tools: z.array(toolSchema).optional(),
+    mcpServers: z.array(mcpServerSchema).optional(),
+    rules: z.array(z.string()).optional(),
+    prompts: z.array(promptSchema).optional(),
+    docs: z.array(docSchema).optional(),
+  })
+  .extend(basePropertiesSchema.shape);
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
 
-export const blockSchema = z
-  .object({
-    name: z.string(),
-    version: z.string(),
-  })
-  .and(
-    z.union([
-      z.object({ models: z.array(modelSchema).length(1) }),
-      z.object({ context: z.array(contextSchema).length(1) }),
-      z.object({ data: z.array(dataSchema).length(1) }),
-      z.object({ tools: z.array(toolSchema).length(1) }),
-      z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
-      z.object({ rules: z.array(z.string()).length(1) }),
-      z.object({ prompts: z.array(promptSchema).length(1) }),
-      z.object({ docs: z.array(docSchema).length(1) }),
-    ]),
-  );
+export const blockSchema = basePropertiesSchema.and(
+  z.union([
+    z.object({ models: z.array(modelSchema).length(1) }),
+    z.object({ context: z.array(contextSchema).length(1) }),
+    z.object({ data: z.array(dataSchema).length(1) }),
+    z.object({ tools: z.array(toolSchema).length(1) }),
+    z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
+    z.object({ rules: z.array(z.string()).length(1) }),
+    z.object({ prompts: z.array(promptSchema).length(1) }),
+    z.object({ docs: z.array(docSchema).length(1) }),
+  ]),
+);
 
 export type Block = z.infer<typeof blockSchema>;
