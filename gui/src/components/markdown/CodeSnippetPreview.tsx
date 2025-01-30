@@ -99,48 +99,44 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           fontSize: getFontSize() - 3,
         }}
         onClick={() => {
-          if (props.item.id.providerTitle === "file" && props.item.uri?.value) {
-            ideMessenger.post("showFile", {
-              filepath: props.item.uri.value,
-            });
-          } else if (props.item.id.providerTitle === "code") {
-            const rif = ctxItemToRifWithContents(props.item, true);
-            ideMessenger.ide.showLines(
-              rif.filepath,
-              rif.range.start.line,
-              rif.range.end.line,
-            );
-          } else {
-            ideMessenger.post("showVirtualFile", {
-              content,
-              name: props.item.name,
-            });
-          }
+          setLocalHidden(!hidden);
         }}
       >
-        <div className="flex items-center gap-1">
+        <div
+          className="flex items-center gap-1 hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (
+              props.item.id.providerTitle === "file" &&
+              props.item.uri?.value
+            ) {
+              ideMessenger.post("showFile", {
+                filepath: props.item.uri.value,
+              });
+            } else if (props.item.id.providerTitle === "code") {
+              const rif = ctxItemToRifWithContents(props.item, true);
+              ideMessenger.ide.showLines(
+                rif.filepath,
+                rif.range.start.line,
+                rif.range.end.line,
+              );
+            } else {
+              ideMessenger.post("showVirtualFile", {
+                content,
+                name: props.item.name,
+              });
+            }
+          }}
+        >
           <FileIcon height="16px" width="16px" filename={props.item.name} />
           {props.item.name}
         </div>
         <div className="flex items-center gap-1">
-          <HeaderButtonWithToolTip
-            text={hidden ? "Show" : "Hide"}
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
-          >
+          <HeaderButtonWithToolTip text={hidden ? "Show" : "Hide"}>
             {hidden ? (
-              <EyeIcon
-                onClick={() => setLocalHidden(false)}
-                width="1em"
-                height="1em"
-              />
+              <EyeIcon width="1em" height="1em" />
             ) : (
-              <EyeSlashIcon
-                onClick={() => setLocalHidden(true)}
-                width="1em"
-                height="1em"
-              />
+              <EyeSlashIcon width="1em" height="1em" />
             )}
           </HeaderButtonWithToolTip>
           <HeaderButtonWithToolTip
