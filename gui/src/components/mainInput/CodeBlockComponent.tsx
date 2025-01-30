@@ -7,7 +7,6 @@ export const CodeBlockComponent = (props: any) => {
   const { node, deleteNode, selected, editor, updateAttributes } = props;
   const item: ContextItemWithId = node.attrs.item;
   const inputId = node.attrs.inputId;
-  // const newestCodeblockId =
   // const contextItems = useSelector(
   //   (store: RootState) =>
   //     store.session.messages[store.session.messages.length - 1].contextItems,

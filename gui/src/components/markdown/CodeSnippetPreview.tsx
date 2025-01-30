@@ -53,7 +53,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const newestCodeblockForInputId = useAppSelector(
     (store) => store.session.newestCodeblockForInput[props.inputId],
   );
-  console.log(newestCodeblockForInputId);
+
   const hidden = useMemo(() => {
     return localHidden ?? newestCodeblockForInputId !== props.item.id.itemId;
   }, [localHidden, newestCodeblockForInputId, props.item]);
@@ -69,7 +69,6 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
 
   const codeBlockRef = useRef<HTMLDivElement>(null);
 
-  // Track codeblock dimensions
   const [codeblockDims, setCodeblockDims] = useState({ width: 0, height: 0 });
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
@@ -86,7 +85,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
     return () => {
       resizeObserver.disconnect();
     };
-  }, [codeBlockRef]); // Empty dependency array to run once
+  }, [codeBlockRef]);
 
   return (
     <PreviewMarkdownDiv
