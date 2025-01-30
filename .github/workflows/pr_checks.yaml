@@ -9,6 +9,7 @@ on:
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
+      - ".github/workflows/**"
 
   push:
     branches:
