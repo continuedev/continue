@@ -53,7 +53,6 @@ async function resolveEditorContent({
     for (const p of editorState.content) {
       if (p.type === "paragraph") {
         const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
-
         // Only take the first slash command\
         if (foundSlashCommand && typeof slashCommand === "undefined") {
           slashCommand = foundSlashCommand;
@@ -240,7 +239,7 @@ function resolveParagraph(
 export function hasSlashCommandOrContextProvider(
   editorState: JSONContent,
 ): boolean {
-  if (!editorState.content) {
+  if (!editorState?.content) {
     return false;
   }
 
