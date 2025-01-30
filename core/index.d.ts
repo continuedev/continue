@@ -229,6 +229,14 @@ export interface SiteIndexingConfig {
   rootUrl?: string; // Currently only used by preindexed docs
 }
 
+export interface DocsIndexingDetails {
+  startUrl: string;
+  config: SiteIndexingConfig;
+  indexingStatus: IndexingStatus | undefined;
+  chunks: Chunk[];
+  isPreIndexedDoc: boolean;
+}
+
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 
@@ -425,6 +433,13 @@ interface ToolCallState {
   output?: ContextItem[];
 }
 
+interface Reasoning {
+  active: boolean;
+  text: string;
+  startAt: number;
+  endAt?: number;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   contextItems: ContextItemWithId[];
@@ -435,6 +450,7 @@ export interface ChatHistoryItem {
   isGatheringContext?: boolean;
   checkpoint?: Checkpoint;
   isBeforeCheckpoint?: boolean;
+  reasoning?: Reasoning;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {

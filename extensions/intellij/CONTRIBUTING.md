@@ -90,10 +90,7 @@ allow for changes to your `config.json` and other files during development, with
 
 ### Viewing logs
 
-When using the `Run Continue` task, we automatically run a script that outputs logs into the "Prompt Logs" terminal tab.
-
-Alternatively, you can view logs for a particular IDE instance by selecting `Help` -> `Open Log in Editor` in the window
-toolbar.
+When using the `Run Continue` task, we automatically tail both prompt logs and IDE logs.
 
 ### Reloading changes
 
@@ -109,7 +106,9 @@ toolbar.
 
 - `extensions/intellij`: Breakpoints can be set in Intellij
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
-- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task
+- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task)
+    - If you have Community Edition installed, you won't be able to use breakpoints in IntelliJ. Instead, you can start
+      the `Core Binary` task in VS Code and set breakpoints in that IDE.
 
 ### Available Gradle tasks
 
