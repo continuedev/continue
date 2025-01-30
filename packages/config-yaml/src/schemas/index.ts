@@ -41,7 +41,7 @@ const docSchema = z.object({
 const basePropertiesSchema = z.object({
   name: z.string(),
   version: z.string(),
-  schema: z.string().optional(),
+  schema: z.string(),
 });
 
 export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
