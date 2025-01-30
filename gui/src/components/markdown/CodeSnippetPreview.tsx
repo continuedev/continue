@@ -1,11 +1,11 @@
 import {
   ChevronDownIcon,
-  ChevronUpIcon,
+  EyeSlashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { dedent, getMarkdownLanguageTagForFile } from "core/util";
-import React, { useContext, useMemo } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -14,6 +14,8 @@ import FileIcon from "../FileIcon";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { EyeIcon } from "@heroicons/react/24/solid";
+import { useAppSelector } from "../../redux/hooks";
 
 const PreviewMarkdownDiv = styled.div<{
   borderColor?: string;
@@ -31,32 +33,30 @@ const PreviewMarkdownDiv = styled.div<{
   }
 `;
 
-const PreviewMarkdownHeader = styled.div`
-  margin: 0;
-  padding: 2px 6px;
-  border-bottom: 0.5px solid ${lightGray};
-  word-break: break-all;
-  font-size: ${getFontSize() - 3}px;
-  display: flex;
-  align-items: center;
-`;
-
 interface CodeSnippetPreviewProps {
   item: ContextItemWithId;
   onDelete?: () => void;
   borderColor?: string;
-  hideHeader?: boolean;
+  inputId: string;
 }
 
-const MAX_PREVIEW_HEIGHT = 300;
+const MAX_PREVIEW_HEIGHT = 100;
 
 const backticksRegex = /`{3,}/gm;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const [collapsed, setCollapsed] = React.useState(true);
-  const [hovered, setHovered] = React.useState(false);
+  const [localHidden, setLocalHidden] = useState<boolean | undefined>();
+  const [isSizeLimited, setIsSizeLimited] = useState(true);
+
+  const newestCodeblockForInputId = useAppSelector(
+    (store) => store.session.newestCodeblockForInput[props.inputId],
+  );
+  console.log(newestCodeblockForInputId);
+  const hidden = useMemo(() => {
+    return localHidden ?? newestCodeblockForInputId !== props.item.id.itemId;
+  }, [localHidden, newestCodeblockForInputId, props.item]);
 
   const content = useMemo(() => {
     return dedent`${props.item.content}`;
@@ -67,65 +67,100 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
     return backticks ? backticks.sort().at(-1) + "`" : "```";
   }, [content]);
 
-  const codeBlockRef = React.useRef<HTMLDivElement>(null);
+  const codeBlockRef = useRef<HTMLDivElement>(null);
+
+  // Track codeblock dimensions
+  const [codeblockDims, setCodeblockDims] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      setCodeblockDims({
+        width: codeBlockRef.current?.scrollWidth ?? 0,
+        height: codeBlockRef.current?.scrollHeight ?? 0,
+      });
+    });
+
+    if (codeBlockRef.current) {
+      resizeObserver.observe(codeBlockRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [codeBlockRef]); // Empty dependency array to run once
 
   return (
     <PreviewMarkdownDiv
       spellCheck={false}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       borderColor={props.borderColor}
       className="find-widget-skip"
     >
-      {!props.hideHeader && (
-        <PreviewMarkdownHeader
-          className="flex cursor-pointer justify-between"
-          onClick={() => {
-            if (
-              props.item.id.providerTitle === "file" &&
-              props.item.uri?.value
-            ) {
-              ideMessenger.post("showFile", {
-                filepath: props.item.uri.value,
-              });
-            } else if (props.item.id.providerTitle === "code") {
-              const rif = ctxItemToRifWithContents(props.item, true);
-              ideMessenger.ide.showLines(
-                rif.filepath,
-                rif.range.start.line,
-                rif.range.end.line,
-              );
-            } else {
-              ideMessenger.post("showVirtualFile", {
-                content,
-                name: props.item.name,
-              });
-            }
-          }}
-        >
-          <div className="flex items-center gap-1">
-            <FileIcon height="16px" width="16px" filename={props.item.name} />
-            {props.item.name}
-          </div>
-          <div className="flex items-center gap-1">
-            <HeaderButtonWithToolTip
-              text="Delete"
-              onClick={(e) => {
-                e.stopPropagation();
-                props.onDelete?.();
-              }}
-            >
-              <XMarkIcon width="1em" height="1em" />
-            </HeaderButtonWithToolTip>
-          </div>
-        </PreviewMarkdownHeader>
-      )}
+      <div
+        className="m-0 flex cursor-pointer items-center justify-between break-all border-b px-[5px] py-1.5 hover:opacity-90"
+        style={{
+          fontSize: getFontSize() - 3,
+        }}
+        onClick={() => {
+          if (props.item.id.providerTitle === "file" && props.item.uri?.value) {
+            ideMessenger.post("showFile", {
+              filepath: props.item.uri.value,
+            });
+          } else if (props.item.id.providerTitle === "code") {
+            const rif = ctxItemToRifWithContents(props.item, true);
+            ideMessenger.ide.showLines(
+              rif.filepath,
+              rif.range.start.line,
+              rif.range.end.line,
+            );
+          } else {
+            ideMessenger.post("showVirtualFile", {
+              content,
+              name: props.item.name,
+            });
+          }
+        }}
+      >
+        <div className="flex items-center gap-1">
+          <FileIcon height="16px" width="16px" filename={props.item.name} />
+          {props.item.name}
+        </div>
+        <div className="flex items-center gap-1">
+          <HeaderButtonWithToolTip
+            text={hidden ? "Show" : "Hide"}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {hidden ? (
+              <EyeIcon
+                onClick={() => setLocalHidden(false)}
+                width="1em"
+                height="1em"
+              />
+            ) : (
+              <EyeSlashIcon
+                onClick={() => setLocalHidden(true)}
+                width="1em"
+                height="1em"
+              />
+            )}
+          </HeaderButtonWithToolTip>
+          <HeaderButtonWithToolTip
+            text="Delete"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onDelete?.();
+            }}
+          >
+            <XMarkIcon width="1em" height="1em" />
+          </HeaderButtonWithToolTip>
+        </div>
+      </div>
       <div
         contentEditable={false}
-        className={`m-0 ${collapsed ? "overflow-hidden" : "overflow-auto"}`}
+        className={`m-0 ${isSizeLimited ? "overflow-hidden" : "overflow-auto"} ${hidden ? "hidden" : ""}`}
         ref={codeBlockRef}
         style={{
-          maxHeight: collapsed ? MAX_PREVIEW_HEIGHT : undefined, // Could switch to max-h-[33vh] but then chevron icon shows when height can't change
+          maxHeight: isSizeLimited ? MAX_PREVIEW_HEIGHT : undefined, // Could switch to max-h-[33vh] but then chevron icon shows when height can't change
         }}
       >
         <StyledMarkdownPreview
@@ -133,22 +168,18 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         />
       </div>
 
-      {(codeBlockRef.current?.scrollHeight ?? 0) > MAX_PREVIEW_HEIGHT && (
+      {codeblockDims.height > MAX_PREVIEW_HEIGHT && (
         <HeaderButtonWithToolTip
           className="absolute bottom-1 right-2"
-          text={collapsed ? "Expand" : "Collapse"}
+          text={isSizeLimited ? "Expand" : "Collapse"}
         >
-          {collapsed ? (
-            <ChevronDownIcon
-              className="h-5 w-5"
-              onClick={() => setCollapsed(false)}
-            />
-          ) : (
-            <ChevronUpIcon
-              className="h-5 w-5"
-              onClick={() => setCollapsed(true)}
-            />
-          )}
+          <ChevronDownIcon
+            className="h-5 w-5 transition-all"
+            style={{
+              transform: isSizeLimited ? "" : "rotate(180deg)",
+            }}
+            onClick={() => setIsSizeLimited((v) => !v)}
+          />
         </HeaderButtonWithToolTip>
       )}
     </PreviewMarkdownDiv>
