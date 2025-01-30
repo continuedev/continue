@@ -3,7 +3,7 @@ import fs from "fs";
 import { getDevDataFilePath } from "../util/paths.js";
 import fetch from "node-fetch";
 import { Core } from "../core.js";
-import { DevDataLogEvent } from "./schemas.js";
+import { DevDataLogEvent } from "./schemas/index.js";
 
 export class DataLogger {
   private static instance: DataLogger | null = null;

@@ -1,6 +1,6 @@
 import * as z from "zod";
 export * from "./models.js";
-import { modelSchema } from "./models.js";
+import { modelSchema, requestOptionsSchema } from "./models.js";
 
 const packageSchema = z.object({
   uses: z.string(),
@@ -40,10 +40,12 @@ const docSchema = z.object({
 });
 
 const dataDestinationSchema = z.object({
+  name: z.string(),
   destination: z.string().url(),
+  version: z.union([z.literal(1), z.literal(2)]),
+  events: z.array(z.string()).optional(), // Could do literals e.g. "autocomplete", "chat" but want to allow some flexibility later
+  requestOptions: requestOptionsSchema.optional(),
   apiKey: z.string().optional(),
-  headers: z.record(z.string()).optional(),
-  fields: z.array(z.string()),
 });
 
 export const configYamlSchema = z.object({
