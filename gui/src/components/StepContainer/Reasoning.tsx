@@ -49,7 +49,7 @@ const ButtonContent = styled.div`
 const ContentDiv = styled.div<{ fontSize?: number }>`
   margin: 4px;
   padding: 4px;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
   font-size: ${getFontSize()}px;
   overflow: hidden;
   border-left: 4px solid ${lightGray};
