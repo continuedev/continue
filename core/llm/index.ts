@@ -376,13 +376,19 @@ export abstract class BaseLLM implements ILLM {
           } else if (
             resp.status === 401 &&
             (resp.url.includes("api.mistral.ai") ||
-              resp.url.includes("codestral.mistral.ai"))
+              resp.url.includes("codestral.mistral.ai") ||
+              resp.url.includes("ai.dragonflygroup.fr")
+            )
           ) {
             if (resp.url.includes("codestral.mistral.ai")) {
               throw new Error(
                 "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
               );
-            } else {
+            } else if (resp.url.includes("ai.dragonflygroup.fr")){
+              text = 
+                "Erreur d'authentification : Vérifiez le jeton d'accès ! Il doit ètre valide pour tous les modèles LLM et non expiré.";
+            }
+            else {
               throw new Error(
                 "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
               );
