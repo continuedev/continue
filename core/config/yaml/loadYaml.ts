@@ -122,6 +122,7 @@ async function configYamlToContinueConfig(
       faviconUrl: doc.faviconUrl,
     })),
     contextProviders: [],
+    data: [],
   };
 
   // Models

@@ -1,4 +1,4 @@
-import { completionOptionsSchema } from "@continuedev/config-yaml/schemas/models";
+import { completionOptionsSchema } from "@continuedev/config-yaml";
 import { z } from "zod";
 
 export const tokensGeneratedDevDataSchema = z.object({
