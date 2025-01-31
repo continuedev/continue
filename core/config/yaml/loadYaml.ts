@@ -122,7 +122,7 @@ async function configYamlToContinueConfig(
       faviconUrl: doc.faviconUrl,
     })),
     contextProviders: [],
-    data: [],
+    data: config.data,
   };
 
   // Models

@@ -111,8 +111,8 @@ export class DataLogger {
                 dataConfig.requestOptions,
               );
               if (!response.ok) {
-                console.error(
-                  `Failed to log data to ${dataConfig.destination}: ${response.statusText}`,
+                throw new Error(
+                  `Post request failed. ${response.status}: ${response.statusText}`,
                 );
               }
             } else if (uriComponents.scheme === "file") {
