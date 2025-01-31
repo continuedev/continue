@@ -11,6 +11,8 @@ import AboutAssistantDialog from "../../dialogs/AboutAssistantDialog";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
 import AssistantIcon from "./AssistantIcon";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../util/navigation";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -18,8 +20,9 @@ interface AssistantSelectOptionsProps {
 
 export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { profiles, selectedProfile } = useAuth();
+  const { profiles, selectedProfile, selectedOrganization } = useAuth();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   function onNewAssistant() {
     ideMessenger.post("controlPlane/openUrl", {
@@ -52,8 +55,11 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
 
   return (
     <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
-      <div className="pb-0.5 pl-3.5 pt-2 font-semibold">
-        Available Assistants
+      <div
+        className="pb-1 pl-3.5 pt-3 font-semibold hover:cursor-pointer hover:underline"
+        onClick={() => navigate(ROUTES.CONFIG)}
+      >
+        {selectedOrganization?.name || "Personal"} Assistants
       </div>
 
       <div className={`max-h-[300px]`}>
