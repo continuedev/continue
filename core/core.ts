@@ -19,6 +19,7 @@ import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFile
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
+import { getControlPlaneEnv } from "./control-plane/env";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
@@ -52,7 +53,6 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import { getControlPlaneEnv } from "./control-plane/env";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
