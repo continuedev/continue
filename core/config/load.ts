@@ -70,12 +70,14 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-// import { isSupportedLanceDbCpuTarget } from "./util";
 import { useHub } from "../control-plane/env";
 import { localPathToUri } from "../util/pathToUri";
+import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
 import { validateConfig } from "./validation.js";
 
-function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
+export function resolveSerializedConfig(
+  filepath: string,
+): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
@@ -111,11 +113,10 @@ function loadSerializedConfig(
   overrideConfigJson: SerializedContinueConfig | undefined,
   ide: IDE,
 ): ConfigResult<SerializedContinueConfig> {
-  const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
     try {
-      config = resolveSerializedConfig(configPath);
+      config = resolveSerializedConfig(getConfigJsonPath(ideType));
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
@@ -133,16 +134,6 @@ function loadSerializedConfig(
 
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
-  }
-
-  // Deprecated getChatTitles property should be accounted for
-  // This is noted in docs
-  if (
-    config.ui &&
-    "getChatTitles" in config.ui &&
-    config.ui.getChatTitles === false
-  ) {
-    config.disableSessionTitles = true;
   }
 
   if (ideSettings.remoteConfigServerUrl) {
@@ -583,6 +574,7 @@ async function finalToBrowserConfig(
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
+    tabAutocompleteOptions: final.tabAutocompleteOptions,
     usePlatform: await useHub(ide.getIdeSettings()),
   };
 }
@@ -767,7 +759,7 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   return readConfigJs();
 }
 
-async function loadFullConfigNode(
+async function loadContinueConfigFromJson(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
@@ -799,8 +791,16 @@ async function loadFullConfigNode(
     serialized.systemMessage = systemPromptDotFile;
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    serialized,
+    sharedConfig,
+  );
+
   // Convert serialized to intermediate config
-  let intermediate = await serializedToIntermediateConfig(serialized, ide);
+  let intermediate = await serializedToIntermediateConfig(withShared, ide);
 
   // Apply config.ts to modify intermediate config
   const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
@@ -877,6 +877,6 @@ async function loadFullConfigNode(
 export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
-  loadFullConfigNode,
+  loadContinueConfigFromJson,
   type BrowserSerializedContinueConfig,
 };
