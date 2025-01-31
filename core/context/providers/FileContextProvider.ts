@@ -11,6 +11,7 @@ import {
   getUriPathBasename,
   getShortestUniqueRelativeUriPaths,
 } from "../../util/uri";
+import { DocxAndPdfParsing } from "../../indexing/chunk/DocxAndPdfParsing";
 
 const MAX_SUBMENU_ITEMS = 10_000;
 
@@ -28,7 +29,13 @@ class FileContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     // Assume the query is a filepath
     query = query.trim();
-    const content = await extras.ide.readFile(query);
+    let content = '';
+    if(query.endsWith(".pdf") || query.endsWith(".docx")){
+      content = await DocxAndPdfParsing.parseContent(query);
+    }
+    else{
+     content = await extras.ide.readFile(query);
+    }
     return [
       {
         name: query.split(/[\\/]/).pop() ?? query,

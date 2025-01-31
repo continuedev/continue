@@ -29,6 +29,7 @@ import type {
   IndexingProgressUpdate,
 } from "../";
 import { getLastNPathParts, getUriPathBasename } from "../util/uri";
+import { DocxAndPdfParsing } from "./chunk/DocxAndPdfParsing";
 
 type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 
@@ -222,9 +223,16 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       let snippets: SnippetChunk[] = [];
       try {
+        let content = '';
+        if(compute.path.endsWith(".pdf")||compute.path.endsWith(".docx")){
+          content = await DocxAndPdfParsing.parseContent(compute.path);
+        }
+        else{
+          content = (await this.ide.readFile(compute.path)).toString();
+        }
         snippets = await this.getSnippetsInFile(
           compute.path,
-          await this.ide.readFile(compute.path),
+          content,
         );
       } catch (e) {
         // If can't parse, assume malformatted code

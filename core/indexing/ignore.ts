@@ -17,7 +17,6 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.mp4",
   "*.svg",
   "*.ico",
-  "*.pdf",
   "*.zip",
   "*.gz",
   "*.tar",

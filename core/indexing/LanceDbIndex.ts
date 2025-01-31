@@ -23,6 +23,7 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { getUriPathBasename } from "../util/uri.js";
+import { DocxAndPdfParsing } from "./chunk/DocxAndPdfParsing";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -122,7 +123,13 @@ export class LanceDbIndex implements CodebaseIndex {
 
     for (const item of items) {
       try {
-        const content = await this.readFile(item.path);
+        let content = '';
+        if(item.path.endsWith(".pdf")||item.path.endsWith('.docx')){
+          content = await DocxAndPdfParsing.parseContent(item.path);
+        }
+        else{
+          content = await this.readFile(item.path);
+        }
 
         if (!shouldChunk(item.path, content)) {
           continue;

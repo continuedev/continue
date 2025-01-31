@@ -15,6 +15,7 @@ import {
 
 import { chunkDocument, shouldChunk } from "./chunk.js";
 import { getUriPathBasename } from "../../util/uri.js";
+import { DocxAndPdfParsing } from "./DocxAndPdfParsing";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
@@ -163,7 +164,13 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   private async packToChunks(pack: PathAndCacheKey): Promise<Chunk[]> {
-    const contents = await this.readFile(pack.path);
+    let contents = '';
+    if(pack.path.endsWith(".pdf")||pack.path.endsWith(".docx")){
+      contents = await DocxAndPdfParsing.parseContent(pack.path);
+    }
+    else{
+      contents = await this.readFile(pack.path);
+    }
     if (!shouldChunk(pack.path, contents)) {
       return [];
     }
