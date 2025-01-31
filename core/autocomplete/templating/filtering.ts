@@ -43,9 +43,10 @@ export const getSnippets = (
   payload: SnippetPayload,
 ): AutocompleteSnippet[] => {
   const snippets = [
-    ...payload.diffSnippets,
     ...payload.clipboardSnippets,
     ...payload.recentlyVisitedRangesSnippets,
+    ...payload.recentlyEditedRangeSnippets,
+    //...payload.diffSnippets,
     ...shuffleArray(
       filterSnippetsAlreadyInCaretWindow(
         [...payload.rootPathSnippets, ...payload.importDefinitionSnippets],

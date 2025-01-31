@@ -21,16 +21,16 @@ export interface AutocompleteTemplate {
     workspaceUris: string[],
   ) => [string, string];
   template:
-    | string
-    | ((
-        prefix: string,
-        suffix: string,
-        filepath: string,
-        reponame: string,
-        language: string,
-        snippets: AutocompleteSnippet[],
-        workspaceUris: string[],
-      ) => string);
+  | string
+  | ((
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    language: string,
+    snippets: AutocompleteSnippet[],
+    workspaceUris: string[],
+  ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
 
@@ -87,13 +87,15 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
   ): [string, string] => {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
-        return [
-          `+++++ ${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n${prefix}`,
-          suffix,
-        ];
+        return [`${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n\n[PREFIX]\n${prefix}`, suffix];
       }
       return [prefix, suffix];
     }
+
+    //snippets = snippets.filter((snippet) => "filepath" in snippet);
+
+    // reverse the snippets so that the most recent snippet is last
+    snippets = [...snippets].reverse();
 
     const relativePaths = getShortestUniqueRelativeUriPaths(
       [
@@ -111,19 +113,17 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
           return snippet.content;
         }
 
-        return `+++++ ${relativePaths[i].uri} \n${snippet.content}`;
+        return `// ${relativePaths[i].uri} \n${snippet.content}`;
       })
       .join("\n\n");
 
     return [
-      `${otherFiles}\n\n+++++ ${
-        relativePaths[relativePaths.length - 1].uri
-      }\n${prefix}`,
-      suffix,
+      `${otherFiles}[PREFIX]${prefix}`,
+      `${suffix}`,
     ];
   },
   template: (prefix: string, suffix: string): string => {
-    return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
+    return "NOT USED!"; //`[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]"],
@@ -160,10 +160,10 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
       snippets.length === 0
         ? ""
         : `<file_sep>${snippets
-            .map((snippet) => {
-              return snippet.content;
-            })
-            .join("<file_sep>")}<file_sep>`;
+          .map((snippet) => {
+            return snippet.content;
+          })
+          .join("<file_sep>")}<file_sep>`;
 
     const prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
     return prompt;
@@ -218,9 +218,8 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       [...snippets.map((snippet) => snippet.filepath), filepath],
       workspaceUris,
     );
-    const baseTemplate = `###PATH:${
-      relativePaths[relativePaths.length - 1]
-    }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
+    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]
+      }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
     if (snippets.length === 0) {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }

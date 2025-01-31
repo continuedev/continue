@@ -16,10 +16,10 @@ export class RecentlyVisitedRangesService {
     Array<AutocompleteCodeSnippet & { timestamp: number }>
   >;
   // Default value, we override in initWithPostHog
-  private numSurroundingLines = 5;
+  private numSurroundingLines = 20;
   private maxRecentFiles = 3;
   private maxSnippetsPerFile = 3;
-  private isEnabled = false;
+  private isEnabled = true;
 
   constructor(private readonly ide: IDE) {
     this.cache = new LRUCache<
@@ -38,12 +38,11 @@ export class RecentlyVisitedRangesService {
         PosthogFeatureFlag.RecentlyVisitedRangesNumSurroundingLines,
       );
 
-    if (!recentlyVisitedRangesNumSurroundingLines) {
-      return;
+    if (recentlyVisitedRangesNumSurroundingLines) {
+      this.isEnabled = true;
+      this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
     }
 
-    this.isEnabled = true;
-    this.numSurroundingLines = recentlyVisitedRangesNumSurroundingLines;
     vscode.window.onDidChangeTextEditorSelection(
       this.cacheCurrentSelectionContext,
     );
