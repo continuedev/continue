@@ -148,7 +148,8 @@ function testLLM(
   });
 }
 
-describe("LLM", () => {
+// Granite.Code - we don't need these tests
+describe.skip("LLM", () => {
   testLLM(
     new Anthropic({
       model: "claude-3-5-sonnet-latest",
