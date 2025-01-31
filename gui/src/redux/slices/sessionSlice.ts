@@ -362,9 +362,26 @@ export const sessionSlice = createSlice({
           } else {
             // Add to the existing message
             if (message.content) {
-              // Note this only works because new message above
-              // was already rendered from parts to string
-              lastMessage.content += renderChatMessage(message);
+              const messageContent = renderChatMessage(message);
+              if (messageContent.includes("<think>")) {
+                lastItem.reasoning = {
+                  startAt: Date.now(),
+                  active: true,
+                  text: messageContent.replace("<think>", "").trim(),
+                }
+              } else if (lastItem.reasoning?.active && messageContent.includes("</think>")) {
+                const [reasoningEnd, answerStart] = messageContent.split("</think>");
+                lastItem.reasoning.text += reasoningEnd.trimEnd();
+                lastItem.reasoning.active = false;
+                lastItem.reasoning.endAt = Date.now();
+                lastMessage.content += answerStart.trimStart();
+              } else if (lastItem.reasoning?.active) {
+                lastItem.reasoning.text += messageContent;
+              } else {
+                // Note this only works because new message above
+                // was already rendered from parts to string
+                lastMessage.content += messageContent;
+              }
             } else if (
               message.role === "assistant" &&
               message.toolCalls?.[0] &&
