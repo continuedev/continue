@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const chatDevDataSchema = z.object({
+export const chatFeedbackEventAllSchema = z.object({
   modelTitle: z.string(),
   completionOptions: z.object({}),
   prompt: z.string(),
