@@ -17,12 +17,13 @@ import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
-import { getConfigYamlPath } from "../../util/paths";
+import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
-import { loadFullConfigNode } from "../load";
+import { loadContinueConfigFromJson } from "../load";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
+import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -40,13 +41,20 @@ export default async function doLoadConfig(
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
+  // Migrations for old config files
+  // Removes
+  const configJsonPath = getConfigJsonPath(ideInfo.ideType);
+  if (fs.existsSync(configJsonPath)) {
+    migrateJsonSharedConfig(configJsonPath, ide);
+  }
+
   const configYamlPath = getConfigYamlPath(ideInfo.ideType);
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
-  if (fs.existsSync(configYamlPath) || overrideConfigYaml) {
+  if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
     const result = await loadContinueConfigFromYaml(
       ide,
       workspaceConfigs.map((c) => JSON.stringify(c)),
@@ -63,7 +71,7 @@ export default async function doLoadConfig(
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
   } else {
-    const result = await loadFullConfigNode(
+    const result = await loadContinueConfigFromJson(
       ide,
       workspaceConfigs,
       ideSettings,
