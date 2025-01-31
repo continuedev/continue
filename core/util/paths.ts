@@ -8,7 +8,10 @@ import dotenv from "dotenv";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
-import { DevDataSchemaName, localDevDataFileNamesMap } from "../data/schemas";
+import {
+  DevDataSchemaName,
+  localDevDataFileNamesMap,
+} from "../../packages/config-yaml/src/schemas/data";
 
 dotenv.config();
 

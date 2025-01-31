@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const quickEditDevDataSchema = z.object({
+export const quickEditEventAllSchema = z.object({
   prompt: z.string(),
   path: z.string().optional(),
   label: z.string(),

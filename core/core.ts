@@ -147,6 +147,7 @@ export class Core {
     // Dev Data Logger
     const dataLogger = DataLogger.getInstance();
     dataLogger.core = this;
+    dataLogger.ide = this.ide;
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;

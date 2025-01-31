@@ -584,6 +584,7 @@ async function finalToBrowserConfig(
     docs: final.docs,
     tools: final.tools,
     usePlatform: await useHub(ide.getIdeSettings()),
+    // data not included here
   };
 }
 

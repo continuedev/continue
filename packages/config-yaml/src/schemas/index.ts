@@ -1,24 +1,6 @@
 import * as z from "zod";
-import {
-  modelSchema,
-  partialModelSchema,
-  requestOptionsSchema,
-} from "./models.js";
-
-const semverRegex =
-  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
-
-const dataSchema = z.object({
-  name: z.string(),
-  destination: z.string().url(),
-  version: z.string().regex(semverRegex, {
-    message: "Version must follow semver format, e.g. 0.2.0",
-  }),
-  levels: z.string().optional(),
-  events: z.array(z.string()).optional(), // Could do literals e.g. "autocomplete", "chat" but want to allow some flexibility later
-  requestOptions: requestOptionsSchema.optional(),
-  apiKey: z.string().optional(),
-});
+import { modelSchema, partialModelSchema } from "./models.js";
+import { dataSchema } from "./data/index.js";
 
 export const contextSchema = z.object({
   provider: z.string(),

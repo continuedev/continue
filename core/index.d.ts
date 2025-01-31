@@ -1134,7 +1134,7 @@ export interface SerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  data: DataDestination[];
+  data?: DataDestination[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1187,7 +1187,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
-  data: DataDestination[];
+  data?: DataDestination[];
 }
 
 // in the actual Continue source code
@@ -1211,7 +1211,7 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
-  data: DataDestination[];
+  data?: DataDestination[];
 }
 
 export interface BrowserSerializedContinueConfig {

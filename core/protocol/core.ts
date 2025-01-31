@@ -23,7 +23,7 @@ import type {
 } from "../";
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
-import { DevDataLogEvent } from "../data/schemas";
+import { DevDataLogEvent } from "../../packages/config-yaml/src/schemas/data";
 
 export type OnboardingModes =
   | "Local"

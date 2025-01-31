@@ -14,7 +14,6 @@ export const handleJetBrainsOSRMetaKeyIssues = (
 ) => {
   const selection = window.getSelection();
   const alter = e.shiftKey ? "extend" : "move";
-
   const handlers: Record<string, () => void> = {
     Backspace: () => handleJetBrainsMetaBackspace(editor),
     ArrowLeft: () =>
@@ -37,6 +36,7 @@ export const handleJetBrainsOSRMetaKeyIssues = (
 
   if (e.key in handlers) {
     e.stopPropagation();
+debugger;
     e.preventDefault();
     handlers[e.key]();
   }
