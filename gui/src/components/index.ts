@@ -154,6 +154,13 @@ export const Button = styled.button`
   }
 `;
 
+type NumberInputProps = {
+  value: number;
+  onChange: (value: number) => void;
+  max?: number;
+  min?: number;
+};
+
 export const SecondaryButton = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
@@ -248,17 +255,6 @@ export const Input = styled.input`
   &:invalid {
     outline: 1px solid red;
   }
-`;
-
-export const Select = styled.select`
-  padding: 8px 12px;
-  margin: 8px 0;
-  box-sizing: border-box;
-  border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${lightGray};
-  border: none;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
 `;
 
 export const Label = styled.label<{ fontSize?: number }>`

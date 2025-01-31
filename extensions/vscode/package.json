@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.257",
+  "version": "0.9.258",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -218,7 +218,7 @@
         "group": "Continue"
       },
       {
-        "command": "continue.openConfig",
+        "command": "continue.openConfigPage",
         "category": "Continue",
         "title": "Open Continue Config",
         "icon": "$(gear)",
@@ -527,7 +527,7 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.openConfig",
+          "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         },
