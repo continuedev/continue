@@ -297,6 +297,11 @@ export class Core {
       addContextProvider(msg.data);
     });
 
+    on("config/updateSharedConfig", async (msg) => {
+      this.globalContext.updateSharedConfig(msg.data);
+      await this.configHandler.reloadConfig();
+    });
+
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);

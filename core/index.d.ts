@@ -433,6 +433,13 @@ interface ToolCallState {
   output?: ContextItem[];
 }
 
+interface Reasoning {
+  active: boolean;
+  text: string;
+  startAt: number;
+  endAt?: number;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   contextItems: ContextItemWithId[];
@@ -443,6 +450,7 @@ export interface ChatHistoryItem {
   isGatheringContext?: boolean;
   checkpoint?: Checkpoint;
   isBeforeCheckpoint?: boolean;
+  reasoning?: Reasoning;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -593,7 +601,6 @@ export interface IdeSettings {
   enableControlServerBeta: boolean;
   continueTestEnvironment: "none" | "production" | "test" | "local";
   pauseCodebaseIndexOnStart: boolean;
-  enableDebugLogs: boolean;
 }
 
 export interface FileStats {
@@ -949,7 +956,6 @@ export interface RerankerDescription {
 
 export interface TabAutocompleteOptions {
   disable: boolean;
-  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;
@@ -1222,6 +1228,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   usePlatform: boolean;
+  tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

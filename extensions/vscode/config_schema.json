@@ -3080,10 +3080,6 @@
               "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
               "default": false
             },
-            "useFileSuffix": {
-              "type": "boolean",
-              "description": "Determines whether to use the file suffix in the prompt."
-            },
             "maxPromptTokens": {
               "type": "number",
               "description": "The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context."
