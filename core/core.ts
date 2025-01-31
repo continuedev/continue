@@ -36,7 +36,7 @@ import historyManager from "./util/history";
 import {
   editConfigJson,
   getConfigJsonPath,
-  setupInitialDotContinueDirectory,
+  migrateV1DevDataFiles,
 } from "./util/paths";
 import { localPathToUri } from "./util/pathToUri";
 import { Telemetry } from "./util/posthog";
@@ -100,7 +100,7 @@ export class Core {
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
-    setupInitialDotContinueDirectory();
+    migrateV1DevDataFiles();
 
     this.codebaseIndexingState = {
       status: "loading",
@@ -147,7 +147,6 @@ export class Core {
     // Dev Data Logger
     const dataLogger = DataLogger.getInstance();
     dataLogger.core = this;
-    dataLogger.ide = this.ide;
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;

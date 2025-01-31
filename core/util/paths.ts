@@ -8,10 +8,7 @@ import dotenv from "dotenv";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
-import {
-  DevDataSchemaName,
-  localDevDataFileNamesMap,
-} from "../../packages/config-yaml/src/schemas/data";
+import { DevEventName } from "../../packages/config-yaml/src/schemas/data";
 
 dotenv.config();
 
@@ -202,7 +199,7 @@ export function getContinueRcPath(): string {
   return continuercPath;
 }
 
-export function devDataPath(): string {
+function getDevDataPath(): string {
   const sPath = path.join(getContinueGlobalPath(), "dev_data");
   if (!fs.existsSync(sPath)) {
     fs.mkdirSync(sPath);
@@ -211,11 +208,18 @@ export function devDataPath(): string {
 }
 
 export function getDevDataSqlitePath(): string {
-  return path.join(devDataPath(), "devdata.sqlite");
+  return path.join(getDevDataPath(), "devdata.sqlite");
 }
 
-export function getDevDataFilePath(schema: DevDataSchemaName): string {
-  return path.join(devDataPath(), `${localDevDataFileNamesMap[schema]}.jsonl`);
+export function getDevDataFilePath(
+  eventName: DevEventName,
+  schemaVersion: string,
+): string {
+  const versionPath = path.join(getDevDataPath(), schemaVersion);
+  if (!fs.existsSync(versionPath)) {
+    fs.mkdirSync(versionPath);
+  }
+  return path.join(versionPath, `${eventName}.jsonl`);
 }
 
 export function editConfigJson(
@@ -377,19 +381,29 @@ export function getEsbuildBinaryPath(): string {
   return path.join(getContinueUtilsPath(), "esbuild");
 }
 
-export function setupInitialDotContinueDirectory() {
-  const devDataTypes: DevDataSchemaName[] = [
-    "chat",
-    "autocomplete",
-    "quickEdit",
-    "tokensGenerated",
-  ];
-  devDataTypes.forEach((p) => {
-    const devDataPath = getDevDataFilePath(p);
-    if (!fs.existsSync(devDataPath)) {
-      fs.writeFileSync(devDataPath, "");
+export function migrateV1DevDataFiles() {
+  const devDataPath = getDevDataPath();
+  function moveToV1FolderIfExists(
+    oldFileName: string,
+    newFileName: DevEventName,
+  ) {
+    const oldFilePath = path.join(devDataPath, `${oldFileName}.jsonl`);
+    if (fs.existsSync(oldFilePath)) {
+      const newFilePath = getDevDataFilePath(newFileName, "0.1.0");
+      if (!fs.existsSync(newFilePath)) {
+        fs.copyFileSync(oldFilePath, newFilePath);
+        fs.unlinkSync(oldFilePath);
+      } else {
+        console.warn(
+          `V1 Dev data migration: ${newFilePath} already exists, skipping ${oldFileName}`,
+        );
+      }
     }
-  });
+  }
+  moveToV1FolderIfExists("tokens_generated", "tokensGenerated");
+  moveToV1FolderIfExists("chat", "chatFeedback");
+  moveToV1FolderIfExists("quickEdit", "quickEdit");
+  moveToV1FolderIfExists("autocomplete", "autocomplete");
 }
 
 export function getDiffsDirectoryPath(): string {

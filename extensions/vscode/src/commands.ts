@@ -33,6 +33,7 @@ import { Battery } from "./util/battery";
 import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -981,7 +982,10 @@ const getCommandsMap: (
       });
       if (feedback) {
         const client = await continueServerClientPromise;
-        const completionsPath = getDevDataFilePath("autocomplete");
+        const completionsPath = getDevDataFilePath(
+          "autocomplete",
+          LOCAL_DEV_DATA_VERSION,
+        );
 
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);

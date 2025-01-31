@@ -97,7 +97,7 @@ export class AutocompleteLoggingService {
 
   private logAutocompleteOutcome(outcome: AutocompleteOutcome) {
     void DataLogger.getInstance().logDevData({
-      schema: "autocomplete",
+      name: "autocomplete",
       data: outcome,
     });
 

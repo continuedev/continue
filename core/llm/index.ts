@@ -340,7 +340,7 @@ export abstract class BaseLLM implements ILLM {
     );
 
     void DataLogger.getInstance().logDevData({
-      schema: "tokensGenerated",
+      name: "tokensGenerated",
       data: {
         model: model,
         provider: this.providerName,

@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 
 import { getDevDataFilePath } from "../util/paths.js";
 import { Core } from "../core.js";
@@ -11,19 +12,13 @@ import {
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { joinPathsToUri } from "../util/uri.js";
 import * as URI from "uri-js";
-import { IDE } from "../index.js";
+import { fileURLToPath } from "url";
 
-// const localDevDataFileNamesMap: Record<Dev, string> = {
-//   //   tokensGenerated: "tokens_generated",
-//   //   chat: "chat",
-//   //   quickEdit: "quickEdit",
-//   autocomplete: "autocomplete",
-// };
 const DEFAULT_DEV_DATA_LEVEL: DataLogLevel = "all";
+export const LOCAL_DEV_DATA_VERSION = "0.2.0";
 export class DataLogger {
   private static instance: DataLogger | null = null;
   core?: Core;
-  ide?: IDE;
 
   // Private constructor to prevent direct class instantiation
   private constructor() {}
@@ -36,8 +31,11 @@ export class DataLogger {
   }
 
   async logDevData(event: DevDataLogEvent) {
-    // Local logs (always on)
-    const filepath: string = getDevDataFilePath(event.schema);
+    // Local logs (always on for all levels)
+    const filepath: string = getDevDataFilePath(
+      event.name,
+      LOCAL_DEV_DATA_VERSION,
+    );
     const jsonLine = JSON.stringify(event.data);
     fs.writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
 
@@ -47,24 +45,52 @@ export class DataLogger {
       await Promise.allSettled(
         config.data.map(async (dataConfig) => {
           try {
-            const version = dataConfig.version;
-            const level = dataConfig.level ?? DEFAULT_DEV_DATA_LEVEL;
-            const events = dataConfig.events ?? allDevEventNames;
+            // First extract the data schema based on the version and level
+            const { schemaVersion } = dataConfig;
 
-            const versionSchemas = devDataVersionedSchemas[version];
+            const level = dataConfig.level ?? DEFAULT_DEV_DATA_LEVEL;
+
+            // Skip event if `events` is specified and does not include the event
+            const events = dataConfig.events ?? allDevEventNames;
+            if (!events.includes(event.name)) {
+              return;
+            }
+
+            const versionSchemas = devDataVersionedSchemas[schemaVersion];
             if (!versionSchemas) {
               throw new Error(
-                `Logging dev data to version ${version} is not supported.`,
+                `Attempting to log dev data to non-existent version ${schemaVersion}`,
+              );
+            }
+
+            const levelSchemas = versionSchemas[level];
+            if (!levelSchemas) {
+              throw new Error(
+                `Attempting to log dev data at level ${level} for version ${schemaVersion} which does not exist`,
+              );
+            }
+
+            const schema = levelSchemas[event.name];
+            if (!schema) {
+              throw new Error(
+                `Attempting to log dev data for event ${event.name} at level ${level} for version ${schemaVersion}: no schema found`,
+              );
+            }
+
+            const parsed = schema.safeParse(event.data);
+            if (!parsed.success) {
+              throw new Error(
+                `Failed to parse event data ${parsed.error.toString()}`,
               );
             }
 
             const uriComponents = URI.parse(dataConfig.destination);
+
+            // Send to remote server
             if (
               uriComponents.scheme === "https" ||
               uriComponents.scheme === "http"
             ) {
-              // Send to remote server
-
               const headers: Record<string, string> = {
                 "Content-Type": "application/json",
               };
@@ -77,10 +103,10 @@ export class DataLogger {
                   method: "POST",
                   headers,
                   body: JSON.stringify({
-                    schema: event.schema,
-                    version: dataConfig.version,
-                    data: event.data,
-                    // x: dataConfig.
+                    name: event.name,
+                    data: parsed.data,
+                    schemaVersion,
+                    level,
                   }),
                 },
                 dataConfig.requestOptions,
@@ -90,10 +116,23 @@ export class DataLogger {
                   `Failed to log data to ${dataConfig.destination}: ${response.statusText}`,
                 );
               }
+            } else if (uriComponents.scheme === "file") {
+              // Write to jsonc file for local file URIs
+              const dirUri = joinPathsToUri(
+                dataConfig.destination,
+                schemaVersion,
+              );
+              const dirPath = fileURLToPath(dirUri);
+
+              if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+              }
+              const filepath = path.join(dirPath, `${event.name}.jsonl`);
+              const jsonLine = JSON.stringify(event.data);
+              fs.writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
             } else {
-              joinPathsToUri(dataConfig.destination, "version");
+              throw new Error(`Unsupported scheme ${uriComponents.scheme}`);
             }
-            // Write to jsonc file using IDE
           } catch (error) {
             console.error(
               `Error logging data to ${dataConfig.destination}: ${error instanceof Error ? error.message : error}`,
