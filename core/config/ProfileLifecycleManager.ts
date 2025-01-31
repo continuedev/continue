@@ -23,6 +23,12 @@ export interface ProfileDescription {
   errors: ConfigValidationError[] | undefined;
 }
 
+export interface OrganizationDescription {
+  id: string;
+  iconUrl: string;
+  name: string;
+}
+
 export class ProfileLifecycleManager {
   private savedConfigResult: ConfigResult<ContinueConfig> | undefined;
   private savedBrowserConfigResult?: ConfigResult<BrowserSerializedContinueConfig>;

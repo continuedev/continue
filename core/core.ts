@@ -307,6 +307,10 @@ export class Core {
       await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
     });
 
+    on("controlPlane/listOrganizations", async (msg) => {
+      return await this.controlPlaneClient.listOrganizations();
+    });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);

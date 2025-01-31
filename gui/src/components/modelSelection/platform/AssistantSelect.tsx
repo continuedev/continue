@@ -1,10 +1,6 @@
 import { Popover } from "@headlessui/react";
-import {
-  ChevronDownIcon,
-  ComputerDesktopIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
-import { cloneElement, useEffect, useRef } from "react";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { useEffect, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { useAppDispatch } from "../../../redux/hooks";
 import { cycleProfile } from "../../../redux/thunks/cycleProfile";
