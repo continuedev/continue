@@ -10,7 +10,7 @@ Continue can be deeply customized. User-level configuration is stored and can be
 - `~/.continue/config.json` (MacOS / Linux)
 - `%USERPROFILE%\.continue\config.json` (Windows)
 
-To open `config.json`, you can click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can see the available options suggested as you type, or check the reference below.
+To open `config.json`, you can click the "gear" icon in the header of the Continue Chat sidebar to open the settings page, and then click `Open [your config location]` to open the file. When editing this file, you can see the available options suggested as you type, or check the reference below.
 
 When you save `config.json`, Continue will automatically refresh to take into account your changes. `config.json` is automatically created the first time you use Continue. `config.json` is automatically generated if it doesn't exist.
 

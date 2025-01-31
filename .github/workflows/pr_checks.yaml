@@ -24,7 +24,7 @@ on:
 jobs:
   validate-pr:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
+    environment: tests-requiring-secrets
     steps:
       - uses: actions/checkout@v4
 
@@ -86,7 +86,7 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
-    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
+    environment: tests-requiring-secrets
     steps:
       - uses: actions/checkout@v4
         with:
@@ -443,7 +443,7 @@ jobs:
       ]
     runs-on: ubuntu-latest
     # Tests requiring secrets need approval from maintainers
-    environment: ${{ github.event.pull_request.head.repo.fork && 'tests-requiring-secrets' || '' }}
+    environment: tests-requiring-secrets
     strategy:
       fail-fast: false
       matrix:
