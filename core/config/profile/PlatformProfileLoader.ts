@@ -1,9 +1,8 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas/index.js";
+import { AssistantUnrolled, ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
 
-import { ConfigResult } from "@continuedev/config-yaml";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";

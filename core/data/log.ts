@@ -20,7 +20,6 @@ export class DataLogger {
   private static instance: DataLogger | null = null;
   core?: Core;
 
-  // Private constructor to prevent direct class instantiation
   private constructor() {}
 
   public static getInstance(): DataLogger {
