@@ -1,23 +1,23 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PageHeader from "../../components/PageHeader";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import PageHeader from "../../components/PageHeader";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 
-import { updateConfig } from "../../redux/slices/configSlice";
-import ToggleSwitch from "../../components/gui/Switch";
-import { useAuth } from "../../context/Auth";
-import { Input, SecondaryButton } from "../../components";
-import { getFontSize } from "../../util";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { ScopeSelect } from "./ScopeSelect";
 import {
   SharedConfigSchema,
   modifyContinueConfigWithSharedConfig,
 } from "core/config/sharedConfig";
+import { Input, SecondaryButton } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
+import ToggleSwitch from "../../components/gui/Switch";
+import { useAuth } from "../../context/Auth";
+import { updateConfig } from "../../redux/slices/configSlice";
+import { getFontSize } from "../../util";
+import { ScopeSelect } from "./ScopeSelect";
 
 function ConfigPage() {
   useNavigationListener();
@@ -25,7 +25,7 @@ function ConfigPage() {
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const { selectedProfile, selectedOrganization } = useAuth();
+  const { selectedProfile, selectedOrganization, session } = useAuth();
   const config = useAppSelector((state) => state.config.config);
 
   function handleUpdate(sharedConfig: Partial<SharedConfigSchema>) {
@@ -51,6 +51,14 @@ function ConfigPage() {
   const useAutocompleteMultilineCompletions =
     config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
   const fontSize = getFontSize();
+
+  const [hubEnabled, setHubEnabled] = useState(false);
+
+  useEffect(() => {
+    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
+      setHubEnabled(continueTestEnvironment === "production");
+    });
+  }, [ideMessenger]);
 
   // Disable autocomplete
   const disableAutocompleteInFiles = (
@@ -121,21 +129,23 @@ function ConfigPage() {
       <PageHeader onTitleClick={() => navigate("/")} title="Chat" />
 
       <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
-        <div className="flex flex-col gap-4 py-6">
-          <div>
-            <h2 className="mb-1 mt-0">Account</h2>
-            {selectedOrganization?.name && (
-              <span className="text-lightgray">
-                You are currently signed in to{" "}
-                <span className="font-semibold">
-                  {selectedOrganization?.name}
+        {hubEnabled && !!session && (
+          <div className="flex flex-col gap-4 py-6">
+            <div>
+              <h2 className="mb-1 mt-0">Account</h2>
+              {selectedOrganization?.name && (
+                <span className="text-lightgray">
+                  You are currently signed in to{" "}
+                  <span className="font-semibold">
+                    {selectedOrganization?.name}
+                  </span>
                 </span>
-              </span>
-            )}
-          </div>
+              )}
+            </div>
 
-          <ScopeSelect />
-        </div>
+            <ScopeSelect />
+          </div>
+        )}
 
         <div className="flex flex-col gap-4 py-6">
           <h2 className="mb-1 mt-0">Configuration</h2>

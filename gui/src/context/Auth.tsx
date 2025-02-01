@@ -49,13 +49,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const ideMessenger = useContext(IdeMessengerContext);
-  const [hubEnabled, setHubEnabled] = useState(false);
-
-  useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
-      setHubEnabled(continueTestEnvironment === "production");
-    });
-  }, [ideMessenger]);
 
   const selectedOrganizationId = useAppSelector(
     (store) => store.session.selectedOrganizationId,
