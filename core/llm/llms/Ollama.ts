@@ -4,6 +4,7 @@ import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
+import { AutocompleteCompletionOptions } from "../../autocomplete/templating/AutocompleteTemplate.js";
 
 type OllamaChatMessage = {
   role: "tool" | "user" | "assistant" | "system";
@@ -293,7 +294,7 @@ class Ollama extends BaseLLM {
   }
 
   private _getGenerateOptions(
-    options: CompletionOptions,
+    options: CompletionOptions & Partial<AutocompleteCompletionOptions>,
     prompt: string,
     suffix?: string,
   ): OllamaRawOptions {
@@ -303,13 +304,15 @@ class Ollama extends BaseLLM {
       raw: options.raw,
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
+      suffix,
       stream: options.stream,
       // Not supported yet: context, images, system, template, format
     };
 
-    // Only add suffix if it's not empty. This allows composing the fim template in a way that uses prompt only
-    if (suffix && suffix !== "") {
-      generateOptions.suffix = suffix;
+    if (options.promptOnly) {
+      console.log("fim: removing suffix");
+
+      delete generateOptions.suffix;
     }
 
     return generateOptions;

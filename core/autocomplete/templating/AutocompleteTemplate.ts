@@ -11,6 +11,10 @@ import {
   AutocompleteSnippetType,
 } from "../snippets/types.js";
 
+export interface AutocompleteCompletionOptions {
+  promptOnly?: boolean;
+}
+
 export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
     prefix: string,
@@ -31,7 +35,7 @@ export interface AutocompleteTemplate {
     snippets: AutocompleteSnippet[],
     workspaceUris: string[],
   ) => string);
-  completionOptions?: Partial<CompletionOptions>;
+  completionOptions?: Partial<CompletionOptions> & Partial<AutocompleteCompletionOptions>;
 }
 
 // https://huggingface.co/stabilityai/stable-code-3b
@@ -105,6 +109,7 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
       "<|im_start|>",
       "<|im_end|>",
     ],
+    promptOnly: true // with ollama provider this makes sure a single prompt is sent (with suffix as part of the prompt, not as a separate parameter)
   },
 };
 
