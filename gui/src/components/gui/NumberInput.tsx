@@ -40,6 +40,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
       />
       <div className="flex flex-col">
         <button
+          style={{ fontSize: "10px" }}
           onClick={handleIncrement}
           disabled={value >= max}
           className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80"
@@ -47,6 +48,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
           ▲
         </button>
         <button
+          style={{ fontSize: "10px" }}
           className="text-vsc-foreground m-0 mb-0.5 cursor-pointer border-none bg-inherit px-1.5 py-0 hover:opacity-80"
           onClick={handleDecrement}
           disabled={value <= min}
