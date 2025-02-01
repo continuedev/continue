@@ -28,6 +28,9 @@ export function validateConfigYaml(
   }
 
   config.models?.forEach((model) => {
+    if ("uses" in model) {
+      return;
+    }
     // Max tokens not too close to context length
     if (
       model.defaultCompletionOptions?.contextLength &&
