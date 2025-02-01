@@ -1,14 +1,21 @@
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import {
+  ConfigResult,
+  ConfigValidationError,
+  FullSlug,
+} from "@continuedev/config-yaml";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
+  IDE,
 } from "../index.js";
 
 import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 
 export interface ProfileDescription {
+  fullSlug: FullSlug;
+  profileType: "control-plane" | "local" | "platform";
   title: string;
   id: string;
   errors: ConfigValidationError[] | undefined;
@@ -19,7 +26,10 @@ export class ProfileLifecycleManager {
   private savedBrowserConfigResult?: ConfigResult<BrowserSerializedContinueConfig>;
   private pendingConfigPromise?: Promise<ConfigResult<ContinueConfig>>;
 
-  constructor(private readonly profileLoader: IProfileLoader) {}
+  constructor(
+    private readonly profileLoader: IProfileLoader,
+    private readonly ide: IDE,
+  ) {}
 
   get profileDescription(): ProfileDescription {
     return this.profileLoader.description;
@@ -87,7 +97,10 @@ export class ProfileLifecycleManager {
           config: undefined,
         };
       }
-      const serializedConfig = finalToBrowserConfig(result.config);
+      const serializedConfig = await finalToBrowserConfig(
+        result.config,
+        this.ide,
+      );
       return {
         ...result,
         config: serializedConfig,

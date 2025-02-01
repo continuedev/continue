@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.254",
+  "version": "0.9.258",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -95,6 +95,11 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+        },
+        "continue.enableContinueHub": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Continue Hub (internal)"
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -213,7 +218,7 @@
         "group": "Continue"
       },
       {
-        "command": "continue.openConfig",
+        "command": "continue.openConfigPage",
         "category": "Continue",
         "title": "Open Continue Config",
         "icon": "$(gear)",
@@ -522,19 +527,19 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.openConfig",
+          "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         },
         {
           "command": "continue.signInToControlPlane",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && !continue.isSignedInToControlPlane"
+          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && !continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openAccountDialog",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && continue.isSignedInToControlPlane"
+          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openMorePage",

@@ -25,7 +25,9 @@ export function AssistantSelect(props: AssistantSelectProps) {
   const dispatch = useAppDispatch();
 
   function onNewAssistant() {
-    ideMessenger.post("openUrl", "https://app-test.continue.dev/new");
+    ideMessenger.post("controlPlane/openUrl", {
+      path: "new",
+    });
   }
 
   return (
