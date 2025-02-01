@@ -31,7 +31,7 @@ async function getContextProviderExtras(
     ide,
     ideSettingsPromise,
     async (text) => {},
-    new ControlPlaneClient(Promise.resolve(undefined)),
+    new ControlPlaneClient(Promise.resolve(undefined), ideSettingsPromise),
   );
   const { config } = await configHandler.loadConfig();
   if (!config) {

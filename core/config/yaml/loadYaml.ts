@@ -1,8 +1,8 @@
 import fs from "node:fs";
 
 import {
+  AssistantUnrolled,
   ConfigResult,
-  ConfigYaml,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
@@ -32,17 +32,20 @@ import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
+import { slashFromCustomCommand } from "../../commands";
 import { allTools } from "../../tools";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
+import { GlobalContext } from "../../util/GlobalContext";
+import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
 
 async function loadConfigYaml(
   workspaceConfigs: string[],
   rawYaml: string,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
-): Promise<ConfigResult<ConfigYaml>> {
+): Promise<ConfigResult<AssistantUnrolled>> {
   let config =
     overrideConfigYaml ??
     (await clientRenderHelper(rawYaml, ide, controlPlaneClient));
@@ -85,7 +88,7 @@ async function slashCommandsFromV1PromptFiles(
 }
 
 async function configYamlToContinueConfig(
-  config: ConfigYaml,
+  config: AssistantUnrolled,
   ide: IDE,
   ideSettings: IdeSettings,
   uniqueId: string,
@@ -95,7 +98,10 @@ async function configYamlToContinueConfig(
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   const continueConfig: ContinueConfig = {
-    slashCommands: await slashCommandsFromV1PromptFiles(ide),
+    slashCommands: [
+      ...(await slashCommandsFromV1PromptFiles(ide)),
+      ...(config.prompts?.map(slashFromCustomCommand) ?? []),
+    ],
     models: [],
     tabAutocompleteModels: [],
     tools: allTools,
@@ -117,6 +123,7 @@ async function configYamlToContinueConfig(
       rootUrl: doc.rootUrl,
       faviconUrl: doc.faviconUrl,
     })),
+    contextProviders: [],
   };
 
   // Models
@@ -176,7 +183,8 @@ async function configYamlToContinueConfig(
 
   // Context providers
   const codebaseContextParams: IContextProvider[] =
-    (config.context || []).find((cp) => cp.uses === "codebase")?.with || {};
+    (config.context || []).find((cp) => cp.provider === "codebase")?.params ||
+    {};
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),
@@ -187,19 +195,19 @@ async function configYamlToContinueConfig(
     ({ description: { title } }) => title,
   );
 
-  continueConfig.contextProviders = config.context
+  continueConfig.contextProviders = (config.context
     ?.map((context) => {
-      const cls = contextProviderClassFromName(context.uses) as any;
+      const cls = contextProviderClassFromName(context.provider) as any;
       if (!cls) {
-        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.uses)) {
-          console.warn(`Unknown context provider ${context.uses}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
+          console.warn(`Unknown context provider ${context.provider}`);
         }
         return undefined;
       }
-      const instance: IContextProvider = new cls(context.with ?? {});
+      const instance: IContextProvider = new cls(context.params ?? {});
       return instance;
     })
-    .filter((p) => !!p) as IContextProvider[];
+    .filter((p) => !!p) ?? []) as IContextProvider[];
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
   // Embeddings Provider
@@ -291,14 +299,13 @@ export async function loadContinueConfigFromYaml(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<ContinueConfig>> {
-  const configYamlPath = getConfigYamlPath(ideType);
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(configYamlPath, "utf-8")
+      ? fs.readFileSync(getConfigYamlPath(ideType), "utf-8")
       : "";
 
   const configYamlResult = await loadConfigYaml(
@@ -336,8 +343,16 @@ export async function loadContinueConfigFromYaml(
     }
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    continueConfig,
+    sharedConfig,
+  );
+
   return {
-    config: continueConfig,
+    config: withShared,
     errors: configYamlResult.errors,
     configLoadInterrupted: false,
   };

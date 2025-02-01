@@ -229,6 +229,14 @@ export interface SiteIndexingConfig {
   rootUrl?: string; // Currently only used by preindexed docs
 }
 
+export interface DocsIndexingDetails {
+  startUrl: string;
+  config: SiteIndexingConfig;
+  indexingStatus: IndexingStatus | undefined;
+  chunks: Chunk[];
+  isPreIndexedDoc: boolean;
+}
+
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 
@@ -425,6 +433,13 @@ interface ToolCallState {
   output?: ContextItem[];
 }
 
+interface Reasoning {
+  active: boolean;
+  text: string;
+  startAt: number;
+  endAt?: number;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   contextItems: ContextItemWithId[];
@@ -435,6 +450,7 @@ export interface ChatHistoryItem {
   isGatheringContext?: boolean;
   checkpoint?: Checkpoint;
   isBeforeCheckpoint?: boolean;
+  reasoning?: Reasoning;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
@@ -583,8 +599,8 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
+  continueTestEnvironment: "none" | "production" | "test" | "local";
   pauseCodebaseIndexOnStart: boolean;
-  enableDebugLogs: boolean;
 }
 
 export interface FileStats {
@@ -826,7 +842,7 @@ export interface SlashCommandDescription {
 export interface CustomCommand {
   name: string;
   prompt: string;
-  description: string;
+  description?: string;
 }
 
 export interface Prediction {
@@ -940,7 +956,6 @@ export interface RerankerDescription {
 
 export interface TabAutocompleteOptions {
   disable: boolean;
-  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;
@@ -986,7 +1001,6 @@ export interface ContinueUIConfig {
   fontSize?: number;
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
-  getChatTitles?: boolean;
   codeWrap?: boolean;
 }
 
@@ -1214,6 +1228,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   usePlatform: boolean;
+  tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

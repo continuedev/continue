@@ -99,6 +99,7 @@ function BestExperienceConfigForm({
               placeholder="Enter your Anthropic API Key"
               value={chatApiKey}
               onChange={(e) => setChatApiKey(e.target.value)}
+              data-testid="best-chat-api-key-input"
             />
             <InputSubtext>
               <a
@@ -133,6 +134,7 @@ function BestExperienceConfigForm({
               placeholder="Enter your Mistral API Key"
               value={autocompleteApiKey}
               onChange={(e) => setAutocompleteApiKey(e.target.value)}
+              data-testid="best-autocomplete-api-key-input"
             />
             <InputSubtext>
               <a

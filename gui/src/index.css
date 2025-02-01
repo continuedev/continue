@@ -79,6 +79,7 @@ body {
   word-break: break-word;
   overflow: hidden;
   line-height: 1.375;
+  text-overflow: ellipsis;
 }
 
 .lines-3 {
@@ -91,4 +92,14 @@ body {
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
+}
+
+.truncate-start {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  direction: rtl;
+  width: 100%;
 }
