@@ -48,6 +48,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
+  const ideMessenger = useContext(IdeMessengerContext);
+  const [hubEnabled, setHubEnabled] = useState(false);
+
+  useEffect(() => {
+    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
+      setHubEnabled(continueTestEnvironment === "production");
+    });
+  }, [ideMessenger]);
+
   const selectedOrganizationId = useAppSelector(
     (store) => store.session.selectedOrganizationId,
   );
@@ -65,7 +74,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return profiles.find((p) => p.id === selectedProfileId);
   }, [profiles, selectedProfileId]);
 
-  const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
