@@ -51,32 +51,42 @@ export class RecentlyEditedTracker {
       let range = this.recentlyEditedRanges[i];
       if (range.range.intersection(editedRange.range)) {
         const union = range.range.union(editedRange.range);
-        const contents = await this._getContentsForRange({
-          ...range,
-          range: union,
-        });
-        range = {
-          ...range,
-          range: union,
-          lines: contents.split("\n"),
-          symbols: getSymbolsForSnippet(contents),
-        };
-        return;
+        try {
+          const contents = await this._getContentsForRange({
+            ...range,
+            range: union,
+          });
+          range = {
+            ...range,
+            range: union,
+            lines: contents.split("\n"),
+            symbols: getSymbolsForSnippet(contents),
+          };
+          return;
+        } catch (error) {
+          console.debug('insertRange: Failed to get contents for: ' + range.uri, error);
+        }
       }
     }
 
     // Otherwise, just add the new and maintain max size
-    const contents = await this._getContentsForRange(editedRange);
-    const newLength = this.recentlyEditedRanges.unshift({
-      ...editedRange,
-      lines: contents.split("\n"),
-      symbols: getSymbolsForSnippet(contents),
-    });
-    if (newLength >= RecentlyEditedTracker.maxRecentlyEditedRanges) {
-      this.recentlyEditedRanges = this.recentlyEditedRanges.slice(
-        0,
-        RecentlyEditedTracker.maxRecentlyEditedRanges,
-      );
+    try {
+      const contents = await this._getContentsForRange(editedRange);
+      const newLength = this.recentlyEditedRanges.unshift({
+        ...editedRange,
+        lines: contents.split("\n"),
+        symbols: getSymbolsForSnippet(contents),
+      });
+      if (newLength >= RecentlyEditedTracker.maxRecentlyEditedRanges) {
+        this.recentlyEditedRanges = this.recentlyEditedRanges.slice(
+          0,
+          RecentlyEditedTracker.maxRecentlyEditedRanges,
+        );
+      }
+    } catch (error) {
+      console.error('Failed to get contents for new range: ' + editedRange.uri, error);
+      // Skip adding the new range if we can't get its contents
+      return;
     }
   }
 
