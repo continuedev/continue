@@ -367,13 +367,13 @@ function ModelSelect() {
             <Divider className="!my-0" />
 
             <span className="block px-3 py-3" style={{ color: lightGray }}>
-              <code>{getMetaKeyLabel()} + '</code> to toggle
+              <kbd>{getMetaKeyLabel()}</kbd> + <kbd>'</kbd> to toggle model
             </span>
           </div>
         </StyledListboxOptions>
       </div>
     </Listbox>
   );
-}
+} 
 
 export default ModelSelect;
