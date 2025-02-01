@@ -17,6 +17,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  gemini: (model) => {
+    // All gemini models support function calling
+    return model.toLowerCase().includes("gemini");
+  },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
     if (

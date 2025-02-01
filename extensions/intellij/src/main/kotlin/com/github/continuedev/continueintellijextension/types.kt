@@ -88,7 +88,6 @@ data class IdeSettings(
     val userToken: String,
     val enableControlServerBeta: Boolean,
     val pauseCodebaseIndexOnStart: Boolean,
-    val enableDebugLogs: Boolean
 )
 
 data class ContinueRcJson(

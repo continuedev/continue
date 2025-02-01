@@ -124,7 +124,7 @@ class VertexAI extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      if (value.type == "message_start") {
+      if (value.type === "message_start") {
         console.log(value);
       }
       if (value.delta?.text) {
@@ -389,11 +389,11 @@ class VertexAI extends BaseLLM {
     const convertedMsgs = isV1API
       ? this.geminiInstance.removeSystemMessage(messages)
       : messages;
-    if (this.vertexProvider == "gemini") {
+    if (this.vertexProvider === "gemini") {
       yield* this.streamChatGemini(convertedMsgs, options);
-    } else if (this.vertexProvider == "mistral") {
+    } else if (this.vertexProvider === "mistral") {
       yield* this.StreamChatMistral(messages, options);
-    } else if (this.vertexProvider == "anthropic") {
+    } else if (this.vertexProvider === "anthropic") {
       yield* this.StreamChatAnthropic(messages, options);
     } else {
       if (options.model.includes("bison")) {

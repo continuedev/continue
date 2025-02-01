@@ -2,10 +2,7 @@ import * as fs from "fs";
 
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
-import {
-  getConfigJsPathForRemote,
-  getConfigJsonPathForRemote,
-} from "core/util/paths";
+import { getConfigJsonPathForRemote } from "core/util/paths";
 import * as vscode from "vscode";
 
 import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
@@ -126,15 +123,11 @@ export class RemoteConfigSync {
         remoteConfigServerUrl.toString(),
         userToken,
       );
-      const { configJson, configJs } = await client.getConfig();
+      const { configJson } = await client.getConfig();
 
       fs.writeFileSync(
         getConfigJsonPathForRemote(remoteConfigServerUrl),
         configJson,
-      );
-      fs.writeFileSync(
-        getConfigJsPathForRemote(remoteConfigServerUrl),
-        configJs,
       );
       this.triggerReloadConfig();
     } catch (e) {

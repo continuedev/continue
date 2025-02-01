@@ -2389,7 +2389,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase", "folder", "docs"]
+                "enum": ["codebase", "folder"]
               }
             }
           },
@@ -2414,6 +2414,46 @@
                     "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results. Disabling re-ranking will give faster, but less accurate, results.",
                     "default": true,
                     "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["docs"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "nRetrieve": {
+                    "title": "N Retrieve",
+                    "description": "Number of docs results to initially retrieve from vector database",
+                    "default": 50,
+                    "type": "integer"
+                  },
+                  "nFinal": {
+                    "title": "N Final",
+                    "description": "Final number of docs results to include after re-ranking",
+                    "default": 10,
+                    "type": "integer"
+                  },
+                  "useReranking": {
+                    "title": "Use Reranking",
+                    "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results. Disabling re-ranking will give faster, but less accurate, results.",
+                    "default": true,
+                    "type": "boolean"
+                  },
+                  "githubToken": {
+                    "type": "string",
+                    "title": "Github Token",
+                    "description": "Include to crawl Github repositories for documentation"
                   }
                 }
               }
@@ -2563,17 +2603,17 @@
                 "type": "string",
                 "description": "The starting URL for indexing the documentation"
               },
-              "rootUrl": {
-                "type": "string",
-                "description": "The root URL of the documentation site"
-              },
               "maxDepth": {
                 "type": "integer",
-                "description": "The maximum depth to crawl the documentation site"
+                "description": "The maximum link depth when crawling the documentation site"
               },
               "faviconUrl": {
                 "type": "string",
                 "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
+              },
+              "useLocalCrawling": {
+                "type": "boolean",
+                "description": "Only use local crawling for this documentation site"
               }
             },
             "required": ["title", "startUrl"]
@@ -3039,10 +3079,6 @@
               "type": "boolean",
               "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
               "default": false
-            },
-            "useFileSuffix": {
-              "type": "boolean",
-              "description": "Determines whether to use the file suffix in the prompt."
             },
             "maxPromptTokens": {
               "type": "number",

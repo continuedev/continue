@@ -33,7 +33,6 @@ import {
 } from "../commands/index.js";
 import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
@@ -63,6 +62,7 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -70,16 +70,14 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import { isSupportedLanceDbCpuTarget } from "./util";
-import { ConfigValidationError, validateConfig } from "./validation.js";
+import { useHub } from "../control-plane/env";
+import { localPathToUri } from "../util/pathToUri";
+import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
+import { validateConfig } from "./validation.js";
 
-export interface ConfigResult<T> {
-  config: T | undefined;
-  errors: ConfigValidationError[] | undefined;
-  configLoadInterrupted: boolean;
-}
-
-function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
+export function resolveSerializedConfig(
+  filepath: string,
+): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
@@ -115,11 +113,10 @@ function loadSerializedConfig(
   overrideConfigJson: SerializedContinueConfig | undefined,
   ide: IDE,
 ): ConfigResult<SerializedContinueConfig> {
-  const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
     try {
-      config = resolveSerializedConfig(configPath);
+      config = resolveSerializedConfig(getConfigJsonPath(ideType));
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
@@ -137,13 +134,6 @@ function loadSerializedConfig(
 
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
-  }
-
-  if (config.ui?.getChatTitles === undefined) {
-    config.ui = {
-      ...config.ui,
-      getChatTitles: true,
-    };
   }
 
   if (ideSettings.remoteConfigServerUrl) {
@@ -176,9 +166,10 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  if (!isSupportedLanceDbCpuTarget(ide)) {
-    config.disableIndexing = true;
-  }
+  // Temporarily disabling this check until we can verify the commands are accuarate
+  // if (!isSupportedLanceDbCpuTarget(ide)) {
+  //   config.disableIndexing = true;
+  // }
 
   return { config, errors, configLoadInterrupted: false };
 }
@@ -229,11 +220,18 @@ function isModelDescription(
   return (llm as ModelDescription).title !== undefined;
 }
 
-function isContextProviderWithParams(
+export function isContextProviderWithParams(
   contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
+
+const getCodebaseProvider = async (params: any) => {
+  const { default: CodebaseContextProvider } = await import(
+    "../context/providers/CodebaseContextProvider"
+  );
+  return new CodebaseContextProvider(params);
+};
 
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
@@ -394,9 +392,14 @@ async function intermediateToFinalConfig(
         | ContextProviderWithParams
         | undefined
     )?.params || {};
+
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
-    new CodebaseContextProvider(codebaseContextParams),
+    // Add codebase provider if indexing is enabled
+    ...(!config.disableIndexing
+      ? [await getCodebaseProvider(codebaseContextParams)]
+      : []),
+    // Add prompt files provider if enabled
     ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
   ];
 
@@ -535,9 +538,10 @@ async function intermediateToFinalConfig(
   return { config: continueConfig, errors };
 }
 
-function finalToBrowserConfig(
+async function finalToBrowserConfig(
   final: ContinueConfig,
-): BrowserSerializedContinueConfig {
+  ide: IDE,
+): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     models: final.models.map((m) => ({
@@ -570,6 +574,8 @@ function finalToBrowserConfig(
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
+    tabAutocompleteOptions: final.tabAutocompleteOptions,
+    usePlatform: await useHub(ide.getIdeSettings()),
   };
 }
 
@@ -753,7 +759,7 @@ async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   return readConfigJs();
 }
 
-async function loadFullConfigNode(
+async function loadContinueConfigFromJson(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
@@ -785,8 +791,16 @@ async function loadFullConfigNode(
     serialized.systemMessage = systemPromptDotFile;
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    serialized,
+    sharedConfig,
+  );
+
   // Convert serialized to intermediate config
-  let intermediate = await serializedToIntermediateConfig(serialized, ide);
+  let intermediate = await serializedToIntermediateConfig(withShared, ide);
 
   // Apply config.ts to modify intermediate config
   const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
@@ -804,7 +818,7 @@ async function loadFullConfigNode(
           "Could not load config.ts as absolute path, retrying as file url ...",
         );
         try {
-          module = await import(`file://${configJsPath}`);
+          module = await import(localPathToUri(configJsPath));
         } catch (e) {
           throw new Error("Could not load config.ts as file url either", {
             cause: e,
@@ -863,6 +877,6 @@ async function loadFullConfigNode(
 export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
-  loadFullConfigNode,
+  loadContinueConfigFromJson,
   type BrowserSerializedContinueConfig,
 };

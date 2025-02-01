@@ -9,7 +9,7 @@ export function slashFromCustomCommand(
 ): SlashCommand {
   return {
     name: customCommand.name,
-    description: customCommand.description,
+    description: customCommand.description ?? "",
     run: async function* ({ input, llm, history, ide }) {
       // Remove slash command prefix from input
       let userInput = input;
@@ -37,16 +37,21 @@ export function slashFromCustomCommand(
 
         if (
           Array.isArray(content) &&
-          content.some((part) =>
-            part.text?.startsWith(`/${customCommand.name}`),
+          content.some(
+            (part) =>
+              "text" in part && part.text?.startsWith(`/${customCommand.name}`),
           )
         ) {
           messages[i] = {
             ...message,
             content: content.map((part) => {
-              return part.text?.startsWith(`/${customCommand.name}`)
-                ? { ...part, text: promptUserInput }
-                : part;
+              if (
+                "text" in part &&
+                part.text.startsWith(`/${customCommand.name}`)
+              ) {
+                return { type: "text", text: promptUserInput };
+              }
+              return part;
             }),
           };
           break;

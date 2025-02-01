@@ -44,7 +44,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
-    <TutorialCardDiv>
+    <TutorialCardDiv data-testid={`tutorial-card`}>
       <CloseButton onClick={onClose}>
         <XMarkIcon className="h-5 w-5" />
       </CloseButton>
@@ -57,10 +57,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
               <span
                 className="cursor-pointer underline"
                 onClick={() =>
-                  ideMessenger.post(
-                    "vscode/openMoveRightMarkdown",
-                    undefined,
-                  )
+                  ideMessenger.post("vscode/openMoveRightMarkdown", undefined)
                 }
               >
                 Move Chat panel to the right
@@ -72,14 +69,14 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <li className="flex items-start">
           <PencilSquareIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Highlight code and press <code>{getMetaKeyLabel() + "I"}</code> to
+            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> + <kbd>I</kbd> to
             quickly make natural language edits
           </span>
         </li>
         <li className="flex items-start">
           <ClipboardDocumentIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Highlight code and press <code>{getMetaKeyLabel() + "L"}</code> to
+            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> + <kbd>L</kbd> to
             add it to the chat window
           </span>
         </li>

@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import {
+  By,
   EditorView,
   Key,
   VSBrowser,
@@ -52,6 +53,45 @@ describe("GUI Test", () => {
       expect(await description.getText()).has.string(
         "Quickly get up and running using our API keys.",
       );
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
+    it("should display tutorial card after accepting onboarding quick start", async () => {
+      // Get paragraph with text Best
+      const bestTab = await GUISelectors.getOnboardingTabButton(view, "Best");
+      await bestTab.click();
+
+      const anthropicInput = await TestUtils.waitForSuccess(
+        async () => await GUISelectors.getBestChatApiKeyInput(view),
+      );
+      anthropicInput.sendKeys("invalid_api_key");
+
+      const mistralInput =
+        await GUISelectors.getBestAutocompleteApiKeyInput(view);
+      mistralInput.sendKeys("invalid_api_key");
+
+      // Get button with text "Connect" and click it
+      const connectButton = await view.findWebElement(
+        By.xpath("//button[text()='Connect']"),
+      );
+      await connectButton.click();
+
+      await TestUtils.waitForSuccess(
+        async () => await GUISelectors.getTutorialCard(view),
+      );
+
+      // TODO validate that claude has been added to list
+
+      // Skip testing Quick Start because github auth opens external app and breaks test
+      // const quickStartButton = await view.findWebElement(
+      //   By.xpath("//*[contains(text(), 'Get started using our API keys')]")
+      // );
+      // await quickStartButton.click();
+      // await view.switchBack();
+      // const allowButton = await TestUtils.waitForSuccess(
+      //   async () => await driver.findElement(By.xpath(`//a[contains(text(), "Allow")]`))
+      // );
+      // await allowButton.click();
+      // ({ view, driver } = await GUIActions.switchToReactIframe());
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
@@ -203,6 +243,53 @@ describe("GUI Test", () => {
 
       await TestUtils.waitForSuccess(
         () => GUISelectors.getThreadMessageByText(view, "No matches found"), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+      );
+    });
+  });
+
+  describe("Context providers", () => {
+    it("should successfully use the terminal context provider", async () => {
+      await GUIActions.selectModelFromDropdown(view, "LAST MESSAGE MOCK LLM");
+
+      // Enter just the context provider in the input and send
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("@");
+      await messageInput.sendKeys("terminal");
+      await messageInput.sendKeys(Key.ENTER);
+      await messageInput.sendKeys(Key.ENTER);
+
+      // Open the context items peek
+      const contextItemsPeek = await GUISelectors.getContextItemsPeek(view);
+      await contextItemsPeek.click();
+
+      await TestUtils.waitForSuccess(async () => {
+        const firstContextItemInPeek =
+          await GUISelectors.getFirstContextItemsPeekItem(view);
+        await firstContextItemInPeek.click();
+
+        // Check that item is there with correct name
+        const description = await firstContextItemInPeek.getText();
+        expect(description).to.include("Terminal");
+      });
+
+      // Check that the contents match what we expect (repeated back by the mock LLM)
+      await TestUtils.waitForSuccess(() => {
+        return GUISelectors.getThreadMessageByText(
+          view,
+          "Current terminal contents:",
+        );
+      });
+    }).timeout(DEFAULT_TIMEOUT.MD);
+  });
+
+  describe("Repeat back the system message", () => {
+    it("should repeat back the system message", async () => {
+      await GUIActions.selectModelFromDropdown(view, "SYSTEM MESSAGE MOCK LLM");
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+      await TestUtils.waitForSuccess(() =>
+        GUISelectors.getThreadMessageByText(view, "TEST_SYS_MSG"),
       );
     });
   });
