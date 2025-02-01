@@ -466,6 +466,7 @@ export interface LLMOptions {
   title?: string;
   uniqueId?: string;
   systemMessage?: string;
+  replaceSystemMessage?: boolean;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -919,6 +920,7 @@ export interface ModelDescription {
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
+  replaceSystemMessage?: boolean;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   capabilities?: ModelCapability;

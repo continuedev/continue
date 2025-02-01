@@ -400,6 +400,11 @@
           "description": "A system message that will always be followed by the LLM",
           "type": "string"
         },
+        "replaceSystemMessage": {
+          "title": "Replace System Message",
+          "description": "If true, the system message will replace the default system message instead of being appended to it",
+          "type": "boolean"
+        },
         "requestOptions": {
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
