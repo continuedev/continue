@@ -47,6 +47,22 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
     testImplementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     implementation("com.automation-remarks:video-recorder-junit5:2.0")
+
+
+    // Exclude vulnerable Log4j from all dependencies
+    configurations.all {
+        resolutionStrategy {
+            eachDependency {
+                if (requested.group == "log4j" && requested.name == "log4j") {
+                    useTarget("org.slf4j:log4j-over-slf4j:1.7.36")
+                }
+            }
+        }
+    }
+
+    // Add Log4j 2.x explicitly
+    implementation("org.apache.logging.log4j:log4j-core:2.20.0")
+    implementation("org.apache.logging.log4j:log4j-api:2.20.0")
 }
 
 // Set the JVM language level used to build the project. Use Java 11 for 2020.3+, and Java 17 for
@@ -105,13 +121,10 @@ tasks {
     wrapper { gradleVersion = properties("gradleVersion").get() }
 
     patchPluginXml {
-        version = properties("pluginVersion")
-        sinceBuild = properties("pluginSinceBuild")
-        untilBuild = properties("pluginUntilBuild")
-
-        // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's
-        // manifest
-        pluginDescription =
+        version.set(properties("pluginVersion"))
+        sinceBuild.set(properties("pluginSinceBuild"))
+        untilBuild.set(properties("pluginUntilBuild"))
+        pluginDescription.set(
             providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
                 val start = "<!-- Plugin description -->"
                 val end = "<!-- Plugin description end -->"
@@ -125,6 +138,7 @@ tasks {
                     subList(indexOf(start) + 1, indexOf(end)).joinToString("\n").let(::markdownToHTML)
                 }
             }
+        )
     }
 
     // Configure UI tests plugin
@@ -149,9 +163,9 @@ tasks {
         // This is to ensure we load the GUI with OSR enabled. We have logic that
         // renders with OSR disabled below a particular IDE version.
         // See ContinueExtensionSettingsService.kt for more info.
-        intellij {
-            version.set("2024.1")
-        }
+//        intellij {
+//            version.set("2024.1")
+//        }
     }
 
     signPlugin {

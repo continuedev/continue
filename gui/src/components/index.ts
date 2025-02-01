@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { getFontSize, isJetBrains } from "../util";
 
 export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
@@ -154,6 +154,13 @@ export const Button = styled.button`
   }
 `;
 
+type NumberInputProps = {
+  value: number;
+  onChange: (value: number) => void;
+  max?: number;
+  min?: number;
+};
+
 export const SecondaryButton = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
@@ -250,17 +257,6 @@ export const Input = styled.input`
   }
 `;
 
-export const Select = styled.select`
-  padding: 8px 12px;
-  margin: 8px 0;
-  box-sizing: border-box;
-  border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${lightGray};
-  border: none;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
-`;
-
 export const Label = styled.label<{ fontSize?: number }>`
   font-size: ${(props) => props.fontSize || getFontSize()}px;
 `;
@@ -296,11 +292,6 @@ export const HeaderButton = styled.button<{
   justify-content: center;
   gap: 4px;
   padding: 2px;
-`;
-
-export const Divider = styled.div`
-  height: 1px;
-  background-color: ${lightGray};
 `;
 
 export const StyledActionButton = styled.div`

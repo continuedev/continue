@@ -4,7 +4,6 @@
 import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { SiteIndexingConfig } from "../../index.js";
-import FreeTrial from "../../llm/llms/FreeTrial.js";
 import FileSystemIde from "../../util/filesystem.js";
 import { editConfigJson } from "../../util/paths.js";
 
@@ -37,17 +36,19 @@ describe.skip("DocsService Integration Tests", () => {
   beforeEach(async () => {
     ide = new FileSystemIde(process.cwd());
 
+    const ideSettingsPromise = Promise.resolve({
+      remoteConfigSyncPeriod: 60,
+      userToken: "",
+      enableControlServerBeta: false,
+      continueTestEnvironment: "none" as const,
+      pauseCodebaseIndexOnStart: false,
+      ideSettings: {} as any,
+      enableDebugLogs: false,
+      remoteConfigServerUrl: "",
+    });
     configHandler = new ConfigHandler(
       ide,
-      Promise.resolve({
-        remoteConfigSyncPeriod: 60,
-        userToken: "",
-        enableControlServerBeta: false,
-        pauseCodebaseIndexOnStart: false,
-        ideSettings: {} as any,
-        enableDebugLogs: false,
-        remoteConfigServerUrl: "",
-      }),
+      ideSettingsPromise,
       async () => {},
       new ControlPlaneClient(
         Promise.resolve({
@@ -57,6 +58,7 @@ describe.skip("DocsService Integration Tests", () => {
             label: "",
           },
         }),
+        ideSettingsPromise,
       ),
     );
 
@@ -105,28 +107,28 @@ describe.skip("DocsService Integration Tests", () => {
     expect(retrievedChunks.length).toBe(0);
   });
 
-  test("Reindexes when changing embeddings provider", async () => {
-    const originalEmbeddingsProvider =
-      await docsService.getEmbeddingsProvider();
+  // test("Reindexes when changing embeddings provider", async () => {
+  //   const originalEmbeddingsProvider =
+  //     await docsService.getEmbeddingsProvider();
 
-    // Change embeddings provider
-    editConfigJson((config) => ({
-      ...config,
-      embeddingsProvider: {
-        provider: FreeTrial.providerName,
-      },
-    }));
+  //   // Change embeddings provider
+  //   editConfigJson((config) => ({
+  //     ...config,
+  //     embeddingsProvider: {
+  //       provider: FreeTrial.providerName,
+  //     },
+  //   }));
 
-    await getReloadedConfig();
+  //   await getReloadedConfig();
 
-    const newEmbeddingsProvider = await docsService.getEmbeddingsProvider();
+  //   const { provider, isPreindexed} = await docsService.getEmbeddingsProvider();
 
-    // Verify reindexing
-    const [originalVector] = await originalEmbeddingsProvider.embed(["test"]);
-    const [newMockVector] = await newEmbeddingsProvider.embed(["test"]);
+  //   // Verify reindexing
+  //   const [originalVector] = await originalEmbeddingsProvider.embed(["test"]);
+  //   const [newMockVector] = await provider.embed(["test"]);
 
-    expect(originalVector).not.toEqual(newMockVector);
-  });
+  //   expect(originalVector).not.toEqual(newMockVector);
+  // });
 
   test("Handles pulling down and adding pre-indexed docs", async () => {
     const preIndexedDoc = Object.values(preIndexedDocs)[0];

@@ -117,6 +117,7 @@ export abstract class BaseLLM implements ILLM {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+  apiKeyLocation?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
@@ -194,6 +195,7 @@ export abstract class BaseLLM implements ILLM {
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
+    this.apiKeyLocation = options.apiKeyLocation;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
     this.cacheBehavior = options.cacheBehavior;
@@ -458,9 +460,11 @@ export abstract class BaseLLM implements ILLM {
               `${toolCall.function?.name}(${toolCall.function?.arguments})`,
           )
           .join("\n");
-      } else if ("content" in msg && Array.isArray(msg.content)) {
-        const content = renderChatMessage(msg);
-        msg.content = content;
+      } else if ("content" in msg) {
+        if (Array.isArray(msg.content)) {
+          msg.content = renderChatMessage(msg);
+        }
+        contentToShow = msg.content;
       }
 
       formatted += `<${msg.role}>\n${contentToShow}\n\n`;

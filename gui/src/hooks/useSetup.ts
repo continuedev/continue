@@ -2,8 +2,8 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
+import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
-import { ConfigResult } from "core/config/load";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setConfigError, setConfigResult } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
@@ -44,6 +44,15 @@ function useSetup() {
         return;
       }
       hasLoadedConfig.current = true;
+      // window.postMessage(
+      //   {
+      //     messageType: "refreshSubmenuItems",
+      //     data: {
+      //       providers: "all",
+      //     },
+      //   },
+      //   "*",
+      // );
       dispatch(setConfigResult(configResult));
       dispatch(setSelectedProfileId(profileId));
 

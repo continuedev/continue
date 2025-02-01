@@ -1,6 +1,5 @@
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
 import { Message } from "core/protocol/messenger";
-import { WebviewMessengerResult } from "core/protocol/util";
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
@@ -11,8 +10,7 @@ import { IMessenger } from "../../../core/protocol/messenger";
 import { showFreeTrialLoginMessage } from "./util/messages";
 
 export class VsCodeWebviewProtocol
-  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
-{
+  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol> {
   listeners = new Map<
     keyof FromWebviewProtocol,
     ((message: Message) => any)[]
@@ -51,34 +49,40 @@ export class VsCodeWebviewProtocol
     this._webview = webView;
     this._webviewListener?.dispose();
 
-    this._webviewListener = this._webview.onDidReceiveMessage(async (msg) => {
-      if (!msg.messageType || !msg.messageId) {
+    const handleMessage = async (msg: Message): Promise<void> => {
+      if (!("messageType" in msg) || !("messageId" in msg)) {
         throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
       }
 
-      const respond = (message: WebviewMessengerResult<any>) =>
+      const respond = (message: any) =>
         this.send(msg.messageType, message, msg.messageId);
 
-      const handlers = this.listeners.get(msg.messageType) || [];
+      const handlers =
+        this.listeners.get(msg.messageType as keyof FromWebviewProtocol) || [];
       for (const handler of handlers) {
         try {
           const response = await handler(msg);
+          // For generator types e.g. llm/streamChat
           if (
             response &&
             typeof response[Symbol.asyncIterator] === "function"
           ) {
             let next = await response.next();
             while (!next.done) {
-              respond(next.value);
+              respond({
+                done: false,
+                content: next.value,
+                status: "success",
+              });
               next = await response.next();
             }
             respond({
               done: true,
-              content: next.value?.content,
+              content: next.value,
               status: "success",
             });
           } else {
-            respond({ done: true, content: response ?? {}, status: "success" });
+            respond({ done: true, content: response, status: "success" });
           }
         } catch (e: any) {
           let message = e.message;
@@ -116,7 +120,6 @@ export class VsCodeWebviewProtocol
             stringified.includes("llm/streamChat") ||
             stringified.includes("chatDescriber/describe")
           ) {
-            // handle these errors in the GUI
             return;
           }
 
@@ -134,7 +137,8 @@ export class VsCodeWebviewProtocol
             message = message.split("\n").filter((l: string) => l !== "")[1];
             try {
               message = JSON.parse(message).message;
-            } catch {}
+            } catch {
+            }
             if (message.includes("exceeded")) {
               message +=
                 " To keep using Continue, you can set up a local model or use your own API key.";
@@ -166,10 +170,14 @@ export class VsCodeWebviewProtocol
           }
         }
       }
-    });
+    };
+
+    this._webviewListener = this._webview.onDidReceiveMessage(handleMessage);
   }
 
-  constructor(private readonly reloadConfig: () => void) {}
+  constructor(private readonly reloadConfig: () => void) {
+  }
+
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],

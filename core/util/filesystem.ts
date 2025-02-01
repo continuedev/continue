@@ -21,6 +21,13 @@ import { GetGhTokenArgs } from "../protocol/ide.js";
 
 class FileSystemIde implements IDE {
   constructor(private readonly workspaceDir: string) {}
+
+  async readSecrets(keys: string[]): Promise<Record<string, string>> {
+    return {};
+  }
+
+  async writeSecrets(secrets: { [key: string]: string }): Promise<void> {}
+
   showToast(
     type: ToastType,
     message: string,
@@ -46,8 +53,8 @@ class FileSystemIde implements IDE {
       remoteConfigSyncPeriod: 60,
       userToken: "",
       enableControlServerBeta: false,
+      continueTestEnvironment: "none",
       pauseCodebaseIndexOnStart: false,
-      enableDebugLogs: false,
     };
   }
   async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
