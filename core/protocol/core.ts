@@ -7,6 +7,7 @@ import type {
   ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
+  DocsIndexingDetails,
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
@@ -22,6 +23,7 @@ import type {
 } from "../";
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
+import { SharedConfigSchema } from "../config/sharedConfig";
 
 export type OnboardingModes =
   | "Local"
@@ -70,6 +72,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];
+  "config/updateSharedConfig": [SharedConfigSchema, void];
   "context/getContextItems": [
     {
       name: string;
@@ -180,7 +183,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
   "docs/getSuggestedDocs": [undefined, void];
   "docs/initStatuses": [undefined, void];
-
+  "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];

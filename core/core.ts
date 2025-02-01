@@ -289,12 +289,18 @@ export class Core {
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
+
     on("config/listProfiles", (msg) => {
       return this.configHandler.listProfiles();
     });
 
     on("config/addContextProvider", async (msg) => {
       addContextProvider(msg.data);
+    });
+
+    on("config/updateSharedConfig", async (msg) => {
+      this.globalContext.updateSharedConfig(msg.data);
+      await this.configHandler.reloadConfig();
     });
 
     on("controlPlane/openUrl", async (msg) => {
@@ -862,6 +868,9 @@ export class Core {
     });
     on("docs/initStatuses", async (msg) => {
       void this.docsService.initStatuses();
+    });
+    on("docs/getDetails", async (msg) => {
+      return await this.docsService.getDetails(msg.data.startUrl);
     });
     //
 
