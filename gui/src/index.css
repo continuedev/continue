@@ -103,3 +103,8 @@ body {
   direction: rtl;
   width: 100%;
 }
+
+kbd {
+  /* font-family: var(--monaco-monospace-font); */
+  font-size: 11px;
+}
