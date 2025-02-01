@@ -416,6 +416,7 @@ export function Chat() {
                     isMainInput={false}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
+                    inputId={item.message.id}
                   />
                 </>
               ) : item.message.role === "tool" ? (
@@ -512,6 +513,7 @@ export function Chat() {
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
+            inputId={"main-editor"}
           />
         )}
 
