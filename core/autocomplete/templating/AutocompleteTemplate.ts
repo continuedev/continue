@@ -11,6 +11,10 @@ import {
   AutocompleteSnippetType,
 } from "../snippets/types.js";
 
+export interface AutocompleteCompletionOptions {
+  promptOnly?: boolean;
+}
+
 export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
     prefix: string,
@@ -21,17 +25,17 @@ export interface AutocompleteTemplate {
     workspaceUris: string[],
   ) => [string, string];
   template:
-    | string
-    | ((
-        prefix: string,
-        suffix: string,
-        filepath: string,
-        reponame: string,
-        language: string,
-        snippets: AutocompleteSnippet[],
-        workspaceUris: string[],
-      ) => string);
-  completionOptions?: Partial<CompletionOptions>;
+  | string
+  | ((
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    language: string,
+    snippets: AutocompleteSnippet[],
+    workspaceUris: string[],
+  ) => string);
+  completionOptions?: Partial<CompletionOptions> & Partial<AutocompleteCompletionOptions>;
 }
 
 // https://huggingface.co/stabilityai/stable-code-3b
@@ -52,8 +56,47 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 
 // https://github.com/QwenLM/Qwen2.5-Coder?tab=readme-ov-file#3-file-level-code-completion-fill-in-the-middle
 const qwenCoderFimTemplate: AutocompleteTemplate = {
-  template:
-    "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  compilePrefixSuffix: (
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+    workspaceUris: string[]
+  ): [string, string] => {
+    // Helper function to get file name from snippet
+    function getFileName(snippet: { uri: string; uniquePath: string }) {
+      return snippet.uri.startsWith("file://") ? snippet.uniquePath : snippet.uri;
+    }
+
+    // Start building the prompt with repo name
+    let prompt = `<|repo_name|>${reponame}`;
+
+    const relativePaths = getShortestUniqueRelativeUriPaths(
+      [
+        ...snippets.map((snippet) =>
+          "filepath" in snippet ? snippet.filepath : "file:///Untitled.txt"
+        ),
+        filepath,
+      ],
+      workspaceUris
+    );
+
+    // Add each snippet with its file path
+    snippets.forEach((snippet, i) => {
+      const content = snippet.type === AutocompleteSnippetType.Diff
+        ? snippet.content
+        : snippet.content;
+      prompt += `\n<|file_sep|>${getFileName(relativePaths[i])}\n${content}`;
+    });
+
+    // Add the current file's prefix and suffix
+    prompt += `<|fim_prefix|>${prefix}<|fim_suffix|>${suffix}<|fim_middle|>`;
+
+    // Empty suffix will make the prefix be used as a single prompt
+    return [prompt, ""];
+  },
+  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
   completionOptions: {
     stop: [
       "<|endoftext|>",
@@ -66,6 +109,7 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
       "<|im_start|>",
       "<|im_end|>",
     ],
+    promptOnly: true // with ollama provider this makes sure a single prompt is sent (with suffix as part of the prompt, not as a separate parameter)
   },
 };
 
@@ -85,15 +129,22 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     snippets,
     workspaceUris,
   ): [string, string] => {
+
+    function getFileName(snippet: { uri: string, uniquePath: string }) {
+      return snippet.uri.startsWith("file://") ? snippet.uniquePath : snippet.uri
+    }
+
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
-        return [
-          `+++++ ${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n${prefix}`,
-          suffix,
-        ];
+        return [`+++++ ${getLastNUriRelativePathParts(workspaceUris, filepath, 2)}\n\n[PREFIX]\n${prefix}`, suffix];
       }
       return [prefix, suffix];
     }
+
+    //snippets = snippets.filter((snippet) => "filepath" in snippet);
+
+    // reverse the snippets so that the most recent snippet is last
+    snippets = [...snippets].reverse();
 
     const relativePaths = getShortestUniqueRelativeUriPaths(
       [
@@ -111,22 +162,20 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
           return snippet.content;
         }
 
-        return `+++++ ${relativePaths[i].uri} \n${snippet.content}`;
+        return `+++++ ${getFileName(relativePaths[i])} \n${snippet.content}`;
       })
       .join("\n\n");
 
     return [
-      `${otherFiles}\n\n+++++ ${
-        relativePaths[relativePaths.length - 1].uri
-      }\n${prefix}`,
-      suffix,
+      `${otherFiles}\n\n+++++ ${getFileName(relativePaths[relativePaths.length - 1])}\n[PREFIX]${prefix}`,
+      `${suffix}`,
     ];
   },
   template: (prefix: string, suffix: string): string => {
-    return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
+    return "NOT USED!"; //`[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
   completionOptions: {
-    stop: ["[PREFIX]", "[SUFFIX]"],
+    stop: ["[PREFIX]", "[SUFFIX]", "\n+++++ "],
   },
 };
 
@@ -160,10 +209,10 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
       snippets.length === 0
         ? ""
         : `<file_sep>${snippets
-            .map((snippet) => {
-              return snippet.content;
-            })
-            .join("<file_sep>")}<file_sep>`;
+          .map((snippet) => {
+            return snippet.content;
+          })
+          .join("<file_sep>")}<file_sep>`;
 
     const prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
     return prompt;
@@ -218,9 +267,8 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       [...snippets.map((snippet) => snippet.filepath), filepath],
       workspaceUris,
     );
-    const baseTemplate = `###PATH:${
-      relativePaths[relativePaths.length - 1]
-    }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
+    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]
+      }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
     if (snippets.length === 0) {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
