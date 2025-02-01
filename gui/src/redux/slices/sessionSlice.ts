@@ -57,6 +57,7 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
+  newestCodeblockForInput: Record<string, string>;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -108,6 +109,7 @@ const initialState: SessionState = {
     curIndex: 0,
   },
   lastSessionId: undefined,
+  newestCodeblockForInput: {},
 };
 
 export const sessionSlice = createSlice({
@@ -643,6 +645,17 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    setNewestCodeblocksForInput: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        inputId: string;
+        contextItemId: string;
+      }>,
+    ) => {
+      state.newestCodeblockForInput[payload.inputId] = payload.contextItemId;
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -741,6 +754,7 @@ export const {
   addSessionMetadata,
   updateSessionMetadata,
   deleteSessionMetadata,
+  setNewestCodeblocksForInput,
 } = sessionSlice.actions;
 
 export const {
