@@ -31,7 +31,12 @@ const rootReducer = combineReducers({
 });
 
 const saveSubsetFilters = [
-  createFilter("session", ["history", "sessionId"]),
+  createFilter("session", [
+    "history",
+    "sessionId",
+    "selectedOrganizationId",
+    "selectedProfileId",
+  ]),
   // Don't persist any of the edit state for now
   createFilter("editModeState", []),
   createFilter("config", ["defaultModelTitle"]),

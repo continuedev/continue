@@ -3,6 +3,7 @@ import {
   ConfigValidationError,
   FullSlug,
 } from "@continuedev/config-yaml";
+
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -18,7 +19,14 @@ export interface ProfileDescription {
   profileType: "control-plane" | "local" | "platform";
   title: string;
   id: string;
+  iconUrl: string;
   errors: ConfigValidationError[] | undefined;
+}
+
+export interface OrganizationDescription {
+  id: string;
+  iconUrl: string;
+  name: string;
 }
 
 export class ProfileLifecycleManager {
