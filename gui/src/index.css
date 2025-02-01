@@ -107,4 +107,5 @@ body {
 kbd {
   /* font-family: var(--monaco-monospace-font); */
   font-size: 11px;
+  color: --vscode-editor-foreground;
 }
