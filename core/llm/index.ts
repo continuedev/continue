@@ -25,6 +25,7 @@ import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
+import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { Telemetry } from "../util/posthog.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
@@ -55,7 +56,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { isOllamaInstalled } from "../util/ollamaHelper.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -117,6 +117,7 @@ export abstract class BaseLLM implements ILLM {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+  apiKeyLocation?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
@@ -194,6 +195,7 @@ export abstract class BaseLLM implements ILLM {
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
+    this.apiKeyLocation = options.apiKeyLocation;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
     this.cacheBehavior = options.cacheBehavior;
@@ -415,10 +417,9 @@ export abstract class BaseLLM implements ILLM {
             e.code === "ECONNREFUSED" &&
             e.message.includes("http://127.0.0.1:11434")
           ) {
-            const message = (await isOllamaInstalled()) ?
-              "Unable to connect to local Ollama instance. Ollama may not be running." :
-              "Unable to connect to local Ollama instance. Ollama may not be installed or may not running."
-            ;
+            const message = (await isOllamaInstalled())
+              ? "Unable to connect to local Ollama instance. Ollama may not be running."
+              : "Unable to connect to local Ollama instance. Ollama may not be installed or may not running.";
             throw new Error(message);
           }
         }
@@ -459,9 +460,11 @@ export abstract class BaseLLM implements ILLM {
               `${toolCall.function?.name}(${toolCall.function?.arguments})`,
           )
           .join("\n");
-      } else if ("content" in msg && Array.isArray(msg.content)) {
-        const content = renderChatMessage(msg);
-        msg.content = content;
+      } else if ("content" in msg) {
+        if (Array.isArray(msg.content)) {
+          msg.content = renderChatMessage(msg);
+        }
+        contentToShow = msg.content;
       }
 
       formatted += `<${msg.role}>\n${contentToShow}\n\n`;
@@ -693,13 +696,28 @@ export abstract class BaseLLM implements ILLM {
     return body;
   }
 
+  private _modifyCompletionOptions(
+    completionOptions: CompletionOptions,
+  ): CompletionOptions {
+    // As of 01/14/25 streaming is currently not available with o1
+    // See these threads:
+    // - https://github.com/continuedev/continue/issues/3698
+    // - https://community.openai.com/t/streaming-support-for-o1-o1-2024-12-17-resulting-in-400-unsupported-value/1085043
+    if (completionOptions.model === "o1") {
+      completionOptions.stream = false;
+    }
+
+    return completionOptions;
+  }
+
   async *streamChat(
     _messages: ChatMessage[],
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
-    const { completionOptions, log, raw } =
-      this._parseCompletionOptions(options);
+    let { completionOptions, log } = this._parseCompletionOptions(options);
+
+    completionOptions = this._modifyCompletionOptions(completionOptions);
 
     const messages = this._compileChatMessages(completionOptions, _messages);
 

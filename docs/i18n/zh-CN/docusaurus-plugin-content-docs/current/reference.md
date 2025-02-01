@@ -83,16 +83,15 @@ Specifies options for tab autocompletion behavior.
 **Properties:**
 
 - `disable`: If `true`, disables tab autocomplete (default: `false`).
-- `useFileSuffix`: If `true`, includes file suffix in the prompt.
-- `maxPromptTokens`: Maximum number of tokens for the prompt.
-- `debounceDelay`: Delay (in ms) before triggering autocomplete.
-- `maxSuffixPercentage`: Maximum percentage of prompt for suffix.
-- `prefixPercentage`: Percentage of input for prefix.
+- `maxPromptTokens`: Maximum number of tokens for the prompt (default: `1024`).
+- `debounceDelay`: Delay (in ms) before triggering autocomplete (default: `350`).
+- `maxSuffixPercentage`: Maximum percentage of prompt for suffix (default: `0.2`).
+- `prefixPercentage`: Percentage of input for prefix (default: `0.3`).
 - `template`: Template string for autocomplete, using Mustache templating.
-- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`).
-- `useCache`: If `true`, caches completions.
-- `onlyMyCode`: If `true`, only includes code within the repository.
-- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled.
+- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`) (default: `auto`).
+- `useCache`: If `true`, caches completions (default: `true`).
+- `onlyMyCode`: If `true`, only includes code within the repository (default: `true`).
+- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled (default: `[]`).
 
 Example
 
@@ -233,8 +232,8 @@ List of documentation sites to index.
 
 - `title` (**required**): Title of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
-- `maxDepth`: Maximum depth for crawling. Default `3`
+<!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
 
 Example
@@ -244,7 +243,6 @@ Example
     {
     "title": "Continue",
     "startUrl": "https://docs.continue.dev/intro",
-    "rootUrl": "https://docs.continue.dev",
     "faviconUrl": "https://docs.continue.dev/favicon.ico",
   }
 ]

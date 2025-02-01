@@ -1228,6 +1228,21 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  asksagegpto3mini: {
+    title: "GPT-o3-mini",
+    description:
+      "o3-mini can outperform o1 in coding and other reasoning tasks, and is 93% cheaper and has lower latency. It supports function calling, Structured Outputs, streaming, and developer messages. o3-mini comes with a larger context window of 200,000 tokens and a max output of 100,000 tokens",
+    params: {
+      model: "gpt-o3-mini",
+      contextLength: 200_000,
+      title: "GPT-o3-mini",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   asksageclaude35gov: {
     title: "Claude 3.5 Sonnet gov",
     description:

@@ -83,16 +83,12 @@ Specifies options for tab autocompletion behavior.
 **Properties:**
 
 - `disable`: If `true`, disables tab autocomplete (default: `false`).
-- `useFileSuffix`: If `true`, includes file suffix in the prompt.
-- `maxPromptTokens`: Maximum number of tokens for the prompt.
-- `debounceDelay`: Delay (in ms) before triggering autocomplete.
-- `maxSuffixPercentage`: Maximum percentage of prompt for suffix.
-- `prefixPercentage`: Percentage of input for prefix.
+- `maxPromptTokens`: Maximum number of tokens for the prompt (default: `1024`).
+- `debounceDelay`: Delay (in ms) before triggering autocomplete (default: `350`).
+- `maxSuffixPercentage`: Maximum percentage of prompt for suffix (default: `0.2`).
+- `prefixPercentage`: Percentage of input for prefix (default: `0.3`).
 - `template`: Template string for autocomplete, using Mustache templating. You can use the `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}`, and `{{{ language }}}` variables.
-- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`).
-- `useCache`: If `true`, caches completions.
-- `onlyMyCode`: If `true`, only includes code within the repository.
-- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled.
+- `onlyMyCode`: If `true`, only includes code within the repository (default: `true`).
 
 Example
 
@@ -234,9 +230,10 @@ List of documentation sites to index.
 
 - `title` (**required**): Title of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
-- `maxDepth`: Maximum depth for crawling. Default `3`
+<!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
 Example
 
@@ -245,21 +242,10 @@ Example
     {
     "title": "Continue",
     "startUrl": "https://docs.continue.dev/intro",
-    "rootUrl": "https://docs.continue.dev",
     "faviconUrl": "https://docs.continue.dev/favicon.ico",
   }
 ]
 ```
-
-### `analytics`
-
-Configuration for analytics tracking.
-
-**Properties:**
-
-- `provider`: Analytics provider (`"posthog"` or `"logstash"`).
-- `url`: URL for analytics data.
-- `clientKey`: Client key for analytics.
 
 ### `slashCommands`
 
@@ -351,40 +337,6 @@ Example
 }
 ```
 
-### `disableSessionTitles`
-
-Prevents generating summary titles for each chat session when set to `true`.
-
-### `ui`
-
-Customizable UI settings to control interface appearance and behavior.
-
-**Properties:**
-
-- `codeBlockToolbarPosition`: Sets the toolbar position within code blocks, either `top` (default) or `bottom`.
-- `fontSize`: Specifies font size for UI elements.
-- `displayRawMarkdown`: If `true`, shows raw markdown in responses.
-- `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
-- `codeWrap`: If `true`, enables text wrapping in code blocks.
-
-Example:
-
-```json title="config.json"
-{
-  "ui": {
-    "codeBlockToolbarPosition": "bottom",
-    "fontSize": 14,
-    "displayRawMarkdown": false,
-    "showChatScrollbar": false,
-    "codeWrap": false
-  }
-}
-```
-
-### `allowAnonymousTelemetry`
-
-When `true`, anonymous usage data is collected using Posthog, to improve features. Default is `true`.
-
 ### `userToken`
 
 An optional token that identifies the user, primarily for authenticated services.
@@ -392,10 +344,6 @@ An optional token that identifies the user, primarily for authenticated services
 ### `systemMessage`
 
 Defines a system message that appears before every response from the language model, providing guidance or context.
-
-### `disableIndexing`
-
-Prevents indexing of the codebase, useful primarily for debugging purposes.
 
 ### `experimental`
 
@@ -408,8 +356,6 @@ Several experimental config parameters are available, as described below:
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
-- `readResponseTTS`: If `true`, reads LLM responses aloud with TTS. Default is `true`.
-- `promptPath`: Change the path to custom prompt files from the default ".prompts"
 - `quickActions`: Array of custom quick actions
   - `title` (**required**): Display title for the quick action.
   - `prompt` (**required**): Prompt for quick action.
@@ -419,7 +365,7 @@ Several experimental config parameters are available, as described below:
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
-- `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
+- `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#model-context-protocol)
 
 Example
 
@@ -429,7 +375,6 @@ Example
     "modelRoles": {
       "inlineEdit": "Edit Model"
     },
-    "promptPath": "custom/.prompts",
     "quickActions": [
       {
         "title": "Tags",
@@ -440,8 +385,40 @@ Example
     "contextMenuPrompts": {
       "fixGrammar": "Fix grammar in the above but allow for typos."
     },
-    "readResponseTTS": false,
-    "useChromiumForDocsCrawling": true
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
   }
 }
 ```
+
+### Fully deprecated settings
+
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
+
+- `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
+- `promptPath`: This value will override during migration.
+- `disableIndexing`: This value will be migrated to the safest merged value (`true` if either are `true`).
+- `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
+- `tabAutocompleteOptions`
+  - `useCache`: This value will override during migration.
+  - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
+  - `multilineCompletions`: This value will override during migration.
+- `experimental`
+  - `useChromiumForDocsCrawling`: This value will override during migration.
+  - `readResponseTTS`: This value will override during migration.
+- `ui` - all will override during migration
+
+  - `codeBlockToolbarPosition`
+  - `fontSize`
+  - `codeWrap`
+  - `displayRawMarkdown`
+  - `showChatScrollbar`
+
+  See [User Settings Page](./customize/settings.md) for more information about each option.

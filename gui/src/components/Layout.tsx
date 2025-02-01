@@ -13,7 +13,6 @@ import {
   newSession,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
@@ -23,6 +22,7 @@ import AccountDialog from "./AccountDialog";
 import { AuthProvider } from "../context/Auth";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
+import { incrementFreeTrialCount } from "../util/freeTrial";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -150,12 +150,7 @@ const Layout = () => {
   useWebviewListener(
     "incrementFtc",
     async () => {
-      const u = getLocalStorage("ftc");
-      if (u) {
-        setLocalStorage("ftc", u + 1);
-      } else {
-        setLocalStorage("ftc", 1);
-      }
+      incrementFreeTrialCount();
     },
     [],
   );

@@ -24,3 +24,5 @@ e2e/storage
 e2e/vsix
 e2e/test-continue/*
 !e2e/test-continue/config.json
+e2e/test-continue-yaml/*
+!e2e/test-continue-yaml/config.yaml

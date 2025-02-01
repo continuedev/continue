@@ -28,15 +28,41 @@ import type {
   TerminalOptions,
   Thread,
 } from "core";
+import { SecretStorage } from "./stubs/SecretStorage";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
+  secretStorage: SecretStorage;
 
   constructor(
     private readonly vscodeWebviewProtocolPromise: Promise<VsCodeWebviewProtocol>,
     private readonly context: vscode.ExtensionContext,
   ) {
     this.ideUtils = new VsCodeIdeUtils();
+    this.secretStorage = new SecretStorage(context);
+  }
+
+  async readSecrets(keys: string[]): Promise<Record<string, string>> {
+    const secretValuePromises = keys.map((key) => this.secretStorage.get(key));
+    const secretValues = await Promise.all(secretValuePromises);
+
+    return keys.reduce(
+      (acc, key, index) => {
+        if (secretValues[index] === undefined) {
+          return acc;
+        }
+
+        acc[key] = secretValues[index];
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }
+
+  async writeSecrets(secrets: { [key: string]: string }): Promise<void> {
+    for (const [key, value] of Object.entries(secrets)) {
+      await this.secretStorage.store(key, value);
+    }
   }
 
   async fileExists(uri: string): Promise<boolean> {
@@ -399,17 +425,22 @@ class VsCodeIde implements IDE {
     );
   }
 
-  async runCommand(command: string, options: TerminalOptions = {reuseTerminal: true}): Promise<void> {
+  async runCommand(
+    command: string,
+    options: TerminalOptions = { reuseTerminal: true },
+  ): Promise<void> {
     let terminal: vscode.Terminal | undefined;
     if (vscode.window.terminals.length && options.reuseTerminal) {
       if (options.terminalName) {
-        terminal = vscode.window.terminals.find(t => t?.name === options.terminalName);
+        terminal = vscode.window.terminals.find(
+          (t) => t?.name === options.terminalName,
+        );
       } else {
         terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
       }
     }
 
-    if( !terminal) {
+    if (!terminal) {
       terminal = vscode.window.createTerminal(options?.terminalName);
     }
     terminal.show();
@@ -605,11 +636,13 @@ class VsCodeIde implements IDE {
         "enableContinueForTeams",
         false,
       ),
+      continueTestEnvironment: settings.get<boolean>("enableContinueHub")
+        ? "production"
+        : "none",
       pauseCodebaseIndexOnStart: settings.get<boolean>(
         "pauseCodebaseIndexOnStart",
         false,
       ),
-      enableDebugLogs: false,
       // settings.get<boolean>(
       //   "enableControlServerBeta",
       //   false,

@@ -11,15 +11,15 @@ You can get an API key from the [xAI console](https://console.x.ai/)
 
 ## Chat model
 
-We recommend configuring **grok-beta** as your chat model.
+We recommend configuring **grok-2-latest** as your chat model. For information on other available models, visit [xAI Documentation](https://docs.x.ai/docs/models).
 
 ```json title="config.json"
 {
   "models": [
     {
-      "title": "Grok Beta",
+      "title": "Grok 2",
       "provider": "xAI",
-      "model": "grok-beta",
+      "model": "grok-2-latest",
       "apiKey": "[API_KEY]"
     }
   ]

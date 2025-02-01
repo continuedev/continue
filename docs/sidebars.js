@@ -132,12 +132,23 @@ const sidebars = {
         },
       ],
     },
-    "customize/changelog",
+    "customize/settings",
     {
       type: "link",
       label: "Reference",
       href: "/reference",
     },
+    "customize/changelog",
+    // {
+    //   type: "link",
+    //   label: "YAML Reference",
+    //   href: "/yaml-reference",
+    // },
+    // {
+    //   type: "link",
+    //   label: "YAML Migration",
+    //   href: "/yaml-migration",
+    // },
   ],
 };
 
