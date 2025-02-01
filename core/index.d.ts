@@ -1241,6 +1241,12 @@ export interface PackageFilePathAndName extends FilePathAndName {
   packageRegistry: string; // e.g. npm, pypi
 }
 
+export interface TableInfo {
+  schema: string;
+  name: string;
+  type: string;
+}
+
 export type ParsedPackageInfo = {
   name: string;
   packageFile: PackageFilePathAndName;
