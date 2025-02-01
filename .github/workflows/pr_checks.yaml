@@ -1,10 +1,11 @@
 name: PR checks
 
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - main
     paths:
+      - "extensions/intellij/**"
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
@@ -21,10 +22,22 @@ on:
       - ".github/workflows/**"
 
 jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    environment: tests-requiring-secrets
+    steps:
+      - uses: actions/checkout@v4
+
   install-root:
+    needs: validate-pr
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          # This is important - it switches from the base repo to the fork
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -44,6 +57,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -69,8 +86,13 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
+    environment: tests-requiring-secrets
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -96,10 +118,14 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   install-gui:
-    needs: [ install-root, install-core ]
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -131,6 +157,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -157,10 +187,14 @@ jobs:
           npx tsc --noEmit
 
   binary-checks:
-    needs: [ install-root, install-core ]
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -193,10 +227,14 @@ jobs:
           npx tsc --noEmit
 
   install-vscode:
-    needs: [ install-root, install-core ]
+    needs: [install-root, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -230,6 +268,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -261,6 +303,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -274,14 +320,22 @@ jobs:
         run: |
           cd core
           npm test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
-    needs: [ install-root, install-vscode ]
+    needs: [install-root, install-vscode]
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Cache node modules
         uses: actions/cache@v3
@@ -306,9 +360,13 @@ jobs:
 
   vscode-package-extension:
     runs-on: ubuntu-latest
-    needs: [ install-vscode, install-core ]
+    needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -338,9 +396,13 @@ jobs:
 
   vscode-download-e2e-dependencies:
     runs-on: ubuntu-latest
-    needs: [ install-vscode, install-core ]
+    needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -370,7 +432,7 @@ jobs:
           path: extensions/vscode/e2e/storage
 
   vscode-e2e-tests:
-    name: ${{ matrix.test_file }}"
+    name: ${{ matrix.test_file }} (${{ matrix.command }})
     needs:
       [
         vscode-download-e2e-dependencies,
@@ -380,12 +442,19 @@ jobs:
         install-core,
       ]
     runs-on: ubuntu-latest
+    # Tests requiring secrets need approval from maintainers
+    environment: tests-requiring-secrets
     strategy:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
+        command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -432,8 +501,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run e2e:ci:run
-
+          TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 
@@ -445,10 +513,14 @@ jobs:
           path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
-    needs: [ install-gui, install-core ]
+    needs: [install-gui, install-core]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -476,10 +548,13 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [ install-root, core-checks ]
+    needs: [install-root, core-checks]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/cache@v4
         with:
@@ -546,7 +621,7 @@ jobs:
         with:
           url: http://127.0.0.1:8082
           max-attempts: 15
-          retry-delay: 5s
+          retry-delay: 30s
 
       - name: Run tests
         run: |
@@ -574,4 +649,33 @@ jobs:
           path: |
             ${{ github.workspace }}/extensions/intellij/build/reports
 
+  # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
+  # This action at least lets us manage the list of required tests via source control
+  # so that creators of new jobs can add them to this list
+  require-all-checks-to-pass:
+    if: always()
+    runs-on: ubuntu-latest
+    needs:
+      - install-root
+      - install-core
+      - core-checks
+      - install-gui
+      - gui-checks
+      - binary-checks
+      - install-vscode
+      - vscode-checks
+      - core-tests
+      - vscode-get-test-file-matrix
+      - vscode-package-extension
+      - vscode-download-e2e-dependencies
+      - vscode-e2e-tests
+      - gui-tests
+      - jetbrains-tests
 
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          allowed-failures:
+          allowed-skips:
+          jobs: ${{ toJSON(needs) }}

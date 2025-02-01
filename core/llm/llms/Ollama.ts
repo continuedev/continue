@@ -1,4 +1,4 @@
-import { JSONSchema7Object, JSONSchema7Type } from "json-schema";
+import { JSONSchema7, JSONSchema7Object } from "json-schema";
 
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
@@ -12,7 +12,7 @@ type OllamaChatMessage = {
   tool_calls?: {
     function: {
       name: string;
-      arguments: Record<string, JSONSchema7Type>;
+      arguments: JSONSchema7Object;
     };
   }[];
 };
@@ -119,7 +119,7 @@ interface OllamaTool {
   function: {
     name: string;
     description?: string;
-    parameters?: JSONSchema7Object;
+    parameters?: JSONSchema7;
   };
 }
 
@@ -273,10 +273,8 @@ class Ollama extends BaseLLM {
       content: "",
     };
 
-    if (typeof message.content === "string") {
-      ollamaMessage.content = message.content;
-    } else {
-      ollamaMessage.content = renderChatMessage(message);
+    ollamaMessage.content = renderChatMessage(message);
+    if (Array.isArray(message.content)) {
       const images: string[] = [];
       message.content.forEach((part) => {
         if (part.type === "imageUrl" && part.imageUrl) {
