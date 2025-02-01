@@ -297,16 +297,22 @@ class Ollama extends BaseLLM {
     prompt: string,
     suffix?: string,
   ): OllamaRawOptions {
-    return {
+    const generateOptions: OllamaRawOptions = {
       model: this._getModel(),
       prompt,
-      suffix,
       raw: options.raw,
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
       // Not supported yet: context, images, system, template, format
     };
+
+    // Only add suffix if it's not empty. This allows composing the fim template in a way that uses prompt only
+    if (suffix && suffix !== "") {
+      generateOptions.suffix = suffix;
+    }
+
+    return generateOptions;
   }
 
   private getEndpoint(endpoint: string): URL {
