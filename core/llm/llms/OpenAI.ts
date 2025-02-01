@@ -49,6 +49,7 @@ const CHAT_ONLY_MODELS = [
   "gpt-4o-mini",
   "o1-preview",
   "o1-mini",
+  "o3-mini",
 ];
 
 const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
@@ -96,8 +97,12 @@ class OpenAI extends BaseLLM {
     return !!model && model.startsWith("o1");
   }
 
+  private isO3Model(model?: string): boolean {
+    return !!model && model.startsWith("o3");
+  }
+
   protected supportsPrediction(model: string): boolean {
-    const SUPPORTED_MODELS = ["gpt-4o-mini", "gpt-4o", "mistral-large"];
+    const SUPPORTED_MODELS = ["gpt-4o-mini", "gpt-4o", "mistral-large", "o3-mini"];
     return SUPPORTED_MODELS.some((m) => model.includes(m));
   }
 
@@ -152,6 +157,13 @@ class OpenAI extends BaseLLM {
 
       // b) don't support system message
       finalOptions.messages = formatMessageForO1(finalOptions.messages);
+    }
+
+    // OpenAI o3-mini:
+    if (this.isO3Model(options.model)) {
+      // a) use max_completion_tokens instead of max_tokens
+      finalOptions.max_completion_tokens = options.maxTokens;
+      finalOptions.max_tokens = undefined;
     }
 
     if (options.model === "o1") {
@@ -247,6 +259,13 @@ class OpenAI extends BaseLLM {
 
       // b) don't support system message
       body.messages = formatMessageForO1(body.messages);
+    }
+
+    // OpenAI o3-mini:
+    if (this.isO3Model(body.model)) {
+      // a) use max_completion_tokens instead of max_tokens
+      body.max_completion_tokens = body.max_tokens;
+      body.max_tokens = undefined;
     }
 
     if (body.model === "o1") {
