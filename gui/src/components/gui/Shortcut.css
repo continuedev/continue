@@ -1,12 +1,11 @@
 .shortcut-wrapper {
-  color: var(--light-gray);
+  
 }
 
 .keyboard-key {
   font-family: "Inter", monospace;
-  -webkit-font-feature-settings: ;
   letter-spacing: 0.05rem;
-  color: --vscode-editor-foreground;
+  color: var(--vscode-editor-foreground);
   padding: 1px 4px;
   margin: 0.08rem 0.08rem;
 }
@@ -25,5 +24,5 @@
   position: relative;
   top: 0.1rem;
   margin: 0 0.1rem;
-  color: --vscode-editor-foreground;
+  color: var(--vscode-editor-foreground);
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { getFontSize, getPlatform, getMetaKeyLabel, getAltKeyLabel } from "../../util";
+import "../../../src/index.css";
 import "./Shortcut.css";
 
 interface ShortcutProps {
