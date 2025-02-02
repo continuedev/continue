@@ -64,9 +64,9 @@ class PostgresContextProvider extends BaseContextProvider {
   WHERE schemaname = $1 AND matviewname = $2`;
   static commentQuery = `
   SELECT
-    CASE WHEN pg_attribute.attnum IS NOT NULL THEN 'C' ELSE 'T' END AS comment_type,
-    pg_attribute.attname,
-    pg_description.description, 
+    CASE WHEN pg_attribute.attnum IS NOT NULL THEN 'C' ELSE 'T' END AS type,
+    pg_attribute.attname as name,
+    pg_description.description as text
   FROM pg_description
   LEFT JOIN pg_class ON pg_description.objoid = pg_class.oid
   LEFT JOIN pg_attribute ON pg_description.objoid = pg_attribute.attrelid
@@ -74,7 +74,7 @@ class PostgresContextProvider extends BaseContextProvider {
   LEFT JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
   WHERE pg_namespace.nspname = $1
       AND pg_class.relname = $2
-  order by 1 desc`
+  order by 1 desc`;
 
   private async getPool() {
     // @ts-ignore
@@ -160,18 +160,23 @@ class PostgresContextProvider extends BaseContextProvider {
           ]);
           prompt += `Sample rows: ${JSON.stringify(sampleRowResults, null, 2)}\n\n`;
         }
+
         // get comments
         const { rows: commentResults } = await pool.query(
           PostgresContextProvider.commentQuery,
           [tableInfo.schema, tableInfo.name],
         );
         if (commentResults.length > 0) {
-          prompt += 'Comments: [\n';
-          for (const comment of commentResults ) {
-            const commentOn = `${(comment[0] === 'Table' ? tableInfo.type : 'column')} ' ${comment[1]}`;
-            prompt += `   {"on": "${commentOn}", "comment": "${comment[3]}"},\n`;
+          prompt += "Comments: [\n";
+          let i = 0;
+          for (const comment of commentResults) {
+            const commentOn =
+              comment.type === "T"
+                ? `${tableInfo.type} ${tableInfo.name}`
+                : `column ${comment.name}`;
+            prompt += `   {"on": "${commentOn}", "comment": "${comment.text}"}${i++ < commentResults.length - 1 ? "," : ""}\n`;
           }
-          prompt += ']\n\n';
+          prompt += "]\n\n";
         }
 
         // Get indexes, foreign keys and sample rows for tables only
@@ -237,15 +242,17 @@ class PostgresContextProvider extends BaseContextProvider {
       contextItems.push({
         id: PostgresContextProvider.ALL_TABLES,
         title: "All tables",
-        description: `All tables/views from schema ${this.options.schema ?? 'public'}`,
+        description: `All tables/views from schema ${this.options.schema ?? "public"}`,
       });
       for (const tableInfo of tableInfos) {
-        const shortType = tableInfo.type.startsWith('mat') ? 'matview' : tableInfo.type;
+        const shortType = tableInfo.type.startsWith("mat")
+          ? "matview"
+          : tableInfo.type;
         const fullName = `${tableInfo.name} ${shortType}`;
         contextItems.push({
           id: fullName,
           title: fullName,
-          description: '',
+          description: "",
         });
       }
 
