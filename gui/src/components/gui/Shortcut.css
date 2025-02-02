@@ -1,22 +1,17 @@
-.shortcut-wrapper {
-  
-}
-
 .keyboard-key {
-  font-family: "Inter", monospace;
-  letter-spacing: 0.05rem;
+  letter-spacing: 0.06rem;
   color: var(--vscode-editor-foreground);
   padding: 1px 4px;
   margin: 0.08rem 0.08rem;
 }
 
-.keyboard-key-meta {
-  font-family: "Inter", monospace;
+.keyboard-key-normal {
+  font-family: "JetBrains Mono", "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace; 
   font-weight: 300;
 }
 
-.keyboard-key-normal {
-  font-family: "Jetbrains Mono", monospace;
+.keyboard-key-special {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "HelveticaNeue-Light", system-ui, "Ubuntu", "Droid Sans", sans-serif;
   font-weight: 300;
 }
 
