@@ -84,7 +84,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <li className="flex items-start">
           <Cog6ToothIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Click the gear icon in the bottom right to configure Continue
+            Click the gear icon in the upper right to configure Continue
           </span>
         </li>
         <li className="flex items-start">
