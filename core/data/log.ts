@@ -96,6 +96,16 @@ export class DataLogger {
               if (dataConfig.apiKey) {
                 headers["Authorization"] = `Bearer ${dataConfig.apiKey}`;
               }
+
+              // For Continue events, overwrite the access token
+              if (uriComponents.host?.endsWith(".continue.dev")) {
+                //
+                const accessToken =
+                  await this.core?.controlPlaneClient.getAccessToken();
+                headers["Authorization"] = `Bearer ${accessToken}`;
+              }
+              const profileId =
+                this.core?.configHandler.currentProfile.profileDescription.id;
               const response = await fetchwithRequestOptions(
                 dataConfig.destination,
                 {
@@ -106,6 +116,7 @@ export class DataLogger {
                     data: parsed.data,
                     schemaVersion,
                     level,
+                    profileId,
                   }),
                 },
                 dataConfig.requestOptions,
@@ -130,7 +141,7 @@ export class DataLogger {
               const jsonLine = JSON.stringify(event.data);
               fs.writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
             } else {
-              throw new Error(`Unsupported scheme ${uriComponents.scheme}`);
+              throw new Error(`Unsupported URI scheme ${uriComponents.scheme}`);
             }
           } catch (error) {
             console.error(
