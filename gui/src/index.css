@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter/InterDisplay-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+}
+
 :root {
   --secondary-dark: rgb(37, 37, 38);
   --vsc-background: rgb(30, 30, 30);
