@@ -96,7 +96,7 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
     // Empty suffix will make the prefix be used as a single prompt
     return [prompt, ""];
   },
-  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  template: "{{{prefix}}}", // output of compilePrefixSuffix already compiles everything into a single prompt
   completionOptions: {
     stop: [
       "<|endoftext|>",
@@ -172,7 +172,29 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     ];
   },
   template: (prefix: string, suffix: string): string => {
-    return "NOT USED!"; //`[SUFFIX]${suffix}[PREFIX]${prefix}`;
+    /*
+      This template is ignored with codestral provider, however theoretically it's possible that a provider
+      not supporting fim endpoint would have a model name matched with this template,
+      or the codestral implementation will be changed, so we provide a usable implementation.
+    */
+
+    const prefixMarkerIndex = prefix.lastIndexOf('[PREFIX]');
+
+    if (prefixMarkerIndex === -1) {
+      return suffix ? `[SUFFIX]${suffix}[PREFIX]${prefix}` : `[PREFIX]${prefix}`;
+    }
+
+    if (!suffix) {
+      // [PREFIX] already in the prompt, but suffix is an empty string
+      return prefix;
+    }
+
+    // Insert [SUFFIX]${suffix} just before [PREFIX]
+    return (
+      prefix.substring(0, prefixMarkerIndex) +
+      '[SUFFIX]' + suffix +
+      prefix.substring(prefixMarkerIndex)
+    );
   },
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]", "\n+++++ "],
