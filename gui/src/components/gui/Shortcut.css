@@ -1,0 +1,29 @@
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter/InterDisplay-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+}
+
+.shortcut-wrapper {
+  color: var(--light-gray);
+}
+
+.keyboard-key {
+  font-family: "Inter"/*, monospace*/;
+  color: --vscode-editor-foreground;
+  padding: 0px 2px;
+}
+
+.keyboard-key-meta {
+  font-weight: 300;
+}
+
+.keyboard-key-normal {
+  font-weight: 300;
+}
+
+.separator {
+  margin: 0 3px;
+  color: var(--vscode-editor-foreground);
+}
