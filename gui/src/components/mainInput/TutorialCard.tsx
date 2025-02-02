@@ -70,7 +70,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <li className="flex items-start">
           <PencilSquareIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> + <kbd>I</kbd> to
+            Highlight code and press <Shortcut>meta I</Shortcut> to
             quickly make natural language edits
           </span>
         </li>
