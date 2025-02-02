@@ -62,6 +62,19 @@ class PostgresContextProvider extends BaseContextProvider {
   SELECT pg_get_viewdef(matviewname::regclass, true) as view_definition
   FROM pg_matviews
   WHERE schemaname = $1 AND matviewname = $2`;
+  static commentQuery = `
+  SELECT
+    CASE WHEN pg_attribute.attnum IS NOT NULL THEN 'C' ELSE 'T' END AS comment_type,
+    pg_attribute.attname,
+    pg_description.description, 
+  FROM pg_description
+  LEFT JOIN pg_class ON pg_description.objoid = pg_class.oid
+  LEFT JOIN pg_attribute ON pg_description.objoid = pg_attribute.attrelid
+      AND pg_description.objsubid = pg_attribute.attnum
+  LEFT JOIN pg_namespace ON pg_class.relnamespace = pg_namespace.oid
+  WHERE pg_namespace.nspname = $1
+      AND pg_class.relname = $2
+  order by 1 desc`
 
   private async getPool() {
     // @ts-ignore
@@ -146,6 +159,19 @@ class PostgresContextProvider extends BaseContextProvider {
             sampleRows,
           ]);
           prompt += `Sample rows: ${JSON.stringify(sampleRowResults, null, 2)}\n\n`;
+        }
+        // get comments
+        const { rows: commentResults } = await pool.query(
+          PostgresContextProvider.commentQuery,
+          [tableInfo.schema, tableInfo.name],
+        );
+        if (commentResults.length > 0) {
+          prompt += 'Comments: [\n';
+          for (const comment of commentResults ) {
+            const commentOn = `${(comment[0] === 'Table' ? tableInfo.type : 'column')} ' ${comment[1]}`;
+            prompt += `   {"on": "${commentOn}", "comment": "${comment[3]}"},\n`;
+          }
+          prompt += ']\n\n';
         }
 
         // Get indexes, foreign keys and sample rows for tables only
