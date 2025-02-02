@@ -21,7 +21,7 @@ const specialKeyMap: { [key: string]: string } = {
   esc: "Esc",
 };
 
-const metaKeys = ["meta", "⌘", "ctrl"];
+const metaKeys = ["meta", "⌘", "ctrl", "cmd", "^"];
 const altKeys = ["alt", "option", "⌥"];
 const modifierKeys = [...metaKeys, ...altKeys];
 
