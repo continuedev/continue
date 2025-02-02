@@ -4,6 +4,7 @@
 
 .keyboard-key {
   font-family: "Inter", monospace;
+  -webkit-font-feature-settings: ;
   letter-spacing: 0.05rem;
   color: --vscode-editor-foreground;
   padding: 1px 4px;
@@ -11,10 +12,12 @@
 }
 
 .keyboard-key-meta {
+  font-family: "Inter", monospace;
   font-weight: 300;
 }
 
 .keyboard-key-normal {
+  font-family: "Jetbrains Mono", monospace;
   font-weight: 300;
 }
 
