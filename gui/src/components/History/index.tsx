@@ -100,7 +100,7 @@ export function History() {
       {filteredAndSortedSessions.length === 0 && (
         <div className="m-4 text-center">
           No past sessions found. To start a new session, either click the "+"
-          button or use the keyboard shortcut: <Shortcut>meta L, meta K, meta M</Shortcut>
+          button or use the keyboard shortcut: <Shortcut>meta L</Shortcut>
         </div>
 
       )}
