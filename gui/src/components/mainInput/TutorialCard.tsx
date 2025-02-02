@@ -11,6 +11,7 @@ import { defaultBorderRadius, lightGray, vscBackground } from "..";
 import { getMetaKeyLabel, isJetBrains } from "../../util";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import Shortcut from '../gui/Shortcut';
 
 interface TutorialCardProps {
   onClose: () => void;
@@ -76,7 +77,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <li className="flex items-start">
           <ClipboardDocumentIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> + <kbd>L</kbd> to
+            Highlight code and press <Shortcut>meta L</Shortcut> to
             add it to the chat window
           </span>
         </li>
