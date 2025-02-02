@@ -601,7 +601,6 @@ export interface IdeSettings {
   enableControlServerBeta: boolean;
   continueTestEnvironment: "none" | "production" | "test" | "local";
   pauseCodebaseIndexOnStart: boolean;
-  enableDebugLogs: boolean;
 }
 
 export interface FileStats {
@@ -957,7 +956,6 @@ export interface RerankerDescription {
 
 export interface TabAutocompleteOptions {
   disable: boolean;
-  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;
@@ -1230,6 +1228,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   usePlatform: boolean;
+  tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
