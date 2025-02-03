@@ -36,13 +36,13 @@ For those preferring local execution or self-hosting,`Qwen2.5-Coder 1.5B` offers
 {
   "tabAutocompleteModel": {
     "title": "Qwen2.5-Coder 1.5B",
-    "model": "qwen2.5-coder:1.5b-base",
+    "model": "qwen2.5-coder:1.5b",
     "provider": "ollama"
   }
 }
 ```
 
-Have more compute? Use `qwen2.5-coder:7b-base` for potentially higher-quality suggestions.
+Have more compute? Use `qwen2.5-coder:7b` for potentially higher-quality suggestions.
 
 :::note
 
@@ -57,7 +57,7 @@ When using a remote instance you need to set the `"apiBase"` value in the config
 {
   "tabAutocompleteModel": {
     "title": "Qwen2.5-Coder 1.5B",
-    "model": "qwen2.5-coder:1.5b-base",
+    "model": "qwen2.5-coder:1.5b",
     "provider": "ollama"
     "apiBase": "http://<my endpoint>:11434"
   }
