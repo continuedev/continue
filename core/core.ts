@@ -208,13 +208,23 @@ export class Core {
 
     // Note, VsCode's in-process messenger doesn't do anything with this
     // It will only show for jetbrains
-    this.messenger.onError((err) => {
-      console.error(err);
+    this.messenger.onError((message, err) => {
       void Telemetry.capture("core_messenger_error", {
         message: err.message,
         stack: err.stack,
       });
-      void this.ide.showToast("error", err.message);
+
+      // Again, specifically for jetbrains to prevent duplicate error messages
+      // The same logic can currently be found in the webview protocol
+      // bc streaming errors are handled in the GUI
+      if (
+        ["llm/streamChat", "chatDescriber/describe"].includes(
+          message.messageType,
+        )
+      ) {
+      } else {
+        void this.ide.showToast("error", err.message);
+      }
     });
 
     on("update/selectTabAutocompleteModel", async (msg) => {
