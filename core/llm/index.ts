@@ -346,6 +346,13 @@ export abstract class BaseLLM implements ILLM {
         provider: this.providerName,
         promptTokens: promptTokens,
         generatedTokens: generatedTokens,
+
+        eventName: "tokensGenerated",
+        createdAt: "",
+        schemaVersion: "",
+        userAgent: "",
+        selectedProfileId: "",
+        userId: "",
       },
     });
   }

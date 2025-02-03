@@ -6,11 +6,9 @@ export const tokensGeneratedEventSchema_0_2_0 =
     createdAt: true,
     userId: true,
     userAgent: true,
-    platform: true,
     selectedProfileId: true,
     eventName: true,
     schemaVersion: true,
-    sessionId: true,
 
     // tokens generated specific
     model: true,

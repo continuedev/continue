@@ -98,7 +98,15 @@ export class AutocompleteLoggingService {
   private logAutocompleteOutcome(outcome: AutocompleteOutcome) {
     void DataLogger.getInstance().logDevData({
       name: "autocomplete",
-      data: outcome,
+      data: {
+        ...outcome,
+        eventName: "autocomplete",
+        createdAt: "",
+        schemaVersion: "",
+        userAgent: "",
+        selectedProfileId: "",
+        userId: "",
+      },
     });
 
     const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;

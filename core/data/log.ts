@@ -29,14 +29,49 @@ export class DataLogger {
     return DataLogger.instance;
   }
 
+  addBaseValues(body: object, schemaVersion: string): object {
+    if ("createdAt" in body) {
+      body.createdAt = new Date().toISOString();
+    }
+    if ("schemaVersion" in body) {
+      body.schemaVersion = schemaVersion;
+    }
+    if ("userAgent" in body) {
+      body.userAgent = navigator.userAgent; // TODO sufficient user agent info?
+    }
+    if ("selectedProfileId" in body) {
+      body.selectedProfileId =
+        this.core?.configHandler.currentProfile.profileDescription.id ?? "";
+    }
+    if ("userId" in body) {
+      body.userId = "not-implemented";
+    }
+
+    return body;
+  }
+
   async logDevData(event: DevDataLogEvent) {
     // Local logs (always on for all levels)
-    const filepath: string = getDevDataFilePath(
-      event.name,
-      LOCAL_DEV_DATA_VERSION,
-    );
-    const jsonLine = JSON.stringify(event.data);
-    fs.writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
+    try {
+      const filepath: string = getDevDataFilePath(
+        event.name,
+        LOCAL_DEV_DATA_VERSION,
+      );
+      const localSchema =
+        devDataVersionedSchemas[LOCAL_DEV_DATA_VERSION]["all"][event.name];
+      const parsed = localSchema?.safeParse(event.data);
+      if (parsed?.success) {
+        const withBaseValues = this.addBaseValues(
+          parsed.data,
+          LOCAL_DEV_DATA_VERSION,
+        );
+        fs.writeFileSync(filepath, `${JSON.stringify(withBaseValues)}\n`, {
+          flag: "a",
+        });
+      }
+    } catch (error) {
+      console.error("Error logging local dev data:", error);
+    }
 
     // Remote logs
     const config = (await this.core?.configHandler.loadConfig())?.config;
@@ -83,6 +118,9 @@ export class DataLogger {
               );
             }
 
+            // Add base values like createdAt etc. if keys present in body
+            const payload = this.addBaseValues(parsed.data, schemaVersion);
+
             const uriComponents = URI.parse(dataConfig.destination);
 
             // Send to remote server
@@ -113,7 +151,7 @@ export class DataLogger {
                   headers,
                   body: JSON.stringify({
                     name: event.name,
-                    data: parsed.data,
+                    data: payload,
                     schemaVersion,
                     level,
                     profileId,

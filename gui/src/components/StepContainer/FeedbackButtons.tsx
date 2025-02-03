@@ -23,7 +23,18 @@ export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
       for (const promptLog of item.promptLogs) {
         ideMessenger.post("devdata/log", {
           name: "chatFeedback",
-          data: { ...promptLog, feedback, sessionId },
+          data: {
+            ...promptLog,
+            feedback,
+            sessionId,
+
+            eventName: "chatFeedback",
+            createdAt: "",
+            schemaVersion: "",
+            userAgent: "",
+            selectedProfileId: "",
+            userId: "",
+          },
         });
       }
     }

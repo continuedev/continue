@@ -5,17 +5,16 @@ export const chatFeedbackEventSchema_0_2_0 = chatFeedbackEventAllSchema.pick({
   createdAt: true,
   userId: true,
   userAgent: true,
-  platform: true,
   selectedProfileId: true,
   eventName: true,
   schemaVersion: true,
-  sessionId: true,
 
   // other
   prompt: true,
   completion: true,
   modelTitle: true,
   feedback: true,
+  sessionId: true,
 });
 
 export const chatFeedbackEventSchema_0_2_0_noPII =

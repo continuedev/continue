@@ -5,11 +5,9 @@ export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
   createdAt: true,
   userId: true,
   userAgent: true,
-  platform: true,
   selectedProfileId: true,
   eventName: true,
   schemaVersion: true,
-  sessionId: true,
 
   // autocomplete-specific
   disable: true,
