@@ -25,7 +25,7 @@ Reference any file in your current workspace.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: file
+    - provider: file
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -47,7 +47,7 @@ Reference specific functions or classes from throughout your project.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: code
+    - provider: code
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -69,7 +69,7 @@ Reference all of the changes you've made to your current branch. This is useful 
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: diff
+    - provider: diff
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -91,7 +91,7 @@ Reference the currently open file.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: currentFile
+    - provider: currentFile
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -113,7 +113,7 @@ Reference the last command you ran in your IDE's terminal and its output.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: terminal
+    - provider: terminal
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -135,7 +135,7 @@ Reference the contents from any documentation site.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: docs
+    - provider: docs
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -161,8 +161,8 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: open
-      with:
+    - provider: open
+      params:
         onlyPinned: true
   ```
   </TabItem>
@@ -190,8 +190,8 @@ Optionally, set `n` to limit the number of results returned (default 6).
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: web
-      with:
+    - provider: web
+      params:
         n: 5
   ```
   </TabItem>
@@ -217,7 +217,7 @@ Reference the most relevant snippets from your codebase.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml" 
   context:
-    - uses: codebase
+    - provider: codebase
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -241,7 +241,7 @@ Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: folder
+    - provider: folder
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -263,7 +263,7 @@ Reference the results of codebase search, just like the results you would get fr
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: search
+    - provider: search
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -287,7 +287,7 @@ Reference the markdown converted contents of a given URL.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml" 
   context:
-    - uses: url
+    - provider: url
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -309,7 +309,7 @@ Reference recent clipboard items
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: clipboard
+    - provider: clipboard
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -331,7 +331,7 @@ Reference the structure of your current workspace.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: tree
+    - provider: tree
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -353,7 +353,7 @@ Get Problems from the current file.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: problems
+    - provider: problems
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -375,8 +375,8 @@ Reference the contents of the local variables in the debugger. Currently only av
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: debugger
-      with:
+    - provider: debugger
+      params:
         stackDepth: 3
   ```
   </TabItem>
@@ -406,8 +406,8 @@ Reference the outline of your codebase. By default, signatures are included alon
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: repo-map
-      with:
+    - provider: repo-map
+      params:
         includeSignatures: false # default true
   ```
   </TabItem>
@@ -439,7 +439,7 @@ Reference the architecture and platform of your current operating system.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: os
+    - provider: os
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -500,8 +500,8 @@ Reference the conversation in a GitHub issue.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: issue
-      with:
+    - provider: issue
+      params:
         repos:
           - owner: continuedev
             repo: continue
@@ -538,8 +538,8 @@ Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: database
-      with:
+    - provider: database
+      params:
         connections:
           - name: examplePostgres
             connection_type: postgres
@@ -621,8 +621,8 @@ Reference the schema of a table, and some sample rows
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: postgres
-      with:
+    - provider: postgres
+      params:
         host: localhost
         port: 5436
         user: myuser
@@ -666,8 +666,8 @@ Reference the results of a Google search.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: google
-      with:
+    - provider: google
+      params:
         serperApiKey: "<your serper.dev api key>"
   ```
   </TabItem>
@@ -697,8 +697,8 @@ Reference an open MR for this branch on GitLab.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: gitlab-mr
-      with:
+    - provider: gitlab-mr
+      params:
         token: "..."
   ```
   </TabItem>
@@ -726,8 +726,8 @@ You can specify the domain to communicate with by setting the `domain` parameter
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: gitlab-mr
-      with:
+    - provider: gitlab-mr
+      params:
         token: "..."
         domain: "gitlab.example.com"
   ```
@@ -759,8 +759,8 @@ Reference the conversation in a Jira issue.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: jira
-      with:
+    - provider: jira
+      params:
         domain: company.atlassian.net
         token: ATATT...
   ```
@@ -792,8 +792,8 @@ to set the API Version to 2 using the `apiVersion` property.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: jira
-      with:
+    - provider: jira
+      params:
         apiVersion: "2"
   ```
   </TabItem>
@@ -829,8 +829,8 @@ Reference the messages in a Discord channel.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: discord
-      with:
+    - provider: discord
+      params:
         discordKey: "bot token"
         guildId: "1234567890" 
         channels:
@@ -875,8 +875,8 @@ The HttpContextProvider makes a POST request to the url passed in the configurat
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: http
-      with:
+    - provider: http
+      params:
         url: "https://api.example.com/v1/users"
   ```
   </TabItem>
@@ -930,8 +930,8 @@ Reference specific git commit metadata and diff or all of the recent commits.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: commit
-      with:
+    - provider: commit
+      params:
         Depth: 50
         LastXCommitsDepth: 10
   ```
@@ -962,8 +962,8 @@ Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - uses: greptile 
-      with:
+    - provider: greptile 
+      params:
         greptileToken: "..."
         githubToken: "..."
   ```

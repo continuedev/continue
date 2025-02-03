@@ -131,8 +131,8 @@ After you've set up your server, you can configure Continue to use it by adding 
 <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   context:
-    - uses: http
-      with:
+    - provider: http
+      params:
         url: https://myserver.com/retrieve
         name: http
         description: Custom HTTP Context Provider
