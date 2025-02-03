@@ -222,6 +222,7 @@ export class Core {
           message.messageType,
         )
       ) {
+        return;
       } else {
         void this.ide.showToast("error", err.message);
       }
