@@ -10,7 +10,8 @@ import { IMessenger } from "../../../core/protocol/messenger";
 import { showFreeTrialLoginMessage } from "./util/messages";
 
 export class VsCodeWebviewProtocol
-  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol> {
+  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
+{
   listeners = new Map<
     keyof FromWebviewProtocol,
     ((message: Message) => any)[]
@@ -114,8 +115,7 @@ export class VsCodeWebviewProtocol
             message = message.split("\n").filter((l: string) => l !== "")[1];
             try {
               message = JSON.parse(message).message;
-            } catch {
-            }
+            } catch {}
             if (message.includes("exceeded")) {
               message +=
                 " To keep using Continue, you can set up a local model or use your own API key.";
@@ -152,8 +152,7 @@ export class VsCodeWebviewProtocol
     this._webviewListener = this._webview.onDidReceiveMessage(handleMessage);
   }
 
-  constructor(private readonly reloadConfig: () => void) {
-  }
+  constructor(private readonly reloadConfig: () => void) {}
 
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -163,7 +162,7 @@ export class VsCodeWebviewProtocol
     throw new Error("Method not implemented.");
   }
 
-  onError(handler: (error: Error) => void): void {
+  onError(handler: (message: Message, error: Error) => void): void {
     throw new Error("Method not implemented.");
   }
 

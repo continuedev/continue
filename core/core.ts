@@ -57,7 +57,6 @@ import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
 export class Core {
-  // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
   configHandler: ConfigHandler;
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
