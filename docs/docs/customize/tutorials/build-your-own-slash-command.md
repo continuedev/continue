@@ -3,7 +3,7 @@ title: Build your own slash command
 ---
 
 :::info
-Slash commands can currently only be added using [`config.json`](../../json-reference.md) or `config.ts`, which have been deprecated in favor of the [`YAML Config Format`](../../reference.md). We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) to achieve similar functionality.
+Slash commands can currently only be added using [`config.json`](../../json-reference.md) or `config.ts`. The [`YAML Config Format`](../../reference.md) is the new and preferred format. We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) to achieve similar functionality.
 :::
 
 There are two ways to add custom slash commands:
@@ -21,7 +21,7 @@ You can add custom slash commands by adding to the `customCommands` property in 
 
 Custom commands are great when you are frequently reusing a prompt. For example, if you've crafted a great prompt and frequently ask the LLM to check for mistakes in your code, you could add a command like this:
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 customCommands=[{
     "name": "check",
     "description": "Check for mistakes in my code",

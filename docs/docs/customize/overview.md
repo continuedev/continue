@@ -16,7 +16,7 @@ Whatever you choose, you'll probably start by editing `config.yaml`.
 
 ## Editing config.json
 
-Most custom configuration is done by editing `config.yaml` (or Deprecated `config.json`). This is a YAML file that allows you to customize Continue to your liking. It is found at:
+Most custom configuration is done by editing `config.yaml` (or the older `config.json`). This is a YAML file that allows you to customize Continue to your liking. It is found at:
 
 - MacOS and Linux: `~/.continue/config.yaml`
 - Windows: `%USERPROFILE%\.continue\config.yaml`

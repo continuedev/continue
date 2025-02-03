@@ -13,7 +13,7 @@ Continue can be configured using a YAML file `config.yaml` which for local confi
 Below are details for each property that can be set in `config.yaml`.
 
 :::info
-Config YAML replaces `config.json`, which has been deprecated. View the **[Migration Guide](/yaml-migration)**. `config.yaml` currently only works in VS Code pre-release.
+Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**. `config.yaml` currently only works in VS Code pre-release.
 :::
 
 **All properties at all levels are optional unless explicitly marked as required.**

@@ -45,7 +45,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
 
 **Before**
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 {
   "models": [
     {
@@ -150,12 +150,12 @@ Note that the `repoMapFileSelection` experimental model role has been deprecated
 
 The JSON `contextProviders` field is replaced by the YAML `context` array.
 
-- JSON `name` maps to `uses`
+- JSON `name` maps to `provider`
 - JSON `params` map to `with`
 
 **Before**
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 {
   "contextProviders": [
     {
@@ -196,7 +196,7 @@ The `systemMessage` property has been replaced with a `rules` property that take
 
 **Before**
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 {
   "systemMessage": "Always give concise responses"
 }
@@ -215,7 +215,7 @@ Rather than with `customCommands`, you can now use the `prompts` field to define
 
 **Before**
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 {
   "customCommands": [
     {
@@ -250,7 +250,7 @@ Documentation is largely the same, but the `title` property has been replaced wi
 
 **Before**
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 {
   "docs": [
     {
@@ -287,7 +287,7 @@ docs:
 
 **Before**
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 {
   "experimental": {
     "modelContextProtocolServers": [

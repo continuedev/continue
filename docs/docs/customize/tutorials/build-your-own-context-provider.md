@@ -3,7 +3,7 @@ title: Build your own context provider
 ---
 
 :::info
-Custom context providers are added through `~/config.ts`, which has been deprecated in favor of the [`YAML Config Format`](../../reference.md). We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) and [MCP Servers](../context-providers.mdx#modelcontextprotocol) to achieve similar functionality.
+Custom context providers are added through `~/config.ts`. The [`YAML Config Format`](../../reference.md) is the new and preferred config format. We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) and [MCP Servers](../context-providers.mdx#modelcontextprotocol) to achieve similar functionality.
 :::
 
 ## Introductory Example
@@ -188,7 +188,7 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
 
 If you'd like to write a context provider in a language other than TypeScript, you can use the "http" context provider to call a server that hosts your own code. Add the context provider to `config.json` like this:
 
-```json title="config.json (Deprecated)"
+```json title="config.json""
 {
   "name": "http",
   "params": {

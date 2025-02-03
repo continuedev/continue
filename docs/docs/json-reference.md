@@ -5,7 +5,7 @@ keywords: [config, config_schema.json, json]
 ---
 
 :::info
-`config.json` has been deprecated in favor of the [`YAML Config Format`](./reference). See the [migration guide](./yaml-migration).
+`config.json` is the original Continue configuration format. The newer and preferred format is [`YAML Config`](./reference). See the [migration guide](./yaml-migration).
 :::
 
 Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
