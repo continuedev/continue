@@ -1,14 +1,23 @@
-import { baseDevDataSchema_0_2_0 } from "../base/0.2.0.js";
 import { tokensGeneratedEventAllSchema } from "./index.js";
 
-export const tokensGeneratedEventSchema_0_2_0 = baseDevDataSchema_0_2_0.merge(
+export const tokensGeneratedEventSchema_0_2_0 =
   tokensGeneratedEventAllSchema.pick({
+    // base
+    createdAt: true,
+    userId: true,
+    userAgent: true,
+    platform: true,
+    selectedProfileId: true,
+    eventName: true,
+    schemaVersion: true,
+    sessionId: true,
+
+    // tokens generated specific
     model: true,
     provider: true,
     promptTokens: true,
     generatedTokens: true,
-  }),
-);
+  });
 
 export const tokensGeneratedEventSchema_0_2_0_noPII =
   tokensGeneratedEventSchema_0_2_0;

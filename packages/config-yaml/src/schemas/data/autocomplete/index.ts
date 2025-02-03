@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { completionOptionsSchema } from "../../models.js";
+import { baseDevDataAllSchema } from "../base.js";
 
-export const autocompleteEventAllSchema = z.object({
+export const autocompleteEventAllSchema = baseDevDataAllSchema.extend({
   // Tab autocomplete options - TODO - old json version?
   disable: z.boolean(),
   useFileSuffix: z.boolean(),

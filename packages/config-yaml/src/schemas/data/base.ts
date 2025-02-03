@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const baseDevDataSchema_0_2_0 = z.object({
+export const baseDevDataAllSchema = z.object({
   eventName: z.string(),
   schemaVersion: z.string(),
   sessionId: z.string(),
