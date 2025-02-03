@@ -167,37 +167,16 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       .join("\n\n");
 
     return [
-      `${otherFiles}\n\n+++++ ${getFileName(relativePaths[relativePaths.length - 1])}\n[PREFIX]${prefix}`,
-      `${suffix}`,
+      `${otherFiles}\n\n+++++ ${getFileName(relativePaths[relativePaths.length - 1])}\n[SUFFIX]${suffix}\n[PREFIX]${prefix}`,
+      "",
     ];
   },
   template: (prefix: string, suffix: string): string => {
-    /*
-      This template is ignored with codestral provider, however theoretically it's possible that a provider
-      not supporting fim endpoint would have a model name matched with this template,
-      or the codestral implementation will be changed, so we provide a usable implementation.
-    */
-
-    const prefixMarkerIndex = prefix.lastIndexOf('[PREFIX]');
-
-    if (prefixMarkerIndex === -1) {
-      return suffix ? `[SUFFIX]${suffix}[PREFIX]${prefix}` : `[PREFIX]${prefix}`;
-    }
-
-    if (!suffix) {
-      // [PREFIX] already in the prompt, but suffix is an empty string
-      return prefix;
-    }
-
-    // Insert [SUFFIX]${suffix} just before [PREFIX]
-    return (
-      prefix.substring(0, prefixMarkerIndex) +
-      '[SUFFIX]' + suffix +
-      prefix.substring(prefixMarkerIndex)
-    );
+    return prefix
   },
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]", "\n+++++ "],
+    promptOnly: true
   },
 };
 
