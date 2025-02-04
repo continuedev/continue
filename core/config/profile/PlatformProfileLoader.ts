@@ -1,12 +1,10 @@
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
-import * as YAML from "yaml";
+import { ConfigResult } from "@continuedev/config-yaml";
+import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas/index.js";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
-
-import { ConfigResult } from "@continuedev/config-yaml";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
-import { clientRenderHelper } from "../yaml/clientRender.js";
+
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -21,14 +19,16 @@ export interface PlatformConfigMetadata {
 }
 
 export default class PlatformProfileLoader implements IProfileLoader {
-  static RELOAD_INTERVAL = 1000 * 60 * 15; // every 15 minutes
+  static RELOAD_INTERVAL = 1000 * 5; // 5 seconds
 
   description: ProfileDescription;
 
   constructor(
-    private configResult: ConfigResult<ConfigYaml>,
+    private configResult: ConfigResult<AssistantUnrolled>,
     private readonly ownerSlug: string,
     private readonly packageSlug: string,
+    private readonly iconUrl: string,
+    versionSlug: string,
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
@@ -37,37 +37,16 @@ export default class PlatformProfileLoader implements IProfileLoader {
   ) {
     this.description = {
       id: `${ownerSlug}/${packageSlug}`,
-      title: `${ownerSlug}/${packageSlug}`,
+      profileType: "platform",
+      fullSlug: {
+        ownerSlug,
+        packageSlug,
+        versionSlug,
+      },
+      title: `${ownerSlug}/${packageSlug}@${versionSlug}`,
       errors: configResult.errors,
+      iconUrl: this.iconUrl,
     };
-
-    setInterval(async () => {
-      const assistants = await this.controlPlaneClient.listAssistants();
-      const newConfigResult = assistants.find(
-        (assistant) =>
-          assistant.packageSlug === this.packageSlug &&
-          assistant.ownerSlug === this.ownerSlug,
-      )?.configResult;
-      if (!newConfigResult) {
-        return;
-      }
-
-      let renderedConfig: ConfigYaml | undefined = undefined;
-      if (newConfigResult.config) {
-        renderedConfig = await clientRenderHelper(
-          YAML.stringify(newConfigResult.config),
-          this.ide,
-          this.controlPlaneClient,
-        );
-      }
-
-      this.configResult = {
-        config: renderedConfig,
-        errors: newConfigResult.errors,
-        configLoadInterrupted: false,
-      };
-      this.onReload();
-    }, PlatformProfileLoader.RELOAD_INTERVAL);
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {

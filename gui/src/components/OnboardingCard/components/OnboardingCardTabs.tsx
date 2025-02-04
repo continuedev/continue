@@ -84,6 +84,7 @@ export function OnboardingCardTabs({
                 key={tabType}
                 isActive={activeTab === tabType}
                 onClick={() => onTabClick(tabType as TabTitle)}
+                data-testid={`onboarding-tab-${tabType}`}
               >
                 <p className="m-0 hidden font-medium md:block">
                   {titles.default}

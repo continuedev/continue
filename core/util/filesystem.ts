@@ -53,8 +53,8 @@ class FileSystemIde implements IDE {
       remoteConfigSyncPeriod: 60,
       userToken: "",
       enableControlServerBeta: false,
+      continueTestEnvironment: "none",
       pauseCodebaseIndexOnStart: false,
-      enableDebugLogs: false,
     };
   }
   async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {

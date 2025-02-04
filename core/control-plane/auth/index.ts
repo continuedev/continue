@@ -1,13 +1,16 @@
 import { v4 as uuidv4 } from "uuid";
+import { IdeSettings } from "../..";
+import { getControlPlaneEnv } from "../env";
 
-import { controlPlaneEnv } from "../env";
-
-export async function getAuthUrlForTokenPage(): Promise<string> {
+export async function getAuthUrlForTokenPage(
+  ideSettingsPromise: Promise<IdeSettings>,
+): Promise<string> {
+  const env = await getControlPlaneEnv(ideSettingsPromise);
   const url = new URL("https://api.workos.com/user_management/authorize");
   const params = {
     response_type: "code",
-    client_id: controlPlaneEnv.WORKOS_CLIENT_ID,
-    redirect_uri: `${controlPlaneEnv.APP_URL}tokens/callback`,
+    client_id: env.WORKOS_CLIENT_ID,
+    redirect_uri: `${env.APP_URL}tokens/callback`,
     // redirect_uri: "http://localhost:3000/tokens/callback",
     state: uuidv4(),
     provider: "authkit",

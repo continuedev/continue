@@ -26,7 +26,7 @@ export class DefaultCrawler {
     });
     if (!resp.ok) {
       const text = await resp.text();
-      throw new Error(`Failed to crawl site: ${text}`);
+      throw new Error(`Failed to crawl site (${resp.status}): ${text}`);
     }
     const json = (await resp.json()) as PageData[];
     return json;

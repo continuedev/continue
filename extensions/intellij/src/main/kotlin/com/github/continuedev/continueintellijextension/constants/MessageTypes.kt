@@ -80,6 +80,7 @@ class MessageTypes {
             "config/deleteModel",
             "config/listProfiles",
             "config/openProfile",
+            "config/updateSharedConfig",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -116,6 +117,9 @@ class MessageTypes {
             "profiles/switch",
             "didChangeSelectedProfile",
             "tools/call",
+            "controlPlane/openUrl",
+            "controlPlane/listOrganizations"
+
         )
     }
 }

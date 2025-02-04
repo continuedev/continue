@@ -1,11 +1,11 @@
 import { ModelConfig } from "@continuedev/config-yaml";
-import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas";
+import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas";
 
 import { SerializedContinueConfig } from "../..";
 
 export function convertConfigJsonToConfigYaml(
   configJson: SerializedContinueConfig,
-): ConfigYaml {
+): AssistantUnrolled {
   return {
     name: "Local Config",
     version: "1.0.0",
@@ -24,8 +24,8 @@ export function convertConfigJsonToConfigYaml(
       // rerankModels
     ],
     context: configJson.contextProviders?.map((provider) => ({
-      uses: provider.name,
-      with: provider.params,
+      provider: provider.name,
+      params: provider.params,
     })),
   };
 }
