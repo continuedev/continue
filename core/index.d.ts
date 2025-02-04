@@ -1105,7 +1105,7 @@ export interface ExperimentalConfig {
 }
 
 export interface AnalyticsConfig {
-  type: string;
+  provider: string;
   url?: string;
   clientKey?: string;
 }

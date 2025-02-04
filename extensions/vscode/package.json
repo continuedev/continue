@@ -214,7 +214,7 @@
         "command": "continue.toggleFullScreen",
         "category": "Continue",
         "title": "Toggle Full Screen",
-        "icon": "$(fullscreen)",
+        "icon": "$(link-external)",
         "group": "Continue"
       },
       {
