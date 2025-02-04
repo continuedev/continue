@@ -877,6 +877,12 @@ export class Core {
       void this.configHandler.setSelectedProfile(msg.data.id);
       void this.configHandler.reloadConfig();
     });
+
+    on("didChangeSelectedOrg", (msg) => {
+      void this.configHandler.setSelectedOrgId(msg.data.id);
+      void this.configHandler.reloadConfig();
+    });
+
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });
