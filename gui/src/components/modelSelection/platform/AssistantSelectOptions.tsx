@@ -6,12 +6,13 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { setProfileId } from "../../../redux/thunks/setProfileId";
-import { getFontSize, getMetaKeyLabel } from "../../../util";
+import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import AboutAssistantDialog from "../../dialogs/AboutAssistantDialog";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../util/navigation";
+import AssistantIcon from "./AssistantIcon";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;

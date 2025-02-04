@@ -1,21 +1,23 @@
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import PageHeader from "../../components/PageHeader";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import PageHeader from "../../components/PageHeader";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+
+import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import {
-  modifyContinueConfigWithSharedConfig,
   SharedConfigSchema,
+  modifyContinueConfigWithSharedConfig,
 } from "core/config/sharedConfig";
-import { updateConfig } from "../../redux/slices/configSlice";
-import ToggleSwitch from "../../components/gui/Switch";
-import { useAuth } from "../../context/Auth";
-import { Button, Input } from "../../components";
-import { getFontSize } from "../../util";
+import { Input, SecondaryButton } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import ToggleSwitch from "../../components/gui/Switch";
+import { useAuth } from "../../context/Auth";
+import { updateConfig } from "../../redux/slices/configSlice";
+import { getFontSize } from "../../util";
+import { ScopeSelect } from "./ScopeSelect";
 
 function ConfigPage() {
   useNavigationListener();
@@ -23,7 +25,7 @@ function ConfigPage() {
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const { selectedProfile } = useAuth();
+  const { selectedProfile, selectedOrganization, session } = useAuth();
   const config = useAppSelector((state) => state.config.config);
 
   function handleUpdate(sharedConfig: Partial<SharedConfigSchema>) {
@@ -49,6 +51,14 @@ function ConfigPage() {
   const useAutocompleteMultilineCompletions =
     config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
   const fontSize = getFontSize();
+
+  const [hubEnabled, setHubEnabled] = useState(false);
+
+  useEffect(() => {
+    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
+      setHubEnabled(continueTestEnvironment === "production");
+    });
+  }, [ideMessenger]);
 
   // Disable autocomplete
   const disableAutocompleteInFiles = (
@@ -100,22 +110,57 @@ function ConfigPage() {
     });
   }
 
-  return (
-    <div className="overflow-y-scroll px-2">
-      <PageHeader onClick={() => navigate("/")} title="Chat" />
-      <h1 className="text-center">Continue Config</h1>
-
-      {!selectedProfile ? (
-        <p className="text-center">No config profile selected</p>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-2 px-3">
+  if (!selectedProfile) {
+    return (
+      <div className="overflow-y-scroll">
+        <PageHeader onTitleClick={() => navigate("/")} title="Chat" />
+        <div className="px-4">
           <div>
-            <Button onClick={handleOpenConfig}>
-              {selectedProfile.id === "local" ? "Open Config File" : "Nooooo"}
-            </Button>
+            <h2>Continue Config</h2>
           </div>
-          <h2 className="text-center">Other Settings</h2>
-          <div className="flex flex-col items-end gap-2">
+          <p className="italic">No config profile selected</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-y-scroll">
+      <PageHeader onTitleClick={() => navigate("/")} title="Chat" />
+
+      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
+        {hubEnabled && !!session && (
+          <div className="flex flex-col gap-4 py-6">
+            <div>
+              <h2 className="mb-1 mt-0">Account</h2>
+              {selectedOrganization?.name && (
+                <span className="text-lightgray">
+                  You are currently signed in to{" "}
+                  <span className="font-semibold">
+                    {selectedOrganization?.name}
+                  </span>
+                </span>
+              )}
+            </div>
+
+            <ScopeSelect />
+          </div>
+        )}
+
+        <div className="flex flex-col gap-4 py-6">
+          <h2 className="mb-1 mt-0">Configuration</h2>
+
+          <SecondaryButton onClick={handleOpenConfig} className="!my-0">
+            Open configuration file
+          </SecondaryButton>
+        </div>
+
+        <div className="flex flex-col gap-4 py-6">
+          <div>
+            <h2 className="mb-4 mt-0">User settings</h2>
+          </div>
+
+          <div className="flex flex-col gap-4">
             <ToggleSwitch
               isToggled={codeWrap}
               onToggle={() =>
@@ -202,7 +247,7 @@ function ConfigPage() {
               text="Use Chromium for Docs Crawling"
             />
 
-            <label className="flex items-center justify-end gap-3">
+            <label className="flex items-center justify-between gap-3">
               <span className="text-right">Codeblock Actions Position</span>
               <Select
                 value={codeBlockToolbarPosition}
@@ -219,7 +264,7 @@ function ConfigPage() {
               </Select>
             </label>
 
-            <label className="flex items-center justify-end gap-3">
+            <label className="flex items-center justify-between gap-3">
               <span className="text-right">Multiline Autocompletions</span>
               <Select
                 value={useAutocompleteMultilineCompletions}
@@ -238,7 +283,7 @@ function ConfigPage() {
               </Select>
             </label>
 
-            <label className="flex items-center justify-end gap-3">
+            <label className="flex items-center justify-between gap-3">
               <span className="text-right">Font Size</span>
               <NumberInput
                 value={fontSize}
@@ -252,95 +297,109 @@ function ConfigPage() {
               />
             </label>
 
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-right">Font Size</span>
+              <NumberInput
+                value={fontSize}
+                onChange={(val) =>
+                  handleUpdate({
+                    fontSize: val,
+                  })
+                }
+                min={7}
+                max={50}
+              />
+            </label>
             <form
-              className="flex flex-col items-end gap-1"
+              className="flex flex-col gap-1"
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSubmitPromptPath();
               }}
             >
-              <label className="flex flex-row items-center justify-end gap-3">
-                <span className="text-right">Workspace prompts path</span>
-                <Input
-                  value={formPromptPath}
-                  className="max-w-[100px]"
-                  onChange={(e) => {
-                    setFormPromptPath(e.target.value);
-                  }}
-                />
-                <div className="flex h-full flex-col">
-                  {formPromptPath !== promptPath ? (
-                    <>
-                      <div
-                        onClick={handleSubmitPromptPath}
-                        className="cursor-pointer"
-                      >
-                        <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
+              <div className="flex items-center justify-between">
+                <span>Workspace prompts path</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={formPromptPath}
+                    className="max-w-[100px]"
+                    onChange={(e) => {
+                      setFormPromptPath(e.target.value);
+                    }}
+                  />
+                  <div className="flex h-full flex-col">
+                    {formPromptPath !== promptPath ? (
+                      <>
+                        <div
+                          onClick={handleSubmitPromptPath}
+                          className="cursor-pointer"
+                        >
+                          <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
+                        </div>
+                        <div
+                          onClick={cancelChangePromptPath}
+                          className="cursor-pointer"
+                        >
+                          <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
                       </div>
-                      <div
-                        onClick={cancelChangePromptPath}
-                        className="cursor-pointer"
-                      >
-                        <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
-                      </div>
-                    </>
-                  ) : (
-                    <div>
-                      <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </label>
+              </div>
             </form>
-
             <form
-              className="flex flex-col items-end gap-1"
+              className="flex flex-col gap-1"
               onSubmit={(e) => {
                 e.preventDefault();
                 handleDisableAutocompleteSubmit();
               }}
             >
-              <label className="flex flex-row items-center justify-end gap-3">
-                <span className="text-right">
-                  Disable autocomplete in files
-                </span>
-                <Input
-                  value={formDisableAutocomplete}
-                  className="max-w-[100px]"
-                  onChange={(e) => {
-                    setFormDisableAutocomplete(e.target.value);
-                  }}
-                />
-                <div className="flex h-full flex-col">
-                  {formDisableAutocomplete !== disableAutocompleteInFiles ? (
-                    <>
-                      <div
-                        onClick={handleDisableAutocompleteSubmit}
-                        className="cursor-pointer"
-                      >
-                        <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
+              <div className="flex items-center justify-between">
+                <span>Disable autocomplete in files</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={formDisableAutocomplete}
+                    className="max-w-[100px]"
+                    onChange={(e) => {
+                      setFormDisableAutocomplete(e.target.value);
+                    }}
+                  />
+                  <div className="flex h-full flex-col">
+                    {formDisableAutocomplete !== disableAutocompleteInFiles ? (
+                      <>
+                        <div
+                          onClick={handleDisableAutocompleteSubmit}
+                          className="cursor-pointer"
+                        >
+                          <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
+                        </div>
+                        <div
+                          onClick={cancelChangeDisableAutocomplete}
+                          className="cursor-pointer"
+                        >
+                          <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
                       </div>
-                      <div
-                        onClick={cancelChangeDisableAutocomplete}
-                        className="cursor-pointer"
-                      >
-                        <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
-                      </div>
-                    </>
-                  ) : (
-                    <div>
-                      <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </label>
-              <span className="text-vsc-foreground-muted text-xs">
+              </div>
+              <span className="text-vsc-foreground-muted self-end text-xs">
                 Comma-separated list of path matchers
               </span>
             </form>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

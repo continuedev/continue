@@ -118,7 +118,9 @@ class MessageTypes {
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",
-            "controlPlane/openUrl"
+            "controlPlane/openUrl",
+            "controlPlane/listOrganizations"
+
         )
     }
 }

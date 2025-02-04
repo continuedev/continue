@@ -62,6 +62,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "didChangeSelectedOrg",
     "tools/call",
     "controlPlane/openUrl",
+    "controlPlane/listOrganizations",
   ];
 
 // Message types to pass through from core to webview

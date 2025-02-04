@@ -8,6 +8,7 @@ import {
 } from "@continuedev/config-yaml";
 import fetch, { RequestInit, Response } from "node-fetch";
 
+import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
 import { IdeSettings, ModelDescription } from "../index.js";
 
 import { getControlPlaneEnv } from "./env.js";
@@ -32,10 +33,6 @@ export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 export class ControlPlaneClient {
-  private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
-
-  private lastAccessTokenRefresh = 0;
-
   constructor(
     private readonly sessionInfoPromise: Promise<
       ControlPlaneSessionInfo | undefined
@@ -121,7 +118,11 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request("ide/list-assistants", {
+      const url = organizationId
+        ? `ide/list-assistants?organizationId=${organizationId}`
+        : "ide/list-assistants";
+
+      const resp = await this.request(url, {
         method: "GET",
       });
       return (await resp.json()) as any;
