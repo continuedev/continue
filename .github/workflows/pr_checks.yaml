@@ -21,6 +21,7 @@ on:
       - "core/**"
       - "gui/**"
       - ".github/workflows/**"
+      - "docs/**"
 
 jobs:
   install-root:
