@@ -72,6 +72,10 @@ export function debounced(delay: number, fn: (...args: any[]) => void) {
 type Platform = "mac" | "linux" | "windows" | "unknown";
 
 export function getPlatform(): Platform {
+  if (vscode.env.uiKind === vscode.UIKind.Web) {
+    return "unknown";
+  }
+
   const platform = os.platform();
   if (platform === "darwin") {
     return "mac";
@@ -87,6 +91,8 @@ export function getPlatform(): Platform {
 export function getAltOrOption() {
   if (getPlatform() === "mac") {
     return "⌥";
+  } else if (getPlatform() === "unknown") {
+    return "Alt/⌥";
   } else {
     return "Alt";
   }
@@ -101,7 +107,7 @@ export function getMetaKeyLabel() {
     case "windows":
       return "^";
     default:
-      return "^";
+      return "^/⌘";
   }
 }
 
@@ -114,7 +120,7 @@ export function getMetaKeyName() {
     case "windows":
       return "Ctrl";
     default:
-      return "Ctrl";
+      return "Ctrl/Cmd";
   }
 }
 
