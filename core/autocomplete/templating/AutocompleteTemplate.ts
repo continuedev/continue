@@ -55,6 +55,8 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 };
 
 // https://github.com/QwenLM/Qwen2.5-Coder?tab=readme-ov-file#3-file-level-code-completion-fill-in-the-middle
+// This issue asks about the use of <|repo_name|> and <|file_sep|> together with <|fim_prefix|>, <|fim_suffix|> and <|fim_middle|>
+// https://github.com/QwenLM/Qwen2.5-Coder/issues/343
 const qwenCoderFimTemplate: AutocompleteTemplate = {
   compilePrefixSuffix: (
     prefix: string,
@@ -96,7 +98,7 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
     // Empty suffix will make the prefix be used as a single prompt
     return [prompt, ""];
   },
-  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  template: "{{{prefix}}}", // output of compilePrefixSuffix already compiles everything into a single prompt
   completionOptions: {
     stop: [
       "<|endoftext|>",
@@ -167,15 +169,16 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       .join("\n\n");
 
     return [
-      `${otherFiles}\n\n+++++ ${getFileName(relativePaths[relativePaths.length - 1])}\n[PREFIX]${prefix}`,
-      `${suffix}`,
+      `${otherFiles}\n\n+++++ ${getFileName(relativePaths[relativePaths.length - 1])}\n[SUFFIX]${suffix}\n[PREFIX]${prefix}`,
+      "",
     ];
   },
   template: (prefix: string, suffix: string): string => {
-    return "NOT USED!"; //`[SUFFIX]${suffix}[PREFIX]${prefix}`;
+    return prefix
   },
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]", "\n+++++ "],
+    promptOnly: true
   },
 };
 
