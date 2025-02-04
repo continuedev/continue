@@ -20,6 +20,10 @@ class DocsContextProvider extends BaseContextProvider {
     displayTitle: "Docs",
     description: "Type to search docs",
     type: "submenu",
+    // Todo: consider a different renderInline so that when multiple docs are referenced in one message,
+    // Or the doc has an odd name unrelated to the content
+    // The name of the doc itself doesn't skew the embedding results
+    // renderInlineAs: "<docs-context-provider>",
   };
 
   constructor(options: any) {
@@ -82,6 +86,7 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    const nRetrieve = this.options?.nRetrieve ?? DocsContextProvider.nRetrieve;
     const useReranking = this.options?.useReranking ?? true;
 
     // Get docs service
@@ -96,7 +101,7 @@ class DocsContextProvider extends BaseContextProvider {
     let chunks = await docsService.retrieveChunksFromQuery(
       extras.fullInput, // confusing: fullInput = the query, query = startUrl in this case
       query,
-      this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
+      nRetrieve,
     );
     if (!chunks?.length) {
       return [];

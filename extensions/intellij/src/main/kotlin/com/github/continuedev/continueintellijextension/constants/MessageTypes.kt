@@ -2,13 +2,6 @@ package com.github.continuedev.continueintellijextension.constants
 
 class MessageTypes {
     companion object {
-        val generatorTypes = listOf(
-            "llm/streamComplete",
-            "llm/streamChat",
-            "command/run",
-            "streamDiffLines"
-        )
-
         val ideMessageTypes = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",
@@ -87,6 +80,7 @@ class MessageTypes {
             "config/deleteModel",
             "config/listProfiles",
             "config/openProfile",
+            "config/updateSharedConfig",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -123,6 +117,9 @@ class MessageTypes {
             "profiles/switch",
             "didChangeSelectedProfile",
             "tools/call",
+            "controlPlane/openUrl",
+            "controlPlane/listOrganizations"
+
         )
     }
 }

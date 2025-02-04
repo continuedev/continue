@@ -42,16 +42,42 @@ export const completionOptionsSchema = z.object({
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
-export const modelSchema = z.object({
+const baseModelFields = {
   name: z.string(),
-  provider: z.string(),
   model: z.string(),
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
-  apiKeySecret: z.string().optional(),
   roles: modelRolesSchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
-});
+};
+
+export const modelSchema = z.union([
+  z.object({
+    ...baseModelFields,
+    provider: z.literal("continue-proxy"),
+    apiKeyLocation: z.string(),
+  }),
+  z.object({
+    ...baseModelFields,
+    provider: z.string().refine((val) => val !== "continue-proxy"),
+  }),
+]);
+
+export const partialModelSchema = z.union([
+  z
+    .object({
+      ...baseModelFields,
+      provider: z.literal("continue-proxy"),
+      apiKeyLocation: z.string(),
+    })
+    .partial(),
+  z
+    .object({
+      ...baseModelFields,
+      provider: z.string().refine((val) => val !== "continue-proxy"),
+    })
+    .partial(),
+]);
 
 export type ModelConfig = z.infer<typeof modelSchema>;
