@@ -60,7 +60,7 @@ const Shortcut: React.FC<ShortcutProps> = ({ children }) => {
                   fontSize:
                     modifierKeys.includes(key) && platform === "mac"
                       ? `${getFontSize() - 2}px`
-                      : `${getFontSize() - 2}px`,
+                      : `${getFontSize() - 3}px`,
                 }}
               >
                 {key}

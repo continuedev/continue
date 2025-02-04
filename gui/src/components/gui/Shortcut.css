@@ -10,9 +10,11 @@
 }
 
 .keyboard-key {
-  font-family: "Inter"/*, monospace*/;
+  font-family: "Inter", monospace;
+  letter-spacing: 0.05rem;
   color: --vscode-editor-foreground;
-  padding: 0px 2px;
+  padding: 1px 4px;
+  margin: 0.08rem 0.08rem;
 }
 
 .keyboard-key-meta {
@@ -24,6 +26,8 @@
 }
 
 .separator {
-  margin: 0 3px;
-  color: var(--vscode-editor-foreground);
+  position: relative;
+  top: 0.1rem;
+  margin: 0 0.1rem;
+  color: --vscode-editor-foreground;
 }
