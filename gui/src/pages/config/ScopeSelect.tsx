@@ -1,5 +1,3 @@
-// gui/src/pages/config/ScopeSelect.tsx
-
 import { Listbox } from "@headlessui/react";
 import {
   ChevronDownIcon,
