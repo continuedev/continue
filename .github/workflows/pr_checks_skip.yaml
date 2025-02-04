@@ -7,13 +7,13 @@ on:
     branches:
       - main
     paths:
-      - docs/**
+      - "docs/**"
 
   push:
     branches:
       - main
     paths:
-      - docs/**
+      - "docs/**"
 
 jobs:
   require-all-checks-to-pass:
