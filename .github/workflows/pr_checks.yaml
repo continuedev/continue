@@ -444,6 +444,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
           echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+        if: ${{ github.event.pull_request.head.repo.fork == false }}
 
       - name: Set up Xvfb
         run: |
@@ -453,7 +454,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
+          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 
