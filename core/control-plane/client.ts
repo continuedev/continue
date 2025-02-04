@@ -1,8 +1,4 @@
 import { ConfigJson } from "@continuedev/config-types";
-import fetch, { RequestInit, Response } from "node-fetch";
-
-import { IdeSettings, ModelDescription } from "../index.js";
-
 import {
   AssistantUnrolled,
   ConfigResult,
@@ -10,6 +6,11 @@ import {
   FullSlug,
   SecretResult,
 } from "@continuedev/config-yaml";
+import fetch, { RequestInit, Response } from "node-fetch";
+
+import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
+import { IdeSettings, ModelDescription } from "../index.js";
+
 import { getControlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
@@ -32,10 +33,6 @@ export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 export class ControlPlaneClient {
-  private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
-
-  private lastAccessTokenRefresh = 0;
-
   constructor(
     private readonly sessionInfoPromise: Promise<
       ControlPlaneSessionInfo | undefined
@@ -107,7 +104,7 @@ export class ControlPlaneClient {
     }
   }
 
-  public async listAssistants(): Promise<
+  public async listAssistants(organizationId?: string): Promise<
     {
       configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
@@ -121,13 +118,42 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request("ide/list-assistants", {
+      const url = organizationId
+        ? `ide/list-assistants?organizationId=${organizationId}`
+        : "ide/list-assistants";
+
+      const resp = await this.request(url, {
         method: "GET",
       });
       return (await resp.json()) as any;
     } catch (e) {
       return [];
     }
+  }
+
+  public async listOrganizations(): Promise<Array<OrganizationDescription>> {
+    return [
+      {
+        id: "1",
+        iconUrl:
+          "https://cdn.prod.website-files.com/663e06c56841363663ffbbcf/663e1b9fb023f0b622ad3608_log-text.svg",
+        name: "Continue",
+      },
+    ];
+    // const userId = await this.userId;
+    // if (!userId) {
+    //   return [];
+    // }
+
+    // try {
+    //   const resp = await this.request("ide/list-organizations", {
+    //     method: "GET",
+    //   });
+    //   const { organizations } = (await resp.json()) as any;
+    //   return organizations;
+    // } catch (e) {
+    //   return [];
+    // }
   }
 
   public async listAssistantFullSlugs(): Promise<FullSlug[] | null> {
