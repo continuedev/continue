@@ -2,7 +2,6 @@ import { TabAutocompleteOptions } from "../index.js";
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
-  useFileSuffix: true,
   maxPromptTokens: 1024,
   prefixPercentage: 0.3,
   maxSuffixPercentage: 0.2,

@@ -132,12 +132,12 @@
             <override-text place="GoToAction" text="View History"/>
         </action>
 
-        <action id="continue.openConfig"
+        <action id="continue.openConfigPage"
                 class="com.github.continuedev.continueintellijextension.actions.OpenConfigAction"
                 icon="AllIcons.General.GearPlain"
-                text="Open Continue Config"
-                description="Open Continue Config">
-            <override-text place="GoToAction" text="Open Continue Config"/>
+                text="Continue Config"
+                description="Continue Config">
+            <override-text place="GoToAction" text="Continue Config"/>
         </action>
 
         <action id="continue.openAccountDialog"
@@ -159,7 +159,7 @@
         <group id="ContinueSidebarActionsGroup">
             <reference ref="continue.newContinueSession"/>
             <reference ref="continue.viewHistory"/>
-            <reference ref="continue.openConfig"/>
+            <reference ref="continue.openConfigPage"/>
             <reference ref="continue.openAccountDialog"/>
             <reference ref="continue.openMorePage"/>
         </group>

@@ -230,6 +230,19 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["deepseek"],
     isOpenSource: false,
   },
+  deepseekReasonerApi: {
+    title: "DeepSeek Reasoner",
+    description:
+      "An open-source reasoning model which generates a chain of thought to enhance the accuracy of its responses.",
+    params: {
+      title: "DeepSeek Reasoner",
+      model: "deepseek-reasoner",
+      contextLength: 64_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["deepseek"],
+    isOpenSource: true,
+  },
   deepseekCoder2Lite: {
     title: "DeepSeek Coder 2 Lite",
     description:
@@ -1221,6 +1234,21 @@ export const models: { [key: string]: ModelPackage } = {
       model: "gpt-o1-mini",
       contextLength: 128_000,
       title: "GPT-o1-mini",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  asksagegpto3mini: {
+    title: "GPT-o3-mini",
+    description:
+      "o3-mini can outperform o1 in coding and other reasoning tasks, and is 93% cheaper and has lower latency. It supports function calling, Structured Outputs, streaming, and developer messages. o3-mini comes with a larger context window of 200,000 tokens and a max output of 100,000 tokens",
+    params: {
+      model: "gpt-o3-mini",
+      contextLength: 200_000,
+      title: "GPT-o3-mini",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },

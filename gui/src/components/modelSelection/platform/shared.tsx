@@ -13,7 +13,6 @@ export const OptionDiv = styled.div<{
   isDisabled?: boolean;
   isSelected?: boolean;
 }>`
-  border-radius: ${defaultBorderRadius};
   padding: 6px 12px;
 
   min-width: 0px;

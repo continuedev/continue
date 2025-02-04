@@ -1,10 +1,4 @@
-import {
-  Position,
-  Range,
-  RangeInFile,
-  RangeInFileWithContents,
-  TabAutocompleteOptions,
-} from "../..";
+import { Position, Range, RangeInFile, TabAutocompleteOptions } from "../..";
 import { AutocompleteCodeSnippet } from "../snippets/types";
 
 export type RecentlyEditedRange = RangeInFile & {
@@ -42,6 +36,7 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   modelName: string;
   completionOptions: any;
   cacheHit: boolean;
+  numLines: number;
   filepath: string;
   gitRepo?: string;
   completionId: string;

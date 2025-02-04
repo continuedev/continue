@@ -22,6 +22,7 @@ interface ContinueInputBoxProps {
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
   hidden?: boolean;
+  inputId: string; // used to keep track of things per input in redux
 }
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
@@ -132,6 +133,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             availableSlashCommands={filteredSlashCommands}
             historyKey={historyKey}
             toolbarOptions={toolbarOptions}
+            inputId={props.inputId}
           />
         </GradientBorder>
       </div>

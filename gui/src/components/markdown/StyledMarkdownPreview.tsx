@@ -34,6 +34,7 @@ import { remarkTables } from "./utils/remarkTables";
 const StyledMarkdown = styled.div<{
   fontSize?: number;
   whiteSpace: string;
+  bgColor: string;
 }>`
   pre {
     white-space: ${(props) => props.whiteSpace};
@@ -63,7 +64,7 @@ const StyledMarkdown = styled.div<{
     color: #f78383;
   }
 
-  background-color: ${vscBackground};
+  background-color: ${(props) => props.bgColor};
   font-family:
     var(--vscode-font-family),
     system-ui,
@@ -104,6 +105,7 @@ interface StyledMarkdownPreviewProps {
   isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
   scrollLocked?: boolean;
   itemIndex?: number;
+  useParentBackgroundColor?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -332,7 +334,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const uiConfig = useAppSelector(selectUIConfig);
   const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
-    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>
+    <StyledMarkdown
+      fontSize={getFontSize()}
+      whiteSpace={codeWrapState}
+      bgColor={props.useParentBackgroundColor ? "" : vscBackground}
+    >
       {reactContent}
     </StyledMarkdown>
   );

@@ -29,16 +29,6 @@ const LayoutTopDiv = styled(CustomScrollbarDiv)`
   border-radius: ${defaultBorderRadius};
   position: relative;
   overflow-x: hidden;
-
-  &::after {
-    position: absolute;
-    content: "";
-    width: 100%;
-    height: 1px;
-    background-color: rgba(136, 136, 136, 0.3);
-    top: 0;
-    left: 0;
-  }
 `;
 
 const GridDiv = styled.div`

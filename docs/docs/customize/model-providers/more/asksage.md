@@ -60,6 +60,7 @@ The current Models available provided by Ask Sage are:
 | 8     | GPT-4-32K              |  Yes  | ✅     |
 | 9     | GPT-o1                 |  Yes  | ✅     |
 | 10    | GPT-o1-mini            |  Yes  | ✅     |
+| 10    | GPT-o3-mini            |  Yes  | ✅     |
 | 11    | GPT-3.5-turbo          |  Yes  | ✅     |
 | 12    | Calude 3.5 Sonnet Gov  |  Yes  | ✅     |
 | 13    | Calude 3 Opus          |  Yes  | ✅     |

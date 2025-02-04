@@ -49,7 +49,7 @@ const modelsByProvider: Record<string, ModelPackage[]> = {
     models.mistralLarge,
   ],
   Cohere: [models.commandR, models.commandRPlus],
-  DeepSeek: [models.deepseekCoderApi, models.deepseekChatApi],
+  DeepSeek: [models.deepseekCoderApi, models.deepseekChatApi, models.deepseekReasonerApi],
   Gemini: [models.geminiPro, models.gemini15Pro, models.gemini15Flash],
   "Open Source": [models.llama3Chat, models.mistralOs, models.deepseek],
 };

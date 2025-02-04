@@ -1,6 +1,7 @@
 import _ from "lodash";
 import { getLocalStorage } from "./localStorage";
 import { KeyboardEvent } from "react";
+import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 
 type Platform = "mac" | "linux" | "windows" | "unknown";
 
@@ -104,4 +105,8 @@ export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   }
 
   return newObject;
+}
+
+export function isLocalProfile(profile: ProfileDescription): boolean {
+  return profile.id === "local";
 }

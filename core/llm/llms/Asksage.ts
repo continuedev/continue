@@ -24,6 +24,7 @@ class Asksage extends BaseLLM {
     "gpt4-32k": "gpt4-32k",
     "gpt-o1": "gpt-o1", // Works
     "gpt-o1-mini": "gpt-o1-mini", // Works
+    "gpt-o3-mini": "gpt-o3-mini", // Stub
     "gpt-3.5-turbo": "gpt35-16k", // Works
     "aws-bedrock-claude-35-sonnet-gov": "aws-bedrock-claude-35-sonnet-gov", // Works
     "claude-3-5-sonnet-latest": "claude-35-sonnet", // Works

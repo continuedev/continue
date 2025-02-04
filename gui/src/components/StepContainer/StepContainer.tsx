@@ -11,6 +11,7 @@ import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
+import Reasoning from "./Reasoning";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -90,11 +91,15 @@ export default function StepContainer(props: StepContainerProps) {
             {renderChatMessage(props.item.message)}
           </pre>
         ) : (
-          <StyledMarkdownPreview
-            isRenderingInStepContainer
-            source={stripImages(props.item.message.content)}
-            itemIndex={props.index}
-          />
+          <>
+            <Reasoning {...props}/>
+
+            <StyledMarkdownPreview
+              isRenderingInStepContainer
+              source={stripImages(props.item.message.content)}
+              itemIndex={props.index}
+            />
+          </>
         )}
         {props.isLast && <ThinkingIndicator historyItem={props.item} />}
       </ContentDiv>

@@ -370,7 +370,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.deepseekCoderApi, models.deepseekChatApi],
+    packages: [models.deepseekCoderApi, models.deepseekChatApi, models.deepseekReasonerApi],
     apiKeyUrl: "https://platform.deepseek.com/api_keys",
   },
   together: {

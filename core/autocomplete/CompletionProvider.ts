@@ -246,6 +246,7 @@ export class CompletionProvider {
         completionOptions,
         cacheHit,
         filepath: helper.filepath,
+        numLines: completion.split("\n").length,
         completionId: helper.input.completionId,
         gitRepo: await this.ide.getRepoName(helper.filepath),
         uniqueId: await this.ide.getUniqueId(),

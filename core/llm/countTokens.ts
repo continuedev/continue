@@ -399,10 +399,10 @@ function compileChatMessages(
 
   if (
     (systemMessage && systemMessage.trim() !== "") ||
-    msgs?.[0].role === "system"
+    msgs?.[0]?.role === "system"
   ) {
     let content = "";
-    if (msgs?.[0].role === "system") {
+    if (msgs?.[0]?.role === "system") {
       content = renderChatMessage(msgs?.[0]);
     }
     if (systemMessage && systemMessage.trim() !== "") {

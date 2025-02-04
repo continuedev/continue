@@ -36,6 +36,8 @@ import { slashFromCustomCommand } from "../../commands";
 import { allTools } from "../../tools";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
+import { GlobalContext } from "../../util/GlobalContext";
+import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
 
 async function loadConfigYaml(
   workspaceConfigs: string[],
@@ -301,10 +303,9 @@ export async function loadContinueConfigFromYaml(
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<ContinueConfig>> {
-  const configYamlPath = getConfigYamlPath(ideType);
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(configYamlPath, "utf-8")
+      ? fs.readFileSync(getConfigYamlPath(ideType), "utf-8")
       : "";
 
   const configYamlResult = await loadConfigYaml(
@@ -342,8 +343,16 @@ export async function loadContinueConfigFromYaml(
     }
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    continueConfig,
+    sharedConfig,
+  );
+
   return {
-    config: continueConfig,
+    config: withShared,
     errors: configYamlResult.errors,
     configLoadInterrupted: false,
   };

@@ -26,6 +26,9 @@ export const CodeBlockExtension = Node.create({
       item: {
         default: "",
       },
+      inputId: {
+        default: "",
+      },
     };
   },
 

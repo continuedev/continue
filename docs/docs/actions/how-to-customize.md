@@ -50,6 +50,7 @@ export function modifyConfig(config: Config): Config {
   return config;
 }
 ```
+
 <!-- TODO: We need a config.ts reference -->
 <!-- For full `config.ts` reference, see [here](reference/config-ts.md). -->
 
@@ -57,4 +58,4 @@ export function modifyConfig(config: Config): Config {
 
 Currently the other action triggers are not open for configuration, but we plan to allow this via .prompt files in the future.
 
-<!-- For any actions defined in a .prompt file, you can [configure a specific model](TODO). -->
+<!-- For any actions defined in a .prompt file, you can [configure a specific model](/). -->

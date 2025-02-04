@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { IContextProvider, IdeSettings } from "core";
+import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME, getControlPlaneEnv } from "core/control-plane/env";
 import { Core } from "core/core";
@@ -375,9 +375,9 @@ export class VsCodeExtension {
       void this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
-    const originalValue = vscode.workspace
+    const enableContinueHub = vscode.workspace
       .getConfiguration(EXTENSION_NAME)
-      .get<IdeSettings["continueTestEnvironment"]>("continueTestEnvironment");
+      .get<boolean>("enableContinueHub");
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = this.ide.getIdeSettingsSync();
@@ -386,7 +386,11 @@ export class VsCodeExtension {
           settings,
         });
 
-        if (settings.continueTestEnvironment !== originalValue) {
+        if (
+          enableContinueHub
+            ? settings.continueTestEnvironment !== "production"
+            : settings.continueTestEnvironment === "production"
+        ) {
           await vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
       }

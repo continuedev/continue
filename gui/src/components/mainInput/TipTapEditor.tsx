@@ -50,6 +50,7 @@ import {
   selectHasCodeToEdit,
   selectIsInEditMode,
   setMainEditorContentTrigger,
+  setNewestCodeblocksForInput,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
 import {
@@ -106,11 +107,6 @@ const InputBoxDiv = styled.div<{ border?: string }>`
 
   display: flex;
   flex-direction: column;
-`;
-
-const PaddingDiv = styled.div`
-  padding: 8px 12px;
-  padding-bottom: 4px;
 `;
 
 const HoverDiv = styled.div`
@@ -180,6 +176,7 @@ interface TipTapEditorProps {
   border?: string;
   placeholder?: string;
   historyKey: string;
+  inputId: string;
 }
 
 export const TIPPY_DIV_ID = "tippy-js-div";
@@ -782,22 +779,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      // const rif: RangeInFile & { contents: string } =
-      //   data.rangeInFileWithContents;
-      // const basename = getBasename(rif.filepath);
-      // const relativePath = getRelativePath(
-      //   rif.filepath,
-      //   await ideMessenger.ide.getWorkspaceDirs(),
-      // const rangeStr = `(${rif.range.start.line + 1}-${
-      //   rif.range.end.line + 1
-      // })`;
-
-      // const itemName = `${basename} ${rangeStr}`;
-      // const item: ContextItemWithId = {
-      //   content: rif.contents,
-      //   name: itemName
-      // }
-
       const contextItem = rifWithContentsToContextItem(
         data.rangeInFileWithContents,
       );
@@ -819,10 +800,16 @@ function TipTapEditor(props: TipTapEditorProps) {
           type: "codeBlock",
           attrs: {
             item: contextItem,
+            inputId: props.inputId,
           },
         })
         .run();
-
+      dispatch(
+        setNewestCodeblocksForInput({
+          inputId: props.inputId,
+          contextItemId: contextItem.id.itemId,
+        }),
+      );
       if (data.prompt) {
         editor.commands.focus("end");
         editor.commands.insertContent(data.prompt);
@@ -990,8 +977,9 @@ function TipTapEditor(props: TipTapEditorProps) {
         event.preventDefault();
       }}
     >
-      <PaddingDiv>
+      <div className="px-2.5 pb-1 pt-2">
         <EditorContent
+          className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[70vh]" : ""}`}
           spellCheck={false}
           editor={editor}
           onClick={(event) => {
@@ -1023,7 +1011,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           }}
           disabled={isStreaming}
         />
-      </PaddingDiv>
+      </div>
 
       {showDragOverMsg &&
         modelSupportsImages(

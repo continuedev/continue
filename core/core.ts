@@ -19,6 +19,7 @@ import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFile
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
+import { getControlPlaneEnv } from "./control-plane/env";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
@@ -52,7 +53,6 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import { getControlPlaneEnv } from "./control-plane/env";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -289,6 +289,7 @@ export class Core {
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
+
     on("config/listProfiles", (msg) => {
       return this.configHandler.listProfiles();
     });
@@ -297,9 +298,18 @@ export class Core {
       addContextProvider(msg.data);
     });
 
+    on("config/updateSharedConfig", async (msg) => {
+      this.globalContext.updateSharedConfig(msg.data);
+      await this.configHandler.reloadConfig();
+    });
+
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+    });
+
+    on("controlPlane/listOrganizations", async (msg) => {
+      return await this.controlPlaneClient.listOrganizations();
     });
 
     // Context providers

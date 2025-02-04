@@ -6,6 +6,7 @@ import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
 export const CodeBlockComponent = (props: any) => {
   const { node, deleteNode, selected, editor, updateAttributes } = props;
   const item: ContextItemWithId = node.attrs.item;
+  const inputId = node.attrs.inputId;
   // const contextItems = useSelector(
   //   (store: RootState) =>
   //     store.session.messages[store.session.messages.length - 1].contextItems,
@@ -23,6 +24,7 @@ export const CodeBlockComponent = (props: any) => {
       as={nodeViewWrapperTag}
     >
       <CodeSnippetPreview
+        inputId={inputId}
         borderColor={
           isFirstContextItem
             ? "#d0d"

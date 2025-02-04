@@ -13,6 +13,7 @@ import MorePage from "./pages/More";
 import Stats from "./pages/stats";
 import { ROUTES } from "./util/navigation";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
+import ConfigPage from "./pages/config";
 
 const router = createMemoryRouter([
   {
@@ -51,6 +52,10 @@ const router = createMemoryRouter([
       {
         path: ROUTES.CONFIG_ERROR,
         element: <ConfigErrorPage />,
+      },
+      {
+        path: ROUTES.CONFIG,
+        element: <ConfigPage />,
       },
       {
         path: "/migration",
