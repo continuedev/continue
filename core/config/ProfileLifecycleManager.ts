@@ -50,12 +50,12 @@ export class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  async reloadConfig(): Promise<ConfigResult<ContinueConfig>> {
+  async reloadConfig(additionalContextProviders: IContextProvider[] = []): Promise<ConfigResult<ContinueConfig>> {
     this.savedConfigResult = undefined;
     this.savedBrowserConfigResult = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.loadConfig([], true);
+    return this.loadConfig(additionalContextProviders, true);
   }
 
   async loadConfig(
