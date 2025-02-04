@@ -1,8 +1,4 @@
 import { ConfigJson } from "@continuedev/config-types";
-import fetch, { RequestInit, Response } from "node-fetch";
-
-import { IdeSettings, ModelDescription } from "../index.js";
-
 import {
   AssistantUnrolled,
   ConfigResult,
@@ -10,6 +6,10 @@ import {
   FullSlug,
   SecretResult,
 } from "@continuedev/config-yaml";
+import fetch, { RequestInit, Response } from "node-fetch";
+
+import { IdeSettings, ModelDescription } from "../index.js";
+
 import { getControlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
@@ -107,13 +107,7 @@ export class ControlPlaneClient {
     }
   }
 
-<<<<<<< Updated upstream
-  public async listAssistants(): Promise<
-||||||| Stash base
-  public async listAssistants(organizationId?: string): Promise<
-=======
   public async listAssistants(organizationId: string | null): Promise<
->>>>>>> Stashed changes
     {
       configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
@@ -136,36 +130,6 @@ export class ControlPlaneClient {
     }
   }
 
-<<<<<<< Updated upstream
-  public async listAssistantFullSlugs(): Promise<FullSlug[] | null> {
-||||||| Stash base
-  public async listOrganizations(): Promise<Array<OrganizationDescription>> {
-    return [
-      {
-        id: "1",
-        iconUrl:
-          "https://cdn.prod.website-files.com/663e06c56841363663ffbbcf/663e1b9fb023f0b622ad3608_log-text.svg",
-        name: "Continue",
-      },
-    ];
-    // const userId = await this.userId;
-    // if (!userId) {
-    //   return [];
-    // }
-
-    // try {
-    //   const resp = await this.request("ide/list-organizations", {
-    //     method: "GET",
-    //   });
-    //   const { organizations } = (await resp.json()) as any;
-    //   return organizations;
-    // } catch (e) {
-    //   return [];
-    // }
-  }
-
-  public async listAssistantFullSlugs(): Promise<FullSlug[] | null> {
-=======
   public async listOrganizations(): Promise<Array<OrganizationDescription>> {
     const userId = await this.userId;
 
@@ -187,7 +151,6 @@ export class ControlPlaneClient {
   public async listAssistantFullSlugs(
     organizationId: string | null,
   ): Promise<FullSlug[] | null> {
->>>>>>> Stashed changes
     const userId = await this.userId;
     if (!userId) {
       return null;
