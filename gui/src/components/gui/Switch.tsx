@@ -12,7 +12,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   text,
 }) => {
   return (
-    <div className="flex cursor-pointer select-none items-center justify-end gap-3">
+    <div className="flex cursor-pointer select-none items-center justify-between gap-3">
       <span className="truncate-right text-right">{text}</span>
       <div>
         <div

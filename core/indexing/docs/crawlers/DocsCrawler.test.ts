@@ -152,11 +152,15 @@ describe("DocsCrawler", () => {
     );
 
     commonDocsSites.forEach((url) => {
-      test(`Default crawler common site: ${url}`, async () => {
-        const { pages, crawler } = await runCrawl(url);
-        expect(pages.length).toBeGreaterThanOrEqual(1);
-        expect(crawler).toEqual("default");
-      });
+      test(
+        `Default crawler common site: ${url}`,
+        async () => {
+          const { pages, crawler } = await runCrawl(url);
+          expect(pages.length).toBeGreaterThanOrEqual(1);
+          expect(crawler).toEqual("default");
+        },
+        TIMEOUT_MS,
+      );
     });
   });
 
