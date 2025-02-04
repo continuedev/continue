@@ -124,12 +124,14 @@ export default async function doLoadConfig(
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
-      newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
+      newConfig.analytics,
       uniqueId,
       ideInfo.extensionVersion,
       controlPlaneClient,
       controlPlaneProxyInfo,
     );
+  } else {
+    await TeamAnalytics.shutdown();
   }
 
   newConfig = await injectControlPlaneProxyInfo(
