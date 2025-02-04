@@ -10,6 +10,7 @@ on:
       - "core/**"
       - "gui/**"
       - ".github/workflows/**"
+      - "docs/**"
 
   push:
     branches:
