@@ -17,7 +17,6 @@ on:
 
 jobs:
   require-all-checks-to-pass:
-    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
