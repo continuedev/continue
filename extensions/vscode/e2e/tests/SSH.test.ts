@@ -1,18 +1,24 @@
 import {
   EditorView,
-  TextEditor,
   InputBox,
-  Workbench,
   Key,
-  VSBrowser,
+  TextEditor,
+  Workbench,
 } from "vscode-extension-tester";
 
-import { DEFAULT_TIMEOUT } from "../constants";
-import { TestUtils } from "../TestUtils";
-import { SSHSelectors } from "../selectors/SSH.selectors";
 import { AutocompleteActions } from "../actions/Autocomplete.actions";
+import { DEFAULT_TIMEOUT } from "../constants";
+import { SSHSelectors } from "../selectors/SSH.selectors";
+import { TestUtils } from "../TestUtils";
 
 describe("SSH", function () {
+  if (process.env.IGNORE_SSH_TESTS === "true") {
+    it("Skipping SSH tests", () => {
+      console.log("Skipping SSH tests due to IGNORE_SSH_TESTS being set");
+    });
+    return;
+  }
+
   it("Should display completions", async () => {
     await TestUtils.waitForSuccess(async () => {
       await new Workbench().executeCommand(

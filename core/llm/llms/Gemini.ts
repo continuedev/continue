@@ -251,9 +251,45 @@ class Gemini extends BaseLLM {
                   return;
                 }
               }
+              // Helper function to recursively clean JSON Schema objects
+              const cleanJsonSchema = (schema: any): any => {
+                if (!schema || typeof schema !== 'object') return schema;
+
+                if (Array.isArray(schema)) {
+                  return schema.map(cleanJsonSchema);
+                }
+
+                const {
+                  $schema,
+                  additionalProperties,
+                  default: defaultValue,
+                  ...rest
+                } = schema;
+
+                // Recursively clean nested properties
+                if (rest.properties) {
+                  rest.properties = Object.entries(rest.properties).reduce(
+                    (acc, [key, value]) => ({
+                      ...acc,
+                      [key]: cleanJsonSchema(value),
+                    }),
+                    {}
+                  );
+                }
+
+                // Clean items in arrays
+                if (rest.items) {
+                  rest.items = cleanJsonSchema(rest.items);
+                }
+
+                return rest;
+              };
+
+              // Clean the parameters and convert type to uppercase
+              const cleanedParams = cleanJsonSchema(tool.function.parameters);
               fn.parameters = {
+                ...cleanedParams,
                 type: tool.function.parameters.type.toUpperCase(),
-                ...tool.function.parameters,
               };
             }
             functions.push(fn);
@@ -311,11 +347,16 @@ class Gemini extends BaseLLM {
           const supportedParts: MessagePart[] = [];
           const toolCalls: ToolCallDelta[] = [];
 
+          // Process all parts first to maintain order
+          const processedParts: Array<{
+            type: 'content' | 'tool' | 'toolCall',
+            data: any
+          }> = [];
+
           for (const part of content.parts) {
             if ("text" in part) {
               supportedParts.push({ type: "text", text: part.text });
             } else if ("inlineData" in part) {
-              // TODO does this image url conversion actually work?
               supportedParts.push({
                 type: "imageUrl",
                 imageUrl: {
@@ -323,37 +364,55 @@ class Gemini extends BaseLLM {
                 },
               });
             } else if ("functionCall" in part) {
-              // Handle function call
-              toolCalls.push({
-                type: "function",
-                id: "", // Not supported by gemini
-                function: {
-                  name: part.functionCall.name,
-                  arguments:
-                    typeof part.functionCall.args === "string"
-                      ? part.functionCall.args
-                      : JSON.stringify(part.functionCall.args),
-                },
+              // Queue function call
+              processedParts.push({
+                type: 'toolCall',
+                data: {
+                  type: "function",
+                  id: "", // Not supported by gemini
+                  function: {
+                    name: part.functionCall.name,
+                    arguments:
+                      typeof part.functionCall.args === "string"
+                        ? part.functionCall.args
+                        : JSON.stringify(part.functionCall.args),
+                  },
+                }
               });
             } else if ("functionResponse" in part) {
-              // TODO hypothetically order could be off here
-              // Where function response is in the middle of something
-              yield {
-                role: "tool",
-                content: part.functionResponse.response.output as string,
-                toolCallId: part.functionResponse.name,
-              };
+              // Queue function response
+              processedParts.push({
+                type: 'tool',
+                data: {
+                  role: "tool",
+                  content: part.functionResponse.response.output as string,
+                  toolCallId: part.functionResponse.name,
+                }
+              });
             } else {
               console.warn("Unsupported gemini part type received", part);
             }
           }
-          if (supportedParts.length || toolCalls.length) {
-            // Incrementally  stream the content to make it smoother
+
+          // If we have supported content parts, yield them first
+          if (supportedParts.length) {
             yield {
               role: "assistant",
-              content: supportedParts.length ? supportedParts : "",
-              ...(toolCalls.length ? { toolCalls } : {}),
+              content: supportedParts,
             };
+          }
+
+          // Then process tool calls and responses in order
+          for (const part of processedParts) {
+            if (part.type === 'toolCall') {
+              yield {
+                role: "assistant",
+                content: "",
+                toolCalls: [part.data],
+              };
+            } else if (part.type === 'tool') {
+              yield part.data;
+            }
           }
         } else {
           // Handle the case where the expected data structure is not found

@@ -56,8 +56,22 @@ class IdeProtocolClient(
             val messageType = message.messageType
             val dataElement = message.data
 
+            // A couple oddball messages respond directly to GUI, expect a different message format
+            // e.g. jetbrains/isOSREnabled
+            fun respondToWebview(content: Any) {
+                respond(mutableMapOf(
+                    "done" to true,
+                    "status" to "success",
+                    "content" to content
+                ))
+            }
+
             try {
                 when (messageType) {
+                    "toggleDevTools" -> {
+                        continuePluginService.continuePluginWindow?.browser?.browser?.openDevtools()
+                    }
+
                     "showTutorial" -> {
                         showTutorial(project)
                     }
@@ -65,12 +79,12 @@ class IdeProtocolClient(
                     "jetbrains/isOSREnabled" -> {
                         val isOSREnabled =
                             ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
-                        respond(isOSREnabled)
+                        respondToWebview(isOSREnabled)
                     }
 
                     "jetbrains/getColors" -> {
                         val colors = GetTheme().getTheme();
-                        respond(colors)
+                        respondToWebview(colors)
                     }
 
                     "jetbrains/onLoad" -> {
@@ -80,7 +94,7 @@ class IdeProtocolClient(
                             "vscMachineId" to getMachineUniqueID(),
                             "vscMediaUrl" to "http://continue",
                         )
-                        respond(jsonData)
+                        respondToWebview(jsonData)
                     }
 
                     "getIdeSettings" -> {

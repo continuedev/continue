@@ -1,4 +1,7 @@
-import { ProfileDescription } from "core/config/ProfileLifecycleManager";
+import {
+  OrganizationDescription,
+  ProfileDescription,
+} from "core/config/ProfileLifecycleManager";
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import React, {
   createContext,
@@ -28,6 +31,8 @@ interface AuthContextType {
   selectedProfile: ProfileDescription | undefined;
   profiles: ProfileDescription[];
   controlServerBetaEnabled: boolean;
+  organizations: OrganizationDescription[];
+  selectedOrganization: OrganizationDescription | undefined;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,6 +44,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     undefined,
   );
 
+  const [organizations, setOrganizations] = useState<OrganizationDescription[]>(
+    [],
+  );
+
+  const ideMessenger = useContext(IdeMessengerContext);
+
+  const selectedOrganizationId = useAppSelector(
+    (store) => store.session.selectedOrganizationId,
+  );
+
+  const selectedOrganization = useMemo(() => {
+    return organizations.find((p) => p.id === selectedOrganizationId);
+  }, [organizations, selectedOrganizationId]);
+
   const profiles = useAppSelector(selectAvailableProfiles);
 
   const selectedProfileId = useAppSelector(
@@ -48,12 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return profiles.find((p) => p.id === selectedProfileId);
   }, [profiles, selectedProfileId]);
 
-  const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
-
-  const lastControlServerBetaEnabledStatus = useAppSelector(
-    (state) => state.misc.lastControlServerBetaEnabledStatus,
-  );
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
     return new Promise((resolve) => {
@@ -142,10 +156,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           enableControlServerBeta || continueTestEnvironment !== "none";
         setControlServerBetaEnabled(enabled);
         dispatch(setLastControlServerBetaEnabledStatus(enabled));
-
-        const shouldShowPopup = !lastControlServerBetaEnabledStatus && enabled;
       });
   }, []);
+
+  useEffect(() => {
+    if (session) {
+      ideMessenger
+        .request("controlPlane/listOrganizations", undefined)
+        .then((result) => {
+          if (result.status === "success") {
+            setOrganizations(result.content);
+          }
+        });
+    } else {
+      setOrganizations([]);
+    }
+  }, [session]);
 
   useWebviewListener(
     "didChangeIdeSettings",
@@ -185,6 +211,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         selectedProfile,
         profiles,
+        selectedOrganization,
+        organizations,
         controlServerBetaEnabled,
       }}
     >

@@ -1,9 +1,17 @@
 import * as fs from "node:fs";
 
 import {
+  AssistantUnrolled,
+  ConfigResult,
+  FullSlug,
+} from "@continuedev/config-yaml";
+import * as YAML from "yaml";
+
+import {
   ControlPlaneClient,
   ControlPlaneSessionInfo,
 } from "../control-plane/client.js";
+import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -15,11 +23,8 @@ import {
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { getConfigJsonPath, getConfigYamlPath } from "../util/paths.js";
-
-import { ConfigResult, ConfigYaml, FullSlug } from "@continuedev/config-yaml";
-import * as YAML from "yaml";
-import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
 import { localPathToUri } from "../util/pathToUri.js";
+
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
@@ -107,7 +112,7 @@ export class ConfigHandler {
       }
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
+      await this.ide.openUrl(`${env.APP_URL}platform/${openProfileId}`);
     }
   }
 
@@ -118,7 +123,7 @@ export class ConfigHandler {
       .then(async (assistants) => {
         const hubProfiles = await Promise.all(
           assistants.map(async (assistant) => {
-            let renderedConfig: ConfigYaml | undefined = undefined;
+            let renderedConfig: AssistantUnrolled | undefined = undefined;
             if (assistant.configResult.config) {
               renderedConfig = await clientRenderHelper(
                 YAML.stringify(assistant.configResult.config),
@@ -131,6 +136,7 @@ export class ConfigHandler {
               { ...assistant.configResult, config: renderedConfig },
               assistant.ownerSlug,
               assistant.packageSlug,
+              assistant.iconUrl,
               assistant.configResult.config?.version ?? "latest",
               this.controlPlaneClient,
               this.ide,
@@ -332,11 +338,11 @@ export class ConfigHandler {
     this.updateListeners.push(listener);
   }
 
-  async reloadConfig() {
+  async reloadConfig(additionalContextProviders: IContextProvider[] = []) {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
 
     const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig();
+      await this.currentProfile.reloadConfig(additionalContextProviders);
 
     if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
@@ -386,6 +392,6 @@ export class ConfigHandler {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
-    void this.reloadConfig();
+    void this.reloadConfig(this.additionalContextProviders);
   }
 }
