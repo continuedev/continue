@@ -1,19 +1,19 @@
 # When none of the paths are matched for the pr_checks.yaml workflow
 # we still need the require-all-checks-to-pass job to pass
-name: PR checks skip
+name: PR checks docs
 
 on:
   pull_request:
     branches:
       - main
-    paths:
-      - "docs/**"
+    # paths:
+    #   - "docs/**"
 
   push:
     branches:
       - main
-    paths:
-      - "docs/**"
+    # paths:
+    #   - "docs/**"
 
 jobs:
   require-all-checks-to-pass:
