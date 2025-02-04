@@ -131,7 +131,7 @@ export default async function doLoadConfig(
       controlPlaneProxyInfo,
     );
   } else {
-    await TeamAnalytics.setup(undefined, "NOT_UNIQUE");
+    await TeamAnalytics.shutdown();
   }
 
   newConfig = await injectControlPlaneProxyInfo(

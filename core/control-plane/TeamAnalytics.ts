@@ -1,7 +1,5 @@
 import os from "node:os";
 
-import { Analytics } from "@continuedev/config-types";
-
 import ContinueProxyAnalyticsProvider from "./analytics/ContinueProxyAnalyticsProvider.js";
 import {
   ControlPlaneProxyInfo,
