@@ -55,6 +55,8 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 };
 
 // https://github.com/QwenLM/Qwen2.5-Coder?tab=readme-ov-file#3-file-level-code-completion-fill-in-the-middle
+// This issue asks about the use of <|repo_name|> and <|file_sep|> together with <|fim_prefix|>, <|fim_suffix|> and <|fim_middle|>
+// https://github.com/QwenLM/Qwen2.5-Coder/issues/343
 const qwenCoderFimTemplate: AutocompleteTemplate = {
   compilePrefixSuffix: (
     prefix: string,
