@@ -32,7 +32,7 @@ export function ScopeSelect() {
   return (
     <Listbox value={value} onChange={handleChange}>
       <div className="relative">
-        <Listbox.Button className="border-vsc-foreground text-vsc-foreground hover:bg-vsc-background flex w-full cursor-pointer items-center gap-0.5 rounded border bg-transparent p-2 hover:opacity-90">
+        <Listbox.Button className="border-vsc-foreground text-vsc-foreground hover:bg-vsc-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border bg-transparent p-2 hover:opacity-90">
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               {selectedDisplay?.iconUrl ? (
