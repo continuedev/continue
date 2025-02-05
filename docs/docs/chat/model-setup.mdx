@@ -99,6 +99,21 @@ If you prefer to use a model from [OpenAI](../customize/model-providers/top-leve
  ]
 ```
 
+### Grok-2 from xAI
+
+If you prefer to use a model from [xAI](../customize/model-providers/top-level/xAI.md), then we recommend Grok-2.
+
+```json title="config.json"
+ "models": [
+   {
+     "title": "Grok-2",
+     "provider": "xAI",
+     "model": "grok-2-latest",
+     "apiKey": "[XAI_API_KEY]"
+   }
+ ]
+```
+
 ### Gemini 1.5 Pro from Google
 
 If you prefer to use a model from [Google](../customize/model-providers/top-level/gemini.md), then we recommend Gemini 1.5 Pro.
@@ -129,7 +144,8 @@ If your local machine can run an 8B parameter model, then we recommend running L
                 {
                     "title": "Llama 3.1 8B",
                     "provider": "ollama",
-                    "model": "llama3.1:8b"
+                    "model": "llama3.1:8b",
+                    "apiBase": "http://localhost:11434"
                 }
             ]
         ```
@@ -158,7 +174,8 @@ If your local machine can run a 16B parameter model, then we recommend running D
                 {
                     "title": "DeepSeek Coder 2 16B",
                     "provider": "ollama",
-                    "model": "deepseek-coder-v2:16b"
+                    "model": "deepseek-coder-v2:16b",
+                    "apiBase": "http://localhost:11434"
                 }
             ]
         ```

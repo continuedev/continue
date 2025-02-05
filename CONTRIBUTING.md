@@ -49,7 +49,7 @@ If you find a bug, please [create an issue](https://github.com/continuedev/conti
 
 ## ✨ Suggest Enhancements
 
-Continue is quickly adding features, and we'd love to hear which are the most important to you. The best ways to suggest an enhancement are
+Continue is quickly adding features, and we'd love to hear which are the most important to you. The best ways to suggest an enhancement are:
 
 - Create an issue
 
@@ -192,7 +192,7 @@ Continue has support for more than a dozen different LLM "providers", making it 
 
 1. Create a new file in the `core/llm/llms` directory. The name of the file should be the name of the provider, and it should export a class that extends `BaseLLM`. This class should contain the following minimal implementation. We recommend viewing pre-existing providers for more details. The [LlamaCpp Provider](./core/llm/llms/LlamaCpp.ts) is a good simple example.
 
-- `providerName` - the identifier for your provider
+- `providerName` - the identifier for your provider.
 - At least one of `_streamComplete` or `_streamChat` - This is the function that makes the request to the API and returns the streamed response. You only need to implement one because Continue can automatically convert between "chat" and "raw completion".
 
 2. Add your provider to the `LLMs` array in [core/llm/llms/index.ts](./core/llm/llms/index.ts).

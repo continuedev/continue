@@ -59,8 +59,11 @@ class CoreMessengerManager(
         coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
 
         coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-            val result = (response as Map<String, Any>)["result"] as Map<String, Any>
+            val responseObject = response as Map<*, *>
+            val responseContent = responseObject["content"] as Map<*, *>
+            val result = responseContent["result"] as Map<*, *>
             val config = result["config"] as Map<String, Any>
+
             val allowAnonymousTelemetry = config?.get("allowAnonymousTelemetry") as? Boolean
             val telemetryService = service<TelemetryService>()
             if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {

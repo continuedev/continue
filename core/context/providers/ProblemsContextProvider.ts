@@ -3,7 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { getUriPathBasename } from "../../util/uri.js";
+import { getUriDescription } from "../../util/uri.js";
 import { BaseContextProvider } from "../index.js";
 
 class ProblemsContextProvider extends BaseContextProvider {
@@ -20,10 +20,14 @@ class ProblemsContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const problems = await ide.getProblems();
+    const workspaceDirs = await ide.getWorkspaceDirs();
 
     const items = await Promise.all(
       problems.map(async (problem) => {
-        const fileName = getUriPathBasename(problem.filepath);
+        const { relativePathOrBasename, baseName } = getUriDescription(
+          problem.filepath,
+          workspaceDirs,
+        );
         const content = await ide.readFile(problem.filepath);
         const lines = content.split("\n");
         const rangeContent = lines
@@ -35,8 +39,8 @@ class ProblemsContextProvider extends BaseContextProvider {
 
         return {
           description: "Problems in current file",
-          content: `\`\`\`${fileName}\n${rangeContent}\n\`\`\`\n${problem.message}\n\n`,
-          name: `Warning in ${fileName}`,
+          content: `\`\`\`${relativePathOrBasename}\n${rangeContent}\n\`\`\`\n${problem.message}\n\n`,
+          name: `Warning in ${baseName}`,
         };
       }),
     );

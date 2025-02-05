@@ -10,8 +10,7 @@ import { IMessenger } from "../../../core/protocol/messenger";
 import { showFreeTrialLoginMessage } from "./util/messages";
 
 export class VsCodeWebviewProtocol
-  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
-{
+  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol> {
   listeners = new Map<
     keyof FromWebviewProtocol,
     ((message: Message) => any)[]
@@ -83,9 +82,33 @@ export class VsCodeWebviewProtocol
               status: "success",
             });
           } else {
-            respond({ content: response, status: "success" });
+            respond({ done: true, content: response, status: "success" });
           }
         } catch (e: any) {
+          let message = e.message;
+          //Intercept Ollama errors for special handling
+          if (message.includes("Ollama may not")) {
+              const options = [];
+              if (message.includes("be installed")) {
+                options.push("Download Ollama");
+              } else if (message.includes("be running")) {
+                options.push("Start Ollama");
+              }
+              if (options.length > 0) {
+                // Respond without an error, so the UI doesn't show the error component
+                respond({ done: true, status: "error" });
+                // Show native vscode error message instead, with options to download/start Ollama
+                vscode.window.showErrorMessage(e.message, ...options).then(async (val) => {
+                  if (val === "Download Ollama") {
+                    vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
+                  } else if (val === "Start Ollama") {
+                    vscode.commands.executeCommand("continue.startLocalOllama");
+                  }
+                });
+                return;
+              }
+          }
+
           respond({ done: true, error: e.message, status: "error" });
 
           const stringified = JSON.stringify({ msg }, null, 2);
@@ -100,7 +123,6 @@ export class VsCodeWebviewProtocol
             return;
           }
 
-          let message = e.message;
           if (e.cause) {
             if (e.cause.name === "ConnectTimeoutError") {
               message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://docs.continue.dev/reference/config`;
@@ -115,7 +137,8 @@ export class VsCodeWebviewProtocol
             message = message.split("\n").filter((l: string) => l !== "")[1];
             try {
               message = JSON.parse(message).message;
-            } catch {}
+            } catch {
+            }
             if (message.includes("exceeded")) {
               message +=
                 " To keep using Continue, you can set up a local model or use your own API key.";
@@ -152,7 +175,9 @@ export class VsCodeWebviewProtocol
     this._webviewListener = this._webview.onDidReceiveMessage(handleMessage);
   }
 
-  constructor(private readonly reloadConfig: () => void) {}
+  constructor(private readonly reloadConfig: () => void) {
+  }
+
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
