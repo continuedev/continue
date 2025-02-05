@@ -118,6 +118,12 @@ By default the Continue window is on the left side of VS Code, but it can be dra
 
 If you have entered a valid API key and model, but are still getting a 404 error from OpenAI, this may be because you need to add credits to your billing account. You can do so from the [billing console](https://platform.openai.com/settings/organization/billing/overview). If you just want to check that this is in fact the cause of the error, you can try adding $1 to your account and checking whether the error persists.
 
+### I'm getting a 404 error from OpenRouter
+
+If you have entered a valid API key and model, but are still getting a 404 error from OpenRouter, this may be because models that do not support function calling will return an error to Continue when a request is sent.
+Example error:
+`HTTP 404 Not Found from https://openrouter.ai/api/v1/chat/completions`
+
 ### Indexing issues
 
 If you are having persistent errors with indexing, our recommendation is to rebuild your index from scratch. Note that for large codebases this may take some time.

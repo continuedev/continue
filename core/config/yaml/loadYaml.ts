@@ -3,6 +3,7 @@ import fs from "node:fs";
 import {
   AssistantUnrolled,
   ConfigResult,
+  parseAssistantUnrolled,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
@@ -34,10 +35,10 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 import { slashFromCustomCommand } from "../../commands";
 import { allTools } from "../../tools";
-import { clientRenderHelper } from "./clientRender";
-import { llmsFromModelConfig } from "./models";
 import { GlobalContext } from "../../util/GlobalContext";
 import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
+import { clientRenderHelper } from "./clientRender";
+import { llmsFromModelConfig } from "./models";
 
 async function loadConfigYaml(
   workspaceConfigs: string[],
@@ -46,9 +47,12 @@ async function loadConfigYaml(
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<AssistantUnrolled>> {
+  const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
-    (await clientRenderHelper(rawYaml, ide, controlPlaneClient));
+    (ideSettings.continueTestEnvironment === "production"
+      ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
+      : parseAssistantUnrolled(rawYaml));
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
