@@ -63,4 +63,6 @@ public static int[] sortingAlgorithm2(int[] x) {
 
 
 
-// ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ———————————————————
+// —————————————————————————————————————————————-     Learn More     -——————————————————————————————————————————————
+
+// Visit the Continue Docs at https://docs.continue.dev/getting-started/overview
