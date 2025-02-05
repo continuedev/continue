@@ -280,8 +280,14 @@ export class ContinueCompletionProvider
             document.lineAt(startPos).range.end,
           );
         } else if (
-          diffPatternMatches(diffs, ["+", "-"]) ||
-          diffPatternMatches(diffs, ["-", "+"])
+          //diffPatternMatches(diffs, ["+", "-"]) ||
+          //diffPatternMatches(diffs, ["-", "+"])
+          diffs.every((diff, index) =>
+            index % 2 === 0 ? diff.added : diff.removed
+          ) ||
+          diffs.every((diff, index) =>
+            index % 2 === 0 ? diff.removed : diff.added
+          )
         ) {
           // We are midline and the model just inserted without repeating to the end of the line
           // We want to move the cursor to the end of the line
