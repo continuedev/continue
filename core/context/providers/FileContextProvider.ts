@@ -10,6 +10,7 @@ import { walkDirs } from "../../indexing/walkDir";
 import {
   getUriPathBasename,
   getShortestUniqueRelativeUriPaths,
+  getUriDescription,
 } from "../../util/uri";
 import { DocxAndPdfParsing } from "../../indexing/chunk/DocxAndPdfParsing";
 
@@ -28,22 +29,28 @@ class FileContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     // Assume the query is a filepath
-    query = query.trim();
+    const fileUri = query.trim();
     let content = '';
-    if(query.endsWith(".pdf") || query.endsWith(".docx")){
-      content = await DocxAndPdfParsing.parseContent(query);
+
+    if (fileUri.endsWith(".pdf") || fileUri.endsWith(".docx")) {
+      content = await DocxAndPdfParsing.parseContent(fileUri);
+    } else {
+      content = await extras.ide.readFile(fileUri);
     }
-    else{
-     content = await extras.ide.readFile(query);
-    }
+
+    const { relativePathOrBasename, last2Parts, baseName } = getUriDescription(
+      fileUri,
+      await extras.ide.getWorkspaceDirs(),
+    );
+
     return [
       {
-        name: query.split(/[\\/]/).pop() ?? query,
-        description: query,
-        content: `\`\`\`${query}\n${content}\n\`\`\``,
+        name: baseName,
+        description: last2Parts,
+        content: `\`\`\`${relativePathOrBasename}\n${content}\n\`\`\``,
         uri: {
           type: "file",
-          value: query,
+          value: fileUri,
         },
       },
     ];

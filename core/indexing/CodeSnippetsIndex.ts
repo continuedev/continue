@@ -28,8 +28,15 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../";
+import {
+  findUriInDirs,
+  getLastNPathParts,
+  getLastNUriRelativePathParts,
+  getUriPathBasename,
+} from "../util/uri";
 import { getLastNPathParts, getUriPathBasename } from "../util/uri";
 import { DocxAndPdfParsing } from "./chunk/DocxAndPdfParsing";
+
 
 type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 
@@ -355,14 +362,19 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     }
   }
 
-  static async getForId(id: number): Promise<ContextItem> {
+  static async getForId(
+    id: number,
+    workspaceDirs: string[],
+  ): Promise<ContextItem> {
     const db = await SqliteDb.get();
     const row = await db.get("SELECT * FROM code_snippets WHERE id = ?", [id]);
 
+    const last2Parts = getLastNUriRelativePathParts(workspaceDirs, row.path, 2);
+    const { relativePathOrBasename } = findUriInDirs(row.path, workspaceDirs);
     return {
       name: row.title,
-      description: getLastNPathParts(row.path, 2),
-      content: `\`\`\`${getUriPathBasename(row.path)}\n${row.content}\n\`\`\``,
+      description: last2Parts,
+      content: `\`\`\`${relativePathOrBasename}\n${row.content}\n\`\`\``,
       uri: {
         type: "file",
         value: row.path,

@@ -104,7 +104,7 @@ export class ControlPlaneClient {
     }
   }
 
-  public async listAssistants(organizationId?: string): Promise<
+  public async listAssistants(organizationId: string | null): Promise<
     {
       configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
@@ -132,38 +132,37 @@ export class ControlPlaneClient {
   }
 
   public async listOrganizations(): Promise<Array<OrganizationDescription>> {
-    return [
-      {
-        id: "1",
-        iconUrl:
-          "https://cdn.prod.website-files.com/663e06c56841363663ffbbcf/663e1b9fb023f0b622ad3608_log-text.svg",
-        name: "Continue",
-      },
-    ];
-    // const userId = await this.userId;
-    // if (!userId) {
-    //   return [];
-    // }
+    const userId = await this.userId;
 
-    // try {
-    //   const resp = await this.request("ide/list-organizations", {
-    //     method: "GET",
-    //   });
-    //   const { organizations } = (await resp.json()) as any;
-    //   return organizations;
-    // } catch (e) {
-    //   return [];
-    // }
+    if (!userId) {
+      return [];
+    }
+
+    try {
+      const resp = await this.request("ide/list-organizations", {
+        method: "GET",
+      });
+      const { organizations } = (await resp.json()) as any;
+      return organizations;
+    } catch (e) {
+      return [];
+    }
   }
 
-  public async listAssistantFullSlugs(): Promise<FullSlug[] | null> {
+  public async listAssistantFullSlugs(
+    organizationId: string | null,
+  ): Promise<FullSlug[] | null> {
     const userId = await this.userId;
     if (!userId) {
       return null;
     }
 
+    const url = organizationId
+      ? `ide/list-assistant-full-slugs?organizationId=${organizationId}`
+      : "ide/list-assistant-full-slugs";
+
     try {
-      const resp = await this.request("ide/list-assistant-full-slugs", {
+      const resp = await this.request(url, {
         method: "GET",
       });
       const { fullSlugs } = (await resp.json()) as any;

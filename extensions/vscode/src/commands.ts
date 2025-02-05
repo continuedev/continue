@@ -31,6 +31,7 @@ import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import { VsCodeIde } from "./VsCodeIde";
+import { getMetaKeyLabel } from "./util/util";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -902,15 +903,18 @@ const getCommandsMap: (
             ? StatusBarStatus.Enabled
             : StatusBarStatus.Disabled;
       }
+
       quickPick.items = [
         {
           label: "$(question) Open help center",
         },
         {
-          label: "$(comment) Open chat (Cmd+L)",
+          label: "$(comment) Open chat",
+          description: getMetaKeyLabel() + " + L",
         },
         {
-          label: "$(screen-full) Open full screen chat (Cmd+K Cmd+M)",
+          label: "$(screen-full) Open full screen chat",
+          description: getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + M",
         },
         {
           label: quickPickStatusText(targetStatus),

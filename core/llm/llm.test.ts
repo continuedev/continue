@@ -178,6 +178,15 @@ function testLLM(
 }
 
 describe("LLM", () => {
+  if (process.env.IGNORE_API_KEY_TESTS === "true") {
+    test("Skipping API key tests", () => {
+      console.log(
+        "Skipping API key tests due to IGNORE_API_KEY_TESTS being set",
+      );
+    });
+    return;
+  }
+
   testLLM(
     new Anthropic({
       model: "claude-3-5-sonnet-latest",
