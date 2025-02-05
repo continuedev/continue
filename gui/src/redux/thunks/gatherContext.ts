@@ -10,6 +10,8 @@ import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { ThunkApiType } from "../store";
 import { selectDefaultModel } from "../slices/configSlice";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
+import * as URI from "uri-js";
+import { v4 as uuidv4 } from "uuid";
 
 export const gatherContext = createAsyncThunk<
   {
@@ -56,39 +58,45 @@ export const gatherContext = createAsyncThunk<
     if (!modifiers.noContext) {
       const usingFreeTrial = defaultModel.provider === "free-trial";
 
-      const currentFile = await extra.ideMessenger.ide.getCurrentFile();
-      if (currentFile) {
-        let currentFileContents = currentFile.contents;
-        if (usingFreeTrial) {
-          currentFileContents = currentFile.contents
-            .split("\n")
-            .slice(0, 1000)
-            .join("\n");
-        }
-        if (
-          !selectedContextItems.find(
-            (item) => item.uri?.value === currentFile.path,
-          )
-        ) {
+      const currentFileResponse = await extra.ideMessenger.request(
+        "context/getContextItems",
+        {
+          name: "currentFile",
+          query: "non-mention-usage",
+          fullInput: "",
+          selectedCode: [],
+          selectedModelTitle: defaultModel.title,
+        },
+      );
+      if (currentFileResponse.status === "success") {
+        const items = currentFileResponse.content;
+        if (items.length > 0) {
+          const currentFile = items[0];
+          const uri = currentFile.uri?.value;
+
           // don't add the file if it's already in the context items
-          selectedContextItems.unshift({
-            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${
-              findUriInDirs(
-                currentFile.path,
-                await extra.ideMessenger.ide.getWorkspaceDirs(),
-              ).relativePathOrBasename
-            }\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getUriPathBasename(currentFile.path)}`,
-            description: currentFile.path,
-            id: {
-              itemId: currentFile.path,
+          if (
+            uri &&
+            !selectedContextItems.find(
+              (item) => item.uri?.value && URI.equal(item.uri.value, uri),
+            )
+          ) {
+            // Limit to 1000 lines if using free trial
+            if (usingFreeTrial) {
+              currentFile.content = currentFile.content
+                .split("\n")
+                .slice(0, 1000)
+                .join("\n");
+              if (!currentFile.content.endsWith("```")) {
+                currentFile.content += "\n```";
+              }
+            }
+            currentFile.id = {
               providerTitle: "file",
-            },
-            uri: {
-              type: "file",
-              value: currentFile.path,
-            },
-          });
+              itemId: uri,
+            };
+            selectedContextItems.unshift(currentFile);
+          }
         }
       }
     }

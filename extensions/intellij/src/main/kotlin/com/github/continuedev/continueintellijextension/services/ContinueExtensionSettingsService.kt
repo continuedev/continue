@@ -98,6 +98,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var enableOSR: Boolean = shouldRenderOffScreen()
         var displayEditorTooltip: Boolean = true
         var showIDECompletionSideBySide: Boolean = false
+        var continueTestEnvironment: String = "none"
     }
 
     var continueState: ContinueState = ContinueState()

@@ -289,6 +289,7 @@ export class Core {
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
+
     on("config/listProfiles", (msg) => {
       return this.configHandler.listProfiles();
     });
@@ -297,9 +298,18 @@ export class Core {
       addContextProvider(msg.data);
     });
 
+    on("config/updateSharedConfig", async (msg) => {
+      this.globalContext.updateSharedConfig(msg.data);
+      await this.configHandler.reloadConfig();
+    });
+
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+    });
+
+    on("controlPlane/listOrganizations", async (msg) => {
+      return await this.controlPlaneClient.listOrganizations();
     });
 
     // Context providers
@@ -872,6 +882,12 @@ export class Core {
       void this.configHandler.setSelectedProfile(msg.data.id);
       void this.configHandler.reloadConfig();
     });
+
+    on("didChangeSelectedOrg", (msg) => {
+      void this.configHandler.setSelectedOrgId(msg.data.id);
+      void this.configHandler.reloadConfig();
+    });
+
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });

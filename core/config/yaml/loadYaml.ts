@@ -3,6 +3,7 @@ import fs from "node:fs";
 import {
   AssistantUnrolled,
   ConfigResult,
+  parseAssistantUnrolled,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
@@ -34,6 +35,8 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 import { slashFromCustomCommand } from "../../commands";
 import { allTools } from "../../tools";
+import { GlobalContext } from "../../util/GlobalContext";
+import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
 
@@ -44,9 +47,12 @@ async function loadConfigYaml(
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<AssistantUnrolled>> {
+  const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
-    (await clientRenderHelper(rawYaml, ide, controlPlaneClient));
+    (ideSettings.continueTestEnvironment === "production"
+      ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
+      : parseAssistantUnrolled(rawYaml));
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
@@ -301,10 +307,9 @@ export async function loadContinueConfigFromYaml(
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<ContinueConfig>> {
-  const configYamlPath = getConfigYamlPath(ideType);
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(configYamlPath, "utf-8")
+      ? fs.readFileSync(getConfigYamlPath(ideType), "utf-8")
       : "";
 
   const configYamlResult = await loadConfigYaml(
@@ -342,8 +347,16 @@ export async function loadContinueConfigFromYaml(
     }
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    continueConfig,
+    sharedConfig,
+  );
+
   return {
-    config: continueConfig,
+    config: withShared,
     errors: configYamlResult.errors,
     configLoadInterrupted: false,
   };

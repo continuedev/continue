@@ -77,6 +77,7 @@ import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
+import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -370,17 +371,25 @@ export function Chat() {
 
   return (
     <>
-      {isInEditMode && (
+      {(isInEditMode || usePlatform) && (
         <PageHeader
-          title="Back to Chat"
-          onClick={async () => {
-            await dispatch(loadLastSession({ saveCurrentSession: false }));
-            dispatch(exitEditMode());
-          }}
+          title={isInEditMode ? "Edit Mode" : ""}
+          onTitleClick={
+            isInEditMode
+              ? async () => {
+                  await dispatch(
+                    loadLastSession({ saveCurrentSession: false }),
+                  );
+                  dispatch(exitEditMode());
+                }
+              : undefined
+          }
+          rightContent={usePlatform && <AssistantSelect />}
         />
       )}
 
       {widget}
+
       <StepsDiv
         ref={stepsDivRef}
         className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
@@ -411,6 +420,7 @@ export function Chat() {
                     isMainInput={false}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
+                    inputId={item.message.id}
                   />
                 </>
               ) : item.message.role === "tool" ? (
@@ -507,6 +517,7 @@ export function Chat() {
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
+            inputId={"main-editor"}
           />
         )}
 

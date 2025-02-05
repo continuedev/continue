@@ -69,10 +69,14 @@ class MCPConnection {
   private constructTransport(options: MCPOptions): Transport {
     switch (options.transport.type) {
       case "stdio":
+        const env: Record<string, string> = options.transport.env || {};
+        if (process.env.PATH !== undefined) {
+          env.PATH = process.env.PATH;
+        }
         return new StdioClientTransport({
           command: options.transport.command,
           args: options.transport.args,
-          env: options.transport.env,
+          env,
         });
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
