@@ -580,7 +580,8 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "",
+          "name": "Continue",
+          "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
       ]
@@ -702,6 +703,7 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
+    "partial-json": "^0.1.7",
     "posthog-node": "^3.6.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
@@ -718,6 +720,7 @@
     "vectordb": "^0.4.20",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
-    "yarn": "^1.22.21"
+    "yarn": "^1.22.21",
+    "zod": "^3.24.1"
   }
 }
