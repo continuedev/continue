@@ -778,6 +778,7 @@ const getCommandsMap: (
             sessionId,
           );
         }
+        panel.reveal();
         sessionLoader.dispose();
       });
 
