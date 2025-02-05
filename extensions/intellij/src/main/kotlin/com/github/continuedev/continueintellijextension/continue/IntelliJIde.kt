@@ -94,6 +94,7 @@ class IntelliJIDE(
             userToken = settings.continueState.userToken ?: "",
             enableControlServerBeta = settings.continueState.enableContinueTeamsBeta,
             pauseCodebaseIndexOnStart = false, // TODO: Needs to be implemented
+            continueTestEnvironment = "none"
         )
     }
 
