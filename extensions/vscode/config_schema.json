@@ -998,6 +998,8 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "deepseek-r1",
+                      "deepseek_v3",
                       "llama3-8b",
                       "llama3-70b",
                       "llama3.1-8b",
