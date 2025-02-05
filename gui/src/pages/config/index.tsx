@@ -150,14 +150,17 @@ function ConfigPage() {
         <div className="flex flex-col gap-4 py-6">
           <h2 className="mb-1 mt-0">Configuration</h2>
 
-          <SecondaryButton onClick={handleOpenConfig} className="!my-0">
+          <SecondaryButton
+            onClick={handleOpenConfig}
+            className="!my-0 max-w-[400px]"
+          >
             Open configuration file
           </SecondaryButton>
         </div>
 
         <div className="flex flex-col gap-4 py-6">
           <div>
-            <h2 className="mb-4 mt-0">User settings</h2>
+            <h2 className="mb-2 mt-0">User settings</h2>
           </div>
 
           <div className="flex flex-col gap-4">

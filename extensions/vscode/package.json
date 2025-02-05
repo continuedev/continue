@@ -220,7 +220,7 @@
       {
         "command": "continue.openConfigPage",
         "category": "Continue",
-        "title": "Open Continue Config",
+        "title": "Open Settings",
         "icon": "$(gear)",
         "group": "Continue"
       },
