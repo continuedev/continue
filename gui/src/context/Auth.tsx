@@ -152,10 +152,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     ideMessenger.ide
       .getIdeSettings()
       .then(({ enableControlServerBeta, continueTestEnvironment }) => {
-        const enabled =
-          enableControlServerBeta || continueTestEnvironment !== "none";
-        setControlServerBetaEnabled(enabled);
-        dispatch(setLastControlServerBetaEnabledStatus(enabled));
+        setControlServerBetaEnabled(enableControlServerBeta);
+        dispatch(
+          setLastControlServerBetaEnabledStatus(enableControlServerBeta),
+        );
       });
   }, []);
 
