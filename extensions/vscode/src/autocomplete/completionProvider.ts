@@ -41,8 +41,7 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider
-{
+  implements vscode.InlineCompletionItemProvider {
   private onError(e: any) {
     const options = ["Documentation"];
     if (e.message.includes("Ollama may not be installed")) {
@@ -280,14 +279,8 @@ export class ContinueCompletionProvider
             document.lineAt(startPos).range.end,
           );
         } else if (
-          //diffPatternMatches(diffs, ["+", "-"]) ||
-          //diffPatternMatches(diffs, ["-", "+"])
-          diffs.every((diff, index) =>
-            index % 2 === 0 ? diff.added : diff.removed
-          ) ||
-          diffs.every((diff, index) =>
-            index % 2 === 0 ? diff.removed : diff.added
-          )
+          diffPatternMatches(diffs, ["+", "-"]) ||
+          diffPatternMatches(diffs, ["-", "+"])
         ) {
           // We are midline and the model just inserted without repeating to the end of the line
           // We want to move the cursor to the end of the line
@@ -310,7 +303,7 @@ export class ContinueCompletionProvider
           } else {
             // If the first part of the diff isn't an insertion, then the model is
             // probably rewriting other parts of the line
-            return undefined;
+            // return undefined; - Let's assume it's simply an insertion
           }
         }
       } else {
