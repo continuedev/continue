@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.258",
+  "version": "0.9.260",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -214,13 +214,13 @@
         "command": "continue.toggleFullScreen",
         "category": "Continue",
         "title": "Toggle Full Screen",
-        "icon": "$(fullscreen)",
+        "icon": "$(link-external)",
         "group": "Continue"
       },
       {
         "command": "continue.openConfigPage",
         "category": "Continue",
-        "title": "Open Continue Config",
+        "title": "Open Settings",
         "icon": "$(gear)",
         "group": "Continue"
       },
