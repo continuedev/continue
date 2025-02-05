@@ -13,7 +13,7 @@
 
 // See an example at https://docs.continue.dev/getting-started/install
 
-// Follow the instructions in the sidebar to set up models for Chat and Autocomplete.
+// Follow the instructions in the sidebar to set up a Chat/Edit modela and an Autocomplete model.
 
 // —————————————————————————————————————————————————     Chat      —————————————————————————————————————————————————
 
