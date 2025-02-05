@@ -1,8 +1,8 @@
-import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
-import Shortcut from "./Shortcut";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as util from "../../util";
+import { Platform } from "../../util";
+import Shortcut from "./Shortcut";
 
 vi.mock("../../util", () => ({
   ...vi.importActual("../../util"),
@@ -15,13 +15,12 @@ vi.mock("../../util", () => ({
 describe("Shortcut component", () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mocked(util.getPlatform).mockReturnValue('windows');
+    vi.mocked(util.getPlatform).mockReturnValue("windows");
     vi.mocked(util.getFontSize).mockReturnValue(14);
   });
-
   describe("Meta key rendering across platforms", () => {
     const metaKeyInputs = ["meta", "cmd", "ctrl", "^", "⌘"];
-    const platforms = ["windows", "mac", "linux"];
+    const platforms: Platform[] = ["windows", "mac", "linux"];
 
     platforms.forEach((platform) => {
       metaKeyInputs.forEach((metaKey) => {
@@ -36,7 +35,7 @@ describe("Shortcut component", () => {
           const { container } = render(<Shortcut>{metaKey}</Shortcut>);
           const kbdElement = container.querySelector("kbd");
           expect(kbdElement?.textContent).toBe(
-            platform === "mac" ? "⌘" : "Ctrl"
+            platform === "mac" ? "⌘" : "Ctrl",
           );
         });
       });
@@ -59,7 +58,7 @@ describe("Shortcut component", () => {
 
   describe("Delete key rendering across platforms", () => {
     const deleteKeyInputs = ["backspace", "delete", "⌫"];
-    const platforms = ["windows", "mac", "linux"];
+    const platforms: Platform[] = ["windows", "mac", "linux"];
 
     platforms.forEach((platform) => {
       deleteKeyInputs.forEach((deleteKey) => {
@@ -67,8 +66,7 @@ describe("Shortcut component", () => {
           vi.mocked(util.getPlatform).mockReturnValue(platform);
           const { container } = render(<Shortcut>{deleteKey}</Shortcut>);
           const kbdElement = container.querySelector("kbd");
-          const expectedText =
-            platform === "mac" ? "Delete ⌫" : "Backspace ⌫";
+          const expectedText = platform === "mac" ? "Delete ⌫" : "Backspace ⌫";
           expect(kbdElement?.textContent).toBe(expectedText);
           expect(kbdElement).toHaveClass("keyboard-key-special");
         });
@@ -95,7 +93,7 @@ describe("Shortcut component", () => {
 
   describe("Option/Alt key rendering across platforms", () => {
     const optionKeyInputs = ["⌥", "option", "opt", "alt"];
-    const platforms = ["windows", "mac"];
+    const platforms: util.Platform[] = ["windows", "mac"];
 
     platforms.forEach((platform) => {
       optionKeyInputs.forEach((optionKey) => {
@@ -118,9 +116,9 @@ describe("Shortcut component", () => {
 
   describe("Font class application for option/alt key", () => {
     it("should apply 'keyboard-key-special' class for option/alt key", () => {
-      vi.mocked(util.getPlatform).mockReturnValue('windows');
+      vi.mocked(util.getPlatform).mockReturnValue("windows");
       vi.mocked(util.getFontSize).mockReturnValue(14);
-      vi.mocked(util.getAltKeyLabel).mockImplementation(() => 'Alt');
+      vi.mocked(util.getAltKeyLabel).mockImplementation(() => "Alt");
       const { container } = render(<Shortcut>alt</Shortcut>);
       const kbdElement = container.querySelector("kbd");
       expect(kbdElement).toHaveClass("keyboard-key-special");

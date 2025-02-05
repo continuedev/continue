@@ -1,11 +1,11 @@
 import React from "react";
-import {
-  getFontSize,
-  getPlatform,
-  getMetaKeyLabel,
-  getAltKeyLabel,
-} from "../../util";
 import "../../../src/index.css";
+import {
+  getAltKeyLabel,
+  getFontSize,
+  getMetaKeyLabel,
+  getPlatform,
+} from "../../util";
 import "./Shortcut.css";
 
 interface ShortcutProps {
@@ -18,7 +18,7 @@ const metaKeys = ["meta", "⌘", "ctrl", "cmd", "^"];
 const altKeys = ["alt", "option", "opt", "⌥"];
 const modifierKeys = [...metaKeys, ...altKeys];
 
-const getSpecialKeyMap = (platform: string) => ({
+const getSpecialKeyMap = (platform: string): Record<string, string> => ({
   uparrow: "UpArrow ↑",
   downarrow: "DownArrow ↓",
   leftarrow: "LeftArrow ←",
@@ -33,7 +33,7 @@ const getSpecialKeyMap = (platform: string) => ({
 const parseShortcut = (shortcut: string, platform: string) => {
   if (!shortcut || typeof shortcut !== "string") {
     console.warn("Invalid shortcut provided:", shortcut);
-    return []; 
+    return [];
   }
 
   const specialKeyMap = getSpecialKeyMap(platform);
@@ -43,15 +43,15 @@ const parseShortcut = (shortcut: string, platform: string) => {
       combo
         .trim()
         .split(" ")
-        .filter((key) => key) 
+        .filter((key) => key)
         .map((key) => {
           const lowerKey = key.toLowerCase();
           if (metaKeys.includes(lowerKey)) return getMetaKeyLabel();
           if (altKeys.includes(lowerKey)) return getAltKeyLabel();
           return specialKeyMap[lowerKey] || capitalizeKey(key);
-        })
+        }),
     )
-    .filter((combo) => combo.length > 0); 
+    .filter((combo) => combo.length > 0);
 };
 
 const capitalizeKey = (key: string) =>
@@ -82,7 +82,8 @@ const Shortcut: React.FC<ShortcutProps> = ({ children }) => {
                 }`}
                 style={{
                   fontSize:
-                    key && modifierKeys.includes(key.toLowerCase()) &&
+                    key &&
+                    modifierKeys.includes(key.toLowerCase()) &&
                     platform === "mac"
                       ? `${fontSize - 2}px`
                       : `${fontSize - 3}px`,
