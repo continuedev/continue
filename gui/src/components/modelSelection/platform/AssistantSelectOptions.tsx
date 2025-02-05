@@ -1,5 +1,6 @@
 import { BuildingOfficeIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -7,12 +8,11 @@ import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { setProfileId } from "../../../redux/thunks/setProfileId";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
+import { ROUTES } from "../../../util/navigation";
 import AboutAssistantDialog from "../../dialogs/AboutAssistantDialog";
+import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../../../util/navigation";
-import AssistantIcon from "./AssistantIcon";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -26,7 +26,7 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
 
   function onNewAssistant() {
     ideMessenger.post("controlPlane/openUrl", {
-      path: "platform/new",
+      path: "new",
     });
   }
 
