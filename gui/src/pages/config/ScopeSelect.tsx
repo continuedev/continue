@@ -1,44 +1,44 @@
-// gui/src/pages/config/ScopeSelect.tsx
-
 import { Listbox } from "@headlessui/react";
 import {
   ChevronDownIcon,
   UserCircleIcon,
-  CubeIcon,
+  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { useAuth } from "../../context/Auth";
-import { useDispatch } from "react-redux";
-import { setSelectedOrganizationId } from "../../redux/slices/sessionSlice";
+import { setOrgId } from "../../redux/thunks/setOrgId";
+import { useAppDispatch } from "../../redux/hooks";
+
+const USER_PROFILE_VAL = "personal";
 
 export function ScopeSelect() {
   const { organizations, selectedOrganization } = useAuth();
   const [value, setValue] = useState<string>(
-    selectedOrganization?.id || "personal",
+    selectedOrganization?.id || USER_PROFILE_VAL,
   );
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const handleChange = (newValue: string) => {
     setValue(newValue);
-    dispatch(
-      setSelectedOrganizationId(newValue === "personal" ? null : newValue),
-    );
+
+    const orgId = newValue === USER_PROFILE_VAL ? null : newValue;
+    dispatch(setOrgId(orgId));
   };
   const selectedDisplay =
-    value === "personal"
+    value === USER_PROFILE_VAL
       ? { name: "Personal", iconUrl: null }
       : organizations.find((org) => org.id === value);
 
   return (
     <Listbox value={value} onChange={handleChange}>
       <div className="relative">
-        <Listbox.Button className="border-vsc-foreground text-vsc-foreground hover:bg-vsc-background flex w-full cursor-pointer items-center gap-0.5 rounded border bg-transparent p-2 hover:opacity-90">
+        <Listbox.Button className="border-vsc-foreground text-vsc-foreground hover:bg-vsc-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border bg-transparent p-2 hover:opacity-90">
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               {selectedDisplay?.iconUrl ? (
                 <img src={selectedDisplay.iconUrl} alt="" className="h-5 w-5" />
               ) : (
-                <UserCircleIcon className="h-5 w-5" />
+                <BuildingOfficeIcon className="h-5 w-5" />
               )}
               <span className="truncate">
                 {selectedDisplay?.name || "Select Organization"}
@@ -49,30 +49,34 @@ export function ScopeSelect() {
         </Listbox.Button>
 
         <Listbox.Options className="bg-vsc-input-background absolute z-50 mt-1 w-full min-w-[200px] list-none overflow-auto rounded p-0 shadow-lg">
-          <div className="text-vsc-foreground p-2 font-semibold">
-            Organizations
-          </div>
-          {organizations.map((org) => (
-            <Listbox.Option
-              key={org.id}
-              value={org.id}
-              className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
-            >
-              <div className="flex items-center gap-2">
-                {org.iconUrl ? (
-                  <img src={org.iconUrl} alt="" className="h-5 w-5" />
-                ) : (
-                  <CubeIcon className="h-5 w-5" />
-                )}
-                <span>{org.name}</span>
+          {organizations.length > 0 && (
+            <>
+              <div className="text-vsc-foreground p-2 font-semibold">
+                Organizations
               </div>
-            </Listbox.Option>
-          ))}
+              {organizations.map((org) => (
+                <Listbox.Option
+                  key={org.id}
+                  value={org.id}
+                  className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
+                >
+                  <div className="flex items-center gap-2">
+                    {org.iconUrl ? (
+                      <img src={org.iconUrl} alt="" className="h-5 w-5" />
+                    ) : (
+                      <BuildingOfficeIcon className="h-5 w-5" />
+                    )}
+                    <span>{org.name}</span>
+                  </div>
+                </Listbox.Option>
+              ))}
 
-          <div className="bg-lightgray mx-1 my-1 h-px" />
+              <div className="bg-lightgray mx-1 my-1 h-px" />
+            </>
+          )}
 
           <Listbox.Option
-            value="personal"
+            value={USER_PROFILE_VAL}
             className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
           >
             <div className="flex items-center gap-2">

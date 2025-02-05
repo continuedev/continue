@@ -116,6 +116,7 @@ class MessageTypes {
             "addAutocompleteModel",
             "profiles/switch",
             "didChangeSelectedProfile",
+            "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
             "controlPlane/listOrganizations"
