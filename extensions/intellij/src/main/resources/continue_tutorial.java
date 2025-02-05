@@ -1,14 +1,14 @@
-/*                            _________               _____ _____
-                               __  ____/______ _______ __  /____(_)_______ ____  _______
-                               _  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
-                               / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
-                               \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/
+//                            _________               _____ _____
+//                               __  ____/______ _______ __  /____(_)_______ ____  _______
+//                               _  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
+//                               / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
+//                               \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/
+//
+//                                        Chat, Edit, and Autocomplete tutorial
+//
 
-                                         Chat, Edit, and Autocomplete tutorial
-*/
 
-
-/* —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— */
+// —————————————————————————————————————————————————     Chat      —————————————————————————————————————————————————
 
 // Highlight the code below
 // Press [Cmd/Ctrl + J] to add to Chat
@@ -26,7 +26,7 @@ public static int[] sortingAlgorithm(int[] x) {
     return x;
 }
 
-/* —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— */
+// —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— 
 
 // Highlight the code below
 // Press [Cmd/Ctrl + I] to Edit
@@ -44,7 +44,7 @@ public static int[] sortingAlgorithm2(int[] x) {
     return x;
 }
 
-/* —————————————————————————————————————————————     Autocomplete     —————————————————————————————————————————————— */
+// —————————————————————————————————————————————     Autocomplete     ——————————————————————————————————————————————
 
 // Place cursor after `sortingAlgorithm...` below and press [Enter]
 // Press [Tab] to accept the Autocomplete suggestion
@@ -52,4 +52,4 @@ public static int[] sortingAlgorithm2(int[] x) {
 // Basic assertion for sortingAlgorithm...
 
 
-/* ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ——————————————————— */
+// ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ———————————————————
