@@ -1,6 +1,6 @@
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
-import { getUriPathBasename } from "../../util/uri";
+import { getUriDescription } from "../../util/uri";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 
 import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline";
@@ -111,18 +111,17 @@ export async function retrieveContextItemsFromEmbeddings(
     ...results
       .sort((a, b) => a.filepath.localeCompare(b.filepath))
       .map((r) => {
-        const basename = getUriPathBasename(r.filepath);
-        const name = `${basename} (${r.startLine}-${r.endLine})`;
-        const description = `${r.filepath}`;
+        const { relativePathOrBasename, last2Parts, baseName } =
+          getUriDescription(r.filepath, workspaceDirs);
 
-        if (basename === "package.json") {
+        if (baseName === "package.json") {
           console.warn("Retrieval pipeline: package.json detected");
         }
 
         return {
-          name,
-          description,
-          content: `\`\`\`${name}\n${r.content}\n\`\`\``,
+          name: `${baseName} (${r.startLine}-${r.endLine})`,
+          description: last2Parts,
+          content: `\`\`\`${relativePathOrBasename}\n${r.content}\n\`\`\``,
           uri: {
             type: "file" as const,
             value: r.filepath,
