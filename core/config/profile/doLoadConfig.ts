@@ -21,9 +21,9 @@ import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { loadContinueConfigFromJson } from "../load";
+import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
-import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 
 export default async function doLoadConfig(
   ide: IDE,
