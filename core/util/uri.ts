@@ -177,3 +177,19 @@ export function getLastNPathParts(filepath: string, n: number): string {
   }
   return filepath.split(/[\\/]/).slice(-n).join("/");
 }
+
+export function getUriDescription(uri: string, dirUriCandidates: string[]) {
+  const { relativePathOrBasename, foundInDir } = findUriInDirs(
+    uri,
+    dirUriCandidates,
+  );
+  const baseName = getUriPathBasename(uri);
+  const last2Parts = getLastNUriRelativePathParts(dirUriCandidates, uri, 2);
+  return {
+    uri,
+    relativePathOrBasename,
+    foundInDir,
+    last2Parts,
+    baseName,
+  };
+}
