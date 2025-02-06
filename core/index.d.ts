@@ -859,6 +859,7 @@ export interface ToolExtras {
   ide: IDE;
   llm: ILLM;
   fetch: FetchFunction;
+  tool: Tool;
 }
 
 export interface Tool {

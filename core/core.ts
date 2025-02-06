@@ -944,13 +944,14 @@ export class Core {
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
       const contextItems = await callTool(
-        tool.uri ?? tool.function.name,
+        tool,
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
           llm,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          tool,
         },
       );
 
