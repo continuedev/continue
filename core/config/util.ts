@@ -1,4 +1,4 @@
-import { execSync } from "child_process";
+import fs from "fs";
 import os from "os";
 
 import {
@@ -131,7 +131,7 @@ export function isSupportedLanceDbCpuTargetForLinux(ide?: IDE) {
   }
 
   try {
-    const cpuFlags = execSync("cat /proc/cpuinfo").toString().toLowerCase();
+    const cpuFlags = fs.readFileSync("/proc/cpuinfo", "utf-8").toLowerCase();
 
     const isSupportedLanceDbCpuTargetForLinux = cpuFlags
       ? CPU_FEATURES_TO_CHECK.every((feature) => cpuFlags.includes(feature))
