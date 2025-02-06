@@ -102,11 +102,6 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       return [prefix, suffix];
     }
 
-    //snippets = snippets.filter((snippet) => "filepath" in snippet);
-
-    // reverse the snippets so that the most recent snippet is last
-    snippets = [...snippets].reverse();
-
     const relativePaths = getShortestUniqueRelativeUriPaths(
       [
         ...snippets.map((snippet) =>
