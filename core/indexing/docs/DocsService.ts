@@ -43,7 +43,6 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
-import { ConfigResult } from "@continuedev/config-yaml";
 
 import type * as LanceType from "vectordb";
 
