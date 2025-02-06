@@ -25,7 +25,7 @@ export type GlobalContextType = {
   hasDismissedConfigTsNoticeJetBrains: boolean;
   hasAlreadyCreatedAPromptFile: boolean;
   showConfigUpdateToast: boolean;
-  isSupportedLanceDbCpuTarget: boolean;
+  isSupportedLanceDbCpuTargetForLinux: boolean;
   sharedConfig: SharedConfigSchema;
 };
 
