@@ -3,6 +3,7 @@ import fs from "node:fs";
 import {
   AssistantUnrolled,
   ConfigResult,
+  ConfigValidationError,
   parseAssistantUnrolled,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
@@ -100,7 +101,8 @@ async function configYamlToContinueConfig(
   workOsAccessToken: string | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   allowFreeTrial: boolean = true,
-): Promise<ContinueConfig> {
+): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+  const errors: ConfigValidationError[] = [];
   const continueConfig: ContinueConfig = {
     slashCommands: [
       ...(await slashCommandsFromV1PromptFiles(ide)),
@@ -259,40 +261,49 @@ async function configYamlToContinueConfig(
 
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
-  config.mcpServers?.forEach(async (server) => {
-    const mcpId = server.name;
-    const mcpConnection = mcpManager.createConnection(mcpId, {
-      transport: {
-        type: "stdio",
-        args: [],
-        ...server,
-      },
-    });
-    if (!mcpConnection) {
-      return;
-    }
-
-    const abortController = new AbortController();
-    const mcpConnectionTimeout = setTimeout(
-      () => abortController.abort(),
-      2000,
-    );
-
-    try {
-      await mcpConnection.modifyConfig(
-        continueConfig,
-        mcpId,
-        abortController.signal,
-      );
-    } catch (e: any) {
-      if (e.name !== "AbortError") {
-        throw e;
+  await Promise.all(
+    config.mcpServers?.map(async (server) => {
+      const mcpId = server.name;
+      const mcpConnection = mcpManager.createConnection(mcpId, {
+        transport: {
+          type: "stdio",
+          args: [],
+          ...server,
+        },
+      });
+      if (!mcpConnection) {
+        return;
       }
-    }
-    clearTimeout(mcpConnectionTimeout);
-  });
 
-  return continueConfig;
+      const abortController = new AbortController();
+      const mcpConnectionTimeout = setTimeout(
+        () => abortController.abort(),
+        5000,
+      );
+
+      try {
+        const mcpError = await mcpConnection.modifyConfig(
+          continueConfig,
+          mcpId,
+          abortController.signal,
+        );
+        if (mcpError) {
+          errors.push(mcpError);
+        }
+      } catch (e: any) {
+        errors.push({
+          fatal: false,
+          message: `Failed to load MCP server: ${e.message}`,
+        });
+        if (e.name !== "AbortError") {
+          throw e;
+        }
+      }
+      clearTimeout(mcpConnectionTimeout);
+    }) ?? [],
+  );
+
+  return { config: continueConfig, errors };
 }
 
 export async function loadContinueConfigFromYaml(
@@ -328,7 +339,7 @@ export async function loadContinueConfigFromYaml(
     };
   }
 
-  const continueConfig = await configYamlToContinueConfig(
+  const { config: continueConfig, errors } = await configYamlToContinueConfig(
     configYamlResult.config,
     ide,
     ideSettings,
@@ -357,7 +368,7 @@ export async function loadContinueConfigFromYaml(
 
   return {
     config: withShared,
-    errors: configYamlResult.errors,
+    errors: [...(configYamlResult.errors ?? []), ...errors],
     configLoadInterrupted: false,
   };
 }
