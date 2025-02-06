@@ -874,6 +874,7 @@ export interface Tool {
   wouldLikeTo: string;
   readonly: boolean;
   uri?: string;
+  faviconUrl?: string;
 }
 
 interface ToolChoice {
@@ -994,6 +995,7 @@ export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
 
 export interface MCPOptions {
   transport: TransportOptions;
+  faviconUrl?: string;
 }
 
 export interface ContinueUIConfig {

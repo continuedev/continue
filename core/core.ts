@@ -954,6 +954,12 @@ export class Core {
         },
       );
 
+      if (tool.faviconUrl) {
+        contextItems.forEach((item) => {
+          item.icon = tool.faviconUrl;
+        });
+      }
+
       return { contextItems };
     });
   }

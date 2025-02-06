@@ -286,6 +286,8 @@ async function configYamlToContinueConfig(
           continueConfig,
           mcpId,
           abortController.signal,
+          server.name,
+          server.faviconUrl,
         );
         if (mcpError) {
           errors.push(mcpError);
