@@ -63,6 +63,11 @@ export default function ToolDropdown(props: ToolDropdownProps) {
           onMouseEnter={() => !props.disabled && setIsHovered(true)}
           onMouseLeave={() => !props.disabled && setIsHovered(false)}
         />
+        {props.disabled && (
+          <ToolTip id="tools-tooltip" place="top-middle">
+            This model does not support tool use
+          </ToolTip>
+        )}
         {!useTools && !props.disabled && (
           <ToolTip id="tools-tooltip" place="top-middle">
             Enable tool usage
@@ -143,7 +148,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                           </div>
                         </div>
                         <div className="max-h-48 overflow-y-auto overflow-x-hidden">
-                          {availableTools.map((tool) => (
+                          {availableTools.map((tool: any) => (
                             <Listbox.Option
                               key={tool.function.name}
                               value="addAllFiles"
