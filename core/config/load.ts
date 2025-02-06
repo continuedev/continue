@@ -41,7 +41,6 @@ import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
 import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
 import { useHub } from "../control-plane/env";
-import { useHub } from "../control-plane/env";
 import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
@@ -66,7 +65,6 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
-import { localPathToUri } from "../util/pathToUri";
 
 import {
   defaultContextProvidersJetBrains,
@@ -76,6 +74,7 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
+import { isSupportedLanceDbCpuTargetForLinux } from "./util";
 import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
