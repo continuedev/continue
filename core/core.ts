@@ -19,6 +19,7 @@ import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFile
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
+import { getControlPlaneEnv } from "./control-plane/env";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
@@ -52,12 +53,10 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import { getControlPlaneEnv } from "./control-plane/env";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
 export class Core {
-  // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
   configHandler: ConfigHandler;
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
@@ -209,13 +208,24 @@ export class Core {
 
     // Note, VsCode's in-process messenger doesn't do anything with this
     // It will only show for jetbrains
-    this.messenger.onError((err) => {
-      console.error(err);
+    this.messenger.onError((message, err) => {
       void Telemetry.capture("core_messenger_error", {
         message: err.message,
         stack: err.stack,
       });
-      void this.ide.showToast("error", err.message);
+
+      // Again, specifically for jetbrains to prevent duplicate error messages
+      // The same logic can currently be found in the webview protocol
+      // bc streaming errors are handled in the GUI
+      if (
+        ["llm/streamChat", "chatDescriber/describe"].includes(
+          message.messageType,
+        )
+      ) {
+        return;
+      } else {
+        void this.ide.showToast("error", err.message);
+      }
     });
 
     on("update/selectTabAutocompleteModel", async (msg) => {
@@ -289,6 +299,7 @@ export class Core {
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
+
     on("config/listProfiles", (msg) => {
       return this.configHandler.listProfiles();
     });
@@ -297,9 +308,18 @@ export class Core {
       addContextProvider(msg.data);
     });
 
+    on("config/updateSharedConfig", async (msg) => {
+      this.globalContext.updateSharedConfig(msg.data);
+      await this.configHandler.reloadConfig();
+    });
+
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+    });
+
+    on("controlPlane/listOrganizations", async (msg) => {
+      return await this.controlPlaneClient.listOrganizations();
     });
 
     // Context providers
@@ -863,12 +883,21 @@ export class Core {
     on("docs/initStatuses", async (msg) => {
       void this.docsService.initStatuses();
     });
+    on("docs/getDetails", async (msg) => {
+      return await this.docsService.getDetails(msg.data.startUrl);
+    });
     //
 
     on("didChangeSelectedProfile", (msg) => {
       void this.configHandler.setSelectedProfile(msg.data.id);
       void this.configHandler.reloadConfig();
     });
+
+    on("didChangeSelectedOrg", (msg) => {
+      void this.configHandler.setSelectedOrgId(msg.data.id);
+      void this.configHandler.reloadConfig();
+    });
+
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });

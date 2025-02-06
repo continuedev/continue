@@ -998,6 +998,8 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "deepseek-r1",
+                      "deepseek_v3",
                       "llama3-8b",
                       "llama3-70b",
                       "llama3.1-8b",
@@ -3079,10 +3081,6 @@
               "type": "boolean",
               "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
               "default": false
-            },
-            "useFileSuffix": {
-              "type": "boolean",
-              "description": "Determines whether to use the file suffix in the prompt."
             },
             "maxPromptTokens": {
               "type": "number",

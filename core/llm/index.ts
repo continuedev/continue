@@ -460,9 +460,11 @@ export abstract class BaseLLM implements ILLM {
               `${toolCall.function?.name}(${toolCall.function?.arguments})`,
           )
           .join("\n");
-      } else if ("content" in msg && Array.isArray(msg.content)) {
-        const content = renderChatMessage(msg);
-        msg.content = content;
+      } else if ("content" in msg) {
+        if (Array.isArray(msg.content)) {
+          msg.content = renderChatMessage(msg);
+        }
+        contentToShow = msg.content;
       }
 
       formatted += `<${msg.role}>\n${contentToShow}\n\n`;

@@ -151,8 +151,8 @@ Note that the `repoMapFileSelection` experimental model role has been deprecated
 
 The JSON `contextProviders` field is replaced by the YAML `context` array.
 
-- JSON `name` maps to `uses`
-- JSON `params` map to `with`
+- JSON `name` maps to `provider`
+- JSON `params` map to `params`
 
 **Before**
 
@@ -181,14 +181,14 @@ The JSON `contextProviders` field is replaced by the YAML `context` array.
 
 ```yaml title="config.yaml"
 context:
-  - uses: docs
+  - provider: docs
 
-  - uses: codebase
-    with:
+  - provider: codebase
+    params:
       nRetrieve: 30
       nFinal: 3
 
-  - uses: diff
+  - params: diff
 ```
 
 ### System Message
@@ -327,20 +327,27 @@ mcpServers:
 
 ## Deprecated configuration options
 
-The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md) (Gear Icon). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
+
+See the [JSON Config Reference](./reference#fully-deprecated-settings) for more information on fully deprecated options.
+
+The following top-level fields from `config.json` still work when using `config.json` but have been deprecated and don't have a YAML equivalent:
 
 - Slash commands (JSON `slashCommands`)
 - top-level `requestOptions`
 - top-level `completionOptions`
 - `tabAutocompleteOptions`
+  - `disable`
+  - `maxPromptTokens`
+  - `debounceDelay`
+  - `maxSuffixPercentage`
+  - `prefixPercentage`
+  - `template`
+  - `onlyMyCode`
 - `analytics`
 - `customCommands`
-- `disableSessionTitles`
 - `experimental`
-- `allowAnonymousTelemetry` (moved to user/IDE level)
-- `ui` (moved to user/IDE level)
 - `userToken`
-- `disableIndexing` (moved to user/IDE level)
 
 ## New Configuration options
 
