@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import useIsOSREnabled from "../hooks/useIsOSREnabled";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { getPlatform } from "../util";
 
 interface Position {
   top?: number;
@@ -11,6 +12,7 @@ interface Position {
 
 const OSRContextMenu = () => {
   const ideMessenger = useContext(IdeMessengerContext);
+  const platform = useRef(getPlatform());
 
   const [position, setPosition] = useState<Position | null>(null);
   const [canCopy, setCanCopy] = useState(false);
@@ -39,6 +41,10 @@ const OSRContextMenu = () => {
 
   const isOSREnabled = useIsOSREnabled();
   useEffect(() => {
+    if (platform.current === "mac") {
+      return;
+    }
+
     function leaveWindowHandler() {
       setPosition(null);
     }
@@ -151,7 +157,7 @@ const OSRContextMenu = () => {
     };
   }, [isOSREnabled]);
 
-  if (!position) {
+  if (platform.current === "mac" || !isOSREnabled || !position) {
     return null;
   }
   return (
