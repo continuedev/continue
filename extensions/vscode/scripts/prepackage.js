@@ -1,12 +1,17 @@
 const fs = require("fs");
+
 const ncp = require("ncp").ncp;
+
 const path = require("path");
+
 const { rimrafSync } = require("rimraf");
+
 const {
   validateFilesPresent,
   execCmdSync,
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
+
 const { copyConfigSchema } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -222,7 +227,7 @@ const exe = os === "win32" ? ".exe" : "";
     "../../../core/llm/llamaTokenizerWorkerPool.mjs",
     "../../../core/llm/llamaTokenizer.mjs",
     "../../../core/llm/tiktokenWorkerPool.mjs",
-    "../../../core/util/start_ollama.sh"
+    "../../../core/util/start_ollama.sh",
   ];
 
   for (const f of filesToCopy) {
@@ -528,11 +533,7 @@ const exe = os === "win32" ? ".exe" : "";
           ? "win32-x64/esbuild.exe"
           : `${target}/bin/esbuild`
     }`,
-    `out/node_modules/@lancedb/vectordb-${
-      os === "win32"
-        ? "win32-x64-msvc"
-        : `${target}${os === "linux" ? "-gnu" : ""}`
-    }/index.node`,
+    `out/node_modules/@lancedb/vectordb-${target}${os === "linux" ? "-gnu" : ""}/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
   ]);

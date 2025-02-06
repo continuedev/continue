@@ -6,11 +6,14 @@
 
 const fs = require("fs");
 const path = require("path");
+
 const { rimrafSync } = require("rimraf");
+
 const {
   validateFilesPresent,
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
+
 const {
   copyConfigSchema,
   installNodeModules,
@@ -71,18 +74,6 @@ function ghAction() {
   return !!process.env.GITHUB_ACTIONS;
 }
 
-function isArm() {
-  return (
-    target === "darwin-arm64" ||
-    target === "linux-arm64" ||
-    target === "win32-arm64"
-  );
-}
-
-function isWin() {
-  return target?.startsWith("win");
-}
-
 async function package(target, os, arch, exe) {
   console.log("[info] Packaging extension for target ", target);
 
@@ -119,7 +110,7 @@ async function package(target, os, arch, exe) {
     "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
     "linux-x64": "@lancedb/vectordb-linux-x64-gnu",
     "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
-    "win32-arm64": "@lancedb/vectordb-win32-x64-msvc", // they don't have a win32-arm64 build
+    "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
   }[target];
   await installNodeModuleInTempDirAndCopyToCurrent(
     lancePackageToInstall,
@@ -203,11 +194,7 @@ async function package(target, os, arch, exe) {
           ? "win32-x64/esbuild.exe"
           : `${target}/bin/esbuild`
     }`,
-    `out/node_modules/@lancedb/vectordb-${
-      os === "win32"
-        ? "win32-x64-msvc"
-        : `${target}${os === "linux" ? "-gnu" : ""}`
-    }/index.node`,
+    `out/node_modules/@lancedb/vectordb-${target}${os === "linux" ? "-gnu" : ""}/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
   ]);

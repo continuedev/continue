@@ -1,7 +1,11 @@
 const fs = require("fs");
+
 const ncp = require("ncp").ncp;
+
 const path = require("path");
+
 const { rimrafSync } = require("rimraf");
+
 const {
   validateFilesPresent,
   execCmdSync,
@@ -18,8 +22,10 @@ function copyConfigSchema() {
     enum: ["merge", "overwrite"],
     default: "merge",
     title: "Merge behavior",
-    markdownDescription: "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
-    "x-intellij-html-description": "<p>If set to <code>merge</code>, <code>.continuerc.json</code> will be applied on top of <code>config.json</code> (arrays and objects are merged). If set to <code>overwrite</code>, then every top-level property of <code>.continuerc.json</code> will overwrite that property from <code>config.json</code>.</p>"
+    markdownDescription:
+      "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
+    "x-intellij-html-description":
+      "<p>If set to <code>merge</code>, <code>.continuerc.json</code> will be applied on top of <code>config.json</code> (arrays and objects are merged). If set to <code>overwrite</code>, then every top-level property of <code>.continuerc.json</code> will overwrite that property from <code>config.json</code>.</p>",
   };
   fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
 
@@ -417,14 +423,14 @@ async function downloadRipgrepBinary(target) {
   const downloadUrl = {
     "darwin-arm64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-apple-darwin.tar.gz",
-    "linux-arm64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-unknown-linux-gnu.tar.gz",
-    "win32-arm64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-pc-windows-msvc.zip",
-    "linux-x64":
-      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-unknown-linux-musl.tar.gz",
     "darwin-x64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-apple-darwin.tar.gz",
+    "linux-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-unknown-linux-gnu.tar.gz",
+    "linux-x64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-unknown-linux-musl.tar.gz",
+    "win32-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-pc-windows-msvc.zip",
     "win32-x64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-pc-windows-msvc.zip",
   }[target];
@@ -539,5 +545,5 @@ module.exports = {
   downloadSqliteBinary,
   downloadRipgrepBinary,
   copyTokenizers,
-  copyScripts
+  copyScripts,
 };

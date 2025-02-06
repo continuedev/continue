@@ -28,6 +28,7 @@ let targets = [
   "linux-x64",
   "linux-arm64",
   "win32-x64",
+  "win32-arm64",
 ];
 
 const [currentPlatform, currentArch] = autodetectPlatformAndArch();
@@ -53,7 +54,7 @@ const targetToLanceDb = {
   "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
   "linux-x64": "@lancedb/vectordb-linux-x64-gnu",
   "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
-  "win32-arm64": "@lancedb/vectordb-win32-x64-msvc", // they don't have a win32-arm64 build
+  "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
 };
 
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
