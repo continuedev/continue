@@ -21,7 +21,6 @@ import {
   setAvailableProfiles,
 } from "../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
@@ -84,23 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
           const session = result.content;
           setSession(session);
-
-          // If this is the first time the user has logged in, explain how profiles work
-          if (!getLocalStorage("shownProfilesIntroduction")) {
-            dispatch(setShowDialog(true));
-            dispatch(
-              setDialogMessage(
-                <ConfirmationDialog
-                  title="Welcome to Continue for Teams!"
-                  text="You can switch between your local profile and team profile using the profile icon in the top right. Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
-                  hideCancelButton={true}
-                  confirmText="Ok"
-                  onConfirm={() => {}}
-                />,
-              ),
-            );
-            setLocalStorage("shownProfilesIntroduction", true);
-          }
 
           resolve(true);
         });
