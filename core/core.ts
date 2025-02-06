@@ -11,7 +11,6 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import {
   setupBestConfig,
   setupLocalConfig,
-  setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
@@ -732,10 +731,6 @@ export class Core {
 
         case "Quickstart":
           editConfigJsonCallback = setupQuickstartConfig;
-          break;
-
-        case "LocalAfterFreeTrial":
-          editConfigJsonCallback = setupLocalConfigAfterFreeTrial;
           break;
 
         case "Best":

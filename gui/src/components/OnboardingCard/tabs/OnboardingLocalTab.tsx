@@ -8,7 +8,6 @@ import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { hasPassedFTL } from "../../../util/freeTrial";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
@@ -25,10 +24,7 @@ interface OnboardingLocalTabProps {
 function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { submitOnboarding } = useSubmitOnboarding(
-    hasPassedFTL() ? "LocalAfterFreeTrial" : "Local",
-    isDialog,
-  );
+  const { submitOnboarding } = useSubmitOnboarding("Local", isDialog);
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
     string[]

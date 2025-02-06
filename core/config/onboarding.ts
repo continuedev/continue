@@ -68,24 +68,3 @@ export function setupQuickstartConfig(
     },
   };
 }
-
-export function setupLocalConfigAfterFreeTrial(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
-    models: [
-      {
-        title: LOCAL_ONBOARDING_CHAT_TITLE,
-        provider: "ollama",
-        model: LOCAL_ONBOARDING_CHAT_MODEL,
-      },
-      {
-        title: ONBOARDING_LOCAL_MODEL_TITLE,
-        provider: "ollama",
-        model: "AUTODETECT",
-      },
-      ...config.models.filter((model) => model.provider !== "free-trial"),
-    ],
-  };
-}
