@@ -5,8 +5,6 @@ import {
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 
-console.log();
-
 class TerminalContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "terminal",

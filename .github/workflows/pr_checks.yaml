@@ -616,7 +616,7 @@ jobs:
       - vscode-package-extension
       - vscode-download-e2e-dependencies
       - vscode-e2e-tests
-      # - gui-tests
+      - gui-tests
       - jetbrains-tests
 
     steps:
