@@ -365,9 +365,11 @@ export function Chat() {
 
   useAutoScroll(stepsDivRef, history);
 
+  const showPageHeader = isInEditMode || usePlatform;
+
   return (
     <>
-      {(isInEditMode || usePlatform) && (
+      {showPageHeader && (
         <PageHeader
           title={isInEditMode ? "Edit Mode" : ""}
           onTitleClick={
@@ -388,7 +390,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (

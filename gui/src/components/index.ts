@@ -134,7 +134,7 @@ export function parseColorForHex(colorVar: string): string {
 }
 
 export const Button = styled.button`
-  padding: 10px 12px;
+  padding: 6px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
@@ -162,13 +162,13 @@ type NumberInputProps = {
 };
 
 export const SecondaryButton = styled.button`
-  padding: 10px 12px;
+  padding: 6px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscForeground};
+  border: 1px solid ${vscInputBorder};
   color: ${vscForeground};
-  background-color: inherit;
+  background-color: ${vscInputBackground};
 
   &:disabled {
     color: gray;
