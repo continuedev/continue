@@ -500,9 +500,45 @@ jobs:
 
   jetbrains-tests:
     needs: [install-root, core-checks]
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: ubuntu-latest
+            runIde: |
+              export DISPLAY=:99.0
+              Xvfb -ac :99 -screen 0 1920x1080x24 &
+              sleep 10
+              mkdir -p extensions/intellij/build/reports
+              ./gradlew runIdeForUiTests &
+            runTests: |
+              export DISPLAY=:99.0
+              ./gradlew test
+            url: http://127.0.0.1:8082
+            reportName: jb-failure-report-linux
+            shell: bash
+            moveVideo: mv extensions/intellij/video extensions/intellij/build/reports
+            copyLogs: mv extensions/intellij/build/idea-sandbox/system/log/ extensions/intellij/build/reports
+            reportsPath: extensions/intellij/build/reports
+
+          - os: windows-latest
+            runIde: |
+              set DISPLAY=:99.0
+              start /B gradlew.bat runIdeForUiTests
+              mkdir extensions\intellij\build\reports
+            runTests: |
+              ./gradlew test
+            url: http://localhost:8082
+            reportName: jb-failure-report-windows
+            shell: pwsh
+            moveVideo: Move-Item extensions\intellij\video extensions\intellij\build\reports
+            copyLogs: Move-Item extensions\intellij\build\idea-sandbox\system\log\ extensions\intellij\build\reports
+            reportsPath: extensions\intellij\build\reports
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/cache@v4
         with:
           path: core/node_modules
@@ -533,7 +569,6 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      # We can shave off another minute off our CI script by finding a way to share this with vscode-tests
       - name: Run prepackage script
         run: |
           cd extensions/vscode
@@ -554,48 +589,34 @@ jobs:
           cd binary
           npm run build
 
-      - name: Start test IDE
-        run: |
-          cd extensions/intellij
-          export DISPLAY=:99.0
-          Xvfb -ac :99 -screen 0 1920x1080x24 &
-          sleep 10
-          mkdir -p build/reports
-          ./gradlew runIdeForUiTests &
+      - name: Run IDE
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.runIde }}
 
       - name: Wait for JB connection
         uses: jtalk/url-health-check-action@v3
         with:
-          url: http://127.0.0.1:8082
+          url: ${{ matrix.url }}
           max-attempts: 15
           retry-delay: 30s
 
       - name: Run tests
-        run: |
-          cd extensions/intellij
-          export DISPLAY=:99.0
-          ./gradlew test
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.runTests }}
 
       - name: Move video
-        if: ${{ failure() }}
-        run: |
-          cd extensions/intellij
-          mv video build/reports
+        if: failure()
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.moveVideo }}
 
       - name: Copy logs
-        if: ${{ failure() }}
-        run: |
-          cd extensions/intellij
-          mv build/idea-sandbox/system/log/ build/reports
+        if: failure()
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.copyLogs }}
 
       - name: Save fails report
-        if: ${{ failure() }}
+        if: failure()
         uses: actions/upload-artifact@v4
-        with:
-          name: jb-failure-report
-          path: |
-            ${{ github.workspace }}/extensions/intellij/build/reports
-
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
   # so that creators of new jobs can add them to this list
@@ -616,13 +637,13 @@ jobs:
       - vscode-package-extension
       - vscode-download-e2e-dependencies
       - vscode-e2e-tests
-      # - gui-tests
+      - gui-tests
       - jetbrains-tests
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed
         uses: re-actors/alls-green@release/v1
         with:
-          allowed-failures:
-          allowed-skips:
+          #          allowed-failures:
+          #          allowed-skips:
           jobs: ${{ toJSON(needs) }}
