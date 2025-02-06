@@ -315,7 +315,11 @@ export class Core {
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+      let url = `${env.APP_URL}${msg.data.path}`;
+      if (msg.data.orgSlug) {
+        url += `?org=${msg.data.orgSlug}`;
+      }
+      await this.messenger.request("openUrl", url);
     });
 
     on("controlPlane/listOrganizations", async (msg) => {

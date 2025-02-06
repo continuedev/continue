@@ -25,6 +25,7 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
   function onNewAssistant() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "new",
+      orgSlug: selectedOrganization?.slug,
     });
   }
 
