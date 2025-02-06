@@ -14,5 +14,6 @@ If you have the ability to use any model, we recommend [Claude 3.5 Sonnet](../mo
 Otherwise, some of the next best options are:
 
 - [GPT-4o](../model-providers/top-level/openai.md)
+- [Grok-2](../model-providers/top-level/xAI.md)
 - [Gemini 1.5 Pro](../model-providers/top-level/gemini.md)
 - [Llama3.1 405B](../tutorials/llama3.1.md)

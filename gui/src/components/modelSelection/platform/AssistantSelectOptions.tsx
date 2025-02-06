@@ -1,5 +1,6 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
+import { BuildingOfficeIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -7,12 +8,11 @@ import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { setProfileId } from "../../../redux/thunks/setProfileId";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
+import { ROUTES } from "../../../util/navigation";
 import AboutAssistantDialog from "../../dialogs/AboutAssistantDialog";
+import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
-import AssistantIcon from "./AssistantIcon";
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../../../util/navigation";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -26,7 +26,7 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
 
   function onNewAssistant() {
     ideMessenger.post("controlPlane/openUrl", {
-      path: "platform/new",
+      path: "new",
     });
   }
 
@@ -55,13 +55,6 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
 
   return (
     <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
-      <div
-        className="pb-1 pl-3.5 pt-3 font-semibold hover:cursor-pointer hover:underline"
-        onClick={() => navigate(ROUTES.CONFIG)}
-      >
-        {selectedOrganization?.name || "Personal"} Assistants
-      </div>
-
       <div className={`max-h-[300px]`}>
         {profiles.map((profile, idx) => (
           <Option
@@ -84,22 +77,14 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
               <div className="mr-2 h-4 w-4 flex-shrink-0">
                 <AssistantIcon assistant={profile} />
               </div>
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <span
-                  className="text-lightgray truncate"
-                  style={{ fontSize: getFontSize() - 4 }}
-                >
-                  {profile.fullSlug.ownerSlug}
-                </span>
-                <span
-                  className="flex-1 truncate"
-                  style={{ fontSize: getFontSize() - 2 }}
-                >
-                  {getProfileDisplayText(profile)}
-                  {profile.fullSlug.versionSlug &&
-                    ` (${profile.fullSlug.versionSlug})`}
-                </span>
-              </div>
+              <span
+                className="flex-1 truncate"
+                style={{ fontSize: getFontSize() - 2 }}
+              >
+                {getProfileDisplayText(profile)}
+                {profile.fullSlug.versionSlug &&
+                  ` (${profile.fullSlug.versionSlug})`}
+              </span>
             </div>
           </Option>
         ))}
@@ -118,12 +103,27 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
 
         <Divider className="!my-0" />
 
-        <span
-          className="block px-3 py-3"
+        <div
+          className="flex items-center justify-between p-2"
           style={{ color: lightGray, fontSize: getFontSize() - 4 }}
         >
-          <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
-        </span>
+          <span className="block">
+            <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
+          </span>
+          <div
+            className="flex items-center gap-1"
+            onClick={() => navigate(ROUTES.CONFIG)}
+          >
+            {selectedOrganization?.iconUrl ? (
+              <img src={selectedOrganization.iconUrl} className="h-4 w-4" />
+            ) : (
+              <BuildingOfficeIcon className="h-4 w-4" />
+            )}
+            <span className="hover:cursor-pointer hover:underline">
+              {selectedOrganization?.name || "Personal"}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );

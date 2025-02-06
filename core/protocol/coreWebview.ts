@@ -5,6 +5,7 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
 export type ToCoreFromWebviewProtocol = ToCoreFromIdeOrWebviewProtocol & {
   didChangeSelectedProfile: [{ id: string }, void];
+  didChangeSelectedOrg: [{ id: string | null }, void];
 };
 export type ToWebviewFromCoreProtocol = ToWebviewFromIdeOrCoreProtocol & {
   didChangeAvailableProfiles: [{ profiles: ProfileDescription[] }, void];

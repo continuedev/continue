@@ -4,7 +4,6 @@ import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
-import { AutocompleteCompletionOptions } from "../../autocomplete/templating/AutocompleteTemplate.js";
 
 type OllamaChatMessage = {
   role: "tool" | "user" | "assistant" | "system";
@@ -294,28 +293,20 @@ class Ollama extends BaseLLM {
   }
 
   private _getGenerateOptions(
-    options: CompletionOptions & Partial<AutocompleteCompletionOptions>,
+    options: CompletionOptions,
     prompt: string,
     suffix?: string,
   ): OllamaRawOptions {
-    const generateOptions: OllamaRawOptions = {
+    return {
       model: this._getModel(),
       prompt,
+      suffix,
       raw: options.raw,
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
-      suffix,
       stream: options.stream,
       // Not supported yet: context, images, system, template, format
     };
-
-    if (options.promptOnly) {
-      console.log("fim: removing suffix");
-
-      delete generateOptions.suffix;
-    }
-
-    return generateOptions;
   }
 
   private getEndpoint(endpoint: string): URL {

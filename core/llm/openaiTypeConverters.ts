@@ -16,7 +16,6 @@ import {
   MessageContent,
   TextMessagePart,
 } from "..";
-import { AutocompleteCompletionOptions } from "../autocomplete/templating/AutocompleteTemplate";
 
 export function toChatMessage(
   message: ChatMessage,
@@ -139,12 +138,12 @@ export function toCompleteBody(
 export function toFimBody(
   prefix: string,
   suffix: string,
-  options: CompletionOptions & AutocompleteCompletionOptions,
+  options: CompletionOptions,
 ): FimCreateParamsStreaming {
   return {
     model: options.model,
     prompt: prefix,
-    suffix: options.promptOnly ? undefined : suffix,
+    suffix,
     max_tokens: options.maxTokens,
     temperature: options.temperature,
     top_p: options.topP,
