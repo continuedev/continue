@@ -15,7 +15,6 @@ import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses
 import PageHeader from "../../components/PageHeader";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { saveCurrentSession } from "../../redux/thunks/session";
-import { updateConfig } from "../../redux/slices/configSlice";
 
 function MorePage() {
   useNavigationListener();
@@ -24,11 +23,6 @@ function MorePage() {
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((store) => store.config.config);
   const { disableIndexing } = config;
-  function openConfig() {
-    // `undefined` will open the config for the current profile
-    const profileId = undefined;
-    ideMessenger.post("config/openProfile", { profileId });
-  }
 
   return (
     <div className="overflow-y-scroll">
@@ -50,7 +44,11 @@ function MorePage() {
               <p className="text-lightgray cursor-pointer text-center text-xs">
                 <span
                   className="underline hover:brightness-125"
-                  onClick={openConfig}
+                  onClick={() =>
+                    ideMessenger.post("config/openProfile", {
+                      profileId: undefined,
+                    })
+                  }
                 >
                   Open your config{" "}
                 </span>

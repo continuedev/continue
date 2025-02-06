@@ -5,8 +5,8 @@ import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
-
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
+
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
@@ -80,24 +80,31 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes = [
+    const indexes: CodebaseIndex[] = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
         config.embeddingsProvider.maxEmbeddingChunkSize,
       ), // Chunking must come first
-      new LanceDbIndex(
-        config.embeddingsProvider,
-        this.ide.readFile.bind(this.ide),
-        this.continueServerClient,
-      ),
+    ];
+
+    const lanceDbIndex = await LanceDbIndex.create(
+      config.embeddingsProvider,
+      this.ide.readFile.bind(this.ide),
+      this.continueServerClient,
+    );
+
+    if (lanceDbIndex) {
+      indexes.push(lanceDbIndex);
+    }
+
+    indexes.push(
       new FullTextSearchCodebaseIndex(),
       new CodeSnippetsCodebaseIndex(this.ide),
-    ];
+    );
 
     return indexes;
   }
-
   public async refreshFile(
     file: string,
     workspaceDirs: string[],

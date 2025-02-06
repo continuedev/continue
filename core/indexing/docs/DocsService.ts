@@ -1,6 +1,6 @@
+import { ConfigResult } from "@continuedev/config-yaml";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
-import lancedb, { Connection } from "vectordb";
 
 import {
   Chunk,
@@ -12,7 +12,10 @@ import {
   SiteIndexingConfig,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
-import { addContextProvider } from "../../config/util";
+import {
+  addContextProvider,
+  isSupportedLanceDbCpuTargetForLinux,
+} from "../../config/util";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
@@ -31,7 +34,6 @@ import {
   markdownPageToArticleWithChunks,
 } from "./article";
 import DocsCrawler, { DocsCrawlerType, PageData } from "./crawlers/DocsCrawler";
-import { ConfigResult } from "@continuedev/config-yaml";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {
   downloadFromS3,
@@ -40,6 +42,8 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
+
+import type * as LanceType from "vectordb";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -79,6 +83,7 @@ export type AddParams = {
     - add/index one
 */
 export default class DocsService {
+  private static lance: typeof LanceType | null = null;
   static lanceTableName = "docs";
   static sqlitebTableName = "docs";
 
@@ -108,6 +113,22 @@ export default class DocsService {
 
   setGithubToken(token: string) {
     this.githubToken = token;
+  }
+
+  private async initLanceDb() {
+    if (!isSupportedLanceDbCpuTargetForLinux()) {
+      return null;
+    }
+
+    try {
+      if (!DocsService.lance) {
+        DocsService.lance = await import("vectordb");
+      }
+      return DocsService.lance;
+    } catch (err) {
+      console.error("Failed to load LanceDB:", err);
+      return null;
+    }
   }
 
   // Singleton pattern: only one service globally
@@ -889,7 +910,7 @@ export default class DocsService {
 
   // Lance DB Initialization
   private async createLanceDocsTable(
-    connection: Connection,
+    connection: LanceType.Connection,
     initializationVector: number[],
     tableName: string,
   ) {
@@ -936,7 +957,12 @@ export default class DocsService {
     initializationVector: number[];
     startUrl: string;
   }) {
-    const conn = await lancedb.connect(getLanceDbPath());
+    const lance = await this.initLanceDb();
+    if (!lance) {
+      throw new Error("LanceDB not available on this platform");
+    }
+
+    const conn = await lance.connect(getLanceDbPath());
     const tableNames = await conn.tableNames();
     const { provider } = await this.getEmbeddingsProvider(startUrl);
     const tableNameFromEmbeddingsProvider =
@@ -1045,8 +1071,13 @@ export default class DocsService {
 
   // Delete methods
   private async deleteEmbeddingsFromLance(startUrl: string) {
+    const lance = await this.initLanceDb();
+    if (!lance) {
+      return;
+    }
+
     for (const tableName of this.lanceTableNamesSet) {
-      const conn = await lancedb.connect(getLanceDbPath());
+      const conn = await lance.connect(getLanceDbPath());
       const table = await conn.openTable(tableName);
       await table.delete(`starturl = '${startUrl}'`);
     }

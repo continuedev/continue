@@ -108,7 +108,7 @@ export function getModelByRole<T extends keyof ModelRoles>(
  *
  * See here for details: https://github.com/continuedev/continue/issues/940
  */
-export function isSupportedLanceDbCpuTargetForLinux(ide: IDE) {
+export function isSupportedLanceDbCpuTargetForLinux(ide?: IDE) {
   const CPU_FEATURES_TO_CHECK = ["avx2", "fma"] as const;
 
   const globalContext = new GlobalContext();
@@ -139,7 +139,7 @@ export function isSupportedLanceDbCpuTargetForLinux(ide: IDE) {
 
     // If it's not a supported CPU target, and it's the first time we are checking,
     // show a toast to inform the user that we are going to disable indexing.
-    if (!isSupportedLanceDbCpuTargetForLinux) {
+    if (!isSupportedLanceDbCpuTargetForLinux && ide) {
       // We offload our async toast to `showUnsupportedCpuToast` to prevent making
       // our config loading async upstream of `isSupportedLanceDbCpuTargetForLinux`
       void showUnsupportedCpuToast(ide);

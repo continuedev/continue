@@ -31,9 +31,10 @@ import {
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
-} from "../commands/index.js";
+} from "../commands/index";
 import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
@@ -73,7 +74,7 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { isSupportedLanceDbCpuTargetForLinux } from "./util";
-import { validateConfig } from "./validation.js";
+import { validateConfig } from "./validation";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -233,13 +234,6 @@ export function isContextProviderWithParams(
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
-
-const getCodebaseProvider = async (params: any) => {
-  const { default: CodebaseContextProvider } = await import(
-    "../context/providers/CodebaseContextProvider"
-  );
-  return new CodebaseContextProvider(params);
-};
 
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
@@ -405,7 +399,7 @@ async function intermediateToFinalConfig(
     new FileContextProvider({}),
     // Add codebase provider if indexing is enabled
     ...(!config.disableIndexing
-      ? [await getCodebaseProvider(codebaseContextParams)]
+      ? [new CodebaseContextProvider(codebaseContextParams)]
       : []),
     // Add prompt files provider if enabled
     ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
