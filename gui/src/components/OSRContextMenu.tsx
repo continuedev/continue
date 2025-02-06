@@ -12,6 +12,7 @@ interface Position {
 
 const OSRContextMenu = () => {
   const ideMessenger = useContext(IdeMessengerContext);
+  const isOSREnabled = useIsOSREnabled();
   const platform = useRef(getPlatform());
 
   const [position, setPosition] = useState<Position | null>(null);
@@ -39,12 +40,7 @@ const OSRContextMenu = () => {
     setPosition(null);
   }
 
-  const isOSREnabled = useIsOSREnabled();
   useEffect(() => {
-    if (platform.current === "mac") {
-      return;
-    }
-
     function leaveWindowHandler() {
       setPosition(null);
     }
@@ -144,16 +140,16 @@ const OSRContextMenu = () => {
     }
 
     setPosition(null);
-    if (isOSREnabled) {
+    if (isOSREnabled && platform.current !== "mac") {
+      document.addEventListener("mousedown", clickHandler);
       document.addEventListener("mouseleave", leaveWindowHandler);
       document.addEventListener("contextmenu", contextMenuHandler);
-      document.addEventListener("mousedown", clickHandler);
     }
 
     return () => {
+      document.removeEventListener("mousedown", clickHandler);
       document.removeEventListener("mouseleave", leaveWindowHandler);
       document.removeEventListener("contextmenu", contextMenuHandler);
-      document.removeEventListener("mousedown", clickHandler);
     };
   }, [isOSREnabled]);
 
