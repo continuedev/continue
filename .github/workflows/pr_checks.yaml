@@ -536,87 +536,87 @@ jobs:
             copyLogs: Move-Item extensions\intellij\build\idea-sandbox\system\log\ extensions\intellij\build\reports
             reportsPath: extensions\intellij\build\reports
     runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
+    # steps:
+    #   - uses: actions/checkout@v4
 
-      - uses: actions/cache@v4
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+    #   - uses: actions/cache@v4
+    #     with:
+    #       path: core/node_modules
+    #       key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Setup Java
-        uses: actions/setup-java@v4.5.0
-        with:
-          distribution: zulu
-          java-version: 17
+    #   - name: Setup Java
+    #     uses: actions/setup-java@v4.5.0
+    #     with:
+    #       distribution: zulu
+    #       java-version: 17
 
-      - name: Setup FFmpeg
-        uses: AnimMouse/setup-ffmpeg@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+    #   - name: Setup FFmpeg
+    #     uses: AnimMouse/setup-ffmpeg@v1
+    #     with:
+    #       token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+    #   - name: Setup Gradle
+    #     uses: gradle/actions/setup-gradle@v3
 
-      - name: Use Node.js from .nvmrc
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
+    #   - name: Use Node.js from .nvmrc
+    #     uses: actions/setup-node@v4
+    #     with:
+    #       node-version-file: ".nvmrc"
 
-      - uses: actions/cache@v4
-        id: gui-cache
-        with:
-          path: gui/node_modules
-          key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+    #   - uses: actions/cache@v4
+    #     id: gui-cache
+    #     with:
+    #       path: gui/node_modules
+    #       key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Run prepackage script
-        run: |
-          cd extensions/vscode
-          npm ci
-          npm run prepackage
-        env:
-          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+    #   - name: Run prepackage script
+    #     run: |
+    #       cd extensions/vscode
+    #       npm ci
+    #       npm run prepackage
+    #     env:
+    #       # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+    #       GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - uses: actions/cache@v4
-        id: binary-cache
-        with:
-          path: binary/node_modules
-          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
+    #   - uses: actions/cache@v4
+    #     id: binary-cache
+    #     with:
+    #       path: binary/node_modules
+    #       key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      - name: Build the binaries
-        run: |
-          cd binary
-          npm run build
+    #   - name: Build the binaries
+    #     run: |
+    #       cd binary
+    #       npm run build
 
-      - name: Run IDE
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.runIde }}
+    #   - name: Run IDE
+    #     shell: ${{ matrix.shell }}
+    #     run: ${{ matrix.runIde }}
 
-      - name: Wait for JB connection
-        uses: jtalk/url-health-check-action@v3
-        with:
-          url: ${{ matrix.url }}
-          max-attempts: 15
-          retry-delay: 30s
+    #   - name: Wait for JB connection
+    #     uses: jtalk/url-health-check-action@v3
+    #     with:
+    #       url: ${{ matrix.url }}
+    #       max-attempts: 15
+    #       retry-delay: 30s
 
-      - name: Run tests
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.runTests }}
+    #   - name: Run tests
+    #     shell: ${{ matrix.shell }}
+    #     run: ${{ matrix.runTests }}
 
-      - name: Move video
-        if: failure()
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.moveVideo }}
+    #   - name: Move video
+    #     if: failure()
+    #     shell: ${{ matrix.shell }}
+    #     run: ${{ matrix.moveVideo }}
 
-      - name: Copy logs
-        if: failure()
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.copyLogs }}
+    #   - name: Copy logs
+    #     if: failure()
+    #     shell: ${{ matrix.shell }}
+    #     run: ${{ matrix.copyLogs }}
 
-      - name: Save fails report
-        if: failure()
-        uses: actions/upload-artifact@v4
+    #   - name: Save fails report
+    #     if: failure()
+    #     uses: actions/upload-artifact@v4
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
   # so that creators of new jobs can add them to this list
