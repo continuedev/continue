@@ -135,21 +135,11 @@ class Gemini extends BaseLLM {
         };
   }
 
-  private async *streamChatGemini(
+  public prepareBody(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
-  ): AsyncGenerator<ChatMessage> {
-    const apiURL = new URL(
-      `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
-      this.apiBase,
-    );
-    // This feels hacky to repeat code from above function but was the quickest
-    // way to ensure system message re-formatting isn't done if user has specified v1
-    const apiBase = this.apiBase || Gemini.defaultOptions.apiBase!; // Determine if it's a v1 API call based on apiBase
-    const isV1API = apiBase.includes("/v1/");
-
-    // Convert chat messages to contents
+    isV1API: boolean,
+  ): GeminiChatRequestBody {
     const body: GeminiChatRequestBody = {
       contents: messages
         .filter((msg) => !(msg.role === "system" && isV1API))
@@ -253,7 +243,7 @@ class Gemini extends BaseLLM {
               }
               // Helper function to recursively clean JSON Schema objects
               const cleanJsonSchema = (schema: any): any => {
-                if (!schema || typeof schema !== 'object') return schema;
+                if (!schema || typeof schema !== "object") return schema;
 
                 if (Array.isArray(schema)) {
                   return schema.map(cleanJsonSchema);
@@ -273,7 +263,7 @@ class Gemini extends BaseLLM {
                       ...acc,
                       [key]: cleanJsonSchema(value),
                     }),
-                    {}
+                    {},
                   );
                 }
 
@@ -304,15 +294,14 @@ class Gemini extends BaseLLM {
         }
       }
     }
+    return body;
+  }
 
-    const response = await this.fetch(apiURL, {
-      method: "POST",
-      body: JSON.stringify(body),
-      signal,
-    });
-
+  public async *processGeminiResponse(
+    stream: AsyncIterable<string>,
+  ): AsyncGenerator<ChatMessage> {
     let buffer = "";
-    for await (const chunk of streamResponse(response)) {
+    for await (const chunk of stream) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
         buffer = buffer.slice(1);
@@ -349,8 +338,8 @@ class Gemini extends BaseLLM {
 
           // Process all parts first to maintain order
           const processedParts: Array<{
-            type: 'content' | 'tool' | 'toolCall',
-            data: any
+            type: "content" | "tool" | "toolCall";
+            data: any;
           }> = [];
 
           for (const part of content.parts) {
@@ -366,7 +355,7 @@ class Gemini extends BaseLLM {
             } else if ("functionCall" in part) {
               // Queue function call
               processedParts.push({
-                type: 'toolCall',
+                type: "toolCall",
                 data: {
                   type: "function",
                   id: "", // Not supported by gemini
@@ -377,17 +366,17 @@ class Gemini extends BaseLLM {
                         ? part.functionCall.args
                         : JSON.stringify(part.functionCall.args),
                   },
-                }
+                },
               });
             } else if ("functionResponse" in part) {
               // Queue function response
               processedParts.push({
-                type: 'tool',
+                type: "tool",
                 data: {
                   role: "tool",
                   content: part.functionResponse.response.output as string,
                   toolCallId: part.functionResponse.name,
-                }
+                },
               });
             } else {
               console.warn("Unsupported gemini part type received", part);
@@ -404,13 +393,13 @@ class Gemini extends BaseLLM {
 
           // Then process tool calls and responses in order
           for (const part of processedParts) {
-            if (part.type === 'toolCall') {
+            if (part.type === "toolCall") {
               yield {
                 role: "assistant",
                 content: "",
                 toolCalls: [part.data],
               };
-            } else if (part.type === 'tool') {
+            } else if (part.type === "tool") {
               yield part.data;
             }
           }
@@ -424,6 +413,35 @@ class Gemini extends BaseLLM {
       } else {
         buffer = "";
       }
+    }
+  }
+
+  private async *streamChatGemini(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    const apiURL = new URL(
+      `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
+      this.apiBase,
+    );
+    // This feels hacky to repeat code from above function but was the quickest
+    // way to ensure system message re-formatting isn't done if user has specified v1
+    const apiBase = this.apiBase || Gemini.defaultOptions.apiBase!; // Determine if it's a v1 API call based on apiBase
+    const isV1API = apiBase.includes("/v1/");
+
+    // Convert chat messages to contents
+    const body = this.prepareBody(messages, options, isV1API);
+
+    const response = await this.fetch(apiURL, {
+      method: "POST",
+      body: JSON.stringify(body),
+      signal,
+    });
+    for await (const message of this.processGeminiResponse(
+      streamResponse(response),
+    )) {
+      yield message;
     }
   }
   private async *streamChatBison(

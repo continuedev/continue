@@ -21,6 +21,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     // All gemini models support function calling
     return model.toLowerCase().includes("gemini");
   },
+  vertexai: (model) => {
+    // All gemini models except flash 2.0 lite support function calling
+    return model.toLowerCase().includes("gemini") && !model.toLowerCase().includes("lite");;
+  },
+
   // https://ollama.com/search?c=tools
   ollama: (model) => {
     if (
