@@ -366,7 +366,7 @@ const isMacTarget = target?.startsWith("darwin");
         "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
       // node-sqlite3 doesn't have a pre-built binary for win32-arm64
       "win32-arm64":
-        "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.node",
+        "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.zip",
     }[target];
     execCmdSync(
       `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
