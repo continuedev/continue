@@ -517,23 +517,15 @@ jobs:
             url: http://127.0.0.1:8082
             reportName: jb-failure-report-linux
             shell: bash
-            moveVideo: mv extensions/intellij/video extensions/intellij/build/reports
-            copyLogs: mv extensions/intellij/build/idea-sandbox/system/log/ extensions/intellij/build/reports
-            reportsPath: extensions/intellij/build/reports
 
           - os: windows-latest
             runIde: |
-              set DISPLAY=:99.0
-              start /B gradlew.bat runIdeForUiTests
+              start gradlew.bat runIdeForUiTests
               mkdir extensions\intellij\build\reports
-            runTests: |
-              ./gradlew test
+            runTests: ./gradlew test
             url: http://localhost:8082
             reportName: jb-failure-report-windows
             shell: powershell
-            moveVideo: Move-Item extensions\intellij\video extensions\intellij\build\reports
-            copyLogs: Move-Item extensions\intellij\build\idea-sandbox\system\log\ extensions\intellij\build\reports
-            reportsPath: extensions\intellij\build\reports
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -583,40 +575,42 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      # - name: Build the binaries
-      #   run: |
-      #     cd binary
-      #     npm run build
+      - name: Build the binaries
+        run: |
+          cd binary
+          npm run build
 
-      # - name: Run IDE
-      #   shell: ${{ matrix.shell }}
-      #   run: ${{ matrix.runIde }}
+      - name: Run IDE
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.runIde }}
 
-      # - name: Wait for JB connection
-      #   uses: jtalk/url-health-check-action@v3
-      #   with:
-      #     url: ${{ matrix.url }}
-      #     max-attempts: 15
-      #     retry-delay: 30s
+      - name: Wait for JB connection
+        uses: jtalk/url-health-check-action@v3
+        with:
+          url: ${{ matrix.url }}
+          max-attempts: 15
+          retry-delay: 30s
 
-      # - name: Run tests
-      #   shell: ${{ matrix.shell }}
-      #   run: ${{ matrix.runTests }}
+      - name: Run tests
+        shell: ${{ matrix.shell }}
+        run: ${{ matrix.runTests }}
 
-      # - name: Move video
-      #   if: failure()
-      #   shell: ${{ matrix.shell }}
-      #   run: ${{ matrix.moveVideo }}
+      - name: Move video
+        if: failure()
+        shell: ${{ matrix.shell }}
+        run: mv extensions/intellij/video extensions/intellij/build/reports
 
-      # - name: Copy logs
-      #   if: failure()
-      #   shell: ${{ matrix.shell }}
-      #   run: ${{ matrix.copyLogs }}
+      - name: Copy logs
+        if: failure()
+        shell: ${{ matrix.shell }}
+        run: mv extensions/intellij/build/idea-sandbox/system/log/ extensions/intellij/build/reports
 
-      # - name: Save fails report
-      #   if: failure()
-      #   uses: actions/upload-artifact@v4
-
+      - name: Save fails report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.reportName }}
+          path: extensions\intellij\build\reports
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
   # so that creators of new jobs can add them to this list
