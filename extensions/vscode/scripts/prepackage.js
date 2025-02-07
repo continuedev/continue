@@ -371,7 +371,18 @@ const isMacTarget = target?.startsWith("darwin");
     execCmdSync(
       `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
     );
-    execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
+
+    // TODO: Remove the if/else once we upload the new binary
+    if (isWinTarget) {
+      execCmdSync(
+        "cd ../../core/node_modules/sqlite3 && mkdir -p build/Release && tar -xvzf build.tar.gz -C build/Release",
+      );
+    } else {
+      execCmdSync(
+        "cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz",
+      );
+    }
+
     fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
 
     // Download and unzip esbuild
@@ -390,6 +401,7 @@ const isMacTarget = target?.startsWith("darwin");
       "esbuild@0.17.19",
       "@esbuild",
     );
+    x;
   }
 
   console.log("[info] Copying sqlite node binding from core");
