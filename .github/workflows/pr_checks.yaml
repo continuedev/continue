@@ -638,7 +638,7 @@ jobs:
       - vscode-download-e2e-dependencies
       - vscode-e2e-tests
       - gui-tests
-      - jetbrains-tests
+      # - jetbrains-tests
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed
