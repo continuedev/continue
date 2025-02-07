@@ -580,7 +580,8 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "",
+          "name": "Continue",
+          "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
       ]
