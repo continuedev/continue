@@ -53,7 +53,6 @@ class ContinueBrowser(val project: Project, url: String) {
                 ContinuePluginService::class.java
             )
 
-            // Webview always expects to receive this format when it initiates
             val respond = fun(data: Any?) {
                 sendToWebview(messageType, data, messageId ?: uuid())
             }
@@ -63,6 +62,8 @@ class ContinueBrowser(val project: Project, url: String) {
                 return@addHandler null
             }
 
+            // If not pass through, then put it in the status/content/done format for webview
+            // Core already sends this format
             val respondToWebview = fun(data: Any?) {
                 sendToWebview(messageType, mapOf(
                     "status" to "success",
