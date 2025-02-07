@@ -53,6 +53,8 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
+import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -365,9 +367,17 @@ export class Core {
       }
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
-      const provider = config.contextProviders?.find(
-        (provider) => provider.description.title === name,
-      );
+      const provider =
+        config.contextProviders?.find(
+          (provider) => provider.description.title === name,
+        ) ??
+        [
+          // user doesn't need these in their config.json for the shortcuts to work
+          // option+enter
+          new CurrentFileContextProvider({}),
+          // cmd+enter
+          new CodebaseContextProvider({}),
+        ].find((provider) => provider.description.title === name);
       if (!provider) {
         return [];
       }
