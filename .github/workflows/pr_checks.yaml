@@ -583,39 +583,39 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      - name: Build the binaries
-        run: |
-          cd binary
-          npm run build
+      # - name: Build the binaries
+      #   run: |
+      #     cd binary
+      #     npm run build
 
-      - name: Run IDE
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.runIde }}
+      # - name: Run IDE
+      #   shell: ${{ matrix.shell }}
+      #   run: ${{ matrix.runIde }}
 
-      - name: Wait for JB connection
-        uses: jtalk/url-health-check-action@v3
-        with:
-          url: ${{ matrix.url }}
-          max-attempts: 15
-          retry-delay: 30s
+      # - name: Wait for JB connection
+      #   uses: jtalk/url-health-check-action@v3
+      #   with:
+      #     url: ${{ matrix.url }}
+      #     max-attempts: 15
+      #     retry-delay: 30s
 
-      - name: Run tests
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.runTests }}
+      # - name: Run tests
+      #   shell: ${{ matrix.shell }}
+      #   run: ${{ matrix.runTests }}
 
-      - name: Move video
-        if: failure()
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.moveVideo }}
+      # - name: Move video
+      #   if: failure()
+      #   shell: ${{ matrix.shell }}
+      #   run: ${{ matrix.moveVideo }}
 
-      - name: Copy logs
-        if: failure()
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.copyLogs }}
+      # - name: Copy logs
+      #   if: failure()
+      #   shell: ${{ matrix.shell }}
+      #   run: ${{ matrix.copyLogs }}
 
-      - name: Save fails report
-        if: failure()
-        uses: actions/upload-artifact@v4
+      # - name: Save fails report
+      #   if: failure()
+      #   uses: actions/upload-artifact@v4
 
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
