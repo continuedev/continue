@@ -2,27 +2,27 @@ import { useEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
+import { AuthProvider } from "../context/Auth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setEditStatus, focusEdit } from "../redux/slices/editModeState";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
 import {
   addCodeToEdit,
-  updateApplyState,
-  setMode,
   newSession,
+  setMode,
+  updateApplyState,
 } from "../redux/slices/sessionSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { exitEditMode } from "../redux/thunks";
+import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
+import AccountDialog from "./AccountDialog";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import PostHogPageView from "./PosthogPageView";
-import AccountDialog from "./AccountDialog";
-import { AuthProvider } from "../context/Auth";
-import { exitEditMode } from "../redux/thunks";
-import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
-import { incrementFreeTrialCount } from "../util/freeTrial";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -62,6 +62,7 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       dispatch(exitEditMode());
@@ -85,6 +86,7 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       dispatch(exitEditMode());
@@ -181,6 +183,8 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: false,
+          // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
+          generateTitle: false,
         }),
       );
       dispatch(newSession());
@@ -196,6 +200,7 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       dispatch(focusEdit());

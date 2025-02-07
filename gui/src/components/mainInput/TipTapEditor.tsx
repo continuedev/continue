@@ -728,6 +728,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         await dispatch(
           saveCurrentSession({
             openNewSession: false,
+            generateTitle: true,
           }),
         );
       }
@@ -761,6 +762,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       setTimeout(() => {
