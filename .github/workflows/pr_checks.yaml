@@ -171,7 +171,10 @@ jobs:
 
   binary-checks:
     needs: [install-root, install-core]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
 
@@ -193,7 +196,7 @@ jobs:
         id: binary-cache
         with:
           path: binary/node_modules
-          key: ${{ runner.os }}-binary-node-modules-v2-${{ hashFiles('binary/package-lock.json') }} # Added v2 to bust cache
+          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }} # Added v2 to bust cache
 
       - name: Install binary dependencies
         if: steps.binary-cache.outputs.cache-hit != 'true'
@@ -582,7 +585,7 @@ jobs:
         id: binary-cache
         with:
           path: binary/node_modules
-          key: ${{ runner.os }}-binary-node-modules-v2-${{ hashFiles('binary/package-lock.json') }} # Added v2 to bust cache
+          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }} # Added v2 to bust cache
 
       - name: Build the binaries
         run: |
