@@ -53,9 +53,13 @@ class ContinueBrowser(val project: Project, url: String) {
                 ContinuePluginService::class.java
             )
 
-
+            // Webview always expects to receive this format when it initiates
             val respond = fun(data: Any?) {
-                sendToWebview(messageType, data, messageId ?: uuid())
+                sendToWebview(messageType, mapOf(
+                    "status" to "success",
+                    "content" to data,
+                    "done" to true
+                ), messageId ?: uuid())
             }
 
             if (PASS_THROUGH_TO_CORE.contains(messageType)) {
