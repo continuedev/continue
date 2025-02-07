@@ -535,13 +535,13 @@ jobs:
             copyLogs: Move-Item extensions\intellij\build\idea-sandbox\system\log\ extensions\intellij\build\reports
             reportsPath: extensions\intellij\build\reports
     runs-on: ${{ matrix.os }}
-    # steps:
-    #   - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-    #   - uses: actions/cache@v4
-    #     with:
-    #       path: core/node_modules
-    #       key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
     #   - name: Setup Java
     #     uses: actions/setup-java@v4.5.0
