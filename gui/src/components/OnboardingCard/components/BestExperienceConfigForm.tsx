@@ -1,5 +1,4 @@
 import { CubeIcon } from "@heroicons/react/24/outline";
-import { DEFAULT_CHAT_MODEL_CONFIG } from "core/config/default";
 import { FormEventHandler, useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button, Input, InputSubtext, lightGray } from "../..";
@@ -57,9 +56,6 @@ function BestExperienceConfigForm({
       apiKey: autocompleteApiKey,
     };
 
-    ideMessenger.post("config/deleteModel", {
-      title: DEFAULT_CHAT_MODEL_CONFIG.title,
-    });
     ideMessenger.post("config/addModel", { model: chatModelConfig });
     ideMessenger.post("config/addModel", {
       model: repoMapConfig,
