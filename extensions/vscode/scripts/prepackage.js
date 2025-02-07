@@ -401,7 +401,6 @@ const isMacTarget = target?.startsWith("darwin");
       "esbuild@0.17.19",
       "@esbuild",
     );
-    x;
   }
 
   console.log("[info] Copying sqlite node binding from core");
