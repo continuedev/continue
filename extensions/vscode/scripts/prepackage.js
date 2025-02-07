@@ -51,6 +51,15 @@ console.log("[info] Using target: ", target);
 
 const exe = os === "win32" ? ".exe" : "";
 
+const isInGitHubAction = !!process.env.GITHUB_ACTIONS;
+
+const isArmTarget =
+  target === "darwin-arm64" ||
+  target === "linux-arm64" ||
+  target === "win32-arm64";
+
+const isWinTarget = target?.startsWith("win");
+
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
@@ -71,7 +80,7 @@ const exe = os === "win32" ? ".exe" : "";
   execCmdSync("npm install");
   console.log("[info] npm install in gui completed");
 
-  if (ghAction()) {
+  if (isInGitHubAction) {
     execCmdSync("npm run build");
   }
 
@@ -238,19 +247,6 @@ const exe = os === "win32" ? ".exe" : "";
     console.log(`[info] Copied ${path.basename(f)}`);
   }
 
-  // tree-sitter tag query files
-  // ncp(
-  //   path.join(
-  //     __dirname,
-  //     "../../../core/node_modules/llm-code-highlighter/dist/tag-qry",
-  //   ),
-  //   path.join(__dirname, "../out/tag-qry"),
-  //   (error) => {
-  //     if (error)
-  //       console.warn("Error copying code-highlighter tag-qry files", error);
-  //   },
-  // );
-
   // textmate-syntaxes
   await new Promise((resolve, reject) => {
     ncp(
@@ -266,22 +262,6 @@ const exe = os === "win32" ? ".exe" : "";
       },
     );
   });
-
-  function ghAction() {
-    return !!process.env.GITHUB_ACTIONS;
-  }
-
-  function isArm() {
-    return (
-      target === "darwin-arm64" ||
-      target === "linux-arm64" ||
-      target === "win32-arm64"
-    );
-  }
-
-  function isWin() {
-    return target?.startsWith("win");
-  }
 
   async function installNodeModuleInTempDirAndCopyToCurrent(
     packageName,
@@ -345,61 +325,86 @@ const exe = os === "win32" ? ".exe" : "";
     }
   }
 
-  // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-  if (ghAction() && isArm()) {
-    // sqlite3
-    if (!isWin()) {
-      // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
+  // // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
+  // if (ghAction() && isArm()) {
+  //   // sqlite3
+  //   // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
 
-      // lancedb binary
-      const packageToInstall = {
-        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-      }[target];
-      console.log(
-        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
-      );
+  //   // lancedb binary
+  //   const packageToInstall = {
+  //     "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+  //     "win32-arm64": "@lancedb/vectordb-win32-arm64-msvc",
+  //     "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+  //   }[target];
+  //   console.log(
+  //     "[info] Downloading pre-built lancedb binary: " + packageToInstall,
+  //   );
 
-      await installNodeModuleInTempDirAndCopyToCurrent(
-        packageToInstall,
-        "@lancedb",
-      );
+  //   await installNodeModuleInTempDirAndCopyToCurrent(
+  //     packageToInstall,
+  //     "@lancedb",
+  //   );
 
-      // Replace the installed with pre-built
-      console.log("[info] Downloading pre-built sqlite3 binary");
-      rimrafSync("../../core/node_modules/sqlite3/build");
-      const downloadUrl = {
-        "darwin-arm64":
-          "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
-        "linux-arm64":
-          "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
-      }[target];
-      execCmdSync(
-        `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
-      );
-      execCmdSync(
-        "cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz",
-      );
-      fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
-    }
+  //   if (isWin()) {
+  //     // Replace the installed with pre-built
+  //     console.log("[info] Downloading pre-built sqlite3 binary");
+  //     rimrafSync("../../core/node_modules/sqlite3/build");
+  //     const downloadUrl = {
+  //       "darwin-arm64":
+  //         "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
+  //       "linux-arm64":
+  //         "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
+  //     }[target];
+  //     execCmdSync(
+  //       `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
+  //     );
+  // execCmdSync(
+  //   "cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz",
+  // );
+  // fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
+  //   } else {
+  //     console.log("[info] Building sqlite3 binary from source for ", target);
+  //     rimrafSync("../../core/node_modules/sqlite3/build");
+  //     execCmdSync(
+  //       `npm rebuild sqlite3 --build-from-source --target_arch=arm64 --fallback-to-build`,
+  //     );
+  //   }
 
-    // Download and unzip esbuild
-    console.log("[info] Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild");
-    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
+  //   // Download and unzip esbuild
+  //   console.log("[info] Downloading pre-built esbuild binary");
+  //   rimrafSync("node_modules/@esbuild");
+  //   fs.mkdirSync("node_modules/@esbuild", { recursive: true });
+  //   execCmdSync(
+  //     `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
+  //   );
+  //   execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
+  //   fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
+  // } else {
+  //   // Download esbuild from npm in tmp and copy over
+  //   console.log("npm installing esbuild binary");
+  //   await installNodeModuleInTempDirAndCopyToCurrent(
+  //     "esbuild@0.17.19",
+  //     "@esbuild",
+  //   );
+  // }
+
+  if (isWinTarget && isArmTarget) {
+    const downloadUrl =
+      "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/sqlite3.zip";
+    rimrafSync("../../core/node_modules/sqlite3/build");
     execCmdSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
+      `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
     );
-    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
-    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-  } else {
-    // Download esbuild from npm in tmp and copy over
-    console.log("npm installing esbuild binary");
-    await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.17.19",
-      "@esbuild",
-    );
+    execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
+    fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
   }
+
+  // Download esbuild from npm in tmp and copy over
+  console.log("npm installing esbuild binary");
+  await installNodeModuleInTempDirAndCopyToCurrent(
+    "esbuild@0.17.19",
+    "@esbuild",
+  );
 
   console.log("[info] Copying sqlite node binding from core");
   await new Promise((resolve, reject) => {
