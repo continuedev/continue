@@ -22,6 +22,7 @@ import AccountDialog from "./AccountDialog";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
+import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
@@ -266,6 +267,7 @@ const Layout = () => {
   return (
     <AuthProvider>
       <LayoutTopDiv>
+        <OSRContextMenu />
         <div
           style={{
             scrollbarGutter: "stable both-edges",
