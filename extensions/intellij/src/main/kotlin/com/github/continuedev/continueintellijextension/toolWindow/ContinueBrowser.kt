@@ -55,11 +55,7 @@ class ContinueBrowser(val project: Project, url: String) {
 
             // Webview always expects to receive this format when it initiates
             val respond = fun(data: Any?) {
-                sendToWebview(messageType, mapOf(
-                    "status" to "success",
-                    "content" to data,
-                    "done" to true
-                ), messageId ?: uuid())
+                sendToWebview(messageType, data, messageId ?: uuid())
             }
 
             if (PASS_THROUGH_TO_CORE.contains(messageType)) {
@@ -67,8 +63,16 @@ class ContinueBrowser(val project: Project, url: String) {
                 return@addHandler null
             }
 
+            val respondToWebview = fun(data: Any?) {
+                sendToWebview(messageType, mapOf(
+                    "status" to "success",
+                    "content" to data,
+                    "done" to true
+                ), messageId ?: uuid())
+            }
+
             if (msg != null) {
-                continuePluginService.ideProtocolClient?.handleMessage(msg, respond)
+                continuePluginService.ideProtocolClient?.handleMessage(msg, respondToWebview)
             }
 
             null
