@@ -582,7 +582,7 @@ jobs:
         id: binary-cache
         with:
           path: binary/node_modules
-          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }} # Added v2 to bust cache
+          key: ${{ runner.os }}-binary-node-modules-v2-${{ hashFiles('binary/package-lock.json') }} # Added v2 to bust cache
 
       - name: Build the binaries
         run: |
