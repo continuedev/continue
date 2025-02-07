@@ -70,7 +70,7 @@ export function OnboardingCardTabs({
   onTabClick,
 }: OnboardingCardTabsProps) {
   return (
-    <div>
+    <div className="flex w-full flex-row">
       <div className="xs:block hidden">
         <TabList>
           {Object.entries(TabTitles).map(([tabType, titles]) => {

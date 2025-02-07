@@ -38,14 +38,14 @@ export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
     case OllamaConnectionStatuses.WaitingToDownload:
       return (
         <StyledActionButton onClick={onClickDownload}>
-          <p className="mr-1 text-sm underline">{downloadUrl}</p>
+          <p className="lines lines-1 mr-1 text-sm underline">{downloadUrl}</p>
           <ArrowTopRightOnSquareIcon width={24} height={24} />
         </StyledActionButton>
       );
     case OllamaConnectionStatuses.Downloading:
       return (
         <div className="flex items-center justify-between">
-          <p className="mr-1 w-3/4 font-mono text-sm">
+          <p className="lines mr-1 w-3/4 font-mono text-sm">
             Checking for connection to Ollama at http://localhost:11434
           </p>
           <ArrowPathIcon className="animate-spin-slow mr-1 h-4 w-4" />

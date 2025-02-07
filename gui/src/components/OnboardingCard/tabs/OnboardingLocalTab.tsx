@@ -101,11 +101,9 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
   }, []);
 
   return (
-    <div className="mt-3 flex flex-col gap-1">
+    <div className="mt-3 flex flex-col gap-1 px-2">
       <div className="flex flex-col">
-        <p className="mb-0 mt-2 text-lg font-bold leading-tight">
-          Install Ollama
-        </p>
+        <p className="mb-0 text-lg font-bold leading-tight">Install Ollama</p>
         <OllamaStatus isOllamaConnected={isOllamaConnected} />
       </div>
 
