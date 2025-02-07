@@ -37,6 +37,60 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  deepseekV3Chat: {
+    title: "deepseek v3",
+    description: "A model from deekseek for chat",
+    refUrl: "",
+    params: {
+      title: "deepseek_v3",
+      model: "deepseek/deepseek_v3",
+      contextLength: 2048,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "r1": {
+            model: "deepseek/deepseek_v3",
+            title: "deepseek_v3",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "novita"
+    ],
+    isOpenSource: true,
+  },
+  deepseekR1Chat: {
+    title: "deepseek r1",
+    description: "A model from deekseek for chat",
+    refUrl: "",
+    params: {
+      title: "deepseek-r1",
+      model: "deepseek/deepseek-r1",
+      contextLength: 2048,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "r1": {
+            model: "deepseek/deepseek-r1",
+            title: "deepseek-r1",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "novita"
+    ],
+    isOpenSource: true,
+  },
   llama318BChat: {
     title: "Llama 3.1 8B",
     description: "A model from Meta, fine-tuned for chat",

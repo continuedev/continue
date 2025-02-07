@@ -427,7 +427,8 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
       ...completionParamsInputsConfigs,
     ],
-    packages: [models.llama318BChat, models.mistralChat].map((p) => {
+    packages: [models.llama318BChat, models.mistralChat,
+      models.deepseekR1Chat, models.deepseekV3Chat].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),
@@ -785,7 +786,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
   askSage: {
     title: "Ask Sage",
     provider: "askSage",
-    icon: "ask-Sage.png",
+    icon: "ask-sage.png",
     description:
       "The Ask Sage API provides seamless access to LLMs including OpenAI, Anthropic, Meta, Mistral, and more.",
     longDescription: `To get access to the Ask Sage API, obtain your API key from the [Ask Sage platform](https://chat.asksage.ai/) for all other models.`,
