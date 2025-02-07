@@ -24,7 +24,10 @@ on:
 
 jobs:
   install-root:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -590,26 +593,24 @@ jobs:
           max-attempts: 15
           retry-delay: 30s
 
-      # - name: Run tests
-      #   shell: ${{ matrix.shell }}
-      #   run: ${{ matrix.runTests }}
+      - name: Run tests
+        run: ${{ matrix.runTests }}
 
-      # - name: Move video
-      #   if: failure()
-      #   shell: ${{ matrix.shell }}
-      #   run: mv extensions/intellij/video extensions/intellij/build/reports
+      - name: Move video
+        if: failure()
+        run: mv extensions/intellij/video extensions/intellij/build/reports
 
-      # - name: Copy logs
-      #   if: failure()
-      #   shell: ${{ matrix.shell }}
-      #   run: mv extensions/intellij/build/idea-sandbox/system/log/ extensions/intellij/build/reports
+      - name: Copy logs
+        if: failure()
+        run: mv extensions/intellij/build/idea-sandbox/system/log/ extensions/intellij/build/reports
 
-      # - name: Save fails report
-      #   if: failure()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ matrix.reportName }}
-      #     path: extensions\intellij\build\reports
+      - name: Save fails report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.reportName }}
+          path: extensions\intellij\build\reports
+
   # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
   # This action at least lets us manage the list of required tests via source control
   # so that creators of new jobs can add them to this list
