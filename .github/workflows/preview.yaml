@@ -4,6 +4,13 @@ on:
   release:
     types: [prereleased]
 
+  workflow_dispatch:
+    inputs:
+      publish_build:
+        description: "Whether or not to publish the built extension to the VS Code marketplace"
+        required: true
+        default: false
+
 jobs:
   check_release_name:
     runs-on: ubuntu-latest
