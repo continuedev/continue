@@ -1,4 +1,4 @@
-import * as Diff from "diff"
+import * as Diff from "diff";
 
 interface SingleLineCompletionResult {
     completionText: string;

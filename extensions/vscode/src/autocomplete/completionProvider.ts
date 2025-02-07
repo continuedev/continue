@@ -1,9 +1,11 @@
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
+import { processSingleLineCompletion } from "core/autocomplete/util/processSingleLineCompletion";
 import {
   type AutocompleteInput,
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { startLocalOllama } from "core/util/ollamaHelper";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -22,16 +24,7 @@ import {
 } from "./statusBar";
 
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
-import { startLocalOllama } from "core/util/ollamaHelper";
 import type { IDE } from "core";
-import { processSingleLineCompletion } from "core/autocomplete/util/processSingleLineCompletion";
-
-interface DiffType {
-  count: number;
-  added: boolean;
-  removed: boolean;
-  value: string;
-}
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
