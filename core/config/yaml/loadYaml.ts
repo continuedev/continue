@@ -35,6 +35,7 @@ import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 import { slashFromCustomCommand } from "../../commands";
+import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import { allTools } from "../../tools";
 import { GlobalContext } from "../../util/GlobalContext";
 import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
@@ -215,6 +216,15 @@ async function configYamlToContinueConfig(
     })
     .filter((p) => !!p) ?? []) as IContextProvider[];
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
+
+  if (
+    continueConfig.docs?.length &&
+    !continueConfig.contextProviders?.some(
+      (cp) => cp.description.title === "docs",
+    )
+  ) {
+    continueConfig.contextProviders.push(new DocsContextProvider({}));
+  }
 
   // Embeddings Provider
   const embedConfig = config.models?.find((model) =>
