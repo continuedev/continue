@@ -512,14 +512,15 @@ jobs:
         include:
           - os: ubuntu-latest
             runIde: |
-              cd extensions/intellij
               export DISPLAY=:99.0
               Xvfb -ac :99 -screen 0 1920x1080x24 &
               sleep 10
+              cd extensions/intellij
               mkdir -p build/reports
               ./gradlew runIdeForUiTests &
             runTests: |
               export DISPLAY=:99.0
+              cd extensions/intellij
               ./gradlew test
             url: http://127.0.0.1:8082
             reportName: jb-failure-report-linux
@@ -529,7 +530,9 @@ jobs:
               cd extensions/intellij
               mkdir -p build/reports
               start gradlew.bat runIdeForUiTests &
-            runTests: ./gradlew test
+            runTests: |
+              cd extensions/intellij
+              ./gradlew test
             url: http://localhost:8082
             reportName: jb-failure-report-windows
     runs-on: ${{ matrix.os }}
@@ -579,7 +582,7 @@ jobs:
         id: binary-cache
         with:
           path: binary/node_modules
-          key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
+          key: ${{ runner.os }}-binary-node-modules-v2-${{ hashFiles('binary/package-lock.json') }} # Added v2 to bust cache
 
       - name: Build the binaries
         run: |
