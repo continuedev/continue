@@ -580,9 +580,9 @@ jobs:
           cd binary
           npm run build
 
-      - name: Run IDE
-        shell: ${{ matrix.shell }}
-        run: ${{ matrix.runIde }}
+      # - name: Run IDE
+      #   shell: ${{ matrix.shell }}
+      #   run: ${{ matrix.runIde }}
 
       # - name: Wait for JB connection
       #   uses: jtalk/url-health-check-action@v3
