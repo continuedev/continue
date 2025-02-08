@@ -22,7 +22,8 @@ We recommend configuring **GPT-4o** as your chat model.
     "model": "gpt-4o",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "deployment": "<YOUR_DEPLOYMENT_NAME>",
-    "apiKey": "<MY_API_KEY>" // If you use subscription key, try using Azure gateway to rename it apiKey
+    "apiKey": "<MY_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
 }]
 ```
 
@@ -50,8 +51,8 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "deployment": "<YOUR_DEPLOYMENT_NAME>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
+    "apiKey": "<MY_API_KEY>",
+    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
 }
 ```
 
@@ -85,6 +86,7 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
   "apiBase": "https://just-an-example.openai.azure.com",
   "deployment": "gpt-4o-july",
   "apiVersion": "2023-03-15-preview",
-  "apiKey": "<MY_API_KEY>"
+  "apiKey": "<MY_API_KEY>",
+  "apiType": "azure-openai"
 }
 ```
