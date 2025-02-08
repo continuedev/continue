@@ -1005,10 +1005,10 @@ const registerCopyBufferSpy = (
   context: vscode.ExtensionContext,
   core: Core,
 ) => {
-  const typeDisposable = vscode.commands.registerCommand(
-    "editor.action.clipboardCopyAction",
-    async (arg) => doCopy(typeDisposable),
-  );
+  // const typeDisposable = vscode.commands.registerCommand(
+  //   "editor.action.clipboardCopyAction",
+  //   async (arg) => doCopy(typeDisposable),
+  // );
 
   async function doCopy(typeDisposable: any) {
     typeDisposable.dispose(); // must dispose to avoid endless loops
@@ -1036,7 +1036,7 @@ const registerCopyBufferSpy = (
     context.subscriptions.push(typeDisposable);
   }
 
-  context.subscriptions.push(typeDisposable);
+  // context.subscriptions.push(typeDisposable);
 };
 
 export function registerAllCommands(
