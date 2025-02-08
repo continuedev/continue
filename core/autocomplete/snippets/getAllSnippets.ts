@@ -90,7 +90,12 @@ const getClipboardSnippets = async (
 const getDiffSnippets = async (
   ide: IDE,
 ): Promise<AutocompleteDiffSnippet[]> => {
-  const diff = await ide.getDiff(true);
+  let diff: string[] = [];
+  try {
+    diff = await ide.getDiff(true);
+  } catch (e) {
+    console.error("Error getting diff for autocomplete", e);
+  }
 
   return diff.map((item) => {
     return {
