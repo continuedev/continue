@@ -246,9 +246,7 @@ export const SubmenuContextProvidersProvider = ({
               abortControllers.get(description.title)?.abort();
               abortControllers.set(description.title, controller);
               providersLoading.add(description.title);
-              console.log(
-                `Refreshing items for ${description.title} submenu provider`,
-              );
+
               const result = await ideMessenger.request(
                 "context/loadSubmenuItems",
                 {
@@ -296,7 +294,7 @@ export const SubmenuContextProvidersProvider = ({
                 setFallbackResults((prev) => ({
                   ...prev,
                   file: deduplicateArray(
-                    [...lastOpenFilesRef.current, ...(prev.file ?? [])],
+                    [...lastOpenFilesRef.current, ...itemsWithProvider],
                     (a, b) => a.id === b.id,
                   ),
                 }));
