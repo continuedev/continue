@@ -115,19 +115,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "viewHistory",
-    async () => {
-      // Toggle the history page / main page
-      if (location.pathname === "/history") {
-        navigate("/");
-      } else {
-        navigate("/history");
-      }
-    },
-    [location, navigate],
-  );
-
-  useWebviewListener(
     "navigateTo",
     async (data) => {
       if (data.toggle && location.pathname === data.path) {
