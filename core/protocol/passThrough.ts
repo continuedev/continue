@@ -23,6 +23,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/deleteModel",
     "config/listProfiles",
     "config/openProfile",
+    "config/updateSharedConfig",
     "context/getContextItems",
     "context/getSymbolsForFiles",
     "context/loadSubmenuItems",
@@ -58,8 +59,10 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "addAutocompleteModel",
     "profiles/switch",
     "didChangeSelectedProfile",
+    "didChangeSelectedOrg",
     "tools/call",
     "controlPlane/openUrl",
+    "controlPlane/listOrganizations",
   ];
 
 // Message types to pass through from core to webview

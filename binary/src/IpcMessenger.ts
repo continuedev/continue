@@ -75,7 +75,7 @@ class IPCMessengerBase<
 
           console.warn(`Error running handler for "${msg.messageType}": `, e);
           this._onErrorHandlers.forEach((handler) => {
-            handler(e);
+            handler(msg, e);
           });
         }
       });
@@ -112,9 +112,9 @@ class IPCMessengerBase<
     lines.forEach((line) => this._handleLine(line));
   }
 
-  private _onErrorHandlers: ((error: Error) => void)[] = [];
+  private _onErrorHandlers: ((message: Message, error: Error) => void)[] = [];
 
-  onError(handler: (error: Error) => void) {
+  onError(handler: (message: Message, error: Error) => void) {
     this._onErrorHandlers.push(handler);
   }
 
@@ -217,7 +217,7 @@ export class CoreBinaryMessenger<
   extends IPCMessengerBase<ToProtocol, FromProtocol>
   implements IMessenger<ToProtocol, FromProtocol>
 {
-  private errorHandler: (error: Error) => void = () => {};
+  private errorHandler: (message: Message, error: Error) => void = () => {};
   private messageHandlers: Map<
     keyof ToProtocol,
     (message: Message<any>) => Promise<any> | any

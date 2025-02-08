@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.258",
+  "version": "0.9.261",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -213,14 +213,14 @@
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
-        "title": "Toggle Full Screen",
-        "icon": "$(fullscreen)",
+        "title": "Open in new window",
+        "icon": "$(link-external)",
         "group": "Continue"
       },
       {
-        "command": "continue.openConfig",
+        "command": "continue.openConfigPage",
         "category": "Continue",
-        "title": "Open Continue Config",
+        "title": "Open Settings",
         "icon": "$(gear)",
         "group": "Continue"
       },
@@ -527,7 +527,7 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.openConfig",
+          "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         },
@@ -580,7 +580,8 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "",
+          "name": "Continue",
+          "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
       ]

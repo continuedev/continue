@@ -30,6 +30,7 @@ import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
+import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -46,6 +47,8 @@ type SessionState = {
   id: string;
   selectedProfileId: string;
   availableProfiles: ProfileDescription[];
+  selectedOrganizationId: string | null;
+  availableOrganizations: OrganizationDescription[];
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
@@ -57,6 +60,7 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
+  newestCodeblockForInput: Record<string, string>;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -96,8 +100,11 @@ const initialState: SessionState = {
         packageSlug: "",
         versionSlug: "",
       },
+      iconUrl: "",
     },
   ],
+  selectedOrganizationId: "",
+  availableOrganizations: [],
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   codeToEdit: [],
@@ -108,6 +115,7 @@ const initialState: SessionState = {
     curIndex: 0,
   },
   lastSessionId: undefined,
+  newestCodeblockForInput: {},
 };
 
 export const sessionSlice = createSlice({
@@ -368,9 +376,13 @@ export const sessionSlice = createSlice({
                   startAt: Date.now(),
                   active: true,
                   text: messageContent.replace("<think>", "").trim(),
-                }
-              } else if (lastItem.reasoning?.active && messageContent.includes("</think>")) {
-                const [reasoningEnd, answerStart] = messageContent.split("</think>");
+                };
+              } else if (
+                lastItem.reasoning?.active &&
+                messageContent.includes("</think>")
+              ) {
+                const [reasoningEnd, answerStart] =
+                  messageContent.split("</think>");
                 lastItem.reasoning.text += reasoningEnd.trimEnd();
                 lastItem.reasoning.active = false;
                 lastItem.reasoning.endAt = Date.now();
@@ -552,6 +564,29 @@ export const sessionSlice = createSlice({
           : payload[0]?.id,
       };
     },
+    setSelectedOrganizationId: (
+      state,
+      { payload }: PayloadAction<string | null>,
+    ) => {
+      return {
+        ...state,
+        selectedOrganizationId: payload,
+      };
+    },
+    setAvailableOrganizations: (
+      state,
+      { payload }: PayloadAction<OrganizationDescription[]>,
+    ) => {
+      return {
+        ...state,
+        availableOrganizations: payload,
+        selectedOrganizationId: payload.find(
+          (org) => org.id === state.selectedOrganizationId,
+        )
+          ? state.selectedOrganizationId
+          : payload[0]?.id,
+      };
+    },
     updateCurCheckpoint: (
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
@@ -643,6 +678,17 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    setNewestCodeblocksForInput: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        inputId: string;
+        contextItemId: string;
+      }>,
+    ) => {
+      state.newestCodeblockForInput[payload.inputId] = payload.contextItemId;
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -668,6 +714,9 @@ export const sessionSlice = createSlice({
     },
     selectAvailableProfiles: (state) => {
       return state.availableProfiles;
+    },
+    selectAvailableOrganizations: (state) => {
+      return state.availableOrganizations;
     },
   },
   extraReducers: (builder) => {
@@ -720,6 +769,7 @@ export const {
   clearLastEmptyResponse,
   setMainEditorContentTrigger,
   setSelectedProfileId,
+  setSelectedOrganizationId,
   deleteMessage,
   setIsGatheringContext,
   updateCurCheckpoint,
@@ -733,6 +783,7 @@ export const {
   setCalling,
   cancelToolCall,
   setAvailableProfiles,
+  setAvailableOrganizations,
   acceptToolCall,
   setToolGenerated,
   setToolCallOutput,
@@ -741,6 +792,7 @@ export const {
   addSessionMetadata,
   updateSessionMetadata,
   deleteSessionMetadata,
+  setNewestCodeblocksForInput,
 } = sessionSlice.actions;
 
 export const {
@@ -749,6 +801,7 @@ export const {
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
   selectAvailableProfiles,
+  selectAvailableOrganizations,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

@@ -75,6 +75,10 @@ export function getGlobalContextFilePath(): string {
   return path.join(getIndexFolderPath(), "globalContext.json");
 }
 
+export function getSharedConfigFilePath(): string {
+  return path.join(getContinueGlobalPath(), "sharedConfig.json");
+}
+
 export function getSessionFilePath(sessionId: string): string {
   return path.join(getSessionsFolderPath(), `${sessionId}.json`);
 }

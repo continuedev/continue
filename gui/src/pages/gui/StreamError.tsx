@@ -51,7 +51,8 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
     typeof error["message"] === "string"
   ) {
     message = error["message"];
-    const status = message?.split(" ")[0];
+    const parts = message?.split(" ") ?? [];
+    const status = parts[0] === "HTTP" ? parts[1] : parts[0];
     if (status) {
       const code = Number(status);
       if (!Number.isNaN(statusCode)) {
