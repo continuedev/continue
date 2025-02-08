@@ -106,6 +106,7 @@ export class AutocompleteLoggingService {
         userAgent: "",
         selectedProfileId: "",
         userId: "",
+        useFileSuffix: true,
       },
     });
 
