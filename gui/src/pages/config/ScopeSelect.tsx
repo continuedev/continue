@@ -24,6 +24,10 @@ export function ScopeSelect() {
     const orgId = newValue === USER_PROFILE_VAL ? null : newValue;
     dispatch(setOrgId(orgId));
   };
+
+  const CurScopeEntityFallBackIcon =
+    value === "personal" ? UserCircleIcon : BuildingOfficeIcon;
+
   const selectedDisplay =
     value === USER_PROFILE_VAL
       ? { name: "Personal", iconUrl: null }
@@ -38,7 +42,7 @@ export function ScopeSelect() {
               {selectedDisplay?.iconUrl ? (
                 <img src={selectedDisplay.iconUrl} alt="" className="h-5 w-5" />
               ) : (
-                <BuildingOfficeIcon className="h-5 w-5" />
+                <CurScopeEntityFallBackIcon className="h-5 w-5" />
               )}
               <span className="truncate">
                 {selectedDisplay?.name || "Select Organization"}
