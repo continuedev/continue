@@ -213,7 +213,7 @@
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
-        "title": "Toggle Full Screen",
+        "title": "Open in new window",
         "icon": "$(link-external)",
         "group": "Continue"
       },

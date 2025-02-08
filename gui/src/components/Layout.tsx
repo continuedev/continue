@@ -9,6 +9,7 @@ import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
 import {
   addCodeToEdit,
   newSession,
+  selectIsInEditMode,
   setMode,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
@@ -116,19 +117,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "viewHistory",
-    async () => {
-      // Toggle the history page / main page
-      if (location.pathname === "/history") {
-        navigate("/");
-      } else {
-        navigate("/history");
-      }
-    },
-    [location, navigate],
-  );
-
-  useWebviewListener(
     "navigateTo",
     async (data) => {
       if (data.toggle && location.pathname === data.path) {
@@ -226,7 +214,11 @@ const Layout = () => {
     [],
   );
 
+  const isInEditMode = useAppSelector(selectIsInEditMode);
   useWebviewListener("exitEditMode", async () => {
+    if (!isInEditMode) {
+      return;
+    }
     dispatch(
       loadLastSession({
         saveCurrentSession: false,
