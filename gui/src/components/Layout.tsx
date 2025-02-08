@@ -11,6 +11,7 @@ import {
   updateApplyState,
   setMode,
   newSession,
+  selectIsInEditMode,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { ROUTES } from "../util/navigation";
@@ -221,7 +222,11 @@ const Layout = () => {
     [],
   );
 
+  const isInEditMode = useAppSelector(selectIsInEditMode);
   useWebviewListener("exitEditMode", async () => {
+    if (!isInEditMode) {
+      return;
+    }
     dispatch(
       loadLastSession({
         saveCurrentSession: false,
