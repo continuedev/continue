@@ -23,6 +23,7 @@ import { AuthProvider } from "../context/Auth";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { incrementFreeTrialCount } from "../util/freeTrial";
+import OSRContextMenu from "./OSRContextMenu";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -261,6 +262,7 @@ const Layout = () => {
   return (
     <AuthProvider>
       <LayoutTopDiv>
+        <OSRContextMenu />
         <div
           style={{
             scrollbarGutter: "stable both-edges",
