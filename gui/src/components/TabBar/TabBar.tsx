@@ -1,5 +1,12 @@
 import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import {
+  deleteSessionMetadata,
+  newSession,
+  updateSessionTitle,
+} from "../../redux/slices/sessionSlice";
+import { loadSession } from "../../redux/thunks/session";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -120,63 +127,77 @@ const NewTabButton = styled.button`
 `;
 
 export function TabBar() {
-  // Simple UUID generator for our needs
-  const generateId = useCallback(() => {
-    return Date.now().toString(36) + Math.random().toString(36).substring(2);
-  }, []);
+  const dispatch = useAppDispatch();
+  const currentSessionId = useAppSelector((state) => state.session.id);
+  const currentSessionTitle = useAppSelector((state) => state.session.title);
+  const allSessions = useAppSelector(
+    (state) => state.session.allSessionMetadata,
+  );
 
-  const [tabs, setTabs] = useState([
-    { id: generateId(), title: "Chat 1", isActive: true },
-  ]);
+  // Convert sessions to tabs format
+  const tabs = allSessions.map((session) => ({
+    id: session.sessionId,
+    title: session.title,
+    isActive: session.sessionId === currentSessionId,
+  }));
 
-  const handleNewTab = () => {
-    const newTab = {
-      id: generateId(),
-      title: `Chat ${tabs.length + 1}`,
-      isActive: false,
-    };
-    setTabs((prev) => {
-      const updated = prev.map((tab) => ({ ...tab, isActive: false }));
-      return [...updated, { ...newTab, isActive: true }];
-    });
-  };
+  // If no tabs, show at least the current session
+  const displayTabs =
+    tabs.length === 0
+      ? [
+          {
+            id: currentSessionId,
+            title: currentSessionTitle,
+            isActive: true,
+          },
+        ]
+      : tabs;
 
-  const handleTabClick = (id: string) => {
-    setTabs((prev) =>
-      prev.map((tab) => ({
-        ...tab,
-        isActive: tab.id === id,
-      })),
-    );
-  };
+  const handleNewTab = useCallback(() => {
+    dispatch(newSession());
+  }, [dispatch]);
 
-  const handleTabClose = (id: string) => {
-    setTabs((prev) => {
+  const handleTabClick = useCallback(
+    (id: string) => {
+      dispatch(
+        loadSession({
+          sessionId: id,
+          saveCurrentSession: true,
+        }),
+      );
+    },
+    [dispatch],
+  );
+
+  const handleTabClose = useCallback(
+    (id: string) => {
       // Safety check - never close the last tab
-      if (prev.length <= 1) return prev;
+      if (displayTabs.length <= 1) return;
 
-      const isClosingActive = prev.find((t) => t.id === id)?.isActive;
-      const filtered = prev.filter((t) => t.id !== id);
+      const isClosingActive = id === currentSessionId;
 
-      // Safety check - if somehow we filtered all tabs, return original state
-      if (filtered.length === 0) return prev;
-
-      // If closing active tab, activate the last tab
+      // If closing active tab, switch to another tab first
       if (isClosingActive) {
-        return filtered.map((tab, i) => ({
-          ...tab,
-          isActive: i === filtered.length - 1,
-        }));
+        const otherTab = displayTabs.find((t) => t.id !== id);
+        if (otherTab) {
+          dispatch(
+            loadSession({
+              sessionId: otherTab.id,
+              saveCurrentSession: false,
+            }),
+          );
+        }
       }
 
-      // If closing inactive tab, maintain current active state
-      return filtered;
-    });
-  };
+      // Then delete the session metadata
+      dispatch(deleteSessionMetadata(id));
+    },
+    [dispatch, currentSessionId, displayTabs],
+  );
 
   return (
     <TabBarContainer>
-      {tabs.map((tab) => (
+      {displayTabs.map((tab) => (
         <Tab
           key={tab.id}
           isActive={tab.isActive}
