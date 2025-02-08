@@ -74,6 +74,7 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
     tsx: "tsx",
     ts: "typescript",
     java: "java",
+    class:"java", //.class files decompile to Java
     go: "go",
     rb: "ruby",
     rs: "rust",
@@ -96,8 +97,20 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
     ps1: "powershell",
   };
 
-  const ext = filepath.split(".").pop();
+  const ext = sanitizeExtension(filepath.split(".").pop());
   return ext ? (extToLangMap[ext] ?? ext) : "";
+}
+
+
+function sanitizeExtension(ext?: string): string|undefined {
+  if (ext) {
+    //ignore ranges in extension eg. "java (11-23)"
+    const match = ext.match(/^(\S+)\s*(\(.*\))?$/);
+    if (match) {
+      ext = match[1];
+    }
+  }
+  return ext;
 }
 
 export function copyOf(obj: any): any {
@@ -106,7 +119,6 @@ export function copyOf(obj: any): any {
   }
   return JSON.parse(JSON.stringify(obj));
 }
-``;
 
 export function deduplicateArray<T>(
   array: T[],

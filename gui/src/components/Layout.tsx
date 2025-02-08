@@ -11,6 +11,7 @@ import {
   updateApplyState,
   setMode,
   newSession,
+  selectIsInEditMode,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { ROUTES } from "../util/navigation";
@@ -23,6 +24,7 @@ import { AuthProvider } from "../context/Auth";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { incrementFreeTrialCount } from "../util/freeTrial";
+import OSRContextMenu from "./OSRContextMenu";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -110,19 +112,6 @@ const Layout = () => {
       navigate("/models");
     },
     [navigate],
-  );
-
-  useWebviewListener(
-    "viewHistory",
-    async () => {
-      // Toggle the history page / main page
-      if (location.pathname === "/history") {
-        navigate("/");
-      } else {
-        navigate("/history");
-      }
-    },
-    [location, navigate],
   );
 
   useWebviewListener(
@@ -220,7 +209,11 @@ const Layout = () => {
     [],
   );
 
+  const isInEditMode = useAppSelector(selectIsInEditMode);
   useWebviewListener("exitEditMode", async () => {
+    if (!isInEditMode) {
+      return;
+    }
     dispatch(
       loadLastSession({
         saveCurrentSession: false,
@@ -261,6 +254,7 @@ const Layout = () => {
   return (
     <AuthProvider>
       <LayoutTopDiv>
+        <OSRContextMenu />
         <div
           style={{
             scrollbarGutter: "stable both-edges",

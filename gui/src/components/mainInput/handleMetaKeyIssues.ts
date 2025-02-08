@@ -3,7 +3,6 @@ import { KeyboardEvent } from "react";
 import { getPlatform, isWebEnvironment } from "../../util";
 
 const isWebEnv = isWebEnvironment();
-const platform = getPlatform();
 
 /**
  * This handles various keypress issues when OSR is enabled
@@ -14,6 +13,7 @@ export const handleJetBrainsOSRMetaKeyIssues = (
 ) => {
   const selection = window.getSelection();
   const alter = e.shiftKey ? "extend" : "move";
+  const platform = getPlatform();
 
   const handlers: Record<string, () => void> = {
     Backspace: () => handleJetBrainsMetaBackspace(editor),
@@ -108,6 +108,7 @@ export const handleJetBrainsMetaBackspace = (editor: Editor) => {
     }
 
     // For Linux/Windows, only delete the word to the left of the cursor
+    const platform = getPlatform();
     if (platform !== "mac") {
       deleteSingleWord(editor);
       break;
