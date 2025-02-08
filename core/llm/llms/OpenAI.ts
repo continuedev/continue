@@ -97,6 +97,10 @@ class OpenAI extends BaseLLM {
     return !!model && (model.startsWith("o1") || model.startsWith("o3"));
   }
 
+  private isFireworksAiModel(model?: string): boolean {
+    return !!model && model.startsWith("accounts/fireworks/models");
+  }
+
   protected supportsPrediction(model: string): boolean {
     const SUPPORTED_MODELS = ["gpt-4o-mini", "gpt-4o", "mistral-large"];
     return SUPPORTED_MODELS.some((m) => model.includes(m));
@@ -267,7 +271,7 @@ class OpenAI extends BaseLLM {
       body.max_completion_tokens = undefined;
     }
 
-    if (body.tools?.length && !body.model?.startsWith("o3")) {
+    if (body.tools?.length) {
       // To ensure schema adherence: https://platform.openai.com/docs/guides/function-calling#parallel-function-calling-and-structured-outputs
       // In practice, setting this to true and asking for multiple tool calls
       // leads to "arguments" being something like '{"file": "test.ts"}{"file": "test.js"}'
