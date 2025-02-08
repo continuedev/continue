@@ -1,6 +1,11 @@
 import { JSONSchema7, JSONSchema7Object } from "json-schema";
 
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  CompletionOptions,
+  EmbedOptions,
+  LLMOptions,
+} from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -261,6 +266,8 @@ class Ollama extends BaseLLM {
       stop: options.stop,
       num_ctx: this.contextLength,
       mirostat: options.mirostat,
+      mirostat_eta: options.mirostatEta,
+      mirostat_tau: options.mirostatTau,
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
       min_p: options.minP,
@@ -521,13 +528,50 @@ class Ollama extends BaseLLM {
     }
   }
 
-  protected async _embed(chunks: string[]): Promise<number[][]> {
+  protected async _embed(
+    chunks: string[],
+    embedOptions: EmbedOptions = {},
+  ): Promise<number[][]> {
+    // Helper function to filter and transform options
+    const _getEmbedOptions = (): Record<string, any> => {
+      const options = embedOptions?.modelOptions || {};
+      const filteredOptions: Record<string, any> = {};
+      // Transform temperature to number (Ollama expects number, not string)
+      if (options?.temperature !== undefined) {
+        filteredOptions.temperature = options?.temperature;
+      }
+      // Keep other options if provided
+      if (options?.topP !== undefined) filteredOptions.top_p = options?.topP;
+      if (options?.topK !== undefined) filteredOptions.top_k = options?.topK;
+      if (options?.minP !== undefined) filteredOptions.min_p = options?.minP;
+      if (options?.maxTokens !== undefined)
+        filteredOptions.num_ctx = options?.maxTokens;
+      if (options?.mirostat !== undefined)
+        filteredOptions.mirostat = options?.mirostat;
+      if (options?.stop !== undefined) filteredOptions.stop = options?.stop;
+      if (options?.stream !== undefined) filteredOptions.seed = options?.stream;
+      if (embedOptions?.maxChunkSize !== undefined)
+        filteredOptions.num_predict = embedOptions?.maxChunkSize;
+      return filteredOptions;
+    };
+
+    const options = _getEmbedOptions();
+    const body_constructor: {
+      model: string;
+      input: string[];
+      options?: Record<string, any>;
+    } = {
+      model: this.model,
+      input: chunks,
+    };
+
+    if (Object.keys(options).length > 0) {
+      body_constructor.options = options;
+    }
+
     const resp = await this.fetch(new URL("api/embed", this.apiBase), {
       method: "POST",
-      body: JSON.stringify({
-        model: this.model,
-        input: chunks,
-      }),
+      body: JSON.stringify(body_constructor),
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
@@ -544,6 +588,7 @@ class Ollama extends BaseLLM {
     if (!embedding || embedding.length === 0) {
       throw new Error("Ollama generated empty embedding");
     }
+
     return embedding;
   }
 }

@@ -295,6 +295,8 @@ export interface ContinueError {
 }
 
 export interface CompletionOptions extends BaseCompletionOptions {
+  mirostatTau?: number;
+  mirostatEta?: number;
   model: string;
 }
 
@@ -928,6 +930,10 @@ export interface EmbedOptions {
 
   // GCP and Watsonx Options
   projectId?: string;
+
+  // Support embeddings model-specific options to be passed
+  modelOptions?: BaseCompletionOptions;
+  keepAlive?: string; // e.g. '5m' for 5 minutes
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
