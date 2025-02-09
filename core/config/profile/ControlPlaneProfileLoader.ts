@@ -1,4 +1,5 @@
 import { ConfigJson } from "@continuedev/config-types";
+import { ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import {
@@ -7,9 +8,8 @@ import {
   IdeSettings,
   SerializedContinueConfig,
 } from "../../index.js";
-
-import { ConfigResult } from "@continuedev/config-yaml";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
+
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -32,6 +32,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     this.description = {
       id: workspaceId,
       profileType: "control-plane",
+      iconUrl: "",
       fullSlug: {
         ownerSlug: "",
         packageSlug: "",

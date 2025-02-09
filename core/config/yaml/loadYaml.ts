@@ -1,8 +1,9 @@
 import fs from "node:fs";
 
 import {
+  AssistantUnrolled,
   ConfigResult,
-  ConfigYaml,
+  parseAssistantUnrolled,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
@@ -34,19 +35,24 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 import { slashFromCustomCommand } from "../../commands";
 import { allTools } from "../../tools";
+import { GlobalContext } from "../../util/GlobalContext";
+import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
 
 async function loadConfigYaml(
   workspaceConfigs: string[],
   rawYaml: string,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
-): Promise<ConfigResult<ConfigYaml>> {
+): Promise<ConfigResult<AssistantUnrolled>> {
+  const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
-    (await clientRenderHelper(rawYaml, ide, controlPlaneClient));
+    (ideSettings.continueTestEnvironment === "production"
+      ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
+      : parseAssistantUnrolled(rawYaml));
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
@@ -86,7 +92,7 @@ async function slashCommandsFromV1PromptFiles(
 }
 
 async function configYamlToContinueConfig(
-  config: ConfigYaml,
+  config: AssistantUnrolled,
   ide: IDE,
   ideSettings: IdeSettings,
   uniqueId: string,
@@ -181,7 +187,8 @@ async function configYamlToContinueConfig(
 
   // Context providers
   const codebaseContextParams: IContextProvider[] =
-    (config.context || []).find((cp) => cp.uses === "codebase")?.with || {};
+    (config.context || []).find((cp) => cp.provider === "codebase")?.params ||
+    {};
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),
@@ -194,14 +201,14 @@ async function configYamlToContinueConfig(
 
   continueConfig.contextProviders = (config.context
     ?.map((context) => {
-      const cls = contextProviderClassFromName(context.uses) as any;
+      const cls = contextProviderClassFromName(context.provider) as any;
       if (!cls) {
-        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.uses)) {
-          console.warn(`Unknown context provider ${context.uses}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
+          console.warn(`Unknown context provider ${context.provider}`);
         }
         return undefined;
       }
-      const instance: IContextProvider = new cls(context.with ?? {});
+      const instance: IContextProvider = new cls(context.params ?? {});
       return instance;
     })
     .filter((p) => !!p) ?? []) as IContextProvider[];
@@ -296,14 +303,13 @@ export async function loadContinueConfigFromYaml(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
-  overrideConfigYaml: ConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<ContinueConfig>> {
-  const configYamlPath = getConfigYamlPath(ideType);
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(configYamlPath, "utf-8")
+      ? fs.readFileSync(getConfigYamlPath(ideType), "utf-8")
       : "";
 
   const configYamlResult = await loadConfigYaml(
@@ -341,8 +347,16 @@ export async function loadContinueConfigFromYaml(
     }
   }
 
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    continueConfig,
+    sharedConfig,
+  );
+
   return {
-    config: continueConfig,
+    config: withShared,
     errors: configYamlResult.errors,
     configLoadInterrupted: false,
   };

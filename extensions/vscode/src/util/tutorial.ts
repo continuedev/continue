@@ -16,7 +16,12 @@ export async function showTutorial(ide: IDE) {
   // Ensure keyboard shortcuts match OS
   if (process.platform !== "darwin") {
     let tutorialContent = await ide.readFile(tutorialUri.toString());
-    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
+    tutorialContent = tutorialContent
+      .replaceAll("[Cmd + L]", "[Ctrl + L]")
+      .replaceAll("[Cmd + Shift + L]", "[Ctrl + Shift + L]")
+      .replaceAll("[Cmd + I]", "[Ctrl + I]")
+      .replaceAll("⌘", "^");
+
     await ide.writeFile(tutorialUri.toString(), tutorialContent);
   }
 

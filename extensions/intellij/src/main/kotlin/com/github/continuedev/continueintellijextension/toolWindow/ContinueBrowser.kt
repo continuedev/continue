@@ -53,7 +53,6 @@ class ContinueBrowser(val project: Project, url: String) {
                 ContinuePluginService::class.java
             )
 
-
             val respond = fun(data: Any?) {
                 sendToWebview(messageType, data, messageId ?: uuid())
             }
@@ -63,8 +62,18 @@ class ContinueBrowser(val project: Project, url: String) {
                 return@addHandler null
             }
 
+            // If not pass through, then put it in the status/content/done format for webview
+            // Core already sends this format
+            val respondToWebview = fun(data: Any?) {
+                sendToWebview(messageType, mapOf(
+                    "status" to "success",
+                    "content" to data,
+                    "done" to true
+                ), messageId ?: uuid())
+            }
+
             if (msg != null) {
-                continuePluginService.ideProtocolClient?.handleMessage(msg, respond)
+                continuePluginService.ideProtocolClient?.handleMessage(msg, respondToWebview)
             }
 
             null
