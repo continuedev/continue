@@ -710,7 +710,7 @@ const getCommandsMap: (
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
     "continue.viewHistory": () => {
-      sidebar.webviewProtocol?.request("viewHistory", undefined);
+      vscode.commands.executeCommand("continue.navigateTo", "/history", true);
     },
     "continue.focusContinueSessionId": async (
       sessionId: string | undefined,

@@ -11,6 +11,7 @@ import {
   updateApplyState,
   setMode,
   newSession,
+  selectIsInEditMode,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { ROUTES } from "../util/navigation";
@@ -114,19 +115,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "viewHistory",
-    async () => {
-      // Toggle the history page / main page
-      if (location.pathname === "/history") {
-        navigate("/");
-      } else {
-        navigate("/history");
-      }
-    },
-    [location, navigate],
-  );
-
-  useWebviewListener(
     "navigateTo",
     async (data) => {
       if (data.toggle && location.pathname === data.path) {
@@ -221,7 +209,11 @@ const Layout = () => {
     [],
   );
 
+  const isInEditMode = useAppSelector(selectIsInEditMode);
   useWebviewListener("exitEditMode", async () => {
+    if (!isInEditMode) {
+      return;
+    }
     dispatch(
       loadLastSession({
         saveCurrentSession: false,
