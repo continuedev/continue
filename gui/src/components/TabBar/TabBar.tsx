@@ -44,7 +44,7 @@ const Tab = styled.div<{ isActive: boolean }>`
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  padding: 0 12px;
+  padding: 0 5px 0 12px;
   min-width: 100px;
   max-width: 200px;
   height: 100%;
@@ -77,7 +77,7 @@ const TabTitle = styled.span`
 `;
 
 const CloseButton = styled.button`
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 16px;
@@ -90,6 +90,7 @@ const CloseButton = styled.button`
   cursor: pointer;
   border-radius: ${defaultBorderRadius};
   padding: 2px;
+  visibility: hidden;
 
   &:hover {
     opacity: 1;
@@ -97,7 +98,7 @@ const CloseButton = styled.button`
   }
 
   ${Tab}:hover & {
-    display: flex;
+    visibility: visible;
   }
 
   &[disabled] {
