@@ -192,6 +192,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
   "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
 };

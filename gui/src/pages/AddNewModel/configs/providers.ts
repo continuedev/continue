@@ -111,7 +111,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       models.claude35Sonnet,
       models.claude3Opus,
       models.claude3Sonnet,
-      models.claude3Haiku,
+      models.claude35Haiku,
     ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
@@ -370,7 +370,11 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.deepseekCoderApi, models.deepseekChatApi, models.deepseekReasonerApi],
+    packages: [
+      models.deepseekCoderApi,
+      models.deepseekChatApi,
+      models.deepseekReasonerApi,
+    ],
     apiKeyUrl: "https://platform.deepseek.com/api_keys",
   },
   together: {
@@ -427,8 +431,12 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
       ...completionParamsInputsConfigs,
     ],
-    packages: [models.llama318BChat, models.mistralChat,
-      models.deepseekR1Chat, models.deepseekV3Chat].map((p) => {
+    packages: [
+      models.llama318BChat,
+      models.mistralChat,
+      models.deepseekR1Chat,
+      models.deepseekV3Chat,
+    ].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),
@@ -681,7 +689,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       { ...models.claude35Sonnet, title: "Claude 3.5 Sonnet (trial)" },
       { ...models.gpt4o, title: "GPT-4o (trial)" },
       { ...models.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
-      { ...models.claude3Haiku, title: "Claude 3 Haiku (trial)" },
+      { ...models.claude35Haiku, title: "Claude 3.5 Haiku (trial)" },
       models.mixtralTrial,
       { ...models.gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
       {
@@ -786,7 +794,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
   askSage: {
     title: "Ask Sage",
     provider: "askSage",
-    icon: "ask-Sage.png",
+    icon: "ask-sage.png",
     description:
       "The Ask Sage API provides seamless access to LLMs including OpenAI, Anthropic, Meta, Mistral, and more.",
     longDescription: `To get access to the Ask Sage API, obtain your API key from the [Ask Sage platform](https://chat.asksage.ai/) for all other models.`,

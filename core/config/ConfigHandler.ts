@@ -365,11 +365,11 @@ export class ConfigHandler {
     this.updateListeners.push(listener);
   }
 
-  async reloadConfig(additionalContextProviders: IContextProvider[] = []) {
+  async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
 
     const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig(additionalContextProviders);
+      await this.currentProfile.reloadConfig(this.additionalContextProviders);
 
     if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
@@ -419,6 +419,6 @@ export class ConfigHandler {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
-    void this.reloadConfig(this.additionalContextProviders);
+    void this.reloadConfig();
   }
 }
