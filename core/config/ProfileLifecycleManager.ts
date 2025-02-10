@@ -3,6 +3,7 @@ import {
   ConfigValidationError,
   FullSlug,
 } from "@continuedev/config-yaml";
+
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -19,7 +20,15 @@ export interface ProfileDescription {
   profileType: "control-plane" | "local" | "platform";
   title: string;
   id: string;
+  iconUrl: string;
   errors: ConfigValidationError[] | undefined;
+}
+
+export interface OrganizationDescription {
+  id: string;
+  iconUrl: string;
+  name: string;
+  slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
 }
 
 export class ProfileLifecycleManager {
@@ -44,18 +53,23 @@ export class ProfileLifecycleManager {
 
   // Clear saved config and reload
   async reloadConfig(
+    additionalContextProviders: IContextProvider[] = [],
     ideSettingsPromise: Promise<IdeSettings>,
   ): Promise<ConfigResult<ContinueConfig>> {
     this.savedConfigResult = undefined;
     this.savedBrowserConfigResult = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.loadConfig(ideSettingsPromise, [], true);
+    return this.loadConfig(
+      additionalContextProviders,
+      ideSettingsPromise,
+      true,
+    );
   }
 
   async loadConfig(
-    ideSettingsPromise: Promise<IdeSettings>,
     additionalContextProviders: IContextProvider[],
+    ideSettingsPromise: Promise<IdeSettings>,
     forceReload: boolean = false,
   ): Promise<ConfigResult<ContinueConfig>> {
     // If we already have a config, return it
@@ -69,7 +83,21 @@ export class ProfileLifecycleManager {
 
     // Set pending config promise
     this.pendingConfigPromise = new Promise(async (resolve, reject) => {
-      const result = await this.profileLoader.doLoadConfig(ideSettingsPromise);
+      let result: ConfigResult<ContinueConfig>;
+      try {
+        result = await this.profileLoader.doLoadConfig(ideSettingsPromise);
+      } catch (e: any) {
+        result = {
+          errors: [
+            {
+              fatal: true,
+              message: e.message,
+            },
+          ],
+          config: undefined,
+          configLoadInterrupted: true,
+        };
+      }
 
       if (result.config) {
         // Add registered context providers
@@ -96,8 +124,8 @@ export class ProfileLifecycleManager {
       return this.savedBrowserConfigResult;
     } else {
       const result = await this.loadConfig(
-        ideSettingsPromise,
         additionalContextProviders,
+        ideSettingsPromise,
       );
       if (!result.config) {
         return {

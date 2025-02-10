@@ -176,4 +176,6 @@ describe("E2E Scenarios", () => {
     );
     expect(geminiSecretValue2).toBe("gemini-api-key");
   });
+
+  it.skip("should prioritize org over user / package secrets", () => {});
 });

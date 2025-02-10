@@ -12,7 +12,7 @@ You can create a project-specific system message by adding a `.continuerules` fi
 - If you want concise answers:
 
 ```title=.continuerules
-Please provide concise answers. Do explain obvious concepts. You can assume that I am knowledgable about most programming topics.
+Please provide concise answers. Don't explain obvious concepts. You can assume that I am knowledgable about most programming topics.
 ```
 
 - If you want to ensure certain practices are followed, for example in React:

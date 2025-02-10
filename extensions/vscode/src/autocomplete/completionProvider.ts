@@ -44,11 +44,11 @@ export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
 {
   private onError(e: any) {
-    const options = ["Documentation"];
+    let options = ["Documentation"];
     if (e.message.includes("Ollama may not be installed")) {
       options.push("Download Ollama");
     } else if (e.message.includes("Ollama may not be running")) {
-      options.unshift("Start Ollama"); // We want "Start" to be the default choice
+      options = ["Start Ollama"]; // We want "Start" to be the only choice
     }
 
     if (e.message.includes("Please sign in with GitHub")) {
@@ -70,7 +70,7 @@ export class ContinueCompletionProvider
         );
       } else if (val === "Download Ollama") {
         vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
-      } else if (val == "Start Ollama") {
+      } else if (val === "Start Ollama") {
         startLocalOllama(this.ide);
       }
     });

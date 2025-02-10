@@ -6,20 +6,6 @@ import {
   SlashCommandDescription,
 } from "../";
 
-export const DEFAULT_CHAT_MODEL_CONFIG: ModelDescription = {
-  model: "claude-3-5-sonnet-latest",
-  provider: "anthropic",
-  apiKey: "",
-  title: "Claude 3.5 Sonnet",
-};
-
-export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
-  title: "Codestral",
-  provider: "mistral",
-  model: "codestral-latest",
-  apiKey: "",
-};
-
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
     title: "Claude 3.5 Sonnet (Free Trial)",
@@ -94,8 +80,7 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [DEFAULT_CHAT_MODEL_CONFIG],
-  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
+  models: [],
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
 };
@@ -103,8 +88,7 @@ export const defaultConfig: SerializedContinueConfig = {
 export const defaultOverrideConfig: Partial<SerializedContinueConfig> = {};
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: [DEFAULT_CHAT_MODEL_CONFIG],
-  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
+  models: [],
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
 };

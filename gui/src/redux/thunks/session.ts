@@ -1,15 +1,15 @@
-import { createAsyncThunk, Dispatch, unwrapResult } from "@reduxjs/toolkit";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, Session, SessionMetadata } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
-import { ThunkApiType } from "../store";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import {
   deleteSessionMetadata,
   newSession,
   setAllSessionMetadata,
   updateSessionMetadata,
 } from "../slices/sessionSlice";
-import { IIdeMessenger } from "../../context/IdeMessenger";
+import { ThunkApiType } from "../store";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -97,6 +97,7 @@ export const loadSession = createAsyncThunk<
       const result = await dispatch(
         saveCurrentSession({
           openNewSession: false,
+          generateTitle: true,
         }),
       );
       unwrapResult(result);
@@ -147,11 +148,11 @@ function getChatTitleFromMessage(message: ChatMessage) {
 
 export const saveCurrentSession = createAsyncThunk<
   void,
-  { openNewSession: boolean },
+  { openNewSession: boolean; generateTitle: boolean },
   ThunkApiType
 >(
   "session/saveCurrent",
-  async ({ openNewSession }, { dispatch, extra, getState }) => {
+  async ({ openNewSession, generateTitle }, { dispatch, extra, getState }) => {
     const state = getState();
     if (state.session.history.length === 0) {
       return;
@@ -173,7 +174,7 @@ export const saveCurrentSession = createAsyncThunk<
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
 
-        if (assistantResponse) {
+        if (assistantResponse && generateTitle) {
           try {
             const result = await extra.ideMessenger.request(
               "chatDescriber/describe",

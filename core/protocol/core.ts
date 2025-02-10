@@ -1,4 +1,10 @@
 import { ConfigResult } from "@continuedev/config-yaml";
+
+import { AutocompleteInput } from "../autocomplete/util/types";
+import { ProfileDescription } from "../config/ConfigHandler";
+import { OrganizationDescription } from "../config/ProfileLifecycleManager";
+import { SharedConfigSchema } from "../config/sharedConfig";
+
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -21,9 +27,6 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
-import { AutocompleteInput } from "../autocomplete/util/types";
-import { ProfileDescription } from "../config/ConfigHandler";
-import { SharedConfigSchema } from "../config/sharedConfig";
 
 export type OnboardingModes =
   | "Local"
@@ -195,5 +198,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
+  "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
 };
