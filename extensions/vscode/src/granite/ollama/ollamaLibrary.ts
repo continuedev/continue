@@ -1,10 +1,12 @@
-import crypto from 'crypto';
-import { ModelInfo } from 'core/granite/commons/modelInfo';
-import { formatSize } from 'core/granite/commons/textUtils';
+import crypto from "crypto";
+import { ModelInfo } from "core/granite/commons/modelInfo";
 
-const cache = new Map<string, ModelInfo | undefined>();//TODO limit caching lifespan
+const cache = new Map<string, ModelInfo | undefined>(); //TODO limit caching lifespan
 
-export async function getRemoteModelInfo(modelId: string): Promise<ModelInfo | undefined> {
+export async function getRemoteModelInfo(
+  modelId: string,
+  signal?: AbortSignal,
+): Promise<ModelInfo | undefined> {
   // Check if the result is already cached
   if (cache.has(modelId)) {
     return cache.get(modelId);
@@ -13,7 +15,8 @@ export async function getRemoteModelInfo(modelId: string): Promise<ModelInfo | u
   const [modelName, tag] = modelId.split(":");
   const url = `https://registry.ollama.ai/v2/library/${modelName}/manifests/${tag}`;
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    const sig = signal ? signal : AbortSignal.timeout(3000);
+    const response = await fetch(url, { signal: sig });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch the model page: ${response.statusText}`);
@@ -25,17 +28,22 @@ export async function getRemoteModelInfo(modelId: string): Promise<ModelInfo | u
 
     // Then, decode the ArrayBuffer into a string and parse it as JSON
     const text = new TextDecoder().decode(buffer);
-    const manifest = JSON.parse(text) as { layers: { size: number }[] };
-    const modelSize = manifest.layers.reduce((sum, layer) => sum + layer.size, 0);
+    const manifest = JSON.parse(text) as {
+      config: { size: number };
+      layers: { size: number }[];
+    };
+    const modelSize =
+      manifest.config.size +
+      manifest.layers.reduce((sum, layer) => sum + layer.size, 0);
 
     const data: ModelInfo = {
       id: modelId,
-      size: formatSize(modelSize),
-      digest
+      size: modelSize,
+      digest,
     };
     // Cache the successful result
     cache.set(modelId, data);
-    console.log('Model info:', data);
+    console.log("Model info:", data);
     return data;
   } catch (error) {
     console.error(`Error fetching or parsing model info: ${error}`);
@@ -50,7 +58,7 @@ export async function getRemoteModelInfo(modelId: string): Promise<ModelInfo | u
 }
 
 function getDigest(buffer: ArrayBuffer): string {
-  const hash = crypto.createHash('sha256');
+  const hash = crypto.createHash("sha256");
   hash.update(Buffer.from(buffer));
-  return hash.digest('hex');
+  return hash.digest("hex");
 }

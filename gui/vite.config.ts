@@ -12,7 +12,7 @@ export default defineConfig({
       // external: ["vscode-webview"],
       input: {
         index: resolve(__dirname, 'index.html'),
-        "index-setupGranite": resolve(__dirname, 'index-setupGranite.html'),
+        indexSetupGranite: resolve(__dirname, 'indexSetupGranite.html'),
       },
       output: {
         entryFileNames: `assets/[name].js`,

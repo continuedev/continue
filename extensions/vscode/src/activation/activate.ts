@@ -33,6 +33,12 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);
+  const showOnboarding = context.globalState.get("showGraniteOnboarding", true);
+  if (showOnboarding) {
+    await vscode.commands.executeCommand("granite.setup");
+    context.globalState.update("showGraniteOnboarding", false);
+  }
+
   const continuePublicApi = {
     registerCustomContextProvider: api.registerCustomContextProvider.bind(api),
   };

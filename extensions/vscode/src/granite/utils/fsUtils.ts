@@ -1,4 +1,4 @@
-import * as fs from 'fs/promises';
+import * as fs from "fs/promises";
 
 export async function checkFileExists(filePath: string): Promise<boolean> {
   try {
@@ -6,13 +6,13 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
     console.log(`${filePath} exists`);
     return true;
   } catch (error: any) {
-    if (error.code === 'ENOENT') {
+    if (error.code === "ENOENT") {
       // File does not exist
       console.log(`${filePath} does not exist`);
       return false;
     } else {
       // Some other error occurred
-      console.error('Error checking file existence:', error);
+      console.error("Error checking file existence:", error);
       throw error;
     }
   }

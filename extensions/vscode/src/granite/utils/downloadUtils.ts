@@ -1,34 +1,29 @@
 import { createWriteStream } from "fs";
 import * as fs from "fs/promises";
-import * as path from 'path';
+import * as path from "path";
 import { Readable } from "stream";
 
 import fetch from "node-fetch";
-import { CancellationToken, Progress } from "vscode";
+import { ProgressReporter } from "core/granite/commons/progressData";
 
-import { checkFileExists } from './fsUtils';
+import { checkFileExists } from "./fsUtils";
 
 export async function downloadFileFromUrl(
   url: string,
   destinationPath: string,
-  token: CancellationToken,
-  progress?: Progress<{ message?: string; increment?: number }>
+  signal: AbortSignal,
+  progressReporter: ProgressReporter,
 ) {
   const fileName = destinationPath.split("/").pop()!;
   await fs.mkdir(path.dirname(destinationPath), { recursive: true });
 
-  const controller = new AbortController();
-  token.onCancellationRequested(() => controller.abort());
-  const response = await fetch(url, { signal: controller.signal });
+  const response = await fetch(url, { signal });
 
   if (!response.ok) {
     throw new Error(`Failed to download ${fileName}`);
   }
-
-  const totalBytes = parseInt(response.headers.get('Content-Length') || '0');
-  let downloadedBytes = 0;
-  let lastReportedProgress = 0;
-
+  const totalBytes = parseInt(response.headers.get("Content-Length") || "0");
+  progressReporter.begin("Downloading Ollama", totalBytes);
   const body = response.body;
   if (!body) {
     throw new Error(`Failed to download ${fileName}`);
@@ -38,26 +33,23 @@ export async function downloadFileFromUrl(
   await new Promise((resolve, reject) => {
     const reader = Readable.from(body);
 
-    reader.on('data', (chunk) => {
-      downloadedBytes += chunk.length;
-      if (progress && totalBytes > 0) {
-        const currentProgress = Math.round((downloadedBytes / totalBytes) * 100);
-        if (currentProgress > lastReportedProgress) {
-          progress.report({
-            increment: currentProgress - lastReportedProgress,
-            message: `${currentProgress}%`
-          });
-          lastReportedProgress = currentProgress;
-        }
-      }
+    reader.on("data", (chunk) => {
+      progressReporter.update(chunk.length);
     });
 
-    reader.pipe(writer)
-      .on('finish', resolve)
-      .on('error', reject);
+    reader.pipe(writer).on("finish", resolve).on("error", reject);
+
+    // Handle abortion
+    signal.addEventListener("abort", () => {
+      reader.destroy(); // Stop reading
+      writer.destroy(); // Close the file
+      fs.unlink(destinationPath).catch(() => {}); // Delete the partial file
+      reject(new Error("Download cancelled"));
+    });
   });
 
   if (!(await checkFileExists(destinationPath))) {
     throw new Error(`${destinationPath} doesn't exist`);
   }
+  progressReporter.done();
 }

@@ -1,4 +1,4 @@
-import { GB } from './sizeUtils';
+import { GB } from "./sizeUtils";
 
 // All the system's information
 export interface SystemInfo {
@@ -8,12 +8,12 @@ export interface SystemInfo {
   };
   cpus: number;
   diskSpace: DiskSpace;
-  gpus: { model: string, cores: number }[];
+  gpus: { model: string; cores: number }[];
 }
 
 export interface GpuInfo {
-  model: string,
-  cores: number
+  model: string;
+  cores: number;
 }
 
 // The system's available disk space
@@ -23,7 +23,6 @@ export interface DiskSpace {
   freeDiskSpace: number;
 }
 
-
 /**
  * Determines if the system is considered high-end based on its GPU power and total memory.
  * A machine is considered high-end if it has a discrete NVidia or AMD GPU, or an Apple M2+ chip, and if it has at least 32GB of total memory.
@@ -32,14 +31,17 @@ export interface DiskSpace {
  * @returns {boolean} - True if the system is considered high-end, false otherwise.
  */
 export function isHighEndMachine(systemInfo: SystemInfo): boolean {
-  const hasEnoughGPUPower = hasDiscreteGPU(systemInfo.gpus) || isHighEndApple(systemInfo.gpus);
+  const hasEnoughGPUPower =
+    hasDiscreteGPU(systemInfo.gpus) || isHighEndApple(systemInfo.gpus);
   const totalMemoryGB = systemInfo.memory.totalMemory;
   return hasEnoughGPUPower && totalMemoryGB >= 32 * GB;
 }
 
 export function isHighEndApple(gpus: GpuInfo[]): boolean {
-  const matches = gpus.map(gpu => gpu.model.toLocaleLowerCase().match(/apple m(\d+)/));
-  const match = matches.find(match => match !== null);
+  const matches = gpus.map((gpu) =>
+    gpu.model.toLocaleLowerCase().match(/apple m(\d+)/),
+  );
+  const match = matches.find((match) => match !== null);
   if (!match) {
     return false;
   }
@@ -48,23 +50,22 @@ export function isHighEndApple(gpus: GpuInfo[]): boolean {
 }
 
 export function hasDiscreteGPU(gpus: GpuInfo[]): boolean {
-  return gpus.some(gpu => {
+  return gpus.some((gpu) => {
     const model = gpu.model.toLowerCase();
     // Check for common discrete GPU manufacturers
-    return model.includes('nvidia') ||
-      model.includes('amd');
+    return model.includes("nvidia") || model.includes("amd");
     // TODO to be more precise, we might want to look for specific GPU Models from those brands
   });
 }
 
 export function getRecommendedModels(systemInfo: SystemInfo) {
   const defaultGraniteModel = isHighEndMachine(systemInfo)
-    ? "granite3.1-dense:8b"    // 8B for powerful systems
-    : "granite3.1-dense:2b";   // 2B for others
+    ? "granite3.1-dense:8b" // 8B for powerful systems
+    : "granite3.1-dense:2b"; // 2B for others
 
   return {
     defaultChatModel: defaultGraniteModel,
     defaultTabModel: defaultGraniteModel,
-    defaultEmbeddingsModel: "nomic-embed-text:latest"
+    defaultEmbeddingsModel: "nomic-embed-text:latest",
   };
 }

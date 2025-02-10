@@ -27,14 +27,15 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 
 import { VerticalDiffManager } from "./diff/vertical/manager";
+import { SetupGranitePage } from "./granite/panels/setupGranitePage";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
+import { showTutorial } from "./util/tutorial";
 import { VsCodeIde } from "./VsCodeIde";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
-import { SetupGranitePage } from "./granite/panels/setupGranitePage";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -1016,6 +1017,9 @@ const getCommandsMap: (
     "granite.setup": () => {
       SetupGranitePage.render(extensionContext, configHandler);
     },
+    "granite.showTutorial": () => {
+      showTutorial(ide);
+    }
   };
 };
 

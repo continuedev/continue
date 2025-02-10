@@ -128,14 +128,14 @@ You are helpful and harmless and you follow ethical guidelines and promote posit
 `,
 };
 
-const DEFAULT_MODEL_GRANITE_SMALL: ModelDescription = {
+export const DEFAULT_MODEL_GRANITE_SMALL: ModelDescription = {
   title: "granite3.1-dense:2b",
   provider: "ollama",
   model: "granite3.1-dense:2b",
   ...BASE_GRANITE_CONFIG,
 };
 
-const DEFAULT_MODEL_GRANITE_LARGE: ModelDescription = {
+export const DEFAULT_MODEL_GRANITE_LARGE: ModelDescription = {
   title: "granite3.1-dense:8b",
   provider: "ollama",
   model: "granite3.1-dense:8b",

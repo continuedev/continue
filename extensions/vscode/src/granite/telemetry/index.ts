@@ -1,4 +1,7 @@
-import { getRedHatService, TelemetryService } from "@redhat-developer/vscode-redhat-telemetry";
+import {
+  getRedHatService,
+  TelemetryService,
+} from "@redhat-developer/vscode-redhat-telemetry";
 import { ExtensionContext } from "vscode";
 
 export namespace Telemetry {
@@ -14,10 +17,14 @@ export namespace Telemetry {
     return telemetryService.sendStartupEvent();
   }
 
-  export async function send(eventName: string, properties?: { [key: string]: any }): Promise<void> {
-    const props = properties ? `with properties: ${JSON.stringify(properties)}` : '';
+  export async function send(
+    eventName: string,
+    properties?: { [key: string]: any },
+  ): Promise<void> {
+    const props = properties
+      ? `with properties: ${JSON.stringify(properties)}`
+      : "";
     console.log(`Sending event: ${eventName} ${props}`);
     return await telemetryService?.send({ name: eventName, properties });
   }
-
 }

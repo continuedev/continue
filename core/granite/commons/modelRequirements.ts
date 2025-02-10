@@ -1,6 +1,6 @@
 import { GB } from "./sizeUtils";
 import { hasDiscreteGPU, isHighEndApple, SystemInfo } from "./sysInfo";
-import { formatSize } from './textUtils';
+import { formatSize } from "./textUtils";
 
 export interface ModelRequirements {
   minMemoryBytes: number;
@@ -14,32 +14,20 @@ export const MODEL_REQUIREMENTS: Record<string, ModelRequirements> = {
     minMemoryBytes: 4 * GB,
     recommendedMemoryBytes: 8 * GB,
     gpuRecommended: false,
-    sizeBytes: Math.ceil(1.5 * GB)
+    sizeBytes: Math.ceil(1.5 * GB),
   },
   "granite3.1-dense:8b": {
     minMemoryBytes: 12 * GB,
     recommendedMemoryBytes: 16 * GB,
     gpuRecommended: true,
-    sizeBytes: Math.ceil(4.9 * GB)
-  },
-  "granite-code:3b": {
-    minMemoryBytes: 6 * GB,
-    recommendedMemoryBytes: 8 * GB,
-    gpuRecommended: false,
-    sizeBytes: Math.ceil(2.0 * GB)
-  },
-  "granite-code:8b": {
-    minMemoryBytes: 12 * GB,
-    recommendedMemoryBytes: 16 * GB,
-    gpuRecommended: true,
-    sizeBytes: Math.ceil(4.6 * GB)
+    sizeBytes: Math.ceil(4.9 * GB),
   },
   "nomic-embed-text:latest": {
     minMemoryBytes: 2 * GB,
     recommendedMemoryBytes: 4 * GB,
     gpuRecommended: false,
-    sizeBytes: Math.ceil(0.274 * GB)
-  }
+    sizeBytes: Math.ceil(0.274 * GB),
+  },
 };
 
 export const DOWNLOADABLE_MODELS = Object.keys(MODEL_REQUIREMENTS);
@@ -52,7 +40,7 @@ interface ValidationResult {
 
 export function checkModelCompatibility(
   modelId: string | null,
-  systemInfo: SystemInfo | null
+  systemInfo: SystemInfo | null,
 ): ValidationResult {
   if (!modelId || !systemInfo) {
     return { isCompatible: true, warnings: [], errors: [] };
@@ -66,7 +54,8 @@ export function checkModelCompatibility(
   const warnings: string[] = [];
   const errors: string[] = [];
   const totalMemoryBytes = systemInfo.memory.totalMemory;
-  const hasGoodGPU = hasDiscreteGPU(systemInfo.gpus) || isHighEndApple(systemInfo.gpus);
+  const hasGoodGPU =
+    hasDiscreteGPU(systemInfo.gpus) || isHighEndApple(systemInfo.gpus);
 
   // const freeDiskBytes = systemInfo.diskSpace.freeDiskSpace;
   // if (freeDiskBytes < requirements.sizeBytes) {
@@ -79,29 +68,31 @@ export function checkModelCompatibility(
   if (totalMemoryBytes < requirements.minMemoryBytes) {
     warnings.push(
       `This model requires at least ${formatSize(requirements.minMemoryBytes)} of RAM. ` +
-      `Your system has ${formatSize(totalMemoryBytes)}.`
+        `Your system has ${formatSize(totalMemoryBytes)}.`,
     );
   } else if (totalMemoryBytes < requirements.recommendedMemoryBytes) {
     warnings.push(
       `This model runs best with ${formatSize(requirements.recommendedMemoryBytes)} of RAM. ` +
-      `Your system has ${formatSize(totalMemoryBytes)}.`
+        `Your system has ${formatSize(totalMemoryBytes)}.`,
     );
   }
 
   if (requirements.gpuRecommended && !hasGoodGPU) {
-    warnings.push("This model performs better with a discrete NVidia or AMD GPU, or an Apple M2+ chip.");
+    warnings.push(
+      "This model performs better with a discrete NVidia or AMD GPU, or an Apple M2+ chip.",
+    );
   }
 
   return {
     isCompatible: errors.length === 0,
     warnings,
-    errors
+    errors,
   };
 }
 
 export function checkCombinedDiskSpace(
   selectedModels: string[],
-  systemInfo: SystemInfo | null
+  systemInfo: SystemInfo | null,
 ): ValidationResult {
   if (!systemInfo || selectedModels.length === 0) {
     return { isCompatible: true, warnings: [], errors: [] };
@@ -119,18 +110,18 @@ export function checkCombinedDiskSpace(
   if (totalSizeBytes > freeDiskBytes) {
     errors.push(
       `Insufficient disk space for selected models. Required: ${formatSize(totalSizeBytes)}, ` +
-      `Available: ${formatSize(freeDiskBytes)}`
+        `Available: ${formatSize(freeDiskBytes)}`,
     );
   } else if (totalSizeBytes > freeDiskBytes * 0.8) {
     warnings.push(
       `Selected models will use ${formatSize(totalSizeBytes)} of your ` +
-      `${formatSize(freeDiskBytes)} available disk space`
+        `${formatSize(freeDiskBytes)} available disk space`,
     );
   }
 
   return {
     isCompatible: errors.length === 0,
     warnings,
-    errors
+    errors,
   };
 }

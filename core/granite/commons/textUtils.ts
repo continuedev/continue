@@ -16,7 +16,8 @@ export function formatSize(bytes: number, precision: number = 1): string {
 export function formatTime(seconds: number): string {
   if (seconds < 60) {
     return `${Math.round(seconds)}s`;
-  } else if (seconds < 900) { // 15 minutes
+  } else if (seconds < 900) {
+    // 15 minutes
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = Math.round(seconds % 60);
     return `${minutes}m ${remainingSeconds}s`;
