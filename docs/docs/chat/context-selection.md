@@ -31,7 +31,7 @@ You can automatically include relevant files from your codebase as context by ty
 
 ## Documentation site
 
-You can include a documentation site as context by typing [`@Docs`](../customize/context-providers.mdx#docs) and selecting the documentation site. You can learn about how @Docs works [here](../customize/deep-dives/docs.md).
+You can include a documentation site as context by typing [`@Docs`](../customize/context-providers.mdx#docs) and selecting the documentation site. You can learn about how @Docs works [here](../customize/deep-dives/docs.mdx).
 
 ## Terminal contents
 

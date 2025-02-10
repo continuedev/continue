@@ -14,6 +14,9 @@ keywords:
 toc_max_heading_level: 5
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 # @Docs
 
 The [`@Docs` context provider](customize/context-providers.mdx#docs) allows you to efficiently reference documentation directly within Continue.
@@ -22,15 +25,25 @@ The [`@Docs` context provider](customize/context-providers.mdx#docs) allows you 
 
 To enable the `@Docs` context provider, add it to the list of context providers in your `config.json` file.
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## How It Works
 
@@ -76,17 +89,29 @@ Documentation sources may be suggested based on package files in your repo. This
 
 For bulk documentation site adds or edits, we recommend editing your global configuration file directly. Documentation sites are stored in an array within `docs` in your global configuration, as follows:
 
-```json title="config.json"
-{
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/",
-      "faviconUrl": "https://docs.nestjs.com/favicon.ico"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+      faviconUrl: https://docs.nestjs.com/favicon.ico
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/",
+        "faviconUrl": "https://docs.nestjs.com/favicon.ico"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 See [the config reference](../../reference) for all documentation site configuration options.
 
@@ -102,39 +127,63 @@ If you have set up an [embeddings provider](../model-types/embeddings.md), @docs
 
 As with [@Codebase context provider configuration](./codebase#configuration), you can adjust the reranking behavior of the `@Docs` context provider with the `nRetrieve`, `nFinal`, and `useReranking`.
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs",
-      "params": {
-        "nRetrieve": 25, // The number of docs to retreive from the embeddings query
-        "nFinal": 5, // The number of docs chunks to return IF reranking
-        "useReranking": true // use reranking if a reranker is configured (defaults to true)
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+      params:
+        nRetrieve: 25 # The number of docs to retreive from the embeddings query
+        nFinal: 5 # The number of docs chunks to return IF reranking
+        useReranking: true # use reranking if a reranker is configured (defaults to true)
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+        "params": {
+          "nRetrieve": 25, // The number of docs to retreive from the embeddings query
+          "nFinal": 5, // The number of docs chunks to return IF reranking
+          "useReranking": true // use reranking if a reranker is configured (defaults to true)
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### Github
 
 The Github API rate limits public requests to 60 per hour. If you want to reliably index Github repos, you can add a github token to your config file:
 
-<<<<<<< HEAD
-
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs",
-      "params": {
-        "githubToken": "github_..."
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+      params:
+        githubToken: ${{ secrets.GITHUB_TOKEN }}
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+        "params": {
+          "githubToken": "github_..."
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### Local Crawling
 
@@ -142,18 +191,31 @@ By default, Continue crawls documentation sites using a specialized crawling ser
 
 If your documentation is private, you can skip the default crawler and use a local crawler instead by setting `useLocalCrawling` to `true`.
 
-```json title="config.json"
-{
-  "docs": [
-    {
-      "title": "My Private Docs",
-      "startUrl": "http://10.2.1.2/docs",
-      "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
-      "useLocalCrawling": true
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  docs:
+    - title: My Private Docs
+      startUrl: http://10.2.1.2/docs
+      faviconUrl: http://10.2.1.2/docs/assets/favicon.ico,
+      useLocalCrawling: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "docs": [
+      {
+        "title": "My Private Docs",
+        "startUrl": "http://10.2.1.2/docs",
+        "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
+        "useLocalCrawling": true
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 The default local crawler is a lightweight tool that cannot render sites that are dynamically generated using JavaScript. If your sites need to be rendered, you can enable the experimental `Use Chromium for Docs Crawling` feature from your [User Settings Page](../settings.md) This will download and install Chromium to `~/.continue/.utils`, and use it as the local crawler.
 
@@ -184,41 +246,74 @@ You can also use the following IDE command to force a re-index of all docs: `Con
 
 The following configuration example works out of the box for VS Code. This uses the built-in embeddings provider with no reranking. Pre-indexed docs will be accessible.
 
-```json title="config.json"
-  "contextProviders": [
-    {
-      "name": "docs",
-    }
-  ],
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/",
-    },
-  ],
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+    
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+    "contextProviders": [
+      {
+        "name": "docs",
+      }
+    ],
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/",
+      },
+    ],
+  ```
+  </TabItem>
+</Tabs>
 
 ### Jetbrains minimal setup
 
 Here is the equivalent minimal example for Jetbrains, which requires setting up an [embeddings provider](../model-types/embeddings.md). Pre-indexed docs will _not_ be accessible.
 
-```json title="config.json"
-  "contextProviders": [
-    {
-      "name": "docs",
-    }
-  ],
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/",
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: LMStudio embedder
+      provider: lmstudio
+      model: nomic-ai/nomic-embed-text-v1.5-GGUF
+      roles:
+        - embed
+  context:
+    - provider: docs
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+    "contextProviders": [
+      {
+        "name": "docs",
+      }
+    ],
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/",
+      },
+    ],
+    "embeddingsProvider": {
+      "provider": "lmstudio",
+      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
     },
-  ],
-  "embeddingsProvider": {
-    "provider": "lmstudio",
-    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
-  },
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ### Full-power setup (VS Code or Jetbrains)
 
@@ -229,44 +324,79 @@ The following configuration example includes:
 - A reranker model available, with reranking parameters customized
 - A Github token to enable Github crawling
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs",
-      "params": {
-        "githubToken": "github_...",
-        "nRetrieve": 25,
-        "nFinal": 5,
-        "useReranking": true
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: LMStudio Nomic Text
+      provider: lmstudio
+      model: nomic-ai/nomic-embed-text-v1.5-GGUF
+      roles:
+        - embed
+    - name: Voyage Rerank-2
+      provider: voyage
+      apiKey: ${{ secrets.VOYAGE_API_KEY }}
+      model: rerank-2
+      roles:
+        - rerank
+  context:
+    - provider: docs
+      params:
+         githubToken: ${{ secrets.GITHUB_TOKEN }}
+         nRetrieve: 25
+         nFinal: 5
+         useReranking: true
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+    - title: My Private Docs
+      startUrl: http://10.2.1.2/docs
+      faviconUrl: http://10.2.1.2/docs/assets/favicon.ico
+      maxDepth: 4
+      useLocalCrawling: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+        "params": {
+          "githubToken": "github_...",
+          "nRetrieve": 25,
+          "nFinal": 5,
+          "useReranking": true
+        }
       }
-    }
-  ],
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/"
+    ],
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/"
+      },
+      {
+        "title": "My Private Docs",
+        "startUrl": "http://10.2.1.2/docs",
+        "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
+        "maxDepth": 4,
+        "useLocalCrawling": true
+      }
+    ],
+    "reranker": {
+      "name": "voyage",
+      "params": {
+        "model": "rerank-2",
+        "apiKey": "<VOYAGE_API_KEY>"
+      }
     },
-    {
-      "title": "My Private Docs",
-      "startUrl": "http://10.2.1.2/docs",
-      "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
-      "maxDepth": 4,
-      "useLocalCrawling": true
+    "embeddingsProvider": {
+      "provider": "lmstudio",
+      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
     }
-  ],
-  "reranker": {
-    "name": "voyage",
-    "params": {
-      "model": "rerank-2",
-      "apiKey": "<VOYAGE_API_KEY>"
-    }
-  },
-  "embeddingsProvider": {
-    "provider": "lmstudio",
-    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 This could also involve enabling Chromium as a backup for local documentation the [User Settings Page](../settings.md).
