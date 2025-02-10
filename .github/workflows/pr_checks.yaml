@@ -298,12 +298,11 @@ jobs:
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
-    needs: [ install-root, install-vscode]
+    needs: [install-root, install-vscode]
     env:
       SSH_HOST: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
-      test_file_exclude: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_exclude }}
     steps:
       - uses: actions/checkout@v4
 
@@ -323,18 +322,10 @@ jobs:
           echo "test_file_matrix<<EOF" >> $GITHUB_OUTPUT
           echo "$FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-          echo "test_file_exclude<<EOF" >> $GITHUB_OUTPUT
-          if [ "$SSH_HOST" = '' ] ; then
-            echo '[{"test_file": "e2e/_output/tests/SSH.test.js"}]' >> $GITHUB_OUTPUT
-          else
-            echo "[]" >> $GITHUB_OUTPUT
-          fi
-          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Debug Outputs
         run: |
           echo "Test files: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}"
-          echo "Test file excludes: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_exclude }}"
 
   vscode-package-extension:
     runs-on: ubuntu-latest
@@ -419,7 +410,6 @@ jobs:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
-        exclude: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_exclude) }}
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
@@ -455,14 +445,13 @@ jobs:
         env:
           SSH_KEY: ${{ secrets.GH_ACTIONS_SSH_TEST_KEY_PEM }}
           SSH_HOST: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
-        if: ${{ env.SSH_HOST != '' }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
           echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
-        if: ${{ github.event.pull_request.head.repo.fork == false }}
+        if: ${{ env.SSH_HOST != '' && github.event.pull_request.head.repo.fork == false }}
 
       - name: Set up Xvfb
         run: |
@@ -470,9 +459,11 @@ jobs:
           export DISPLAY=:99
 
       - name: Run e2e tests
+        env:
+          SSH_HOST: ${{ secrets.GH_ACTIONS_SSH_TEST_DNS_NAME }}
         run: |
           cd extensions/vscode
-          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
+          IGNORE_SSH_TESTS="${{ env.SSH_HOST != '' && github.event.pull_request.head.repo.fork }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 
@@ -517,6 +508,7 @@ jobs:
 
   jetbrains-tests:
     # Don't run for granite/customization
+    if: false
     needs: [install-root, core-checks]
     runs-on: ubuntu-latest
     steps:
