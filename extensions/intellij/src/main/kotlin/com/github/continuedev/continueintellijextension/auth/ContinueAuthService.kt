@@ -88,10 +88,12 @@ class ContinueAuthService {
                 val lastName = user?.get("lastName") as? String
                 val label = "$firstName $lastName"
                 val id = user?.get("id") as? String
+                val email = user?.get("email") as? String
 
                 // Persist the session info
                 setRefreshToken(refreshToken!!)
-                val sessionInfo = ControlPlaneSessionInfo(accessToken!!, ControlPlaneSessionInfo.Account(id!!, label))
+                val sessionInfo =
+                    ControlPlaneSessionInfo(accessToken!!, ControlPlaneSessionInfo.Account(email!!, label))
                 setControlPlaneSessionInfo(sessionInfo)
 
                 // Notify listeners
