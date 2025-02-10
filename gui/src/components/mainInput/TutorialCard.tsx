@@ -11,6 +11,7 @@ import { defaultBorderRadius, lightGray, vscBackground } from "..";
 import { getMetaKeyLabel, isJetBrains } from "../../util";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import Shortcut from '../gui/Shortcut';
 
 interface TutorialCardProps {
   onClose: () => void;
@@ -69,21 +70,21 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <li className="flex items-start">
           <PencilSquareIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> + <kbd>I</kbd> to
+            Highlight code and press <Shortcut>meta I</Shortcut> to
             quickly make natural language edits
           </span>
         </li>
         <li className="flex items-start">
           <ClipboardDocumentIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> + <kbd>L</kbd> to
+            Highlight code and press <Shortcut>meta L</Shortcut> to
             add it to the chat window
           </span>
         </li>
         <li className="flex items-start">
           <Cog6ToothIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
-            Click the gear icon in the bottom right to configure Continue
+            Click the gear icon in the upper right to configure Continue
           </span>
         </li>
         <li className="flex items-start">
