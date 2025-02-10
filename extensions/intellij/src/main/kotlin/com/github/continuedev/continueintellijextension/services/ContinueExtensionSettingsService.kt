@@ -34,7 +34,7 @@ class ContinueSettingsComponent : DumbAware {
     val enableOSR: JCheckBox = JCheckBox("Enable Off-Screen Rendering")
     val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
     val showIDECompletionSideBySide: JCheckBox = JCheckBox("Show IDE completions side-by-side")
-    val continueTestEnvironment: JComboBox<String> = JComboBox(arrayOf("none", "production", "test", "local"))
+    val enableContinueHub: JCheckBox = JCheckBox("Enable Continue Hub")
 
     init {
         val constraints = GridBagConstraints()
@@ -68,10 +68,7 @@ class ContinueSettingsComponent : DumbAware {
         constraints.gridy++
         panel.add(showIDECompletionSideBySide, constraints)
         constraints.gridy++
-        panel.add(JLabel("Continue test environment"), constraints)
-        constraints.gridy++
-        constraints.gridy++
-        panel.add(continueTestEnvironment, constraints)
+        panel.add(enableContinueHub, constraints)
         constraints.gridy++
 
         // Add a "filler" component that takes up all remaining vertical space
@@ -220,7 +217,7 @@ class ContinueExtensionConfigurable : Configurable {
                     mySettingsComponent?.enableOSR?.isSelected != settings.continueState.enableOSR ||
                     mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip ||
                     mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide ||
-                    mySettingsComponent?.continueTestEnvironment?.selectedItem.toString() != settings.continueState.continueTestEnvironment
+                    (if (mySettingsComponent?.enableContinueHub?.isSelected == true) settings.continueState.continueTestEnvironment != "production" else settings.continueState.continueTestEnvironment == "production")
         return modified
     }
 
@@ -237,7 +234,7 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.showIDECompletionSideBySide =
             mySettingsComponent?.showIDECompletionSideBySide?.isSelected ?: false
         settings.continueState.continueTestEnvironment =
-            mySettingsComponent?.continueTestEnvironment?.selectedItem.toString()
+            if (mySettingsComponent?.enableContinueHub?.isSelected == true) "production" else "none"
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC)
             .settingsUpdated(settings.continueState)
@@ -255,7 +252,8 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
         mySettingsComponent?.showIDECompletionSideBySide?.isSelected =
             settings.continueState.showIDECompletionSideBySide
-        mySettingsComponent?.continueTestEnvironment?.selectedItem = settings.continueState.continueTestEnvironment
+        mySettingsComponent?.enableContinueHub?.isSelected =
+            settings.continueState.continueTestEnvironment == "production"
 
         ContinueExtensionSettings.instance.addRemoteSyncJob()
     }
