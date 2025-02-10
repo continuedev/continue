@@ -53,6 +53,8 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
+import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -315,7 +317,11 @@ export class Core {
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+      let url = `${env.APP_URL}${msg.data.path}`;
+      if (msg.data.orgSlug) {
+        url += `?org=${msg.data.orgSlug}`;
+      }
+      await this.messenger.request("openUrl", url);
     });
 
     on("controlPlane/listOrganizations", async (msg) => {
@@ -361,9 +367,17 @@ export class Core {
       }
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
-      const provider = config.contextProviders?.find(
-        (provider) => provider.description.title === name,
-      );
+      const provider =
+        config.contextProviders?.find(
+          (provider) => provider.description.title === name,
+        ) ??
+        [
+          // user doesn't need these in their config.json for the shortcuts to work
+          // option+enter
+          new CurrentFileContextProvider({}),
+          // cmd+enter
+          new CodebaseContextProvider({}),
+        ].find((provider) => provider.description.title === name);
       if (!provider) {
         return [];
       }
@@ -946,15 +960,22 @@ export class Core {
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
       const contextItems = await callTool(
-        tool.uri ?? tool.function.name,
+        tool,
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
           llm,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          tool,
         },
       );
+
+      if (tool.faviconUrl) {
+        contextItems.forEach((item) => {
+          item.icon = tool.faviconUrl;
+        });
+      }
 
       return { contextItems };
     });

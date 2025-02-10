@@ -859,6 +859,7 @@ export interface ToolExtras {
   ide: IDE;
   llm: ILLM;
   fetch: FetchFunction;
+  tool: Tool;
 }
 
 export interface Tool {
@@ -874,6 +875,7 @@ export interface Tool {
   wouldLikeTo: string;
   readonly: boolean;
   uri?: string;
+  faviconUrl?: string;
 }
 
 interface ToolChoice {
@@ -994,6 +996,7 @@ export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
 
 export interface MCPOptions {
   transport: TransportOptions;
+  faviconUrl?: string;
 }
 
 export interface ContinueUIConfig {
