@@ -95,7 +95,7 @@ class IntelliJIDE(
             enableControlServerBeta = settings.continueState.enableContinueTeamsBeta,
             continueTestEnvironment = settings.continueState.continueTestEnvironment,
             pauseCodebaseIndexOnStart = false, // TODO: Needs to be implemented
-            enableDebugLogs = false // TODO: Needs to be implemented
+            continueTestEnvironment = "none"
         )
     }
 

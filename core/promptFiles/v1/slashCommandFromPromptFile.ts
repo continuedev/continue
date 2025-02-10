@@ -25,15 +25,20 @@ async function renderPromptV1(
 ) {
   const helpers = getContextProviderHelpers(context);
 
-  // A few context providers that don't need to be in config.json to work in .prompt files
-  const diff = await context.ide.getDiff(true);
-  const currentFile = await context.ide.getCurrentFile();
   const inputData: Record<string, string> = {
-    diff: diff.join("\n"),
     input: userInput,
   };
-  if (currentFile) {
-    inputData.currentFile = currentFile.path;
+
+  // A few context providers that don't need to be in config.json to work in .prompt files
+  if (helpers?.find((helper) => helper[0] === "diff")) {
+    const diff = await context.ide.getDiff(true);
+    inputData.diff = diff.join("\n");
+  }
+  if (helpers?.find((helper) => helper[0] === "currentFile")) {
+    const currentFile = await context.ide.getCurrentFile();
+    if (currentFile) {
+      inputData.currentFile = currentFile.path;
+    }
   }
 
   return renderTemplatedString(

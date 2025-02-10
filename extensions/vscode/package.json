@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.255",
+  "version": "0.9.262",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -96,16 +96,10 @@
           "default": false,
           "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
         },
-        "continue.continueTestEnvironment": {
-          "type": "string",
-          "enum": [
-            "none",
-            "production",
-            "test",
-            "local"
-          ],
-          "default": "none",
-          "description": "Continue test environment"
+        "continue.enableContinueHub": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Continue Hub (internal)"
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -219,14 +213,14 @@
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
-        "title": "Toggle Full Screen",
-        "icon": "$(fullscreen)",
+        "title": "Open in new window",
+        "icon": "$(link-external)",
         "group": "Continue"
       },
       {
-        "command": "continue.openConfig",
+        "command": "continue.openConfigPage",
         "category": "Continue",
-        "title": "Open Continue Config",
+        "title": "Open Settings",
         "icon": "$(gear)",
         "group": "Continue"
       },
@@ -533,19 +527,19 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.openConfig",
+          "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         },
         {
           "command": "continue.signInToControlPlane",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.continueTestEnvironment !== 'none') && !continue.isSignedInToControlPlane"
+          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && !continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openAccountDialog",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.continueTestEnvironment !== 'none') && continue.isSignedInToControlPlane"
+          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openMorePage",
@@ -586,7 +580,8 @@
         {
           "type": "webview",
           "id": "continue.continueGUIView",
-          "name": "",
+          "name": "Continue",
+          "icon": "media/sidebar-icon.png",
           "visibility": "visible"
         }
       ]
@@ -629,7 +624,7 @@
     "e2e:build": "npm --prefix ../../gui run build && npm run package",
     "e2e:create-storage": "mkdir -p ./e2e/storage",
     "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage",
-    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage",
+    "e2e:get-vscode": "CODE_VERSION=\"1.95.0\" extest get-vscode --storage ./e2e/storage",
     "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
     "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",

@@ -36,6 +36,7 @@ function EditorInset() {
           console.log("Enter: ", e, modifiers);
         }}
         historyKey="chat"
+        inputId="editor-inset"
       />
     </EditorInsetDiv>
   );

@@ -29,7 +29,7 @@ describe("E2E Scenarios", () => {
 
   const packageSecrets: Record<string, string> = {
     "test-org/assistant/ANTHROPIC_API_KEY": "sk-ant",
-    "test-org/models/GEMINI_API_KEY": "gemini-api-key",
+    "test-org/gemini/GEMINI_API_KEY": "gemini-api-key",
   };
 
   const proxyEnvSecrets: Record<string, string> = {
@@ -100,20 +100,22 @@ describe("E2E Scenarios", () => {
     );
 
     // Test that packages were correctly unrolled and params replaced
-    expect(unrolledConfig.models?.length).toBe(4);
+    expect(unrolledConfig.models?.length).toBe(3);
     expect(unrolledConfig.models?.[0].apiKey).toBe(
       "${{ secrets.test-org/assistant/OPENAI_API_KEY }}",
     );
-    expect(unrolledConfig.models?.[1].apiKey).toBe("sk-456");
-    expect(unrolledConfig.models?.[2].apiKey).toBe(
-      "${{ secrets.test-org/assistant/test-org/models/ANTHROPIC_API_KEY }}",
+    expect(unrolledConfig.models?.[1].apiKey).toBe(
+      "${{ secrets.test-org/assistant/test-org/gemini/GEMINI_API_KEY }}",
     );
-    expect(unrolledConfig.models?.[3].apiKey).toBe(
-      "${{ secrets.test-org/assistant/test-org/models/GEMINI_API_KEY }}",
+    expect(unrolledConfig.models?.[2].apiKey).toBe(
+      "${{ secrets.test-org/assistant/ANTHROPIC_API_KEY }}",
     );
 
-    expect(unrolledConfig.rules?.length).toBe(3);
+    expect(unrolledConfig.rules?.length).toBe(2);
     expect(unrolledConfig.docs?.[0].startUrl).toBe(
+      "https://docs.python.org/release/3.13.1",
+    );
+    expect(unrolledConfig.docs?.[0].rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
 
@@ -126,19 +128,18 @@ describe("E2E Scenarios", () => {
     // Test that user secrets were injected and others were changed to use proxy
     const anthropicSecretLocation =
       "package:test-org/assistant/ANTHROPIC_API_KEY";
-    const geminiSecretLocation = "package:test-org/models/GEMINI_API_KEY";
+    const geminiSecretLocation = "package:test-org/gemini/GEMINI_API_KEY";
     expect(clientRendered.models?.[0].apiKey).toBe("sk-123");
-    expect(clientRendered.models?.[1].apiKey).toBe("sk-456");
+    expect(clientRendered.models?.[1].provider).toBe("continue-proxy");
+    expect((clientRendered.models?.[1] as any).apiKeyLocation).toBe(
+      geminiSecretLocation,
+    );
+    expect(clientRendered.models?.[1].apiKey).toBeUndefined();
     expect(clientRendered.models?.[2].provider).toBe("continue-proxy");
     expect((clientRendered.models?.[2] as any).apiKeyLocation).toBe(
       anthropicSecretLocation,
     );
     expect(clientRendered.models?.[2].apiKey).toBeUndefined();
-    expect(clientRendered.models?.[3].provider).toBe("continue-proxy");
-    expect((clientRendered.models?.[3] as any).apiKeyLocation).toBe(
-      geminiSecretLocation,
-    );
-    expect(clientRendered.models?.[3].apiKey).toBeUndefined();
 
     // Test that proxy can correctly resolve secrets
     const decodedAnthropicSecretLocation = decodeSecretLocation(
@@ -175,4 +176,6 @@ describe("E2E Scenarios", () => {
     );
     expect(geminiSecretValue2).toBe("gemini-api-key");
   });
+
+  it.skip("should prioritize org over user / package secrets", () => {});
 });

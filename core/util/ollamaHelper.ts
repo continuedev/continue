@@ -11,7 +11,7 @@ export async function isOllamaInstalled(): Promise<boolean> {
     });
 }
 
-export async function startLocalOllama(ide: IDE): Promise<void> {
+export async function startLocalOllama(ide: IDE): Promise<any> {
     let startCommand: string | undefined;
 
     switch (process.platform) {
@@ -20,16 +20,16 @@ export async function startLocalOllama(ide: IDE): Promise<void> {
             break;
 
         case "win32"://Windows
-            startCommand = `& "ollama app.exe"\n`;
+            startCommand = "& \"ollama app.exe\"\n";
             break;
 
         default: //Linux...
-            const start_script_path = path.resolve(__dirname, './start_ollama.sh');
+            const start_script_path = path.resolve(__dirname, "./start_ollama.sh");
             if (await ide.fileExists(`file:/${start_script_path}`)) {
                 startCommand = `set -e && chmod +x ${start_script_path} && ${start_script_path}\n`;
                 console.log(`Ollama Linux startup script at : ${start_script_path}`);
             } else {
-                ide.showToast("error", `Cannot start Ollama: could not find ${start_script_path}!`)
+                return ide.showToast("error", `Cannot start Ollama: could not find ${start_script_path}!`)
             }
     }
     if (startCommand) {

@@ -47,7 +47,15 @@ fun showTutorial(project: Project) {
                 throw IOException("Resource not found: $tutorialFileName")
             }
             var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
+            
+            // All jetbrains will use J instead of L
+            content = content.replace("[Cmd + L]", "[Cmd + J]")
+            content = content.replace("[Cmd + Shift + L]", "[Cmd + Shift + J]")
+
             if (!System.getProperty("os.name").lowercase().contains("mac")) {
+                content = content.replace("[Cmd + J]", "[Ctrl + J]")
+                content = content.replace("[Cmd + Shift + J]", "[Ctrl + Shift + J]")
+                content = content.replace("[Cmd + I]", "[Ctrl + I]")
                 content = content.replace("⌘", "⌃")
             }
             val filepath = Paths.get(getContinueGlobalPath(), tutorialFileName).toString()

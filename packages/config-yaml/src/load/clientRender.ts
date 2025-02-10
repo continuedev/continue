@@ -5,34 +5,27 @@ import {
   SecretLocation,
 } from "../interfaces/SecretResult.js";
 import { decodeFQSN, encodeFQSN, FQSN } from "../interfaces/slugs.js";
-import { ConfigYaml } from "../schemas/index.js";
+import { AssistantUnrolled } from "../schemas/index.js";
 import {
   fillTemplateVariables,
   getTemplateVariables,
-  parseConfigYaml,
+  parseAssistantUnrolled,
 } from "./unroll.js";
 
 export async function clientRender(
   unrolledConfigContent: string,
-  secretStore: SecretStore,
+  clientSecretStore: SecretStore,
   platformClient?: PlatformClient,
-): Promise<ConfigYaml> {
+): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
   const secrets = getTemplateVariables(unrolledConfigContent);
 
   // 2. Then, we will check which of the secrets are found in the local personal secret store. Here we’re checking for anything that matches the last part of the FQSN, not worrying about the owner/package/owner/package slugs
   const secretsTemplateData: Record<string, string> = {};
 
-  const unresolvedFQSNs: FQSN[] = [];
-  for (const secret of secrets) {
-    const fqsn = decodeFQSN(secret.replace("secrets.", ""));
-    const secretValue = await secretStore.get(fqsn.secretName);
-    if (secretValue) {
-      secretsTemplateData[secret] = secretValue;
-    } else {
-      unresolvedFQSNs.push(fqsn);
-    }
-  }
+  const unresolvedFQSNs: FQSN[] = secrets.map((secret) => {
+    return decodeFQSN(secret.replace("secrets.", ""));
+  });
 
   // Don't use platform client in local mode
   if (platformClient) {
@@ -45,16 +38,10 @@ export async function clientRender(
         continue;
       }
 
-      if (!secretResult.found) {
-        // When a secret isn't found anywhere, we keep it templated as just the secret name
-        // in case it can be found in the on-prem proxy's env
-        secretsTemplateData["secrets." + encodeFQSN(secretResult.fqsn)] =
-          `\${{ secrets.${secretResult.fqsn.secretName} }}`;
-        continue;
-      }
-
       if ("value" in secretResult) {
-        secretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // clientSecretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // const secretValue = await clientSecretStore.get(fqsn.secretName);
+        secretsTemplateData[encodeFQSN(secretResult.fqsn)] = secretResult.value;
       }
 
       secretsTemplateData["secrets." + encodeFQSN(secretResult.fqsn)] =
@@ -71,7 +58,7 @@ export async function clientRender(
   );
 
   // 6. The rendered YAML is parsed and validated again
-  const parsedYaml = parseConfigYaml(renderedYaml);
+  const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
   const finalConfig = useProxyForUnrenderedSecrets(parsedYaml);
@@ -102,7 +89,9 @@ function getUnrenderedSecretLocation(
   return undefined;
 }
 
-function useProxyForUnrenderedSecrets(config: ConfigYaml): ConfigYaml {
+function useProxyForUnrenderedSecrets(
+  config: AssistantUnrolled,
+): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
       const apiKeyLocation = getUnrenderedSecretLocation(

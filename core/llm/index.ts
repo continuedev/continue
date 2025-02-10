@@ -191,7 +191,8 @@ export abstract class BaseLLM implements ILLM {
         options.model,
         this.providerName,
         options.template,
-      );
+      ) ??
+      undefined;
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
@@ -460,9 +461,11 @@ export abstract class BaseLLM implements ILLM {
               `${toolCall.function?.name}(${toolCall.function?.arguments})`,
           )
           .join("\n");
-      } else if ("content" in msg && Array.isArray(msg.content)) {
-        const content = renderChatMessage(msg);
-        msg.content = content;
+      } else if ("content" in msg) {
+        if (Array.isArray(msg.content)) {
+          msg.content = renderChatMessage(msg);
+        }
+        contentToShow = msg.content;
       }
 
       formatted += `<${msg.role}>\n${contentToShow}\n\n`;
@@ -955,7 +958,9 @@ export abstract class BaseLLM implements ILLM {
         this.providerName,
         autodetectTemplateType(this.model),
       );
-      return templateMessages(rendered);
+      if (templateMessages) {
+        return templateMessages(rendered);
+      }
     }
     return rendered;
   }

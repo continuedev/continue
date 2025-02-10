@@ -89,7 +89,7 @@ export const AddCodeToEdit = Node.create<MentionOptions>({
         default: null,
         parseHTML: (element) => element.getAttribute("data-renderInlineAs"),
         renderHTML: (attributes) => {
-          if (!attributes.renderInlineAs) {
+          if (typeof attributes.renderInlineAs !== "string") {
             return {};
           }
 

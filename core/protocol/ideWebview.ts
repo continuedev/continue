@@ -79,10 +79,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 
-  /**
-   * @deprecated Use navigateTo with a path instead.
-   */
-  viewHistory: [undefined, void];
   focusContinueSessionId: [{ sessionId: string | undefined }, void];
   newSession: [undefined, void];
   setTheme: [{ theme: any }, void];

@@ -53,19 +53,6 @@ export default function AccountDialog() {
     );
   }
 
-  if (!controlServerBetaEnabled && !session) {
-    return (
-      <div className="p-4 pt-0">
-        <h1 className="mb-1 text-2xl">Account</h1>
-        <p>
-          Continue For Teams is not enabled. You can enable it in your IDE
-          settings.
-        </p>
-        <p>Using local config.</p>
-      </div>
-    );
-  }
-
   const dispatch = useDispatch();
 
   const changeProfileId = (id: string) => {
@@ -82,8 +69,7 @@ export default function AccountDialog() {
             "Signed in"
           ) : (
             <>
-              Signed in as{" "}
-              <span className="italic">{session.account.label}</span>
+              Signed in as <span className="italic">{session.account.id}</span>
             </>
           )}
         </span>

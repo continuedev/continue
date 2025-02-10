@@ -5,16 +5,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import KeyboardShortcuts from "./KeyboardShortcuts";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { setOnboardingCard } from "../../redux/slices/uiSlice";
-import MoreHelpRow from "./MoreHelpRow";
-import IndexingProgress from "./IndexingProgress";
 import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses";
 import PageHeader from "../../components/PageHeader";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { setOnboardingCard } from "../../redux/slices/uiSlice";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import IndexingProgress from "./IndexingProgress";
+import KeyboardShortcuts from "./KeyboardShortcuts";
+import MoreHelpRow from "./MoreHelpRow";
 
 function MorePage() {
   useNavigationListener();
@@ -27,7 +27,7 @@ function MorePage() {
 
   return (
     <div className="overflow-y-scroll">
-      <PageHeader onClick={() => navigate("/")} title="Chat" />
+      <PageHeader onTitleClick={() => navigate("/")} title="Chat" />
 
       <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="py-5">
@@ -100,6 +100,7 @@ function MorePage() {
                 await dispatch(
                   saveCurrentSession({
                     openNewSession: true,
+                    generateTitle: true,
                   }),
                 );
                 dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));

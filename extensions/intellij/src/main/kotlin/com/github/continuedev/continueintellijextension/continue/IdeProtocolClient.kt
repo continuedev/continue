@@ -43,11 +43,6 @@ class IdeProtocolClient(
         )
     }
 
-    private fun send(messageType: String, data: Any?, messageId: String? = null) {
-        val id = messageId ?: uuid()
-        continuePluginService.sendToWebview(messageType, data, id)
-    }
-
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val message = Gson().fromJson(msg, Message::class.java)
@@ -56,6 +51,10 @@ class IdeProtocolClient(
 
             try {
                 when (messageType) {
+                    "toggleDevTools" -> {
+                        continuePluginService.continuePluginWindow?.browser?.browser?.openDevtools()
+                    }
+
                     "showTutorial" -> {
                         showTutorial(project)
                     }
@@ -63,7 +62,7 @@ class IdeProtocolClient(
                     "jetbrains/isOSREnabled" -> {
                         val isOSREnabled =
                             ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
-                        respond(isOSREnabled)
+                            respond(isOSREnabled)
                     }
 
                     "jetbrains/getColors" -> {
@@ -579,11 +578,11 @@ class IdeProtocolClient(
 
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
-        send("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
+        continuePluginService.sendToWebview("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
     }
 
     fun deleteAtIndex(index: Int) {
-        send("deleteAtIndex", DeleteAtIndex(index), uuid())
+        continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
     }
 
     private fun getModelByRole(
