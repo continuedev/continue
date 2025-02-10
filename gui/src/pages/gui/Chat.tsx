@@ -21,6 +21,7 @@ import {
 } from "../../components";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
+import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
@@ -28,6 +29,7 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
+import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 import {
   OnboardingCard,
   useOnboardingCard,
@@ -76,7 +78,6 @@ import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -364,22 +365,32 @@ export function Chat() {
 
   useAutoScroll(stepsDivRef, history);
 
+  const showPageHeader = isInEditMode || usePlatform;
+
   return (
     <>
-      {isInEditMode && (
+      {showPageHeader && (
         <PageHeader
-          title="Back to Chat"
-          onClick={async () => {
-            await dispatch(loadLastSession({ saveCurrentSession: false }));
-            dispatch(exitEditMode());
-          }}
+          title={isInEditMode ? "Edit Mode" : ""}
+          onTitleClick={
+            isInEditMode
+              ? async () => {
+                  await dispatch(
+                    loadLastSession({ saveCurrentSession: false }),
+                  );
+                  dispatch(exitEditMode());
+                }
+              : undefined
+          }
+          rightContent={usePlatform && <AssistantSelect />}
         />
       )}
 
       {widget}
+
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -407,6 +418,7 @@ export function Chat() {
                     isMainInput={false}
                     editorState={item.editorState}
                     contextItems={item.contextItems}
+                    inputId={item.message.id}
                   />
                 </>
               ) : item.message.role === "tool" ? (
@@ -503,6 +515,7 @@ export function Chat() {
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
+            inputId={"main-editor"}
           />
         )}
 

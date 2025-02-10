@@ -21,7 +21,7 @@ export interface IMessenger<
   ToProtocol extends IProtocol,
   FromProtocol extends IProtocol,
 > {
-  onError(handler: (error: Error) => void): void;
+  onError(handler: (message: Message, error: Error) => void): void;
   send<T extends keyof FromProtocol>(
     messageType: T,
     data: FromProtocol[T][0],
@@ -64,9 +64,9 @@ export class InProcessMessenger<
     (message: Message) => any
   >();
 
-  protected _onErrorHandlers: ((error: Error) => void)[] = [];
+  protected _onErrorHandlers: ((message: Message, error: Error) => void)[] = [];
 
-  onError(handler: (error: Error) => void) {
+  onError(handler: (message: Message, error: Error) => void) {
     this._onErrorHandlers.push(handler);
   }
 

@@ -64,6 +64,8 @@ import {
 } from "../util/paths";
 
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { useHub } from "../control-plane/env";
+import { localPathToUri } from "../util/pathToUri";
 import {
   defaultConfigGraniteLarge,
   defaultConfigGraniteSmall,
@@ -73,8 +75,6 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import { useHub } from "../control-plane/env";
-import { localPathToUri } from "../util/pathToUri";
 import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
 import { validateConfig } from "./validation.js";
 
@@ -568,6 +568,8 @@ async function intermediateToFinalConfig(
               continueConfig,
               mcpId,
               abortController.signal,
+              "MCP Server",
+              server.faviconUrl,
             );
             if (mcpError) {
               errors.push(mcpError);

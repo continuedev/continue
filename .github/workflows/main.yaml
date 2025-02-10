@@ -208,7 +208,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: github.event.inputs.publish_build == 'true'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
     permissions:
       contents: write
     steps:
