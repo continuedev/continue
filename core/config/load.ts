@@ -511,6 +511,8 @@ async function intermediateToFinalConfig(
               continueConfig,
               mcpId,
               abortController.signal,
+              "MCP Server",
+              server.faviconUrl,
             );
             if (mcpError) {
               errors.push(mcpError);

@@ -1,11 +1,11 @@
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
+import { useContext } from "react";
 import { Button, ButtonSubtext } from "../../..";
 import { useAuth } from "../../../../context/Auth";
+import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { hasPassedFTL } from "../../../../util/freeTrial";
 import ContinueLogo from "../../../gui/ContinueLogo";
 import { useOnboardingCard } from "../../hooks";
-import { hasPassedFTL } from "../../../../util/freeTrial";
-import { useContext } from "react";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 
 export default function MainTab({
   onRemainLocal,
@@ -29,6 +29,7 @@ export default function MainTab({
   function openPastFreeTrialOnboarding() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "setup-models",
+      orgSlug: auth.selectedOrganization?.slug,
     });
     onboardingCard.close(isDialog);
   }
