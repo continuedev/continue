@@ -6,8 +6,7 @@ import {
   PencilSquareIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscBackground } from "..";
+import { lightGray } from "..";
 import { getMetaKeyLabel, isJetBrains } from "../../util";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -15,13 +14,6 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 interface TutorialCardProps {
   onClose: () => void;
 }
-
-const CloseButton = styled.button`
-  border: none;
-  background-color: ${vscBackground};
-  color: ${lightGray};
-  position: absolute;
-`;
 
 export function TutorialCard({ onClose }: TutorialCardProps) {
   const ideMessenger = useContext(IdeMessengerContext);
