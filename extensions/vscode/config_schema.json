@@ -2765,7 +2765,8 @@
               ]
             },
             "model": {
-              "type": "string"
+              "type": "string",
+              "required": true
             },
             "apiKey": {
               "type": "string"
@@ -2817,6 +2818,12 @@
             }
           },
           "required": ["provider"],
+          "default": {
+            "provider": "",
+            "model": "",
+            "maxChunkSize": 512,
+            "maxBatchSize": 1
+          },
           "allOf": [
             {
               "if": {
@@ -2895,78 +2902,57 @@
                     "properties": {
                       "apiBase": {
                         "description": "The base URL of the Ollama API"
-                      }
-                    },
-                    "required": ["apiBase"]
-                  },
-                  {
-                    "properties": {
+                      },
                       "apiKey": {
                         "description": "The API key for the Ollama API"
                       }
                     },
-                    "required": ["apiKey"]
+                    "required": []
                   },
                   {
                     "properties": {
                       "embedOptions": {
                         "title": "Embed Options",
+                        "type": "object",
                         "description": "Options for the embeddings provider",
                         "allOf": [
-                          {
-                            "$ref": "#/$defs/BaseCompletionOptions"
-                          },
                           {
                             "properties": {
                               "truncate": {
                                 "type": "boolean",
-                                "description": "Whether to truncate long sequences to the maximum allowed context length",
+                                "description": "Whether to truncate long sequences to the maximum allowed context length. This is a lossy function.",
                                 "default": false
+                              },
+                              "temperature": {
+                                "$ref": "#/$defs/BaseCompletionOptions/properties/temperature"
+                              },
+                              "mirostat": {
+                                "$ref": "#/$defs/BaseCompletionOptions/properties/mirostat"
+                              },
+                              "numThreads": {
+                                "$ref": "#/$defs/BaseCompletionOptions/properties/numThreads"
+                              },
+                              "useMmap": {
+                                "$ref": "#/$defs/BaseCompletionOptions/properties/useMmap"
+                              },
+                              "keepAlive": {
+                                "$ref": "#/$defs/BaseCompletionOptions/properties/keepAlive"
                               }
-                            },
-                            "required": ["truncate"]
+                            }
                           }
-                        ]
+                        ],
+                        "default": {
+                          "numThreads": 0,
+                          "useMmap": false,
+                          "keepAlive": 180,
+                          "truncate": true
+                        }
                       }
                     }
-                  },
-                  {
-                    "properties": {
-                      "region": {
-                        "description": "Region is not supported on this provider.",
-                        "enum": []
-                      }
-                    },
-                    "required": ["region"]
-                  },
-                  {
-                    "properties": {
-                      "profile": {
-                        "description": "Profile is not supported on this provider.",
-                        "enum": []
-                      }
-                    },
-                    "required": ["profile"]
-                  },
-                  {
-                    "properties": {
-                      "requestOptions": {
-                        "description": "Additional options for the HTTP(S) requests not supported on embeddings model.",
-                        "enum": []
-                      }
-                    },
-                    "required": ["requestOptions"]
                   }
                 ]
               },
-              "required": [
-                "apiBase",
-                "apiKey",
-                "embedOptions",
-                "region",
-                "profile",
-                "requestOptions"
-              ]
+              "required": []
             }
           ]
         },
