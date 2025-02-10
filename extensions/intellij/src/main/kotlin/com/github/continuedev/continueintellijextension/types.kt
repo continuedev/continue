@@ -1,16 +1,25 @@
 package com.github.continuedev.continueintellijextension
 
 import com.google.gson.JsonElement
+import com.google.gson.annotations.SerializedName
 
-enum class IdeType(val value: String) {
-    JETBRAINS("jetbrains"),
-    VSCODE("vscode"),
+enum class IdeType {
+    @SerializedName("jetbrains")
+    JETBRAINS,
+
+    @SerializedName("vscode")
+    VSCODE;
 }
 
-enum class ToastType(val value: String) {
-    INFO("info"),
-    ERROR("error"),
-    WARNING("warning"),
+enum class ToastType {
+    @SerializedName("info")
+    INFO,
+
+    @SerializedName("error")
+    ERROR,
+
+    @SerializedName("warning")
+    WARNING;
 }
 
 enum class FileType(val value: Int) {
@@ -21,8 +30,11 @@ enum class FileType(val value: Int) {
 }
 
 enum class ConfigMergeType {
+    @SerializedName("merge")
     MERGE,
-    OVERWRITE
+
+    @SerializedName("overwrite")
+    OVERWRITE;
 }
 
 data class Position(val line: Int, val character: Int)
