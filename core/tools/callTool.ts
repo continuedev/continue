@@ -1,4 +1,4 @@
-import { ContextItem, ToolExtras } from "..";
+import { ContextItem, Tool, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp";
 import { BuiltInToolNames } from "./builtIn";
 
@@ -86,13 +86,18 @@ async function callToolFromUri(
         throw new Error(`Failed to call tool: ${toolName}`);
       }
 
-      return (response.content as any).map((item: any) => {
+      return (response.content as any).map((item: any): ContextItem => {
         if (item.type !== "text") {
           throw new Error(
             `Continue received item of type "${item.type}" from MCP tool, but currently only supports "text".`,
           );
         }
-        return { name: toolName, description: toolName, content: item.text };
+        return {
+          name: extras.tool.displayTitle,
+          description: "Tool output",
+          content: item.text,
+          icon: extras.tool.faviconUrl,
+        };
       });
 
     default:
@@ -101,10 +106,12 @@ async function callToolFromUri(
 }
 
 export async function callTool(
-  uri: string,
+  tool: Tool,
   args: any,
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
+  const uri = tool.uri ?? tool.function.name;
+
   switch (uri) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
