@@ -1,5 +1,6 @@
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
+import { object } from "zod";
 
 declare global {
   interface Window {
@@ -927,6 +928,11 @@ export interface ModelDescription {
   cacheBehavior?: CacheBehavior;
 }
 
+export interface EmbedModelOptions extends BaseCompletionOptions {
+  keepAlive?: number; // list in seconds how long to keep model loaded
+  truncate?: boolean;
+}
+
 export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
@@ -947,8 +953,7 @@ export interface EmbedOptions {
   projectId?: string;
 
   // Support embeddings model-specific options to be passed
-  modelOptions?: BaseCompletionOptions;
-  keepAlive?: string; // e.g. '5m' for 5 minutes
+  modelOptions?: EmbedModelOptions;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {

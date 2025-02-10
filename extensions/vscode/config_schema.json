@@ -2929,12 +2929,6 @@
                               "mirostat": {
                                 "$ref": "#/$defs/BaseCompletionOptions/properties/mirostat"
                               },
-                              "numThreads": {
-                                "$ref": "#/$defs/BaseCompletionOptions/properties/numThreads"
-                              },
-                              "useMmap": {
-                                "$ref": "#/$defs/BaseCompletionOptions/properties/useMmap"
-                              },
                               "keepAlive": {
                                 "$ref": "#/$defs/BaseCompletionOptions/properties/keepAlive"
                               }
@@ -2950,9 +2944,9 @@
                       }
                     }
                   }
-                ]
-              },
-              "required": []
+                ],
+                "required": ["model"]
+              }
             }
           ]
         },

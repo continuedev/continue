@@ -532,38 +532,45 @@ class Ollama extends BaseLLM {
     chunks: string[],
     embedOptions: EmbedOptions = {},
   ): Promise<number[][]> {
-    // Helper function to filter and transform options
-    const _getEmbedOptions = (): Record<string, any> => {
-      const options = embedOptions?.modelOptions || {};
-      const filteredOptions: Record<string, any> = {};
-      // Transform temperature to number (Ollama expects number, not string)
-      if (options?.temperature !== undefined) {
-        filteredOptions.temperature = options?.temperature;
-      }
-      // Keep other options if provided
-      if (options?.topP !== undefined) filteredOptions.top_p = options?.topP;
-      if (options?.topK !== undefined) filteredOptions.top_k = options?.topK;
-      if (options?.minP !== undefined) filteredOptions.min_p = options?.minP;
-      if (options?.maxTokens !== undefined)
-        filteredOptions.num_ctx = options?.maxTokens;
-      if (options?.mirostat !== undefined)
-        filteredOptions.mirostat = options?.mirostat;
-      if (options?.stop !== undefined) filteredOptions.stop = options?.stop;
-      if (options?.stream !== undefined) filteredOptions.seed = options?.stream;
-      if (embedOptions?.maxChunkSize !== undefined)
-        filteredOptions.num_predict = embedOptions?.maxChunkSize;
-      return filteredOptions;
-    };
-
-    const options = _getEmbedOptions();
+    // Define the body_constructor object first
     const body_constructor: {
       model: string;
       input: string[];
       options?: Record<string, any>;
+      truncate?: boolean;
+      keep_alive?: string;
     } = {
       model: this.model,
       input: chunks,
     };
+    const _embedModelOptions = { ...(embedOptions?.modelOptions || {}) };
+    // Helper function to filter and transform options
+    const _getEmbedOptions = (): Record<string, any> => {
+      let filteredOptions: Record<string, any> = {};
+
+      // Handle special cases first
+      if (embedOptions?.maxChunkSize !== undefined) {
+        filteredOptions.num_ctx = embedOptions.maxChunkSize;
+      }
+
+      if (_embedModelOptions?.keepAlive !== undefined) {
+        body_constructor.keep_alive =
+          Math.floor(_embedModelOptions.keepAlive / 60).toString() + "m";
+        delete _embedModelOptions.keepAlive;
+      }
+
+      if (_embedModelOptions?.truncate !== undefined) {
+        body_constructor.truncate = _embedModelOptions.truncate;
+        delete _embedModelOptions.truncate;
+      }
+
+      // Map remaining options directly
+      filteredOptions = { ...filteredOptions, ..._embedModelOptions };
+
+      return filteredOptions;
+    };
+
+    const options = _getEmbedOptions();
 
     if (Object.keys(options).length > 0) {
       body_constructor.options = options;
