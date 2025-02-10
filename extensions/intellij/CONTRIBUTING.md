@@ -90,10 +90,7 @@ allow for changes to your `config.json` and other files during development, with
 
 ### Viewing logs
 
-When using the `Run Continue` task, we automatically run a script that outputs logs into the "Prompt Logs" terminal tab.
-
-Alternatively, you can view logs for a particular IDE instance by selecting `Help` -> `Open Log in Editor` in the window
-toolbar.
+When using the `Run Continue` task, we automatically tail both prompt logs and IDE logs.
 
 ### Reloading changes
 
@@ -109,7 +106,9 @@ toolbar.
 
 - `extensions/intellij`: Breakpoints can be set in Intellij
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
-- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task
+- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task)
+    - If you have Community Edition installed, you won't be able to use breakpoints in IntelliJ. Instead, you can start
+      the `Core Binary` task in VS Code and set breakpoints in that IDE.
 
 ### Available Gradle tasks
 
@@ -152,6 +151,8 @@ This will generate a .zip file in `./build/distributions` with the version defin
 The e2e tests are written using [intellij-ui-test-robot](`https://github.com/JetBrains/intellij-ui-test-robot`). The
 README for this project has a lot of helpful info on how to use the library.
 
+Note that these tests fully take control of your mouse while executing.
+
 #### Setup
 
 If you are on macOS, you'll need to give IntelliJ permission to control your computer in order to run the e2e tests.
@@ -174,7 +175,18 @@ to run.
 
 #### Identifying selectors
 
-While the `runIdeForUiTests` task is runnung, you can visit the following URL
+While the `runIdeForUiTests` task is running, you can visit the following URL
 to view the UI hierarchy of the running IDE:
 
 http://127.0.0.1:8082/
+
+#### Rebuilding the extension
+
+To rebuild the extension with the latest source code, run the following:
+
+```sh
+./gradlew buildPlugin
+```
+
+This will update the contents of the extension that is loaded into the test IDE from
+`build/idea-sandbox/plugins-uiTest/continue-intellij-extension`

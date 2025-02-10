@@ -1,7 +1,10 @@
 import fs from "fs";
 
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
-import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas";
+import {
+  AssistantUnrolled,
+  ConfigResult,
+  ConfigValidationError,
+} from "@continuedev/config-yaml";
 import {
   ContinueConfig,
   ContinueRcJson,
@@ -11,13 +14,14 @@ import {
 } from "../../";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { controlPlaneEnv } from "../../control-plane/env.js";
+import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
-import { getConfigYamlPath } from "../../util/paths";
+import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
-import { loadFullConfigNode } from "../load";
+import { loadContinueConfigFromJson } from "../load";
+import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
@@ -27,7 +31,7 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: ClientConfigYaml | undefined,
+  overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {
@@ -37,13 +41,20 @@ export default async function doLoadConfig(
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
+  // Migrations for old config files
+  // Removes
+  const configJsonPath = getConfigJsonPath(ideInfo.ideType);
+  if (fs.existsSync(configJsonPath)) {
+    migrateJsonSharedConfig(configJsonPath, ide);
+  }
+
   const configYamlPath = getConfigYamlPath(ideInfo.ideType);
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
-  if (fs.existsSync(configYamlPath) || overrideConfigYaml) {
+  if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
     const result = await loadContinueConfigFromYaml(
       ide,
       workspaceConfigs.map((c) => JSON.stringify(c)),
@@ -60,7 +71,7 @@ export default async function doLoadConfig(
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
   } else {
-    const result = await loadFullConfigNode(
+    const result = await loadContinueConfigFromJson(
       ide,
       workspaceConfigs,
       ideSettings,
@@ -96,9 +107,11 @@ export default async function doLoadConfig(
   const controlPlane = (newConfig as any).controlPlane;
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
+
+  const env = await getControlPlaneEnv(ideSettingsPromise);
   let controlPlaneProxyUrl: string = useOnPremProxy
     ? controlPlane?.proxyUrl
-    : controlPlaneEnv.DEFAULT_CONTROL_PLANE_PROXY_URL;
+    : env.DEFAULT_CONTROL_PLANE_PROXY_URL;
 
   if (!controlPlaneProxyUrl.endsWith("/")) {
     controlPlaneProxyUrl += "/";
@@ -111,12 +124,14 @@ export default async function doLoadConfig(
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
-      newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
+      newConfig.analytics,
       uniqueId,
       ideInfo.extensionVersion,
       controlPlaneClient,
       controlPlaneProxyInfo,
     );
+  } else {
+    await TeamAnalytics.shutdown();
   }
 
   newConfig = await injectControlPlaneProxyInfo(

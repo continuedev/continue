@@ -1,8 +1,8 @@
 import { Tool } from "core";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
 import { addTool, toggleToolSetting } from "../../../redux/slices/uiSlice";
+import { RootState } from "../../../redux/store";
 
 interface ToolDropdownItemProps {
   tool: Tool;
@@ -34,6 +34,13 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
       }}
     >
       <span className="flex items-center gap-1">
+        {props.tool.faviconUrl && (
+          <img
+            src={props.tool.faviconUrl}
+            alt={props.tool.displayTitle}
+            className="h-4 w-4"
+          />
+        )}
         {props.tool.displayTitle}{" "}
         {/* <InfoHover
           id={`tool-policy-row-${props.tool.function.name}`}

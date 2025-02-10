@@ -49,3 +49,5 @@ export function modifyConfig(config: Config): Config {
 ## Other custom actions
 
 Currently the other action triggers are not open for configuration, but we plan to allow this via .prompt files in the future.
+
+<!-- For any actions defined in a .prompt file, you can [configure a specific model](/). -->

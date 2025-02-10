@@ -1,17 +1,33 @@
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import {
+  ConfigResult,
+  ConfigValidationError,
+  FullSlug,
+} from "@continuedev/config-yaml";
+
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
+  IDE,
 } from "../index.js";
 
 import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 
 export interface ProfileDescription {
+  fullSlug: FullSlug;
+  profileType: "control-plane" | "local" | "platform";
   title: string;
   id: string;
+  iconUrl: string;
   errors: ConfigValidationError[] | undefined;
+}
+
+export interface OrganizationDescription {
+  id: string;
+  iconUrl: string;
+  name: string;
+  slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
 }
 
 export class ProfileLifecycleManager {
@@ -19,7 +35,10 @@ export class ProfileLifecycleManager {
   private savedBrowserConfigResult?: ConfigResult<BrowserSerializedContinueConfig>;
   private pendingConfigPromise?: Promise<ConfigResult<ContinueConfig>>;
 
-  constructor(private readonly profileLoader: IProfileLoader) {}
+  constructor(
+    private readonly profileLoader: IProfileLoader,
+    private readonly ide: IDE,
+  ) {}
 
   get profileDescription(): ProfileDescription {
     return this.profileLoader.description;
@@ -32,12 +51,14 @@ export class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  async reloadConfig(): Promise<ConfigResult<ContinueConfig>> {
+  async reloadConfig(
+    additionalContextProviders: IContextProvider[] = [],
+  ): Promise<ConfigResult<ContinueConfig>> {
     this.savedConfigResult = undefined;
     this.savedBrowserConfigResult = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.loadConfig([], true);
+    return this.loadConfig(additionalContextProviders, true);
   }
 
   async loadConfig(
@@ -55,7 +76,21 @@ export class ProfileLifecycleManager {
 
     // Set pending config promise
     this.pendingConfigPromise = new Promise(async (resolve, reject) => {
-      const result = await this.profileLoader.doLoadConfig();
+      let result: ConfigResult<ContinueConfig>;
+      try {
+        result = await this.profileLoader.doLoadConfig();
+      } catch (e: any) {
+        result = {
+          errors: [
+            {
+              fatal: true,
+              message: e.message,
+            },
+          ],
+          config: undefined,
+          configLoadInterrupted: true,
+        };
+      }
 
       if (result.config) {
         // Add registered context providers
@@ -87,7 +122,10 @@ export class ProfileLifecycleManager {
           config: undefined,
         };
       }
-      const serializedConfig = finalToBrowserConfig(result.config);
+      const serializedConfig = await finalToBrowserConfig(
+        result.config,
+        this.ide,
+      );
       return {
         ...result,
         config: serializedConfig,

@@ -20,14 +20,14 @@ Each model has specific configuration options tailored to its provider and funct
 **Properties:**
 
 - `title` (**required**): The title to assign to your model, shown in dropdowns, etc.
-- `provider` (**required**): The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, etc., see intelliJ suggestions.
+- `provider` (**required**): The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, `xAI`, etc., see IntelliJ suggestions.
 - `model` (**required**): The name of the model, used for prompt template auto-detection. Use `AUTODETECT` special name to get all available models.
-- `apiKey`: API key required by providers like OpenAI, Anthropic, and Cohere.
+- `apiKey`: API key required by providers like OpenAI, Anthropic, Cohere, and xAI.
 - `apiBase`: The base URL of the LLM API.
 - `contextLength`: Maximum context length of the model, typically in tokens (default: 2048).
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `template`: Chat template to format messages. Auto-detected for most models but can be overridden. See intelliJ suggestions.
-- `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. (DEPRECATED)
+- `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt).
 - `completionOptions`: Model-specific completion options, same format as top-level [`completionOptions`](#completionoptions), which they override.
 - `systemMessage`: A system message that will precede responses from the LLM.
 - `requestOptions`: Model-specific HTTP request options, same format as top-level [`requestOptions`](#requestoptions), which they override.
@@ -87,20 +87,16 @@ Specifies options for tab autocompletion behavior.
 **Properties:**
 
 - `disable`: If `true`, disables tab autocomplete (default: `false`).
-- `useFileSuffix`: If `true`, includes file suffix in the prompt.
-- `maxPromptTokens`: Maximum number of tokens for the prompt.
-- `debounceDelay`: Delay (in ms) before triggering autocomplete.
-- `maxSuffixPercentage`: Maximum percentage of prompt for suffix.
-- `prefixPercentage`: Percentage of input for prefix.
+- `maxPromptTokens`: Maximum number of tokens for the prompt (default: `1024`).
+- `debounceDelay`: Delay (in ms) before triggering autocomplete (default: `350`).
+- `maxSuffixPercentage`: Maximum percentage of prompt for suffix (default: `0.2`).
+- `prefixPercentage`: Percentage of input for prefix (default: `0.3`).
 - `template`: Template string for autocomplete, using Mustache templating. You can use the `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}`, and `{{{ language }}}` variables.
-- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`).
-- `useCache`: If `true`, caches completions.
-- `onlyMyCode`: If `true`, only includes code within the repository.
-- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled.
+- `onlyMyCode`: If `true`, only includes code within the repository (default: `true`).
 
 Example
 
-```json title="config.json"
+````json title="config.json"
 {
   "tabAutocompleteOptions": {
     "debounceDelay": 500,
@@ -108,7 +104,6 @@ Example
     "disableInFiles": ["*.md"]
   }
 }
-```
 
 ### `embeddingsProvider`
 
@@ -141,7 +136,7 @@ Example:
     "maxBatchSize": 5
   }
 }
-```
+````
 
 ### `completionOptions`
 
@@ -387,10 +382,6 @@ An optional token that identifies the user, primarily for authenticated services
 
 Defines a system message that appears before every response from the language model, providing guidance or context.
 
-### `disableIndexing`
-
-Prevents indexing of the codebase, useful primarily for debugging purposes.
-
 ### `experimental`
 
 Several experimental config parameters are available, as described below:
@@ -402,8 +393,6 @@ Several experimental config parameters are available, as described below:
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
-- `readResponseTTS`: If `true`, reads LLM responses aloud with TTS. Default is `true`.
-- `promptPath`: Change the path to custom prompt files from the default ".prompts"
 - `quickActions`: Array of custom quick actions
   - `title` (**required**): Display title for the quick action.
   - `prompt` (**required**): Prompt for quick action.
@@ -413,7 +402,6 @@ Several experimental config parameters are available, as described below:
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
-- `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
 - `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#model-context-protocol)
 
 Example
@@ -424,7 +412,6 @@ Example
     "modelRoles": {
       "inlineEdit": "Edit Model"
     },
-    "promptPath": "custom/.prompts",
     "quickActions": [
       {
         "title": "Tags",
@@ -435,8 +422,6 @@ Example
     "contextMenuPrompts": {
       "fixGrammar": "Fix grammar in the above but allow for typos."
     },
-    "readResponseTTS": false,
-    "useChromiumForDocsCrawling": true,
     "modelContextProtocolServers": [
       {
         "transport": {

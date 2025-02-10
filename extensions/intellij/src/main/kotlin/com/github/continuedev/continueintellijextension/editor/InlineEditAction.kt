@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
+import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -128,11 +129,15 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     // Get list of model titles
     val continuePluginService = project.service<ContinuePluginService>()
     val modelTitles = mutableListOf<String>()
+
     continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val config = response as Map<String, Any>
-        val models = (config["config"] as Map<String, Any>)["models"] as List<Map<String, Any>>
+        val content = (response as Map<String, Any>)["content"] as Map<String, Any>
+        val result = content["result"] as Map<String, Any>
+        val config = result["config"] as Map<String, Any>
+        val models = config["models"] as List<Map<String, Any>>
         modelTitles.addAll(models.map { it["title"] as String })
     }
+
     val maxWaitTime = 200
     val startTime = System.currentTimeMillis()
     while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
@@ -163,13 +168,13 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val prefix = editor.document.getText(TextRange(0, startOffset))
     val highlighted = editor.document.getText(TextRange(startOffset, endOffset))
     val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
-    val lineNumber = max(0, startLineNumber - 1)
+    val lineNumber = if (startLineNumber == 0) 0 else max(0, startLineNumber - 1)
 
     // Un-highlight the selected text
     selectionModel.removeSelection()
 
     // Get indentation width in pixels
-    val indentationLineNum = lineNumber + 1
+    val indentationLineNum = if (startLineNumber == 0) 0 else lineNumber + 1
     val lineStart = editor.document.getLineStartOffset(indentationLineNum)
     val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
     val text = editor.document.getText(TextRange(lineStart, lineEnd))
@@ -427,7 +432,7 @@ class CustomPanel(
                     }
 
                     selectedIndex =
-                        if(itemCount == 0) -1 else continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
+                        if (itemCount == 0) -1 else continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
                             if (modelTitles.isEmpty()) -1
                             else {
                                 val index = modelTitles.indexOf(it)
@@ -485,14 +490,14 @@ class CustomPanel(
                 }
 
             val leftButton =
-                CustomButton("Reject All (${getMetaKeyLabel()}⇧⌫)") { onReject() }
+                CustomButton("Reject All (${getMetaKeyLabel()}${getShiftKeyLabel()}⌫)") { onReject() }
                     .apply {
                         background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
                         foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
                     }
 
             val rightButton =
-                CustomButton("Accept All (${getMetaKeyLabel()}⇧⏎)") { onAccept() }
+                CustomButton("Accept All (${getMetaKeyLabel()}${getShiftKeyLabel()}⏎)") { onAccept() }
                     .apply {
                         background = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
                         foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())

@@ -1,7 +1,6 @@
-import { readUsePlatform } from "../util/paths";
-import { usePlatform } from "./flags";
+import { IdeSettings } from "..";
 
-interface ControlPlaneEnv {
+export interface ControlPlaneEnv {
   DEFAULT_CONTROL_PLANE_PROXY_URL: string;
   CONTROL_PLANE_URL: string;
   AUTH_TYPE: string;
@@ -25,6 +24,14 @@ const PRODUCTION_ENV: ControlPlaneEnv = {
   AUTH_TYPE: WORKOS_ENV_ID_PRODUCTION,
   WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_PRODUCTION,
   APP_URL: "https://app.continue.dev/",
+};
+
+const PRODUCTION_HUB_ENV: ControlPlaneEnv = {
+  DEFAULT_CONTROL_PLANE_PROXY_URL: "https://api.continue.dev/",
+  CONTROL_PLANE_URL: "https://api.continue.dev/",
+  AUTH_TYPE: WORKOS_ENV_ID_PRODUCTION,
+  WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_PRODUCTION,
+  APP_URL: "https://hub.continue.dev/",
 };
 
 const STAGING_ENV: ControlPlaneEnv = {
@@ -53,17 +60,39 @@ const LOCAL_ENV: ControlPlaneEnv = {
   APP_URL: "http://localhost:3000/",
 };
 
-function getControlPlaneEnv(): ControlPlaneEnv {
-  const usePlatformFileEnv = readUsePlatform();
-  const env = usePlatformFileEnv || process.env.CONTROL_PLANE_ENV;
+export async function getControlPlaneEnv(
+  ideSettingsPromise: Promise<IdeSettings>,
+): Promise<ControlPlaneEnv> {
+  const ideSettings = await ideSettingsPromise;
+  return getControlPlaneEnvSync(ideSettings.continueTestEnvironment);
+}
+
+export function getControlPlaneEnvSync(
+  ideTestEnvironment: IdeSettings["continueTestEnvironment"],
+): ControlPlaneEnv {
+  const env =
+    ideTestEnvironment === "production"
+      ? "hub"
+      : ideTestEnvironment === "test"
+        ? "test"
+        : ideTestEnvironment === "local"
+          ? "local"
+          : process.env.CONTROL_PLANE_ENV;
 
   return env === "local"
     ? LOCAL_ENV
     : env === "staging"
       ? STAGING_ENV
-      : env === "test" || usePlatform()
+      : env === "test"
         ? TEST_ENV
-        : PRODUCTION_ENV;
+        : env === "hub"
+          ? PRODUCTION_HUB_ENV
+          : PRODUCTION_ENV;
 }
 
-export const controlPlaneEnv = getControlPlaneEnv();
+export async function useHub(
+  ideSettingsPromise: Promise<IdeSettings>,
+): Promise<boolean> {
+  const ideSettings = await ideSettingsPromise;
+  return ideSettings.continueTestEnvironment !== "none";
+}

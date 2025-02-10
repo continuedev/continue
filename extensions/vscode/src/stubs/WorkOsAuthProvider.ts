@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
-import { controlPlaneEnv } from "core/control-plane/env";
+import { EXTENSION_NAME, getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -17,12 +17,19 @@ import {
   Uri,
   UriHandler,
   window,
+  workspace,
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
 
 const AUTH_NAME = "Continue";
+
+const controlPlaneEnv = getControlPlaneEnvSync(
+  workspace.getConfiguration(EXTENSION_NAME).get<boolean>("enableContinueHub")
+    ? "production"
+    : "none",
+);
 
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
 

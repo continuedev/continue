@@ -1,11 +1,17 @@
 import { ConfigJson } from "@continuedev/config-types";
-import { ClientConfigYaml } from "@continuedev/config-yaml/dist/schemas/index.js";
+import {
+  AssistantUnrolled,
+  ConfigResult,
+  FQSN,
+  FullSlug,
+  SecretResult,
+} from "@continuedev/config-yaml";
 import fetch, { RequestInit, Response } from "node-fetch";
 
-import { ModelDescription } from "../index.js";
+import { OrganizationDescription } from "../config/ProfileLifecycleManager.js";
+import { IdeSettings, ModelDescription } from "../index.js";
 
-import { ConfigResult } from "@continuedev/config-yaml";
-import { controlPlaneEnv } from "./env.js";
+import { getControlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -27,16 +33,25 @@ export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 export class ControlPlaneClient {
-  private static URL = controlPlaneEnv.CONTROL_PLANE_URL;
-  private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
-
-  private lastAccessTokenRefresh = 0;
-
   constructor(
     private readonly sessionInfoPromise: Promise<
       ControlPlaneSessionInfo | undefined
     >,
+    private readonly ideSettingsPromise: Promise<IdeSettings>,
   ) {}
+
+  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+    const userId = await this.userId;
+    if (!userId) {
+      throw new Error("No user id");
+    }
+
+    const resp = await this.request("ide/sync-secrets", {
+      method: "POST",
+      body: JSON.stringify({ fqsns }),
+    });
+    return (await resp.json()) as any;
+  }
 
   get userId(): Promise<string | undefined> {
     return this.sessionInfoPromise.then(
@@ -53,7 +68,9 @@ export class ControlPlaneClient {
     if (!accessToken) {
       throw new Error("No access token");
     }
-    const url = new URL(path, ControlPlaneClient.URL).toString();
+
+    const env = await getControlPlaneEnv(this.ideSettingsPromise);
+    const url = new URL(path, env.CONTROL_PLANE_URL).toString();
     const resp = await fetch(url, {
       ...init,
       headers: {
@@ -87,9 +104,9 @@ export class ControlPlaneClient {
     }
   }
 
-  public async listAssistants(): Promise<
+  public async listAssistants(organizationId: string | null): Promise<
     {
-      configResult: ConfigResult<ClientConfigYaml>;
+      configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;
@@ -101,12 +118,57 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request("ide/list-assistants", {
+      const url = organizationId
+        ? `ide/list-assistants?organizationId=${organizationId}`
+        : "ide/list-assistants";
+
+      const resp = await this.request(url, {
         method: "GET",
       });
       return (await resp.json()) as any;
     } catch (e) {
       return [];
+    }
+  }
+
+  public async listOrganizations(): Promise<Array<OrganizationDescription>> {
+    const userId = await this.userId;
+
+    if (!userId) {
+      return [];
+    }
+
+    try {
+      const resp = await this.request("ide/list-organizations", {
+        method: "GET",
+      });
+      const { organizations } = (await resp.json()) as any;
+      return organizations;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  public async listAssistantFullSlugs(
+    organizationId: string | null,
+  ): Promise<FullSlug[] | null> {
+    const userId = await this.userId;
+    if (!userId) {
+      return null;
+    }
+
+    const url = organizationId
+      ? `ide/list-assistant-full-slugs?organizationId=${organizationId}`
+      : "ide/list-assistant-full-slugs";
+
+    try {
+      const resp = await this.request(url, {
+        method: "GET",
+      });
+      const { fullSlugs } = (await resp.json()) as any;
+      return fullSlugs;
+    } catch (e) {
+      return null;
     }
   }
 

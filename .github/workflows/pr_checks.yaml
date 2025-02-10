@@ -5,10 +5,12 @@ on:
     branches:
       - main
     paths:
+      - "extensions/intellij/**"
       - "extensions/vscode/**"
       - "core/**"
       - "gui/**"
       - ".github/workflows/**"
+      - "docs/**"
 
   push:
     branches:
@@ -25,6 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -44,6 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -71,6 +75,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -100,6 +105,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -131,6 +137,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -161,6 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -197,6 +205,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -230,6 +239,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -261,6 +271,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -275,6 +286,7 @@ jobs:
           cd core
           npm test
         env:
+          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -314,6 +326,7 @@ jobs:
     needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -346,6 +359,7 @@ jobs:
     needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -385,6 +399,7 @@ jobs:
         install-core,
       ]
     runs-on: ubuntu-latest
+    # Tests requiring secrets need approval from maintainers
     strategy:
       fail-fast: false
       matrix:
@@ -392,6 +407,7 @@ jobs:
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -429,6 +445,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
           echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+        if: ${{ github.event.pull_request.head.repo.fork == false }}
 
       - name: Set up Xvfb
         run: |
@@ -438,8 +455,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
-
+          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 
@@ -455,6 +471,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
@@ -486,7 +503,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/cache@v4
         with:
           path: core/node_modules
@@ -552,7 +568,7 @@ jobs:
         with:
           url: http://127.0.0.1:8082
           max-attempts: 15
-          retry-delay: 5s
+          retry-delay: 30s
 
       - name: Run tests
         run: |
@@ -579,3 +595,34 @@ jobs:
           name: jb-failure-report
           path: |
             ${{ github.workspace }}/extensions/intellij/build/reports
+
+  # GitHub does not have a way of requiring that all checks pass (you must manually select each job)
+  # This action at least lets us manage the list of required tests via source control
+  # so that creators of new jobs can add them to this list
+  require-all-checks-to-pass:
+    if: always()
+    runs-on: ubuntu-latest
+    needs:
+      - install-root
+      - install-core
+      - core-checks
+      - install-gui
+      - gui-checks
+      - binary-checks
+      - install-vscode
+      - vscode-checks
+      - core-tests
+      - vscode-get-test-file-matrix
+      - vscode-package-extension
+      - vscode-download-e2e-dependencies
+      - vscode-e2e-tests
+      - gui-tests
+      - jetbrains-tests
+
+    steps:
+      - name: Decide whether the needed jobs succeeded or failed
+        uses: re-actors/alls-green@release/v1
+        with:
+          allowed-failures:
+          allowed-skips:
+          jobs: ${{ toJSON(needs) }}

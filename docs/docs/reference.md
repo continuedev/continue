@@ -6,7 +6,7 @@ keywords: [config, yaml, configuration, customize, customization]
 
 # Config YAML Reference
 
-<!-- TODO - data and packages sections -->
+<!-- TODO - data section -->
 
 Continue can be configured using a YAML file `config.yaml` which for local configuration can be placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
 
@@ -120,8 +120,8 @@ More information about usage/params for each context provider can be found [here
 
 **Properties:**
 
-- `uses` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
-- `with`: Optional parameters to configure the context provider's behavior.
+- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
+- `params`: Optional parameters to configure the context provider's behavior.
 
 **Example:**
 
@@ -179,8 +179,10 @@ List of documentation sites to index.
 
 - `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
+<!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
 Example
 
@@ -188,7 +190,6 @@ Example
 docs:
   - name: Continue
     startUrl: https://docs.continue.dev/intro
-    rootUrl: https://docs.continue.dev
     favicon: https://docs.continue.dev/favicon.ico
 ```
 
@@ -252,7 +253,6 @@ The `data` section specifies data providers used in your configuration. Data pro
 data:
   - provider: embeddings
 ```
-
 --- -->
 
 ---
@@ -319,3 +319,28 @@ mcpServers:
     env:
       PORT: "3000"
 ```
+
+### Fully deprecated settings
+
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
+
+- `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
+- `promptPath`: This value will override during migration.
+- `disableIndexing`: This value will be migrated to the safest merged value (`true` if either are `true`).
+- `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
+- `tabAutocompleteOptions`
+  - `useCache`: This value will override during migration.
+  - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
+  - `multilineCompletions`: This value will override during migration.
+- `experimental`
+  - `useChromiumForDocsCrawling`: This value will override during migration.
+  - `readResponseTTS`: This value will override during migration.
+- `ui` - all will override during migration
+
+  - `codeBlockToolbarPosition`
+  - `fontSize`
+  - `codeWrap`
+  - `displayRawMarkdown`
+  - `showChatScrollbar`
+
+  See [User Settings Page](./customize/settings.md) for more information about each option.

@@ -7,7 +7,9 @@ keywords: [config, settings, customize]
 
 ## YAML Config
 
-Continue can be deeply customized. User-level configuration is stored and can be edited in your home directory in `config.yaml`:
+Continue can be deeply customized. Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
+
+To open `config.yaml`, you can click the "gear" icon in the header of the Continue Chat sidebar to open the settings page, and then click `Open Config File` to open the file. When editing this file, you can see the available options suggested as you type, or check the reference below.
 
 - `~/.continue/config.yaml` (MacOS / Linux)
 - `%USERPROFILE%\.continue\config.yaml` (Windows)

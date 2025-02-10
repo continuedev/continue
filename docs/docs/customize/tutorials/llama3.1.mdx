@@ -1,7 +1,7 @@
 ---
 title: Using Llama 3.1 with Continue
 description: How to use Llama 3.1 with Continue
-keywords: [llama, meta, togetherai, novita, ollama, replicate]
+keywords: [llama, meta, togetherai, ollama, replicate]
 ---
 
 import Tabs from "@theme/Tabs";
@@ -31,7 +31,7 @@ Ollama is the fastest way to get up and running with local language models. We r
 		```
 	</TabItem>
 	<TabItem value="json" label="JSON">
-		```json title="config.json""
+		```json title="config.json"
       "models": [
         {
           "title": "Llama 3.1 8b",
@@ -45,6 +45,10 @@ Ollama is the fastest way to get up and running with local language models. We r
 
 ## Groq
 
+:::info
+Check if your chosen model is still supported by referring to the [model documentation](https://console.groq.com/docs/models). If a model has been deprecated, you may encounter a 404 error when attempting to use it.
+:::
+
 Groq provides the fastest available inference for open-source language models, including the entire Llama 3.1 family.
 
 1. Obtain an API key [here](https://console.groq.com/keys)
@@ -54,19 +58,19 @@ Groq provides the fastest available inference for open-source language models, i
 	<TabItem value="yaml" label="YAML">
 		```yaml title="config.yaml"
 		models:
-		  - name: Llama 3.1 405b
+		  - name: Llama 3.3 70b Versatile
 		    provider: groq
-		    model: llama3.1-405b
+		    model: llama-3.3-70b-versatile
 		    apiKey: ${{ secrets.GROQ_API_KEY }}
 		```
 	</TabItem>
 	<TabItem value="json" label="JSON">
-		```json title="config.json""
+		```json title="config.json"
 		"models": [
 		  {
-		    "title": "Llama 3.1 405b",
+		    "title": "Llama 3.3 70b Versatile",
 		    "provider": "groq",
-		    "model": "llama3.1-405b",
+		    "model": "llama-3.3-70b-versatile",
 		    "apiKey": "<GROQ_API_KEY>"
 		  }
 		]
@@ -93,7 +97,7 @@ Together AI provides fast and reliable inference of open-source models. You'll b
 		```
 	</TabItem>
 	<TabItem value="json" label="JSON">
-		```json title="config.json""
+		```json title="config.json"
 		"models": [
 		  {
 		    "title": "Llama 3.1 405b",
@@ -124,7 +128,7 @@ Replicate makes it easy to host and run open-source AI with an API.
 		```
 	</TabItem>
 	<TabItem value="json" label="JSON">
-		```json title="config.json""
+		```json title="config.json"
 			"models": [
 			    {
 			        "title": "Llama 3.1 405b",
@@ -156,7 +160,7 @@ SambaNova Cloud provides world record Llama3.1 70B/405B serving.
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
-    ```json title="config.json""
+    ```json title="config.json"
       "models": [
         {
           "title": "SambaNova Llama 3.1 405B",
@@ -188,7 +192,7 @@ Cerebras Inference uses specialized silicon to provides fast inference for the L
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
-  ```json title="config.json""
+  ```json title="config.json"
   "models": [
     {
       "title": "Cerebras Llama 3.1 70B",
