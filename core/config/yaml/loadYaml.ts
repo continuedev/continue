@@ -166,6 +166,24 @@ async function configYamlToContinueConfig(
       );
       continueConfig.tabAutocompleteModels?.push(...llms);
     }
+
+    if (
+      model.roles?.includes("apply") &&
+      !continueConfig.experimental?.modelRoles?.applyCodeBlock
+    ) {
+      continueConfig.experimental ??= {};
+      continueConfig.experimental!.modelRoles ??= {};
+      continueConfig.experimental!.modelRoles!.applyCodeBlock = model.name;
+    }
+
+    if (
+      model.roles?.includes("edit") &&
+      !continueConfig.experimental?.modelRoles?.inlineEdit
+    ) {
+      continueConfig.experimental ??= {};
+      continueConfig.experimental!.modelRoles ??= {};
+      continueConfig.experimental!.modelRoles!.inlineEdit = model.name;
+    }
   }
 
   if (allowFreeTrial) {
