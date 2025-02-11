@@ -49,7 +49,7 @@ const CHAT_ONLY_MODELS = [
   "gpt-4o-mini",
   "o1-preview",
   "o1-mini",
-  "o3-mini"
+  "o3-mini",
 ];
 
 const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
@@ -206,16 +206,23 @@ class OpenAI extends BaseLLM {
   protected _getEndpoint(
     endpoint: "chat/completions" | "completions" | "models",
   ) {
-    if (this.apiType === "azure") {
-      return new URL(
-        `openai/deployments/${this.deployment}/${endpoint}?api-version=${this.apiVersion}`,
-        this.apiBase,
-      );
-    }
     if (!this.apiBase) {
       throw new Error(
         "No API base URL provided. Please set the 'apiBase' option in config.json",
       );
+    }
+
+    if (this.apiType?.includes("azure")) {
+      // Default is `azure-openai`, but previously was `azure`
+      const isAzureOpenAI =
+        this.apiType === "azure-openai" || this.apiType === "azure";
+
+      const path = isAzureOpenAI
+        ? `openai/deployments/${this.deployment}/${endpoint}`
+        : endpoint;
+
+      const version = this.apiVersion ? `?api-version=${this.apiVersion}` : "";
+      return new URL(`${path}${version}`, this.apiBase);
     }
 
     return new URL(endpoint, this.apiBase);
@@ -267,7 +274,7 @@ class OpenAI extends BaseLLM {
       body.max_completion_tokens = undefined;
     }
 
-    if (body.tools?.length) {
+    if (body.tools?.length && !body.model?.startsWith("o3")) {
       // To ensure schema adherence: https://platform.openai.com/docs/guides/function-calling#parallel-function-calling-and-structured-outputs
       // In practice, setting this to true and asking for multiple tool calls
       // leads to "arguments" being something like '{"file": "test.ts"}{"file": "test.js"}'

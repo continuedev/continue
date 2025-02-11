@@ -9,7 +9,9 @@ import TabItem from "@theme/TabItem";
 Azure AI Foundry is a cloud-based service that provides access to models from OpenAI, Mistral AI, and others, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure AI Foundry resource in the [Azure portal](https://portal.azure.com).
 
 :::info
-For details on OpenAI model setup, see [Azure OpenAI Service configuration](#general-model-configuration).
+
+For details on OpenAI model setup, see [Azure OpenAI Service configuration](#azure-openai-service-configuration).
+
 :::
 
 ## Chat model
@@ -26,19 +28,22 @@ We recommend configuring **GPT-4o** as your chat model.
 	    apiBase: <YOUR_DEPLOYMENT_BASE>
 	    deployment: <YOUR_DEPLOYMENT_NAME>
 	    apiKey: ${{ secrets.AZURE_API_KEY }} # If you use subscription key, try using Azure gateway to rename it apiKey
+      env:
+         apiType: azure-foundry # Or "azure-openai" if using OpenAI models
 	```
 	</TabItem>
 	<TabItem value="json" label="JSON">
-	```json title="config.json"
-    "models": [{
+  ```json title="config.json"
+  "models": [{
       "title": "GPT-4o",
       "provider": "azure",
       "model": "gpt-4o",
       "apiBase": "<YOUR_DEPLOYMENT_BASE>",
       "deployment": "<YOUR_DEPLOYMENT_NAME>",
-      "apiKey": "<MY_API_KEY>" // If you use subscription key, try using Azure gateway to rename it apiKey
-    }]
-	```
+      "apiKey": "<MY_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+      "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
+  }]
+  ```
 	</TabItem>
 </Tabs>
 
@@ -77,23 +82,24 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     ```yaml title="Package or config.yaml"
     models:
       - name: Text Embedding-3 Large
-        provider: openai
+        provider: azure
         model: text-embedding-3-large
         apiBase: <YOUR_DEPLOYMENT_BASE>
         deployment: <YOUR_DEPLOYMENT_NAME>
-        apiType: azure
         apiKey: ${{ secrets.AZURE_API_KEY }}
+        env:
+          apiType: azure
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
       "embeddingsProvider": {
-        "provider": "openai",
+        "provider": "azure",
         "model": "text-embedding-3-large",
         "apiBase": "<YOUR_DEPLOYMENT_BASE>",
         "deployment": "<YOUR_DEPLOYMENT_NAME>",
-        "apiType": "azure",
-        "apiKey": "<MY_API_KEY>"
+        "apiKey": "<AZURE_API_KEY>",
+        "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
       }
     ```
     </TabItem>
@@ -110,9 +116,7 @@ Azure OpenAI currently does not offer any reranking models.
 If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant.
 
 :::info[Getting access]
-You need to apply for access to the Azure OpenAI service. Response times are typically within a few days.
-
-**[Click here to apply for access to the Azure OpenAI service](https://azure.microsoft.com/en-us/products/ai-services/openai-service)**
+[Click here](https://azure.microsoft.com/en-us/products/ai-services/openai-service) to apply for access to the Azure OpenAI service. Response times are typically within a few days.
 :::
 
 ## Azure OpenAI Service configuration
@@ -134,6 +138,8 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
         deployment: gpt-4o-july
         apiVersion: 2023-03-15-preview
         apiKey: ${{ secrets.AZURE_API_KEY }}
+        env:
+           apiType: azure-openai
     ```
 	</TabItem>
 	<TabItem value="json" label="JSON">
@@ -145,7 +151,8 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
         "apiBase": "https://just-an-example.openai.azure.com",
         "deployment": "gpt-4o-july",
         "apiVersion": "2023-03-15-preview",
-        "apiKey": "<AZURE_API_KEY>"
+        "apiKey": "<AZURE_API_KEY>",
+        "apiType": "azure-openai"
     }
     ```
 	</TabItem>
