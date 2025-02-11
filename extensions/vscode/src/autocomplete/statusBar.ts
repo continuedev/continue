@@ -47,20 +47,20 @@ const statusBarItemText = (
   error?: boolean,
 ) => {
   if (error) {
-    return "$(alert) Continue (FATAL ERROR)";
+    return "$(alert) Granite.Code (FATAL ERROR)";
   }
 
   switch (status) {
     case undefined:
       if (loading) {
-        return "$(loading~spin) Continue";
+        return "$(loading~spin) Granite.Code";
       }
     case StatusBarStatus.Disabled:
-      return "$(circle-slash) Continue";
+      return "$(circle-slash) Granite.Code";
     case StatusBarStatus.Enabled:
-      return "$(check) Continue";
+      return "$(check) Granite.Code";
     case StatusBarStatus.Paused:
-      return "$(debug-pause) Continue";
+      return "$(debug-pause) Granite.Code";
   }
 };
 
