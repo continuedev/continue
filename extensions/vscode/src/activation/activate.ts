@@ -8,6 +8,7 @@ import { getExtensionVersion } from "../util/util";
 
 import { VsCodeContinueApi } from "./api";
 import setupInlineTips from "./InlineTipManager";
+import { isTestMode } from "core/granite/commons/constants";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
@@ -34,7 +35,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const api = new VsCodeContinueApi(vscodeExtension);
   const showOnboarding = context.globalState.get("showGraniteOnboarding", true);
-  if (showOnboarding) {
+  if (showOnboarding && !isTestMode) {
     await vscode.commands.executeCommand("granite.setup");
     context.globalState.update("showGraniteOnboarding", false);
   }
