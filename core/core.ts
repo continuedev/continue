@@ -413,10 +413,35 @@ export class Core {
           id,
         }));
       } catch (e) {
-        void this.ide.showToast(
-          "error",
-          `Error getting context items from ${name}: ${e}`,
-        );
+        let knownError = false;
+
+        if (e instanceof Error) {
+          // A specific error where we're forcing the presence of embeddings provider on the config
+          // But Jetbrains doesn't support transformers JS
+          // So if a context provider needs it it will throw this error when the file isn't found
+          if (e.message.includes("all-MiniLM-L6-v2")) {
+            const toastOption = "See Docs";
+            void this.ide
+              .showToast(
+                "error",
+                `Set up an embeddings model to use ${name}`,
+                toastOption,
+              )
+              .then((userSelection) => {
+                if (userSelection === toastOption) {
+                  void this.ide.openUrl(
+                    "https://docs.continue.dev/customize/model-types/embeddings",
+                  );
+                }
+              });
+          }
+        }
+        if (!knownError) {
+          void this.ide.showToast(
+            "error",
+            `Error getting context items from ${name}: ${e}`,
+          );
+        }
         return [];
       }
     });
