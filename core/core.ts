@@ -420,11 +420,12 @@ export class Core {
           // But Jetbrains doesn't support transformers JS
           // So if a context provider needs it it will throw this error when the file isn't found
           if (e.message.includes("all-MiniLM-L6-v2")) {
+            knownError = true;
             const toastOption = "See Docs";
             void this.ide
               .showToast(
                 "error",
-                `Set up an embeddings model to use ${name}`,
+                `Set up an embeddings model to use @${name}`,
                 toastOption,
               )
               .then((userSelection) => {
