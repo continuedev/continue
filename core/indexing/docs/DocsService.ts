@@ -431,6 +431,12 @@ export default class DocsService {
         console.log(
           `Not reattempting to index ${siteIndexingConfig.startUrl}, has already failed with same config`,
         );
+        this.handleStatusUpdate({
+          ...fixedStatus,
+          description: "Failed",
+          status: "failed",
+          progress: 1,
+        });
         return;
       }
     }
