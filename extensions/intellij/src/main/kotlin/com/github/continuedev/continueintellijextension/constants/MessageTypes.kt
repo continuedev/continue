@@ -43,15 +43,15 @@ class MessageTypes {
             "showToast",
             "openUrl",
             
-            // These only come from the GUI for now but should be here to prevent confusionn
+            // These only come from the GUI for now but should be here to prevent confusion
             "toggleDevTools",
-            "showTutorial"
+            "showTutorial",
             
             // These are jetbrains only and only come from the GUI for now
             // But again including for consistency
-            "copyText"
-            "jetbrains/isOSREnabled"
-            "jetbrains/getColors"
+            "copyText",
+            "jetbrains/isOSREnabled",
+            "jetbrains/getColors",
             "jetbrains/onLoad"
         )
 
