@@ -420,6 +420,16 @@ export default class DocsService {
       }
     }
 
+    const markFailedInGlobalContext = () => {
+      const globalContext = new GlobalContext();
+      const failedDocs = globalContext.get("failedDocs") ?? [];
+      const newFailedDocs = failedDocs.filter(
+        (d) => !this.siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+      );
+      newFailedDocs.push(siteIndexingConfig);
+      globalContext.update("failedDocs", newFailedDocs);
+    };
+
     try {
       this.docsIndexingQueue.add(startUrl);
 
@@ -553,6 +563,7 @@ export default class DocsService {
 
         void this.ide.showToast("info", `Failed to index ${startUrl}`);
         this.docsIndexingQueue.delete(startUrl);
+        markFailedInGlobalContext();
         return;
       }
 
@@ -628,6 +639,7 @@ export default class DocsService {
         status: "failed",
         progress: 1,
       });
+      markFailedInGlobalContext();
     } finally {
       this.docsIndexingQueue.delete(startUrl);
     }
