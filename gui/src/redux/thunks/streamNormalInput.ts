@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, PromptLog } from "core";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
@@ -70,7 +70,8 @@ export const streamNormalInput = createAsyncThunk<
       toolSettings[toolCallState.toolCall.function.name] ===
       "allowedWithoutPermission"
     ) {
-      await dispatch(callTool());
+      const response = await dispatch(callTool());
+      unwrapResult(response);
     }
   }
 });
