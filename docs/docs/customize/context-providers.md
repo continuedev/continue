@@ -639,20 +639,6 @@ Reference specific git commit metadata and diff or all of the recent commits.
 The depth is how many commits will be loaded into the submenu, defaults to 50.
 The LastXCommitsDepth is how many recent commits will be included, defaults to 10.
 
-### `@Clipboard`
-
-Reference recent clipboard items
-
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "clipboard"
-    }
-  ]
-}
-```
-
 ### `@Greptile`
 
 Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
