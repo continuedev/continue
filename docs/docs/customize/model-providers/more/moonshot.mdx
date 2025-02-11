@@ -19,7 +19,7 @@ To use Moonshot AI models, you need to:
       - name: Moonshot
         provider: moonshot
         model: moonshot-v1-8k
-        apiKey: apiKey: ${{ secrets.MOONSHOT_API_KEY }}
+        apiKey: <YOUR_MOONSHOT_API_KEY>
     ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -29,7 +29,7 @@ To use Moonshot AI models, you need to:
         "title": "Moonshot",
         "provider": "moonshot",
         "model": "moonshot-v1-8k",
-        "apiKey": "YOUR_API_KEY"
+        "apiKey": "<YOUR_MOONSHOT_API_KEY>"
       }
     ]
     ```
@@ -63,7 +63,7 @@ Here's a complete configuration example:
     - name: Moonshot-8K
       provider: moonshot
       model: moonshot-v1-8k
-      apiKey: apiKey: ${{ secrets.MOONSHOT_API_KEY }}
+      apiKey: <YOUR_MOONSHOT_API_KEY>
       defaultCompletionOptions:
         temperature: 0.7
         topP: 0.95
@@ -77,7 +77,7 @@ Here's a complete configuration example:
         "title": "Moonshot-8K",
         "provider": "moonshot",
         "model": "moonshot-v1-8k",
-        "apiKey": "YOUR_API_KEY",
+        "apiKey": "<YOUR_MOONSHOT_API_KEY>",
         "completionOptions": {
           "temperature": 0.7,
           "topP": 0.95,

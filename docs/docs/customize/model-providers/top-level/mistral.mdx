@@ -21,7 +21,7 @@ We recommend configuring **Mistral Large** as your chat model.
     - name: Mistral Large
       provider: mistral
       model: mistral-large-latest 
-      apiKey: MISTRAL_API_KEY
+      apiKey: <YOUR_MISTRAL_API_KEY>
       roles:
         - chat
   ```
@@ -33,7 +33,7 @@ We recommend configuring **Mistral Large** as your chat model.
         "title": "Mistral Large", 
         "provider": "mistral",
         "model": "mistral-large-latest",
-        "apiKey": "[API_KEY]"
+        "apiKey": "<YOUR_MISTRAL_API_KEY>"
       }
     ]
   ```
@@ -79,7 +79,7 @@ We recommend configuring **Mistral Embed** as your embeddings model.
     - name: Mistral Embed
       provider: mistral
       model: mistral-embed
-      apiKey: MISTRAL_API_KEY 
+      apiKey: <YOUR_MISTRAL_API_KEY> 
       apiBase: https://api.mistral.ai/v1
       roles:
         - embed
@@ -90,7 +90,7 @@ We recommend configuring **Mistral Embed** as your embeddings model.
     "embeddingsProvider": {
       "provider": "mistral",
       "model": "mistral-embed", 
-      "apiKey": "[API_KEY]",
+      "apiKey": "<YOUR_MISTRAL_API_KEY>",
       "apiBase": "https://api.mistral.ai/v1"
     }
   ```

@@ -21,7 +21,7 @@ We recommend configuring **DeepSeek Chat** as your chat model.
 		  - name: DeepSeek Chat
 		    provider: deepseek
 		    model: deepseek-chat
-		    apiKey: ${{ secrets.DEEPSEEK_API_KEY }}
+		    apiKey: <YOUR_DEEPSEEK_API_KEY>
 		```
 	</TabItem>
 	<TabItem value="json" label="JSON">
@@ -31,7 +31,7 @@ We recommend configuring **DeepSeek Chat** as your chat model.
 		    "title": "DeepSeek Chat",
 		    "provider": "deepseek",
 		    "model": "deepseek-chat",
-		    "apiKey": "[API_KEY]"
+		    "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
 		  }
 		]
 		```
@@ -49,6 +49,7 @@ We recommend configuring **DeepSeek Coder** as your autocomplete model.
 		  - name: DeepSeek Coder
 		    provider: deepseek
 		    model: deepseek-coder
+			apiKey: <YOUR_DEEPSEEK_API_KEY>
 		    roles:
 		      - autocomplete
 		```
@@ -58,7 +59,8 @@ We recommend configuring **DeepSeek Coder** as your autocomplete model.
 		"tabAutocompleteModel": {
 		  "title": "DeepSeek Coder",
 		  "provider": "deepseek",
-		  "model": "deepseek-coder"
+		  "model": "deepseek-coder",
+		  "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
 		}
 		```
 	</TabItem>

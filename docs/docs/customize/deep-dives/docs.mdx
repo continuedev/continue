@@ -166,7 +166,7 @@ The Github API rate limits public requests to 60 per hour. If you want to reliab
   context:
     - provider: docs
       params:
-        githubToken: ${{ secrets.GITHUB_TOKEN }}
+        githubToken: <GITHUB_TOKEN>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -335,14 +335,14 @@ The following configuration example includes:
         - embed
     - name: Voyage Rerank-2
       provider: voyage
-      apiKey: ${{ secrets.VOYAGE_API_KEY }}
+      apiKey: <VOYAGE_API_KEY>
       model: rerank-2
       roles:
         - rerank
   context:
     - provider: docs
       params:
-         githubToken: ${{ secrets.GITHUB_TOKEN }}
+         githubToken: <GITHUB_TOKEN>
          nRetrieve: 25
          nFinal: 5
          useReranking: true
@@ -387,7 +387,7 @@ The following configuration example includes:
       "name": "voyage",
       "params": {
         "model": "rerank-2",
-        "apiKey": "<VOYAGE_API_KEY>"
+        "apiKey": "<YOUR_VOYAGE_API_KEY>"
       }
     },
     "embeddingsProvider": {

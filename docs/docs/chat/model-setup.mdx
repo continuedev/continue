@@ -27,7 +27,7 @@ Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customiz
   - name: Claude 3.5 Sonnet
     provider: anthropic
     model: claude-3-5-sonnet-latest
-    apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
+    apiKey: <YOUR_ANTHROPIC_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -37,7 +37,7 @@ Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customiz
         "title": "Claude 3.5 Sonnet",
         "provider": "anthropic",
         "model": "claude-3-5-sonnet-latest",
-        "apiKey": "[ANTHROPIC_API_KEY]"
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
   ```
@@ -57,7 +57,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
           - name: "Llama 3.1 405B"
             provider: "together"
             model: "llama3.1-405b"
-            apiKey: ${{ secrets.TOGETHER_API_KEY }}
+            apiKey: <YOUR_TOGETHER_API_KEY>
         ```
         </TabItem>
         <TabItem value="Groq">
@@ -66,7 +66,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
           - name: "Llama 3.1 405B"
             provider: "groq"
             model: "llama3.1-405b"
-            apiKey: ${{ secrets.GROQ_API_KEY }}
+            apiKey: <YOUR_GROQ_API_KEY>
         ```
         </TabItem>
         <TabItem value="vLLM">
@@ -96,7 +96,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
                         "title": "Llama 3.1 405B",
                         "provider": "together",
                         "model": "llama3.1-405b",
-                        "apiKey": "[TOGETHER_API_KEY]"
+                        "apiKey": "<YOUR_TOGETHER_API_KEY>"
                     }
                 ]
             ```
@@ -108,7 +108,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
                         "title": "Llama 3.1 405B",
                         "provider": "groq",
                         "model": "llama3.1-405b",
-                        "apiKey": "[GROQ_API_KEY]"
+                        "apiKey": "<YOUR_GROQ_API_KEY>"
                     }
                 ]
             ```
@@ -150,7 +150,7 @@ If you prefer to use a model from [OpenAI](../customize/model-providers/top-leve
       - name: GPT-4o
         provider: openai
         model: ''
-        apiKey: ${{ secrets.OPENAI_API_KEY }}
+        apiKey: <YOUR_OPENAI_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -160,7 +160,7 @@ If you prefer to use a model from [OpenAI](../customize/model-providers/top-leve
         "title": "GPT-4o",
         "provider": "openai",
         "model": "",
-        "apiKey": "[OPENAI_API_KEY]"
+        "apiKey": "<YOUR_OPENAI_API_KEY>"
     }
     ]
     ```
@@ -177,7 +177,7 @@ If you prefer to use a model from [xAI](../customize/model-providers/top-level/x
      "title": "Grok-2",
      "provider": "xAI",
      "model": "grok-2-latest",
-     "apiKey": "[XAI_API_KEY]"
+     "apiKey": "<YOUR_XAI_API_KEY>"
    }
  ]
 ```
@@ -193,7 +193,7 @@ If you prefer to use a model from [Google](../customize/model-providers/top-leve
       - name: Gemini 1.5 Pro
         provider: gemini
         model: gemini-1.5-pro-latest
-        apiKey: ${{ secrets.GEMINI_API_KEY }}
+        apiKey: <YOUR_GEMINI_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -203,7 +203,7 @@ If you prefer to use a model from [Google](../customize/model-providers/top-leve
             "title": "Gemini 1.5 Pro",
             "provider": "gemini",
             "model": "gemini-1.5-pro-latest",
-            "apiKey": "[GEMINI_API_KEY]"
+            "apiKey": "<YOUR_GEMINI_API_KEY>"
         }
         ]
     ```

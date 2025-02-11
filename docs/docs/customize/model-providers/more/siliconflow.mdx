@@ -20,7 +20,7 @@ We recommend configuring **Qwen/Qwen2.5-Coder-32B-Instruct** as your chat model.
       - name: Qwen
         provider: siliconflow
         model: Qwen/Qwen2.5-Coder-32B-Instruct
-        apiKey: ${{ secrets.SILICONFLOW_API_KEY }}
+        apiKey: <YOUR_SILICONFLOW_API_KEY>
         roles:
           - chat
     ```
@@ -32,7 +32,7 @@ We recommend configuring **Qwen/Qwen2.5-Coder-32B-Instruct** as your chat model.
           "title": "Qwen",
           "provider": "siliconflow",
           "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
-          "apiKey": "[API_KEY]"
+          "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
         }
       ]
     ```
@@ -50,7 +50,7 @@ We recommend configuring **Qwen/Qwen2.5-Coder-7B-Instruct** as your autocomplete
       - name: Qwen
         provider: siliconflow
         model: Qwen/Qwen2.5-Coder-32B-Instruct
-        apiKey: ${{ secrets.SILICONFLOW_API_KEY }}
+        apiKey: <YOUR_SILICONFLOW_API_KEY>
         roles: 
           - autocomplete
     ```
@@ -62,14 +62,14 @@ We recommend configuring **Qwen/Qwen2.5-Coder-7B-Instruct** as your autocomplete
           "title": "Qwen",
           "provider": "siliconflow",
           "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
-          "apiKey": "[API_KEY]"
+          "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
         }
       ]
       "tabAutocompleteModel": {
         "title": "Qwen",
         "provider": "siliconflow",
         "model": "Qwen/Qwen2.5-Coder-7B-Instruct",
-        "apiKey": "[API_KEY]"
+        "apiKey": "<YOUR_SILICONFLOW_API_KEY>"
       }
     ```
     </TabItem>

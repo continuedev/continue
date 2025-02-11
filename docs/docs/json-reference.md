@@ -58,7 +58,7 @@ Example:
       "contextLength": 128000,
       "title": "GPT-4o",
       "provider": "openai",
-      "apiKey": "YOUR_API_KEY"
+      "apiKey": "<YOUR_OPENAI_API_KEY>"
     }
   ]
 }
@@ -131,7 +131,7 @@ Example:
   "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-ada-002",
-    "apiKey": "<API_KEY>",
+    "apiKey": "<YOUR_OPENAI_API_KEY>",
     "maxChunkSize": 256,
     "maxBatchSize": 5
   }
@@ -219,7 +219,7 @@ Example
     "name": "voyage",
     "params": {
       "model": "rerank-2",
-      "apiKey": "<VOYAGE_API_KEY>"
+      "apiKey": "<YOUR_VOYAGE_API_KEY>"
     }
   }
 }

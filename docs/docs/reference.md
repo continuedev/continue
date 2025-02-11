@@ -209,7 +209,7 @@ The `tools` section specifies external tools or APIs that can be used within you
 ```yaml title="config.yaml"
 tools:
   - url: https://api.exampletool.com/tool1
-    apiKey: YOUR_API_KEY
+    apiKey: <YOUR_API_KEY>
 ```
 
 --- -->

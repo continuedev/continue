@@ -12,7 +12,7 @@ Cloudflare Workers AI can be used for both chat and tab autocompletion in Contin
     - name: Llama 3 8B
       provider: cloudflare
       accountId: YOUR CLOUDFLARE ACCOUNT ID
-      apiKey:  ${{ secrets.CLOUDFARE_API_KEY }}
+      apiKey: <YOUR_CLOUDFARE_API_KEY>
       model: "@cf/meta/llama-3-8b-instruct"
       contextLength: 2400
       defaultCompletionOptions:
@@ -22,7 +22,7 @@ Cloudflare Workers AI can be used for both chat and tab autocompletion in Contin
     - name: DeepSeek Coder 6.7b Instruct
       provider: cloudflare
       accountId: YOUR CLOUDFLARE ACCOUNT ID
-      apiKey: ${{ secrets.CLOUDFARE_API_KEY }}
+      apiKey: <YOUR_CLOUDFARE_API_KEY>
       model: "@hf/thebloke/deepseek-coder-6.7b-instruct-awq"
       contextLength: 2400
       defaultCompletionOptions:
@@ -32,7 +32,7 @@ Cloudflare Workers AI can be used for both chat and tab autocompletion in Contin
     - name: DeepSeek 7b
       provider: cloudflare
       accountId: YOUR CLOUDFLARE ACCOUNT ID
-      apiKey: ${{ secrets.CLOUDFARE_API_KEY }}
+      apiKey: <YOUR_CLOUDFARE_API_KEY>
       model: "@hf/thebloke/deepseek-coder-6.7b-base-awq"
       roles:
         - autocomplete

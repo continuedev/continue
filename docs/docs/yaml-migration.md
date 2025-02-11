@@ -52,7 +52,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
       "title": "GPT-4",
       "provider": "openai",
       "model": "gpt-4",
-      "apiKey": "YOUR_API_KEY",
+      "apiKey": "<YOUR_OPENAI_API_KEY>",
       "completionOptions": {
         "temperature": 0.5,
         "maxTokens": 2000
@@ -81,7 +81,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
   "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-ada-002",
-    "apiKey": "<API_KEY>",
+    "apiKey": "<YOUR_OPENAI_API_KEY>",
     "maxChunkSize": 256,
     "maxBatchSize": 5
   },
@@ -89,7 +89,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
     "name": "voyage",
     "params": {
       "model": "rerank-2",
-      "apiKey": "<VOYAGE_API_KEY>"
+      "apiKey": "<YOUR_VOYAGE_API_KEY>"
     }
   }
 }
@@ -102,7 +102,7 @@ models:
   - name: GPT-4
     provider: openai
     model: gpt-4
-    apiKey: ${{ secrets.OPENAI_KEY }}
+    apiKey: <YOUR_OPENAI_KEY>
     defaultCompletionOptions:
       temperature: 0.5
       maxTokens: 2000
@@ -112,8 +112,7 @@ models:
 
   - name: My Voyage Reranker
     provider: voyage
-    apiKey: ${{ secrets.VOYAGE_KEY }}
-    roles:
+    apiKey: <YOUR_VOYAGE_KEY>
       - rerank
 
   - name: My Starcoder
@@ -124,7 +123,7 @@ models:
 
   - name: My Ada Embedder
     provider: openai
-    apiKey: ${{ secrets.ADA_API_KEY }}
+    apiKey: <YOUR_ADA_API_KEY>
     roles:
       - embed
 
@@ -138,7 +137,7 @@ models:
     apiBase: http://3.3.3.3/v1
     requestOptions:
       headers:
-        X-Auth-Token: ${{ secrets.CUSTOM_API_KEY }}
+        X-Auth-Token: <MY_API_KEY>
     roles:
       - chat
       - apply

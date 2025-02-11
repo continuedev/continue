@@ -14,7 +14,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
     - name: Claude 3.5 Sonnet
       provider: kindo
       model: claude-3-5-sonnet
-      apiKey: ${{ secrets.KINDO_API_KEY }}
+      apiKey: <YOUR_KINDO_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -24,7 +24,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
         "title": "Claude 3.5 Sonnet",
         "provider": "kindo",
         "model": "claude-3-5-sonnet",
-        "apiKey": "<KINDO_API_KEY>"
+        "apiKey": "<YOUR_KINDO_API_KEY>"
       }
     ]
   ```
@@ -40,7 +40,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
       - name: WhiteRabbitNeo
         provider: kindo
         model: /models/WhiteRabbitNeo-33B-DeepSeekCoder
-        apiKey: ${{ secrets.KINDO_API_KEY }}
+        apiKey: <YOUR_KINDO_API_KEY>
         roles:
           - autocomplete
     ```
@@ -52,7 +52,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
           "title": "WhiteRabbitNeo",
           "provider": "kindo",
           "model": "/models/WhiteRabbitNeo-33B-DeepSeekCoder",
-          "apiKey": "<KINDO_API_KEY>",
+          "apiKey": "<YOUR_KINDO_API_KEY>",
           "template": "none"
         }
       ]

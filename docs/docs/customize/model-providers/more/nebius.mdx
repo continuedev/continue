@@ -18,7 +18,7 @@ Available models can be found on the [Nebius AI Studio models page](https://stud
     - name: Llama 3.1 405b
       provider: nebius
       model: llama3.1-405b
-      apiKey: ${{ secrets.NEBIUS_API_KEY }}
+      apiKey: <YOUR_NEBIUS_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -28,7 +28,7 @@ Available models can be found on the [Nebius AI Studio models page](https://stud
         "title": "Llama 3.1 405b",
         "provider": "nebius",
         "model": "llama3.1-405b",
-        "apiKey": "[API_KEY]"
+        "apiKey": "<YOUR_NEBIUS_API_KEY>"
       }
     ]
   ```
@@ -46,7 +46,7 @@ Available models can be found on the [Nebius AI Studio embeddings page](https://
     - name: BAAI Embedder
       provider: nebius
       model: BAAI/bge-en-icl
-      apiKey: ${{ secrets.NEBIUS_API_KEY }}
+      apiKey: <YOUR_NEBIUS_API_KEY>
       roles:
         - embed
   ```
@@ -56,7 +56,7 @@ Available models can be found on the [Nebius AI Studio embeddings page](https://
     "embeddingsProvider": {
       "provider": "nebius",
       "model": "BAAI/bge-en-icl",
-      "apiKey": "[API_KEY]"
+      "apiKey": "<YOUR_NEBIUS_API_KEY>"
     }
   ```
   </TabItem>

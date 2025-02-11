@@ -26,7 +26,7 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
   models:
     - name: My Voyage Reranker
       provider: voyage
-      apiKey: ${{ secrets.VOYAGE_API_KEY }}
+      apiKey: <YOUR_VOYAGE_API_KEY>
       model: rerank-2
       roles:
         - rerank
@@ -38,7 +38,7 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
         "name": "voyage",
         "params": {
             "model": "rerank-2",
-            "apiKey": "<VOYAGE_API_KEY>"
+            "apiKey": "<YOUR_VOYAGE_API_KEY>"
         }
     }
   ```
@@ -56,7 +56,7 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
     - name: Cohere Reranker
       provider: cohere
       model: rerank-english-v3.0
-      apiKey: ${{ secrets.COHERE_API_KEY }}
+      apiKey: <YOUR_COHERE_API_KEY>
       roles:
         - rerank
   ```
@@ -67,7 +67,7 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
         "name": "cohere",
         "params": {
             "model": "rerank-english-v3.0",
-            "apiKey": "<COHERE_API_KEY>"
+            "apiKey": "<YOUR_COHERE_API_KEY>"
         }
     }
   ```
@@ -114,7 +114,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
       - name: Huggingface-tei Reranker
         provider: huggingface-tei
         apiBase: http://localhost:8080
-        apiKey: ${{ secrets.HUGGINGFACE_TEI_API_KEY }}
+        apiKey: <YOUR_TEI_API_KEY>
         roles:
           - rerank
     ```
@@ -125,7 +125,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
         "name": "huggingface-tei",
         "params": {
           "apiBase": "http://localhost:8080",
-          "apiKey": "<TEI_API_KEY>"
+          "apiKey": "<YOUR_TEI_API_KEY>"
         }
       }
     ```

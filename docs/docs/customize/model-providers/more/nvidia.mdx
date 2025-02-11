@@ -20,7 +20,7 @@ We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
     - name: Nemotron-4-340B-Instruct
       provider: nvidia
       model: nvidia-nemotron-4-340b-instruct
-      apiKey: ${{ secrets.NVIDIA_API_KEY }}
+      apiKey: <YOUR_NVIDIA_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -30,7 +30,7 @@ We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
         "title": "Nemotron-4-340B-Instruct",
         "provider": "nvidia",
         "model": "nvidia-nemotron-4-340b-instruct",
-        "apiKey": "[API_KEY]"
+        "apiKey": "<YOUR_NVIDIA_API_KEY>"
       }
     ]
   ```
@@ -54,7 +54,7 @@ We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings m
     - name: Nvidia Embedder
       provider: nvidia
       model: nvidia/nv-embedqa-mistral-7b-v2
-      apiKey: ${{ secrets.NVIDIA_API_KEY }}
+      apiKey: <YOUR_NVIDIA_API_KEY>
       roles:
         - embed
   ```
@@ -64,7 +64,7 @@ We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings m
     "embeddingsProvider": {
       "provider": "nvidia",
       "model": "nvidia/nv-embedqa-mistral-7b-v2",
-      "apiKey": "[API_KEY]"
+      "apiKey": "<YOUR_NVIDIA_API_KEY>"
     }
   ```
   </TabItem>

@@ -17,7 +17,7 @@ To use the Ask Sage models, you can use the following
   models:
   - name: GPT-4 gov
     provider: askSage
-    apiKey: ${{ secrets.ASK_SAGE_API_KEY }}
+    apiKey: <YOUR_ASK_SAGE_API_KEY>
     apiBase: https://api.asksage.ai/server/
     model: gpt4-gov
   ```
@@ -26,11 +26,11 @@ To use the Ask Sage models, you can use the following
   ```json title="config.json"
   "models": [
     {
-      "apiKey": "YOUR_API_KEY",
-      "apiBase": "https://api.asksage.ai/server/",
-      "model": "gpt4-gov",
       "title": "GPT-4 gov",
-      "provider": "askSage"
+      "provider": "askSage",
+      "model": "gpt4-gov",
+      "apiBase": "https://api.asksage.ai/server/",
+      "apiKey": "<YOUR_ASK_SAGE_API_KEY>"
     }
   ]
   ```
