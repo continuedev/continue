@@ -28,12 +28,7 @@ import type {
   ToolCall,
 } from "../";
 
-export type OnboardingModes =
-  | "Local"
-  | "Best"
-  | "Custom"
-  | "Quickstart"
-  | "LocalAfterFreeTrial";
+export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
 export interface ListHistoryOptions {
   offset?: number;

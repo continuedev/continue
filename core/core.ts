@@ -11,7 +11,6 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import {
   setupBestConfig,
   setupLocalConfig,
-  setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
@@ -748,10 +747,6 @@ export class Core {
           editConfigJsonCallback = setupQuickstartConfig;
           break;
 
-        case "LocalAfterFreeTrial":
-          editConfigJsonCallback = setupLocalConfigAfterFreeTrial;
-          break;
-
         case "Best":
           editConfigJsonCallback = setupBestConfig;
           break;
@@ -855,12 +850,18 @@ export class Core {
 
     on("files/created", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });

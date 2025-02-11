@@ -7,6 +7,7 @@ import {
 } from "../config/sharedConfig";
 
 import { getGlobalContextFilePath } from "./paths";
+import { SiteIndexingConfig } from "..";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
@@ -27,6 +28,7 @@ export type GlobalContextType = {
   showConfigUpdateToast: boolean;
   isSupportedLanceDbCpuTargetForLinux: boolean;
   sharedConfig: SharedConfigSchema;
+  failedDocs: SiteIndexingConfig[];
 };
 
 /**

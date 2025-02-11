@@ -22,6 +22,7 @@ import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbed
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
+import { GlobalContext } from "../../util/GlobalContext";
 import {
   editConfigJson,
   getDocsSqlitePath,
@@ -231,11 +232,11 @@ export default class DocsService {
     if (isAborted) {
       return true;
     }
-    // Handle indexing disabled change mid-indexing
-    if (this.config.disableIndexing) {
-      this.abort(startUrl);
-      return true;
-    }
+    // // Handle indexing disabled change mid-indexing
+    // if (this.config.disableIndexing) {
+    //   this.abort(startUrl);
+    //   return true;
+    // }
     // Handle embeddings provider change mid-indexing
     if (this.config.embeddingsProvider.embeddingId !== startedWithEmbedder) {
       this.abort(startUrl);
@@ -297,9 +298,9 @@ export default class DocsService {
       const oldConfig = this.config;
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
 
-      if (this.config.disableIndexing) {
-        return;
-      }
+      // if (this.config.disableIndexing) {
+      //   return;
+      // }
 
       // No point in indexing if no docs context provider
       const hasDocsContextProvider = this.hasDocsContextProvider();
@@ -386,12 +387,12 @@ export default class DocsService {
 
   async indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
-    reIndex: boolean = false,
+    forceReindex: boolean = false,
   ): Promise<void> {
-    if (this.config.disableIndexing) {
-      console.warn("Attempting to add/index docs when indexing is disabled");
-      return;
-    }
+    // if (this.config.disableIndexing) {
+    //   console.warn("Attempting to add/index docs when indexing is disabled");
+    //   return;
+    // }
     const { startUrl, useLocalCrawling, maxDepth } = siteIndexingConfig;
 
     const { isPreindexed, provider } =
@@ -417,7 +418,7 @@ export default class DocsService {
       type: "docs",
       id: siteIndexingConfig.startUrl,
       embeddingsProviderId: provider.embeddingId,
-      isReindexing: reIndex && indexExists,
+      isReindexing: forceReindex && indexExists,
       title: siteIndexingConfig.title,
       debugInfo: `max depth: ${siteIndexingConfig.maxDepth}`,
       icon: siteIndexingConfig.faviconUrl,
@@ -426,7 +427,7 @@ export default class DocsService {
 
     // Clear current indexes if reIndexing
     if (indexExists) {
-      if (reIndex) {
+      if (forceReindex) {
         await this.deleteIndexes(startUrl);
       } else {
         this.handleStatusUpdate({
@@ -439,6 +440,46 @@ export default class DocsService {
         return;
       }
     }
+
+    // If not force-reindexing and has failed with same config, don't reattempt
+    if (!forceReindex) {
+      const globalContext = new GlobalContext();
+      const failedDocs = globalContext.get("failedDocs") ?? [];
+      const hasFailed = failedDocs.find((d) =>
+        this.siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+      );
+      if (hasFailed) {
+        console.log(
+          `Not reattempting to index ${siteIndexingConfig.startUrl}, has already failed with same config`,
+        );
+        this.handleStatusUpdate({
+          ...fixedStatus,
+          description: "Failed",
+          status: "failed",
+          progress: 1,
+        });
+        return;
+      }
+    }
+
+    const markFailedInGlobalContext = () => {
+      const globalContext = new GlobalContext();
+      const failedDocs = globalContext.get("failedDocs") ?? [];
+      const newFailedDocs = failedDocs.filter(
+        (d) => !this.siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+      );
+      newFailedDocs.push(siteIndexingConfig);
+      globalContext.update("failedDocs", newFailedDocs);
+    };
+
+    const removeFromFailedGlobalContext = () => {
+      const globalContext = new GlobalContext();
+      const failedDocs = globalContext.get("failedDocs") ?? [];
+      const newFailedDocs = failedDocs.filter(
+        (d) => !this.siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+      );
+      globalContext.update("failedDocs", newFailedDocs);
+    };
 
     try {
       this.docsIndexingQueue.add(startUrl);
@@ -573,6 +614,7 @@ export default class DocsService {
 
         void this.ide.showToast("info", `Failed to index ${startUrl}`);
         this.docsIndexingQueue.delete(startUrl);
+        markFailedInGlobalContext();
         return;
       }
 
@@ -590,7 +632,7 @@ export default class DocsService {
       });
 
       // Delete indexed docs if re-indexing
-      if (reIndex && indexExists) {
+      if (forceReindex && indexExists) {
         console.log("Deleting old embeddings");
         await this.deleteIndexes(startUrl);
       }
@@ -631,6 +673,8 @@ export default class DocsService {
       this.messenger?.send("refreshSubmenuItems", {
         providers: ["docs"],
       });
+
+      removeFromFailedGlobalContext();
     } catch (e) {
       let description = `Error getting docs from: ${siteIndexingConfig.startUrl}`;
       if (e instanceof Error) {
@@ -638,7 +682,7 @@ export default class DocsService {
           e.message.includes("github.com") &&
           e.message.includes("rate limit")
         ) {
-          description = "Github rate limit exceeded";
+          description = "Github rate limit exceeded"; // This text is used verbatim elsewhere
         }
       }
       console.error("Error indexing docs", e);
@@ -648,6 +692,7 @@ export default class DocsService {
         status: "failed",
         progress: 1,
       });
+      markFailedInGlobalContext();
     } finally {
       this.docsIndexingQueue.delete(startUrl);
     }
@@ -929,10 +974,8 @@ export default class DocsService {
             }
           }
         } else {
-          const currentStatus = this.statuses.get(doc.startUrl);
-          if (currentStatus?.status !== "failed") {
-            newDocs.push(doc);
-          }
+          newDocs.push(doc);
+          void Telemetry.capture("add_docs_config", { url: doc.startUrl });
         }
       }
 
@@ -940,10 +983,6 @@ export default class DocsService {
         ...changedDocs.map((doc) => this.indexAndAdd(doc, true)),
         ...newDocs.map((doc) => this.indexAndAdd(doc)),
       ]);
-
-      for (const doc of newDocs) {
-        void Telemetry.capture("add_docs_config", { url: doc.startUrl });
-      }
 
       for (const doc of deletedDocs) {
         await this.deleteIndexes(doc.startUrl);
