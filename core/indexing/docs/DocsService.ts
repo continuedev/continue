@@ -210,11 +210,11 @@ export default class DocsService {
     if (isAborted) {
       return true;
     }
-    // Handle indexing disabled change mid-indexing
-    if (this.config.disableIndexing) {
-      this.abort(startUrl);
-      return true;
-    }
+    // // Handle indexing disabled change mid-indexing
+    // if (this.config.disableIndexing) {
+    //   this.abort(startUrl);
+    //   return true;
+    // }
     // Handle embeddings provider change mid-indexing
     if (this.config.embeddingsProvider.embeddingId !== startedWithEmbedder) {
       this.abort(startUrl);
@@ -276,9 +276,9 @@ export default class DocsService {
       const oldConfig = this.config;
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
 
-      if (this.config.disableIndexing) {
-        return;
-      }
+      // if (this.config.disableIndexing) {
+      //   return;
+      // }
 
       // No point in indexing if no docs context provider
       const hasDocsContextProvider = this.hasDocsContextProvider();
@@ -367,10 +367,10 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
   ): Promise<void> {
-    if (this.config.disableIndexing) {
-      console.warn("Attempting to add/index docs when indexing is disabled");
-      return;
-    }
+    // if (this.config.disableIndexing) {
+    //   console.warn("Attempting to add/index docs when indexing is disabled");
+    //   return;
+    // }
     const { startUrl, useLocalCrawling, maxDepth } = siteIndexingConfig;
 
     const { isPreindexed, provider } =
