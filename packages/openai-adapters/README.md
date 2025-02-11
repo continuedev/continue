@@ -37,6 +37,7 @@ They are concerned with:
 - [x] Deepseek
 - [ ] Flowise
 - [x] Function Network
+- [x] GeekAI
 - [x] Gemini
 - [x] Groq
 - [ ] HuggingFace Inference API

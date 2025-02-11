@@ -65,6 +65,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "sagemaker",
   "continue-proxy",
   "openrouter",
+  "geekai",
   "vertexai",
   "azure",
   "scaleway",

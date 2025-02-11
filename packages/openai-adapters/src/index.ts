@@ -59,6 +59,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://127.0.0.1:5000/v1/", config);
     case "openrouter":
       return openAICompatible("https://openrouter.ai/api/v1/", config);
+    case "geekai":
+        return openAICompatible("https://geekai.dev/api/v1/", config);
     case "cerebras":
       return openAICompatible("https://api.cerebras.ai/v1/", config);
     case "kindo":
