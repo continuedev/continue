@@ -28,12 +28,7 @@ import type {
   ToolCall,
 } from "../";
 
-export type OnboardingModes =
-  | "Local"
-  | "Best"
-  | "Custom"
-  | "Quickstart"
-  | "LocalAfterFreeTrial";
+export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -197,6 +192,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
   "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
 };

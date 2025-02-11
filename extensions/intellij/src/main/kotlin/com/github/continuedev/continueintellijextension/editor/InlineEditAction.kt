@@ -450,8 +450,8 @@ class CustomPanel(
             val rightButton =
                 CustomButton("⏎  Enter") { onEnter() }
                     .apply {
-                        background = JBColor(0x999998, 0x999998)
-                        foreground = JBColor(0xF5F5F5, 0xF5F5F5)
+                        background = globalScheme.defaultForeground
+                        foreground = globalScheme.defaultBackground
                         border = JBUI.Borders.empty(2, 6)
                     }
 

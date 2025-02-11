@@ -27,6 +27,7 @@ export interface OrganizationDescription {
   id: string;
   iconUrl: string;
   name: string;
+  slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
 }
 
 export class ProfileLifecycleManager {
