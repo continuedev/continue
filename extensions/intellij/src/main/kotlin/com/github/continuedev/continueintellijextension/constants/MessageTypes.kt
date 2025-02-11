@@ -41,6 +41,18 @@ class MessageTypes {
             "logoutOfControlPlane",
             "getTerminalContents",
             "showToast",
+            "openUrl",
+            
+            // These only come from the GUI for now but should be here to prevent confusionn
+            "toggleDevTools",
+            "showTutorial"
+            
+            // These are jetbrains only and only come from the GUI for now
+            // But again including for consistency
+            "copyText"
+            "jetbrains/isOSREnabled"
+            "jetbrains/getColors"
+            "jetbrains/onLoad"
         )
 
         // Note: If updating these values, make a corresponding update in
