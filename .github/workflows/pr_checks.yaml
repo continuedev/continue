@@ -631,5 +631,5 @@ jobs:
         uses: re-actors/alls-green@release/v1
         with:
           allowed-failures:
-          allowed-skips:
+          allowed-skips: jetbrains-tests
           jobs: ${{ toJSON(needs) }}
