@@ -1,3 +1,4 @@
+import { isTestMode } from "core/granite/commons/constants";
 import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -34,7 +35,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const api = new VsCodeContinueApi(vscodeExtension);
   const showOnboarding = context.globalState.get("showGraniteOnboarding", true);
-  if (showOnboarding) {
+  if (showOnboarding && !isTestMode) {
     await vscode.commands.executeCommand("granite.setup");
     context.globalState.update("showGraniteOnboarding", false);
   }
