@@ -41,6 +41,7 @@ import {
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
 import { ConfigResult } from "@continuedev/config-yaml";
+import { GlobalContext } from "../../util/GlobalContext";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -908,19 +909,24 @@ export default class DocsService {
             }
           }
         } else {
-          const currentStatus = this.statuses.get(doc.startUrl);
-          if (currentStatus?.status !== "failed") {
-            newDocs.push(doc);
-          }
+          newDocs.push(doc);
         }
       }
 
+      const globalContext = new GlobalContext();
+      const failedDocs = globalContext.get("failedDocs") ?? [];
+
+      const newDocsNotFailed = newDocs.filter(
+        (doc) =>
+          !failedDocs.find((d) => this.siteIndexingConfigsAreEqual(doc, d)),
+      );
+
       await Promise.allSettled([
         ...changedDocs.map((doc) => this.indexAndAdd(doc, true)),
-        ...newDocs.map((doc) => this.indexAndAdd(doc)),
+        ...newDocsNotFailed.map((doc) => this.indexAndAdd(doc)),
       ]);
 
-      for (const doc of newDocs) {
+      for (const doc of newDocsNotFailed) {
         void Telemetry.capture("add_docs_config", { url: doc.startUrl });
       }
 
