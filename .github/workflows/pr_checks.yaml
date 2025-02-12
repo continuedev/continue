@@ -19,7 +19,7 @@ on:
       - "extensions/intellij/**"
       - "extensions/vscode/**"
       - "core/**"
-      - "gui/**"
+      - gui/**
       - ".github/workflows/**"
 
 jobs:
