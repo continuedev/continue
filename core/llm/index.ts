@@ -460,11 +460,7 @@ export abstract class BaseLLM implements ILLM {
             throw new Error(message);
           }
         }
-        //if e instance of LLMError, rethrow
-        if (e instanceof LLMError) {
-          throw e;
-        }
-        throw new Error(e.message);
+        throw e;
       }
     };
     return withExponentialBackoff<Response>(
