@@ -385,7 +385,7 @@ const isMacTarget = target?.startsWith("darwin");
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
   } else {
     // Download esbuild from npm in tmp and copy over
-    console.log("npm installing esbuild binary - TEST");
+    console.log("npm installing esbuild binary");
     await installNodeModuleInTempDirAndCopyToCurrent(
       "esbuild@0.24.0",
       "@esbuild",
