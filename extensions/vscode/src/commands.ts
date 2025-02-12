@@ -27,6 +27,7 @@ import {
   setupStatusBar,
   StatusBarStatus,
 } from "./autocomplete/statusBar";
+import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 
 import { VerticalDiffManager } from "./diff/vertical/manager";
@@ -316,6 +317,7 @@ const getCommandsMap: (
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -327,6 +329,7 @@ const getCommandsMap: (
   ide,
   extensionContext,
   sidebar,
+  consoleView,
   configHandler,
   verticalDiffManager,
   continueServerClientPromise,
@@ -679,6 +682,9 @@ const getCommandsMap: (
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
+    },
+    "continue.clearConsole": async () => {
+      consoleView.clearLog();
     },
     "continue.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
@@ -1127,6 +1133,7 @@ export function registerAllCommands(
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -1142,6 +1149,7 @@ export function registerAllCommands(
       ide,
       extensionContext,
       sidebar,
+      consoleView,
       configHandler,
       verticalDiffManager,
       continueServerClientPromise,
