@@ -14,12 +14,14 @@ import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { setSelectedProfileId } from "../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { getFontSize } from "../util";
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
   background-color: ${({ selected }) =>
     selected ? vscListActiveBackground : vscInputBackground};
   cursor: pointer;
-  padding: 6px 8px;
+  padding: 4px 6px;
+  font-size: ${getFontSize() - 1}px;
 
   &:hover {
     background-color: ${vscListActiveBackground};
@@ -76,7 +78,7 @@ export default function AccountDialog() {
       </div>
 
       {controlServerBetaEnabled && (
-        <div className="w-full">
+        <div className="mb-10 mt-4 w-full">
           <span className="mb-1 block text-sm">Current workspace</span>
 
           <Listbox value={"local"} onChange={changeProfileId}>
