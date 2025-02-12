@@ -1,4 +1,8 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
+import {
+  isTestMode,
+  SHOW_GRANITE_ONBOARDING_CARD_KEY,
+} from "core/granite/commons/constants";
 import * as vscode from "vscode";
 
 import { getTheme } from "./util/getTheme";
@@ -168,6 +172,7 @@ export class ContinueGUIWebviewViewProvider
         <script>window.ide = "vscode"</script>
         <script>window.fullColorTheme = ${JSON.stringify(currentTheme)}</script>
         <script>window.colorThemeName = "dark-plus"</script>
+        <script>window.showGraniteCodeOnboarding = ${this.extensionContext.globalState.get(SHOW_GRANITE_ONBOARDING_CARD_KEY, true) && !isTestMode}</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map((folder) =>
             folder.uri.toString(),

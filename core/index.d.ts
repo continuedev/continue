@@ -14,6 +14,7 @@ declare global {
         foreground?: string;
       }[];
     };
+    showGraniteCodeOnboarding?: boolean;
     colorThemeName?: string;
     workspacePaths?: string[];
     postIntellijMessage?: (

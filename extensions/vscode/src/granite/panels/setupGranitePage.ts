@@ -1,9 +1,14 @@
-import { ConfigHandler } from 'core/config/ConfigHandler';
-import { EXTENSION_NAME } from 'core/control-plane/env';
-import { DOWNLOADABLE_MODELS } from 'core/granite/commons/modelRequirements';
+import { ConfigHandler } from "core/config/ConfigHandler";
+import { EXTENSION_NAME } from "core/control-plane/env";
+import { DOWNLOADABLE_MODELS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
-import { ModelStatus, ServerStatus } from 'core/granite/commons/statuses';
-import { FINAL_STEP, MODELS_STEP, OLLAMA_STEP, WizardState } from 'core/granite/commons/wizardState';
+import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
+import {
+  FINAL_STEP,
+  MODELS_STEP,
+  OLLAMA_STEP,
+  WizardState,
+} from "core/granite/commons/wizardState";
 import {
   commands,
   Disposable,
@@ -14,16 +19,17 @@ import {
   Webview,
   WebviewPanel,
   window,
-  workspace
+  workspace,
 } from "vscode";
 
 import { OllamaServer } from "../ollama/ollamaServer";
 import { getNonce } from "../utils/getNonce";
 import { getUri } from "../utils/getUri";
 import { getSystemInfo } from "../utils/sysUtils";
-import { LocalModelSize } from 'core';
-import { CancellationController } from '../utils/cancellationController';
-
+import { LocalModelSize } from "core";
+import { CancellationController } from "../utils/cancellationController";
+import { VsCodeWebviewProtocol } from "../../webviewProtocol";
+import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -49,39 +55,59 @@ export class SetupGranitePage {
    * @param panel A reference to the webview panel
    * @param extensionUri The URI of the directory containing the extension
    */
-  private constructor(panel: WebviewPanel, context: ExtensionContext, private configHandler: ConfigHandler, defaultState?: WizardState) {
+  private constructor(
+    panel: WebviewPanel,
+    private context: ExtensionContext,
+    private configHandler: ConfigHandler,
+    private chatWebViewProtocol: VsCodeWebviewProtocol,
+    defaultState?: WizardState,
+  ) {
     this._panel = panel;
     this._disposables.push(this._panel);
     this.server = new OllamaServer(context);
-    this.wizardState = defaultState ? defaultState : { stepStatuses: [false, false, false] } as WizardState;
+    this.wizardState = defaultState
+      ? defaultState
+      : ({ stepStatuses: [false, false, false] } as WizardState);
 
     // Set up dispose handler with confirmation dialog
-    this._panel.onDidDispose(async () => {
-      // Verify setup is complete by checking if ollama and the models are configured
-      const isComplete = this.wizardState.stepStatuses[OLLAMA_STEP] && this.wizardState.stepStatuses[MODELS_STEP];
-      let reopen = false;
-      if (!isComplete) {
-        const RESUME_LABEL = "Resume Setup";
-        const choice = await window.showWarningMessage(
-          'Resume Granite.Code Setup?',
-          {
-            modal: true,
-            detail: 'Granite.Code needs to be setup before it can be used. Setup is not yet complete.'
-          },
-          RESUME_LABEL// Cancel is always shown
-        );
-        reopen = choice === RESUME_LABEL;
-      }
-      this.dispose();
-      if (reopen) {
-        SetupGranitePage.render(context, configHandler, this.wizardState);
-      }
-    }, null, this._disposables);
+    this._panel.onDidDispose(
+      async () => {
+        // Verify setup is complete by checking if ollama and the models are configured
+        const isComplete =
+          this.wizardState.stepStatuses[OLLAMA_STEP] &&
+          this.wizardState.stepStatuses[MODELS_STEP];
+        let reopen = false;
+        if (!isComplete) {
+          const RESUME_LABEL = "Resume Setup";
+          const choice = await window.showWarningMessage(
+            "Resume Granite.Code Setup?",
+            {
+              modal: true,
+              detail:
+                "Granite.Code needs to be setup before it can be used. Setup is not yet complete.",
+            },
+            RESUME_LABEL, // Cancel is always shown
+          );
+          reopen = choice === RESUME_LABEL;
+        }
+        this.dispose();
+        if (reopen) {
+          SetupGranitePage.render(
+            context,
+            configHandler,
+            this.chatWebViewProtocol,
+            this.wizardState,
+          );
+        }
+      },
+      null,
+      this._disposables,
+    );
 
     // Set the HTML content for the webview panel
     this._panel.webview.html = this._getWebviewContent(
       this._panel.webview,
-      context
+      context,
     );
 
     // Set an event listener to listen for messages passed from the webview context
@@ -100,7 +126,12 @@ export class SetupGranitePage {
    *
    * @param extensionUri The URI of the directory containing the extension.
    */
-  public static render(context: ExtensionContext, configHandler: ConfigHandler, wizardState?: WizardState) {
+  public static render(
+    context: ExtensionContext,
+    configHandler: ConfigHandler,
+    chatWebViewProtocol: VsCodeWebviewProtocol,
+    wizardState?: WizardState,
+  ) {
     if (SetupGranitePage.currentPanel) {
       // If the webview panel already exists reveal it
       SetupGranitePage.currentPanel._panel.reveal(ViewColumn.One);
@@ -120,13 +151,17 @@ export class SetupGranitePage {
           enableScripts: true,
           retainContextWhenHidden: true,
           // Restrict the webview to only load resources from the `gui` directory
-          localResourceRoots: [
-            Uri.joinPath(extensionUri, "gui"),
-          ],
-        }
+          localResourceRoots: [Uri.joinPath(extensionUri, "gui")],
+        },
       );
 
-      SetupGranitePage.currentPanel = new SetupGranitePage(panel, context, configHandler, wizardState);
+      SetupGranitePage.currentPanel = new SetupGranitePage(
+        panel,
+        context,
+        configHandler,
+        chatWebViewProtocol,
+        wizardState,
+      );
     }
   }
 
@@ -156,7 +191,6 @@ export class SetupGranitePage {
    * rendered within the webview panel
    */
   private _getWebviewContent(webview: Webview, context: ExtensionContext) {
-
     let stylesUri, scriptUri;
     const extensionUri = context.extensionUri;
     const vscMediaUrl = getUri(webview, extensionUri, ["gui"]).toString();
@@ -179,7 +213,8 @@ export class SetupGranitePage {
       ]);
     }
 
-    const inDevelopmentMode = context?.extensionMode === ExtensionMode.Development;
+    const inDevelopmentMode =
+      context?.extensionMode === ExtensionMode.Development;
 
     const devStyleSrc = inDevelopmentMode ? "http://localhost:5173" : "";
     const devConnectSrc = inDevelopmentMode ? "ws://localhost:5173" : "";
@@ -198,16 +233,17 @@ export class SetupGranitePage {
           </head>
           <body>
           <div id="root"></div>
-          ${inDevelopmentMode
-        ? `<script type="module" nonce="${nonce}">
+          ${
+            inDevelopmentMode
+              ? `<script type="module" nonce="${nonce}">
             import RefreshRuntime from "http://localhost:5173/@react-refresh"
             RefreshRuntime.injectIntoGlobalHook(window)
             window.$RefreshReg$ = () => {}
             window.$RefreshSig$ = () => (type) => type
             window.__vite_plugin_react_preamble_installed__ = true
             </script>`
-        : ""
-      }
+              : ""
+          }
           <script type="module" nonce="${nonce}">
             window.vscMediaUrl="${vscMediaUrl}";
           </script>
@@ -242,7 +278,7 @@ export class SetupGranitePage {
               data: {
                 installModes: await this.server.supportedInstallModes(),
                 systemInfo: await getSystemInfo(),
-                wizardState: this.wizardState
+                wizardState: this.wizardState,
               },
             });
             break;
@@ -259,7 +295,8 @@ export class SetupGranitePage {
             if ("ollama" === target) {
               console.log("Cancelling ollama installation");
               this.ollamaInstallCanceller?.cancel();
-            } else {// models
+            } else {
+              // models
               console.log("Cancelling model installation");
               this.modelInstallCanceller?.cancel();
             }
@@ -281,7 +318,7 @@ export class SetupGranitePage {
             this.publishStatus(webview);
             break;
           case "selectModels":
-            this.wizardState.selectedModelSize = data.model as LocalModelSize;;
+            this.wizardState.selectedModelSize = data.model as LocalModelSize;
             break;
           case "installModels":
             await this.installModels(data.model as LocalModelSize, panel);
@@ -289,7 +326,7 @@ export class SetupGranitePage {
         }
       },
       undefined,
-      this._disposables
+      this._disposables,
     );
   }
 
@@ -312,7 +349,11 @@ export class SetupGranitePage {
     }
 
     // Convert CancellationToken to AbortSignal
-    await this.server.installServer(mode, this.ollamaInstallCanceller.signal, reportProgress);
+    await this.server.installServer(
+      mode,
+      this.ollamaInstallCanceller.signal,
+      reportProgress,
+    );
   }
 
   private async installModels(modelSize: LocalModelSize, panel: WebviewPanel) {
@@ -345,13 +386,22 @@ export class SetupGranitePage {
     this._disposables.push(this.modelInstallCanceller);
     try {
       this.wizardState.selectedModelSize = modelSize;
-      const result = await this.server.pullModels(modelSize, this.modelInstallCanceller.signal, reportProgress);
+      const result = await this.server.pullModels(
+        modelSize,
+        this.modelInstallCanceller.signal,
+        reportProgress,
+      );
       this.wizardState.stepStatuses[MODELS_STEP] = result;
       this.publishStatus(webview);
       if (result) {
         await this.saveSettings(modelSize);
+        this.hideGraniteOnboardingCard();
+
         if (!panel.visible) {
-          const selection = await window.showInformationMessage("Granite.Code is ready to be used.", "Show Setup Wizard");
+          const selection = await window.showInformationMessage(
+            "Granite.Code is ready to be used.",
+            "Show Setup Wizard",
+          );
           if (selection) {
             panel.reveal();
           }
@@ -368,6 +418,11 @@ export class SetupGranitePage {
     }
   }
 
+  private hideGraniteOnboardingCard() {
+    this.context.globalState.update(SHOW_GRANITE_ONBOARDING_CARD_KEY, false);
+    this.chatWebViewProtocol.send("setShowGraniteOnboardingCard", false);
+  }
+
   private async waitUntilOllamaStarts() {
     let serverStatus = await this.server.getStatus();
     const timeout = 30000;
@@ -382,7 +437,7 @@ export class SetupGranitePage {
           break;
         }
         console.log("Waiting for ollama server to start " + i);
-        await new Promise(resolve => setTimeout(resolve, interval));
+        await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
     return { serverStatus, timeout };
@@ -390,10 +445,12 @@ export class SetupGranitePage {
 
   async getModelStatuses(): Promise<Map<string, ModelStatus>> {
     const modelStatuses: Map<string, ModelStatus> = new Map();
-    await Promise.all(DOWNLOADABLE_MODELS.map(async (id) => {
-      const status = await this.server.getModelStatus(id);
-      modelStatuses.set(id, status);
-    }));
+    await Promise.all(
+      DOWNLOADABLE_MODELS.map(async (id) => {
+        const status = await this.server.getModelStatus(id);
+        modelStatuses.set(id, status);
+      }),
+    );
     return modelStatuses;
   }
 
@@ -402,7 +459,9 @@ export class SetupGranitePage {
     const serverStatus = await this.server.getStatus();
     const modelStatuses = await this.getModelStatuses();
     const modelStatusesObject = Object.fromEntries(modelStatuses); // Convert Map to Object
-    this.wizardState.stepStatuses[OLLAMA_STEP] = serverStatus === ServerStatus.started || serverStatus === ServerStatus.stopped;
+    this.wizardState.stepStatuses[OLLAMA_STEP] =
+      serverStatus === ServerStatus.started ||
+      serverStatus === ServerStatus.stopped;
     webview.postMessage({
       command: "status",
       data: {
@@ -420,6 +479,6 @@ export class SetupGranitePage {
   async saveSettings(modelSize: LocalModelSize): Promise<void> {
     console.log("Saving settings for model size: " + modelSize);
     const config = workspace.getConfiguration(EXTENSION_NAME);
-    await config.update('localModelSize', modelSize, true);
+    await config.update("localModelSize", modelSize, true);
   }
 }

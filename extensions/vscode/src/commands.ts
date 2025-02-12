@@ -1024,7 +1024,7 @@ const getCommandsMap: (
         });
     },
     "granite.setup": () => {
-      SetupGranitePage.render(extensionContext, configHandler);
+      SetupGranitePage.render(extensionContext, configHandler, sidebar.webviewProtocol);
     },
     "granite.showTutorial": () => {
       showTutorial(ide);
