@@ -326,6 +326,7 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
+    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
   }
 
   if (allowFreeTrial) {
