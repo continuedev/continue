@@ -1,5 +1,6 @@
 import { ILLM } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
+import { formatModelTitle } from "core/util/shortenName";
 import * as vscode from "vscode";
 
 import { Battery } from "../util/battery";
@@ -194,7 +195,7 @@ export function getAutocompleteStatusBarTitle(
   }
 
   if (title === selected) {
-    return `$(check) ${title}`;
+    return `$(check) ${formatModelTitle(title)}`;
   }
 
   return title;

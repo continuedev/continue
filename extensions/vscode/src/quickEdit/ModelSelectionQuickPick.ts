@@ -1,4 +1,5 @@
 import { ContinueConfig } from "core";
+import { formatModelTitle } from "core/util/shortenName";
 import { QuickPickItem, window } from "vscode";
 
 export async function getModelQuickPickVal(
@@ -7,11 +8,13 @@ export async function getModelQuickPickVal(
 ) {
   const modelItems: QuickPickItem[] = config.models.map((model) => {
     const isCurModel = curModelTitle === model.title;
+    const displayTitle = formatModelTitle(model.title || "");
 
     return {
       label: model.title
-        ? `${isCurModel ? "$(check)" : "     "} ${model.title}`
+        ? `${isCurModel ? "$(check)" : "     "} ${displayTitle}`
         : "Model title not set",
+      description: model.title,
     };
   });
 
