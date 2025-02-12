@@ -36,5 +36,6 @@ For example, to prevent extra long prompts from being compressed, you can explic
   ]
 }
 ```
+Note: The model must support function calling, otherwise you might receive an error "HTTP 404 Not Found from https://openrouter.ai/api/v1/chat/completions".
 
 Learn more about available settings [here](https://openrouter.ai/docs).
