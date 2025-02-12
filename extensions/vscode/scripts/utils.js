@@ -508,21 +508,11 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 async function copyScripts() {
   process.chdir(path.join(continueDir, "extensions", "vscode"));
   console.log("[info] Copying scripts from core");
-  await new Promise((resolve, reject) => {
-    ncp(
-      path.join(__dirname, "../../../core/scripts"),
-      path.join(__dirname, "../out"),
-      { dereference: true },
-      (error) => {
-        if (error) {
-          console.warn("[error] Error copying script files", error);
-          reject(error);
-        } else {
-          resolve();
-        }
-      },
-    );
-  });
+  fs.copyFileSync(
+    path.join(__dirname, "../../../core/util/start_ollama.sh"),
+    path.join(__dirname, "../out/start_ollama.sh"),
+  );
+  console.log("[info] Copied script files");
 }
 
 module.exports = {
