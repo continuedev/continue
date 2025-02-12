@@ -7,10 +7,10 @@ import {
   parseAssistantUnrolled,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
+import { ModelRole } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 
 import {
-  BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
   IDE,
@@ -18,9 +18,11 @@ import {
   IdeType,
   SlashCommand,
 } from "../..";
+import { slashFromCustomCommand } from "../../commands";
 import { AllRerankers } from "../../context/allRerankers";
 import { MCPManagerSingleton } from "../../context/mcp";
 import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
+import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
 import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
@@ -30,15 +32,13 @@ import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
+import { allTools } from "../../tools";
+import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
-
-import { slashFromCustomCommand } from "../../commands";
-import DocsContextProvider from "../../context/providers/DocsContextProvider";
-import { allTools } from "../../tools";
-import { GlobalContext } from "../../util/GlobalContext";
 import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
+
 import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
 
@@ -134,12 +134,10 @@ async function configYamlToContinueConfig(
   };
 
   // Models
+  const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    if (
-      ["chat", "summarize", "apply", "edit"].some((role: any) =>
-        model.roles?.includes(role),
-      )
-    ) {
+    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
+    if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
       // Main model array
       const llms = await llmsFromModelConfig(
         model,
@@ -245,6 +243,7 @@ async function configYamlToContinueConfig(
   }
 
   // Embeddings Provider
+  // IMPORTANT this currently will grab the first model found with an embed role
   const embedConfig = config.models?.find((model) =>
     model.roles?.includes("embed"),
   );
@@ -269,6 +268,7 @@ async function configYamlToContinueConfig(
   }
 
   // Reranker
+  // IMPORTANT this currently will grab the first model found with a rerank role
   const rerankConfig = config.models?.find((model) =>
     model.roles?.includes("rerank"),
   );
@@ -402,5 +402,3 @@ export async function loadContinueConfigFromYaml(
     configLoadInterrupted: false,
   };
 }
-
-export { type BrowserSerializedContinueConfig };

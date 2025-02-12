@@ -559,6 +559,7 @@ async function finalToBrowserConfig(
       requestOptions: m.requestOptions,
       promptTemplates: m.promptTemplates as any,
       capabilities: m.capabilities,
+      roles: m.roles,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
