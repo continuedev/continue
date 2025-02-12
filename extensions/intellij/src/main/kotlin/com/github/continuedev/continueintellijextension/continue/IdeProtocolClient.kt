@@ -62,7 +62,7 @@ class IdeProtocolClient(
                     "jetbrains/isOSREnabled" -> {
                         val isOSREnabled =
                             ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
-                            respond(isOSREnabled)
+                        respond(isOSREnabled)
                     }
 
                     "jetbrains/getColors" -> {
@@ -106,6 +106,10 @@ class IdeProtocolClient(
                         authService.signOut()
                         ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                             .handleUpdatedSessionInfo(null)
+
+                        // Tell the webview that session info changed
+                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
+
                         respond(null)
                     }
 
