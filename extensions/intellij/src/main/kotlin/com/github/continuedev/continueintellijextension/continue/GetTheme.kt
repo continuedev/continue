@@ -86,7 +86,9 @@ class GetTheme {
                 "--vscode-input-border" to "#80808080",
                 "--vscode-badge-background" to highlightHex,
                 "--vscode-badge-foreground" to defaultForegroundHex,
-                "--vscode-sideBar-border" to "#80808080"
+                "--vscode-sideBar-border" to "#80808080",
+                "--vscode-commandCenter-activeBorder" to highlightHex,
+                "--vscode-commandCenter-inactiveBorder" to "#80808080"
             )
 
         } catch (error: Error) {
