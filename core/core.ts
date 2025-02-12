@@ -11,7 +11,6 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import {
   setupBestConfig,
   setupLocalConfig,
-  setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
@@ -717,6 +716,8 @@ export class Core {
         llm,
         data.input,
         data.language,
+        false,
+        undefined,
       )) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
@@ -746,10 +747,6 @@ export class Core {
 
         case "Quickstart":
           editConfigJsonCallback = setupQuickstartConfig;
-          break;
-
-        case "LocalAfterFreeTrial":
-          editConfigJsonCallback = setupLocalConfigAfterFreeTrial;
           break;
 
         case "Best":
@@ -855,12 +852,18 @@ export class Core {
 
     on("files/created", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });
@@ -913,7 +916,9 @@ export class Core {
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
-      this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+      await this.configHandler.updateControlPlaneSessionInfo(
+        msg.data.sessionInfo,
+      );
     });
     on("auth/getAuthUrl", async (msg) => {
       const url = await getAuthUrlForTokenPage(

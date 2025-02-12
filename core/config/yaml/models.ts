@@ -58,6 +58,7 @@ async function modelConfigToBaseLLM(
     title: model.name,
     model: modelName,
     systemMessage,
+    promptTemplates: model.promptTemplates,
   };
 
   const llm = new cls(options);

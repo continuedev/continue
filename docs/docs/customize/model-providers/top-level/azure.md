@@ -7,7 +7,7 @@ Azure AI Foundry is a cloud-based service that provides access to models from Op
 
 :::info
 
-For details on OpenAI model setup, see [Azure OpenAI Service configuration](#general-model-configuration).
+For details on OpenAI model setup, see [Azure OpenAI Service configuration](#azure-openai-service-configuration).
 
 :::
 
@@ -22,7 +22,8 @@ We recommend configuring **GPT-4o** as your chat model.
     "model": "gpt-4o",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "deployment": "<YOUR_DEPLOYMENT_NAME>",
-    "apiKey": "<MY_API_KEY>" // If you use subscription key, try using Azure gateway to rename it apiKey
+    "apiKey": "<MY_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
 }]
 ```
 
@@ -46,12 +47,12 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 ```json title="config.json"
 "embeddingsProvider": {
-    "provider": "openai",
+    "provider": "azure",
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "deployment": "<YOUR_DEPLOYMENT_NAME>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
+    "apiKey": "<MY_API_KEY>",
+    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
 }
 ```
 
@@ -66,9 +67,7 @@ Azure OpenAI currently does not offer any reranking models.
 If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant.
 
 :::info[Getting access]
-You need to apply for access to the Azure OpenAI service. Response times are typically within a few days.
-
-**[Click here to apply for access to the Azure OpenAI service](https://azure.microsoft.com/en-us/products/ai-services/openai-service)**
+[Click here](https://azure.microsoft.com/en-us/products/ai-services/openai-service) to apply for access to the Azure OpenAI service. Response times are typically within a few days.
 :::
 
 ## Azure OpenAI Service configuration
@@ -83,10 +82,11 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
 {
   "title": "GPT-4o Azure",
   "model": "gpt-4o",
-  "provider": "openai",
+  "provider": "azure",
   "apiBase": "https://just-an-example.openai.azure.com",
   "deployment": "gpt-4o-july",
   "apiVersion": "2023-03-15-preview",
-  "apiKey": "<MY_API_KEY>"
+  "apiKey": "<MY_API_KEY>",
+  "apiType": "azure-openai"
 }
 ```
