@@ -21,6 +21,7 @@ import {
   StatusBarStatus,
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
+import { ContinueConsoleWebviewViewProvider } from "../ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
@@ -48,6 +49,7 @@ export class VsCodeExtension {
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
+  private consoleView: ContinueConsoleWebviewViewProvider;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private editDecorationManager: EditDecorationManager;
@@ -106,10 +108,6 @@ export class VsCodeExtension {
     );
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
 
-    // Config Handler with output channel
-    const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion",
-    );
     const inProcessMessenger = new InProcessMessenger<
       ToCoreProtocol,
       FromCoreProtocol
@@ -125,19 +123,12 @@ export class VsCodeExtension {
       this.editDecorationManager,
     );
 
-    this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.append(log);
-    });
+    this.core = new Core(inProcessMessenger, this.ide);
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
     this.configHandler.loadConfig();
+
     this.verticalDiffManager = new VerticalDiffManager(
       this.configHandler,
       this.sidebar.webviewProtocol,
@@ -244,12 +235,27 @@ export class VsCodeExtension {
       this.fileSearch,
     );
 
+    // LLM Log view
+    this.consoleView = new ContinueConsoleWebviewViewProvider(
+      this.windowId,
+      this.extensionContext,
+      this.core.llmLogger,
+    );
+
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        "continue.continueConsoleView",
+        this.consoleView,
+      ),
+    );
+
     // Commands
     registerAllCommands(
       context,
       this.ide,
       context,
       this.sidebar,
+      this.consoleView,
       this.configHandler,
       this.verticalDiffManager,
       this.core.continueServerClientPromise,

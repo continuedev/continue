@@ -33,9 +33,7 @@ program.action(async () => {
     const ide = new IpcIde(messenger);
     const promptLogsPath = getPromptLogsPath();
 
-    new Core(messenger, ide, async (text) => {
-      fs.appendFileSync(promptLogsPath, text + "\n\n");
-    });
+    new Core(messenger, ide);
 
     console.log("[binary] Core started");
   } catch (e) {

@@ -7,6 +7,7 @@ import {
   IContextProvider,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
+import { LLMLogger } from "../../llm/logger";
 import { TEST_DIR } from "../../test/testDir";
 import FileSystemIde from "../../util/filesystem";
 
@@ -26,10 +27,11 @@ async function getContextProviderExtras(
 ): Promise<ContextProviderExtras> {
   const ide = new FileSystemIde(TEST_DIR);
   const ideSettingsPromise = ide.getIdeSettings();
+  const llmLogger = new LLMLogger();
   const configHandler = new ConfigHandler(
     ide,
     ideSettingsPromise,
-    async (text) => {},
+    llmLogger,
     Promise.resolve(undefined),
   );
   const { config } = await configHandler.loadConfig();
