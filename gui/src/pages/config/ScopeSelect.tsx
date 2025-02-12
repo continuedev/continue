@@ -52,7 +52,7 @@ export function ScopeSelect() {
           </div>
         </Listbox.Button>
 
-        <Listbox.Options className="bg-vsc-input-background absolute z-50 mt-1 w-full min-w-[200px] list-none overflow-auto rounded p-0 shadow-lg">
+        <Listbox.Options className="bg-vsc-input-background absolute z-50 mt-1 w-full max-w-[400px] list-none overflow-auto rounded p-0 shadow-lg">
           {organizations.length > 0 && (
             <>
               <div className="text-vsc-foreground p-2 font-semibold">

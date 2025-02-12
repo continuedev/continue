@@ -50,6 +50,7 @@ export class ConfigHandler {
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string;
   private selectedOrgId: string | null;
+  private localProfileManager: ProfileLifecycleManager;
 
   constructor(
     private readonly ide: IDE,
@@ -68,7 +69,11 @@ export class ConfigHandler {
       controlPlaneClient,
       writeLog,
     );
-    this.profiles = [new ProfileLifecycleManager(localProfileLoader, this.ide)];
+    this.localProfileManager = new ProfileLifecycleManager(
+      localProfileLoader,
+      this.ide,
+    );
+    this.profiles = [this.localProfileManager];
     this.selectedProfileId = localProfileLoader.description.id;
     this.selectedOrgId = null;
 
@@ -165,12 +170,10 @@ export class ConfigHandler {
           }),
         );
 
-        this.profiles = [
-          ...this.profiles.filter(
-            (profile) => profile.profileDescription.id === "local",
-          ),
-          ...hubProfiles,
-        ];
+        this.profiles =
+          this.selectedOrgId === null
+            ? [this.localProfileManager, ...hubProfiles]
+            : hubProfiles;
 
         this.notifyProfileListeners(
           this.profiles.map((profile) => profile.profileDescription),
@@ -249,9 +252,7 @@ export class ConfigHandler {
       this.controlPlaneClient
         .listWorkspaces()
         .then(async (workspaces) => {
-          this.profiles = this.profiles.filter(
-            (profile) => profile.profileDescription.id === "local",
-          );
+          this.profiles = [this.localProfileManager];
           workspaces.forEach((workspace) => {
             const profileLoader = new ControlPlaneProfileLoader(
               workspace.id,

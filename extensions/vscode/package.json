@@ -94,7 +94,7 @@
         "continue.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the gear icon to go to the settings page, and click Sign In."
         },
         "continue.enableContinueHub": {
           "type": "boolean",
@@ -328,20 +328,6 @@
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
-      },
-      {
-        "command": "continue.signInToControlPlane",
-        "title": "Sign In",
-        "category": "Continue",
-        "group": "Continue",
-        "icon": "$(account)"
-      },
-      {
-        "command": "continue.openAccountDialog",
-        "title": "Account",
-        "category": "Continue",
-        "group": "Continue",
-        "icon": "$(account)"
       }
     ],
     "keybindings": [
@@ -530,16 +516,6 @@
           "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.signInToControlPlane",
-          "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && !continue.isSignedInToControlPlane"
-        },
-        {
-          "command": "continue.openAccountDialog",
-          "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openMorePage",

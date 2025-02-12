@@ -37,7 +37,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   setTTSActive: [boolean, void];
   getWebviewHistoryLength: [undefined, number];
   getCurrentSessionId: [undefined, string];
-  signInToControlPlane: [undefined, void];
-  openDialogMessage: ["account", void];
   "docs/suggestions": [PackageDocsResult[], void];
 };

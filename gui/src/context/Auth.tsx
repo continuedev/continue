@@ -11,7 +11,6 @@ import React, {
   useState,
 } from "react";
 import { useDispatch } from "react-redux";
-import AccountDialog from "../components/AccountDialog";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
@@ -100,8 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             ideMessenger.post("logoutOfControlPlane", undefined);
           }}
           onCancel={() => {
-            dispatch(setDialogMessage(<AccountDialog />));
-            dispatch(setShowDialog(true));
+            dispatch(setDialogMessage(undefined));
+            dispatch(setShowDialog(false));
           }}
         />,
       ),
@@ -110,10 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
     setSession(data.sessionInfo);
-  });
-
-  useWebviewListener("signInToControlPlane", async () => {
-    login(false);
   });
 
   useEffect(() => {

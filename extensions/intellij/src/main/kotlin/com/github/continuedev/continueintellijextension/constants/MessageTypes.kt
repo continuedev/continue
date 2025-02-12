@@ -59,8 +59,6 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
-            "signInToControlPlane",
-            "openDialogMessage",
             "docs/suggestions",
         )
 

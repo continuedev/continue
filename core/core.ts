@@ -905,13 +905,13 @@ export class Core {
     });
     //
 
-    on("didChangeSelectedProfile", (msg) => {
-      void this.configHandler.setSelectedProfile(msg.data.id);
+    on("didChangeSelectedProfile", async (msg) => {
+      await this.configHandler.setSelectedProfile(msg.data.id);
       void this.configHandler.reloadConfig();
     });
 
-    on("didChangeSelectedOrg", (msg) => {
-      void this.configHandler.setSelectedOrgId(msg.data.id);
+    on("didChangeSelectedOrg", async (msg) => {
+      await this.configHandler.setSelectedOrgId(msg.data.id);
       void this.configHandler.reloadConfig();
     });
 
