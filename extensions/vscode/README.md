@@ -30,7 +30,7 @@
 
 [Chat](https://continue.dev/docs/chat/how-to-use-it) makes it easy to ask for help from an LLM without needing to leave the IDE
 
-![chat](docs/static/img/chat.gif)
+![chat](../../docs/static/img/chat.gif)
 
 ## Autocomplete
 
@@ -42,13 +42,13 @@
 
 [Edit](https://continue.dev/docs/edit/how-to-use-it) is a convenient way to modify code without leaving your current file
 
-![edit](docs/static/img/edit.gif)
+![edit](../../docs/static/img/edit.gif)
 
 ## Actions
 
 [Actions](https://continue.dev/docs/actions/how-to-use-it) are shortcuts for common use cases.
 
-![actions](docs/static/img/actions.gif)
+![actions](../../docs/static/img/actions.gif)
 
 </div>
 
