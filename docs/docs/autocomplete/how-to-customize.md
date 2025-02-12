@@ -8,11 +8,13 @@ sidebar_position: 5
 Continue offers a handful of parameters in [`config.json`](../json-reference.md) that can be tuned to find the perfect balance between suggestion quality and system performance for your specific needs and hardware capabilities:
 
 ```json title="config.json"
- "tabAutocompleteOptions": {
-   "maxPromptTokens": 400,
-   "prefixPercentage": 0.5,
-   "multilineCompletions": "always"
- }
+{
+  "tabAutocompleteOptions": {
+    "maxPromptTokens": 400,
+    "prefixPercentage": 0.5,
+    "multilineCompletions": "always"
+  }
+}
 ```
 
 - `maxPromptTokens`: Sets the maximum number of tokens for the prompt, balancing context and speed.

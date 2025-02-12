@@ -27,6 +27,7 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Claude 3.5 Sonnet", 
@@ -36,6 +37,7 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
         "profile": "bedrock"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -59,6 +61,7 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Claude 3.5 Sonnet",
@@ -68,6 +71,7 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
         "profile": "bedrock"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -96,12 +100,14 @@ We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazo
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "embeddingsProvider": {
       "title": "Embeddings Model",
       "provider": "bedrock",
       "model": "amazon.titan-embed-text-v2:0",
       "region": "us-west-2"
     }
+  }
   ```
   </TabItem>
 </Tabs>
@@ -124,6 +130,7 @@ We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "reranker": {
       "name": "bedrock",
       "params": {
@@ -131,6 +138,7 @@ We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may
         "region": "us-west-2"
       }
     }
+  }
   ```
   </TabItem>
 </Tabs>
@@ -165,6 +173,7 @@ To setup Bedrock using custom imported models, add the following to your config 
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "AWS Bedrock deepseek-coder-6.7b-instruct",
@@ -175,6 +184,7 @@ To setup Bedrock using custom imported models, add the following to your config 
         "profile": "bedrock"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>

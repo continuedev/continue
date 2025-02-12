@@ -34,15 +34,17 @@ We recommend configuring **GPT-4o** as your chat model.
 	</TabItem>
 	<TabItem value="json" label="JSON">
   ```json title="config.json"
-  "models": [{
-      "title": "GPT-4o",
-      "provider": "azure",
-      "model": "gpt-4o",
-      "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-      "deployment": "<YOUR_DEPLOYMENT_NAME>",
-      "apiKey": "<YOUR_AZURE_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
-      "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
-  }]
+  {
+    "models": [{
+        "title": "GPT-4o",
+        "provider": "azure",
+        "model": "gpt-4o",
+        "apiBase": "<YOUR_DEPLOYMENT_BASE>",
+        "deployment": "<YOUR_DEPLOYMENT_NAME>",
+        "apiKey": "<YOUR_AZURE_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+        "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
+    }]
+  }
   ```
 	</TabItem>
 </Tabs>
@@ -64,11 +66,13 @@ We recommend configuring **Codestral** as your autocomplete model.
 	</TabItem>
 	<TabItem value="json" label="JSON">
 	```json title="config.json"
+  {
     "tabAutocompleteModel": {
       "title": "Codestral",
       "provider": "mistral",
       "model": "codestral-latest"
     }
+  }
 	```
 	</TabItem>
 </Tabs>
@@ -93,6 +97,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "embeddingsProvider": {
         "provider": "azure",
         "model": "text-embedding-3-large",
@@ -101,6 +106,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
         "apiKey": "<YOUR_AZURE_API_KEY>",
         "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
       }
+    }
     ```
     </TabItem>
 </Tabs>
@@ -145,14 +151,14 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
 	<TabItem value="json" label="JSON">
     ```json title="config.json"
     {
-        "title": "GPT-4o Azure",
-        "model": "gpt-4o",
-        "provider": "openai",
-        "apiBase": "https://just-an-example.openai.azure.com",
-        "deployment": "gpt-4o-july",
-        "apiVersion": "2023-03-15-preview",
-        "apiKey": "<YOUR_AZURE_API_KEY>",
-        "apiType": "azure-openai"
+      "title": "GPT-4o Azure",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "apiBase": "https://just-an-example.openai.azure.com",
+      "deployment": "gpt-4o-july",
+      "apiVersion": "2023-03-15-preview",
+      "apiKey": "<YOUR_AZURE_API_KEY>",
+      "apiType": "azure-openai"
     }
     ```
 	</TabItem>

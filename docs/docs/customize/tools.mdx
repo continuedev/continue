@@ -30,16 +30,17 @@ Currently custom tools can be configured using the [Model Context Protocol](http
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   mcpServers:
-  - name: My MCP Server
-    command: uvx
-    args:
-      - mcp-server-sqlite
-      - --db-path
-      - /Users/NAME/test.db
+    - name: My MCP Server
+      command: uvx
+      args:
+        - mcp-server-sqlite
+        - --db-path
+        - /Users/NAME/test.db
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "experimental": {
       "modelContextProtocolServers": [
         {
@@ -51,6 +52,7 @@ Currently custom tools can be configured using the [Model Context Protocol](http
         }
       ]
     }
+  }
   ```
   </TabItem>
 </Tabs>

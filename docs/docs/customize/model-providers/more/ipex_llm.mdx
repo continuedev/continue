@@ -20,6 +20,7 @@ IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "IPEX-LLM",
@@ -27,6 +28,7 @@ IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to
         "model": "AUTODETECT"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -45,6 +47,7 @@ If you would like to reach the Ollama service from another machine, make sure yo
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "IPEX-LLM",
@@ -53,6 +56,7 @@ If you would like to reach the Ollama service from another machine, make sure yo
         "apiBase": "http://your-ollama-service-ip:11434"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>

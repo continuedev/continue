@@ -14,18 +14,19 @@ Groq provides the fastest available inference for open-source language models, i
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
-    models:
-      - name: Llama 3.3 70b Versatile
-        provider: groq
-        model: llama-3.3-70b-versatile
-        apiKey: <YOUR_GROQ_API_KEY>
-        roles:
-          - chat
-    ```
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Llama 3.3 70b Versatile
+      provider: groq
+      model: llama-3.3-70b-versatile
+      apiKey: <YOUR_GROQ_API_KEY>
+      roles:
+        - chat
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-    ```json title="config.json"
+  ```json title="config.json"
+  {
     "models": [
       {
         "title": "Llama 3.3 70b Versatile",
@@ -34,6 +35,7 @@ Groq provides the fastest available inference for open-source language models, i
         "apiKey": "<YOUR_GROQ_API_KEY>"
       }
     ]
-    ```
+  }
+  ```
   </TabItem>
 </Tabs>

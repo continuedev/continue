@@ -19,6 +19,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Claude 3.5 Sonnet",
@@ -27,6 +28,7 @@ Kindo offers centralized control over your organization's AI operations, ensurin
         "apiKey": "<YOUR_KINDO_API_KEY>"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -35,28 +37,30 @@ Kindo offers centralized control over your organization's AI operations, ensurin
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
-    models:
-      - name: WhiteRabbitNeo
-        provider: kindo
-        model: /models/WhiteRabbitNeo-33B-DeepSeekCoder
-        apiKey: <YOUR_KINDO_API_KEY>
-        roles:
-          - autocomplete
-    ```
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: WhiteRabbitNeo
+      provider: kindo
+      model: /models/WhiteRabbitNeo-33B-DeepSeekCoder
+      apiKey: <YOUR_KINDO_API_KEY>
+      roles:
+        - autocomplete
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-    ```json title="config.json"
-      "tabAutocompleteModel": [
-        {
-          "title": "WhiteRabbitNeo",
-          "provider": "kindo",
-          "model": "/models/WhiteRabbitNeo-33B-DeepSeekCoder",
-          "apiKey": "<YOUR_KINDO_API_KEY>",
-          "template": "none"
-        }
-      ]
-    ```
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": [
+      {
+        "title": "WhiteRabbitNeo",
+        "provider": "kindo",
+        "model": "/models/WhiteRabbitNeo-33B-DeepSeekCoder",
+        "apiKey": "<YOUR_KINDO_API_KEY>",
+        "template": "none"
+      }
+    ]
+  }
+  ```
   </TabItem>
 </Tabs>
 

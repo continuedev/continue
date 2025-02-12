@@ -14,16 +14,17 @@ To use Moonshot AI models, you need to:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
-    models:
-      - name: Moonshot
-        provider: moonshot
-        model: moonshot-v1-8k
-        apiKey: <YOUR_MOONSHOT_API_KEY>
-    ```
+  ```yaml title="Package or config.yaml"
+  models:
+    - name: Moonshot
+      provider: moonshot
+      model: moonshot-v1-8k
+      apiKey: <YOUR_MOONSHOT_API_KEY>
+  ```
   </TabItem>
   <TabItem value="json" label="JSON">
-    ```json title="config.json"
+  ```json title="config.json"
+  {
     "models": [
       {
         "title": "Moonshot",
@@ -32,7 +33,8 @@ To use Moonshot AI models, you need to:
         "apiKey": "<YOUR_MOONSHOT_API_KEY>"
       }
     ]
-    ```
+  }
+  ```
   </TabItem>
 </Tabs>
 
@@ -72,6 +74,7 @@ Here's a complete configuration example:
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Moonshot-8K",
@@ -85,6 +88,7 @@ Here's a complete configuration example:
         }
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>

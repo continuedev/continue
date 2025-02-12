@@ -240,14 +240,16 @@ List of documentation sites to index.
 Example
 
 ```json title="config.json"
-"docs": [
+{
+  "docs": [
     {
-    "title": "Continue",
-    "startUrl": "https://docs.continue.dev/intro",
-    "rootUrl": "https://docs.continue.dev",
-    "faviconUrl": "https://docs.continue.dev/favicon.ico",
-  }
-]
+      "title": "Continue",
+      "startUrl": "https://docs.continue.dev/intro",
+      "rootUrl": "https://docs.continue.dev",
+      "faviconUrl": "https://docs.continue.dev/favicon.ico"
+    }
+  ]
+}
 ```
 
 ### `slashCommands`

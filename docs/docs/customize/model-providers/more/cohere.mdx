@@ -21,6 +21,7 @@ We recommend configuring **Command-R Plus** as your chat model.
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Cohere",
@@ -29,6 +30,7 @@ We recommend configuring **Command-R Plus** as your chat model.
         "apiKey": "<YOUR_COHERE_API_KEY>"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -57,11 +59,13 @@ We recommend configuring **embed-english-v3.0** as your embeddings model.
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "embeddingsProvider": {
       "provider": "cohere",
       "model": "embed-english-v3.0",
       "apiKey": "<YOUR_COHERE_API_KEY>"
     }
+  }
   ```
   </TabItem>
 </Tabs>
@@ -84,6 +88,7 @@ We recommend configuring **rerank-english-v3.0** as your reranking model.
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "reranker": {
       "name": "cohere",
       "params": {
@@ -91,6 +96,7 @@ We recommend configuring **rerank-english-v3.0** as your reranking model.
         "apiKey": "<YOUR_COHERE_API_KEY>"
       }
     }
+  }
   ```
   </TabItem>
 </Tabs>

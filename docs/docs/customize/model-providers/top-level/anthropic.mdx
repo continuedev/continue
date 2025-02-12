@@ -21,19 +21,21 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
     - name: Claude 3.5 Sonnet
       provider: anthropic
       model: claude-3-5-sonnet-latest
-      apiKey: ${{ secrets.ANTHROPIC_API_KEY }}
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Claude 3.5 Sonnet",
         "provider": "anthropic",
         "model": "claude-3-5-sonnet-latest",
-        "apiKey": "[API_KEY]"
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -79,18 +81,20 @@ To enable caching of the system message and the turn-by-turn conversation, updat
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
-  "models": [
-    {
-      "cacheBehavior": {
-        "cacheSystemMessage": true,
-        "cacheConversation": true
-      },
-      "title": "Anthropic",
-      "provider": "anthropic",
-      "model": "claude-3-5-sonnet-latest",
-      "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-    }
-  ]
+  {
+    "models": [
+      {
+        "cacheBehavior": {
+          "cacheSystemMessage": true,
+          "cacheConversation": true
+        },
+        "title": "Anthropic",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-latest",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
   ```
   </TabItem>
 </Tabs>

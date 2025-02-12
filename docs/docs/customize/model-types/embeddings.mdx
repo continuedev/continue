@@ -34,21 +34,23 @@ After obtaining an API key from [here](https://www.voyageai.com/), you can confi
     <TabItem value="yaml" label="YAML">
     ```yaml title="Package or config.yaml"
     models:
-    - name: Voyage Code 3
-      provider: voyage
-      model: voyage-code-3
-      apiKey: <YOUR_VOYAGE_API_KEY>
-      roles: 
-        - embed
+      - name: Voyage Code 3
+        provider: voyage
+        model: voyage-code-3
+        apiKey: <YOUR_VOYAGE_API_KEY>
+        roles: 
+          - embed
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "embeddingsProvider": {
         "provider": "voyage",
         "model": "voyage-code-3",
         "apiKey": "<YOUR_VOYAGE_API_KEY>"
       }
+    }
     ```
     </TabItem>
 </Tabs>
@@ -73,9 +75,11 @@ See [here](../model-providers/top-level/ollama.mdx#embeddings-model) for instruc
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "embeddingsProvider": {
         "provider": "transformers.js"
       }
+    }
     ```
     </TabItem>
 </Tabs>
@@ -96,10 +100,12 @@ See [here](../model-providers/top-level/ollama.mdx#embeddings-model) for instruc
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "embeddingsProvider": {
       "provider": "huggingface-tei",
       "apiBase": "http://localhost:8080"
     }
+  }
   ```
   </TabItem>
 </Tabs>

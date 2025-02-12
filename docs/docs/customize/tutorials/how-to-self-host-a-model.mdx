@@ -35,14 +35,16 @@ Basic authentication can be done with any provider using the `apiKey` field:
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
-  "models": [
-    {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "llama2-7b",
-      "apiKey": "<YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>"
-    }
-  ]
+  {
+    "models": [
+      {
+        "title": "Ollama",
+        "provider": "ollama",
+        "model": "llama2-7b",
+        "apiKey": "<YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>"
+      }
+    ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -65,18 +67,20 @@ If you need to send custom headers for authentication, you may use the `requestO
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
-    "models": [
-      {
-        "title": "Ollama",
-        "provider": "ollama",
-        "model": "llama2-7b",
-        "requestOptions": {
-          "headers": {
-            "X-Auth-Token": "xxx"
+    {
+      "models": [
+        {
+          "title": "Ollama",
+          "provider": "ollama",
+          "model": "llama2-7b",
+          "requestOptions": {
+            "headers": {
+              "X-Auth-Token": "xxx"
+            }
           }
         }
-      }
-    ]
+      ]
+    }
     ```
     </TabItem>
 </Tabs>
@@ -99,6 +103,7 @@ Similarly if your model requires a Certificate for authentication, you may use t
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Ollama",
@@ -113,6 +118,7 @@ Similarly if your model requires a Certificate for authentication, you may use t
         }
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>

@@ -22,16 +22,17 @@ Ollama is the fastest way to get up and running with local language models. We r
 3. Change your Continue config file like this:
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
-		```yaml title="Package or config.yaml"
-		models:
-		  - name: Llama 3.1 8b
-		    provider: ollama
-		    model: llama3.1-8b
-		```
-	</TabItem>
-	<TabItem value="json" label="JSON">
-		```json title="config.json"
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="Package or config.yaml"
+   models:
+     - name: Llama 3.1 8b
+       provider: ollama
+       model: llama3.1-8b
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
       "models": [
         {
           "title": "Llama 3.1 8b",
@@ -39,8 +40,9 @@ Ollama is the fastest way to get up and running with local language models. We r
           "model": "llama3.1-8b"
         }
       ]
-		```
-	</TabItem>
+    }
+    ```
+   </TabItem>
 </Tabs>
 
 ## Groq
@@ -55,27 +57,29 @@ Groq provides the fastest available inference for open-source language models, i
 2. Update your Continue config file like this:
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
-		```yaml title="config.yaml"
-		models:
-		  - name: Llama 3.3 70b Versatile
-		    provider: groq
-		    model: llama-3.3-70b-versatile
-		    apiKey: <YOUR_GROQ_API_KEY>
-		```
-	</TabItem>
-	<TabItem value="json" label="JSON">
-		```json title="config.json"
-		"models": [
-		  {
-		    "title": "Llama 3.3 70b Versatile",
-		    "provider": "groq",
-		    "model": "llama-3.3-70b-versatile",
-		    "apiKey": "<YOUR_GROQ_API_KEY>"
-		  }
-		]
-		```
-	</TabItem>
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: Llama 3.3 70b Versatile
+       provider: groq
+       model: llama-3.3-70b-versatile
+       apiKey: <YOUR_GROQ_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+	 "models": [
+	   {
+	     "title": "Llama 3.3 70b Versatile",
+	     "provider": "groq",
+	     "model": "llama-3.3-70b-versatile",
+	     "apiKey": "<YOUR_GROQ_API_KEY>"
+	   }
+	 ]
+   }
+   ```
+   </TabItem>
 </Tabs>
 
 ## Together AI
@@ -87,27 +91,29 @@ Together AI provides fast and reliable inference of open-source models. You'll b
 3. Update your Continue config file like this:
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
-		```yaml title="Package or config.yaml"
-		models:
-		  - name: Llama 3.1 405b
-		    provider: together
-		    model: llama3.1-405b
-		    apiKey: <YOUR_TOGETHER_API_KEY>
-		```
-	</TabItem>
-	<TabItem value="json" label="JSON">
-		```json title="config.json"
-		"models": [
-		  {
-		    "title": "Llama 3.1 405b",
-		    "provider": "together",
-		    "model": "llama3.1-405b",
-		    "apiKey": "<YOUR_TOGETHER_API_KEY>"
-		  }
-		]
-		```
-	</TabItem>
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="Package or config.yaml"
+   models:
+     - name: Llama 3.1 405b
+       provider: together
+       model: llama3.1-405b
+       apiKey: <YOUR_TOGETHER_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+      "models": [
+        {
+          "title": "Llama 3.1 405b",
+          "provider": "together",
+          "model": "llama3.1-405b",
+          "apiKey": "<YOUR_TOGETHER_API_KEY>"
+        }
+      ]
+   }
+   ```
+   </TabItem>
 </Tabs>
 
 ## Replicate
@@ -118,27 +124,29 @@ Replicate makes it easy to host and run open-source AI with an API.
 2. Change your Continue config file like this:
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
-		```yaml title="Package or config.yaml"
-		models:
-		  - name: Llama 3.1 405b
-		    provider: replicate
-		    model: llama3.1-405b
-		    apiKey: <YOUR_REPLICATE_API_KEY>
-		```
-	</TabItem>
-	<TabItem value="json" label="JSON">
-		```json title="config.json"
-			"models": [
-			    {
-			        "title": "Llama 3.1 405b",
-			        "provider": "replicate",
-			        "model": "llama3.1-405b",
-			        "apiKey": "<YOUR_REPLICATE_API_KEY>"
-			    }
-			]
-		```
-	</TabItem>
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="Package or config.yaml"
+   models:
+     - name: Llama 3.1 405b
+       provider: replicate
+       model: llama3.1-405b
+       apiKey: <YOUR_REPLICATE_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+      "models": [
+        {
+          "title": "Llama 3.1 405b",
+          "provider": "replicate",
+          "model": "llama3.1-405b",
+          "apiKey": "<YOUR_REPLICATE_API_KEY>"
+        }
+      ]
+   }
+   ```
+   </TabItem>
 </Tabs>
 
 ## SambaNova
@@ -161,6 +169,7 @@ SambaNova Cloud provides world record Llama3.1 70B/405B serving.
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "models": [
         {
           "title": "SambaNova Llama 3.1 405B",
@@ -169,6 +178,7 @@ SambaNova Cloud provides world record Llama3.1 70B/405B serving.
           "apiKey": "<YOUR_SAMBA_API_KEY>"
         }
       ]
+    }
     ```
     </TabItem>
 </Tabs>
@@ -193,14 +203,16 @@ Cerebras Inference uses specialized silicon to provides fast inference for the L
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
-  "models": [
-    {
-      "title": "Cerebras Llama 3.1 70B",
-      "provider": "cerebras",
-      "model": "llama3.1-70b",
-      "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-    }
-  ]
+  {
+    "models": [
+     {
+        "title": "Cerebras Llama 3.1 70B",
+        "provider": "cerebras",
+        "model": "llama3.1-70b",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
   ```
   </TabItem>
 </Tabs>

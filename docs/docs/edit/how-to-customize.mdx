@@ -15,12 +15,12 @@ You can configure a particular model to be used for Edit:
   Use model roles.
   ```yaml title="Package or config.yaml"
   models:
-  - name: Claude 3.5 Sonnet
-    provider: anthropic
-    model: claude-3-5-sonnet-latest
-    roles:
-      - edit
-    apiKey: <YOUR_ANTHROPIC_API_KEY>
+    - name: Claude 3.5 Sonnet
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - edit
   ```
   </TabItem>
   <TabItem value="json" label="JSON">

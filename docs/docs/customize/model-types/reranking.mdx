@@ -34,6 +34,7 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "reranker": {
         "name": "voyage",
         "params": {
@@ -41,6 +42,7 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
             "apiKey": "<YOUR_VOYAGE_API_KEY>"
         }
     }
+  }
   ```
   </TabItem>
 </Tabs>
@@ -63,13 +65,15 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "reranker": {
         "name": "cohere",
         "params": {
-            "model": "rerank-english-v3.0",
-            "apiKey": "<YOUR_COHERE_API_KEY>"
+          "model": "rerank-english-v3.0",
+          "apiKey": "<YOUR_COHERE_API_KEY>"
         }
     }
+  }
   ```
   </TabItem>
 </Tabs>
@@ -91,12 +95,14 @@ If you only have access to a single LLM, then you can use it as a reranker. This
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
-      "reranker": {
-          "name": "llm",
-          "params": {
-              "modelTitle": "My Model Title"
-          }
-      }
+  {
+    "reranker": {
+        "name": "llm",
+        "params": {
+            "modelTitle": "My Model Title"
+        }
+    }
+  }
   ```
   </TabItem>
 </Tabs>
@@ -121,6 +127,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "reranker": {
         "name": "huggingface-tei",
         "params": {
@@ -128,6 +135,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
           "apiKey": "<YOUR_TEI_API_KEY>"
         }
       }
+    }
     ```
     </TabItem>
 </Tabs>
@@ -148,8 +156,10 @@ Continue offers a free trial of Voyage AI's reranking model.
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
-    "reranker": {
-      "name": "free-trial"
+    {
+      "reranker": {
+        "name": "free-trial"
+      }
     }
     ```
     </TabItem>

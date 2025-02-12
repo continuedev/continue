@@ -114,15 +114,17 @@ If you are using an OpenAI compatible server / API, you can change the `apiBase`
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
-      "title": "OpenAI-compatible server / API", 
-      "provider": "openai",
-      "model": "MODEL_NAME",
-      "apiKey": "<YOUR_CUSTOM_API_KEY>",
-      "apiBase": "http://localhost:8000/v1"
+        "title": "OpenAI-compatible server / API", 
+        "provider": "openai",
+        "model": "MODEL_NAME",
+        "apiKey": "<YOUR_CUSTOM_API_KEY>",
+        "apiBase": "http://localhost:8000/v1"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>

@@ -122,16 +122,17 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   mcpServers:
-  - name: My MCP Server
-    command: uvx
-    args:
-      - mcp-server-sqlite
-      - --db-path
-      - /Users/NAME/test.db
+    - name: My MCP Server
+      command: uvx
+      args:
+        - mcp-server-sqlite
+        - --db-path
+        - /Users/NAME/test.db
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "experimental": {
       "modelContextProtocolServers": [
         {
@@ -143,6 +144,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
         }
       ]
     }
+  }
   ```
   </TabItem>
 </Tabs>

@@ -259,6 +259,7 @@ The following configuration example works out of the box for VS Code. This uses 
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "contextProviders": [
       {
         "name": "docs",
@@ -269,7 +270,8 @@ The following configuration example works out of the box for VS Code. This uses 
         "title": "Nest.js",
         "startUrl": "https://docs.nestjs.com/",
       },
-    ],
+    ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -296,6 +298,7 @@ Here is the equivalent minimal example for Jetbrains, which requires setting up 
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "contextProviders": [
       {
         "name": "docs",
@@ -310,7 +313,8 @@ Here is the equivalent minimal example for Jetbrains, which requires setting up 
     "embeddingsProvider": {
       "provider": "lmstudio",
       "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
-    },
+    }
+  }
   ```
   </TabItem>
 </Tabs>

@@ -23,6 +23,7 @@ We recommend configuring **Llama3.1 8B** as your chat model.
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "models": [
         {
           "title": "Llama3.1 8B",
@@ -30,6 +31,7 @@ We recommend configuring **Llama3.1 8B** as your chat model.
           "model": "llama3.1:8b"
         }
       ]
+    }
     ```
     </TabItem>
 </Tabs>
@@ -51,11 +53,13 @@ We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "tabAutocompleteModel": {
         "title": "Qwen2.5-Coder 1.5B",
         "provider": "ollama",
         "model": "qwen2.5-coder:1.5b-base"
       }
+    }
     ```
     </TabItem>
 </Tabs>
@@ -77,10 +81,12 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "embeddingsProvider": {
         "provider": "ollama",
         "model": "nomic-embed-text"
       }
+    }
     ```
     </TabItem>
 </Tabs>
@@ -107,6 +113,7 @@ To configure a remote instance of Ollama, add the `"apiBase"` property to your m
     </TabItem>
     <TabItem value="json" label="JSON">
     ```json title="config.json"
+    {
       "models": [
         {
           "title": "Llama3.1 8B",
@@ -115,6 +122,7 @@ To configure a remote instance of Ollama, add the `"apiBase"` property to your m
           "apiBase": "http://<my endpoint>:11434"
         }
       ]
+    }
     ```
     </TabItem>
 </Tabs>

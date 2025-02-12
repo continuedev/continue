@@ -25,6 +25,7 @@ We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "models": [
       {
         "title": "Nemotron-4-340B-Instruct",
@@ -33,6 +34,7 @@ We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
         "apiKey": "<YOUR_NVIDIA_API_KEY>"
       }
     ]
+  }
   ```
   </TabItem>
 </Tabs>
@@ -61,11 +63,13 @@ We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings m
   </TabItem>
   <TabItem value="json" label="JSON">
   ```json title="config.json"
+  {
     "embeddingsProvider": {
       "provider": "nvidia",
       "model": "nvidia/nv-embedqa-mistral-7b-v2",
       "apiKey": "<YOUR_NVIDIA_API_KEY>"
     }
+  }
   ```
   </TabItem>
 </Tabs>
