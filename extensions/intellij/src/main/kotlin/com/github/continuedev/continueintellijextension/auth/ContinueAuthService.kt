@@ -224,7 +224,7 @@ class ContinueAuthService {
         val accountId = getAccountId()
         val accountLabel = getAccountLabel()
 
-        return if (accessToken != null && accountId != null && accountLabel != null) {
+        return if ((accessToken != null && accessToken != "") && accountId != null && accountLabel != null) {
             ControlPlaneSessionInfo(
                 accessToken = accessToken,
                 account = ControlPlaneSessionInfo.Account(
