@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import { IdeSettings } from "..";
 
 export interface ControlPlaneEnv {
@@ -59,6 +60,17 @@ const LOCAL_ENV: ControlPlaneEnv = {
   WORKOS_CLIENT_ID: WORKOS_CLIENT_ID_STAGING,
   APP_URL: "http://localhost:3000/",
 };
+
+export async function enableHubContinueDev() {
+  try {
+    const resp = await fetch("https://api.continue.dev/features/hub");
+    const data = (await resp.json()) as any;
+    if ("enabled" in data && data.enabled === true) {
+      return true;
+    }
+  } catch (e: any) {}
+  return false;
+}
 
 export async function getControlPlaneEnv(
   ideSettingsPromise: Promise<IdeSettings>,

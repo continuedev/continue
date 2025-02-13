@@ -18,7 +18,7 @@ import type {
   IdeSettings,
   LLMFullCompletionOptions,
   ModelDescription,
-  ModelRoles,
+  ExperimentalModelRoles,
   PromptLog,
   RangeInFile,
   SerializedContinueConfig,
@@ -53,7 +53,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/addModel": [
     {
       model: SerializedContinueConfig["models"][number];
-      role?: keyof ModelRoles;
+      role?: keyof ExperimentalModelRoles;
     },
     void,
   ];
