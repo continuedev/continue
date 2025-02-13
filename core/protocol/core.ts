@@ -29,12 +29,7 @@ import type {
 } from "../";
 import { DevDataLogEvent } from "../../packages/config-yaml/src/schemas/data";
 
-export type OnboardingModes =
-  | "Local"
-  | "Best"
-  | "Custom"
-  | "Quickstart"
-  | "LocalAfterFreeTrial";
+export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -192,12 +187,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
 
   "profiles/switch": [{ id: string }, undefined];
 
-  "auth/getAuthUrl": [undefined, { url: string }];
+  "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall; selectedModelTitle: string },
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
   "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
 };

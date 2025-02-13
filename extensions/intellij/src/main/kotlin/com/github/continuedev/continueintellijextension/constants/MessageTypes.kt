@@ -41,6 +41,7 @@ class MessageTypes {
             "logoutOfControlPlane",
             "getTerminalContents",
             "showToast",
+            "openUrl"
         )
 
         // Note: If updating these values, make a corresponding update in

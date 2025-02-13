@@ -31,8 +31,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const defaultModel = selectDefaultModel(state);
 
         if (!defaultModel) {
-          console.error("No default model found");
-          return;
+          throw new Error("No model selected");
         }
 
         resetStateForNewMessage();
@@ -68,7 +67,8 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           defaultModel.provider,
           useTools,
         );
-        unwrapResult(await dispatch(streamNormalInput(messages)));
+        const output = await dispatch(streamNormalInput(messages));
+        unwrapResult(output);
       }),
     );
   },

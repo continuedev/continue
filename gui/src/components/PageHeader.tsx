@@ -12,7 +12,7 @@ export default function PageHeader({
   rightContent,
 }: PageHeaderProps) {
   return (
-    <div className="bg-vsc-background sticky top-0 z-20 m-0 flex items-center justify-between border-0 border-b border-solid border-b-zinc-700 bg-inherit pb-1">
+    <div className="bg-vsc-background sticky top-0 z-20 m-0 flex items-center justify-between border-b-zinc-700 bg-inherit py-0.5">
       <div className="flex items-center">
         {title && (
           <div

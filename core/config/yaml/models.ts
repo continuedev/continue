@@ -35,7 +35,8 @@ async function modelConfigToBaseLLM(
     return undefined;
   }
 
-  const usingContinueProxy = model.provider === "continue-proxy";
+  const usingContinueProxy =
+    platformConfigMetadata && model.provider === "continue-proxy";
   const modelName = usingContinueProxy
     ? getContinueProxyModelName(
         platformConfigMetadata!.ownerSlug,
@@ -58,6 +59,7 @@ async function modelConfigToBaseLLM(
     title: model.name,
     model: modelName,
     systemMessage,
+    promptTemplates: model.promptTemplates,
   };
 
   const llm = new cls(options);

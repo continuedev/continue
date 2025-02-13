@@ -5,11 +5,9 @@ import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
-import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { setProfileId } from "../../../redux/thunks/setProfileId";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
-import AboutAssistantDialog from "../../dialogs/AboutAssistantDialog";
 import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
@@ -27,6 +25,7 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
   function onNewAssistant() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "new",
+      orgSlug: selectedOrganization?.slug,
     });
   }
 
@@ -40,13 +39,7 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
     e.stopPropagation();
     e.preventDefault();
 
-    if (option.id === "local") {
-      ideMessenger.post("config/openProfile", { profileId: option.id });
-    } else {
-      props.onClose();
-      dispatch(setDialogMessage(<AboutAssistantDialog />));
-      dispatch(setShowDialog(true));
-    }
+    ideMessenger.post("config/openProfile", { profileId: option.id });
   }
 
   function handleClickError(profileId: string) {
@@ -61,7 +54,7 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
             key={idx}
             idx={idx}
             disabled={!!profile.errors?.length}
-            showConfigure={true}
+            showConfigure={profile.id === "local"}
             selected={profile.id === selectedProfile?.id}
             onLink={
               !isLocalProfile(profile)

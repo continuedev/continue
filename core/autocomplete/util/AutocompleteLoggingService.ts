@@ -126,6 +126,7 @@ export class AutocompleteLoggingService {
         multilineCompletions: restOfOutcome.multilineCompletions,
         time: restOfOutcome.time,
         useRecentlyEdited: restOfOutcome.useRecentlyEdited,
+        numLines: restOfOutcome.numLines,
       },
       true,
     );
