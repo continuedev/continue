@@ -13,8 +13,9 @@ describe.skip("Test the ConfigHandler and E2E config loading", () => {
     expect(profiles.length).toBe(1);
     expect(profiles[0].id).toBe("local");
 
-    const currentProfile = testConfigHandler.currentProfile;
-    expect(currentProfile.profileDescription.id).toBe("local");
+    expect(testConfigHandler.selectedProfile?.profileDescription.id).toBe(
+      "local",
+    );
   });
 
   test("should load the default config successfully", async () => {

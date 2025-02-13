@@ -48,7 +48,7 @@ export class ConfigHandler {
   private readonly globalContext = new GlobalContext();
   private additionalContextProviders: IContextProvider[] = [];
   private profiles: ProfileLifecycleManager[];
-  private selectedProfileId: string;
+  private selectedProfileId: string | null;
   private selectedOrgId: string | null;
   private localProfileManager: ProfileLifecycleManager;
 
@@ -102,17 +102,31 @@ export class ConfigHandler {
     void this.fetchControlPlaneProfiles();
   }
 
-  // This will be the local profile
-  private get fallbackProfile() {
-    return this.profiles[0];
-  }
-
-  get currentProfile() {
-    return (
-      this.profiles.find(
-        (p) => p.profileDescription.id === this.selectedProfileId,
-      ) ?? this.fallbackProfile
+  get selectedProfile(): ProfileLifecycleManager | null {
+    if (this.profiles.length === 0) {
+      return null;
+    }
+    if (!this.selectedProfileId) {
+      return null;
+    }
+    const match = this.profiles.find(
+      (p) => p.profileDescription.id === this.selectedProfileId,
     );
+    if (match) {
+      return match;
+    }
+    // If no match first try local
+    const local = this.profiles.find(
+      (p) => p.profileDescription.id === "local",
+    );
+    if (local) {
+      this.selectedProfileId = "local";
+      return local;
+    }
+
+    // Else return the first one
+    this.selectedProfileId = this.profiles[0].profileDescription.id;
+    return this.profiles[0];
   }
 
   get inactiveProfiles() {
