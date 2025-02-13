@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as os from "node:os";
 
-import { ContextMenuConfig, RangeInFileWithContents } from "core";
+import { ContextMenuConfig, ILLM, ModelInstaller, RangeInFileWithContents } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
@@ -14,13 +14,13 @@ import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 
 import {
-  StatusBarStatus,
   getAutocompleteStatusBarDescription,
   getAutocompleteStatusBarTitle,
   getStatusBarStatus,
   getStatusBarStatusFromQuickPickItemLabel,
   quickPickStatusText,
   setupStatusBar,
+  StatusBarStatus,
 } from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 
@@ -32,6 +32,7 @@ import { getMetaKeyLabel } from "./util/util";
 import { VsCodeIde } from "./VsCodeIde";
 
 import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
+import { isModelInstaller } from "core/llm";
 import { startLocalOllama } from "core/util/ollamaHelper";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -996,6 +997,19 @@ const getCommandsMap: (
     "continue.startLocalOllama": () => {
       startLocalOllama(ide);
     },
+    "continue.installModel": async (modelName: string, llmProvider: ILLM | undefined) => {
+      try {
+        if (!isModelInstaller(llmProvider)) {
+          const msg = llmProvider ? `LLM provider '${llmProvider.providerName}' does not support installing models` :
+          'Missing LLM Provider';
+          throw new Error(msg);
+        }
+        await installModelWithProgress(modelName, llmProvider);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : String(e);
+        vscode.window.showErrorMessage(`Failed to install '${modelName}': ${message}`);
+      }
+    }
   };
 };
 
@@ -1036,6 +1050,32 @@ const registerCopyBufferSpy = (
 
   context.subscriptions.push(typeDisposable);
 };
+
+async function installModelWithProgress(modelName: string, modelInstaller: ModelInstaller) {
+    return vscode.window.withProgress(
+      {
+        location: vscode.ProgressLocation.Notification,
+        title: `Installing model '${modelName}'`,
+        cancellable: true,
+      }, async (windowProgress, token) => {
+        let currentProgress: number = 0;
+        const progressWrapper = (details: string, worked?: number, total?: number) => {
+          let increment = 0;
+          if (worked && total) {
+            const progressValue = Math.round((worked / total) * 100);
+            increment = progressValue - currentProgress;
+            currentProgress = progressValue;
+          }
+          windowProgress.report({ message: details, increment });
+        }
+        const abortController = new AbortController();
+        token.onCancellationRequested(() => {
+          console.log(`Pulling ${modelName} model was cancelled`);
+          abortController.abort();
+        });
+        await modelInstaller.installModel(modelName, abortController.signal, progressWrapper);
+      });
+}
 
 export function registerAllCommands(
   context: vscode.ExtensionContext,
