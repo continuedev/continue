@@ -122,8 +122,8 @@ export class ConfigHandler {
   }
 
   async openConfigProfile(profileId?: string) {
-    let openProfileId = profileId || this.selectedProfileId;
-    if (openProfileId === "local") {
+    let idToOpen = profileId || this.currentProfile.profileDescription.id;
+    if (idToOpen === "local") {
       const ideInfo = await this.ide.getIdeInfo();
       const configYamlPath = getConfigYamlPath(ideInfo.ideType);
       if (fs.existsSync(configYamlPath)) {
@@ -133,7 +133,8 @@ export class ConfigHandler {
       }
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
+
+      await this.ide.openUrl(`${env.APP_URL}${idToOpen}`);
     }
   }
 
