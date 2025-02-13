@@ -208,6 +208,7 @@ export const sessionSlice = createSlice({
 
         historyItem.message.content = ""; // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
         historyItem.editorState = payload.editorState;
+        historyItem.contextItems = [];
 
         state.history = state.history.slice(0, index + 1).concat({
           message: {
