@@ -907,6 +907,7 @@ export interface BaseCompletionOptions {
 
 export interface ModelCapability {
   uploadImage?: boolean;
+  tools?: boolean;
 }
 
 export interface ModelDescription {
