@@ -57,7 +57,7 @@ export default function AssistantSelect() {
         <Popover.Button
           data-testid="assistant-select-button"
           ref={buttonRef}
-          className="text-vsc-foreground-muted cursor-pointer border-none bg-transparent text-gray-500 hover:brightness-125"
+          className="text-lightgray cursor-pointer border-none bg-transparent text-gray-500 hover:brightness-125"
           style={{ fontSize: `${getFontSize() - 2}px` }}
         >
           <div className="flex max-w-[50vw] items-center gap-0.5">

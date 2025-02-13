@@ -33,7 +33,6 @@ module.exports = {
         "vsc-editor-background":
           "var(--vscode-editor-background, var(--vscode-sideBar-background, rgb(30 30 30)))",
         "vsc-input-border": "var(--vscode-input-border, #999998)",
-        "vsc-foreground-muted": "var(--vscode-foreground-muted, #999)",
 
         // I've moved a few over to the non-vsc-specific approach
         // TODO move the rest
