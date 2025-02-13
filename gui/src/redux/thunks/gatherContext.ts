@@ -6,12 +6,10 @@ import {
   MessageContent,
   RangeInFile,
 } from "core";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
-import { ThunkApiType } from "../store";
-import { selectDefaultModel } from "../slices/configSlice";
-import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import * as URI from "uri-js";
-import { v4 as uuidv4 } from "uuid";
+import resolveEditorContent from "../../components/mainInput/resolveInput";
+import { selectDefaultModel } from "../slices/configSlice";
+import { ThunkApiType } from "../store";
 
 export const gatherContext = createAsyncThunk<
   {

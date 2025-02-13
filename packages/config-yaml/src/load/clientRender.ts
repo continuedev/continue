@@ -14,7 +14,7 @@ import {
 
 export async function clientRender(
   unrolledConfigContent: string,
-  secretStore: SecretStore,
+  clientSecretStore: SecretStore,
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -23,16 +23,9 @@ export async function clientRender(
   // 2. Then, we will check which of the secrets are found in the local personal secret store. Here we’re checking for anything that matches the last part of the FQSN, not worrying about the owner/package/owner/package slugs
   const secretsTemplateData: Record<string, string> = {};
 
-  const unresolvedFQSNs: FQSN[] = [];
-  for (const secret of secrets) {
-    const fqsn = decodeFQSN(secret.replace("secrets.", ""));
-    const secretValue = await secretStore.get(fqsn.secretName);
-    if (secretValue) {
-      secretsTemplateData[secret] = secretValue;
-    } else {
-      unresolvedFQSNs.push(fqsn);
-    }
-  }
+  const unresolvedFQSNs: FQSN[] = secrets.map((secret) => {
+    return decodeFQSN(secret.replace("secrets.", ""));
+  });
 
   // Don't use platform client in local mode
   if (platformClient) {
@@ -46,7 +39,9 @@ export async function clientRender(
       }
 
       if ("value" in secretResult) {
-        secretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // clientSecretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // const secretValue = await clientSecretStore.get(fqsn.secretName);
+        secretsTemplateData[encodeFQSN(secretResult.fqsn)] = secretResult.value;
       }
 
       secretsTemplateData["secrets." + encodeFQSN(secretResult.fqsn)] =

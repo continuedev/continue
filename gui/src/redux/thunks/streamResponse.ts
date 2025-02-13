@@ -74,13 +74,15 @@ export const streamResponseThunk = createAsyncThunk<
         const useTools = state.ui.useTools;
         const defaultModel = selectDefaultModel(state);
         const slashCommands = state.config.config.slashCommands || [];
-        const inputIndex = index ?? state.session.history.length;
+        const inputIndex = index ?? state.session.history.length; // Either given index or concat to end
 
         if (!defaultModel) {
           throw new Error("No chat model selected");
         }
 
-        dispatch(submitEditorAndInitAtIndex({ index, editorState }));
+        dispatch(
+          submitEditorAndInitAtIndex({ index: inputIndex, editorState }),
+        );
         resetStateForNewMessage();
 
         const result = await dispatch(
