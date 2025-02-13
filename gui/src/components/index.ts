@@ -4,10 +4,6 @@ import { getFontSize, isJetBrains } from "../util";
 export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
 export const VSC_FOREGROUND_VAR = "--vscode-editor-foreground";
-export const VSC_FOREGROUND_MUTED_VAR = "--vscode-foreground-muted";
-export const VSC_DESCRIPTION_FOREGROUND = "--vscode-descriptionForeground";
-export const VSC_INPUT_PLACEHOLDER_FOREGROUND =
-  "--vscode-input-placeholderForeground";
 export const VSC_BUTTON_BACKGROUND_VAR = "--vscode-button-background";
 export const VSC_BUTTON_FOREGROUND_VAR = "--vscode-button-foreground";
 export const VSC_EDITOR_BACKGROUND_VAR = "--vscode-editor-background";
@@ -21,11 +17,6 @@ export const VSC_INPUT_BORDER_VAR = "--vscode-input-border";
 export const VSC_INPUT_BORDER_FOCUS_VAR = "--vscode-focusBorder";
 export const VSC_BADGE_BACKGROUND_VAR = "--vscode-badge-background";
 export const VSC_BADGE_FOREGROUND_VAR = "--vscode-badge-foreground";
-export const VSC_SIDEBAR_BORDER_VAR = "--vscode-sideBar-border";
-export const VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR =
-  "--vscode-diffEditor-removedLineBackground";
-export const VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR =
-  "--vscode-diffEditor-insertedLineBackground";
 export const VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR =
   "--vscode-commandCenter-activeBorder";
 export const VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR =
@@ -35,9 +26,6 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
   VSC_BACKGROUND_VAR,
   VSC_FOREGROUND_VAR,
-  VSC_FOREGROUND_MUTED_VAR,
-  VSC_DESCRIPTION_FOREGROUND,
-  VSC_INPUT_PLACEHOLDER_FOREGROUND,
   VSC_BUTTON_BACKGROUND_VAR,
   VSC_BUTTON_FOREGROUND_VAR,
   VSC_EDITOR_BACKGROUND_VAR,
@@ -48,10 +36,7 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BORDER_VAR,
   VSC_INPUT_BORDER_FOCUS_VAR,
   VSC_BADGE_BACKGROUND_VAR,
-  VSC_SIDEBAR_BORDER_VAR,
   VSC_BADGE_FOREGROUND_VAR,
-  VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
-  VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
   VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR,
   VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR,
 ];
@@ -77,8 +62,9 @@ export const vscCommandCenterActiveBorder = `var(${VSC_COMMAND_CENTER_ACTIVE_BOR
 export const vscCommandCenterInactiveBorder = `var(${VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR}, #1bbe84)`;
 
 if (typeof document !== "undefined") {
+  const jetbrains = isJetBrains();
   for (const colorVar of VSC_THEME_COLOR_VARS) {
-    if (isJetBrains()) {
+    if (jetbrains) {
       const cached = localStorage.getItem(colorVar);
       if (cached) {
         document.body.style.setProperty(colorVar, cached);
@@ -161,13 +147,6 @@ export const Button = styled.button`
     filter: brightness(1.2);
   }
 `;
-
-type NumberInputProps = {
-  value: number;
-  onChange: (value: number) => void;
-  max?: number;
-  min?: number;
-};
 
 export const SecondaryButton = styled.button`
   padding: 6px 12px;

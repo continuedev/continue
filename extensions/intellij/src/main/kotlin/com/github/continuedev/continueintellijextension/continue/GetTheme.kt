@@ -75,18 +75,25 @@ class GetTheme {
 
             return mapOf(
                 "--vscode-editor-foreground" to defaultForegroundHex,
-                "--vscode-sideBar-background" to defaultBackgroundHex,
-                "--vscode-input-background" to secondaryDarkHex,
                 "--vscode-editor-background" to defaultBackgroundHex,
+
                 "--vscode-button-background" to defaultBackgroundHex,
+                "--vscode-button-foreground" to defaultForegroundHex,
+
                 "--vscode-list-activeSelectionBackground" to defaultBackgroundHex,
-                "--vscode-focusBorder" to highlightHex,
+
                 "--vscode-quickInputList-focusForeground" to defaultForegroundHex,
                 "--vscode-quickInput-background" to secondaryDarkHex,
-                "--vscode-input-border" to "#80808080",
+
                 "--vscode-badge-background" to highlightHex,
                 "--vscode-badge-foreground" to defaultForegroundHex,
+
+                "--vscode-input-background" to secondaryDarkHex,
+                "--vscode-input-border" to "#80808080",
+                "--vscode-sideBar-background" to defaultBackgroundHex,
                 "--vscode-sideBar-border" to "#80808080",
+                "--vscode-focusBorder" to highlightHex,
+
                 "--vscode-commandCenter-activeBorder" to highlightHex,
                 "--vscode-commandCenter-inactiveBorder" to "#80808080"
             )
