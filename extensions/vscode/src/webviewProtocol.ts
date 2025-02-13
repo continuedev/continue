@@ -7,6 +7,7 @@ import * as vscode from "vscode";
 
 import { IMessenger } from "../../../core/protocol/messenger";
 
+import { ILLM } from "core";
 import { showFreeTrialLoginMessage } from "./util/messages";
 
 export class VsCodeWebviewProtocol
@@ -87,27 +88,40 @@ export class VsCodeWebviewProtocol
           }
         } catch (e: any) {
           let message = e.message;
+          let llmProvider: ILLM | undefined;
           //Intercept Ollama errors for special handling
-          if (message.includes("Ollama may not")) {
-              const options = [];
-              if (message.includes("be installed")) {
-                options.push("Download Ollama");
-              } else if (message.includes("be running")) {
-                options.push("Start Ollama");
+          if (message.includes("Ollama may not") || message.includes("`ollama run")) {
+            let modelName : string | undefined;
+            const options = [];
+            if (message.includes("be installed")) {
+              options.push("Download Ollama");
+            } else if (message.includes("be running")) {
+              options.push("Start Ollama");
+            } else if (message.includes("`ollama run")) {
+              modelName = e.message.match(/`ollama run (.*)`/)?.[1];
+              if (e.llm) {
+                llmProvider = e.llm;
               }
-              if (options.length > 0) {
-                // Respond without an error, so the UI doesn't show the error component
-                respond({ done: true, status: "error" });
-                // Show native vscode error message instead, with options to download/start Ollama
-                vscode.window.showErrorMessage(e.message, ...options).then(async (val) => {
-                  if (val === "Download Ollama") {
-                    vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
-                  } else if (val === "Start Ollama") {
-                    vscode.commands.executeCommand("continue.startLocalOllama");
-                  }
-                });
-                return;
+              message = `Model "${modelName}" is not found in Ollama. You need to install it.`;
+              if (modelName) {
+                options.push("Install Model");
               }
+            }
+            if (options.length > 0) {
+              // Respond without an error, so the UI doesn't show the error component
+              respond({ done: true, status: "error" });
+              // Show native vscode error message instead, with options to download/start Ollama
+              vscode.window.showErrorMessage(message, ...options).then(async (val) => {
+                if (val === "Download Ollama") {
+                  vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
+                } else if (val === "Start Ollama") {
+                  vscode.commands.executeCommand("continue.startLocalOllama");
+                } else if (val === "Install Model") {
+                  vscode.commands.executeCommand("continue.installModel", modelName, llmProvider);
+                }
+              });
+              return;
+            }
           }
 
           respond({ done: true, error: e.message, status: "error" });
