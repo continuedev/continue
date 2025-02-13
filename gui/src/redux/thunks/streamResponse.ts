@@ -120,8 +120,7 @@ export const streamResponseThunk = createAsyncThunk<
         const updatedHistory = getState().session.history;
         const messages = constructMessages(
           [...updatedHistory],
-          defaultModel.model,
-          defaultModel.provider,
+          defaultModel,
           useTools,
         );
 
