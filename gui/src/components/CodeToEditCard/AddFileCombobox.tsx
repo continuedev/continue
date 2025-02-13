@@ -84,7 +84,7 @@ export default function AddFileCombobox({
                     className={({ active }) =>
                       `relative flex w-full cursor-pointer px-2 py-1 text-left text-xs ${
                         active
-                          ? "bg-vsc-list-active-background text-vsc-list-active-foreground"
+                          ? "bg-list-active text-list-active-foreground"
                           : ""
                       }`
                     }
@@ -112,7 +112,7 @@ export default function AddFileCombobox({
                   </Combobox.Option>
                 ))
               ) : (
-                <div className="text-vsc-list-active-foreground0 px-2 py-1 text-xs">
+                <div className="text-list-active-foreground px-2 py-1 text-xs">
                   No results
                 </div>
               )}
