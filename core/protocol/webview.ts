@@ -40,4 +40,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   signInToControlPlane: [undefined, void];
   openDialogMessage: ["account", void];
   "docs/suggestions": [PackageDocsResult[], void];
+  "jetbrains/setColors": [Record<string, string>, void];
 };

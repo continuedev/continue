@@ -93,8 +93,8 @@ class IntelliJIDE(
             remoteConfigSyncPeriod = settings.continueState.remoteConfigSyncPeriod,
             userToken = settings.continueState.userToken ?: "",
             enableControlServerBeta = settings.continueState.enableContinueTeamsBeta,
+            continueTestEnvironment = settings.continueState.continueTestEnvironment,
             pauseCodebaseIndexOnStart = false, // TODO: Needs to be implemented
-            continueTestEnvironment = "none"
         )
     }
 
