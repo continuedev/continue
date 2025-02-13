@@ -63,7 +63,7 @@ const LOCAL_ENV: ControlPlaneEnv = {
 
 export async function enableHubContinueDev() {
   try {
-    const resp = await fetch("http://localhost:3001/features/hub");
+    const resp = await fetch("https://api.continue.dev/features/hub");
     const data = (await resp.json()) as any;
     if ("enabled" in data && data.enabled === true) {
       return true;

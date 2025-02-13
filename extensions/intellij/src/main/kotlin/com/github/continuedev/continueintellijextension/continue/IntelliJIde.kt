@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.utils.OS
 import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
 import com.github.continuedev.continueintellijextension.utils.getOS
 import com.github.continuedev.continueintellijextension.utils.toUriOrNull
+import com.google.gson.Gson
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
@@ -31,6 +32,10 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.util.containers.toArray
 import kotlinx.coroutines.*
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.awt.Desktop
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -39,6 +44,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.net.URI
+import java.net.URL
 import java.nio.charset.Charset
 import java.nio.file.Paths
 
@@ -85,15 +91,50 @@ class IntelliJIDE(
         )
     }
 
+    suspend fun enableHubContinueDev(): Boolean {
+        try {
+            val client = OkHttpClient()
+            val url = URL("https://api.continue.dev/features/hub")
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .header("Content-Type", "application/json")
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            val responseBody = response.body?.string()
+            val gson = Gson()
+            val responseMap = gson.fromJson(responseBody, Map::class.java)
+
+            if (responseMap["enabled"] == true) {
+                return true
+            }
+        } catch (e: Exception) {
+            return false
+        }
+        return false
+    }
+
     override suspend fun getIdeSettings(): IdeSettings {
         val settings = service<ContinueExtensionSettings>()
+
+
+        var continueTestEnvironment = settings.continueState.continueTestEnvironment
+        if (continueTestEnvironment != "production") {
+            val enableHub = enableHubContinueDev()
+            if (enableHub) {
+                continueTestEnvironment = "production"
+            }
+        }
 
         return IdeSettings(
             remoteConfigServerUrl = settings.continueState.remoteConfigServerUrl,
             remoteConfigSyncPeriod = settings.continueState.remoteConfigSyncPeriod,
             userToken = settings.continueState.userToken ?: "",
             enableControlServerBeta = settings.continueState.enableContinueTeamsBeta,
-            continueTestEnvironment = settings.continueState.continueTestEnvironment,
+            continueTestEnvironment = continueTestEnvironment,
             pauseCodebaseIndexOnStart = false, // TODO: Needs to be implemented
         )
     }
