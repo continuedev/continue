@@ -7,7 +7,7 @@ import {
   IDE,
   ILLM,
   ModelDescription,
-  ModelRoles,
+  ExperimentalModelRoles,
 } from "../";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
@@ -34,7 +34,10 @@ export function addContextProvider(provider: ContextProviderWithParams) {
   });
 }
 
-export function addModel(model: ModelDescription, role?: keyof ModelRoles) {
+export function addModel(
+  model: ModelDescription,
+  role?: keyof ExperimentalModelRoles,
+) {
   editConfigJson((config) => {
     if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
       return config;
@@ -85,7 +88,7 @@ export function deleteModel(title: string) {
   });
 }
 
-export function getModelByRole<T extends keyof ModelRoles>(
+export function getModelByRole<T extends keyof ExperimentalModelRoles>(
   config: ContinueConfig,
   role: T,
 ): ILLM | undefined {
