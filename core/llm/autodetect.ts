@@ -93,8 +93,8 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
 ];
 
 function modelSupportsTools(modelDescription: ModelDescription) {
-  if (modelDescription.capabilities?.tools) {
-    return true;
+  if (modelDescription.capabilities?.tools !== undefined) {
+    return modelDescription.capabilities.tools;
   }
   const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
   if (!providerSupport) {
