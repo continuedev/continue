@@ -202,14 +202,14 @@ function AddDocsDialog() {
                     <div>
                       <PencilIcon
                         data-tooltip-id={id + "-edit"}
-                        className="lightgray h-3 w-3"
+                        className="text-lightgray h-3 w-3"
                       />
                       <ToolTip id={id + "-edit"} place="bottom">
                         This may not be a docs page
                       </ToolTip>
                     </div>
                   ) : (
-                    <PlusIcon className="text-foreground-muted h-3.5 w-3.5" />
+                    <PlusIcon className="text-lightgray h-3.5 w-3.5" />
                   )}
                 </div>
                 <div className="flex items-center gap-0.5">

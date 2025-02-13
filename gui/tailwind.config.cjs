@@ -26,7 +26,6 @@ module.exports = {
       },
       colors: {
         lightgray: "#999998",
-        "vsc-background": "var(--vsc-background)", //  "rgb(var(--vsc-background) / <alpha-value>)",
         "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",
         "vsc-background": "var(--vscode-sideBar-background, rgb(30 30 30))",
         "vsc-foreground": "var(--vscode-editor-foreground, #fff)",
@@ -34,8 +33,8 @@ module.exports = {
           "var(--vscode-editor-background, var(--vscode-sideBar-background, rgb(30 30 30)))",
         "vsc-input-border": "var(--vscode-input-border, #999998)",
 
-        // I've moved a few over to the non-vsc-specific approach
-        // TODO move the rest
+        // Starting to make things less vsc-specific
+        // TODO make it all non-IDE-specific naming
         "find-match-selected":
           "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0))",
         "list-active": "var(--vscode-list-activeSelectionBackground, #1bbe84)",
