@@ -193,7 +193,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
             // Listen for theme changes
             connection.subscribe(LafManagerListener.TOPIC, LafManagerListener {
-                // val isDarkTheme = UIManager.getLookAndFeel()?.name?.lowercase()?.contains("dark") ?: false
                 val colors = GetTheme().getTheme();
                 continuePluginService.sendToWebview(
                     "jetbrains/setColors",

@@ -46,26 +46,22 @@ class GetTheme {
             val background = JBColor.background()
             val foreground = JBColor.foreground()
 
-            val buttonBackground = JBColor.namedColor("Button.background")
-            val buttonForeground = JBColor.namedColor("Button.foreground")
+            val buttonBackground = JBColor.namedColor("Button.background", Color(230, 230, 230))
+            val buttonForeground = JBColor.namedColor("Button.foreground", Color(0, 0, 0))
 
-            val badgeBackground =  JBColor.namedColor("Panel.background")
-            val badgeForeground =  JBColor.namedColor("Panel.foreground")
+            val badgeBackground = JBColor.namedColor("Badge.background", Color(150, 150, 150))
+            val badgeForeground = JBColor.namedColor("Badge.foreground", Color(0, 0, 0))
 
-            val inputBackground = JBColor.namedColor("TextField.background")
+            val inputBackground = JBColor.namedColor("TextField.background", Color(255, 255, 255))
 
             val border = JBColor.border()
-            val focusBorder = JBColor.namedColor("Focus.borderColor")
-
+            val focusBorder = JBColor.namedColor("Focus.borderColor", Color(100, 100, 255))
             val editorScheme = EditorColorsManager.getInstance().globalScheme
 
             val editorBackground = editorScheme.defaultBackground
             val editorForeground = editorScheme.defaultForeground
 
-             val actionHoverBackground = JBColor.namedColor("ActionButton.hoverBackground")
-            // val inputBorder = JBColor.namedColor("TextField.borderColor")
-            // val focus = JBColor.namedColor("focusColor")
-             val highlight = editorScheme.getColor(EditorColors.MODIFIED_TAB_ICON_COLOR) ?: editorForeground
+            val actionHoverBackground = JBColor.namedColor("ActionButton.hoverBackground", Color(220, 220, 220))
 
             val findMatchBackground = editorScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)?.backgroundColor ?: Color(255, 221, 0)
 
@@ -76,7 +72,7 @@ class GetTheme {
                 "--vscode-button-background" to toHex(buttonBackground),
                 "--vscode-button-foreground" to toHex(buttonForeground),
 
-                "--vscode-list-activeSelectionBackground" to toHex(actionHoverBackground),
+                "--vscode-list-activeSelectionBackground" to toHex(actionHoverBackground) + "50",
 
                 "--vscode-quickInputList-focusForeground" to toHex(foreground),
                 "--vscode-quickInput-background" to toHex(inputBackground),
