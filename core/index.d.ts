@@ -672,6 +672,8 @@ export interface IDE {
       }
   >;
 
+  getLastFileSaveTimestamp?(): number;
+
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;

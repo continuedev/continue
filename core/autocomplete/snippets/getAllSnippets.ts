@@ -29,6 +29,27 @@ function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
   return Promise.race([promise, timeoutPromise]);
 }
 
+class DiffSnippetsCache {
+  private cache: Map<number, any> = new Map();
+  private lastTimestamp: number = 0;
+
+  public set<T>(timestamp: number, value: T): T {
+    // Clear old cache entry if exists
+    if (this.lastTimestamp !== timestamp) {
+      this.cache.clear();
+    }
+    this.lastTimestamp = timestamp;
+    this.cache.set(timestamp, value);
+    return value;
+  }
+
+  public get(timestamp: number): any | undefined {
+    return this.cache.get(timestamp);
+  }
+}
+
+const diffSnippetsCache = new DiffSnippetsCache();
+
 // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
 // or they might separately track recently edited ranges)
 async function getIdeSnippets(
@@ -90,6 +111,18 @@ const getClipboardSnippets = async (
 const getDiffSnippets = async (
   ide: IDE,
 ): Promise<AutocompleteDiffSnippet[]> => {
+  const currentTimestamp = ide.getLastFileSaveTimestamp ?
+    ide.getLastFileSaveTimestamp() :
+    Math.floor(Date.now() / 10000) * 10000; // Defaults to update once in every 10 seconds
+
+  // Check cache first
+  const cached = diffSnippetsCache.get(currentTimestamp) as AutocompleteDiffSnippet[];
+
+  if (cached) {
+    console.log("return cached diff");
+    return cached;
+  }
+
   let diff: string[] = [];
   try {
     diff = await ide.getDiff(true);
@@ -97,12 +130,14 @@ const getDiffSnippets = async (
     console.error("Error getting diff for autocomplete", e);
   }
 
-  return diff.map((item) => {
+  console.log("return new diff");
+  return diffSnippetsCache.set(currentTimestamp, diff.map((item) => {
     return {
       content: item,
       type: AutocompleteSnippetType.Diff,
     };
-  });
+  }));
+
 };
 
 export const getAllSnippets = async ({
