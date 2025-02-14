@@ -43,13 +43,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-    | "loading"
-    | "indexing"
-    | "done"
-    | "failed"
-    | "paused"
-    | "disabled"
-    | "cancelled";
+  | "loading"
+  | "indexing"
+  | "done"
+  | "failed"
+  | "paused"
+  | "disabled"
+  | "cancelled";
   debugInfo?: string;
 }
 
@@ -666,13 +666,15 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-        isUntitled: boolean;
-        path: string;
-        contents: string;
-      }
+      isUntitled: boolean;
+      path: string;
+      contents: string;
+    }
   >;
 
   getLastFileSaveTimestamp?(): number;
+
+  updateLastFileSaveTimestamp?(): void;
 
   getPinnedFiles(): Promise<string[]>;
 
@@ -850,11 +852,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-    | string
-    | {
-        type: "text";
-        text: string;
-      }[];
+  | string
+  | {
+    type: "text";
+    text: string;
+  }[];
 }
 
 export interface ToolExtras {
@@ -1176,9 +1178,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1269,9 +1271,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-  | { error: string; details?: never }
-  | { details: PackageDetailsSuccess; error?: never }
-);
+    | { error: string; details?: never }
+    | { details: PackageDetailsSuccess; error?: never }
+  );
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;

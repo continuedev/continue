@@ -41,16 +41,9 @@ class VsCodeIde implements IDE {
   ) {
     this.ideUtils = new VsCodeIdeUtils();
     this.secretStorage = new SecretStorage(context);
-    this.registerSaveWatcher();
   }
 
-  public registerSaveWatcher() {
-    vscode.workspace.onDidSaveTextDocument(async (event) => {
-      this.updateLastFileSaveTimestamp();
-    });
-  }
-
-  private updateLastFileSaveTimestamp(): void {
+  public updateLastFileSaveTimestamp(): void {
     this.lastFileSaveTimestamp = Date.now();
   }
 
