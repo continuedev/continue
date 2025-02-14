@@ -168,12 +168,6 @@ export class VsCodeExtension {
         } else if (newConfig) {
           setupStatusBar(undefined, undefined, false);
 
-          const result = await this.configHandler.getSerializedConfig();
-          this.sidebar.webviewProtocol?.request("configUpdate", {
-            result,
-            profileId: this.configHandler.currentProfile.profileDescription.id,
-          });
-
           this.tabAutocompleteModel.clearLlm();
 
           registerAllCodeLensProviders(
@@ -182,8 +176,6 @@ export class VsCodeExtension {
             newConfig,
           );
         }
-
-        this.sidebar.webviewProtocol?.request("configError", errors);
       },
     );
 
@@ -303,14 +295,6 @@ export class VsCodeExtension {
         );
 
         const sessionInfo = await getControlPlaneSessionInfo(true, false);
-        this.webviewProtocolPromise.then(async (webviewProtocol) => {
-          void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
-            sessionInfo,
-          });
-
-          // To make sure continue-proxy models and anything else requiring it get updated access token
-          this.configHandler.reloadConfig();
-        });
         void this.core.invoke("didChangeControlPlaneSessionInfo", {
           sessionInfo,
         });

@@ -33,12 +33,12 @@ import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
+  OrganizationDescription,
   ProfileDescription,
   ProfileLifecycleManager,
+  SessionState,
 } from "./ProfileLifecycleManager.js";
 import { clientRenderHelper } from "./yaml/clientRender.js";
-
-export type { ProfileDescription };
 
 type ConfigUpdateFunction = (payload: ConfigResult<ContinueConfig>) => void;
 
@@ -136,7 +136,14 @@ export class ConfigHandler {
   }
 
   async openConfigProfile(profileId?: string) {
-    let idToOpen = profileId || this.currentProfile.profileDescription.id;
+    let idToOpen = profileId || this.selectedProfile?.profileDescription.id;
+
+    if (!idToOpen) {
+      console.error(
+        "Error opening config profile: id not provided and no profile selected",
+      );
+      return;
+    }
     if (idToOpen === "local") {
       const ideInfo = await this.ide.getIdeInfo();
       const configYamlPath = getConfigYamlPath(ideInfo.ideType);
@@ -196,19 +203,19 @@ export class ConfigHandler {
 
         // Check the last selected workspace, and reload if it isn't local
         const workspaceId = await this.getWorkspaceId();
-        const lastSelectedWorkspaceIds =
+        const lastSelectedIds =
           this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
 
-        const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
-        if (selectedWorkspaceId) {
-          this.selectedProfileId = selectedWorkspaceId;
+        const lastSelectedProfileId = lastSelectedIds[workspaceId];
+        if (lastSelectedProfileId) {
+          this.selectedProfileId = lastSelectedProfileId;
           await this.loadConfig();
         } else {
           // Otherwise we stick with local profile, and record choice
-          lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
+          lastSelectedIds[workspaceId] = this.selectedProfileId;
           this.globalContext.update(
             "lastSelectedProfileForWorkspace",
-            lastSelectedWorkspaceIds,
+            lastSelectedIds,
           );
         }
       })
@@ -289,20 +296,21 @@ export class ConfigHandler {
 
           // Check the last selected workspace, and reload if it isn't local
           const workspaceId = await this.getWorkspaceId();
-          const lastSelectedWorkspaceIds =
+          const lastSelectedIds =
             this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
-          const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
-          if (selectedWorkspaceId) {
-            this.selectedProfileId = selectedWorkspaceId;
+          const lastSelectedProfileId = lastSelectedIds[workspaceId];
+          if (lastSelectedProfileId) {
+            this.selectedProfileId = lastSelectedProfileId;
             await this.loadConfig();
           } else {
             // Otherwise we stick with local profile, and record choice
-            lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
+            lastSelectedIds[workspaceId] = this.selectedProfileId;
             this.globalContext.update(
               "lastSelectedProfileForWorkspace",
-              lastSelectedWorkspaceIds,
+              lastSelectedIds,
             );
           }
+          void this.reloadConfig();
         })
         .catch((e) => {
           console.error(e);
@@ -310,15 +318,16 @@ export class ConfigHandler {
     }
   }
 
-  async setSelectedOrgId(orgId: string | null) {
+  async setSelectedOrg(orgId: string | null) {
     this.selectedOrgId = orgId;
     const selectedOrgs =
       this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
     selectedOrgs[await this.getWorkspaceId()] = orgId;
     this.globalContext.update("lastSelectedOrgIdForWorkspace", selectedOrgs);
+    await this.reloadConfig();
   }
 
-  async setSelectedProfile(profileId: string) {
+  async setSelectedProfile(profileId: string | null) {
     this.selectedProfileId = profileId;
     const result = await this.loadConfig();
     this.notifyConfigListeners(result);
@@ -329,6 +338,7 @@ export class ConfigHandler {
       "lastSelectedProfileForWorkspace",
       selectedProfiles,
     );
+    await this.reloadConfig();
   }
 
   // A unique ID for the current workspace, built from folder names
@@ -355,16 +365,14 @@ export class ConfigHandler {
     });
   }
 
-  private profilesListeners: ((profiles: ProfileDescription[]) => void)[] = [];
-  onDidChangeAvailableProfiles(
-    listener: (profiles: ProfileDescription[]) => void,
-  ) {
-    this.profilesListeners.push(listener);
+  private sessionStateListeners: ((sessionState: SessionState) => void)[] = [];
+  onDidChangeSessionState(listener: (sessionState: SessionState) => void) {
+    this.sessionStateListeners.push(listener);
   }
 
-  private notifyProfileListeners(profiles: ProfileDescription[]) {
-    for (const listener of this.profilesListeners) {
-      listener(profiles);
+  private notifySessionStateListeners(sessionState: SessionState) {
+    for (const listener of this.sessionStateListeners) {
+      listener(sessionState);
     }
   }
 
@@ -383,9 +391,12 @@ export class ConfigHandler {
 
   async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
+    if (!this.selectedProfile) {
+      return;
+    }
 
     const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig(this.additionalContextProviders);
+      await this.selectedProfile.reloadConfig(this.additionalContextProviders);
 
     if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
@@ -395,10 +406,17 @@ export class ConfigHandler {
     return { config, errors };
   }
 
-  getSerializedConfig(): Promise<
+  async getSerializedConfig(): Promise<
     ConfigResult<BrowserSerializedContinueConfig>
   > {
-    return this.currentProfile.getSerializedConfig(
+    if (!this.selectedProfile) {
+      return {
+        config: undefined,
+        errors: [],
+        configLoadInterrupted: true,
+      };
+    }
+    return await this.selectedProfile.getSerializedConfig(
       this.additionalContextProviders,
     );
   }
@@ -408,7 +426,14 @@ export class ConfigHandler {
   }
 
   async loadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    return await this.currentProfile.loadConfig(
+    if (!this.selectedProfile) {
+      return {
+        config: undefined,
+        errors: [],
+        configLoadInterrupted: true,
+      };
+    }
+    return await this.selectedProfile.loadConfig(
       this.additionalContextProviders,
     );
   }

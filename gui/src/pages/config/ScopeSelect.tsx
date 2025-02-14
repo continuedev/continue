@@ -4,37 +4,37 @@ import {
   ChevronDownIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
 import { useAuth } from "../../context/Auth";
-import { useAppDispatch } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setOrgId } from "../../redux/thunks/setOrgId";
 
-const USER_PROFILE_VAL = "personal";
+// const USER_PROFILE_VAL = "personal";
 
 export function ScopeSelect() {
   const { organizations, selectedOrganization } = useAuth();
-  const [value, setValue] = useState<string>(
-    selectedOrganization?.id || USER_PROFILE_VAL,
+  const selectedOrgId = useAppSelector(
+    (state) => state.session.selectedOrganizationId,
   );
   const dispatch = useAppDispatch();
 
-  const handleChange = (newValue: string) => {
-    setValue(newValue);
-
-    const orgId = newValue === USER_PROFILE_VAL ? null : newValue;
-    dispatch(setOrgId(orgId));
+  const handleChange = (newValue: string | null) => {
+    if (newValue === selectedOrgId) {
+      return;
+    }
+    dispatch(setOrgId(newValue));
   };
 
-  const CurScopeEntityFallBackIcon =
-    value === "personal" ? UserCircleIcon : BuildingOfficeIcon;
+  const CurScopeEntityFallBackIcon = selectedOrgId
+    ? BuildingOfficeIcon
+    : UserCircleIcon;
 
-  const selectedDisplay =
-    value === USER_PROFILE_VAL
-      ? { name: "Personal", iconUrl: null }
-      : organizations.find((org) => org.id === value);
+  const selectedDisplay = selectedOrganization ?? {
+    name: "Personal",
+    iconUrl: null,
+  };
 
   return (
-    <Listbox value={value} onChange={handleChange}>
+    <Listbox value={selectedOrgId} onChange={handleChange}>
       <div className="relative">
         <Listbox.Button className="border-vsc-input-border text-vsc-foreground hover:bg-vsc-background bg-vsc-input-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border border-solid p-2 hover:opacity-90">
           <div className="flex w-full items-center justify-between">
@@ -80,7 +80,7 @@ export function ScopeSelect() {
           )}
 
           <Listbox.Option
-            value={USER_PROFILE_VAL}
+            value={null}
             className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
           >
             <div className="flex items-center gap-2">

@@ -1,8 +1,10 @@
 import { ConfigResult } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
-import { ProfileDescription } from "../config/ConfigHandler";
-import { OrganizationDescription } from "../config/ProfileLifecycleManager";
+import {
+  OrganizationDescription,
+  ProfileDescription,
+} from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 
 import type {
@@ -27,6 +29,7 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -62,7 +65,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
-      profileId: string;
+      profileId: string | undefined;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
@@ -184,8 +187,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
-  "profiles/switch": [{ id: string }, undefined];
-
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall; selectedModelTitle: string },
@@ -194,4 +195,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
   "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
 };

@@ -5,8 +5,8 @@ import { ThunkApiType } from "../store";
 export const setProfileId = createAsyncThunk<void, string, ThunkApiType>(
   "profile/setId",
   async (id, { dispatch, extra }) => {
-    dispatch(setSelectedProfileId(id));
-    extra.ideMessenger.post("didChangeSelectedProfile", {
+    dispatch(setSelectedProfileId(id)); // Optimistic update
+    extra.ideMessenger.post("config/selectProfile", {
       id,
     });
   },

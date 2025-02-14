@@ -36,7 +36,7 @@ function useSetup() {
       initial: boolean,
       result: {
         result: ConfigResult<BrowserSerializedContinueConfig>;
-        profileId: string;
+        profileId: string | undefined;
       },
     ) => {
       const { result: configResult, profileId } = result;
@@ -44,15 +44,6 @@ function useSetup() {
         return;
       }
       hasLoadedConfig.current = true;
-      // window.postMessage(
-      //   {
-      //     messageType: "refreshSubmenuItems",
-      //     data: {
-      //       providers: "all",
-      //     },
-      //   },
-      //   "*",
-      // );
       dispatch(setConfigResult(configResult));
       dispatch(setSelectedProfileId(profileId));
 

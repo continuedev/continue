@@ -73,10 +73,6 @@ export class Core {
 
   private abortedMessageIds: Set<string> = new Set();
 
-  private async config() {
-    return (await this.configHandler.loadConfig()).config;
-  }
-
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
     data: ToCoreProtocol[T][0],
@@ -90,6 +86,206 @@ export class Core {
     messageId?: string,
   ): string {
     return this.messenger.send(messageType, data, messageId);
+  }
+
+  async *llmStreamChat(
+    abortedMessageIds: Set<string>,
+    msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
+  ): AsyncGenerator<ChatMessage, PromptLog> {
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
+
+    // Stop TTS on new StreamChat
+    if (config.experimental?.readResponseTTS) {
+      void TTS.kill();
+    }
+
+    const model = await this.configHandler.llmFromTitle(msg.data.title);
+
+    const gen = model.streamChat(
+      msg.data.messages,
+      new AbortController().signal,
+      msg.data.completionOptions,
+    );
+    let next = await gen.next();
+    while (!next.done) {
+      if (abortedMessageIds.has(msg.messageId)) {
+        abortedMessageIds.delete(msg.messageId);
+        next = await gen.return({
+          modelTitle: model.title ?? model.model,
+          completion: "",
+          prompt: "",
+          completionOptions: {
+            ...msg.data.completionOptions,
+            model: model.model,
+          },
+        });
+        break;
+      }
+
+      const chunk = next.value;
+
+      yield chunk;
+      next = await gen.next();
+    }
+
+    if (config.experimental?.readResponseTTS && "completion" in next.value) {
+      void TTS.read(next.value?.completion);
+    }
+
+    void Telemetry.capture(
+      "chat",
+      {
+        model: model.model,
+        provider: model.providerName,
+      },
+      true,
+    );
+
+    if (!next.done) {
+      throw new Error("Will never happen");
+    }
+
+    return next.value;
+  }
+
+  async *llmStreamComplete(
+    abortedMessageIds: Set<string>,
+    msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
+  ): AsyncGenerator<string, PromptLog> {
+    const model = await this.configHandler.llmFromTitle(msg.data.title);
+    const gen = model.streamComplete(
+      msg.data.prompt,
+      new AbortController().signal,
+      msg.data.completionOptions,
+    );
+    let next = await gen.next();
+    while (!next.done) {
+      if (abortedMessageIds.has(msg.messageId)) {
+        abortedMessageIds.delete(msg.messageId);
+        next = await gen.return({
+          modelTitle: model.title ?? model.model,
+          completion: "",
+          prompt: "",
+          completionOptions: {
+            ...msg.data.completionOptions,
+            model: model.model,
+          },
+        });
+        break;
+      }
+      yield next.value;
+      next = await gen.next();
+    }
+    if (!next.done) {
+      throw new Error("This will never happen");
+    }
+    return next.value;
+  }
+
+  async *runNodeJsSlashCommand(
+    abortedMessageIds: Set<string>,
+    msg: Message<ToCoreProtocol["command/run"][0]>,
+    messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+  ): AsyncGenerator<string> {
+    const {
+      input,
+      history,
+      modelTitle,
+      slashCommandName,
+      contextItems,
+      params,
+      historyIndex,
+      selectedCode,
+    } = msg.data;
+
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      throw new Error("Config not loaded");
+    }
+
+    const llm = await this.configHandler.llmFromTitle(modelTitle);
+    const slashCommand = config.slashCommands?.find(
+      (sc) => sc.name === slashCommandName,
+    );
+    if (!slashCommand) {
+      throw new Error(`Unknown slash command ${slashCommandName}`);
+    }
+
+    void Telemetry.capture(
+      "useSlashCommand",
+      {
+        name: slashCommandName,
+      },
+      true,
+    );
+
+    const checkActiveInterval = setInterval(() => {
+      if (abortedMessageIds.has(msg.messageId)) {
+        abortedMessageIds.delete(msg.messageId);
+        clearInterval(checkActiveInterval);
+      }
+    }, 100);
+
+    try {
+      for await (const content of slashCommand.run({
+        input,
+        history,
+        llm,
+        contextItems,
+        params,
+        ide: this.ide,
+        addContextItem: (item) => {
+          void messenger.request("addContextItem", {
+            item,
+            historyIndex,
+          });
+        },
+        selectedCode,
+        config,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
+      })) {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          clearInterval(checkActiveInterval);
+          break;
+        }
+        if (content) {
+          yield content;
+        }
+      }
+    } catch (e) {
+      throw e;
+    } finally {
+      clearInterval(checkActiveInterval);
+    }
+  }
+
+  async *streamDiffLinesGenerator(
+    abortedMessageIds: Set<string>,
+    msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
+  ): AsyncGenerator<DiffLine> {
+    const data = msg.data;
+    const llm = await this.configHandler.llmFromTitle(msg.data.modelTitle);
+    for await (const diffLine of streamDiffLines(
+      data.prefix,
+      data.highlighted,
+      data.suffix,
+      llm,
+      data.input,
+      data.language,
+      false,
+      undefined,
+    )) {
+      if (abortedMessageIds.has(msg.messageId)) {
+        abortedMessageIds.delete(msg.messageId);
+        break;
+      }
+      yield diffLine;
+    }
   }
 
   // TODO: It shouldn't actually need an IDE type, because this can happen
@@ -136,12 +332,12 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.selectedProfile.profileDescription.id,
+        profileId: this.configHandler.selectedProfile?.profileDescription.id,
       });
     });
 
-    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
-      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    this.configHandler.onDidChangeSessionState((state) =>
+      this.messenger.send("didChangeSessionState", state),
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
@@ -281,10 +477,8 @@ export class Core {
     });
 
     on("config/newPromptFile", async (msg) => {
-      await createNewPromptFileV2(
-        this.ide,
-        (await this.config())?.experimental?.promptPath,
-      );
+      const { config } = await this.configHandler.loadConfig();
+      await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
       await this.configHandler.reloadConfig();
     });
 
@@ -341,7 +535,7 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
@@ -358,12 +552,13 @@ export class Core {
     });
 
     on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode, selectedModelTitle } =
-        msg.data;
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
+
+      const { name, query, fullInput, selectedCode, selectedModelTitle } =
+        msg.data;
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider =
@@ -425,10 +620,10 @@ export class Core {
       return await getSymbolsForManyFiles(uris, this.ide);
     });
 
-    on("config/getSerializedProfileInfo", async (msg) => {
+    on("config/getSerializedProfileInfo", async () => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.selectedProfile.profileDescription.id,
+        profileId: this.configHandler.selectedProfile?.profileDescription.id,
       };
     });
 
@@ -441,111 +636,12 @@ export class Core {
       }
     });
 
-    async function* llmStreamChat(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
-    ): AsyncGenerator<ChatMessage, PromptLog> {
-      const { config } = await configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      // Stop TTS on new StreamChat
-      if (config.experimental?.readResponseTTS) {
-        void TTS.kill();
-      }
-
-      const model = await configHandler.llmFromTitle(msg.data.title);
-
-      const gen = model.streamChat(
-        msg.data.messages,
-        new AbortController().signal,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({
-            modelTitle: model.title ?? model.model,
-            completion: "",
-            prompt: "",
-            completionOptions: {
-              ...msg.data.completionOptions,
-              model: model.model,
-            },
-          });
-          break;
-        }
-
-        const chunk = next.value;
-
-        yield chunk;
-        next = await gen.next();
-      }
-
-      if (config.experimental?.readResponseTTS && "completion" in next.value) {
-        void TTS.read(next.value?.completion);
-      }
-
-      void Telemetry.capture(
-        "chat",
-        {
-          model: model.model,
-          provider: model.providerName,
-        },
-        true,
-      );
-
-      if (!next.done) {
-        throw new Error("Will never happen");
-      }
-
-      return next.value;
-    }
-
     on("llm/streamChat", (msg) =>
-      llmStreamChat(this.configHandler, this.abortedMessageIds, msg),
+      this.llmStreamChat(this.abortedMessageIds, msg),
     );
 
-    async function* llmStreamComplete(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
-    ): AsyncGenerator<string, PromptLog> {
-      const model = await configHandler.llmFromTitle(msg.data.title);
-      const gen = model.streamComplete(
-        msg.data.prompt,
-        new AbortController().signal,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({
-            modelTitle: model.title ?? model.model,
-            completion: "",
-            prompt: "",
-            completionOptions: {
-              ...msg.data.completionOptions,
-              model: model.model,
-            },
-          });
-          break;
-        }
-        yield next.value;
-        next = await gen.next();
-      }
-      if (!next.done) {
-        throw new Error("This will never happen");
-      }
-      return next.value;
-    }
-
     on("llm/streamComplete", (msg) =>
-      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg),
+      this.llmStreamComplete(this.abortedMessageIds, msg),
     );
 
     on("llm/complete", async (msg) => {
@@ -598,92 +694,8 @@ export class Core {
       return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
 
-    async function* runNodeJsSlashCommand(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["command/run"][0]>,
-      messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-    ): AsyncGenerator<string> {
-      const {
-        input,
-        history,
-        modelTitle,
-        slashCommandName,
-        contextItems,
-        params,
-        historyIndex,
-        selectedCode,
-      } = msg.data;
-
-      const { config } = await configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      const llm = await configHandler.llmFromTitle(modelTitle);
-      const slashCommand = config.slashCommands?.find(
-        (sc) => sc.name === slashCommandName,
-      );
-      if (!slashCommand) {
-        throw new Error(`Unknown slash command ${slashCommandName}`);
-      }
-
-      void Telemetry.capture(
-        "useSlashCommand",
-        {
-          name: slashCommandName,
-        },
-        true,
-      );
-
-      const checkActiveInterval = setInterval(() => {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          clearInterval(checkActiveInterval);
-        }
-      }, 100);
-
-      try {
-        for await (const content of slashCommand.run({
-          input,
-          history,
-          llm,
-          contextItems,
-          params,
-          ide,
-          addContextItem: (item) => {
-            void messenger.request("addContextItem", {
-              item,
-              historyIndex,
-            });
-          },
-          selectedCode,
-          config,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-        })) {
-          if (abortedMessageIds.has(msg.messageId)) {
-            abortedMessageIds.delete(msg.messageId);
-            clearInterval(checkActiveInterval);
-            break;
-          }
-          if (content) {
-            yield content;
-          }
-        }
-      } catch (e) {
-        throw e;
-      } finally {
-        clearInterval(checkActiveInterval);
-      }
-    }
     on("command/run", (msg) =>
-      runNodeJsSlashCommand(
-        this.configHandler,
-        this.abortedMessageIds,
-        msg,
-        this.messenger,
-      ),
+      this.runNodeJsSlashCommand(this.abortedMessageIds, msg, this.messenger),
     );
 
     // Autocomplete
@@ -702,33 +714,8 @@ export class Core {
       this.completionProvider.cancel();
     });
 
-    async function* streamDiffLinesGenerator(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
-    ): AsyncGenerator<DiffLine> {
-      const data = msg.data;
-      const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
-      for await (const diffLine of streamDiffLines(
-        data.prefix,
-        data.highlighted,
-        data.suffix,
-        llm,
-        data.input,
-        data.language,
-        false,
-        undefined,
-      )) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          break;
-        }
-        yield diffLine;
-      }
-    }
-
     on("streamDiffLines", (msg) =>
-      streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
+      this.streamDiffLinesGenerator(this.abortedMessageIds, msg),
     );
 
     on("completeOnboarding", (msg) => {
@@ -905,21 +892,20 @@ export class Core {
     });
     //
 
-    on("didChangeSelectedProfile", async (msg) => {
-      await this.configHandler.setSelectedProfile(msg.data.id);
-      void this.configHandler.reloadConfig();
-    });
-
-    on("didChangeSelectedOrg", async (msg) => {
-      await this.configHandler.setSelectedOrgId(msg.data.id);
-      void this.configHandler.reloadConfig();
-    });
-
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       await this.configHandler.updateControlPlaneSessionInfo(
         msg.data.sessionInfo,
       );
     });
+
+    on("controlPlane/selectOrg", async (msg) => {
+      await this.configHandler.setSelectedOrg(msg.data.id);
+    });
+
+    on("config/selectProfile", async (msg) => {
+      await this.configHandler.setSelectedProfile(msg.data.id);
+    });
+
     on("auth/getAuthUrl", async (msg) => {
       const url = await getAuthUrlForTokenPage(
         ideSettingsPromise,

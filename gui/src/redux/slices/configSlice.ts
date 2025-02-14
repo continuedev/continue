@@ -1,12 +1,20 @@
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { BrowserSerializedContinueConfig } from "core";
+import {
+  OrganizationDescription,
+  ProfileDescription,
+} from "core/config/ProfileLifecycleManager";
 import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
 
 export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
   config: BrowserSerializedContinueConfig;
   defaultModelTitle: string;
+  selectedProfileId: string | null;
+  availableProfiles: ProfileDescription[];
+  selectedOrganizationId: string | null;
+  availableOrganizations: OrganizationDescription[];
 };
 
 const initialState: ConfigState = {
@@ -28,6 +36,23 @@ const initialState: ConfigState = {
     tools: [],
     usePlatform: false,
   },
+  selectedProfileId: "local",
+  availableProfiles: [
+    {
+      id: "local",
+      title: "Local",
+      errors: undefined,
+      profileType: "local",
+      fullSlug: {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
+      iconUrl: "",
+    },
+  ],
+  selectedOrganizationId: "",
+  availableOrganizations: [],
 };
 
 export const configSlice = createSlice({
@@ -94,6 +119,53 @@ export const configSlice = createSlice({
         defaultModelTitle: state.config.models[nextIndex].title,
       };
     },
+    setSelectedProfileId: (
+      state,
+      { payload }: PayloadAction<string | null>,
+    ) => {
+      state.selectedProfileId = payload;
+    },
+    setAvailableProfiles: (
+      state,
+      { payload }: PayloadAction<ProfileDescription[]>,
+    ) => {
+      state.availableProfiles = payload;
+
+      // If no orgs or current profile id isn't found, clear it
+      if (payload.length === 0) {
+        state.selectedProfileId = null;
+      } else if (
+        state.selectedProfileId &&
+        !state.availableProfiles.find(
+          (profile) => profile.id === state.selectedProfileId,
+        )
+      ) {
+        state.selectedProfileId = state.availableProfiles[0].id; // Note "local" won't exist if using hub
+      }
+    },
+    setSelectedOrganizationId: (
+      state,
+      { payload }: PayloadAction<string | null>,
+    ) => {
+      state.selectedOrganizationId = payload;
+    },
+    setAvailableOrganizations: (
+      state,
+      { payload }: PayloadAction<OrganizationDescription[]>,
+    ) => {
+      state.availableOrganizations = payload;
+      // If no orgs or current org id isn't found, clear it
+      if (payload.length === 0) {
+        state.selectedOrganizationId = null;
+      } else if (
+        state.selectedOrganizationId &&
+        !state.availableOrganizations.find(
+          (org) => org.id === state.selectedOrganizationId,
+        )
+      ) {
+        state.selectedOrganizationId = state.availableOrganizations[0].id; // could set to null to default to personal
+      }
+    },
   },
   selectors: {
     selectDefaultModel: (state) => {
@@ -119,6 +191,10 @@ export const {
   updateConfig,
   setConfigResult,
   setConfigError,
+  setSelectedProfileId,
+  setSelectedOrganizationId,
+  setAvailableProfiles,
+  setAvailableOrganizations,
 } = configSlice.actions;
 
 export const {

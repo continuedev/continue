@@ -55,7 +55,7 @@ class MessageTypes {
             "addContextItem",
             "refreshSubmenuItems",
             "isContinueInputFocused",
-            "didChangeAvailableProfiles",
+            "didChangeSessionState",
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
@@ -113,12 +113,11 @@ class MessageTypes {
             //
             "completeOnboarding",
             "addAutocompleteModel",
-            "profiles/switch",
-            "didChangeSelectedProfile",
-            "didChangeSelectedOrg",
+            "config/selectProfile",
             "tools/call",
-            "controlPlane/openUrl",
+            "controlPlane/selectOrg",
             "controlPlane/listOrganizations"
+            "controlPlane/openUrl",
 
         )
     }

@@ -199,7 +199,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                     "sessionInfo" to initialSessionInfo
                 )
                 continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
-                continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
             }
 
             connection.subscribe(AuthListener.TOPIC, object : AuthListener {
@@ -216,7 +215,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         data,
                         null
                     ) { _ -> }
-                    continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
                 }
             })
 

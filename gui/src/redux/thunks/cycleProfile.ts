@@ -9,13 +9,15 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
     const profileIds = state.session.availableProfiles.map(
       (profile) => profile.id,
     );
-    const curIndex = profileIds.indexOf(state.session.selectedProfileId);
-    const nextIndex = (curIndex + 1) % profileIds.length;
-    const nextId = profileIds[nextIndex];
-    dispatch(setProfileId(nextId));
-
-    extra.ideMessenger.post("didChangeSelectedProfile", {
-      id: nextId,
-    });
+    if (profileIds.length === 0) {
+      return;
+    }
+    let nextId = profileIds[0];
+    if (state.session.selectedProfileId) {
+      const curIndex = profileIds.indexOf(state.session.selectedProfileId);
+      const nextIndex = (curIndex + 1) % profileIds.length;
+      nextId = profileIds[nextIndex];
+    }
+    await dispatch(setProfileId(nextId));
   },
 );

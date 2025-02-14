@@ -12,7 +12,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
-      profileId: string;
+      profileId: string | undefined;
     },
     void,
   ];

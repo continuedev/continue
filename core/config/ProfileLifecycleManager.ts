@@ -13,6 +13,7 @@ import {
 
 import { finalToBrowserConfig } from "./load.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
+import { ControlPlaneSessionInfo } from "../control-plane/client.js";
 
 export interface ProfileDescription {
   fullSlug: FullSlug;
@@ -28,6 +29,14 @@ export interface OrganizationDescription {
   iconUrl: string;
   name: string;
   slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
+}
+
+export interface SessionState {
+  session: ControlPlaneSessionInfo | undefined;
+  organizations: OrganizationDescription[];
+  profiles: ProfileDescription[];
+  selectedProfileId: string | null;
+  selectedOrganizationId: string | null;
 }
 
 export class ProfileLifecycleManager {

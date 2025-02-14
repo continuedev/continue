@@ -16,9 +16,11 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import {
-  selectAvailableProfiles,
+  setAvailableOrganizations,
   setAvailableProfiles,
-} from "../redux/slices/sessionSlice";
+  setSelectedOrganizationId,
+  setSelectedProfileId,
+} from "../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
 
@@ -42,24 +44,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     undefined,
   );
 
-  const [organizations, setOrganizations] = useState<OrganizationDescription[]>(
-    [],
-  );
-
   const ideMessenger = useContext(IdeMessengerContext);
 
+  // Orgs
+  const organizations = useAppSelector(
+    (store) => store.config.availableOrganizations,
+  );
   const selectedOrganizationId = useAppSelector(
-    (store) => store.session.selectedOrganizationId,
+    (store) => store.config.selectedOrganizationId,
   );
 
   const selectedOrganization = useMemo(() => {
     return organizations.find((p) => p.id === selectedOrganizationId);
   }, [organizations, selectedOrganizationId]);
 
-  const profiles = useAppSelector(selectAvailableProfiles);
+  // Profiles
+  const profiles = useAppSelector((store) => store.config.availableProfiles);
 
   const selectedProfileId = useAppSelector(
-    (store) => store.session.selectedProfileId,
+    (store) => store.config.selectedProfileId,
   );
   const selectedProfile = useMemo(() => {
     return profiles.find((p) => p.id === selectedProfileId);
@@ -107,10 +110,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
-  useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
-    setSession(data.sessionInfo);
-  });
-
   useEffect(() => {
     ideMessenger
       .request("getControlPlaneSessionInfo", {
@@ -122,6 +121,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
   }, []);
 
+  useEffect(() => {
+    if (session) {
+      ideMessenger
+        .request("controlPlane/listOrganizations", undefined)
+        .then((result) => {
+          if (result.status === "success") {
+            dispatch(setAvailableOrganizations(result.content));
+          }
+        });
+    } else {
+      dispatch(setAvailableOrganizations([]));
+    }
+  }, [session]);
+
+  // IDE settings
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =
     useState(false);
 
@@ -135,20 +149,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       });
   }, []);
-
-  useEffect(() => {
-    if (session) {
-      ideMessenger
-        .request("controlPlane/listOrganizations", undefined)
-        .then((result) => {
-          if (result.status === "success") {
-            setOrganizations(result.content);
-          }
-        });
-    } else {
-      setOrganizations([]);
-    }
-  }, [session]);
 
   useWebviewListener(
     "didChangeIdeSettings",
@@ -173,9 +173,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useWebviewListener(
-    "didChangeAvailableProfiles",
+    "didChangeSessionState",
     async (data) => {
+      setSession(data.session);
       dispatch(setAvailableProfiles(data.profiles));
+      dispatch(setAvailableOrganizations(data.organizations));
+      dispatch(setSelectedOrganizationId(data.selectedOrganizationId));
+      dispatch(setSelectedProfileId(data.selectedProfileId));
     },
     [],
   );

@@ -1,12 +1,15 @@
-import { ProfileDescription } from "../config/ConfigHandler.js";
+import {
+  OrganizationDescription,
+  SessionState,
+} from "../config/ProfileLifecycleManager.js";
 
 import { ToCoreFromIdeOrWebviewProtocol } from "./core.js";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
 export type ToCoreFromWebviewProtocol = ToCoreFromIdeOrWebviewProtocol & {
-  didChangeSelectedProfile: [{ id: string }, void];
-  didChangeSelectedOrg: [{ id: string | null }, void];
+  "config/selectProfile": [{ id: string | null }, void];
+  "controlPlane/selectOrg": [{ id: string | null }, void];
 };
 export type ToWebviewFromCoreProtocol = ToWebviewFromIdeOrCoreProtocol & {
-  didChangeAvailableProfiles: [{ profiles: ProfileDescription[] }, void];
+  didChangeSessionState: [SessionState, void];
 };

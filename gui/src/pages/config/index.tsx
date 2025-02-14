@@ -10,8 +10,7 @@ import { ScopeSelect } from "./ScopeSelect";
 import UserSettingsUI from "./UserSettings";
 import { Listbox, Transition } from "@headlessui/react";
 import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
-import { setSelectedProfileId } from "../../redux/slices/sessionSlice";
-import { isNull } from "lodash";
+import { setProfileId } from "../../redux/thunks/setProfileId";
 
 function ConfigPage() {
   useNavigationListener();
@@ -21,19 +20,16 @@ function ConfigPage() {
 
   const {
     session,
-
     logout,
     login,
     profiles,
     selectedProfile,
     controlServerBetaEnabled,
-    selectedOrganization,
   } = useAuth();
   // const profiles = [];
 
   const changeProfileId = (id: string) => {
-    ideMessenger.post("didChangeSelectedProfile", { id });
-    dispatch(setSelectedProfileId(id));
+    dispatch(setProfileId(id));
   };
 
   const [hubEnabled, setHubEnabled] = useState(false);
