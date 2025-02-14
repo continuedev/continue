@@ -16,7 +16,7 @@ In order to display suggestions quickly, without sending too many requests, we d
 
 ## Context
 
-As explained on the [context selection](context-selection.md) page, Continue uses a number of retrieval methods to find relevant snippets from your codebase to include in the prompt.
+As explained on the [context selection](./context-selection.md) page, Continue uses a number of retrieval methods to find relevant snippets from your codebase to include in the prompt.
 
 ## Filtering
 
@@ -28,4 +28,4 @@ Language models aren't perfect, but can be made much closer by adjusting their o
 
 We will also occasionally entirely filter out responses if they are bad. This is often due to extreme repetition.
 
-You can learn more about how it works in the [Autocomplete deep dive](../customize/deep-dives/autocomplete.md).
+You can learn more about how it works in the [Autocomplete deep dive](../customize/deep-dives/autocomplete.mdx).

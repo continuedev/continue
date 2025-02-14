@@ -99,7 +99,7 @@ SambaNova Cloud 提供 Llama3.1 70B/405B 服务的世界记录。
 2. 复制你的 API key
 3. 更新你的 Continue 配置文件像这样：
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

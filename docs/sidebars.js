@@ -138,6 +138,11 @@ const sidebars = {
       label: "Reference",
       href: "/reference",
     },
+    {
+      type: "link",
+      label: "JSON Reference",
+      href: "/json-reference",
+    },
     "customize/changelog",
     // {
     //   type: "link",

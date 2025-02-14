@@ -18,7 +18,7 @@ The most common way to invoke an action is with a slash command. These are short
 
 ![slash-commands](/img/slash-commands.png)
 
-A few of the most useful slash commands are available by default, like “/edit”, “/comment”, and “/share”, but Continue has a large built-in library of other options. To enable these, learn more [here](../customize/slash-commands.md).
+A few of the most useful slash commands are available by default, like “/edit”, “/comment”, and “/share”, but Continue has a large built-in library of other options. To enable these, learn more [here](../customize/slash-commands.mdx).
 
 ### Prompt files
 
@@ -36,7 +36,7 @@ Below is a quick example of setting up a prompt file to write unit tests using J
 2. Add a file called `test.prompt` to this folder. The name of this file will be the name of the slash command you will use to generate your prompt.
 3. Write the following contents to `test.prompt` and save.
 
-```
+```.prompt
 {{{ input }}}
 
 Write unit tests for the above selected code, following each of these instructions:

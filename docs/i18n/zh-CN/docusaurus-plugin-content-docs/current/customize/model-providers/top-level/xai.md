@@ -46,8 +46,16 @@ xAI currently does not offer any reranking models.
 
 ## Legacy Completions
 
-To force usage of `chat/completions` instead of `completions` endpoint you can set
+To force usage of `chat/completions` instead of `completions` endpoint you can set `useLegacyCompletionsEndpoint` to `true`:
 
-```json
-"useLegacyCompletionsEndpoint": false
+```json title="config.json"
+  "models": [
+    {
+      "title": "Grok Beta",
+      "provider": "xAI",
+      "model": "grok-beta",
+      "apiKey": "[API_KEY]",
+      "useLegacyCompletionsEndpoint": false
+    }
+  ]
 ```

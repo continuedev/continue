@@ -27,14 +27,15 @@ body:
         - **Continue version**: v0.9.4
         - **IDE version**:  VSCode 1.85.1
         - Model: Claude Sonnet 3.5
-        - config.json: `{ "models": ... }`
+        - config.yaml: `models: ...`
+        - OR config.json: `{ "models": ... }`
       value: |
         - OS:
         - Continue version:
         - IDE version:
         - Model:
-        - config.json:
-          ```json
+        - config:
+          ```yaml
 
           ```
       render: Markdown
