@@ -377,6 +377,10 @@ export function getEsbuildBinaryPath(): string {
   return path.join(getContinueUtilsPath(), "esbuild");
 }
 
+export function getStagingEnvironmentDotFilePath(): string {
+  return path.join(getContinueGlobalPath(), ".staging");
+}
+
 export function setupInitialDotContinueDirectory() {
   const devDataTypes = [
     "chat",

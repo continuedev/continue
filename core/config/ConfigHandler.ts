@@ -142,6 +142,10 @@ export class ConfigHandler {
             let renderedConfig: AssistantUnrolled | undefined = undefined;
             if (assistant.configResult.config) {
               renderedConfig = await clientRenderHelper(
+                {
+                  ownerSlug: assistant.ownerSlug,
+                  packageSlug: assistant.packageSlug,
+                },
                 YAML.stringify(assistant.configResult.config),
                 this.ide,
                 this.controlPlaneClient,
