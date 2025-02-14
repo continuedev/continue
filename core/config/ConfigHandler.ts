@@ -36,6 +36,7 @@ import {
   OrganizationDescription,
   ProfileDescription,
   ProfileLifecycleManager,
+  ProfilesState,
   SessionState,
 } from "./ProfileLifecycleManager.js";
 import { clientRenderHelper } from "./yaml/clientRender.js";
@@ -49,8 +50,10 @@ export class ConfigHandler {
   private additionalContextProviders: IContextProvider[] = [];
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string | null;
+  private organizations: OrganizationDescription[] = [];
   private selectedOrgId: string | null;
   private localProfileManager: ProfileLifecycleManager;
+  private sessionInfo: ControlPlaneSessionInfo | undefined;
 
   constructor(
     private readonly ide: IDE,
@@ -77,17 +80,17 @@ export class ConfigHandler {
     this.selectedProfileId = localProfileLoader.description.id;
     this.selectedOrgId = null;
 
-    // Always load local profile immediately in case control plane doesn't load
-    try {
-      void this.loadConfig();
-    } catch (e) {
-      console.error("Failed to load config: ", e);
-    }
-
     void this.init();
   }
 
   private async init() {
+    // Always load local profile immediately in case control plane doesn't load
+    try {
+      await this.loadConfig();
+    } catch (e) {
+      console.error("Failed to load config: ", e);
+    }
+
     const workspaceId = await this.getWorkspaceId();
     const lastSelectedOrgIds =
       this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
@@ -98,35 +101,120 @@ export class ConfigHandler {
       this.selectedOrgId = selectedOrgId;
     }
 
+    await this.notifyAllListenersWithCurrentState();
+
     // Load control plane profiles
     void this.fetchControlPlaneProfiles();
   }
 
-  get selectedProfile(): ProfileLifecycleManager | null {
-    if (this.profiles.length === 0) {
-      return null;
+  /////////////// WORKSPACE SETTINGS ////////////////
+
+  // A unique ID for the current workspace, built from folder names
+  private async getWorkspaceId(): Promise<string> {
+    const dirs = await this.ide.getWorkspaceDirs();
+    return dirs.join("&");
+  }
+
+  // Automatically refresh config when Continue-related IDE (e.g. VS Code) settings are changed
+  updateIdeSettings(ideSettings: IdeSettings) {
+    this.ideSettingsPromise = Promise.resolve(ideSettings);
+    void this.reloadConfig();
+  }
+
+  /////////////// CONTROL PLANE SESSION ////////////////
+  private sessionListeners: ((sessionState: SessionState) => void)[] = [];
+  onDidChangeSession(listener: (sessionState: SessionState) => void) {
+    this.sessionListeners.push(listener);
+  }
+
+  private notifySessionListeners(sessionState: SessionState) {
+    for (const listener of this.sessionListeners) {
+      listener(sessionState);
     }
-    if (!this.selectedProfileId) {
-      return null;
-    }
-    const match = this.profiles.find(
-      (p) => p.profileDescription.id === this.selectedProfileId,
+  }
+
+  async updateControlPlaneSessionInfo(
+    sessionInfo: ControlPlaneSessionInfo | undefined,
+  ) {
+    this.controlPlaneClient = new ControlPlaneClient(
+      Promise.resolve(sessionInfo),
+      this.ideSettingsPromise,
     );
-    if (match) {
-      return match;
-    }
-    // If no match first try local
-    const local = this.profiles.find(
-      (p) => p.profileDescription.id === "local",
-    );
-    if (local) {
-      this.selectedProfileId = "local";
-      return local;
+
+    this.sessionInfo = sessionInfo;
+    this.organizations = await this.controlPlaneClient.listOrganizations();
+
+    await this.setSelectedOrg(this.selectedOrgId);
+
+    // Trigger profile fetching
+    this.fetchControlPlaneProfiles().catch((e) => {
+      console.error("Failed to fetch control plane profiles: ", e);
+    });
+  }
+
+  async setSelectedOrg(orgId: string | null) {
+    // Rectify org id - clear if not found
+    this.selectedOrgId = orgId;
+    if (
+      this.selectedOrgId &&
+      !this.organizations.some((org) => org.id === this.selectedOrgId)
+    ) {
+      this.selectedOrgId = null;
     }
 
-    // Else return the first one
-    this.selectedProfileId = this.profiles[0].profileDescription.id;
-    return this.profiles[0];
+    this.selectedOrgId = orgId;
+    const selectedOrgs =
+      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
+    selectedOrgs[await this.getWorkspaceId()] = orgId;
+    this.globalContext.update("lastSelectedOrgIdForWorkspace", selectedOrgs);
+
+    this.notifySessionListeners({
+      organizations: this.organizations,
+      session: this.sessionInfo,
+      selectedOrganizationId: this.selectedOrgId,
+    });
+
+    await this.reloadConfig();
+  }
+
+  /////////////// CONFIG PROFILES ////////////////
+
+  // get selectedProfile(): ProfileLifecycleManager | null {
+  //   if (this.profiles.length === 0) {
+  //     return null;
+  //   }
+  //   if (!this.selectedProfileId) {
+  //     return null;
+  //   }
+  //   const match = this.profiles.find(
+  //     (p) => p.profileDescription.id === this.selectedProfileId,
+  //   );
+  //   if (match) {
+  //     return match;
+  //   }
+  //   // If no match first try local
+  //   const local = this.profiles.find(
+  //     (p) => p.profileDescription.id === "local",
+  //   );
+  //   if (local) {
+  //     this.selectedProfileId = "local";
+  //     return local;
+  //   }
+
+  //   // Else return the first one
+  //   this.selectedProfileId = this.profiles[0].profileDescription.id;
+  //   return this.profiles[0];
+  // }
+
+  private profileListeners: ((profilesState: ProfilesState) => void)[] = [];
+  onDidChangeProfiles(listener: (profilesState: ProfilesState) => void) {
+    this.profileListeners.push(listener);
+  }
+
+  private notifyProfileListeners(profilesState: ProfilesState) {
+    for (const listener of this.profileListeners) {
+      listener(profilesState);
+    }
   }
 
   get inactiveProfiles() {
@@ -135,93 +223,70 @@ export class ConfigHandler {
     );
   }
 
-  async openConfigProfile(profileId?: string) {
-    let idToOpen = profileId || this.selectedProfile?.profileDescription.id;
-
-    if (!idToOpen) {
-      console.error(
-        "Error opening config profile: id not provided and no profile selected",
-      );
-      return;
-    }
-    if (idToOpen === "local") {
-      const ideInfo = await this.ide.getIdeInfo();
-      const configYamlPath = getConfigYamlPath(ideInfo.ideType);
-      if (fs.existsSync(configYamlPath)) {
-        await this.ide.openFile(localPathToUri(configYamlPath));
-      } else {
-        await this.ide.openFile(localPathToUri(getConfigJsonPath()));
-      }
-    } else {
-      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-
-      await this.ide.openUrl(`${env.APP_URL}${idToOpen}`);
-    }
-  }
-
   private async loadPlatformProfiles() {
     // Get the profiles and create their lifecycle managers
-    this.controlPlaneClient
-      .listAssistants(this.selectedOrgId)
-      .then(async (assistants) => {
-        const hubProfiles = await Promise.all(
-          assistants.map(async (assistant) => {
-            let renderedConfig: AssistantUnrolled | undefined = undefined;
-            if (assistant.configResult.config) {
-              renderedConfig = await clientRenderHelper(
-                YAML.stringify(assistant.configResult.config),
-                this.ide,
-                this.controlPlaneClient,
-              );
-            }
+    try {
+      const assistants = await this.controlPlaneClient.listAssistants(
+        this.selectedOrgId,
+      );
 
-            const profileLoader = new PlatformProfileLoader(
-              { ...assistant.configResult, config: renderedConfig },
-              assistant.ownerSlug,
-              assistant.packageSlug,
-              assistant.iconUrl,
-              assistant.configResult.config?.version ?? "latest",
-              this.controlPlaneClient,
+      const hubProfiles = await Promise.all(
+        assistants.map(async (assistant) => {
+          let renderedConfig: AssistantUnrolled | undefined = undefined;
+          if (assistant.configResult.config) {
+            renderedConfig = await clientRenderHelper(
+              YAML.stringify(assistant.configResult.config),
               this.ide,
-              this.ideSettingsPromise,
-              this.writeLog,
-              this.reloadConfig.bind(this),
+              this.controlPlaneClient,
             );
+          }
 
-            return new ProfileLifecycleManager(profileLoader, this.ide);
-          }),
-        );
-
-        this.profiles =
-          this.selectedOrgId === null
-            ? [this.localProfileManager, ...hubProfiles]
-            : hubProfiles;
-
-        this.notifyProfileListeners(
-          this.profiles.map((profile) => profile.profileDescription),
-        );
-
-        // Check the last selected workspace, and reload if it isn't local
-        const workspaceId = await this.getWorkspaceId();
-        const lastSelectedIds =
-          this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
-
-        const lastSelectedProfileId = lastSelectedIds[workspaceId];
-        if (lastSelectedProfileId) {
-          this.selectedProfileId = lastSelectedProfileId;
-          await this.loadConfig();
-        } else {
-          // Otherwise we stick with local profile, and record choice
-          lastSelectedIds[workspaceId] = this.selectedProfileId;
-          this.globalContext.update(
-            "lastSelectedProfileForWorkspace",
-            lastSelectedIds,
+          const profileLoader = new PlatformProfileLoader(
+            { ...assistant.configResult, config: renderedConfig },
+            assistant.ownerSlug,
+            assistant.packageSlug,
+            assistant.iconUrl,
+            assistant.configResult.config?.version ?? "latest",
+            this.controlPlaneClient,
+            this.ide,
+            this.ideSettingsPromise,
+            this.writeLog,
+            this.reloadConfig.bind(this),
           );
-        }
-      })
-      .catch((e) => {
-        console.error("Failed to list assistants: ", e);
-      });
+
+          return new ProfileLifecycleManager(profileLoader, this.ide);
+        }),
+      );
+
+      this.profiles =
+        this.selectedOrgId === null
+          ? [this.localProfileManager, ...hubProfiles]
+          : hubProfiles;
+
+      this.notifyProfileListeners(
+        this.profiles.map((profile) => profile.profileDescription),
+      );
+
+      // Check the last selected workspace, and reload if it isn't local
+      const workspaceId = await this.getWorkspaceId();
+      const lastSelectedIds =
+        this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+
+      const lastSelectedProfileId = lastSelectedIds[workspaceId];
+      if (lastSelectedProfileId) {
+        this.selectedProfileId = lastSelectedProfileId;
+        await this.loadConfig();
+      } else {
+        // Otherwise we stick with local profile, and record choice
+        lastSelectedIds[workspaceId] = this.selectedProfileId;
+        this.globalContext.update(
+          "lastSelectedProfileForWorkspace",
+          lastSelectedIds,
+        );
+      }
+    } catch (e) {
+      console.error("Failed to list assistants", e);
+    }
   }
 
   private platformProfilesRefreshInterval: NodeJS.Timeout | undefined;
@@ -310,21 +375,13 @@ export class ConfigHandler {
               lastSelectedIds,
             );
           }
+
           void this.reloadConfig();
         })
         .catch((e) => {
           console.error(e);
         });
     }
-  }
-
-  async setSelectedOrg(orgId: string | null) {
-    this.selectedOrgId = orgId;
-    const selectedOrgs =
-      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-    selectedOrgs[await this.getWorkspaceId()] = orgId;
-    this.globalContext.update("lastSelectedOrgIdForWorkspace", selectedOrgs);
-    await this.reloadConfig();
   }
 
   async setSelectedProfile(profileId: string | null) {
@@ -341,41 +398,17 @@ export class ConfigHandler {
     await this.reloadConfig();
   }
 
-  // A unique ID for the current workspace, built from folder names
-  private async getWorkspaceId(): Promise<string> {
-    const dirs = await this.ide.getWorkspaceDirs();
-    return dirs.join("&");
+  listProfiles(): ProfileDescription[] {
+    return this.profiles.map((p) => p.profileDescription);
   }
 
-  // Automatically refresh config when Continue-related IDE (e.g. VS Code) settings are changed
-  updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettingsPromise = Promise.resolve(ideSettings);
-    void this.reloadConfig();
-  }
+  /////////////// CONFIG LOADING ////////////////
 
-  async updateControlPlaneSessionInfo(
-    sessionInfo: ControlPlaneSessionInfo | undefined,
-  ) {
-    this.controlPlaneClient = new ControlPlaneClient(
-      Promise.resolve(sessionInfo),
-      this.ideSettingsPromise,
-    );
-    this.fetchControlPlaneProfiles().catch((e) => {
-      console.error("Failed to fetch control plane profiles: ", e);
-    });
-  }
+  private updateListeners: ConfigUpdateFunction[] = [];
 
-  private sessionStateListeners: ((sessionState: SessionState) => void)[] = [];
-  onDidChangeSessionState(listener: (sessionState: SessionState) => void) {
-    this.sessionStateListeners.push(listener);
+  onConfigUpdate(listener: ConfigUpdateFunction) {
+    this.updateListeners.push(listener);
   }
-
-  private notifySessionStateListeners(sessionState: SessionState) {
-    for (const listener of this.sessionStateListeners) {
-      listener(sessionState);
-    }
-  }
-
   private notifyConfigListeners(result: ConfigResult<ContinueConfig>) {
     // Notify listeners that config changed
     for (const listener of this.updateListeners) {
@@ -383,11 +416,19 @@ export class ConfigHandler {
     }
   }
 
-  private updateListeners: ConfigUpdateFunction[] = [];
-
-  onConfigUpdate(listener: ConfigUpdateFunction) {
-    this.updateListeners.push(listener);
-  }
+  // private async notifyAllListenersWithCurrentState() {
+  //   this.notifySessionListeners({
+  //     session: this.sessionInfo,
+  //     organizations: this.organizations,
+  //     selectedOrganizationId: this.selectedOrgId,
+  //   });
+  //   this.notifyProfileListeners({
+  //     profiles: this.listProfiles(),
+  //     selectedProfileId: this.selectedProfileId,
+  //   });
+  //   const result = await this.loadConfig();
+  //   this.notifyConfigListeners(result);
+  // }
 
   async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
@@ -421,10 +462,6 @@ export class ConfigHandler {
     );
   }
 
-  listProfiles(): ProfileDescription[] {
-    return this.profiles.map((p) => p.profileDescription);
-  }
-
   async loadConfig(): Promise<ConfigResult<ContinueConfig>> {
     if (!this.selectedProfile) {
       return {
@@ -438,6 +475,7 @@ export class ConfigHandler {
     );
   }
 
+  /////////////// OTHER ////////////////
   async llmFromTitle(title?: string): Promise<ILLM> {
     const { config } = await this.loadConfig();
     const model = config?.models.find((m) => m.title === title);
@@ -461,5 +499,29 @@ export class ConfigHandler {
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
     void this.reloadConfig();
+  }
+
+  async openConfigProfile(profileId?: string) {
+    let idToOpen = profileId || this.selectedProfile?.profileDescription.id;
+
+    if (!idToOpen) {
+      console.error(
+        "Error opening config profile: id not provided and no profile selected",
+      );
+      return;
+    }
+    if (idToOpen === "local") {
+      const ideInfo = await this.ide.getIdeInfo();
+      const configYamlPath = getConfigYamlPath(ideInfo.ideType);
+      if (fs.existsSync(configYamlPath)) {
+        await this.ide.openFile(localPathToUri(configYamlPath));
+      } else {
+        await this.ide.openFile(localPathToUri(getConfigJsonPath()));
+      }
+    } else {
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+
+      await this.ide.openUrl(`${env.APP_URL}${idToOpen}`);
+    }
   }
 }

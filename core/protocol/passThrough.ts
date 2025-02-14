@@ -61,7 +61,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "controlPlane/selectOrg",
     "tools/call",
     "controlPlane/openUrl",
-    "controlPlane/listOrganizations",
   ];
 
 // Message types to pass through from core to webview
@@ -77,7 +76,8 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "addContextItem",
     "refreshSubmenuItems",
     "isContinueInputFocused",
-    "didChangeSessionState",
+    "config/didChangeSession",
+    "config/didChangeProfiles",
     "setTTSActive",
     "getWebviewHistoryLength",
     "getCurrentSessionId",

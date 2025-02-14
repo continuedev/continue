@@ -13,7 +13,7 @@ import { setOrgId } from "../../redux/thunks/setOrgId";
 export function ScopeSelect() {
   const { organizations, selectedOrganization } = useAuth();
   const selectedOrgId = useAppSelector(
-    (state) => state.session.selectedOrganizationId,
+    (state) => state.config.selectedOrganizationId,
   );
   const dispatch = useAppDispatch();
 

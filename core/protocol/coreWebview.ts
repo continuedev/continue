@@ -1,5 +1,5 @@
 import {
-  OrganizationDescription,
+  ProfilesState,
   SessionState,
 } from "../config/ProfileLifecycleManager.js";
 
@@ -11,5 +11,6 @@ export type ToCoreFromWebviewProtocol = ToCoreFromIdeOrWebviewProtocol & {
   "controlPlane/selectOrg": [{ id: string | null }, void];
 };
 export type ToWebviewFromCoreProtocol = ToWebviewFromIdeOrCoreProtocol & {
-  didChangeSessionState: [SessionState, void];
+  "config/didChangeSession": [SessionState, void];
+  "config/didChangeProfiles": [ProfilesState, void];
 };

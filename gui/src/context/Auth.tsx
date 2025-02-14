@@ -40,11 +40,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const dispatch = useDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const [session, setSession] = useState<ControlPlaneSessionInfo | undefined>(
     undefined,
   );
-
-  const ideMessenger = useContext(IdeMessengerContext);
 
   // Orgs
   const organizations = useAppSelector(
@@ -68,28 +69,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return profiles.find((p) => p.id === selectedProfileId);
   }, [profiles, selectedProfileId]);
 
-  const dispatch = useDispatch();
-
-  const login: AuthContextType["login"] = (useOnboarding: boolean) => {
-    return new Promise((resolve) => {
-      ideMessenger
-        .request("getControlPlaneSessionInfo", {
-          silent: false,
-          useOnboarding,
-        })
-        .then((result) => {
-          if (result.status === "error") {
-            resolve(false);
-            return;
-          }
-
-          const session = result.content;
-          setSession(session);
-
-          resolve(true);
-        });
+  async function login(useOnboarding: boolean): Promise<boolean> {
+    const result = await ideMessenger.request("getControlPlaneSessionInfo", {
+      silent: false,
+      useOnboarding,
     });
-  };
+    if (result.status === "error") {
+      return false;
+    }
+    const session = result.content;
+    setSession(session);
+    return true;
+  }
 
   const logout = () => {
     dispatch(setShowDialog(true));
@@ -109,31 +100,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       ),
     );
   };
-
-  useEffect(() => {
-    ideMessenger
-      .request("getControlPlaneSessionInfo", {
-        silent: true,
-        useOnboarding: false,
-      })
-      .then(
-        (result) => result.status === "success" && setSession(result.content),
-      );
-  }, []);
-
-  useEffect(() => {
-    if (session) {
-      ideMessenger
-        .request("controlPlane/listOrganizations", undefined)
-        .then((result) => {
-          if (result.status === "success") {
-            dispatch(setAvailableOrganizations(result.content));
-          }
-        });
-    } else {
-      dispatch(setAvailableOrganizations([]));
-    }
-  }, [session]);
 
   // IDE settings
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =
@@ -162,6 +128,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
+  // Session and Config Profiles State
+  useEffect(() => {
+    ideMessenger
+      .request("getControlPlaneSessionInfo", {
+        silent: true,
+        useOnboarding: false,
+      })
+      .then(
+        (result) => result.status === "success" && setSession(result.content),
+      );
+  }, []);
+
+  // useEffect(() => {
+  //   if (session) {
+  //     ideMessenger
+  //       .request("controlPlane/listOrganizations", undefined)
+  //       .then((result) => {
+  //         if (result.status === "success") {
+  //           dispatch(setAvailableOrganizations(result.content));
+  //         }
+  //       });
+  //   } else {
+  //     dispatch(setAvailableOrganizations([]));
+  //   }
+  // }, [session]);
+
   useEffect(() => {
     ideMessenger
       .request("config/listProfiles", undefined)
@@ -173,16 +165,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useWebviewListener(
-    "didChangeSessionState",
+    "config/didChangeSession",
     async (data) => {
       setSession(data.session);
-      dispatch(setAvailableProfiles(data.profiles));
       dispatch(setAvailableOrganizations(data.organizations));
       dispatch(setSelectedOrganizationId(data.selectedOrganizationId));
-      dispatch(setSelectedProfileId(data.selectedProfileId));
     },
     [],
   );
+
+  useWebviewListener("config/didChangeProfiles", async (data) => {
+    dispatch(setAvailableProfiles(data.profiles));
+    dispatch(setSelectedProfileId(data.selectedProfileId));
+  });
+
+  useWebviewListener;
 
   return (
     <AuthContext.Provider

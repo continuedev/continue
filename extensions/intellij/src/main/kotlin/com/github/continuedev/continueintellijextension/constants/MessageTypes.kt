@@ -55,7 +55,8 @@ class MessageTypes {
             "addContextItem",
             "refreshSubmenuItems",
             "isContinueInputFocused",
-            "didChangeSessionState",
+            "config/didChangeSession",
+            "config/didChangeProfiles",
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
@@ -116,7 +117,6 @@ class MessageTypes {
             "config/selectProfile",
             "tools/call",
             "controlPlane/selectOrg",
-            "controlPlane/listOrganizations"
             "controlPlane/openUrl",
 
         )

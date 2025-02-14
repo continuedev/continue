@@ -328,6 +328,14 @@ export class Core {
       this.messenger,
     );
 
+    this.configHandler.onDidChangeSession((state) =>
+      this.messenger.send("config/didChangeSession", state),
+    );
+
+    this.configHandler.onDidChangeProfiles((state) =>
+      this.messenger.send("config/didChangeProfiles", state),
+    );
+
     this.configHandler.onConfigUpdate(async (result) => {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
@@ -335,10 +343,6 @@ export class Core {
         profileId: this.configHandler.selectedProfile?.profileDescription.id,
       });
     });
-
-    this.configHandler.onDidChangeSessionState((state) =>
-      this.messenger.send("didChangeSessionState", state),
-    );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;
@@ -495,10 +499,6 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
-    on("config/listProfiles", (msg) => {
-      return this.configHandler.listProfiles();
-    });
-
     on("config/addContextProvider", async (msg) => {
       addContextProvider(msg.data);
     });
@@ -517,8 +517,8 @@ export class Core {
       await this.messenger.request("openUrl", url);
     });
 
-    on("controlPlane/listOrganizations", async (msg) => {
-      return await this.controlPlaneClient.listOrganizations();
+    on("config/listProfiles", (msg) => {
+      return this.configHandler.listProfiles();
     });
 
     // Context providers

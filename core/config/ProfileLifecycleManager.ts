@@ -31,11 +31,13 @@ export interface OrganizationDescription {
   slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
 }
 
+export interface ProfilesState {
+  profiles: ProfileDescription[];
+  selectedProfileId: string | null;
+}
 export interface SessionState {
   session: ControlPlaneSessionInfo | undefined;
   organizations: OrganizationDescription[];
-  profiles: ProfileDescription[];
-  selectedProfileId: string | null;
   selectedOrganizationId: string | null;
 }
 
