@@ -43,6 +43,5 @@
     // "sync/**": true
   },
   "eslint.workingDirectories": ["./core"],
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "java.compile.nullAnalysis.mode": "disabled"
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
