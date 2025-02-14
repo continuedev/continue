@@ -1,7 +1,7 @@
 import { Listbox } from "@headlessui/react";
 import {
   BuildingOfficeIcon,
-  ChevronDownIcon,
+  ChevronUpDownIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/Auth";
@@ -31,7 +31,7 @@ export function ScopeSelect() {
   return (
     <Listbox value={selectedOrgId} onChange={handleChange}>
       <div className="relative">
-        <Listbox.Button className="border-vsc-input-border text-vsc-foreground hover:bg-vsc-background bg-vsc-input-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border border-solid p-2 hover:opacity-90">
+        <Listbox.Button className="border-vsc-input-border hover:bg-vsc-input-background text-vsc-foreground bg-vsc-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border border-solid p-2 hover:opacity-90">
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               {selectedDisplay?.iconUrl ? (
@@ -43,7 +43,7 @@ export function ScopeSelect() {
                 {selectedDisplay?.name || "Select Organization"}
               </span>
             </div>
-            <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
+            <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
           </div>
         </Listbox.Button>
 
@@ -57,7 +57,7 @@ export function ScopeSelect() {
                 <Listbox.Option
                   key={org.id}
                   value={org.id}
-                  className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
+                  className="text-vsc-foreground hover:bg-list-active cursor-pointer rounded p-2 text-sm hover:opacity-90"
                 >
                   <div className="flex items-center gap-2">
                     {org.iconUrl ? (
@@ -76,7 +76,7 @@ export function ScopeSelect() {
 
           <Listbox.Option
             value={null}
-            className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
+            className="text-vsc-foreground hover:bg-list-active cursor-pointer rounded p-2 hover:opacity-90"
           >
             <div className="flex items-center gap-2">
               <UserCircleIcon className="h-5 w-5" />

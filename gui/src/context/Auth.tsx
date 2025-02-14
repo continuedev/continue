@@ -144,13 +144,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         .request("controlPlane/listOrganizations", undefined)
         .then((result) => {
           if (result.status === "success") {
-            updateOrgsThunk(result.content);
+            dispatch(updateOrgsThunk(result.content));
           } else {
-            updateOrgsThunk([]);
+            dispatch(updateOrgsThunk([]));
           }
         });
     } else {
-      updateOrgsThunk([]);
+      dispatch(updateOrgsThunk([]));
     }
   }, [session]);
 

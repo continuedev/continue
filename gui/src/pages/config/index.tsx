@@ -9,7 +9,7 @@ import { useAuth } from "../../context/Auth";
 import { ScopeSelect } from "./ScopeSelect";
 import UserSettingsUI from "./UserSettings";
 import { Listbox, Transition } from "@headlessui/react";
-import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
+import { ChevronUpDownIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 
 function ConfigPage() {
@@ -25,8 +25,8 @@ function ConfigPage() {
     profiles,
     selectedProfile,
     controlServerBetaEnabled,
+    selectedOrganization,
   } = useAuth();
-  // const profiles = [];
 
   const changeProfileId = (id: string) => {
     dispatch(selectProfileThunk(id));
@@ -102,7 +102,7 @@ function ConfigPage() {
                 <div className="relative w-full">
                   <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
                     <span className="lines lines-1">
-                      {selectedProfile?.title}
+                      {selectedProfile?.title ?? "No Assistant Selected"}
                     </span>
                     <div className="pointer-events-none flex items-center">
                       <ChevronUpDownIcon
@@ -127,21 +127,28 @@ function ConfigPage() {
                         <Listbox.Option
                           key={idx}
                           value={option.id}
-                          className={`text-vsc-foreground hover:text-vsc-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === option.id ? "bg-vsc-list-active-background" : "bg-vsc-input-background"}`}
+                          className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === option.id ? "bg-list-active" : "bg-vsc-input-background"}`}
                         >
                           <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
                             {option.title}
                           </span>
                         </Listbox.Option>
                       ))}
-                      {profiles.length === 0 && (
+                      {hubEnabled && (
                         <Listbox.Option
                           key={"no-profiles"}
-                          value={undefined}
-                          className={`text-vsc-foreground hover:text-vsc-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === undefined ? "bg-vsc-list-active-background" : "bg-vsc-input-background"}`}
+                          value={null}
+                          className={`text-vsc-foreground hover:bg-list-active bg-vsc-input-background flex cursor-pointer flex-row items-center gap-2 px-3 py-2`}
+                          onClick={() => {
+                            ideMessenger.post("controlPlane/openUrl", {
+                              path: "new",
+                              orgSlug: selectedOrganization?.slug,
+                            });
+                          }}
                         >
-                          <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs italic">
-                            No profiles found
+                          <PlusCircleIcon className="h-4 w-4" />
+                          <span className="lines lines-1 flex items-center justify-between text-xs">
+                            Create new Assistant
                           </span>
                         </Listbox.Option>
                       )}

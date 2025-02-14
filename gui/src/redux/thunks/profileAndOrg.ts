@@ -106,6 +106,7 @@ export const selectOrgThunk = createAsyncThunk<
   // Fallback to Personal (org = null)
 
   if (initialId !== newId) {
+    dispatch(setAvailableProfiles([]));
     dispatch(setSelectedOrganizationId(newId));
     extra.ideMessenger.post("didChangeSelectedOrg", {
       id: newId,
@@ -117,7 +118,7 @@ export const updateOrgsThunk = createAsyncThunk<
   void,
   OrganizationDescription[],
   ThunkApiType
->("session/updateOrgs", async (orgs, { dispatch, extra, getState }) => {
+>("session/updateOrgs", async (orgs, { dispatch, getState }) => {
   const state = getState();
   dispatch(setOrganizations(orgs));
 
