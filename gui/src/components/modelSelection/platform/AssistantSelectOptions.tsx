@@ -5,13 +5,13 @@ import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
-import { setProfileId } from "../../../redux/thunks/profileAndOrg";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
 import { ProfileDescription } from "core/config/ConfigHandler";
+import { selectProfileThunk } from "../../../redux/thunks/profileAndOrg";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -52,7 +52,7 @@ export function AssistantSelectOptions({
               key={idx}
               idx={idx}
               disabled={!!profile.errors?.length}
-              showConfigure={profile.id === "local"}
+              showConfigure={isLocalProfile(profile)}
               selected={profile.id === selectedProfile?.id}
               onOpenConfig={() => {
                 handleConfigure(profile);
@@ -60,7 +60,7 @@ export function AssistantSelectOptions({
               errors={profile.errors}
               onClickError={() => handleClickError(profile.id)}
               onClick={() => {
-                dispatch(setProfileId(profile.id));
+                dispatch(selectProfileThunk(profile.id));
                 onClose();
               }}
             >
