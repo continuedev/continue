@@ -34,6 +34,7 @@ import { VsCodeIde } from "./VsCodeIde";
 import { getMetaKeyLabel } from "./util/util";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { startLocalOllama } from "core/util/ollamaHelper";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -709,7 +710,7 @@ const getCommandsMap: (
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
     "continue.viewHistory": () => {
-      sidebar.webviewProtocol?.request("viewHistory", undefined);
+      vscode.commands.executeCommand("continue.navigateTo", "/history", true);
     },
     "continue.focusContinueSessionId": async (
       sessionId: string | undefined,
@@ -777,6 +778,7 @@ const getCommandsMap: (
             sessionId,
           );
         }
+        panel.reveal();
         sessionLoader.dispose();
       });
 
@@ -1001,6 +1003,9 @@ const getCommandsMap: (
     },
     "continue.openAccountDialog": () => {
       sidebar.webviewProtocol?.request("openDialogMessage", "account");
+    },
+    "continue.startLocalOllama": () => {
+      startLocalOllama(ide);
     },
   };
 };

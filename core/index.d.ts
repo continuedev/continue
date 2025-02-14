@@ -1,6 +1,6 @@
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-
+import { ModelRole } from "@continuedev/config-yaml";
 declare global {
   interface Window {
     ide?: "vscode";
@@ -94,6 +94,8 @@ export interface ILLM extends LLMOptions {
   apiKey?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   deployment?: string;
   apiVersion?: string;
@@ -480,6 +482,8 @@ export interface LLMOptions {
   aiGatewaySlug?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -502,9 +506,6 @@ export interface LLMOptions {
 
   // AWS and GCP Options
   region?: string;
-
-  // GCP Options
-  capabilities?: ModelCapability;
 
   // GCP and Watsonx Options
   projectId?: string;
@@ -859,6 +860,7 @@ export interface ToolExtras {
   ide: IDE;
   llm: ILLM;
   fetch: FetchFunction;
+  tool: Tool;
 }
 
 export interface Tool {
@@ -874,6 +876,7 @@ export interface Tool {
   wouldLikeTo: string;
   readonly: boolean;
   uri?: string;
+  faviconUrl?: string;
 }
 
 interface ToolChoice {
@@ -921,8 +924,9 @@ export interface ModelDescription {
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
-  capabilities?: ModelCapability;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 }
 
 export interface EmbedOptions {
@@ -999,6 +1003,7 @@ export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
 
 export interface MCPOptions {
   transport: TransportOptions;
+  faviconUrl?: string;
 }
 
 export interface ContinueUIConfig {
@@ -1017,7 +1022,7 @@ export interface ContextMenuConfig {
   fixGrammar?: string;
 }
 
-export interface ModelRoles {
+export interface ExperimentalModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
   repoMapFileSelection?: string;
@@ -1085,7 +1090,7 @@ export type DefaultContextProvider = ContextProviderWithParams & {
 
 export interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
-  modelRoles?: ModelRoles;
+  modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
 

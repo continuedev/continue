@@ -56,6 +56,7 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
+import { ModelRole } from "@continuedev/config-yaml";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -121,6 +122,7 @@ export abstract class BaseLLM implements ILLM {
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   deployment?: string;
   apiVersion?: string;
@@ -191,7 +193,8 @@ export abstract class BaseLLM implements ILLM {
         options.model,
         this.providerName,
         options.template,
-      );
+      ) ??
+      undefined;
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
@@ -208,6 +211,7 @@ export abstract class BaseLLM implements ILLM {
     }
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
+    this.roles = options.roles;
 
     this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
@@ -957,7 +961,9 @@ export abstract class BaseLLM implements ILLM {
         this.providerName,
         autodetectTemplateType(this.model),
       );
-      return templateMessages(rendered);
+      if (templateMessages) {
+        return templateMessages(rendered);
+      }
     }
     return rendered;
   }

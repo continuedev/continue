@@ -27,7 +27,7 @@ import { localPathToUri } from "../util/pathToUri.js";
 
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
-  ONBOARDING_LOCAL_MODEL_TITLE,
+  LOCAL_ONBOARDING_PROVIDER_TITLE,
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
@@ -365,11 +365,11 @@ export class ConfigHandler {
     this.updateListeners.push(listener);
   }
 
-  async reloadConfig(additionalContextProviders: IContextProvider[] = []) {
+  async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
 
     const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig(additionalContextProviders);
+      await this.currentProfile.reloadConfig(this.additionalContextProviders);
 
     if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
@@ -401,7 +401,7 @@ export class ConfigHandler {
     const { config } = await this.loadConfig();
     const model = config?.models.find((m) => m.title === title);
     if (!model) {
-      if (title === ONBOARDING_LOCAL_MODEL_TITLE) {
+      if (title === LOCAL_ONBOARDING_PROVIDER_TITLE) {
         // Special case, make calls to Ollama before we have it in the config
         const ollama = new Ollama({
           model: LOCAL_ONBOARDING_CHAT_MODEL,
@@ -419,6 +419,6 @@ export class ConfigHandler {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
-    void this.reloadConfig(this.additionalContextProviders);
+    void this.reloadConfig();
   }
 }

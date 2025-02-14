@@ -57,30 +57,34 @@ export function toChatMessage(
     }
     return msg;
   } else {
+    if (typeof message.content === "string") {
+      return {
+        role: "user",
+        content: message.content ?? " ", // LM Studio (and other providers) don't accept empty content
+      };
+    }
+
+    // If no multi-media is in the message, just send as text
+    // for compatibility with OpenAI-"compatible" servers
+    // that don't support multi-media format
     return {
       role: "user",
-      content:
-        typeof message.content === "string"
-          ? message.content || " " // LM Studio (and other providers) don't accept empty content
-          : // If no multi-media is in the message, just send as text
-            // for compatibility with OpenAI-"compatible" servers
-            // that don't support multi-media format
-            message.content.some((item) => item.type !== "text")
-            ? message.content
-                .map((item) => (item as TextMessagePart).text)
-                .join("") || " "
-            : message.content.map((part) => {
-                if (part.type === "imageUrl") {
-                  return {
-                    type: "image_url" as const,
-                    image_url: {
-                      url: part.imageUrl.url,
-                      detail: "auto" as const,
-                    },
-                  };
-                }
-                return part;
-              }),
+      content: !message.content.some((item) => item.type !== "text")
+        ? message.content
+            .map((item) => (item as TextMessagePart).text)
+            .join("") || " "
+        : message.content.map((part) => {
+            if (part.type === "imageUrl") {
+              return {
+                type: "image_url" as const,
+                image_url: {
+                  url: part.imageUrl.url,
+                  detail: "auto" as const,
+                },
+              };
+            }
+            return part;
+          }),
     };
   }
 }

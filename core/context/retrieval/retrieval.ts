@@ -119,7 +119,7 @@ export async function retrieveContextItemsFromEmbeddings(
         }
 
         return {
-          name: `${baseName} (${r.startLine}-${r.endLine})`,
+          name: `${baseName} (${r.startLine + 1}-${r.endLine + 1})`,
           description: last2Parts,
           content: `\`\`\`${relativePathOrBasename}\n${r.content}\n\`\`\``,
           uri: {
