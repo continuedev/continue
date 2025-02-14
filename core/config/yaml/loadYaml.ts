@@ -4,10 +4,10 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
+  ModelRole,
   parseAssistantUnrolled,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
-import { ModelRole } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 
 import {
@@ -39,7 +39,6 @@ import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
 
-import { clientRenderHelper } from "./clientRender";
 import { llmsFromModelConfig } from "./models";
 
 async function loadConfigYaml(
@@ -52,9 +51,11 @@ async function loadConfigYaml(
   const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
-    (ideSettings.continueTestEnvironment === "production"
-      ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
-      : parseAssistantUnrolled(rawYaml));
+    // (ideSettings.continueTestEnvironment === "production"
+    // ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
+    // :
+    parseAssistantUnrolled(rawYaml);
+  // );
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
