@@ -35,7 +35,7 @@
     "@types/uuid": "^10.0.0",
     "@types/vscode-webview": "^1.57.1",
     "core": "file:../core",
-    "dompurify": "^3.0.6",
+    "dompurify": "^3.2.4",
     "downshift": "^7.6.0",
     "lodash": "^4.17.21",
     "minisearch": "^7.0.2",
