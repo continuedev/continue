@@ -33,6 +33,7 @@ import { SecretStorage } from "./stubs/SecretStorage";
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
   secretStorage: SecretStorage;
+  private lastFileSaveTimestamp: number = Date.now();
 
   constructor(
     private readonly vscodeWebviewProtocolPromise: Promise<VsCodeWebviewProtocol>,
@@ -40,6 +41,14 @@ class VsCodeIde implements IDE {
   ) {
     this.ideUtils = new VsCodeIdeUtils();
     this.secretStorage = new SecretStorage(context);
+  }
+
+  public updateLastFileSaveTimestamp(): void {
+    this.lastFileSaveTimestamp = Date.now();
+  }
+
+  public getLastFileSaveTimestamp(): number {
+    return this.lastFileSaveTimestamp;
   }
 
   async readSecrets(keys: string[]): Promise<Record<string, string>> {
