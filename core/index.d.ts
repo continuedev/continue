@@ -1,6 +1,6 @@
+import { ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-
 declare global {
   interface Window {
     ide?: "vscode";
@@ -43,13 +43,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-  | "loading"
-  | "indexing"
-  | "done"
-  | "failed"
-  | "paused"
-  | "disabled"
-  | "cancelled";
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
@@ -94,6 +94,8 @@ export interface ILLM extends LLMOptions {
   apiKey?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   deployment?: string;
   apiVersion?: string;
@@ -481,6 +483,8 @@ export interface LLMOptions {
   aiGatewaySlug?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -503,9 +507,6 @@ export interface LLMOptions {
 
   // AWS and GCP Options
   region?: string;
-
-  // GCP Options
-  capabilities?: ModelCapability;
 
   // GCP and Watsonx Options
   projectId?: string;
@@ -600,7 +601,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
-  continueTestEnvironment: "none" | "production" | "test" | "local";
+  continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
 }
 
@@ -667,10 +668,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-      isUntitled: boolean;
-      path: string;
-      contents: string;
-    }
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
   >;
 
   getLastFileSaveTimestamp?(): number;
@@ -853,11 +854,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-  | string
-  | {
-    type: "text";
-    text: string;
-  }[];
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 export interface ToolExtras {
@@ -929,8 +930,9 @@ export interface ModelDescription {
   replaceSystemMessage?: boolean;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
-  capabilities?: ModelCapability;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 }
 
 export interface EmbedOptions {
@@ -1026,7 +1028,7 @@ export interface ContextMenuConfig {
   fixGrammar?: string;
 }
 
-export interface ModelRoles {
+export interface ExperimentalModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
   repoMapFileSelection?: string;
@@ -1094,7 +1096,7 @@ export type DefaultContextProvider = ContextProviderWithParams & {
 
 export interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
-  modelRoles?: ModelRoles;
+  modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
 
@@ -1185,9 +1187,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1278,9 +1280,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-    | { error: string; details?: never }
-    | { details: PackageDetailsSuccess; error?: never }
-  );
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;

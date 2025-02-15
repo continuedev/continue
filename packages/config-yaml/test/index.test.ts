@@ -120,6 +120,7 @@ describe("E2E Scenarios", () => {
     );
 
     const clientRendered = await clientRender(
+      { ownerSlug: "test-org", packageSlug: "assistant" },
       YAML.stringify(unrolledConfig),
       localUserSecretStore,
       platformClient,

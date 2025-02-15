@@ -353,6 +353,11 @@ const preIndexedDocs: Record<
     startUrl: "https://docs.asksage.ai/",
     rootUrl: "https://docs.asksage.ai/",
   },
+  "https://angular.dev/": {
+    title: "Angular",
+    startUrl: "https://angular.dev/",
+    rootUrl: "https://angular.dev/",
+  },
 };
 
 export default preIndexedDocs;

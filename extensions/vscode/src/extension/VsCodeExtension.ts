@@ -380,7 +380,7 @@ export class VsCodeExtension {
       .get<boolean>("enableContinueHub");
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
-        const settings = this.ide.getIdeSettingsSync();
+        const settings = await this.ide.getIdeSettings();
         const webviewProtocol = await this.webviewProtocolPromise;
         void webviewProtocol.request("didChangeIdeSettings", {
           settings,
