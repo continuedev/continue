@@ -26,6 +26,8 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 
+import { ConfigResult } from "@continuedev/config-yaml";
+import { GlobalContext } from "../../util/GlobalContext";
 import {
   ArticleWithChunks,
   htmlPageToArticleWithChunks,
@@ -40,8 +42,6 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
-import { ConfigResult } from "@continuedev/config-yaml";
-import { GlobalContext } from "../../util/GlobalContext";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -436,10 +436,6 @@ export default class DocsService {
       await provider.embed(["continue-test-run"]);
     } catch (e) {
       console.error("Failed to test embeddings connection", e);
-      void this.ide.showToast(
-        "error",
-        "Failed to test embeddings connection. check your embeddings model configuration",
-      );
       return;
     }
 
