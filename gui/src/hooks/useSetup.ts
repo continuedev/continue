@@ -242,7 +242,6 @@ function useSetup() {
   });
 
   useWebviewListener("indexing/statusUpdate", async (data) => {
-    debugger;
     dispatch(updateIndexingStatus(data));
   });
 

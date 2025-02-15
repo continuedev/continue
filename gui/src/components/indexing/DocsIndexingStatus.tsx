@@ -87,7 +87,6 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
   const Icon = STATUS_TO_ICON[status?.status];
   const showProgressPercentage = progressPercentage !== "100";
 
-  console.log("STatus for " + docConfig.title, status);
   if (hasDeleted) return null;
 
   return (
