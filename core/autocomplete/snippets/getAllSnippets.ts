@@ -119,7 +119,6 @@ const getDiffSnippets = async (
   const cached = diffSnippetsCache.get(currentTimestamp) as AutocompleteDiffSnippet[];
 
   if (cached) {
-    console.log("return cached diff");
     return cached;
   }
 
@@ -130,7 +129,6 @@ const getDiffSnippets = async (
     console.error("Error getting diff for autocomplete", e);
   }
 
-  console.log("return new diff");
   return diffSnippetsCache.set(currentTimestamp, diff.map((item) => {
     return {
       content: item,
