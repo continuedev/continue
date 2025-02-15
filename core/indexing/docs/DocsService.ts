@@ -142,27 +142,6 @@ export default class DocsService {
     this.messenger?.send("indexing/statusUpdate", update);
   }
 
-  // buildDocsStatus(
-  //   docConfig: SiteIndexingConfig,
-  //   status: IndexingStatus["status"],
-  //   description: string,
-  //   progress: number,
-  // ): IndexingStatus {
-  //   return {
-  //     status,
-  //     description,
-  //     progress,
-  //     type: "docs" as IndexingStatus["type"],
-  //     id: docConfig.startUrl,
-  //     embeddingsProviderId: this.config.embeddingsProvider.embeddingId,
-  //     isReindexing: false,
-  //     title: docConfig.title,
-  //     debugInfo: `max depth: ${docConfig.maxDepth}`,
-  //     icon: docConfig.faviconUrl,
-  //     url: docConfig.startUrl,
-  //   };
-  // }
-
   // A way for gui to retrieve initial statuses
   async initStatuses(): Promise<void> {
     if (!this.config?.docs) {
