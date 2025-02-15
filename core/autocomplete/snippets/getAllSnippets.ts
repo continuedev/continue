@@ -11,6 +11,8 @@ import {
   AutocompleteSnippetType,
 } from "./types";
 
+const IDE_SNIPPETS_ENABLED = false; // ideSnippets is not used, so it's temporarily disabled
+
 export interface SnippetPayload {
   rootPathSnippets: AutocompleteCodeSnippet[];
   importDefinitionSnippets: AutocompleteCodeSnippet[];
@@ -119,7 +121,6 @@ const getDiffSnippets = async (
   const cached = diffSnippetsCache.get(currentTimestamp) as AutocompleteDiffSnippet[];
 
   if (cached) {
-    console.log("return cached diff");
     return cached;
   }
 
@@ -130,7 +131,6 @@ const getDiffSnippets = async (
     console.error("Error getting diff for autocomplete", e);
   }
 
-  console.log("return new diff");
   return diffSnippetsCache.set(currentTimestamp, diff.map((item) => {
     return {
       content: item,
@@ -163,7 +163,7 @@ export const getAllSnippets = async ({
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
     racePromise(contextRetrievalService.getSnippetsFromImportDefinitions(helper)),
-    helper.options.useImports ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)) : [],
+    IDE_SNIPPETS_ENABLED ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)) : [],
     racePromise(getDiffSnippets(ide)),
     racePromise(getClipboardSnippets(ide)),
   ]);
