@@ -26,6 +26,10 @@ export const VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR =
   "--vscode-diffEditor-removedLineBackground";
 export const VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR =
   "--vscode-diffEditor-insertedLineBackground";
+export const VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR =
+  "--vscode-commandCenter-activeBorder";
+export const VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR =
+  "--vscode-commandCenter-inactiveBorder";
 
 export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
@@ -48,6 +52,8 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_BADGE_FOREGROUND_VAR,
   VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
   VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
+  VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR,
+  VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR,
 ];
 
 export const defaultBorderRadius = "5px";
@@ -67,6 +73,8 @@ export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, $
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
 export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGray})`;
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
+export const vscCommandCenterActiveBorder = `var(${VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR}, #1bbe84)`;
+export const vscCommandCenterInactiveBorder = `var(${VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR}, #1bbe84)`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
@@ -134,7 +142,7 @@ export function parseColorForHex(colorVar: string): string {
 }
 
 export const Button = styled.button`
-  padding: 10px 12px;
+  padding: 6px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
@@ -162,13 +170,13 @@ type NumberInputProps = {
 };
 
 export const SecondaryButton = styled.button`
-  padding: 10px 12px;
+  padding: 6px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscForeground};
+  border: 1px solid ${vscInputBorder};
   color: ${vscForeground};
-  background-color: inherit;
+  background-color: ${vscInputBackground};
 
   &:disabled {
     color: gray;

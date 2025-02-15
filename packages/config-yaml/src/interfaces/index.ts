@@ -36,7 +36,13 @@ export async function resolveFQSN(
   const reversedSlugs = [...fqsn.packageSlugs].reverse();
 
   const locationsToLook: SecretLocation[] = [
-    // Packages first
+    // Organization first
+    ...reversedSlugs.map((slug) => ({
+      secretType: SecretType.Organization as const,
+      orgSlug: slug.ownerSlug,
+      secretName: fqsn.secretName,
+    })),
+    // Then packages
     ...reversedSlugs.map((slug) => ({
       secretType: SecretType.Package as const,
       packageSlug: slug,
@@ -48,12 +54,6 @@ export async function resolveFQSN(
       userSlug: currentUserSlug,
       secretName: fqsn.secretName,
     },
-    // Then organization
-    ...reversedSlugs.map((slug) => ({
-      secretType: SecretType.Organization as const,
-      orgSlug: slug.ownerSlug,
-      secretName: fqsn.secretName,
-    })),
   ];
 
   // Then try to get the secret from each location

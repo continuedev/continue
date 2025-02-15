@@ -3,10 +3,12 @@ import { SerializedContinueConfig } from "../";
 import { FREE_TRIAL_MODELS } from "./default";
 
 export const TRIAL_FIM_MODEL = "codestral-latest";
-export const ONBOARDING_LOCAL_MODEL_TITLE = "Ollama";
+export const LOCAL_ONBOARDING_PROVIDER_TITLE = "Ollama";
 export const LOCAL_ONBOARDING_FIM_MODEL = "qwen2.5-coder:1.5b-base";
+export const LOCAL_ONBOARDING_FIM_TITLE = "Qwen2.5-Coder 1.5B";
 export const LOCAL_ONBOARDING_CHAT_MODEL = "llama3.1:8b";
 export const LOCAL_ONBOARDING_CHAT_TITLE = "Llama 3.1 8B";
+export const LOCAL_ONBOARDING_EMBEDDINGS_MODEL = "nomic-embed-text:latest";
 
 /**
  * We set the "best" chat + autocopmlete models by default
@@ -35,13 +37,13 @@ export function setupLocalConfig(
       ...config.models.filter((model) => model.provider !== "free-trial"),
     ],
     tabAutocompleteModel: {
-      title: "Qwen2.5-Coder 1.5B",
+      title: LOCAL_ONBOARDING_FIM_TITLE,
       provider: "ollama",
       model: LOCAL_ONBOARDING_FIM_MODEL,
     },
     embeddingsProvider: {
       provider: "ollama",
-      model: "nomic-embed-text",
+      model: LOCAL_ONBOARDING_EMBEDDINGS_MODEL,
     },
   };
 }
@@ -66,26 +68,5 @@ export function setupQuickstartConfig(
     reranker: {
       name: "free-trial",
     },
-  };
-}
-
-export function setupLocalConfigAfterFreeTrial(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
-    models: [
-      {
-        title: LOCAL_ONBOARDING_CHAT_TITLE,
-        provider: "ollama",
-        model: LOCAL_ONBOARDING_CHAT_MODEL,
-      },
-      {
-        title: ONBOARDING_LOCAL_MODEL_TITLE,
-        provider: "ollama",
-        model: "AUTODETECT",
-      },
-      ...config.models.filter((model) => model.provider !== "free-trial"),
-    ],
   };
 }

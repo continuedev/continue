@@ -15,7 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@continuedev/config-yaml": "^1.0.23",
+    "@continuedev/config-yaml": "^1.0.28",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@reduxjs/toolkit": "^2.3.0",
@@ -59,7 +59,7 @@
     "redux-persist-transform-filter": "^0.0.22",
     "redux-thunk": "^3.1.0",
     "rehype-highlight": "^7.0.0",
-    "rehype-katex": "^7.0.0",
+    "rehype-katex": "^7.0.1",
     "rehype-wrap-all": "^1.1.0",
     "remark-math": "^6.0.0",
     "reselect": "^5.1.1",

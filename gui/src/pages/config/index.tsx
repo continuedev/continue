@@ -154,7 +154,7 @@ function ConfigPage() {
             onClick={handleOpenConfig}
             className="!my-0 max-w-[400px]"
           >
-            Open configuration file
+            Open config file
           </SecondaryButton>
         </div>
 
