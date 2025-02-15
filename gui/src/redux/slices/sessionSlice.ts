@@ -191,13 +191,13 @@ export const sessionSlice = createSlice({
       {
         payload,
       }: PayloadAction<{
-        index?: number;
+        index: number;
         editorState: JSONContent;
       }>,
     ) => {
       const { index, editorState } = payload;
 
-      if (typeof index === "number" && index < state.history.length) {
+      if (state.history.length && index < state.history.length) {
         // Resubmission - update input message, truncate history after resubmit with new empty response message
         if (index % 2 === 1) {
           console.warn(
@@ -208,6 +208,7 @@ export const sessionSlice = createSlice({
 
         historyItem.message.content = ""; // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
         historyItem.editorState = payload.editorState;
+        historyItem.contextItems = [];
 
         state.history = state.history.slice(0, index + 1).concat({
           message: {
@@ -260,7 +261,7 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       const { index, updates } = payload;
-      if (!state.history[index]) {
+      if (index !== 0 && !state.history[index]) {
         console.error(
           `attempting to update history item at nonexistent index ${index}`,
           updates,

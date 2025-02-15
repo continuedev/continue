@@ -31,8 +31,10 @@ import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import { VsCodeIde } from "./VsCodeIde";
+import { getMetaKeyLabel } from "./util/util";
 
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { startLocalOllama } from "core/util/ollamaHelper";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -708,7 +710,7 @@ const getCommandsMap: (
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
     "continue.viewHistory": () => {
-      sidebar.webviewProtocol?.request("viewHistory", undefined);
+      vscode.commands.executeCommand("continue.navigateTo", "/history", true);
     },
     "continue.focusContinueSessionId": async (
       sessionId: string | undefined,
@@ -776,6 +778,7 @@ const getCommandsMap: (
             sessionId,
           );
         }
+        panel.reveal();
         sessionLoader.dispose();
       });
 
@@ -902,15 +905,18 @@ const getCommandsMap: (
             ? StatusBarStatus.Enabled
             : StatusBarStatus.Disabled;
       }
+
       quickPick.items = [
         {
           label: "$(question) Open help center",
         },
         {
-          label: "$(comment) Open chat (Cmd+L)",
+          label: "$(comment) Open chat",
+          description: getMetaKeyLabel() + " + L",
         },
         {
-          label: "$(screen-full) Open full screen chat (Cmd+K Cmd+M)",
+          label: "$(screen-full) Open full screen chat",
+          description: getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + M",
         },
         {
           label: quickPickStatusText(targetStatus),
@@ -998,6 +1004,9 @@ const getCommandsMap: (
     "continue.openAccountDialog": () => {
       sidebar.webviewProtocol?.request("openDialogMessage", "account");
     },
+    "continue.startLocalOllama": () => {
+      startLocalOllama(ide);
+    },
   };
 };
 
@@ -1052,7 +1061,7 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
-  registerCopyBufferSpy(context, core);
+  // registerCopyBufferSpy(context, core);
 
   for (const [command, callback] of Object.entries(
     getCommandsMap(

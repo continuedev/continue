@@ -63,6 +63,8 @@ import {
 } from "../util/paths";
 
 import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { useHub } from "../control-plane/env";
+import { localPathToUri } from "../util/pathToUri";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -70,8 +72,6 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import { useHub } from "../control-plane/env";
-import { localPathToUri } from "../util/pathToUri";
 import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
 import { validateConfig } from "./validation.js";
 
@@ -326,6 +326,7 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
+    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
   }
 
   if (allowFreeTrial) {
@@ -517,6 +518,8 @@ async function intermediateToFinalConfig(
               continueConfig,
               mcpId,
               abortController.signal,
+              "MCP Server",
+              server.faviconUrl,
             );
             if (mcpError) {
               errors.push(mcpError);
@@ -557,6 +560,7 @@ async function finalToBrowserConfig(
       requestOptions: m.requestOptions,
       promptTemplates: m.promptTemplates as any,
       capabilities: m.capabilities,
+      roles: m.roles,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,

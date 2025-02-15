@@ -11,7 +11,6 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import {
   setupBestConfig,
   setupLocalConfig,
-  setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
@@ -53,11 +52,12 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
+import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
 export class Core {
-  // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
   configHandler: ConfigHandler;
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
@@ -209,13 +209,24 @@ export class Core {
 
     // Note, VsCode's in-process messenger doesn't do anything with this
     // It will only show for jetbrains
-    this.messenger.onError((err) => {
-      console.error(err);
+    this.messenger.onError((message, err) => {
       void Telemetry.capture("core_messenger_error", {
         message: err.message,
         stack: err.stack,
       });
-      void this.ide.showToast("error", err.message);
+
+      // Again, specifically for jetbrains to prevent duplicate error messages
+      // The same logic can currently be found in the webview protocol
+      // bc streaming errors are handled in the GUI
+      if (
+        ["llm/streamChat", "chatDescriber/describe"].includes(
+          message.messageType,
+        )
+      ) {
+        return;
+      } else {
+        void this.ide.showToast("error", err.message);
+      }
     });
 
     on("update/selectTabAutocompleteModel", async (msg) => {
@@ -305,7 +316,11 @@ export class Core {
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+      let url = `${env.APP_URL}${msg.data.path}`;
+      if (msg.data.orgSlug) {
+        url += `?org=${msg.data.orgSlug}`;
+      }
+      await this.messenger.request("openUrl", url);
     });
 
     on("controlPlane/listOrganizations", async (msg) => {
@@ -351,9 +366,17 @@ export class Core {
       }
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
-      const provider = config.contextProviders?.find(
-        (provider) => provider.description.title === name,
-      );
+      const provider =
+        config.contextProviders?.find(
+          (provider) => provider.description.title === name,
+        ) ??
+        [
+          // user doesn't need these in their config.json for the shortcuts to work
+          // option+enter
+          new CurrentFileContextProvider({}),
+          // cmd+enter
+          new CodebaseContextProvider({}),
+        ].find((provider) => provider.description.title === name);
       if (!provider) {
         return [];
       }
@@ -389,10 +412,36 @@ export class Core {
           id,
         }));
       } catch (e) {
-        void this.ide.showToast(
-          "error",
-          `Error getting context items from ${name}: ${e}`,
-        );
+        let knownError = false;
+
+        if (e instanceof Error) {
+          // A specific error where we're forcing the presence of embeddings provider on the config
+          // But Jetbrains doesn't support transformers JS
+          // So if a context provider needs it it will throw this error when the file isn't found
+          if (e.message.includes("all-MiniLM-L6-v2")) {
+            knownError = true;
+            const toastOption = "See Docs";
+            void this.ide
+              .showToast(
+                "error",
+                `Set up an embeddings model to use @${name}`,
+                toastOption,
+              )
+              .then((userSelection) => {
+                if (userSelection === toastOption) {
+                  void this.ide.openUrl(
+                    "https://docs.continue.dev/customize/model-types/embeddings",
+                  );
+                }
+              });
+          }
+        }
+        if (!knownError) {
+          void this.ide.showToast(
+            "error",
+            `Error getting context items from ${name}: ${e}`,
+          );
+        }
         return [];
       }
     });
@@ -693,6 +742,8 @@ export class Core {
         llm,
         data.input,
         data.language,
+        false,
+        undefined,
       )) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
@@ -722,10 +773,6 @@ export class Core {
 
         case "Quickstart":
           editConfigJsonCallback = setupQuickstartConfig;
-          break;
-
-        case "LocalAfterFreeTrial":
-          editConfigJsonCallback = setupLocalConfigAfterFreeTrial;
           break;
 
         case "Best":
@@ -831,12 +878,18 @@ export class Core {
 
     on("files/created", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });
@@ -882,11 +935,22 @@ export class Core {
       void this.configHandler.setSelectedProfile(msg.data.id);
       void this.configHandler.reloadConfig();
     });
+
+    on("didChangeSelectedOrg", (msg) => {
+      void this.configHandler.setSelectedOrgId(msg.data.id);
+      void this.configHandler.reloadConfig();
+    });
+
     on("didChangeControlPlaneSessionInfo", async (msg) => {
-      this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+      await this.configHandler.updateControlPlaneSessionInfo(
+        msg.data.sessionInfo,
+      );
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
+      const url = await getAuthUrlForTokenPage(
+        ideSettingsPromise,
+        msg.data.useOnboarding,
+      );
       return { url };
     });
 
@@ -924,15 +988,22 @@ export class Core {
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
       const contextItems = await callTool(
-        tool.uri ?? tool.function.name,
+        tool,
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
           llm,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          tool,
         },
       );
+
+      if (tool.faviconUrl) {
+        contextItems.forEach((item) => {
+          item.icon = tool.faviconUrl;
+        });
+      }
 
       return { contextItems };
     });

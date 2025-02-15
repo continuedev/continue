@@ -27,7 +27,7 @@ import { localPathToUri } from "../util/pathToUri.js";
 
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
-  ONBOARDING_LOCAL_MODEL_TITLE,
+  LOCAL_ONBOARDING_PROVIDER_TITLE,
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
@@ -49,6 +49,7 @@ export class ConfigHandler {
   private additionalContextProviders: IContextProvider[] = [];
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string;
+  private selectedOrgId: string | null;
 
   constructor(
     private readonly ide: IDE,
@@ -69,12 +70,27 @@ export class ConfigHandler {
     );
     this.profiles = [new ProfileLifecycleManager(localProfileLoader, this.ide)];
     this.selectedProfileId = localProfileLoader.description.id;
+    this.selectedOrgId = null;
 
     // Always load local profile immediately in case control plane doesn't load
     try {
       void this.loadConfig();
     } catch (e) {
       console.error("Failed to load config: ", e);
+    }
+
+    void this.init();
+  }
+
+  private async init() {
+    const workspaceId = await this.getWorkspaceId();
+    const lastSelectedOrgIds =
+      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
+    const selectedOrgId = lastSelectedOrgIds[workspaceId];
+
+    // We want to set the org ID before fetching control plane profiles
+    if (selectedOrgId) {
+      this.selectedOrgId = selectedOrgId;
     }
 
     // Load control plane profiles
@@ -112,20 +128,24 @@ export class ConfigHandler {
       }
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.ide.openUrl(`${env.APP_URL}platform/${openProfileId}`);
+      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
   }
 
   private async loadPlatformProfiles() {
     // Get the profiles and create their lifecycle managers
     this.controlPlaneClient
-      .listAssistants()
+      .listAssistants(this.selectedOrgId)
       .then(async (assistants) => {
         const hubProfiles = await Promise.all(
           assistants.map(async (assistant) => {
             let renderedConfig: AssistantUnrolled | undefined = undefined;
             if (assistant.configResult.config) {
               renderedConfig = await clientRenderHelper(
+                {
+                  ownerSlug: assistant.ownerSlug,
+                  packageSlug: assistant.packageSlug,
+                },
                 YAML.stringify(assistant.configResult.config),
                 this.ide,
                 this.controlPlaneClient,
@@ -164,6 +184,7 @@ export class ConfigHandler {
         const workspaceId = await this.getWorkspaceId();
         const lastSelectedWorkspaceIds =
           this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+
         const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
         if (selectedWorkspaceId) {
           this.selectedProfileId = selectedWorkspaceId;
@@ -213,7 +234,9 @@ export class ConfigHandler {
       // If so, we do the full (more expensive) reload
       this.platformProfilesRefreshInterval = setInterval(async () => {
         const newFullSlugsList =
-          await this.controlPlaneClient.listAssistantFullSlugs();
+          await this.controlPlaneClient.listAssistantFullSlugs(
+            this.selectedOrgId,
+          );
 
         if (newFullSlugsList) {
           const shouldReload = this.fullSlugsListsDiffer(
@@ -273,6 +296,14 @@ export class ConfigHandler {
           console.error(e);
         });
     }
+  }
+
+  async setSelectedOrgId(orgId: string | null) {
+    this.selectedOrgId = orgId;
+    const selectedOrgs =
+      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
+    selectedOrgs[await this.getWorkspaceId()] = orgId;
+    this.globalContext.update("lastSelectedOrgIdForWorkspace", selectedOrgs);
   }
 
   async setSelectedProfile(profileId: string) {
@@ -338,11 +369,11 @@ export class ConfigHandler {
     this.updateListeners.push(listener);
   }
 
-  async reloadConfig(additionalContextProviders: IContextProvider[] = []) {
+  async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
 
     const { config, errors, configLoadInterrupted } =
-      await this.currentProfile.reloadConfig(additionalContextProviders);
+      await this.currentProfile.reloadConfig(this.additionalContextProviders);
 
     if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
@@ -374,7 +405,7 @@ export class ConfigHandler {
     const { config } = await this.loadConfig();
     const model = config?.models.find((m) => m.title === title);
     if (!model) {
-      if (title === ONBOARDING_LOCAL_MODEL_TITLE) {
+      if (title === LOCAL_ONBOARDING_PROVIDER_TITLE) {
         // Special case, make calls to Ollama before we have it in the config
         const ollama = new Ollama({
           model: LOCAL_ONBOARDING_CHAT_MODEL,
@@ -392,6 +423,6 @@ export class ConfigHandler {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
-    void this.reloadConfig(this.additionalContextProviders);
+    void this.reloadConfig();
   }
 }
