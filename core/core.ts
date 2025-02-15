@@ -301,7 +301,7 @@ export class Core {
     });
 
     on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data);
+      addContextProvider(msg.data, this.configHandler);
     });
 
     on("config/updateSharedConfig", async (msg) => {
