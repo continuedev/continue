@@ -367,6 +367,7 @@ export default class DocsService {
     if (this.docsIndexingQueue.has(startUrl)) {
       return;
     }
+    this.docsIndexingQueue.add(startUrl);
 
     const { isPreindexed, provider } =
       await this.getEmbeddingsProvider(startUrl);
@@ -416,6 +417,31 @@ export default class DocsService {
       }
     }
 
+    if (indexExists && !forceReindex) {
+      this.handleStatusUpdate({
+        ...fixedStatus,
+        progress: 1,
+        description: "Complete",
+        status: "complete",
+        debugInfo: "Already indexed",
+      });
+      return;
+    }
+
+    // Do a test run on the embedder
+    // This particular failure will not mark as a failed config in global context
+    // Since SiteIndexingConfig is likely to be valid
+    try {
+      await provider.embed(["continue-test-run"]);
+    } catch (e) {
+      console.error("Failed to test embeddings connection", e);
+      void this.ide.showToast(
+        "error",
+        "Failed to test embeddings connection. check your embeddings model configuration",
+      );
+      return;
+    }
+
     const markFailedInGlobalContext = () => {
       const globalContext = new GlobalContext();
       const failedDocs = globalContext.get("failedDocs") ?? [];
@@ -435,38 +461,13 @@ export default class DocsService {
       globalContext.update("failedDocs", newFailedDocs);
     };
 
-    // Do a test run on the embedder
-    // This particular failure will not mark as a failed config in global context
-    // Since SiteIndexingConfig is likely to be valid
-    try {
-      await provider.embed(["continue-test-run"]);
-    } catch (e) {
-      console.error("Failed to test embeddings connection", e);
-      void this.ide.showToast(
-        "error",
-        "Failed to test embeddings connection. check your embeddings model configuration",
-      );
-      return;
-    }
-
-    // Clear current indexes if reIndexing
-    if (indexExists) {
-      if (forceReindex) {
-        await this.deleteIndexes(startUrl);
-      } else {
-        this.handleStatusUpdate({
-          ...fixedStatus,
-          progress: 1,
-          description: "Complete",
-          status: "complete",
-          debugInfo: "Already indexed",
-        });
-        return;
-      }
-    }
-
     try {
       this.docsIndexingQueue.add(startUrl);
+
+      // Clear current indexes if reIndexing
+      if (indexExists && forceReindex) {
+        await this.deleteIndexes(startUrl);
+      }
 
       this.addToConfig(siteIndexingConfig);
 
@@ -655,7 +656,11 @@ export default class DocsService {
 
       removeFromFailedGlobalContext();
     } catch (e) {
-      let description = `Error getting docs from: ${siteIndexingConfig.startUrl}`;
+      console.error(
+        `Error indexing docs at: ${siteIndexingConfig.startUrl}`,
+        e,
+      );
+      let description = `Error indexing docs at: ${siteIndexingConfig.startUrl}`;
       if (e instanceof Error) {
         if (
           e.message.includes("github.com") &&
@@ -664,7 +669,6 @@ export default class DocsService {
           description = "Github rate limit exceeded"; // This text is used verbatim elsewhere
         }
       }
-      console.error("Error indexing docs", e);
       this.handleStatusUpdate({
         ...fixedStatus,
         description,
