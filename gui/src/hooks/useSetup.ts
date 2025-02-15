@@ -11,7 +11,6 @@ import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
   addContextItemsAtIndex,
   setInactive,
-  setSelectedProfileId,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { refreshSessionMetadata } from "../redux/thunks/session";
@@ -20,6 +19,7 @@ import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols"
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
+import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 
 function useSetup() {
   const dispatch = useAppDispatch();
@@ -36,7 +36,7 @@ function useSetup() {
       initial: boolean,
       result: {
         result: ConfigResult<BrowserSerializedContinueConfig>;
-        profileId: string;
+        profileId: string | null;
       },
     ) => {
       const { result: configResult, profileId } = result;
@@ -44,17 +44,8 @@ function useSetup() {
         return;
       }
       hasLoadedConfig.current = true;
-      // window.postMessage(
-      //   {
-      //     messageType: "refreshSubmenuItems",
-      //     data: {
-      //       providers: "all",
-      //     },
-      //   },
-      //   "*",
-      // );
       dispatch(setConfigResult(configResult));
-      dispatch(setSelectedProfileId(profileId));
+      dispatch(selectProfileThunk(profileId));
 
       // Perform any actions needed with the config
       if (configResult.config?.ui?.fontSize) {

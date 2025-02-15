@@ -70,8 +70,6 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
-            "signInToControlPlane",
-            "openDialogMessage",
             "docs/suggestions",
         )
 
@@ -126,7 +124,6 @@ class MessageTypes {
             //
             "completeOnboarding",
             "addAutocompleteModel",
-            "profiles/switch",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",
