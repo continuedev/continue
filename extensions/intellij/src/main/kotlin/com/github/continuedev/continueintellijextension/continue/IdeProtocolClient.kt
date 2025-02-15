@@ -43,26 +43,11 @@ class IdeProtocolClient(
         )
     }
 
-    private fun send(messageType: String, data: Any?, messageId: String? = null) {
-        val id = messageId ?: uuid()
-        continuePluginService.sendToWebview(messageType, data, id)
-    }
-
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val message = Gson().fromJson(msg, Message::class.java)
             val messageType = message.messageType
             val dataElement = message.data
-
-            // A couple oddball messages respond directly to GUI, expect a different message format
-            // e.g. jetbrains/isOSREnabled
-            fun respondToWebview(content: Any) {
-                respond(mutableMapOf(
-                    "done" to true,
-                    "status" to "success",
-                    "content" to content
-                ))
-            }
 
             try {
                 when (messageType) {
@@ -77,12 +62,12 @@ class IdeProtocolClient(
                     "jetbrains/isOSREnabled" -> {
                         val isOSREnabled =
                             ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
-                        respondToWebview(isOSREnabled)
+                        respond(isOSREnabled)
                     }
 
                     "jetbrains/getColors" -> {
                         val colors = GetTheme().getTheme();
-                        respondToWebview(colors)
+                        respond(colors)
                     }
 
                     "jetbrains/onLoad" -> {
@@ -92,7 +77,7 @@ class IdeProtocolClient(
                             "vscMachineId" to getMachineUniqueID(),
                             "vscMediaUrl" to "http://continue",
                         )
-                        respondToWebview(jsonData)
+                        respond(jsonData)
                     }
 
                     "getIdeSettings" -> {
@@ -111,7 +96,7 @@ class IdeProtocolClient(
                             val sessionInfo = authService.loadControlPlaneSessionInfo()
                             respond(sessionInfo)
                         } else {
-                            authService.startAuthFlow(project)
+                            authService.startAuthFlow(project, params.useOnboarding)
                             respond(null)
                         }
                     }
@@ -121,6 +106,10 @@ class IdeProtocolClient(
                         authService.signOut()
                         ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                             .handleUpdatedSessionInfo(null)
+
+                        // Tell the webview that session info changed
+                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
+
                         respond(null)
                     }
 
@@ -593,11 +582,11 @@ class IdeProtocolClient(
 
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
-        send("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
+        continuePluginService.sendToWebview("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
     }
 
     fun deleteAtIndex(index: Int) {
-        send("deleteAtIndex", DeleteAtIndex(index), uuid())
+        continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
     }
 
     private fun getModelByRole(

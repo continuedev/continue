@@ -8,6 +8,7 @@ import { TabTitle } from "../components/OnboardingCardTabs";
 import { useOnboardingCard } from "../hooks";
 import OnboardingLocalTab from "../tabs/OnboardingLocalTab";
 import MainTab from "./tabs/main";
+import { useAppSelector } from "../../../redux/hooks";
 
 const StyledCard = styled.div`
   margin: auto;
@@ -29,6 +30,7 @@ interface OnboardingCardProps {
 
 export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
   const onboardingCard = useOnboardingCard();
+  const config = useAppSelector((store) => store.config.config);
 
   if (getLocalStorage("onboardingStatus") === undefined) {
     setLocalStorage("onboardingStatus", "Started");
@@ -38,7 +40,7 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
 
   return (
     <StyledCard className="xs:py-4 xs:px-4 relative px-2 py-3">
-      {!isDialog && (
+      {!isDialog && !!config.models.length && (
         <CloseButton onClick={() => onboardingCard.close()}>
           <XMarkIcon className="mt-1.5 hidden h-5 w-5 hover:brightness-125 sm:flex" />
         </CloseButton>
@@ -51,7 +53,7 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
               isDialog={isDialog}
             />
           ) : (
-            <div className="mt-4">
+            <div className="mt-4 flex flex-col">
               <Alert type="info">
                 By choosing this option, Continue will be configured by a local{" "}
                 <code>config.yaml</code> file. If you're just looking to use

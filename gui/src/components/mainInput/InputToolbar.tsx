@@ -91,7 +91,7 @@ function InputToolbar(props: InputToolbarProps) {
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
-  const shouldRenderToolsButton =
+  const toolsSupported =
     defaultModel &&
     modelSupportsTools(defaultModel.model, defaultModel.provider) &&
     !props.toolbarOptions?.hideTools;
@@ -158,14 +158,14 @@ function InputToolbar(props: InputToolbarProps) {
               </HoverItem>
             )}
 
-            {shouldRenderToolsButton && <ToggleToolsButton />}
+            <ToggleToolsButton disabled={!toolsSupported} />
           </div>
         </div>
 
         <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
-              className={`${shouldRenderToolsButton ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
+              className={`${toolsSupported ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
             >
               {props.activeKey === "Alt" ? (
                 <HoverItem className="underline">

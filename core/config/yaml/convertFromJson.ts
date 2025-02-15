@@ -1,5 +1,4 @@
-import { ModelConfig } from "@continuedev/config-yaml";
-import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas";
+import { ModelConfig, AssistantUnrolled } from "@continuedev/config-yaml";
 
 import { SerializedContinueConfig } from "../..";
 

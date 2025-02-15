@@ -14,7 +14,7 @@ class Azure extends OpenAI {
 
   static defaultOptions: Partial<LLMOptions> = {
     apiVersion: "2024-02-15-preview",
-    apiType: "azure",
+    apiType: "azure-openai",
   };
 
   constructor(options: LLMOptions) {

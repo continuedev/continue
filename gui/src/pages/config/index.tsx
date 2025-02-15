@@ -150,14 +150,17 @@ function ConfigPage() {
         <div className="flex flex-col gap-4 py-6">
           <h2 className="mb-1 mt-0">Configuration</h2>
 
-          <SecondaryButton onClick={handleOpenConfig} className="!my-0">
-            Open configuration file
+          <SecondaryButton
+            onClick={handleOpenConfig}
+            className="!my-0 max-w-[400px]"
+          >
+            Open config file
           </SecondaryButton>
         </div>
 
         <div className="flex flex-col gap-4 py-6">
           <div>
-            <h2 className="mb-4 mt-0">User settings</h2>
+            <h2 className="mb-2 mt-0">User settings</h2>
           </div>
 
           <div className="flex flex-col gap-4">
@@ -345,7 +348,7 @@ function ConfigPage() {
                       </>
                     ) : (
                       <div>
-                        <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
+                        <CheckIcon className="text-lightgray h-4 w-4" />
                       </div>
                     )}
                   </div>
@@ -387,13 +390,13 @@ function ConfigPage() {
                       </>
                     ) : (
                       <div>
-                        <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
+                        <CheckIcon className="text-lightgray h-4 w-4" />
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-              <span className="text-vsc-foreground-muted self-end text-xs">
+              <span className="text-lightgray self-end text-xs">
                 Comma-separated list of path matchers
               </span>
             </form>
