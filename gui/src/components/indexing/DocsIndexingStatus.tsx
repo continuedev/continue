@@ -87,11 +87,11 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
   const Icon = STATUS_TO_ICON[status?.status];
   const showProgressPercentage = progressPercentage !== "100";
 
+  console.log("STatus for " + docConfig.title, status);
   if (hasDeleted) return null;
 
   return (
     <div className="mt-2 flex w-full flex-col">
-      {/* {`${status.type} - ${status.id} - ${status.status} - ${status.progress} - ${status.description} - ${status.icon}`} */}
       <div
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
