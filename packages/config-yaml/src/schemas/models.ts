@@ -29,7 +29,7 @@ export const modelRolesSchema = z.enum([
   "apply",
   "summarize",
 ]);
-export type ModelRoles = z.infer<typeof modelRolesSchema>;
+export type ModelRole = z.infer<typeof modelRolesSchema>;
 
 export const completionOptionsSchema = z.object({
   contextLength: z.number().optional(),
@@ -42,6 +42,13 @@ export const completionOptionsSchema = z.object({
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
+/** Prompt templates use Handlebars syntax */
+const promptTemplatesSchema = z.object({
+  apply: z.string().optional(),
+  edit: z.string().optional(),
+});
+export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
+
 const baseModelFields = {
   name: z.string(),
   model: z.string(),
@@ -50,6 +57,7 @@ const baseModelFields = {
   roles: modelRolesSchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
+  promptTemplates: promptTemplatesSchema.optional(),
 };
 
 export const modelSchema = z.union([

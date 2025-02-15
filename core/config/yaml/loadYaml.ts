@@ -3,12 +3,14 @@ import fs from "node:fs";
 import {
   AssistantUnrolled,
   ConfigResult,
+  ConfigValidationError,
+  ModelRole,
+  parseAssistantUnrolled,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 
 import {
-  BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
   IDE,
@@ -16,9 +18,11 @@ import {
   IdeType,
   SlashCommand,
 } from "../..";
+import { slashFromCustomCommand } from "../../commands";
 import { AllRerankers } from "../../context/allRerankers";
 import { MCPManagerSingleton } from "../../context/mcp";
 import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
+import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
 import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
@@ -28,16 +32,14 @@ import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
+import { allTools } from "../../tools";
+import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
-
-import { slashFromCustomCommand } from "../../commands";
-import { allTools } from "../../tools";
-import { clientRenderHelper } from "./clientRender";
-import { llmsFromModelConfig } from "./models";
-import { GlobalContext } from "../../util/GlobalContext";
 import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
+
+import { llmsFromModelConfig } from "./models";
 
 async function loadConfigYaml(
   workspaceConfigs: string[],
@@ -46,9 +48,14 @@ async function loadConfigYaml(
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<AssistantUnrolled>> {
+  const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
-    (await clientRenderHelper(rawYaml, ide, controlPlaneClient));
+    // (ideSettings.continueTestEnvironment === "production"
+    // ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
+    // :
+    parseAssistantUnrolled(rawYaml);
+  // );
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
@@ -96,7 +103,8 @@ async function configYamlToContinueConfig(
   workOsAccessToken: string | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   allowFreeTrial: boolean = true,
-): Promise<ContinueConfig> {
+): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+  const errors: ConfigValidationError[] = [];
   const continueConfig: ContinueConfig = {
     slashCommands: [
       ...(await slashCommandsFromV1PromptFiles(ide)),
@@ -127,12 +135,10 @@ async function configYamlToContinueConfig(
   };
 
   // Models
+  const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    if (
-      ["chat", "summarize", "apply", "edit"].some((role: any) =>
-        model.roles?.includes(role),
-      )
-    ) {
+    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
+    if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
       // Main model array
       const llms = await llmsFromModelConfig(
         model,
@@ -158,6 +164,24 @@ async function configYamlToContinueConfig(
         continueConfig.systemMessage,
       );
       continueConfig.tabAutocompleteModels?.push(...llms);
+    }
+
+    if (
+      model.roles?.includes("apply") &&
+      !continueConfig.experimental?.modelRoles?.applyCodeBlock
+    ) {
+      continueConfig.experimental ??= {};
+      continueConfig.experimental!.modelRoles ??= {};
+      continueConfig.experimental!.modelRoles!.applyCodeBlock = model.name;
+    }
+
+    if (
+      model.roles?.includes("edit") &&
+      !continueConfig.experimental?.modelRoles?.inlineEdit
+    ) {
+      continueConfig.experimental ??= {};
+      continueConfig.experimental!.modelRoles ??= {};
+      continueConfig.experimental!.modelRoles!.inlineEdit = model.name;
     }
   }
 
@@ -210,7 +234,17 @@ async function configYamlToContinueConfig(
     .filter((p) => !!p) ?? []) as IContextProvider[];
   continueConfig.contextProviders.push(...DEFAULT_CONTEXT_PROVIDERS);
 
+  if (
+    continueConfig.docs?.length &&
+    !continueConfig.contextProviders?.some(
+      (cp) => cp.description.title === "docs",
+    )
+  ) {
+    continueConfig.contextProviders.push(new DocsContextProvider({}));
+  }
+
   // Embeddings Provider
+  // IMPORTANT this currently will grab the first model found with an embed role
   const embedConfig = config.models?.find((model) =>
     model.roles?.includes("embed"),
   );
@@ -235,6 +269,7 @@ async function configYamlToContinueConfig(
   }
 
   // Reranker
+  // IMPORTANT this currently will grab the first model found with a rerank role
   const rerankConfig = config.models?.find((model) =>
     model.roles?.includes("rerank"),
   );
@@ -255,40 +290,51 @@ async function configYamlToContinueConfig(
 
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
-  config.mcpServers?.forEach(async (server) => {
-    const mcpId = server.name;
-    const mcpConnection = mcpManager.createConnection(mcpId, {
-      transport: {
-        type: "stdio",
-        args: [],
-        ...server,
-      },
-    });
-    if (!mcpConnection) {
-      return;
-    }
-
-    const abortController = new AbortController();
-    const mcpConnectionTimeout = setTimeout(
-      () => abortController.abort(),
-      2000,
-    );
-
-    try {
-      await mcpConnection.modifyConfig(
-        continueConfig,
-        mcpId,
-        abortController.signal,
-      );
-    } catch (e: any) {
-      if (e.name !== "AbortError") {
-        throw e;
+  await Promise.all(
+    config.mcpServers?.map(async (server) => {
+      const mcpId = server.name;
+      const mcpConnection = mcpManager.createConnection(mcpId, {
+        transport: {
+          type: "stdio",
+          args: [],
+          ...server,
+        },
+      });
+      if (!mcpConnection) {
+        return;
       }
-    }
-    clearTimeout(mcpConnectionTimeout);
-  });
 
-  return continueConfig;
+      const abortController = new AbortController();
+      const mcpConnectionTimeout = setTimeout(
+        () => abortController.abort(),
+        5000,
+      );
+
+      try {
+        const mcpError = await mcpConnection.modifyConfig(
+          continueConfig,
+          mcpId,
+          abortController.signal,
+          server.name,
+          server.faviconUrl,
+        );
+        if (mcpError) {
+          errors.push(mcpError);
+        }
+      } catch (e: any) {
+        errors.push({
+          fatal: false,
+          message: `Failed to load MCP server: ${e.message}`,
+        });
+        if (e.name !== "AbortError") {
+          throw e;
+        }
+      }
+      clearTimeout(mcpConnectionTimeout);
+    }) ?? [],
+  );
+
+  return { config: continueConfig, errors };
 }
 
 export async function loadContinueConfigFromYaml(
@@ -324,7 +370,7 @@ export async function loadContinueConfigFromYaml(
     };
   }
 
-  const continueConfig = await configYamlToContinueConfig(
+  const { config: continueConfig, errors } = await configYamlToContinueConfig(
     configYamlResult.config,
     ide,
     ideSettings,
@@ -353,9 +399,7 @@ export async function loadContinueConfigFromYaml(
 
   return {
     config: withShared,
-    errors: configYamlResult.errors,
+    errors: [...(configYamlResult.errors ?? []), ...errors],
     configLoadInterrupted: false,
   };
 }
-
-export { type BrowserSerializedContinueConfig };

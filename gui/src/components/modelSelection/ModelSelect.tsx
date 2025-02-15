@@ -235,13 +235,15 @@ function ModelSelect() {
 
   useEffect(() => {
     setOptions(
-      allModels.map((model) => {
-        return {
-          value: model.title,
-          title: modelSelectTitle(model),
-          apiKey: model.apiKey,
-        };
-      }),
+      allModels
+        .filter((m) => !m.roles || m.roles.includes("chat"))
+        .map((model) => {
+          return {
+            value: model.title,
+            title: modelSelectTitle(model),
+            apiKey: model.apiKey,
+          };
+        }),
     );
   }, [allModels]);
 

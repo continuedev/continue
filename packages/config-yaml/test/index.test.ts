@@ -120,6 +120,7 @@ describe("E2E Scenarios", () => {
     );
 
     const clientRendered = await clientRender(
+      { ownerSlug: "test-org", packageSlug: "assistant" },
       YAML.stringify(unrolledConfig),
       localUserSecretStore,
       platformClient,
@@ -176,4 +177,6 @@ describe("E2E Scenarios", () => {
     );
     expect(geminiSecretValue2).toBe("gemini-api-key");
   });
+
+  it.skip("should prioritize org over user / package secrets", () => {});
 });

@@ -3,18 +3,24 @@ import {
   ContextProviderName,
   ContextSubmenuItemWithProvider,
 } from "core";
-import { createContext } from "react";
 import { deduplicateArray } from "core/util";
-import MiniSearch, { SearchResult } from "minisearch";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { IdeMessengerContext } from "./IdeMessenger";
-import { selectSubmenuContextProviders } from "../redux/selectors";
-import { useWebviewListener } from "../hooks/useWebviewListener";
-import { useAppSelector } from "../redux/hooks";
 import {
   getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
 } from "core/util/uri";
+import MiniSearch, { SearchResult } from "minisearch";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useAppSelector } from "../redux/hooks";
+import { selectSubmenuContextProviders } from "../redux/selectors";
+import { IdeMessengerContext } from "./IdeMessenger";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -246,9 +252,7 @@ export const SubmenuContextProvidersProvider = ({
               abortControllers.get(description.title)?.abort();
               abortControllers.set(description.title, controller);
               providersLoading.add(description.title);
-              console.log(
-                `Refreshing items for ${description.title} submenu provider`,
-              );
+
               const result = await ideMessenger.request(
                 "context/loadSubmenuItems",
                 {
@@ -296,7 +300,7 @@ export const SubmenuContextProvidersProvider = ({
                 setFallbackResults((prev) => ({
                   ...prev,
                   file: deduplicateArray(
-                    [...lastOpenFilesRef.current, ...(prev.file ?? [])],
+                    [...lastOpenFilesRef.current, ...itemsWithProvider],
                     (a, b) => a.id === b.id,
                   ),
                 }));

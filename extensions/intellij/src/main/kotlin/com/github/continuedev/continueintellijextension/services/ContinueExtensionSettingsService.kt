@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
+import com.intellij.execution.target.value.constant
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.*
@@ -33,6 +34,7 @@ class ContinueSettingsComponent : DumbAware {
     val enableOSR: JCheckBox = JCheckBox("Enable Off-Screen Rendering")
     val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
     val showIDECompletionSideBySide: JCheckBox = JCheckBox("Show IDE completions side-by-side")
+    val enableContinueHub: JCheckBox = JCheckBox("Enable Continue Hub")
 
     init {
         val constraints = GridBagConstraints()
@@ -66,6 +68,8 @@ class ContinueSettingsComponent : DumbAware {
         constraints.gridy++
         panel.add(showIDECompletionSideBySide, constraints)
         constraints.gridy++
+        panel.add(enableContinueHub, constraints)
+        constraints.gridy++
 
         // Add a "filler" component that takes up all remaining vertical space
         constraints.weighty = 1.0
@@ -98,6 +102,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var enableOSR: Boolean = shouldRenderOffScreen()
         var displayEditorTooltip: Boolean = true
         var showIDECompletionSideBySide: Boolean = false
+        var continueTestEnvironment: String = "none"
     }
 
     var continueState: ContinueState = ContinueState()
@@ -211,7 +216,8 @@ class ContinueExtensionConfigurable : Configurable {
                     mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
                     mySettingsComponent?.enableOSR?.isSelected != settings.continueState.enableOSR ||
                     mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip ||
-                    mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide
+                    mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide ||
+                    (if (mySettingsComponent?.enableContinueHub?.isSelected == true) settings.continueState.continueTestEnvironment != "production" else settings.continueState.continueTestEnvironment == "production")
         return modified
     }
 
@@ -227,6 +233,8 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.displayEditorTooltip = mySettingsComponent?.displayEditorTooltip?.isSelected ?: true
         settings.continueState.showIDECompletionSideBySide =
             mySettingsComponent?.showIDECompletionSideBySide?.isSelected ?: false
+        settings.continueState.continueTestEnvironment =
+            if (mySettingsComponent?.enableContinueHub?.isSelected == true) "production" else "none"
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC)
             .settingsUpdated(settings.continueState)
@@ -244,6 +252,8 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
         mySettingsComponent?.showIDECompletionSideBySide?.isSelected =
             settings.continueState.showIDECompletionSideBySide
+        mySettingsComponent?.enableContinueHub?.isSelected =
+            settings.continueState.continueTestEnvironment == "production"
 
         ContinueExtensionSettings.instance.addRemoteSyncJob()
     }

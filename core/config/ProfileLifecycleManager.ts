@@ -27,6 +27,7 @@ export interface OrganizationDescription {
   id: string;
   iconUrl: string;
   name: string;
+  slug: string | undefined; // TODO: This doesn't need to be undefined, just doing while transitioning the backend
 }
 
 export class ProfileLifecycleManager {
@@ -50,7 +51,9 @@ export class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  async reloadConfig(additionalContextProviders: IContextProvider[] = []): Promise<ConfigResult<ContinueConfig>> {
+  async reloadConfig(
+    additionalContextProviders: IContextProvider[] = [],
+  ): Promise<ConfigResult<ContinueConfig>> {
     this.savedConfigResult = undefined;
     this.savedBrowserConfigResult = undefined;
     this.pendingConfigPromise = undefined;
@@ -73,7 +76,21 @@ export class ProfileLifecycleManager {
 
     // Set pending config promise
     this.pendingConfigPromise = new Promise(async (resolve, reject) => {
-      const result = await this.profileLoader.doLoadConfig();
+      let result: ConfigResult<ContinueConfig>;
+      try {
+        result = await this.profileLoader.doLoadConfig();
+      } catch (e: any) {
+        result = {
+          errors: [
+            {
+              fatal: true,
+              message: e.message,
+            },
+          ],
+          config: undefined,
+          configLoadInterrupted: true,
+        };
+      }
 
       if (result.config) {
         // Add registered context providers
