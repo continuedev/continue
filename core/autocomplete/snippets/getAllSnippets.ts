@@ -162,10 +162,8 @@ export const getAllSnippets = async ({
     clipboardSnippets,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
-    racePromise(
-      contextRetrievalService.getSnippetsFromImportDefinitions(helper),
-    ),
-    racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)),
+    racePromise(contextRetrievalService.getSnippetsFromImportDefinitions(helper)),
+    helper.options.useImports ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)) : [],
     racePromise(getDiffSnippets(ide)),
     racePromise(getClipboardSnippets(ide)),
   ]);
