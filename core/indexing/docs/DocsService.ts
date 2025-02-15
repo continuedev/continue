@@ -157,7 +157,8 @@ export default class DocsService {
 
       const currentStatus = this.statuses.get(doc.startUrl);
       if (currentStatus) {
-        return currentStatus;
+        this.handleStatusUpdate(currentStatus);
+        return;
       }
 
       const sharedStatus = {
