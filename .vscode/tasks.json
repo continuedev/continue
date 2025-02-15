@@ -73,7 +73,27 @@
         }
       ]
     },
-    // Build the React app. It gets bundled into the extension as a file resource and has a seprate build step
+    {
+      "label": "vscode-extension:package",
+      "dependsOn": ["vscode-extension:esbuild"],
+      "type": "npm",
+      "script": "package",
+      "path": "extensions/vscode",
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
+              "file": 1,
+              "line": 2,
+              "column": 3,
+              "severity": 4,
+              "message": 5
+            }
+          ]
+        }
+      ]
+    },
     {
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
