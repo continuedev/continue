@@ -365,10 +365,10 @@ export default class DocsService {
 
     // First, if indexing is already in process, don't attempt
     // This queue is necessary because indexAndAdd is invoked circularly by config edits
+    // TODO shouldn't really be a gap between adding and checking in queue but probably fine
     if (this.docsIndexingQueue.has(startUrl)) {
       return;
     }
-    this.docsIndexingQueue.add(startUrl);
 
     const { isPreindexed, provider } =
       await this.getEmbeddingsProvider(startUrl);
