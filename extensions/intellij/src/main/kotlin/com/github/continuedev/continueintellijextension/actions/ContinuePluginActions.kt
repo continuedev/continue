@@ -135,10 +135,3 @@ class OpenMorePageAction : AnAction() {
         continuePluginService.sendToWebview("navigateTo", params)
     }
 }
-
-class OpenAccountDialogAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.sendToWebview("openDialogMessage", "account")
-    }
-}

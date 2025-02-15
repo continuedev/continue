@@ -93,7 +93,7 @@ function InputToolbar(props: InputToolbarProps) {
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
   const toolsSupported =
     defaultModel &&
-    modelSupportsTools(defaultModel.model, defaultModel.provider) &&
+    modelSupportsTools(defaultModel) &&
     !props.toolbarOptions?.hideTools;
 
   const supportsImages =

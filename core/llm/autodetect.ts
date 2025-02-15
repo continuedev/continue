@@ -1,4 +1,9 @@
-import { ChatMessage, ModelCapability, TemplateType } from "../index.js";
+import {
+  ChatMessage,
+  ModelCapability,
+  ModelDescription,
+  TemplateType,
+} from "../index.js";
 
 import {
   anthropicTemplateMessages,
@@ -87,12 +92,15 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
 ];
 
-function modelSupportsTools(modelName: string, provider: string) {
-  const providerSupport = PROVIDER_TOOL_SUPPORT[provider];
+function modelSupportsTools(modelDescription: ModelDescription) {
+  if (modelDescription.capabilities?.tools !== undefined) {
+    return modelDescription.capabilities.tools;
+  }
+  const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
   if (!providerSupport) {
     return false;
   }
-  return providerSupport(modelName) ?? false;
+  return providerSupport(modelDescription.model) ?? false;
 }
 
 function modelSupportsImages(

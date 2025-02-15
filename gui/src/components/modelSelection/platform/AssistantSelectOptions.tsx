@@ -5,18 +5,21 @@ import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
-import { setProfileId } from "../../../redux/thunks/setProfileId";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
+import { ProfileDescription } from "core/config/ConfigHandler";
+import { selectProfileThunk } from "../../../redux/thunks/profileAndOrg";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
 }
 
-export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
+export function AssistantSelectOptions({
+  onClose,
+}: AssistantSelectOptionsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { profiles, selectedProfile, selectedOrganization } = useAuth();
   const dispatch = useAppDispatch();
@@ -27,60 +30,56 @@ export function AssistantSelectOptions(props: AssistantSelectOptionsProps) {
       path: "new",
       orgSlug: selectedOrganization?.slug,
     });
+    onClose();
   }
 
-  function handleOptionLink(e: React.MouseEvent, profileId: string) {
-    e.stopPropagation();
-    e.preventDefault();
-    ideMessenger.post("config/openProfile", { profileId });
-  }
-
-  function handleConfigure(e: React.MouseEvent, option: any) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    ideMessenger.post("config/openProfile", { profileId: option.id });
+  function handleConfigure(profile: ProfileDescription) {
+    ideMessenger.post("config/openProfile", { profileId: profile.id });
+    onClose();
   }
 
   function handleClickError(profileId: string) {
     ideMessenger.post("config/openProfile", { profileId });
+    onClose();
   }
 
   return (
     <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
       <div className={`max-h-[300px]`}>
-        {profiles.map((profile, idx) => (
-          <Option
-            key={idx}
-            idx={idx}
-            disabled={!!profile.errors?.length}
-            showConfigure={profile.id === "local"}
-            selected={profile.id === selectedProfile?.id}
-            onLink={
-              !isLocalProfile(profile)
-                ? (e) => handleOptionLink(e, profile.id)
-                : undefined
-            }
-            onConfigure={(e) => handleConfigure(e, profile)}
-            errors={profile.errors}
-            onClickError={() => handleClickError(profile.id)}
-            onClick={() => dispatch(setProfileId(profile.id))}
-          >
-            <div className="flex min-w-0 items-center">
-              <div className="mr-2 h-4 w-4 flex-shrink-0">
-                <AssistantIcon assistant={profile} />
+        {profiles.map((profile, idx) => {
+          return (
+            <Option
+              key={idx}
+              idx={idx}
+              disabled={!!profile.errors?.length}
+              showConfigure={isLocalProfile(profile)}
+              selected={profile.id === selectedProfile?.id}
+              onOpenConfig={() => {
+                handleConfigure(profile);
+              }}
+              errors={profile.errors}
+              onClickError={() => handleClickError(profile.id)}
+              onClick={() => {
+                dispatch(selectProfileThunk(profile.id));
+                onClose();
+              }}
+            >
+              <div className="flex min-w-0 items-center">
+                <div className="mr-2 h-4 w-4 flex-shrink-0">
+                  <AssistantIcon assistant={profile} />
+                </div>
+                <span
+                  className="flex-1 truncate"
+                  style={{ fontSize: getFontSize() - 2 }}
+                >
+                  {getProfileDisplayText(profile)}
+                  {profile.fullSlug.versionSlug &&
+                    ` (${profile.fullSlug.versionSlug})`}
+                </span>
               </div>
-              <span
-                className="flex-1 truncate"
-                style={{ fontSize: getFontSize() - 2 }}
-              >
-                {getProfileDisplayText(profile)}
-                {profile.fullSlug.versionSlug &&
-                  ` (${profile.fullSlug.versionSlug})`}
-              </span>
-            </div>
-          </Option>
-        ))}
+            </Option>
+          );
+        })}
       </div>
 
       <div className="mt-auto w-full">

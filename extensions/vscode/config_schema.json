@@ -440,6 +440,10 @@
             "uploadImage": {
               "type": "boolean",
               "description": "Indicates whether the model can upload images."
+            },
+            "tools": {
+              "type": "boolean",
+              "description": "Indicates whether the model can use tools"
             }
           }
         }

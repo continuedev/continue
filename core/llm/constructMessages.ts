@@ -1,4 +1,9 @@
-import { ChatHistoryItem, ChatMessage, MessagePart } from "../";
+import {
+  ChatHistoryItem,
+  ChatMessage,
+  MessagePart,
+  ModelDescription,
+} from "../";
 import { normalizeToMessageParts } from "../util/messageContent";
 
 import { modelSupportsTools } from "./autodetect";
@@ -67,15 +72,18 @@ const TOOL_USE_RULES = `When using tools, follow the following guidelines:
 - Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
 
 function constructSystemPrompt(
-  model: string,
-  provider: string,
+  modelDescription: ModelDescription,
   useTools: boolean,
 ): string | null {
   let systemMessage = "";
-  if (CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))) {
+  if (
+    CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) =>
+      modelDescription.model.includes(family),
+    )
+  ) {
     systemMessage = SYSTEM_MESSAGE;
   }
-  if (useTools && modelSupportsTools(model, provider)) {
+  if (useTools && modelSupportsTools(modelDescription)) {
     if (systemMessage) {
       systemMessage += "\n\n";
     }
@@ -89,8 +97,7 @@ const CANCELED_TOOL_CALL_MESSAGE =
 
 export function constructMessages(
   history: ChatHistoryItem[],
-  model: string,
-  provider: string,
+  modelDescription: ModelDescription,
   useTools: boolean,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
@@ -98,7 +105,7 @@ export function constructMessages(
   );
   const msgs: ChatMessage[] = [];
 
-  const systemMessage = constructSystemPrompt(model, provider, useTools);
+  const systemMessage = constructSystemPrompt(modelDescription, useTools);
   if (systemMessage) {
     msgs.push({
       role: "system",

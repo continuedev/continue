@@ -12,7 +12,6 @@ bin
 assets
 
 gui/**
-!gui/onigasm.wasm
 
 .devcontainer
 .github
