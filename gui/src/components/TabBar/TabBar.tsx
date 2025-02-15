@@ -177,7 +177,9 @@ export function TabBar() {
   const handleNewTab = async () => {
     // Save current session before creating new one
     if (hasHistory) {
-      await dispatch(saveCurrentSession({ openNewSession: false }));
+      await dispatch(
+        saveCurrentSession({ openNewSession: false, generateTitle: true }),
+      );
     }
 
     dispatch(newSession());
