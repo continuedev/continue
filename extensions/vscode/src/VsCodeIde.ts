@@ -2,7 +2,7 @@ import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
 
 import { Range } from "core";
-import { EXTENSION_NAME } from "core/control-plane/env";
+import { enableHubContinueDev, EXTENSION_NAME } from "core/control-plane/env";
 import { GetGhTokenArgs } from "core/protocol/ide";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import * as vscode from "vscode";
@@ -628,7 +628,7 @@ class VsCodeIde implements IDE {
     return vscode.workspace.fs.readDirectory(vscode.Uri.parse(dir)) as any;
   }
 
-  getIdeSettingsSync(): IdeSettings {
+  private getIdeSettingsSync(): IdeSettings {
     const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
     const remoteConfigServerUrl = settings.get<string | undefined>(
       "remoteConfigServerUrl",
@@ -661,7 +661,17 @@ class VsCodeIde implements IDE {
   }
 
   async getIdeSettings(): Promise<IdeSettings> {
-    return this.getIdeSettingsSync();
+    const ideSettings = this.getIdeSettingsSync();
+
+    // Feature flag for when hub is enabled
+    if (ideSettings.continueTestEnvironment !== "production") {
+      const enableHub = await enableHubContinueDev();
+      if (enableHub) {
+        ideSettings.continueTestEnvironment = "production";
+      }
+    }
+
+    return ideSettings;
   }
 }
 

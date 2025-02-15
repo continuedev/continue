@@ -1,6 +1,6 @@
+import { ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-
 declare global {
   interface Window {
     ide?: "vscode";
@@ -94,6 +94,8 @@ export interface ILLM extends LLMOptions {
   apiKey?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   deployment?: string;
   apiVersion?: string;
@@ -480,6 +482,8 @@ export interface LLMOptions {
   aiGatewaySlug?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -502,9 +506,6 @@ export interface LLMOptions {
 
   // AWS and GCP Options
   region?: string;
-
-  // GCP Options
-  capabilities?: ModelCapability;
 
   // GCP and Watsonx Options
   projectId?: string;
@@ -599,7 +600,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
-  continueTestEnvironment: "none" | "production" | "test" | "local";
+  continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
 }
 
@@ -927,8 +928,9 @@ export interface ModelDescription {
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
-  capabilities?: ModelCapability;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 }
 
 export interface EmbedOptions {
@@ -977,6 +979,11 @@ export interface TabAutocompleteOptions {
   disableInFiles?: string[];
   useImports?: boolean;
   showWhateverWeHaveAtXMs?: number;
+  // true = enabled, false = disabled, number = enabled with priority
+  experimental_includeClipboard: boolean | number;
+  experimental_includeRecentlyVisitedRanges: boolean | number;
+  experimental_includeRecentlyEditedRanges: boolean | number;
+  experimental_includeDiff: boolean | number;
 }
 
 export interface StdioOptions {
@@ -1019,7 +1026,7 @@ export interface ContextMenuConfig {
   fixGrammar?: string;
 }
 
-export interface ModelRoles {
+export interface ExperimentalModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
   repoMapFileSelection?: string;
@@ -1087,7 +1094,7 @@ export type DefaultContextProvider = ContextProviderWithParams & {
 
 export interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
-  modelRoles?: ModelRoles;
+  modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
 
