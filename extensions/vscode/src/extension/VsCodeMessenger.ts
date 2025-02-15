@@ -230,6 +230,7 @@ export class VsCodeMessenger {
           undefined,
           undefined,
           rangeToApplyTo,
+          data.text,
         );
       }
     });

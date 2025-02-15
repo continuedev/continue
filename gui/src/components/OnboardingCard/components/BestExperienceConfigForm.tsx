@@ -5,8 +5,8 @@ import { Button, Input, InputSubtext, lightGray } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import { setDefaultModel } from "../../../redux/slices/configSlice";
+import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 
 const { anthropic, mistral } = providers;
 const chatProvider = anthropic!;
@@ -14,7 +14,7 @@ const autocompleteProvider = mistral!;
 
 const {
   claude35Sonnet: chatModel,
-  claude3Haiku: repoMapModel,
+  claude35Haiku: repoMapModel,
   codestral: autocompleteModel,
 } = models;
 

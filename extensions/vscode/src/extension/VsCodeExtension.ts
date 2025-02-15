@@ -168,12 +168,6 @@ export class VsCodeExtension {
         } else if (newConfig) {
           setupStatusBar(undefined, undefined, false);
 
-          const result = await this.configHandler.getSerializedConfig();
-          this.sidebar.webviewProtocol?.request("configUpdate", {
-            result,
-            profileId: this.configHandler.currentProfile.profileDescription.id,
-          });
-
           this.tabAutocompleteModel.clearLlm();
 
           registerAllCodeLensProviders(
@@ -182,8 +176,6 @@ export class VsCodeExtension {
             newConfig,
           );
         }
-
-        this.sidebar.webviewProtocol?.request("configError", errors);
       },
     );
 
@@ -380,7 +372,7 @@ export class VsCodeExtension {
       .get<boolean>("enableContinueHub");
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
-        const settings = this.ide.getIdeSettingsSync();
+        const settings = await this.ide.getIdeSettings();
         const webviewProtocol = await this.webviewProtocolPromise;
         void webviewProtocol.request("didChangeIdeSettings", {
           settings,
