@@ -138,7 +138,7 @@ export class ConfigHandler {
     }
   }
 
-  private async loadPlatformProfiles() {
+  async loadPlatformProfiles() {
     // Get the profiles and create their lifecycle managers
     this.controlPlaneClient
       .listAssistants(this.selectedOrgId)
