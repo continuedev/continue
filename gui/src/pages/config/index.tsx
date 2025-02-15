@@ -348,7 +348,7 @@ function ConfigPage() {
                       </>
                     ) : (
                       <div>
-                        <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
+                        <CheckIcon className="text-lightgray h-4 w-4" />
                       </div>
                     )}
                   </div>
@@ -390,13 +390,13 @@ function ConfigPage() {
                       </>
                     ) : (
                       <div>
-                        <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
+                        <CheckIcon className="text-lightgray h-4 w-4" />
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-              <span className="text-vsc-foreground-muted self-end text-xs">
+              <span className="text-lightgray self-end text-xs">
                 Comma-separated list of path matchers
               </span>
             </form>

@@ -184,7 +184,7 @@ function AddDocsDialog() {
         {!!sortedDocsSuggestions.length && (
           <p className="m-0 mb-1 mt-4 p-0 font-semibold">Suggestions</p>
         )}
-        <div className="border-vsc-foreground-muted max-h-[145px] overflow-y-scroll rounded-sm py-1 pr-2">
+        <div className="border-lightgray max-h-[145px] overflow-y-scroll rounded-sm py-1 pr-2">
           {sortedDocsSuggestions.map((docsResult) => {
             const { error, details } = docsResult;
             const { language, name, version } = docsResult.packageInfo;
@@ -202,14 +202,14 @@ function AddDocsDialog() {
                     <div>
                       <PencilIcon
                         data-tooltip-id={id + "-edit"}
-                        className="vsc-foreground-muted h-3 w-3"
+                        className="text-lightgray h-3 w-3"
                       />
                       <ToolTip id={id + "-edit"} place="bottom">
                         This may not be a docs page
                       </ToolTip>
                     </div>
                   ) : (
-                    <PlusIcon className="text-foreground-muted h-3.5 w-3.5" />
+                    <PlusIcon className="text-lightgray h-3.5 w-3.5" />
                   )}
                 </div>
                 <div className="flex items-center gap-0.5">
@@ -224,7 +224,7 @@ function AddDocsDialog() {
                 </div>
                 <div>
                   {error || !details?.docsLink ? (
-                    <span className="text-vsc-foreground-muted italic">
+                    <span className="text-lightgray italic">
                       No docs link found
                     </span>
                   ) : (
@@ -251,7 +251,7 @@ function AddDocsDialog() {
                 >
                   <InformationCircleIcon
                     data-tooltip-id={id + "-info"}
-                    className="text-vsc-foreground-muted h-3.5 w-3.5 select-none"
+                    className="text-lightgray h-3.5 w-3.5 select-none"
                   />
                   <ToolTip id={id + "-info"} place="bottom">
                     <p className="m-0 p-0">{`Version: ${version}`}</p>
@@ -271,7 +271,7 @@ function AddDocsDialog() {
                   <div>
                     <InformationCircleIcon
                       data-tooltip-id={"add-docs-form-title"}
-                      className="text-vsc-foreground-muted h-3.5 w-3.5 select-none"
+                      className="text-lightgray h-3.5 w-3.5 select-none"
                     />
                     <ToolTip id={"add-docs-form-title"} place="top">
                       The title that will be displayed to users in the `@docs`
@@ -297,7 +297,7 @@ function AddDocsDialog() {
                   <div>
                     <InformationCircleIcon
                       data-tooltip-id={"add-docs-form-url"}
-                      className="text-vsc-foreground-muted h-3.5 w-3.5 select-none"
+                      className="text-lightgray h-3.5 w-3.5 select-none"
                     />
                     <ToolTip id={"add-docs-form-url"} place="top">
                       The starting location to begin crawling the documentation
