@@ -444,7 +444,7 @@ export default class DocsService {
       console.error("Failed to test embeddings connection", e);
       void this.ide.showToast(
         "error",
-        "Embeddings error: Failed to test embeddings connection. check your embeddings model config",
+        "Failed to test embeddings connection. check your embeddings model configuration",
       );
       return;
     }
