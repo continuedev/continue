@@ -75,6 +75,15 @@ class PostgresContextProvider extends BaseContextProvider {
   WHERE pg_namespace.nspname = $1
       AND pg_class.relname = $2
   order by 1 desc`;
+  static triggerQuery = `
+  SELECT
+    pg_get_triggerdef(t.oid) as trigger_definition
+  FROM pg_trigger t
+    JOIN pg_class c ON t.tgrelid = c.oid
+    JOIN pg_namespace n ON c.relnamespace = n.oid
+  WHERE pg_get_triggerdef(t.oid) not like 'CREATE CONSTRAINT%'
+    and n.nspname = $1
+    AND c.relname = $2`;
 
   private async getPool() {
     // @ts-ignore
@@ -136,7 +145,6 @@ class PostgresContextProvider extends BaseContextProvider {
       }
 
       for (const tableInfo of tableInfos) {
-        // console.log("schemaQuery", schemaQuery);
         const { rows: tableSchema } = await pool.query(
           PostgresContextProvider.columnQuery,
           [tableInfo.schema, tableInfo.name],
@@ -179,7 +187,7 @@ class PostgresContextProvider extends BaseContextProvider {
           prompt += "]\n\n";
         }
 
-        // Get indexes, foreign keys and sample rows for tables only
+        // Get indexes, foreign keys, triggers and sample rows for tables only
         if (tableInfo.type === "table") {
           // Get indexes
           // console.log("indexQuery", indexQuery);
@@ -194,7 +202,14 @@ class PostgresContextProvider extends BaseContextProvider {
             PostgresContextProvider.constraintQuery,
             [tableInfo.schema, fullName],
           );
-          prompt += `Constraints: ${JSON.stringify(constraintDefinitionResults, null, 2)}`;
+          prompt += `Constraints: ${JSON.stringify(constraintDefinitionResults, null, 2)}\n\n`;
+
+          // Get triggers
+          const { rows: triggerDefinitionResults } = await pool.query(
+            PostgresContextProvider.triggerQuery,
+            [tableInfo.schema, tableInfo.name],
+          );
+          prompt += `Triggers: ${JSON.stringify(triggerDefinitionResults, null, 2)}`;
         } else if (tableInfo.type === "view") {
           // Get view definition statement
           const { rows: viewDefinitionResults } = await pool.query(
