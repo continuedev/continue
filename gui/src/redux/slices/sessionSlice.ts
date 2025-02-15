@@ -45,10 +45,10 @@ type SessionState = {
   isStreaming: boolean;
   title: string;
   id: string;
-  selectedProfileId: string;
   availableProfiles: ProfileDescription[];
+  selectedProfileId: string | null;
+  organizations: OrganizationDescription[];
   selectedOrganizationId: string | null;
-  availableOrganizations: OrganizationDescription[];
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
@@ -103,8 +103,8 @@ const initialState: SessionState = {
       iconUrl: "",
     },
   ],
+  organizations: [],
   selectedOrganizationId: "",
-  availableOrganizations: [],
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   codeToEdit: [],
@@ -545,49 +545,34 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
-      return {
-        ...state,
-        selectedProfileId: payload,
-      };
+    // Important: these reducers don't handle selected profile/organization fallback logic
+    // That is done in thunks
+    setSelectedProfileId: (
+      state,
+      { payload }: PayloadAction<string | null>,
+    ) => {
+      state.selectedProfileId = payload;
     },
     setAvailableProfiles: (
       state,
       { payload }: PayloadAction<ProfileDescription[]>,
     ) => {
-      return {
-        ...state,
-        availableProfiles: payload,
-        selectedProfileId: payload.find(
-          (profile) => profile.id === state.selectedProfileId,
-        )
-          ? state.selectedProfileId
-          : payload[0]?.id,
-      };
+      state.availableProfiles = payload;
+    },
+    setOrganizations: (
+      state,
+      { payload }: PayloadAction<OrganizationDescription[]>,
+    ) => {
+      state.organizations = payload;
     },
     setSelectedOrganizationId: (
       state,
       { payload }: PayloadAction<string | null>,
     ) => {
-      return {
-        ...state,
-        selectedOrganizationId: payload,
-      };
+      state.selectedOrganizationId = payload;
     },
-    setAvailableOrganizations: (
-      state,
-      { payload }: PayloadAction<OrganizationDescription[]>,
-    ) => {
-      return {
-        ...state,
-        availableOrganizations: payload,
-        selectedOrganizationId: payload.find(
-          (org) => org.id === state.selectedOrganizationId,
-        )
-          ? state.selectedOrganizationId
-          : payload[0]?.id,
-      };
-    },
+    ///////////////
+
     updateCurCheckpoint: (
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
@@ -713,12 +698,6 @@ export const sessionSlice = createSlice({
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
     },
-    selectAvailableProfiles: (state) => {
-      return state.availableProfiles;
-    },
-    selectAvailableOrganizations: (state) => {
-      return state.availableOrganizations;
-    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -769,8 +748,6 @@ export const {
   updateHistoryItemAtIndex,
   clearLastEmptyResponse,
   setMainEditorContentTrigger,
-  setSelectedProfileId,
-  setSelectedOrganizationId,
   deleteMessage,
   setIsGatheringContext,
   updateCurCheckpoint,
@@ -783,8 +760,6 @@ export const {
   removeCodeToEdit,
   setCalling,
   cancelToolCall,
-  setAvailableProfiles,
-  setAvailableOrganizations,
   acceptToolCall,
   setToolGenerated,
   setToolCallOutput,
@@ -794,6 +769,11 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
+
+  setAvailableProfiles,
+  setSelectedProfileId,
+  setOrganizations,
+  setSelectedOrganizationId,
 } = sessionSlice.actions;
 
 export const {
@@ -801,8 +781,6 @@ export const {
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
-  selectAvailableProfiles,
-  selectAvailableOrganizations,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

@@ -73,10 +73,6 @@ export class Core {
 
   private abortedMessageIds: Set<string> = new Set();
 
-  private async config() {
-    return (await this.configHandler.loadConfig()).config;
-  }
-
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
     data: ToCoreProtocol[T][0],
@@ -136,7 +132,8 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       });
     });
 
@@ -281,10 +278,8 @@ export class Core {
     });
 
     on("config/newPromptFile", async (msg) => {
-      await createNewPromptFileV2(
-        this.ide,
-        (await this.config())?.experimental?.promptPath,
-      );
+      const { config } = await this.configHandler.loadConfig();
+      await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
       await this.configHandler.reloadConfig();
     });
 
@@ -341,7 +336,7 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
@@ -358,12 +353,13 @@ export class Core {
     });
 
     on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode, selectedModelTitle } =
-        msg.data;
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
+
+      const { name, query, fullInput, selectedCode, selectedModelTitle } =
+        msg.data;
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider =
@@ -454,7 +450,8 @@ export class Core {
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       };
     });
 
