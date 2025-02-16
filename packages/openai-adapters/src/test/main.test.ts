@@ -46,12 +46,12 @@ const TESTS: Omit<ModelConfig, "name">[] = [
     apiKey: process.env.ANTHROPIC_API_KEY!,
     roles: ["chat"],
   },
-  // {
-  //   provider: "gemini",
-  //   model: "gemini-1.5-flash-latest",
-  //   apiKey: process.env.GEMINI_API_KEY!,
-  //   roles: ["chat"],
-  // },
+  {
+    provider: "gemini",
+    model: "gemini-1.5-flash-latest",
+    apiKey: process.env.GEMINI_API_KEY!,
+    roles: ["chat"],
+  },
   {
     provider: "mistral",
     model: "codestral-latest",

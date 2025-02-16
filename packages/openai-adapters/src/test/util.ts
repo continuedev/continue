@@ -201,12 +201,18 @@ export function testChat(api: BaseLlmApi, model: string) {
     expect(completion?.startsWith("RESPONSE: ")).toBe(true);
   });
 
-  test.only("Tool Call works", async () => {
+  test("Tool Call works", async () => {
     let args = "";
     let isFirstChunk = true;
     for await (const chunk of api.chatCompletionStream(
       {
-        messages: [{ role: "user", content: "Hi, my name is Nate." }],
+        messages: [
+          {
+            role: "user",
+            content:
+              "Hi, my name is Nate. Please call the say_hello function to respond to me.",
+          },
+        ],
         tools: [
           {
             function: {
@@ -251,7 +257,6 @@ export function testChat(api: BaseLlmApi, model: string) {
       }
     }
 
-    console.log("args", args);
     const parsedArgs = JSON.parse(args);
     expect(parsedArgs.name).toBe("Nate");
   });
