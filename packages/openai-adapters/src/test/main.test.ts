@@ -52,60 +52,6 @@ const TESTS: Omit<ModelConfig, "name">[] = [
     apiKey: process.env.GEMINI_API_KEY!,
     roles: ["chat"],
   },
-  // {
-  //   provider: "cohere",
-  //   model: "command-r",
-  //   apiKey: process.env.COHERE_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "fireworks",
-  //   model: "accounts/fireworks/models/llama-v3p1-8b-instruct",
-  //   apiKey: process.env.FIREWORKS_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "groq",
-  //   model: "llama3-8b-8192",
-  //   apiKey: process.env.GROQ_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "deepinfra",
-  //   model: "meta-llama/Meta-Llama-3.1-8B-Instruct",
-  //   apiKey: process.env.DEEP_INFRA_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "together",
-  //   model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
-  //   apiKey: process.env.TOGETHER_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "novita",
-  //   model: "meta-llama/llama-3.1-8b-instruct",
-  //   apiKey: process.env.NOVITA_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "sambanova",
-  //   model: "Meta-Llama-3.1-8B-Instruct",
-  //   apiKey: process.env.SAMBANOVA_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "nebius",
-  //   model: "llama3.1-8b",
-  //   apiKey: process.env.NEBIUS_API_KEY!,
-  //   roles: ["chat"],
-  // },
-  // {
-  //   provider: "scaleway",
-  //   model: "llama3.1-8b",
-  //   apiKey: process.env.SCALEWAY_API_KEY!,
-  //   roles: ["chat"],
-  // },
   {
     provider: "mistral",
     model: "codestral-latest",
@@ -143,18 +89,6 @@ const TESTS: Omit<ModelConfig, "name">[] = [
   //   apiKey: process.env.GEMINI_API_KEY!,
   //   roles: ["embed"],
   // },
-  // {
-  //   provider: "nebius",
-  //   model: "BAAI/bge-en-icl",
-  //   apiKey: process.env.NEBIUS_API_KEY!,
-  //   roles: ["embed"],
-  // },
-  // {
-  //   provider: "scaleway",
-  //   model: "bge-multilingual-gemma2",
-  //   apiKey: process.env.SCALEWAY_API_KEY!,
-  //   roles: ["embed"],
-  // },
   {
     provider: "voyage",
     model: "rerank-lite-1",
@@ -165,12 +99,6 @@ const TESTS: Omit<ModelConfig, "name">[] = [
   //   provider: "cohere",
   //   model: "rerank-english-v3.0",
   //   apiKey: process.env.COHERE_API_KEY!,
-  //   roles: ["rerank"],
-  // },
-  // {
-  //   provider: "jina",
-  //   model: "jina-reranker-v2-base-multilingual",
-  //   apiKey: process.env.JINA_API_KEY!,
   //   roles: ["rerank"],
   // },
 ];
