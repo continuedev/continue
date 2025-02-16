@@ -200,6 +200,61 @@ export function testChat(api: BaseLlmApi, model: string) {
     expect(completion?.length).toBeGreaterThan(0);
     expect(completion?.startsWith("RESPONSE: ")).toBe(true);
   });
+
+  test.only("Tool Call works", async () => {
+    let args = "";
+    let isFirstChunk = true;
+    for await (const chunk of api.chatCompletionStream(
+      {
+        messages: [{ role: "user", content: "Hi, my name is Nate." }],
+        tools: [
+          {
+            function: {
+              name: "say_hello",
+              description: "Say Hello",
+              parameters: {
+                type: "object",
+                properties: {
+                  name: {
+                    type: "string",
+                    description: "The name of the person to greet",
+                  },
+                },
+              },
+            },
+            type: "function",
+          },
+        ],
+        tool_choice: {
+          type: "function",
+          function: {
+            name: "say_hello",
+          },
+        },
+        stream: true,
+        model,
+      },
+      new AbortController().signal,
+    )) {
+      const toolCall = chunk.choices[0].delta.tool_calls?.[0];
+      if (!toolCall) {
+        continue;
+      }
+      args += toolCall.function?.arguments ?? "";
+
+      expect(chunk.choices[0].delta.tool_calls).toHaveLength(1);
+
+      if (isFirstChunk) {
+        isFirstChunk = false;
+        expect(toolCall.id).toBeDefined();
+        expect(toolCall.function!.name).toBe("say_hello");
+      }
+    }
+
+    console.log("args", args);
+    const parsedArgs = JSON.parse(args);
+    expect(parsedArgs.name).toBe("Nate");
+  });
 }
 
 export function testCompletion(api: BaseLlmApi, model: string) {

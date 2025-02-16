@@ -103,8 +103,8 @@ const TESTS: Omit<ModelConfig, "name">[] = [
   // },
 ];
 
-describe("should successfully call all adapters", () => {
-  TESTS.forEach((config) => {
+TESTS.forEach((config) => {
+  describe(`${config.provider}/${config.model}`, () => {
     testConfig({ name: config.model, ...config });
   });
 });
