@@ -301,7 +301,7 @@ export class Core {
     });
 
     on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data);
+      addContextProvider(msg.data, this.configHandler);
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -936,6 +936,7 @@ export class Core {
     on("didChangeSelectedOrg", (msg) => {
       void this.configHandler.setSelectedOrgId(msg.data.id);
       void this.configHandler.reloadConfig();
+      void this.configHandler.loadPlatformProfiles();
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {

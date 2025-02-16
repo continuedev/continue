@@ -138,7 +138,7 @@ export class ConfigHandler {
     }
   }
 
-  private async loadPlatformProfiles() {
+  async loadPlatformProfiles() {
     // Get the profiles and create their lifecycle managers
     this.controlPlaneClient
       .listAssistants(this.selectedOrgId)
@@ -229,6 +229,22 @@ export class ConfigHandler {
     return false;
   }
 
+  private async reloadHubAssistants() {
+    const newFullSlugsList =
+      await this.controlPlaneClient.listAssistantFullSlugs(this.selectedOrgId);
+
+    if (newFullSlugsList) {
+      const shouldReload = this.fullSlugsListsDiffer(
+        newFullSlugsList,
+        this.lastFullSlugsList,
+      );
+      if (shouldReload) {
+        await this.loadPlatformProfiles();
+      }
+      this.lastFullSlugsList = newFullSlugsList;
+    }
+  }
+
   private async fetchControlPlaneProfiles() {
     if (await useHub(this.ideSettingsPromise)) {
       clearInterval(this.platformProfilesRefreshInterval);
@@ -236,23 +252,10 @@ export class ConfigHandler {
 
       // Every 5 seconds we ask the platform whether there are any assistant updates in the last 5 seconds
       // If so, we do the full (more expensive) reload
-      this.platformProfilesRefreshInterval = setInterval(async () => {
-        const newFullSlugsList =
-          await this.controlPlaneClient.listAssistantFullSlugs(
-            this.selectedOrgId,
-          );
-
-        if (newFullSlugsList) {
-          const shouldReload = this.fullSlugsListsDiffer(
-            newFullSlugsList,
-            this.lastFullSlugsList,
-          );
-          if (shouldReload) {
-            await this.loadPlatformProfiles();
-          }
-          this.lastFullSlugsList = newFullSlugsList;
-        }
-      }, PlatformProfileLoader.RELOAD_INTERVAL);
+      this.platformProfilesRefreshInterval = setInterval(
+        this.reloadHubAssistants.bind(this),
+        PlatformProfileLoader.RELOAD_INTERVAL,
+      );
     } else {
       this.controlPlaneClient
         .listWorkspaces()

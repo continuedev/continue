@@ -120,12 +120,6 @@ const isMacTarget = target?.startsWith("darwin");
   fs.copyFileSync("tmp_index.html", indexHtmlPath);
   fs.unlinkSync("tmp_index.html");
 
-  // Copy over other misc. files
-  fs.copyFileSync(
-    "../extensions/vscode/gui/onigasm.wasm",
-    path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
-  );
-
   console.log("[info] Copied gui build to JetBrains extension");
 
   // Then copy over the dist folder to the VSCode extension //
@@ -387,7 +381,7 @@ const isMacTarget = target?.startsWith("darwin");
     // Download esbuild from npm in tmp and copy over
     console.log("npm installing esbuild binary");
     await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.24.0",
+      "esbuild@0.17.19",
       "@esbuild",
     );
   }
