@@ -5,6 +5,7 @@ import { getUriFileExtension } from "../../util/uri";
 
 import { deterministicApplyLazyEdit } from "./deterministic";
 import { streamLazyApply } from "./streamLazyApply";
+import { isUnifiedDiffFormat, applyUnifiedDiff } from "./unifiedDiffApply";
 
 function canUseInstantApply(filename: string) {
   const fileExtension = getUriFileExtension(filename);
@@ -29,6 +30,17 @@ export async function applyCodeBlock(
     if (diffLines !== undefined) {
       const diffGenerator = generateLines(diffLines!);
       return [true, diffGenerator];
+    }
+  }
+
+  // If the code block is a diff
+  if (isUnifiedDiffFormat(newFile)) {
+    try {
+      const diffLines = applyUnifiedDiff(oldFile, newFile);
+      const diffGenerator = generateLines(diffLines!);
+      return [true, diffGenerator];
+    } catch (e) {
+      console.error("Failed to apply unified diff", e);
     }
   }
 
