@@ -187,16 +187,17 @@ class PostgresContextProvider extends BaseContextProvider {
           prompt += "]\n\n";
         }
 
-        // Get indexes, foreign keys, triggers and sample rows for tables only
-        if (tableInfo.type === "table") {
-          // Get indexes
-          // console.log("indexQuery", indexQuery);
+        // get indexes for tables and materialized views
+        if (tableInfo.type !== 'view') {
           const { rows: indexDefinitionResults } = await pool.query(
             PostgresContextProvider.indexQuery,
             [tableInfo.schema, tableInfo.name],
           );
           prompt += `Indexes: ${JSON.stringify(indexDefinitionResults, null, 2)}\n\n`;
+        }
 
+        // Get foreign keys and  triggers for tables only
+        if (tableInfo.type === "table") {
           // Get constraints
           const { rows: constraintDefinitionResults } = await pool.query(
             PostgresContextProvider.constraintQuery,
