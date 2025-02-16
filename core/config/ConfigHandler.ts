@@ -112,7 +112,7 @@ export class ConfigHandler {
     return (
       this.profiles.find(
         (p) => p.profileDescription.id === this.selectedProfileId,
-      ) ?? null
+      ) ?? this.profiles[0]
     );
   }
 
