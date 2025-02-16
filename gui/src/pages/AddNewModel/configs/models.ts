@@ -37,6 +37,114 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  llama323BChat: {
+    title: "Llama 3.2 3B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.2-3b",
+      model: "meta-llama/llama-3.2-3b-instruct",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "meta-llama/llama-3.2-3b-instruct",
+            title: "Llama3.2-3b",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "ppio"
+    ],
+    isOpenSource: true,
+  },
+  qwen2572bChat: {
+    title: "qwen 2.5 72b",
+    description: "A model from qwen for chat",
+    refUrl: "",
+    params: {
+      title: "qwen 2.5 72b",
+      model: "qwen/qwen-2.5-72b-instruct",
+      contextLength: 2048,
+    },
+    icon: "qwen.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "72b": {
+            model: "qwen/qwen-2.5-72b-instruct",
+            title: "qwen-2.5-72b-instruct",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "ppio"
+    ],
+    isOpenSource: true,
+  },
+  deepseekV3CommunityChat: {
+    title: "deepseek v3 community",
+    description: "A model from deekseek for chat",
+    refUrl: "",
+    params: {
+      title: "deepseek-v3/community",
+      model: "deepseek/deepseek-v3/community",
+      contextLength: 2048,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "v3-community": {
+            model: "deepseek/deepseek-v3/community",
+            title: "deepseek-v3/community",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "ppio"
+    ],
+    isOpenSource: true,
+  },
+  deepseekV3CommonChat: {
+    title: "deepseek v3",
+    description: "A model from deekseek for chat",
+    refUrl: "",
+    params: {
+      title: "deepseek-v3",
+      model: "deepseek/deepseek-v3",
+      contextLength: 2048,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "v3": {
+            model: "deepseek/deepseek-v3",
+            title: "deepseek-v3",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "ppio"
+    ],
+    isOpenSource: true,
+  },
   deepseekV3Chat: {
     title: "deepseek v3",
     description: "A model from deekseek for chat",
@@ -52,16 +160,42 @@ export const models: { [key: string]: ModelPackage } = {
         name: "Parameter Count",
         description: "The number of parameters in the model",
         options: {
-          r1: {
+          "r1": {
             model: "deepseek/deepseek_v3",
             title: "deepseek_v3",
-          },
+          }
         },
       },
     ],
     providerOptions: [
-      "novita",
-      "ppio",
+      "novita"
+    ],
+    isOpenSource: true,
+  },
+  deepseekR1CommunityChat: {
+    title: "deepseek r1 community",
+    description: "A model from deekseek for chat",
+    refUrl: "",
+    params: {
+      title: "deepseek-r1/community",
+      model: "deepseek/deepseek-r1/community",
+      contextLength: 2048,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "r1": {
+            model: "deepseek/deepseek-r1/community",
+            title: "deepseek-r1/community",
+          }
+        },
+      },
+    ],
+    providerOptions: [
+      "ppio"
     ],
     isOpenSource: true,
   },
@@ -80,16 +214,15 @@ export const models: { [key: string]: ModelPackage } = {
         name: "Parameter Count",
         description: "The number of parameters in the model",
         options: {
-          r1: {
+          "r1": {
             model: "deepseek/deepseek-r1",
             title: "deepseek-r1",
-          },
+          }
         },
       },
     ],
     providerOptions: [
-      "novita",
-      "ppio",
+      "novita", "ppio"
     ],
     isOpenSource: true,
   },
@@ -111,13 +244,12 @@ export const models: { [key: string]: ModelPackage } = {
           "8b": {
             model: "meta-llama/llama-3.1-8b-instruct",
             title: "Llama3.1-8b",
-          },
+          }
         },
       },
     ],
     providerOptions: [
-      "novita",
-      "ppio",
+      "novita"
     ],
     isOpenSource: true,
   },
@@ -145,7 +277,6 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mistral.png",
     providerOptions: [
       "novita",
-      "ppio",
     ],
     isOpenSource: true,
   },
@@ -999,14 +1130,14 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude35Haiku: {
-    title: "Claude 3.5 Haiku",
+  claude3Haiku: {
+    title: "Claude 3 Haiku",
     description:
-      "The fastest model in the Claude 3.5 series: a compact model for near-instant responsiveness",
+      "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
     params: {
-      model: "claude-3-5-haiku-latest",
+      model: "claude-3-haiku-20240307",
       contextLength: 200_000,
-      title: "Claude 3.5 Haiku",
+      title: "Claude 3 Haiku",
       apiKey: "",
     },
     providerOptions: ["anthropic", "free-trial"],

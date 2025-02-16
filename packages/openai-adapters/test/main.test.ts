@@ -275,7 +275,7 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
   },
   {
     provider: "ppio",
-    model: "meta-llama/llama-3.1-8b-instruct",
+    model: "meta-llama/llama-3.2-3b-instruct",
     apiKey: process.env.PPIO_API_KEY!,
     chatOnly: true,
   },

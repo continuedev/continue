@@ -466,10 +466,12 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama318BChat,
-      models.mistralChat,
+      models.deepseekR1CommunityChat,
+      models.deepseekV3CommunityChat,
       models.deepseekR1Chat,
-      models.deepseekV3Chat,
+      models.deepseekV3CommonChat,
+      models.llama323BChat,
+      models.qwen2572bChat
     ].map((p) => {
       p.params.contextLength = 4096;
       return p;

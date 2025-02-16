@@ -9,19 +9,15 @@ class PPIO extends OpenAI {
   };
 
   private static MODEL_IDS: { [name: string]: string } = {
+    "deepseek-v3-community": "deepseek/deepseek-v3/community",
+    "deepseek-r1-community": "deepseek/deepseek-r1/community",
     "deepseek-r1": "deepseek/deepseek-r1",
-    "deepseek_v3": "deepseek/deepseek_v3",
-    "llama3-8b": "meta-llama/llama-3-8b-instruct",
-    "llama3-70b": "meta-llama/llama-3-70b-instruct",
+    "deepseek-v3": "deepseek/deepseek-v3",
     "llama3.1-8b": "meta-llama/llama-3.1-8b-instruct",
     "llama3.1-70b": "meta-llama/llama-3.1-70b-instruct",
-    "llama3.1-405b": "meta-llama/llama-3.1-405b-instruct",
-    "llama3.2-1b": "meta-llama/llama-3.2-1b-instruct",
     "llama3.2-3b": "meta-llama/llama-3.2-3b-instruct",
-    "llama3.2-11b": "meta-llama/llama-3.2-11b-vision-instruct",
-    "llama3.3-70b": "meta-llama/llama-3.3-70b-instruct",
-    "mistral-nemo": "mistralai/mistral-nemo",
-    "mistral-7b": "mistralai/mistral-7b-instruct",
+    "qwen-2.5-72b": "qwen/qwen-2.5-72b-instruct",
+    "qwen-2-vl-72b": "qwen/qwen-2-vl-72b-instruct",
   };
 
   protected _convertModelName(model: string) {
