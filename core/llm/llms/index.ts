@@ -49,6 +49,7 @@ import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import Novita from "./Novita";
+import PPIO from "./PPIO";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
@@ -67,6 +68,7 @@ export const LLMClasses = [
   TextGenWebUI,
   Together,
   Novita,
+  PPIO,
   HuggingFaceTGI,
   HuggingFaceInferenceAPI,
   Kindo,

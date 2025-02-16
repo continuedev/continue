@@ -274,6 +274,12 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
     chatOnly: true,
   },
   {
+    provider: "ppio",
+    model: "meta-llama/llama-3.1-8b-instruct",
+    apiKey: process.env.PPIO_API_KEY!,
+    chatOnly: true,
+  },
+  {
     provider: "sambanova",
     model: "Meta-Llama-3.1-8B-Instruct",
     apiKey: process.env.SAMBANOVA_API_KEY!,

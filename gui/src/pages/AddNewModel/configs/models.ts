@@ -59,7 +59,10 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["novita"],
+    providerOptions: [
+      "novita",
+      "ppio",
+    ],
     isOpenSource: true,
   },
   deepseekR1Chat: {
@@ -84,7 +87,10 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["novita"],
+    providerOptions: [
+      "novita",
+      "ppio",
+    ],
     isOpenSource: true,
   },
   llama318BChat: {
@@ -109,7 +115,10 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["novita"],
+    providerOptions: [
+      "novita",
+      "ppio",
+    ],
     isOpenSource: true,
   },
   mistralChat: {
@@ -134,7 +143,10 @@ export const models: { [key: string]: ModelPackage } = {
       },
     ],
     icon: "mistral.png",
-    providerOptions: ["novita"],
+    providerOptions: [
+      "novita",
+      "ppio",
+    ],
     isOpenSource: true,
   },
   llama31Chat: {

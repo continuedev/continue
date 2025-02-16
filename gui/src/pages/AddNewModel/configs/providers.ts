@@ -443,6 +443,40 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     apiKeyUrl:
       "https://novita.ai/settings/key-management?utm_source=github_continuedev&utm_medium=github_readme&utm_campaign=github_link",
   },
+  ppio: {
+    title: "PPIO",
+    provider: "ppio",
+    refPage: "ppio",
+    description:
+      "Use PPIO API for extremely fast streaming of open-source models",
+    icon: "ppio.png",
+    longDescription: `[PPIO](https://ppinfra.com?utm_source=github_continuedev) supports stable and cost-efficient open-source LLM APIs, such as DeepSeek, Llama, Qwen etc. To get started with PPIO:\n1. Obtain an API key from [here](https://ppinfra.com/settings/key-management?utm_source=github_continuedev)\n2. Paste below\n3. Select a model preset`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your PPIO API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.llama318BChat,
+      models.mistralChat,
+      models.deepseekR1Chat,
+      models.deepseekV3Chat,
+    ].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl:
+      "https://ppinfra.com/settings/key-management?utm_source=github_continuedev",
+  },
   gemini: {
     title: "Google Gemini API",
     provider: "gemini",

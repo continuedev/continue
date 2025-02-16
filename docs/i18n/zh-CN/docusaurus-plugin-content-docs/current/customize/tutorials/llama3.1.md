@@ -1,7 +1,7 @@
 ---
 title: Continue 使用 Llama 3.1
 description: Continue 如何使用 Llama 3.1
-keywords: [llama, meta, togetherai, novita, ollama, replicate]
+keywords: [llama, meta, togetherai, novita, ppio, ollama, replicate]
 ---
 
 Continue 让使用最新的开元模型编码变得简单，包括整个 Llama 3.1 家族模型。
@@ -65,6 +65,27 @@ Together AI 提供开源模型的快速和可信任的推理。你可以以良�
       "title": "Llama 3.1 405b",
       "provider": "together",
       "model": "llama3.1-405b",
+      "apiKey": "<API_KEY>"
+    }
+  ]
+}
+```
+
+## PPIO
+
+[PPIO 派欧云](https://ppinfra.com?utm_source=github_continuedev) 提供稳定、高性价比的开源模型 API 服务，支持 DeepSeek 全系列、Llama、Qwen 等行业领先大模型。
+
+1. 创建账号 [在这里](https://ppinfra.com/user/login?utm_source=github_continuedev)
+2. 复制 [API 密钥管理](https://ppinfra.com/settings/key-management?utm_source=github_continuedev) 中的 API key
+3. 更新你的 Continue 配置文件，像这样：
+
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "Llama 3.1 405b",
+      "provider": "ppio",
+      "model": "meta-llama/llama-3.1-405b-instruct",
       "apiKey": "<API_KEY>"
     }
   ]

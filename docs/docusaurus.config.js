@@ -394,6 +394,10 @@ const config = {
             from: "/reference/Model Providers/novita",
           },
           {
+            to: "/customize/model-providers/more/ppio",
+            from: "/reference/Model Providers/ppio",
+          },
+          {
             to: "/customize/model-providers/more/vllm",
             from: "/reference/Model Providers/vllm",
           },

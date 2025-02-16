@@ -60,6 +60,7 @@ They are concerned with:
 - [x] TextGen Web UI
 - [x] Together
 - [x] Novita AI
+- [x] PPIO
 - [x] Vllm
 - [ ] Vertex AI
 - [x] Voyage AI

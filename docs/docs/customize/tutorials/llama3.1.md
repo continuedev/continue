@@ -1,7 +1,7 @@
 ---
 title: Using Llama 3.1 with Continue
 description: How to use Llama 3.1 with Continue
-keywords: [llama, meta, togetherai, novita, ollama, replicate]
+keywords: [llama, meta, togetherai, novita, ppio, ollama, replicate]
 ---
 
 Continue makes it easy to code with the latest open-source models, including the entire Llama 3.1 family of models. Llama 3.2 models are also supported but not recommended for chat, because they are specifically designed to be small or multi-modal.
@@ -71,6 +71,27 @@ Together AI provides fast and reliable inference of open-source models. You'll b
       "title": "Llama 3.1 405b",
       "provider": "together",
       "model": "llama3.1-405b",
+      "apiKey": "<API_KEY>"
+    }
+  ]
+}
+```
+
+## PPIO
+
+[PPIO](https://ppinfra.com?utm_source=github_continuedev) supports stable and cost-efficient open-source LLM APIs, such as DeepSeek, Llama, Qwen etc. Try the [PPIO Llama 3 API Demo](https://ppinfra.com/llm?utm_source=github_continuedev) today!
+
+1. Create an account [here](https://ppinfra.com/user/login?utm_source=github_continuedev)
+2. Copy your API key on the [Key Management](https://ppinfra.com/settings/key-management?utm_source=github_continuedev
+3. Update your Continue config file like this:
+
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "Llama 3.1 405b",
+      "provider": "ppio",
+      "model": "meta-llama/llama-3.1-405b-instruct",
       "apiKey": "<API_KEY>"
     }
   ]
