@@ -1,7 +1,15 @@
 ---
-title: Azure OpenAI
+title: Azure AI Foundry
 slug: ../azure
 ---
+
+Azure AI Foundry 是一个基于云的服务，提供对 OpenAI, Mistral AI 和其他模型的访问，集成微软 Azure 平台的安全和企业特性。为了开始，在 [Azure portal](https://portal.azure.com) 中，创建一个 Azure AI Foundry 资源。
+
+:::info
+
+对于 OpenAI 模型设置的细节，查看 [Azure OpenAI 服务配置](#azure-openai-service-configuration) 。
+
+:::
 
 ## 聊天模型
 
@@ -13,10 +21,9 @@ slug: ../azure
     "provider": "azure",
     "model": "gpt-4o",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",
+    "apiKey": "<MY_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
 }]
 ```
 
@@ -25,16 +32,13 @@ slug: ../azure
 我们推荐配置 **Codestral** 作为你的自动补全模型。
 
 ```json title="config.json"
-"tabAutocompleteModel": [{
+{
+  "tabAutocompleteModel": {
     "title": "Codestral",
-    "provider": "azure",
-    "model": "codestral-latest",
-    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
-}]
+    "provider": "mistral",
+    "model": "codestral-latest"
+  }
+}
 ```
 
 ## 嵌入模型
@@ -46,10 +50,9 @@ slug: ../azure
     "provider": "azure",
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",
+    "apiKey": "<MY_API_KEY>",
+    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
 }
 ```
 
@@ -64,18 +67,18 @@ Azure OpenAI 当前没有提供任何重排序模型。
 如果你想要使用 OpenAI 模型，但是担心隐私问题，你可以使用 Azure OpenAI 服务，它是符合 GDPR 和 HIPAA 的。
 
 :::info[获取访问]
-你需要申请 Azure OpenAI 服务的访问。响应时间通常是几天。
 
-**[点击这里申请 Azure OpenAI 服务的访问](https://azure.microsoft.com/en-us/products/ai-services/openai-service)**
+[点击这里](https://azure.microsoft.com/en-us/products/ai-services/openai-service) 申请访问 Azure OpenAI 服务。响应时间通常是几天。
+
 :::
 
-## 通用模型配置
+## Azure OpenAI 服务配置
 
-Azure OpenAI 需要配置一些额外的参数，例如模型引擎和 API 版本。
+Azure OpenAI 服务需要配置一些额外的参数，例如部署名称和 API 基础 URL 。
 
-要在 _Azure AI Studio_ 查找这个信息，首先选择你想要连接的模型。然后访问 _Endpoint_ > _Target URI_ 。
+要在 _Azure AI Foundry_ 查找这个信息，首先选择你想要连接的模型。然后访问 _Endpoint_ > _Target URI_ 。
 
-例如， Target URI `<https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-03-15-preview>` 匹配以下配置：
+例如， Target URI `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` 匹配以下配置：
 
 ```json
 {
@@ -83,9 +86,9 @@ Azure OpenAI 需要配置一些额外的参数，例如模型引擎和 API 版�
   "model": "gpt-4o",
   "provider": "azure",
   "apiBase": "https://just-an-example.openai.azure.com",
-  "apiType": "azure",
-  "engine": "gpt-4o",
+  "deployment": "gpt-4o-july",
   "apiVersion": "2023-03-15-preview",
-  "apiKey": "<MY_API_KEY>"
+  "apiKey": "<MY_API_KEY>",
+  "apiType": "azure-openai"
 }
 ```

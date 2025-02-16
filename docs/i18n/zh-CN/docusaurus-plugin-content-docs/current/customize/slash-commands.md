@@ -12,37 +12,7 @@ keywords: [斜杠命令, 自定义命令, 步骤]
 
 为了使用任何内置的斜杠命令，打开 `config.json` 并添加它到 `slashCommands` 列表中。
 
-### `/Edit`
-
-使用 `ctrl/cmd + L` (VS Code) 或 `ctrl/cmd + J` (JetBrains) 选择代码，然后输入 `/Edit` ，跟着编辑的指令。 Continue 将会流式地在一个并排 diff 编辑器中修改。
-
-```json title="config.json"
-{
-  "slashCommands": [
-    {
-      "name": "edit",
-      "description": "Edit highlighted code"
-    }
-  ]
-}
-```
-
-### `/Comment`
-
-Comment 工作就像 `/Edit` ，除了它将自动地给 LLM 注释代码的提示词。
-
-```json title="config.json"
-{
-  "slashCommands": [
-    {
-      "name": "comment",
-      "description": "Write comments for the highlighted code"
-    }
-  ]
-}
-```
-
-### `/Share`
+### `/share`
 
 生成一个关于你当前聊天历史的可分享的 markdown 副本。
 
@@ -60,7 +30,7 @@ Comment 工作就像 `/Edit` ，除了它将自动地给 LLM 注释代码的提�
 
 使用 `outputDir` 参数指定你想要把 markdown 文件保存在哪里。
 
-### `/Cmd`
+### `/cmd`
 
 通过自然语言生成一个 shell 命令，并且（只在 VS Code 中）自动地粘贴它到终端中。
 
@@ -75,7 +45,7 @@ Comment 工作就像 `/Edit` ，除了它将自动地给 LLM 注释代码的提�
 }
 ```
 
-### `/Commit`
+### `/commit`
 
 显示给 LLM 你当前的 git diff ，并询问生成一个 commit 消息。
 
@@ -90,7 +60,7 @@ Comment 工作就像 `/Edit` ，除了它将自动地给 LLM 注释代码的提�
 }
 ```
 
-### `/Http`
+### `/http`
 
 编写一个自定义的斜杠命令，在你自己的 HTTP 端点。在参数对象中对于你设置的端点设置 'url' 。端点应该返回一个字符串更新序列，将会流式地输出到 Continue 侧边栏。查看我们基本的 [FastAPI 示例](https://github.com/continuedev/continue/blob/74002369a5e435735b83278fb965e004ae38a97d/core/context/providers/context_provider_server.py#L34-L45) 作为参考。
 
@@ -106,7 +76,7 @@ Comment 工作就像 `/Edit` ，除了它将自动地给 LLM 注释代码的提�
 }
 ```
 
-### `/Issue`
+### `/issue`
 
 描述你想要生成的 issue ， Continue 会转换为格式良好的标题和正文，然后给你一个草稿的链接，让你可以提交。确保设置你想要生成 issue 的仓库的 URL 。
 
@@ -122,24 +92,9 @@ Comment 工作就像 `/Edit` ，除了它将自动地给 LLM 注释代码的提�
 }
 ```
 
-### `/So`
+### `/onboard`
 
-StackOverflow 斜杠命令将会自动地拉取 StackOverflow 的结果来回答你的问题，引用链接和它的答案一起。
-
-```json title="config.json"
-{
-  "slashCommands": [
-    {
-      "name": "so",
-      "description": "Reference StackOverflow to answer the question"
-    }
-  ]
-}
-```
-
-### `/Onboard`
-
-Onboard 斜杠命令帮助你熟悉一个新的项目，通过分析项目结构， README 和依赖文件。它发现关键目录，解释它们的目的，并高亮使用的流行的包。另外，它提供对项目架构的了解。
+onboard 斜杠命令帮助你自己熟悉一个新的项目，通过分析项目结构， READMEs 和依赖文件。它识别关键的目录，解释它们的目的，高亮使用的流行的包。另外，它提供对项目架构的洞察。
 
 ```json title="config.json"
 {
@@ -151,3 +106,26 @@ Onboard 斜杠命令帮助你熟悉一个新的项目，通过分析项目结构
   ]
 }
 ```
+
+### Model Context Protocol
+
+[Model Context Protocol](https://modelcontextprotocol.io/introduction) 是一个 Anthropic 标准建议，为了统一提示词，上下文，使用的工具。 Continue 支持 MCP "prompts" ，通过创建斜杠命令。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置本地服务器，并配置你的 `config.json` 像这样：
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
+  }
+}
+```
+
+### 构建你自己的斜杠命令
+你可以构建自己的斜杠命令，通过跟随 [这个入门](/customize/tutorials/build-your-own-slash-command) 。

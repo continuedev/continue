@@ -5,13 +5,13 @@ slug: ../vertexai
 
 :::info
 
-You need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).
+你需要启用 [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) 并设置 [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc) 。
 
 :::
 
-## Chat model
+## 聊天模型
 
-We recommend configuring **Claude 3.5 Sonnet** as your chat model.
+我们推荐配置 **Claude 3.5 Sonnet** 作为你的聊天模型。
 
 ```json title="config.json"
 {
@@ -27,9 +27,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 }
 ```
 
-## Autocomplete model
+## 自动补全模型
 
-We recommend configuring **Codestral** or **code-gecko** as your autocomplete model.
+我们推荐配置 **Codestral** 或 **code-gecko** 作为你的自动补全模型。
 
 ```json title="config.json"
 {
@@ -43,9 +43,9 @@ We recommend configuring **Codestral** or **code-gecko** as your autocomplete mo
 }
 ```
 
-## Embeddings model
+## 嵌入模型
 
-We recommend configuring **text-embedding-004** as your embeddings model.
+我们推荐配置 **text-embedding-004** 作为你的嵌入模型。
 
 ```json title="config.json"
 {
@@ -58,8 +58,8 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 }
 ```
 
-## Reranking model
+## 重排序模型
 
-<!-- Vertex AI currently does not offer any reranking models.
+Vertex AI 当前没有提供任何重排序模型。
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers. -->
+[点击这里](../../model-types/reranking.md) 查看重排序模型提供者列表。

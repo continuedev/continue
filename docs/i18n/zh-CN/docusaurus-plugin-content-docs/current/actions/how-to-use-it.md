@@ -14,7 +14,7 @@ Actions 是常见用例的快捷方式。例如，你可能想要审查代码，
 
 ### 斜杠命令
 
-最常见的调用 action 的方法是使用斜杠命令。通过输入 '/' 并在下拉框中选择，这里有快捷方式会被激活。例如，内置的 '/edit' 斜杠命令，让你可以直接在你的编辑器中流式地编辑。
+最常见的调用 action 的方法是使用斜杠命令。通过输入 '/' 可以激活快捷方式，在聊天会话中（按下 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) 或 <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)），并在下拉框中选择。例如，内置的 '/edit' 斜杠命令，让你可以直接在你的编辑器中流式地编辑。
 
 ![slash-commands](/img/slash-commands.png)
 
@@ -48,7 +48,7 @@ Write unit tests for the above selected code, following each of these instructio
 - Don't explain how to set up `jest`
 ```
 
-现在要使用这个提示词，你可以高亮代码，并使用 `cmd/ctrl+L` 来选择它到 Continue 侧边栏中。
+现在要使用这个提示词，你可以高亮代码，并使用 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> 来选择它到 Continue 侧边栏中。
 
 然后，输入 "/" 来查看斜杠命令列表，选择名为 "test" 的那个。按下回车， LLM 会响应你的 prompt 文件中给出的指令。
 
@@ -76,10 +76,10 @@ Write unit tests for the above selected code, following each of these instructio
 
 #### 调试 action
 
-调试 action 是 VS Code 扩展中一个特殊的内置键盘快捷方式。使用 `cmd/ctrl+shift+R` 来快速复制当前终端的内容到聊天侧边栏，并获得调试建议。
+调试 action 是 VS Code 扩展中一个特殊的内置键盘快捷方式。使用 <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>R</kbd> 来快速复制当前终端的内容到聊天侧边栏，并获得调试建议。
 
 #### 快速修复
 
-无论何时在你的代码中看到红色/黄色下划线表示错误，你可以把光标放到附近， VS Code 会显示一个灯泡图标。无论点击灯泡，或使用 `cmd/ctrl+.` 快捷键，将会显示一个快速修复的下拉菜单。其中之一是 "Ask Continue" action 。无论单击或再次使用 `cmd/ctrl+.` ， Continue 将尝试帮助解决问题。
+无论何时在你的代码中看到红色/黄色下划线表示错误，你可以把光标放到附近， VS Code 会显示一个灯泡图标。无论点击灯泡，或使用 <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> 快捷键，将会显示一个快速修复的下拉菜单。其中之一是 "Ask Continue" action 。无论单击或再次使用 <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> ， Continue 将尝试帮助解决问题。
 
 ![ask-continue](/img/ask-continue.png)

@@ -1,6 +1,6 @@
 # SambaNova Cloud
 
-SambaNova 云是一个运行大型 AI 模型的云平台，有 Llama 3.1 70B/405B 性能的世界记录。你可以在 [这里](https://cloud.sambanova.ai/) 登录，在最初的欢迎屏幕复制你的 API key ，然后在 [模型列表](https://community.sambanova.ai/t/quick-start-guide/104) 任何模型上点击 play 按钮。
+SambaNova 云是一个运行大型 AI 模型的云平台，有 Llama 3.1 70B/405B 性能的世界记录。你可以跟随 [这个博客文章](https://sambanova.ai/blog/accelerating-coding-with-sambanova-cloud?ref=blog.continue.dev) 的说明来配置你的设置。
 
 ```json title="config.json"
 {

@@ -24,7 +24,7 @@ Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如
 为了查看调试日志，它包含额外的信息，点击最上面是 "Default levels" 的下拉框并选择 "Verbose" 。
 :::
 
-1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
+1. <kbd>cmd</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> (MacOS) 或 <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> (Windows)
 2. 查找，然后选择 "Developer: Toggle Developer Tools"
 3. 这将打开 [Chrome DevTools window](https://developer.chrome.com/docs/devtools/)
 4. 选择 `Console` 标签
@@ -40,7 +40,9 @@ Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如
 
 ### JetBrains
 
-打开 `~/.continue/logs/core.log` 。最近的日志可以在文件的底部找到。
+打开 `~/.continue/logs/core.log` 查看 Continue 插件的日志。最近的日志可以在文件的底部找到。
+
+一些 JetBrains 相关的日志也可以点击 "Help" > "Show Log in Explorer/Finder" 找到。
 
 ## 下载最新的预览版
 
@@ -54,7 +56,7 @@ Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如
 
 在 JetBrains 上， "预览版" 出现在他们的抢先体验计划 (EAP) 频道。要下载最新的 EAP 版本，启用 EAP 频道：
 
-1. 打开 JetBrains 设置 (`cmd/ctrl + ,`) 并导航到 "插件"
+1. 打开 JetBrains 设置 (<kbd>cmd/ctrl</kbd> + <kbd>,</kbd>) 并导航到 "插件"
 2. 点击顶部的齿轮图标
 3. 选择 "管理插件仓库..."
 4. 添加 "[https://plugins.jetbrains.com/plugins/eap/list](https://plugins.jetbrains.com/plugins/eap/list)" 到列表中
@@ -102,7 +104,7 @@ Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如
 
 #### VS Code 代理设置
 
-如果你使用 VS Code ，需要通过代理进行请求，你可能已经通过 VS Code 的 [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support) 设置。为了检查这个是否启用，使用 `cmd/ctrl+,` 打开设置并查找 "Proxy Support" ，除非它设置为 "off" ，那么 VS Code 将会负责对代理进行请求。
+如果你使用 VS Code ，需要通过代理进行请求，你可能已经通过 VS Code 的 [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support) 设置。为了检查这个是否启用，使用 <kbd>cmd/ctrl</kbd> + <kbd>,</kbd> 打开设置并查找 "Proxy Support" ，除非它设置为 "off" ，那么 VS Code 将会负责对代理进行请求。
 
 #### code-server
 
@@ -124,7 +126,7 @@ Continue 可以在 [code-server](https://coder.com/) 中使用，但是如果你
 
 ### Android Studio - "Nothing to show" 在聊天中
 
-这可以修复，通过选择 `Actions > Choose Boot runtime for the IDE` ，然后选择最新的版本，然后重启 Android Studio 。[查看这个线索](https://github.com/continuedev/continue/issues/2280#issuecomment-2365231567) 获得详情。
+这可以修复，通过选择 `Actions > Choose Boot runtime for the IDE` ，然后选择最新的版本，然后重启 Android Studio 。[查看这个线索](https://github.com/continuedev/continue/issues/596#issuecomment-1789327178) 获得详情。
 
 ## 仍然有问题？
 

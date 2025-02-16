@@ -4,13 +4,13 @@ title: NVIDIA
 
 :::info
 
-[View the docs](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog) to learn how to get an API key.
+[查看文档](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog) 了解如何获取一个 API key 。
 
 :::
 
-## Chat model
+## 聊天模型
 
-We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
+我们推荐配置 **Nemotron-4-340B-Instruct** 作为你的聊天模型。
 
 ```json title="config.json"
 {
@@ -25,15 +25,15 @@ We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
 }
 ```
 
-## Autocomplete model
+## 自动补全模型
 
-NVIDIA currently does not offer any autocomplete models.
+NVIDIA 当前不提供任何自动补全模型。
 
-[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+[点击这里](../../model-types/autocomplete.md) 查看自动补全模型提供者列表。
 
-## Embeddings model
+## 嵌入模型
 
-We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings model.
+我们推荐配置 **NVIDIA Retrieval QA Mistral 7B** 作为你的嵌入模型。
 
 ```json title="config.json"
 {
@@ -45,8 +45,8 @@ We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings m
 }
 ```
 
-## Reranking model
+## 重排序模型
 
-NVIDIA currently does not offer any reranking models.
+NVIDIA 当前不提供任何重排序模型。
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[点击这里](../../model-types/reranking.md) 查看重排序模型提供者列表。

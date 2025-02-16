@@ -6,42 +6,31 @@ title: 提示词文件
 
 ## 快速开始
 
-:::tip[提示词库]
+<!-- :::tip[提示词库]
 为了帮助你开始，[我们精心编写了一个小的 `.prompt` 文件库](https://github.com/continuedev/prompt-file-examples)。我们鼓励社区贡献到这个仓库，所有请考虑为你的 prompt 创建一个拉取请求！
-:::
+::: -->
 
-以下是一个快速示例，设置一个 prompt 文件使用 Jest 编写单元测试。
+以下是一个快速示例，设置一个 prompt 文件到 de
 
-1. 创建一个名为 `.prompts/` 的目录，再你的工作区的最高层级。
-2. 添加一个名为 `test.prompt` 的文件到这个目录中。这个文件的名称将是斜杠命令的名称，你用来生成提示词。
-3. 写入以下内容到 `test.prompt` 并保存。
+1. 创建一个名为 `.continue/prompts` 的目录，在你的工作区的最高层级（或者你可以使用 UI 中的按钮，输入 @ ，选择 "Prompt Files" ，选择 "New Prompt File"）。
+2. 添加一个名为 `rails.prompt` 的文件到这个目录中。
+3. 写入以下内容到 `rails.prompt` 并保存。
 
 ```
-temperature: 0.5
-maxTokens: 4096
+name: Rails Project
+description: Information about this project
 ---
-<system>
-You are an expert programmer
-</system>
 
-{{{ input }}}
-
-Write unit tests for the above selected code, following each of these instructions:
-- Use `jest`
-- Properly set up and tear down
-- Include important edge cases
-- The tests should be complete and sophisticated
-- Give the tests just as chat output, don't edit any file
-- Don't explain how to set up `jest`
+关联的是当前 Ruby on Rails 应用的总结，包含 @Gemfile 和在 @db/schema.rb 中的数据库 schema
 ```
 
-现在使用这个提示词，你可以高亮代码，并使用 `cmd/ctrl+L` 来选择它到 Continue 侧边栏中。
+现在使用这个提示词，你可以高亮代码，并使用 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> 来选择它到 Continue 侧边栏中。
 
-然后，输入 "/" 来查看斜杠命令列表，选择名为 "test" 的那个。按下 enter ，LLM 会响应你的 prompt 文件中给出的指令。
+然后，输入 "@" ，选择 "Prompt files"，选择名为 "Rails Project" 的那个。你现在可以像往常一样提问， LLM 会有你的 .prompt 文件中的信息。
 
 ## 格式
 
-格式来自 [HumanLoops 的 .prompt 文件](https://docs.humanloop.com/docs/prompt-file-format) ，并通过额外的模板，使用上下文提供者和内置的变量，使用 [Handlebars 语法](https://handlebarsjs.com/guide/) 。
+格式来自 [HumanLoops 的 .prompt 文件](https://docs.humanloop.com/docs/prompt-file-format) ，并通过额外的模板，关联文件， URL 和上下文提供者。
 
 :::info
 这个格式的当前状态时试验性的，并且可能变更
@@ -51,38 +40,30 @@ Write unit tests for the above selected code, following each of these instructio
 
 "preamble" 是 `---` 分隔符之上的任何东西，让你可以指定模型参数。它使用 YAML 语法，当前支持以下参数：
 
-- `name`
-- `temperature`
-- `topP`
-- `topK`
-- `minP`
-- `presencePenalty`
-- `frequencyPenalty`
-- `mirostat`
-- `stop`
-- `maxTokens`
-- `description`
+- `name` - 显示的标题
+- `description` - 你将在下拉框中看到的描述
+- `version` - 可以是 "1" （对于旧的提示词文件）或 "2" （这是默认的，不需要设置）
 
 如果你不需要任何这些参数，你可以对 preamble 留空，不需要包含 `---` 分隔符。
 
-### 系统信息
+### 上下文
 
-为了添加一个系统信息，使用 `<system></system>` tag 开始 body ，例如上面的例子，并将你的系统信息放入其中。
+很多 [上下文提供者](../context-providers.md) 可以被引用，通过输入 "@" 跟着上下文提供者的名称。当前支持的列表如下：
 
-### 内置变量
+- `@terminal` - 终端的内容
+- `@currentFile` - 当前激活的文件
+- `@open` - 所有打开的文件
+- `@os` - 操作系统的信息
+- `@problems` - 在激活文件中语言服务器生成的问题
+- `@repo-map` - 仓库中的文件映射
+- `@tree` - 仓库结构的树形视图
 
-下面的内置变量当前是可用的：
+或者你可以直接输入 URL 和文件路径：
 
-- `{{{ input }}}` - 侧边栏中输入框中与斜杠命令一起发送的全部文本
-- `{{{ currentFile }}}` - 当前在你的 IDE 中打开的文件
-- `{{{ ./path/to/file.js }}}` - 可以直接引用的任何文件
+- `@https://github.com/continuedev/continue` - URL 的内容
+- `@src/index.ts` - 文件的内容（仅 VS Code 有效）
 
-### 上下文提供者
-
-任何你添加到配置中的 [上下文提供者](../context-providers.md) ，可以使用上下文提供者的名称引用。接收输入的上下文提供者也支持。
-
-- `{{{ terminal }}}` - 终端的内容
-- `{{{ url "https://github.com/continuedev/continue" }}}` - URL 的内容
+所有的引用会作为上下文条目，而不是直接放入行内。
 
 ## 反馈
 

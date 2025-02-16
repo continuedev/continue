@@ -25,7 +25,7 @@ import TabItem from "@theme/TabItem";
    {
      "title": "Claude 3.5 Sonnet",
      "provider": "anthropic",
-     "model": "claude-3-5-sonnet-20240620",
+     "model": "claude-3-5-sonnet-latest",
      "apiKey": "[ANTHROPIC_API_KEY]"
    }
  ]
@@ -33,7 +33,7 @@ import TabItem from "@theme/TabItem";
 
 ### 来自 Meta 的 Llama 3.1 405B
 
-如果你倾向于使用开放权重模型，那么来自 Meta 的 Llama 3.1 405B 是你当前的最好选择。你需要决定，通过 SaaS 模型提供者使用它（比如 [Together](../customize/model-providers/more/together.md)或 [Groq](../customize/model-providers/more/groq.md)）或者自托管使用它（比如使用 [vLLM](../customize/model-providers//more/vllm.md) 或 [Ollama](../customize/model-providers/top-level/ollama.md)） 。
+如果你倾向于使用开放权重模型，那么来自 Meta 的 Llama 3.1 405B 是你当前的最好选择。你需要决定，通过 SaaS 模型提供者使用它（比如 [Together](../customize/model-providers/more/together.md) 或 [Groq](../customize/model-providers/more/groq.md)）或者自托管使用它（比如使用 [vLLM](../customize/model-providers//more/vllm.md) 或 [Ollama](../customize/model-providers/top-level/ollama.md)） 。
 
 <Tabs groupId="providers">
     <TabItem value="Together">
@@ -44,18 +44,6 @@ import TabItem from "@theme/TabItem";
                     "provider": "together",
                     "model": "llama3.1-405b",
                     "apiKey": "[TOGETHER_API_KEY]"
-                }
-            ]
-        ```
-    </TabItem>
-    <TabItem value="Novita">
-        ```json title="config.json"
-            "models": [
-                {
-                    "title": "Llama 3.1 405B",
-                    "provider": "novita",
-                    "model": "meta-llama/llama-3.1-405b-instruct",
-                    "apiKey": "[NOVITA_API_KEY]"
                 }
             ]
         ```
@@ -89,7 +77,7 @@ import TabItem from "@theme/TabItem";
                 {
                     "title": "Llama 3.1 405B",
                     "provider": "ollama",
-                    "model": "llama3.1-405b"
+                    "model": "llama3.1:405b"
                 }
             ]
         ```
@@ -107,6 +95,21 @@ import TabItem from "@theme/TabItem";
      "provider": "openai",
      "model": "",
      "apiKey": "[OPENAI_API_KEY]"
+   }
+ ]
+```
+
+### Grok-2 from xAI
+
+如果你倾向于使用来自 [xAI](../customize/model-providers/top-level/xAI.md) 的模型，那么我们推荐 Grok-2 。
+
+```json title="config.json"
+ "models": [
+   {
+     "title": "Grok-2",
+     "provider": "xAI",
+     "model": "grok-2-latest",
+     "apiKey": "[XAI_API_KEY]"
    }
  ]
 ```
@@ -141,7 +144,8 @@ import TabItem from "@theme/TabItem";
                 {
                     "title": "Llama 3.1 8B",
                     "provider": "ollama",
-                    "model": "llama3.1-8b"
+                    "model": "llama3.1:8b",
+                    "apiBase": "http://localhost:11434"
                 }
             ]
         ```
@@ -170,7 +174,8 @@ import TabItem from "@theme/TabItem";
                 {
                     "title": "DeepSeek Coder 2 16B",
                     "provider": "ollama",
-                    "model": "deepseek-coder-v2:16b"
+                    "model": "deepseek-coder-v2:16b",
+                    "apiBase": "http://localhost:11434"
                 }
             ]
         ```

@@ -17,7 +17,7 @@ slug: ../anthropic
     {
       "title": "Claude 3.5 Sonnet",
       "provider": "anthropic",
-      "model": "claude-3-5-sonnet-20240620",
+      "model": "claude-3-5-sonnet-latest",
       "apiKey": "[API_KEY]"
     }
   ]
@@ -59,7 +59,7 @@ Anthropic 提供 [Claude 的提示词缓存](https://docs.anthropic.com/en/docs/
       },
       "title": "Anthropic",
       "provider": "anthropic",
-      "model": "claude-3-5-sonnet-20240620",
+      "model": "claude-3-5-sonnet-latest",
       "apiKey": "[API_KEY]"
     }
   ]

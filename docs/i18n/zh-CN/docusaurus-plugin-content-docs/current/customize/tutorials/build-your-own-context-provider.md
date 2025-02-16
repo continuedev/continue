@@ -103,11 +103,20 @@ const ReadMeContextProvider: CustomContextProvider = {
   loadSubmenuItems: async (
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> => {
+    const { ide } = args;
+
     // Filter all workspace files for READMEs
-    const allFiles = await args.ide.listWorkspaceContents();
-    const readmes = allFiles.filter((filepath) =>
-      filepath.endsWith("README.md"),
+    const workspaceDirs = await ide.getWorkspaceDirs()
+
+    const allFiles = await Promise.all(
+      workspaceDirs.map(dir => ide.subprocess(`find ${dir} -name "README.md"`)),
     );
+
+    // 'readmes' now contains an array of file paths for each README.md file found in the workspace,
+    // excluding those in 'node_modules'
+    const readmes = allFiles
+      .flatMap(mds => mds[0].split("\n"))
+      .filter(file => file.trim() !== '' && !file.includes("/node_modules/"))
 
     // Return the items that will be shown in the dropdown
     return readmes.map((filepath) => {
@@ -181,37 +190,62 @@ Continue 将使用 [esbuild](https://esbuild.github.io/) 打包你的 `config.ts
     "url": "https://myserver.com/context-provider",
     "title": "http",
     "description": "Custom HTTP Context Provider",
-    "displayTitle": "My Custom Context"
+    "displayTitle": "My Custom Context",
+    "options": {}
   }
 }
 ```
 
-<!-- Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI. -->
+然后，创建一个服务器，响应请求像来自 [HttpContextProvider.ts](../../../../core/context/providers/HttpContextProvider.ts) 。查看 `hello` 端点在 [context_provider_server.py](../../../../core/context/providers/context_provider_server.py) 中，作为使用 FastAPI 的示例。
+
+`"options"` 属性可以用来发送额外的参数到你的端点，将会包含在请求体中。
 
 ## VSCode 的扩展 API
 
 Continue 暴露一个 API ，从第三方 VSCode 扩展注册上下文提供者。这是有用的，如果你有一个 VSCode 扩展，提供一些额外的上下文，你想要在 Continue 中使用。为了使用这个 API ，添加以下内容到你的 `package.json` ：
 
-```json
+```json title="package.json"
 {
   "extensionDependencies": ["continue.continue"]
 }
 ```
 
-或者复制 `~/.continue/type/core/index.d.ts` 到你的扩展仓库。
+或者使用 npm 安装 Continue Core 模块：
+
+```bash
+npm i @continuedev/core
+```
+
+你可以添加 Continue core 模块作为 dev dependency 在你的 `package.json` 中：
+
+```json title="package.json"
+{
+  "devDependencies": {
+    "@continuedev/core": "^0.0.1"
+  }
+}
+```
 
 然后，你可以使用 `registerCustomContextProvider` 函数注册你的上下文提供者。你定制的上下文提供者必须实现 `IContextProvider` 接口。
 这是一个例子：
 
-```typescript
+```typescript title="myCustomContextProvider.ts"
 import * as vscode from "vscode";
+import {
+  IContextProvider,
+  ContextProviderDescription,
+  ContextProviderExtras,
+  ContextItem,
+  LoadSubmenuItemsArgs,
+  ContextSubmenuItem,
+} from "@continuedev/core";
 
 class MyCustomProvider implements IContextProvider {
   get description(): ContextProviderDescription {
     return {
-      title: "custom",
+      title: "Custom",
       displayTitle: "Custom",
-      description: "Custom description",
+      description: "my custom context provider",
       type: "normal",
     };
   }
@@ -240,7 +274,7 @@ class MyCustomProvider implements IContextProvider {
 const customProvider = new MyCustomProvider();
 
 // get Continue extension using vscode API
-const continueExt = vscode.extensions.getExtension("continue.continue");
+const continueExt = vscode.extensions.getExtension("Continue.continue");
 
 // get the API from the extension
 const continueApi = continueExt?.exports;
@@ -248,3 +282,7 @@ const continueApi = continueExt?.exports;
 // register your custom provider
 continueApi?.registerCustomContextProvider(customProvider);
 ```
+
+这将对 Continue 注册 `MyCustomProvider` ！
+
+![alt text](./assets/image.png)

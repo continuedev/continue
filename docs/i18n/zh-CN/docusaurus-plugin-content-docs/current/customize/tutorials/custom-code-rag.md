@@ -145,4 +145,4 @@ async def create_item(item: ContextProviderInput):
 2. 发送所有这 50 个结果到重排器 API ，与查询一起，为了获取每个结果的相关性分数
 3. 通过相关性分数对结果进行排序，并返回最前面 10 个
 
-我们推荐使用来自 Voyage AI 的 `rerank-1` 模型，它有使用示例 [在这里](https://docs.voyageai.com/docs/reranker) 。
+我们推荐使用来自 Voyage AI 的 `rerank-2` 模型，它有使用示例 [在这里](https://docs.voyageai.com/docs/reranker) 。

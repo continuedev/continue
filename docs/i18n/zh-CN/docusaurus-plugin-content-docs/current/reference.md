@@ -1,45 +1,46 @@
 ---
-title: Reference
-description: Reference for the Continue _config.json_ configuration file
-keywords: [config, config_schema.json, json]
+title: config.json 参考
+description: Continue _config.json_ 配置文件参考
+keywords: [配置, config_schema.json, json]
 ---
 
-Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
+以下是可以在 `config.json` 中设置的每个属性的细节。配置 schema 代码可以在 [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json) 找到。
 
-**All properties at all levels are optional unless explicitly marked required**
+**任何级别的所有属性都是可选的，除非标记为必需的**
 
 ### `models`
 
-Your **chat** models are defined here, which are used for [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Actions](./actions/how-to-use-it.md).
-Each model has specific configuration options tailored to its provider and functionality, which can be seen as suggestions while editing the json.
+你的 **聊天** 模型在这里定义，用来 [聊天](./chat/how-to-use-it.md) ， [编辑](./edit/how-to-use-it.md) 和 [Actions](./actions/how-to-use-it.md) 。
+每个模型有特定的配置选项，专门给它的提供者和功能，当编辑 json 时可以看到建议。
 
-**Properties:**
+**属性：**
 
-- `title` (**required**): The title to assign to your model, shown in dropdowns, etc.
-- `provider` (**required**): The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, etc., see intelliJ suggestions.
-- `model` (**required**): The name of the model, used for prompt template auto-detection.
-- `apiKey`: API key required by providers like OpenAI, Anthropic, and Cohere.
-- `apiBase`: The base URL of the LLM API.
-- `contextLength`: Maximum context length of the model, typically in tokens (default: 2048).
-- `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
-- `template`: Chat template to format messages. Auto-detected for most models but can be overridden. See intelliJ suggestions.
-- `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt).
-- `completionOptions`: Model-specific completion options, same format as top-level [`completionOptions`](#completionoptions), which they override.
-- `systemMessage`: A system message that will precede responses from the LLM.
+- `title` (**必需的**): 你的模型使用的标题，在下拉框等显示
+- `provider` (**必需的**): 模型的提供者，决定类型和交互方法。可选项是 `openai`, `ollama`, `xAI` 等。查看 IntelliJ 建议。
+- `model` (**必需的**): 模型的名称，用来提示词模板自动检测。使用 `AUTODETECT` 指定名称获取所有可用的模型。
+- `apiKey`: 提供者需要的 API key ，比如 OpenAI, Anthropic, Cohere 和 xAI 。
+- `apiBase`: LLM API 的基础 URL 。
+- `contextLength`: 模型的最大上下文长度，通常是 token （默认值： 2048）
+- `maxStopWords`: 停止文字允许的最大长度，避免大量列表的 API 错误。
+- `template`: 用来格式化消息的聊天模板。对于大多数模型自动探测，但是可以被覆盖。查看 intelliJ 建议。
+- `promptTemplates`: 一个提示词模板名称（比如 `edit`）到模板字符串的映射。[定制指导](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) 。
+- `completionOptions`: 模型特定的补全选项，和最高级的 [`completionOptions`](#completionoptions) 一样的格式，它们会覆盖。
+- `systemMessage`: 一个系统消息在 LLM 响应之前。
 - `requestOptions`: Model-specific HTTP request options, same format as top-level [`requestOptions`](#requestoptions), which they override.
-- `apiType`: Specifies the type of API (`openai` or `azure`).
-- `apiVersion`: Azure API version (e.g., `2023-07-01-preview`).
-- `engine`: Engine for Azure OpenAI requests.
-- `capabilities`: Override auto-detected capabilities:
-  - `uploadImage`: Boolean indicating if the model supports image uploads.
+- `requestOptions`: 模型特定的 HTTP 请求选项，与最高级的 [`requestOptions`](#requestoptions) 一样的格式，他们会覆盖。
+- `apiType`: 指定 API (`openai` 或 `azure`) 的类型。
+- `apiVersion`: Azure API 版本 (例如 `2023-07-01-preview`) 。
+- `engine`: Azure OpenAI 请求的引擎。
+- `capabilities`: 覆盖自动检测能力：
+  - `uploadImage`: 布尔型，表示模型是否支持图片上传。
 
-_(AWS Only)_
+_(仅 AWS)_
 
-- `profile`: AWS security profile for authorization.
-- `modelArn`: AWS ARN for imported models (e.g., for `bedrockimport` provider).
-- `region`: Region where the model is hosted (e.g., `us-east-1`, `eu-central-1`).
+- `profile`: AWS 认证安全配置文件。
+- `modelArn`: 导入模型（例如，对于 `bedrockimport` 提供者）的 AWS ARN 。
+- `region`: 模型托管的区域（例如，`us-east-1`, `eu-central-1`） 。
 
-Example:
+示例：
 
 ```json title="config.json"
 {
@@ -62,9 +63,9 @@ Example:
 
 ### `tabAutocompleteModel`
 
-Specifies the model or models for tab autocompletion, defaulting to an Ollama instance. This property uses the same format as `models`. Can be an array of models or an object for one model.
+指定 tab 自动补全的模型或模型们，模式是一个 Ollama 实例。这个属性使用 `models` 一样的格式。可以是一个模型列表或一个模型对象。
 
-Example
+示例：
 
 ```json title="config.json"
 {
@@ -78,22 +79,19 @@ Example
 
 ### `tabAutocompleteOptions`
 
-Specifies options for tab autocompletion behavior.
+指定 tab 自动补全行为的选项。
 
-**Properties:**
+**属性：**
 
-- `disable`: If `true`, disables tab autocomplete (default: `false`).
-- `maxPromptTokens`: Maximum number of tokens for the prompt (default: `1024`).
-- `debounceDelay`: Delay (in ms) before triggering autocomplete (default: `350`).
-- `maxSuffixPercentage`: Maximum percentage of prompt for suffix (default: `0.2`).
-- `prefixPercentage`: Percentage of input for prefix (default: `0.3`).
-- `template`: Template string for autocomplete, using Mustache templating.
-- `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`) (default: `auto`).
-- `useCache`: If `true`, caches completions (default: `true`).
-- `onlyMyCode`: If `true`, only includes code within the repository (default: `true`).
-- `disableInFiles`: Array of glob patterns for files where autocomplete is disabled (default: `[]`).
+- `disable`: 如果是 `true` ，禁用 tab 自动补全（默认值： `false`） 。
+- `maxPromptTokens`: 提示词 token 的最大长度（默认值： `1024`） 。
+- `debounceDelay`: 触发自动补全前的延迟（毫秒）（默认值： `350`）。
+- `maxSuffixPercentage`: 提示词后缀的最大百分比（默认值： `0.2`）。
+- `prefixPercentage`: 前缀的输入百分比（默认值： `0.3`）。
+- `template`: 自动补全的模板字符串，使用 Mustache 模板。你可以使用 `{{{ prefix }}}`, `{{{ suffix }}}`, `{{{ filename }}}`, `{{{ reponame }}}` 和 `{{{ language }}}` 变量。
+- `onlyMyCode`: 如果是 `true` ，只包含仓库中的代码（默认值： `true`）。
 
-Example
+示例：
 
 ```json title="config.json"
 {
@@ -107,24 +105,24 @@ Example
 
 ### `embeddingsProvider`
 
-Embeddings model settings - the model used for @Codebase and @docs.
+嵌入模型设置 - `@Codebase` 和 `@docs` 使用的模型。
 
-**Properties:**
+**属性：**
 
-- `provider` (**required**): Specifies the embeddings provider, with options including `transformers.js`, `ollama`, `openai`, `cohere`, `free-trial`, `gemini`, etc
-- `model`: Model name for embeddings.
-- `apiKey`: API key for the provider.
-- `apiBase`: Base URL for API requests.
-- `requestOptions`: Additional HTTP request settings specific to the embeddings provider.
-- `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
-- `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+- `provider` (**必需的**): 指定嵌入模型，可选项是 `transformers.js`, `ollama`, `openai`, `cohere`, `free-trial`, `gemini` 等。
+- `model`: 嵌入的模型名称。
+- `apiKey`: 提供者的 API key 。
+- `apiBase`: API 请求的基础 URL 。
+- `requestOptions`: 特定嵌入提供者额外的 HTTP 请求设置。
+- `maxChunkSize`: 每个文档分块的最大 token 。最小值是 128 token 。
+- `maxBatchSize`: 每个请求分块的最大数量。最小值是 1 个分块。
 
-(AWS ONLY)
+(仅 AWS)
 
-- `region`: Specifies the region hosting the model.
-- `profile`: AWS security profile.
+- `region`: 指定托管模型的区域。
+- `profile`: AWS 安全配置文件。
 
-Example:
+示例：
 
 ```json title="config.json"
 {
@@ -140,24 +138,24 @@ Example:
 
 ### `completionOptions`
 
-Parameters that control the behavior of text generation and completion settings. Top-level `completionOptions` apply to all models, _unless overridden at the model level_.
+控制文本生成和补全设置行为的参数。最高级别的 `completionOptions` 应用到所有模型， _除非在模型级别被覆盖_ 。
 
-**Properties:**
+**属性：**
 
-- `stream`: Whether to stream the LLM response. Currently only respected by the `anthropic` and `ollama` providers; other providers will always stream (default: `true`).
-- `temperature`: Controls the randomness of the completion. Higher values result in more diverse outputs.
-- `topP`: The cumulative probability for nucleus sampling. Lower values limit responses to tokens within the top probability mass.
-- `topK`: The maximum number of tokens considered at each step. Limits the generated text to tokens within this probability.
-- `presencePenalty`: Discourages the model from generating tokens that have already appeared in the output.
-- `frequencePenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
-- `mirostat`: Enables Mirostat sampling, which controls the perplexity during text generation. Supported by Ollama, LM Studio, and llama.cpp providers (default: `0`, where `0` = disabled, `1` = Mirostat, and `2` = Mirostat 2.0).
-- `stop`: An array of stop tokens that, when encountered, will terminate the completion. Allows specifying multiple end conditions.
-- `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
-- `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
-- `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
-- `useMmap`: For Ollama, this parameter allows the model to be mapped into memory. If disabled can enhance response time on low end devices but will slow down the stream.
+- `stream`: 是否流式输出 LLM 响应。当前只对 `anthropic` 和 `ollama` 提供者有效；其他提供者总是流式地（默认值： `true`）。
+- `temperature`: 控制补全的随机性。较高的值导致更多样的输出。
+- `topP`: 核采样的累计可能性。较低的值限制 token 的响应在 top 可能性之中。
+- `topK`: 每一步考虑 token 的最大数量。这个可能性限制 token 的生成文本。
+- `presencePenalty`: 阻止模型生成已经出现在输出的 token 。
+- `frequencePenalty`: 基于在文本中的频率处罚 token ，减少重复。
+- `mirostat`: 允许 Mirostat 采样，在文本生成时控制复杂性。支持 Ollama, LM Studio 和 llama.cpp 提供者（默认值： `0` ，其中 `0` = disabled, `1` = Mirostat, `2` = Mirostat 2.0 ）。
+- `stop`: 一个停止 token 的列表，当出现时，将结束补全。允许指定多个结束条件。
+- `maxTokens`: 在一次补全中生成 token 的最大数量（默认值： `2048`）。
+- `numThreads`: 生成进程使用的线程数量。只对 Ollama 有效， `num_thread` 。
+- `keepAlive`: 对于 Ollama ，这个参数设置最近一次请求之后保持模型加载的秒数，如果不活跃，从内存中卸载它（默认值： `1800` 秒，或 30 分钟）。
+- `useMmap`: 对于 Ollama ，这个参数允许模型映射到内存。如果禁用，可以在低端设备上增强响应时间，但是会减慢流式输出。
 
-Example
+示例：
 
 ```json title="config.json"
 {
@@ -170,24 +168,24 @@ Example
 
 ### `requestOptions`
 
-Default HTTP request options that apply to all models and context providers, unless overridden at the model level.
+默认的 HTTP 请求选项，应用到所有模型和上下文提供中，除非在模型级别覆盖。
 
-**Properties:**
+**属性：**
 
-- `timeout`: Timeout for each request to the LLM (default: 7200 seconds).
-- `verifySsl`: Whether to verify SSL certificates for requests.
-- `caBundlePath`: Path to a custom CA bundle for HTTP requests - path to `.pem` file (or array of paths)
-- `proxy`: Proxy URL to use for HTTP requests.
-- `headers`: Custom headers for HTTP requests.
-- `extraBodyProperties`: Additional properties to merge with the HTTP request body.
-- `noProxy`: List of hostnames that should bypass the specified proxy.
-- `clientCertificate`: Client certificate for HTTP requests.
+- `timeout`: 每个请求到 LLM 的超时时间（默认值： `7200` 秒）。
+- `verifySsl`: 是否验证请求的 SSL 证书。
+- `caBundlePath`: HTTP 请求定制 CA 证书集的路径 - `.pem` 文件的路径（或路径列表）
+- `proxy`: HTTP 请求使用的代理 URL 。
+- `headers`: HTTP 请求的定制头。
+- `extraBodyProperties`: HTTP 请求体合并的额外的属性。
+- `noProxy`: 绕过指定代理的主机名列表。
+- `clientCertificate`: HTTP 请求的客户端证书。
 
-  - `cert`: Path to the client certificate file.
-  - `key`: Path to the client certificate key file.
-  - `passphrase`: Optional passphrase for the client certificate key file.
+  - `cert`: 客户端证书文件的路径。
+  - `key`: 客户端证书 key 文件的路径。
+  - `passphrase`: 可选的客户端证书 key 文件的密钥。
 
-Example
+示例：
 
 ```json title="config.json"
 {
@@ -201,16 +199,17 @@ Example
 
 ### `reranker`
 
-Configuration for the reranker model used in response ranking.
+配置在响应排序中使用的排序器模型。
 
-**Properties:**
+**属性：**
 
-- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`
+- `name` (**必需的**): 排序器名称，例如 `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`, `bedrock`
 - `params`:
-  - `model`: Model name
+  - `model`: 模型名称
   - `apiKey`: Api key
+  - `region`: 区域（仅 Bedrock）
 
-Example
+示例：
 
 ```json title="config.json"
 {
@@ -226,17 +225,18 @@ Example
 
 ### `docs`
 
-List of documentation sites to index.
+索引的文档列表。
 
-**Properties:**
+**属性：**
 
-- `title` (**required**): Title of the documentation site, displayed in dropdowns, etc.
-- `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
+- `title` (**必需的**): 文档网站的名称，在下拉框等中显示。
+- `startUrl` (**必需的**): 爬取的开始页面 - 通常是文档的根或简介页面
 <!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
-- `maxDepth`: Maximum link depth for crawling. Default `4`
-- `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `maxDepth`: 爬取的最大链接深度。默认是 `4`
+- `favicon`: 网站 favicon 的 URL （默认是 `startUrl` 的 `/favicon.ico` ）。
+- `useLocalCrawling`: 跳过默认爬取器，只使用本地爬取器爬取。
 
-Example
+示例：
 
 ```json title="config.json"
 "docs": [
@@ -248,28 +248,18 @@ Example
 ]
 ```
 
-### `analytics`
-
-Configuration for analytics tracking.
-
-**Properties:**
-
-- `provider`: Analytics provider (`"posthog"` or `"logstash"`).
-- `url`: URL for analytics data.
-- `clientKey`: Client key for analytics.
-
 ### `slashCommands`
 
-Custom commands initiated by typing "/" in the sidebar. Commands include predefined functionality or may be user-defined.
+定制命令在侧边栏中通过输入 "/" 发起。命令包括预定义的功能或用户定义的。
 
-**Properties:**
+**属性：**
 
-- `name`: The command name. Options include "issue", "share", "cmd", "http", "commit", and "review".
-- `description`: Brief description of the command.
-- `step`: (Deprecated) Used for built-in commands; set the name for pre-configured options.
-- `params`: Additional parameters to configure command behavior (command-specific - see code for command)
+- `name`: 命令的名称。可选项包括 "issue", "share", "cmd", "http", "commit" 和 "review" 。
+- `description`: 命令的简短描述。
+- `step`: (废弃) 用于内建命令；设置预配置选项的名称。
+- `params`: 配置命令行为的额外参数（命令特定的 - 查看命令的代码）
 
-Example:
+示例：
 
 ```json title="config.json"
 {
@@ -292,15 +282,15 @@ Example:
 
 ### `customCommands`
 
-User-defined commands for prompt shortcuts in the sidebar, allowing quick access to common actions.
+用户定义的在侧边栏中提示词快捷方式的命令，允许快速访问常见的 action 。
 
-**Properties:**
+**属性：**
 
-- `name`: The name of the custom command.
-- `prompt`: Text prompt for the command.
-- `description`: Brief description explaining the command's function.
+- `name`: 定制命令的名称。
+- `prompt`: 命令的文本提示词。
+- `description`: 解释命令功能的简短描述。
 
-Example:
+示例：
 
 ```json title="config.json"
 {
@@ -316,14 +306,14 @@ Example:
 
 ### `contextProviders`
 
-List of the pre-defined context providers that will show up as options while typing in the chat, and their customization with `params`.
+预定义上下文提供者的列表，当在聊天中输入时，显示为可选项，它们使用 `params` 定制。
 
-**Properties:**
+**属性：**
 
-- `name`: Name of the context provider, e.g. `docs` or `web`
-- `params`: A context-provider-specific record of params to configure the context behavior
+- `name`: 上下文提供者的名称，例如 `docs` 或 `web`
+- `params`: 一个上下文提供者特定的参数记录，用来配置上下文的行为
 
-Example
+示例：
 
 ```json title="config.json"
 {
@@ -348,75 +338,37 @@ Example
 }
 ```
 
-### `disableSessionTitles`
-
-Prevents generating summary titles for each chat session when set to `true`.
-
-### `ui`
-
-Customizable UI settings to control interface appearance and behavior.
-
-**Properties:**
-
-- `codeBlockToolbarPosition`: Sets the toolbar position within code blocks, either `top` (default) or `bottom`.
-- `fontSize`: Specifies font size for UI elements.
-- `displayRawMarkdown`: If `true`, shows raw markdown in responses.
-- `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
-
-Example:
-
-```json title="config.json"
-{
-  "ui": {
-    "codeBlockToolbarPosition": "bottom",
-    "fontSize": 14,
-    "displayRawMarkdown": false
-  }
-}
-```
-
-### `allowAnonymousTelemetry`
-
-When `true`, anonymous usage data is collected using Posthog, to improve features. Default is `true`.
-
 ### `userToken`
 
-An optional token that identifies the user, primarily for authenticated services.
+一个可选的 token ，识别用户，主要用于需要认证的服务。
 
 ### `systemMessage`
 
-Defines a system message that appears before every response from the language model, providing guidance or context.
-
-### `disableIndexing`
-
-Prevents indexing of the codebase, useful primarily for debugging purposes.
+定义一个系统消息，出现在语言模型每个响应之前，提供指导或上下文。
 
 ### `experimental`
 
-Several experimental config parameters are available, as described below:
+多个试验性配置参数可用，如下所述：
 
 `experimental`:
 
-- `defaultContext`: Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.=
+- `defaultContext`: 定义 LLM 的默认上下文。使用 `contextProviders` 一样的格式，但是包含额外的 `query` 属性，指定定制查询参数。
 - `modelRoles`:
-  - `inlineEdit`: Model title for inline edits.
-  - `applyCodeBlock`: Model title for applying code blocks.
-  - `repoMapFileSelection`: Model title for repo map selections.
-- `readResponseTTS`: If `true`, reads LLM responses aloud with TTS. Default is `true`.
-- `promptPath`: Change the path to custom prompt files from the default ".prompts"
-- `quickActions`: Array of custom quick actions
-  - `title` (**required**): Display title for the quick action.
-  - `prompt` (**required**): Prompt for quick action.
-  - `sendToChat`: If `true`, sends result to chat; else inserts in document. Default is `false`.
+  - `inlineEdit`: 行内编辑的模型标题。
+  - `applyCodeBlock`: 应用代码块的模型标题。
+  - `repoMapFileSelection`: 仓库映射选择的模型标题。
+- `quickActions`: 定制快速 action 的列表
+  - `title` (**必需的**): 显示快速 action 的显示名称。
+  - `prompt` (**必需的**): 快速 action 的提示词。
+  - `sendToChat`: 如果是 `true` ，发送结果到聊天；否则插入到文档中。默认是 `false` 。
 - `contextMenuPrompts`:
-  - `comment`: Prompt for commenting code.
-  - `docstring`: Prompt for adding docstrings.
-  - `fix`: Prompt for fixing code.
-  - `optimize`: Prompt for optimizing code.
-  - `fixGrammar`: Prompt for fixing grammar or spelling.
-- `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
+  - `comment`: 注释代码的提示词。
+  - `docstring`: 添加 docstring 的提示词。
+  - `fix`: 修复代码的提示词。
+  - `optimize`: 优化代码的提示词。
+- `modelContextProtocolServers`: 查看 [模型上下文协议](/customize/context-providers#model-context-protocol)
 
-Example
+示例：
 
 ```json title="config.json"
 {
@@ -424,7 +376,6 @@ Example
     "modelRoles": {
       "inlineEdit": "Edit Model"
     },
-    "promptPath": "custom/.prompts",
     "quickActions": [
       {
         "title": "Tags",
@@ -435,8 +386,40 @@ Example
     "contextMenuPrompts": {
       "fixGrammar": "Fix grammar in the above but allow for typos."
     },
-    "readResponseTTS": false,
-    "useChromiumForDocsCrawling": true
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
   }
 }
 ```
+
+### 完全弃用的设置
+
+一些弃用的 `config.json` 设置不再保存在配置中，移动到 [用户设置页面](./customize/settings.md) 编辑。如果在 `config.json` 发现，它们会迁移到 [用户设置页面](./customize/settings.md) ，并从 `config.json` 中移除。
+
+- `allowAnonymousTelemetry`: 这个值将会迁移到最安全的合并值（`false` 如果是 `false`）。
+- `promptPath`: 这个值将会在迁移中覆盖。
+- `disableIndexing`: 这个值将会迁移到最安全的合并值（`true` 如果是 `true`）。
+- `disableSessionTitles`/`ui.getChatTitles`: 这个值将会迁移到最安全的合并值（`true` 如果是 `true`）。 `getChatTitles` 优先，如果设置为 `false`
+- `tabAutocompleteOptions`
+  - `useCache`: 这个值将会在迁移中覆盖。
+  - `disableInFiles`: 这个值将会迁移到最安全的合并值（匹配合并/去重的文件列表）
+  - `multilineCompletions`: 这个值将会在迁移中覆盖。
+- `experimental`
+  - `useChromiumForDocsCrawling`: 这个值将会在迁移中覆盖。
+  - `readResponseTTS`: 这个值将会在迁移中覆盖。
+- `ui` - 所有将会在迁移中覆盖
+
+  - `codeBlockToolbarPosition`
+  - `fontSize`
+  - `codeWrap`
+  - `displayRawMarkdown`
+  - `showChatScrollbar`
+
+  查看 [用户设置页面](./customize/settings.md) 获取每个选项的更多信息。

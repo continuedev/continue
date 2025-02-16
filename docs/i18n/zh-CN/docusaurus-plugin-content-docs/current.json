@@ -46,5 +46,9 @@
   "sidebar.customizingSidebar.category.Tutorials": {
     "message": "教程",
     "description": "The label for category Tutorials in sidebar customizingSidebar"
+  },
+  "sidebar.customizingSidebar.link.Reference": {
+    "message": "参考",
+    "description": "The label for link Reference in sidebar customizingSidebar, linking to /reference"
   }
 }

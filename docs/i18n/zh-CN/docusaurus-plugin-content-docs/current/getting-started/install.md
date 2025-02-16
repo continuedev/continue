@@ -20,7 +20,7 @@ keywords: [安装, 开始, vs code, jetbrains]
 
 ## JetBrains
 
-1. 打开你的 JetBrains IDE 并使用 `cmd/ctrl + ,` 打开 **设置**
+1. 打开你的 JetBrains IDE 并使用 <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd> 打开 **设置**
 
 2. 在侧边栏中选择 **插件** 并在市场中查找 "Continue"
 

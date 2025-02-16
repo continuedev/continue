@@ -11,18 +11,18 @@ sidebar_position: 4
 
 ## 推荐的重排序模型
 
-如果你有使用任何模型的能力，我们推荐 Voyage AI 的 `rerank-1` ，它独立列在下面，和其他的重排序选项一起。
+如果你有使用任何模型的能力，我们推荐 Voyage AI 的 `rerank-2` ，它独立列在下面，和其他的重排序选项一起。
 
 ### Voyage AI
 
-Voyage AI 提供代码最好的重排序模型， 使用他们的 `rerank-1` 模型。在从 [这里](https://www.voyageai.com/) 获取 API key 后，你可以像这样配置：
+Voyage AI 提供代码最好的重排序模型， 使用他们的 `rerank-2` 模型。在从 [这里](https://www.voyageai.com/) 获取 API key 后，你可以像这样配置：
 
 ```json title="config.json"
 {
   "reranker": {
     "name": "voyage",
     "params": {
-      "model": "rerank-1",
+      "model": "rerank-2",
       "apiKey": "<VOYAGE_API_KEY>"
     }
   }
@@ -72,6 +72,7 @@ Voyage AI 提供代码最好的重排序模型， 使用他们的 `rerank-1` 模
     "name": "huggingface-tei",
     "params": {
       "apiBase": "http://localhost:8080",
+      "apiKey": "<TEI_API_KEY>",
       "truncate": true,
       "truncation_direction": "Right"
     }

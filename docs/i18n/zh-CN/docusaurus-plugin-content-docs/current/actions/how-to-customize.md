@@ -20,7 +20,7 @@ Continue 有一个大的内置斜杠命令库，但是当你首次安装时，�
 
 <!-- TODO: We need a config.ts reference -->
 <!-- :::tip[config.ts]
-Before adding a custom slash command, we recommend reading the [introduction to `config.ts`](../customize/config.mdx).
+Before adding a custom slash command, we recommend reading the [introduction to `config.ts`](../customize/deep-dives/ways-to-configure.md).
 ::: -->
 
 如果你想比使用自然语言编写定制命令更进一步，你可以编写一个定制函数返回响应。这需要使用 `config.ts` 替代 `config.json` 。
@@ -58,4 +58,4 @@ export function modifyConfig(config: Config): Config {
 
 目前，其他 action 触发器没有开放配置，但是我们计划在未来通过 .prompt 文件来允许。
 
-<!-- For any actions defined in a .prompt file, you can [configure a specific model](TODO). -->
+<!-- For any actions defined in a .prompt file, you can [configure a specific model](/). -->

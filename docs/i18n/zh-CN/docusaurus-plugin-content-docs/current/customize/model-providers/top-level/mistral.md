@@ -4,7 +4,7 @@ slug: ../mistral
 ---
 
 :::info
-你可以从 [Mistral Dashboard](https://console.mistral.ai) 获取 API key 。注意 Codestral (codestral.mistral.ai) 的 API key 是与所有其他模型 (api.mistral.ai) 不同的。
+你可以从 [Mistral Dashboard](https://console.mistral.ai) 获取 API key 。注意 Codestral (codestral.mistral.ai) 的 API key 是与所有其他模型 (api.mistral.ai) 不同的。如果你使用一个 Codestral API key ，你应该设置 `apiBase` 为 `https://codestral.mistral.ai/v1` 。否则，我们将默认使用 `https://api.mistral.ai/v1` 。
 :::
 
 ## 聊天模型
@@ -34,6 +34,7 @@ slug: ../mistral
     "title": "Codestral",
     "provider": "mistral",
     "model": "codestral-latest"
+    // "apiBase": "https://codestral.mistral.ai/v1"  // Do this if you are using a Codestral API key
   }
 }
 ```

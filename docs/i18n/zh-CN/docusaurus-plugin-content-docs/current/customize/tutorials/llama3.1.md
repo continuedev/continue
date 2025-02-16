@@ -4,7 +4,7 @@ description: Continue 如何使用 Llama 3.1
 keywords: [llama, meta, togetherai, novita, ollama, replicate]
 ---
 
-Continue 让使用最新的开元模型编码变得简单，包括整个 Llama 3.1 家族模型。
+Continue 让使用最新的开源模型编码变得简单，包括整个 Llama 3.1 家族模型。 Llama 3.2 模型也被支持，但是布推荐聊天使用，因为它们特别为小的或多模态而设计。
 
 如果你还没有安装 Continue ，你可以安装 [VS Code 在这里](https://marketplace.visualstudio.com/items?itemName=Continue.continue) 或者 [JetBrains 在这里](https://plugins.jetbrains.com/plugin/22707-continue) 。对于更通用的定制 Continue 的信息，查看 [我们的定制文档](../overview.md) 。
 
@@ -32,6 +32,12 @@ Ollama 是最快的配置和运行本地语言模型的方法。我们推荐尝�
 
 ## Groq
 
+:::info
+
+检查你选择的模型是否仍然支持，通过查阅 [模型文档](https://console.groq.com/docs/models) 。如果模型被丢弃，你可能遇到一个 404 错误，当尝试使用它时。
+
+:::
+
 Groq 提供最快的可用的开源语言模型推理，包括整个 Llama 3.1 家族。
 
 1. 获取 API key [在这里](https://console.groq.com/keys)
@@ -41,9 +47,9 @@ Groq 提供最快的可用的开源语言模型推理，包括整个 Llama 3.1 �
 {
   "models": [
     {
-      "title": "Llama 3.1 405b",
+      "title": "Llama 3.3 70b Versatile",
       "provider": "groq",
-      "model": "llama3.1-405b",
+      "model": "llama-3.3-70b-versatile",
       "apiKey": "<API_KEY>"
     }
   ]
@@ -106,6 +112,27 @@ SambaNova Cloud 提供 Llama3.1 70B/405B 服务的世界记录。
       "title": "SambaNova Llama 3.1 405B",
       "provider": "sambanova",
       "model": "llama3.1-405b",
+      "apiKey": "YOUR_API_KEY"
+    }
+  ]
+}
+```
+
+## Cerebras Inference
+
+Cerebras Inference 使用专用的芯片提供 Llama3.1 8B/70B 的快速的推理。
+
+1. 在门户 [这里](https://cloud.cerebras.ai/) 创建一个帐号 。
+2. 创建和复制 API key 在 Continue 中使用。
+3. 更新你的 Continue 配置文件：
+
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "Cerebras Llama 3.1 70B",
+      "provider": "cerebras",
+      "model": "llama3.1-70b",
       "apiKey": "YOUR_API_KEY"
     }
   ]

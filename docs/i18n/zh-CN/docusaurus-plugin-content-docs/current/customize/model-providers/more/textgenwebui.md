@@ -8,7 +8,7 @@ TextGenWebUI 是一个综合的，开源语言模型 UI 和本地服务器。你
     {
       "title": "Text Generation WebUI",
       "provider": "text-gen-webui",
-      "apiBase": "http://localhost:5000",
+      "apiBase": "http://localhost:5000/v1",
       "model": "MODEL_NAME"
     }
   ]

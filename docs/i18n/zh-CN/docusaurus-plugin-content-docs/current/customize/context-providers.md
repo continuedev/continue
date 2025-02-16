@@ -56,9 +56,23 @@ keywords: [上下文, "@", 提供者, LLM]
 }
 ```
 
+### `@Current File`
+
+关联当前打开的文件。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "currentFile"
+    }
+  ]
+}
+```
+
 ### `@Terminal`
 
-关联你的 IDE 终端的内容。
+关联你的 IDE 终端中最后运行的命令和它的输出。
 
 ```json title="config.json"
 {
@@ -99,6 +113,25 @@ keywords: [上下文, "@", 提供者, LLM]
       "name": "open",
       "params": {
         "onlyPinned": true
+      }
+    }
+  ]
+}
+```
+
+### `@Web`
+
+通过网络引用相关的页面，通过你的输入自动确定。
+
+可选地，设置 "n" 来限制返回结果的个数（默认是 6）。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "web",
+      "params": {
+        "n": 5
       }
     }
   ]
@@ -165,6 +198,20 @@ keywords: [上下文, "@", 提供者, LLM]
 }
 ```
 
+### `@Clipboard`
+
+关联最近的剪贴板条目
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "clipboard"
+    }
+  ]
+}
+```
+
 ### `@Tree`
 
 关联你当前工作区的结构。
@@ -179,30 +226,107 @@ keywords: [上下文, "@", 提供者, LLM]
 }
 ```
 
-### `@Google`
+### `@Problems`
 
-关联 Google 搜索的结果。
+获取当前文件的问题。
 
 ```json title="config.json"
 {
   "contextProviders": [
     {
-      "name": "google",
+      "name": "problems"
+    }
+  ]
+}
+```
+
+### `@Debugger`
+
+关联调试器中本地变量的内容。目前只在 VS Code 中可用。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "debugger",
       "params": {
-        "serperApiKey": "<your serper.dev api key>"
+        "stackDepth": 3
       }
     }
   ]
 }
 ```
 
-例如，输入 "@Google python tutorial" ，如果你想要搜索或讨论学习 Python 的方法。
+使用最多 _n_ 级 (默认是 3) 的当前线程的调用栈。
 
-注意：你可以在 [serper.dev](https://serper.dev) 免费获得 API key 。
+### `@Repository Map`
+
+关联你的代码库的概览。默认情况下， signature 与文件一起包含在仓库映射中。
+
+`includeSignatures` 参数可以设置为 false 来排除 signature 。这对大的仓库是需要的，或许可以明显减少上下文大小。 signature 不会被包含，如果索引被禁止。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "repo-map",
+      "params": {
+        "includeSignatures": false // default true
+      }
+    }
+  ]
+}
+```
+
+提供一个文件列表，以及这些文件中的最高级的类、函数和方法的调用签名。这帮助模型更好地理解，一段特定的代码如何关联其他的代码库。
+
+在出现的子菜单中，你可以选择 `Entire codebase` 或指定一个子文件夹，来生成仓库映射。
+
+这个上下文提供者想法来自 [Aider's repository map](https://aider.chat/2023/10/22/repomap.html) 。
+
+### `@Operating System`
+
+关联你当前操作系统的架构和平台。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "os"
+    }
+  ]
+}
+```
+
+### 模型上下文协议
+
+[模型上下文协议](https://modelcontextprotocol.io/introduction) 是一个由 Anthropic 提议的标准，用于统一提示词，上下文和工具使用。 Continue 支持任何 MCP 服务器，使用 MCP 上下文提供者。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置一个本地服务器，然后像这样配置你的 `config.json` ：
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
+  }
+}
+```
+
+然后你能够输入 "@" ，在上下文提供者下拉框中看到 "MCP" 。
+
+### 提示词文件
+
+查看 [提示词文件](/customize/deep-dives/prompt-files) 。提示词文件不是直接添加到配置文件中；提示词文件自动地解析和插入到配置中，像其他上下文提供者一样使用。
 
 ### `@Issue`
 
-关联一个 GitHub issue 的交谈信息。
+关联一个 Github issue 的交谈信息。
 
 ```json title="config.json"
 {
@@ -224,6 +348,110 @@ keywords: [上下文, "@", 提供者, LLM]
 ```
 
 确保包含你自己的 [GitHub 个人访问 token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) 来避免频率限制。
+
+### `@Database`
+
+关联 Sqlite, Postgres, MSSQL 和 MySQL 数据库的表 schema 。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "database",
+      "params": {
+        "connections": [
+          {
+            "name": "examplePostgres",
+            "connection_type": "postgres",
+            "connection": {
+              "user": "username",
+              "host": "localhost",
+              "database": "exampleDB",
+              "password": "yourPassword",
+              "port": 5432
+            }
+          },
+          {
+            "name": "exampleMssql",
+            "connection_type": "mssql",
+            "connection": {
+              "user": "username",
+              "server": "localhost",
+              "database": "exampleDB",
+              "password": "yourPassword"
+            }
+          },
+          {
+            "name": "exampleSqlite",
+            "connection_type": "sqlite",
+            "connection": {
+              "filename": "/path/to/your/sqlite/database.db"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+每个连接应该有一个单独的名称，`connection_type` ，以及每个数据库类型特定的必须的连接参数。
+
+可用的连接类型：
+
+- `postgres`
+- `mysql`
+- `sqlite`
+
+### `@Postgres`
+
+关联表的 schema ，以及一些示例行
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "postgres",
+      "params": {
+        "host": "localhost",
+        "port": 5436,
+        "user": "myuser",
+        "password": "catsarecool",
+        "database": "animals",
+        "schema": "public",
+        "sampleRows": 3
+      }
+    }
+  ]
+}
+```
+
+仅需要的配置是那些创建数据库连接所需要的： `host`, `port`, `user`, `password` 和 `database` 。
+
+默认情况下， `schema` 过滤器设置为 `public` ， `sampleRows` 设置为 3 。你可以取消设置 schema ，如果你想要包含所有 schema 的表。
+
+[这是一个简单的 demo](https://github.com/continuedev/continue/pull/859) 。
+
+### `@Google`
+
+关联 Google 搜索的结果。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "google",
+      "params": {
+        "serperApiKey": "<your serper.dev api key>"
+      }
+    }
+  ]
+}
+```
+
+例如，输入 "@Google python tutorial" ，如果你想要搜索或讨论学习 Python 的方法。
+
+注意：你可以在 [serper.dev](https://serper.dev) 免费获得 API key 。
 
 ### `@Gitlab Merge Request`
 
@@ -277,7 +505,7 @@ keywords: [上下文, "@", 提供者, LLM]
       "name": "jira",
       "params": {
         "domain": "company.atlassian.net",
-        "token ": "ATATT..."
+        "token": "ATATT..."
       }
     }
   ]
@@ -313,63 +541,26 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 
 你可以覆盖这个查询，通过设置 `issueQuery` 参数。
 
-### `@Postgres`
+### `@Discord`
 
-关联表的 schema ，和一些示例行
-
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "postgres",
-      "params": {
-        "host": "localhost",
-        "port": 5436,
-        "user": "myuser",
-        "password": "catsarecool",
-        "database": "animals",
-        "schema": "public",
-        "sampleRows": 3
-      }
-    }
-  ]
-}
-```
-
-仅需要的配置是那些创建数据库连接所需要的： `host`, `port`, `user`, `password` 和 `database` 。
-
-默认情况下， `schema` 过滤器设置为 `public` ， `sampleRows` 设置为 3 。你可以取消设置 schema ，如果你想要包含所有 schema 的表。
-
-[这是一个简单的 demo](https://github.com/continuedev/continue/pull/859) 。
-
-### `@Database`
-
-关联 Sqlite, Postgres 和 MySQL 数据库的表 schema 。
+引用 Discord 频道的消息。
 
 ```json title="config.json"
 {
   "contextProviders": [
     {
-      "name": "database",
+      "name": "discord",
       "params": {
-        "connections": [
+        "discordKey": "bot token",
+        "guildId": "1234567890",
+        "channels": [
           {
-            "name": "examplePostgres",
-            "connection_type": "postgres",
-            "connection": {
-              "user": "username",
-              "host": "localhost",
-              "database": "exampleDB",
-              "password": "yourPassword",
-              "port": 5432
-            }
+            "id": "123456",
+            "name": "example-channel"
           },
           {
-            "name": "exampleSqlite",
-            "connection_type": "sqlite",
-            "connection": {
-              "filename": "/path/to/your/sqlite/database.db"
-            }
+            "id": "678901",
+            "name": "example-channel-2"
           }
         ]
       }
@@ -378,70 +569,11 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 }
 ```
 
-每个连接应该有一个单独的名称，`connection_type` ，以及每个数据库类型特定的必须的连接参数。
-
-可用的连接类型：
-
-- `postgres`
-- `mysql`
-- `sqlite`
-
-### `@Locals`
-
-关联调试器中本地变量的内容。
-
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "locals",
-      "params": {
-        "stackDepth": 3
-      }
-    }
-  ]
-}
-```
-
-使用最多 _n_ 级 (默认是 3) 的当前线程的调用栈。
-
-### `@Repository Map`
-
-关联你的代码库的概览。
-
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "repo-map"
-    }
-  ]
-}
-```
-
-提供一个文件列表，以及这些文件中的最高级的类、函数和方法的调用签名。这帮助模型更好地理解，一段特定的代码如何关联其他的代码库。
-
-在出现的子菜单中，你可以选择 `Entire codebase` 或指定一个子文件夹，来生成仓库映射。
-
-这个上下文提供者想法来自 [Aider's repository map](https://aider.chat/2023/10/22/repomap.html) 。
-
-### `@Operating System`
-
-关联你当前操作系统的架构和平台。
-
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "os"
-    }
-  ]
-}
-```
+确保包含你自己的 [Bot Token](https://discord.com/developers/applications) ，并把它加入你关联的服务器。如果你想要关于搜索哪个频道的更细粒度的控制，你可以指定一个要搜索的频道 ID 列表。如果你不想要指定任何频道，只需要包含 guild id(Server ID) ，所有频道将会被包含。提供者只会读取文本频道。
 
 ### `@HTTP`
 
-HttpContextProvider 创建一个 POST 请求到配置中的 url 。服务器必须返回 200 OK ，以及一个 ContextItem 对象或一个 ContextItems 列表。
+HttpContextProvider 创建一个 POST 请求到配置中传递的 url 。服务器必须返回 200 OK ，包含一个 ContextItem 对象或一个 ContextItems 列表。
 
 ```json title="config.json"
 {
@@ -449,22 +581,24 @@ HttpContextProvider 创建一个 POST 请求到配置中的 url 。服务器必�
     {
       "name": "http",
       "params": {
-        "url": "https://api.example.com/v1/users",
+        "url": "https://api.example.com/v1/users"
       }
     }
   ]
 }
 ```
 
-接收的 URL 应该接收下面的参数：
-```json title="POST parameters"
+接收的 URL 应该接收以下参数：
+
+```js title="POST parameters"
 {
   query: string,
   fullInput: string
 }
 ```
 
-响应 200 OK 应该是一个有以下结构的 JSON 对象：
+响应 200 OK 应该是一个 JSON 对象，有以下结构：
+
 ```json title="Response"
 [
   {
@@ -479,6 +613,45 @@ HttpContextProvider 创建一个 POST 请求到配置中的 url 。服务器必�
   "name": "",
   "description": "",
   "content": ""
+}
+```
+
+### `@Commits`
+
+关联指定的 git commit 元数据和 diff 或所有最近的 commit 。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "commit",
+      "params": {
+        "Depth": 50,
+        "LastXCommitsDepth": 10
+      }
+    }
+  ]
+}
+```
+
+Depth 是将要加载到子菜单的 commit 数量，默认是 50 。
+LastXCommitsDepth 是将要包含的最近 commit 的数量，默认是 10 。
+
+### `@Greptile`
+
+查询一个 [Greptile](https://www.greptile.com/) 索引，关于当前的仓库/分支。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "greptile",
+      "params": {
+        "GreptileToken": "...",
+        "GithubToken": "..."
+      }
+    }
+  ]
 }
 ```
 
