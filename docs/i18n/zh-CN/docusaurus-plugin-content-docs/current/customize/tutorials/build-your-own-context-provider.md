@@ -196,7 +196,7 @@ Continue 将使用 [esbuild](https://esbuild.github.io/) 打包你的 `config.ts
 }
 ```
 
-然后，创建一个服务器，响应请求像来自 [HttpContextProvider.ts](../../../../core/context/providers/HttpContextProvider.ts) 。查看 `hello` 端点在 [context_provider_server.py](../../../../core/context/providers/context_provider_server.py) 中，作为使用 FastAPI 的示例。
+然后，创建一个服务器，响应请求像来自 [HttpContextProvider.ts](../../../../../../../core/context/providers/HttpContextProvider.ts) 。查看 `hello` 端点在 [context_provider_server.py](../../../../../../../core/context/providers/context_provider_server.py) 中，作为使用 FastAPI 的示例。
 
 `"options"` 属性可以用来发送额外的参数到你的端点，将会包含在请求体中。
 
