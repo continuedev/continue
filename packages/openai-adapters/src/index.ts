@@ -41,6 +41,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return new DeepSeekApi(config);
     case "moonshot":
       return new MoonshotApi(config);
+    case "ppio":
+      return openAICompatible("https://api.ppinfra.com/v3/openai", config);
     case "x-ai":
       return openAICompatible("https://api.x.ai/v1/", config);
     case "voyage":
@@ -75,8 +77,6 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.together.xyz/v1/", config);
     case "novita":
       return openAICompatible("https://api.novita.ai/v3/openai", config);
-    case "ppio":
-      return openAICompatible("https://api.ppinfra.com/v3/openai", config);
     case "nebius":
       return openAICompatible("https://api.studio.nebius.ai/v1/", config);
     case "function-network":
