@@ -42,6 +42,7 @@ import { localPathToUri } from "./util/pathToUri";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
+import { findUriInDirs } from "./util/uri";
 
 import {
   ChatMessage,
@@ -954,10 +955,10 @@ export class Core {
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
       const ignoreInstance = ignore().add(defaultIgnoreFile);
-      let rootDirectory = await this.ide.getWorkspaceDirs();
-      const relativeFilePath = path.relative(rootDirectory[0], filepath);
+      const workspaceDirs = await this.ide.getWorkspaceDirs();
+      const { relativePathOrBasename } = findUriInDirs(filepath, workspaceDirs);
       try {
-        if (!ignoreInstance.ignores(relativeFilePath)) {
+        if (!ignoreInstance.ignores(relativePathOrBasename)) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
       } catch (e) {
