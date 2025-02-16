@@ -70,6 +70,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "sagemaker",
   "continue-proxy",
   "openrouter",
+  "venice",
   "vertexai",
   "azure",
   "scaleway",
