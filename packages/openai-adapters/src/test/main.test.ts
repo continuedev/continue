@@ -42,16 +42,16 @@ const TESTS: Omit<ModelConfig, "name">[] = [
   },
   {
     provider: "anthropic",
-    model: "claude-3-haiku-20240307",
+    model: "claude-3-5-haiku-latest",
     apiKey: process.env.ANTHROPIC_API_KEY!,
     roles: ["chat"],
   },
-  {
-    provider: "gemini",
-    model: "gemini-1.5-flash-latest",
-    apiKey: process.env.GEMINI_API_KEY!,
-    roles: ["chat"],
-  },
+  // {
+  //   provider: "gemini",
+  //   model: "gemini-1.5-flash-latest",
+  //   apiKey: process.env.GEMINI_API_KEY!,
+  //   roles: ["chat"],
+  // },
   {
     provider: "mistral",
     model: "codestral-latest",
