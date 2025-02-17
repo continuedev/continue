@@ -410,6 +410,10 @@ export function migrateV1DevDataFiles() {
   moveToV1FolderIfExists("autocomplete", "autocomplete");
 }
 
+export function getStagingEnvironmentDotFilePath(): string {
+  return path.join(getContinueGlobalPath(), ".staging");
+}
+
 export function getDiffsDirectoryPath(): string {
   const diffsPath = path.join(getContinueGlobalPath(), ".diffs"); // .replace(/^C:/, "c:"); ??
   if (!fs.existsSync(diffsPath)) {

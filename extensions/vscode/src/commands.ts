@@ -1003,12 +1003,6 @@ const getCommandsMap: (
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
       focusGUI();
     },
-    "continue.signInToControlPlane": () => {
-      sidebar.webviewProtocol?.request("signInToControlPlane", undefined);
-    },
-    "continue.openAccountDialog": () => {
-      sidebar.webviewProtocol?.request("openDialogMessage", "account");
-    },
     "continue.startLocalOllama": () => {
       startLocalOllama(ide);
     },
@@ -1066,7 +1060,7 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
-  registerCopyBufferSpy(context, core);
+  // registerCopyBufferSpy(context, core);
 
   for (const [command, callback] of Object.entries(
     getCommandsMap(

@@ -59,7 +59,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["novita"],
+    providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
   deepseekR1Chat: {
@@ -84,7 +84,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["novita"],
+    providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
   llama318BChat: {
@@ -499,7 +499,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway"],
+    providerOptions: ["groq", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -512,7 +512,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway"],
+    providerOptions: ["groq", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama31405bChat: {
@@ -525,7 +525,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "nebius"],
     isOpenSource: false,
   },
   llama3170bNemotron: {
@@ -551,7 +551,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "nebius"],
     isOpenSource: false,
   },
   llama323bChat: {
@@ -1371,10 +1371,10 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Qwen 2.5 Coder 32b",
       model: "qwen2.5-coder-32b",
-      contextLength: 128_000,
+      contextLength: 32_000,
     },
     icon: "qwen.png",
-    providerOptions: ["scaleway"],
+    providerOptions: ["scaleway", "nebius"],
     isOpenSource: true,
   },
   grokBeta: {

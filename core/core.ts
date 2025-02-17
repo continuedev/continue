@@ -73,10 +73,6 @@ export class Core {
 
   private abortedMessageIds: Set<string> = new Set();
 
-  private async config() {
-    return (await this.configHandler.loadConfig()).config;
-  }
-
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
     data: ToCoreProtocol[T][0],
@@ -136,7 +132,8 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       });
     });
 
@@ -285,10 +282,8 @@ export class Core {
     });
 
     on("config/newPromptFile", async (msg) => {
-      await createNewPromptFileV2(
-        this.ide,
-        (await this.config())?.experimental?.promptPath,
-      );
+      const { config } = await this.configHandler.loadConfig();
+      await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
       await this.configHandler.reloadConfig();
     });
 
@@ -310,7 +305,7 @@ export class Core {
     });
 
     on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data);
+      addContextProvider(msg.data, this.configHandler);
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -345,7 +340,7 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
@@ -362,12 +357,13 @@ export class Core {
     });
 
     on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode, selectedModelTitle } =
-        msg.data;
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
+
+      const { name, query, fullInput, selectedCode, selectedModelTitle } =
+        msg.data;
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider =
@@ -416,10 +412,36 @@ export class Core {
           id,
         }));
       } catch (e) {
-        void this.ide.showToast(
-          "error",
-          `Error getting context items from ${name}: ${e}`,
-        );
+        let knownError = false;
+
+        if (e instanceof Error) {
+          // A specific error where we're forcing the presence of embeddings provider on the config
+          // But Jetbrains doesn't support transformers JS
+          // So if a context provider needs it it will throw this error when the file isn't found
+          if (e.message.includes("all-MiniLM-L6-v2")) {
+            knownError = true;
+            const toastOption = "See Docs";
+            void this.ide
+              .showToast(
+                "error",
+                `Set up an embeddings model to use @${name}`,
+                toastOption,
+              )
+              .then((userSelection) => {
+                if (userSelection === toastOption) {
+                  void this.ide.openUrl(
+                    "https://docs.continue.dev/customize/model-types/embeddings",
+                  );
+                }
+              });
+          }
+        }
+        if (!knownError) {
+          void this.ide.showToast(
+            "error",
+            `Error getting context items from ${name}: ${e}`,
+          );
+        }
         return [];
       }
     });
@@ -432,7 +454,8 @@ export class Core {
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       };
     });
 
@@ -917,6 +940,7 @@ export class Core {
     on("didChangeSelectedOrg", (msg) => {
       void this.configHandler.setSelectedOrgId(msg.data.id);
       void this.configHandler.reloadConfig();
+      void this.configHandler.loadPlatformProfiles();
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
