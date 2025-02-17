@@ -100,6 +100,8 @@ declare global {
     apiVersion?: string;
     apiType?: string;
     region?: string;
+    agentId?: string;
+    agentAliasId?: string; 
     projectId?: string;
   
     // Embedding options
@@ -471,6 +473,8 @@ declare global {
     // AWS options
     profile?: string;
     modelArn?: string;
+    agentId?: string;
+    agentAliasId?: string;
   
     // AWS and GCP Options
     region?: string;
