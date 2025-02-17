@@ -223,7 +223,7 @@ export function getDevDataFilePath(
   if (!fs.existsSync(versionPath)) {
     fs.mkdirSync(versionPath);
   }
-  return path.join(versionPath, `${eventName}.jsonl`);
+  return path.join(versionPath, `${String(eventName)}.jsonl`);
 }
 
 export function editConfigJson(
