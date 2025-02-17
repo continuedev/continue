@@ -9,6 +9,7 @@ import {
   setAllSessionMetadata,
   updateSessionMetadata,
 } from "../slices/sessionSlice";
+import { selectDefaultModel } from "../slices/configSlice";
 import { ThunkApiType } from "../store";
 
 const MAX_TITLE_LENGTH = 100;
@@ -166,10 +167,8 @@ export const saveCurrentSession = createAsyncThunk<
     // Now save previous session and update chat title if relevant
     let title = state.session.title;
     if (title === NEW_SESSION_TITLE) {
-      if (
-        !state.config.config?.disableSessionTitles &&
-        state.config.defaultModelTitle
-      ) {
+      const defaultModel = selectDefaultModel(state);
+      if (!state.config.config?.disableSessionTitles && defaultModel) {
         let assistantResponse = state.session.history
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
@@ -180,7 +179,7 @@ export const saveCurrentSession = createAsyncThunk<
               "chatDescriber/describe",
               {
                 text: assistantResponse,
-                selectedModelTitle: state.config.defaultModelTitle,
+                selectedModelTitle: defaultModel.title,
               },
             );
             if (result.status === "success" && result.content) {

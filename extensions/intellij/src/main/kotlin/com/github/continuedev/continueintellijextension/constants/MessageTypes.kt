@@ -58,7 +58,6 @@ class MessageTypes {
         // Note: If updating these values, make a corresponding update in
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
-            "configError",
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress", // Codebase
