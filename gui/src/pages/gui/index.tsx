@@ -1,4 +1,5 @@
 import { History } from "../../components/History";
+import { TabBar } from "../../components/TabBar/TabBar";
 import { Chat } from "./Chat";
 
 export default function GUI() {
@@ -8,6 +9,7 @@ export default function GUI() {
         <History />
       </aside>
       <main className="no-scrollbar flex flex-1 flex-col overflow-y-auto">
+        <TabBar />
         <Chat />
       </main>
     </div>
