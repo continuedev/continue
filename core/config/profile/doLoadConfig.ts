@@ -104,14 +104,20 @@ export default async function doLoadConfig(
   await TTS.setup();
 
   // Set up control plane proxy if configured
+  // Continue for Teams
   const controlPlane = (newConfig as any).controlPlane;
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
 
   const env = await getControlPlaneEnv(ideSettingsPromise);
-  let controlPlaneProxyUrl: string = useOnPremProxy
-    ? controlPlane?.proxyUrl
-    : env.DEFAULT_CONTROL_PLANE_PROXY_URL;
+  let controlPlaneProxyUrl: string =
+    // hub.continue.dev-defined proxy URL
+    platformConfigMetadata?.onPremProxyUrl ??
+    (useOnPremProxy
+      ? // Continue for Teams-defined proxy URL
+        controlPlane?.proxyUrl
+      : // default
+        env.DEFAULT_CONTROL_PLANE_PROXY_URL);
 
   if (!controlPlaneProxyUrl.endsWith("/")) {
     controlPlaneProxyUrl += "/";

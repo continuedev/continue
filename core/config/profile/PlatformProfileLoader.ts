@@ -1,4 +1,4 @@
-import { ConfigResult, AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
@@ -15,6 +15,7 @@ import { IProfileLoader } from "./IProfileLoader.js";
 export interface PlatformConfigMetadata {
   ownerSlug: string;
   packageSlug: string;
+  onPremProxyUrl: string | undefined;
 }
 
 export default class PlatformProfileLoader implements IProfileLoader {
@@ -28,6 +29,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
     private readonly packageSlug: string,
     private readonly iconUrl: string,
     versionSlug: string,
+    private readonly onPremProxyUrl: string | undefined,
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
@@ -67,6 +69,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       {
         ownerSlug: this.ownerSlug,
         packageSlug: this.packageSlug,
+        onPremProxyUrl: this.onPremProxyUrl,
       },
     );
 
