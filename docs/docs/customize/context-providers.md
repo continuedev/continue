@@ -405,7 +405,9 @@ Available connection types:
 
 ### `@Postgres`
 
-Reference the schema of a table, and some sample rows
+Reference the schema of a table or view, and some sample rows.  
+Includes indexes, constraints, triggers and comments.
+
 
 ```json title="config.json"
 {
@@ -419,6 +421,7 @@ Reference the schema of a table, and some sample rows
         "password": "catsarecool",
         "database": "animals",
         "schema": "public",
+        "excludePattern": "^BATCH_.+", 
         "sampleRows": 3
       }
     }
@@ -427,8 +430,9 @@ Reference the schema of a table, and some sample rows
 ```
 
 The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
+By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3.
 
-By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
+Use `excludePattern` to exclude tables/views with matching names from context. Matching is case insensitive. By default, there is no exclusion.
 
 [Here is a short demo.](https://github.com/continuedev/continue/pull/859)
 
