@@ -25,6 +25,7 @@ import {
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import { Divider } from "./platform/shared";
+import { formatModelTitle } from "core/util/shortenName";
 
 interface ModelOptionProps {
   option: Option;
@@ -119,7 +120,7 @@ const StyledTrashIcon = styled(IconBase).attrs({ as: TrashIcon })``;
 const StyledCog6ToothIcon = styled(IconBase).attrs({ as: Cog6ToothIcon })``;
 
 function modelSelectTitle(model: any): string {
-  if (model?.title) return model?.title;
+  if (model?.title) formatModelTitle(model.title);
   if (model?.model !== undefined && model?.model.trim() !== "") {
     if (model?.class_name) {
       return `${model?.class_name} - ${model?.model}`;
@@ -190,7 +191,7 @@ function ModelOption({
           <div className="flex flex-grow items-center">
             <CubeIcon className="mr-2 h-4 w-4 flex-shrink-0" />
             <span className="flex-grow">
-              {option.title}
+              {formatModelTitle(option.title)}
               {showMissingApiKeyMsg && (
                 <span className="ml-2 text-[10px] italic">
                   (Missing API key)
