@@ -64,6 +64,7 @@ OpenAI compatible servers
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples)
 - [vLLM](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)
 - [BerriAI/litellm](https://github.com/BerriAI/litellm)
+- [VeniceAI](https://docs.venice.ai/api-reference/endpoint/chat/completions)
 
 OpenAI compatible APIs
 
