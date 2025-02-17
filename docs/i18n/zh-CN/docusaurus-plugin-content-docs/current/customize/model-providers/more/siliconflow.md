@@ -1,10 +1,10 @@
 ---
-title: 硅基流动
+title: SiliconFlow
 ---
 
 :::info
 
-你可以从 [Silicon Cloud](https://cloud.siliconflow.cn/account/ak) 获取 API key 。
+你可以从 [Silicon Cloud](https://cloud.siliconflow.cn/account/ak) 获取一个 API key 。
 
 :::
 
@@ -42,10 +42,8 @@ title: 硅基流动
 
 ## 嵌入模型
 
-SiliconFlow 提供了一些嵌入模型，[点击这里](https://siliconflow.cn/models) 查看所有的嵌入模型.
+SiliconFlow 提供了一些嵌入模型，[点击这里](https://siliconflow.cn/models) 查看嵌入模型列表。
 
 ## 重排序模型
 
-SiliconFlow 提供了一些重排序模型，[点击这里](https://siliconflow.cn/models) 查看所有的重排序模型.
-
-[Click here](https://siliconflow.cn/models) to see a list of reranking models.
+SiliconFlow 提供了一些重排序模型，[点击这里](https://siliconflow.cn/models) 查看重排序模型列表。

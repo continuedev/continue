@@ -11,11 +11,11 @@ sidebar_position: 3
 
 ## 高亮代码
 
-你通过按下 `cmd/ctrl + L` (VS Code) 或 `cmd/ctrl + J` (JetBrains) 选择的高亮代码，将包含在你的提示词中，和你提供的输入一起。这是提供给模型的仅有的代码片段，除非你高亮更多的片段，或使用以下的选择方法之一。
+你通过按下 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) 或 <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) 选择的高亮代码，将包含在你的提示词中，和你提供的输入一起。这是提供给模型的仅有的代码片段，除非你高亮更多的片段，或使用以下的选择方法之一。
 
 ## 活动文件
 
-在发送请求时，你可以通过按下 `cmd/ctrl + opt + enter` 包含当前打开的文件作为上下文。
+在聊天窗口发送请求时（提示词不能为空），你可以通过按下 <kbd>opt</kbd> + <kbd>enter</kbd> (Mac) 或 <kbd>alt</kbd> + <kbd>enter</kbd> (Windows) 包含当前打开的文件作为上下文。
 
 ## 指定文件
 
@@ -25,9 +25,9 @@ sidebar_position: 3
 
 你可以通过输入 [`@Folder`](../customize/context-providers.md#folder) 并选择目录，包含当前工作区中指定目录作为上下文。它像 [`@Codebase`](../customize/deep-dives/codebase.md) 一样工作，但是只包含指定目录中的文件。
 
-## 整个代码库
+## 代码库搜索
 
-你可以通过输入 [`@Codebase`](../customize/context-providers.md#codebase) 包含整个代码库作为上下文。你可以 [在这里](../customize/deep-dives/codebase.md) 了解 `@Codebase` 是如何工作的。
+你可以通过输入 [`@Codebase`](../customize/context-providers.md#codebase) 自动包含与你的代码库相关的文件作为上下文。你可以 [在这里](../customize/deep-dives/codebase.md) 了解 `@Codebase` 是如何工作的。
 
 ## 文档网址
 

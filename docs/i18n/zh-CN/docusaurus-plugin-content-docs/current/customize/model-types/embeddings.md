@@ -9,6 +9,14 @@ sidebar_position: 3
 
 在 Continue 中，嵌入是在索引是生成的，然后由 [@Codebase](../deep-dives/codebase.md) 使用，来实现对你的代码库的相似性搜索。
 
+:::info[默认模型 (仅 VS Code)]
+`transformers.js` 作为 VS Code 中默认嵌入模型。在 JetBrains 中，当前没有默认的。
+:::
+
+:::info[免费试用]
+免费试用支持嵌入 (provider: `free-trial`)
+:::
+
 ## 推荐的嵌入模型
 
 如果你有使用任何模型的能力，我们推荐 `voyage-code-3` ，它独立列在下面，和其他的嵌入模型选项一起。
@@ -35,7 +43,7 @@ sidebar_position: 3
 
 ### Transformers.js (当前只有 VS Code)
 
-[Transformers.js](https://huggingface.co/docs/transformers.js/index) 是流行的 [Transformers](https://huggingface.co/transformers/) 库一个 JavaScript 移植。它允许嵌入完全在本地计算。模型使用的是 `all-MiniLM-L6-v2` ，与 Continue 扩展一起，当你没有明确配置嵌入提供者时，作为默认使用。
+[Transformers.js](https://huggingface.co/docs/transformers.js/index) 是流行的 [Transformers](https://huggingface.co/transformers/) 库一个 JavaScript 移植。它允许嵌入完全在本地计算。模型使用的是 `all-MiniLM-L6-v2` ，与 Continue 扩展一起。
 
 ```json title="config.json"
 {
@@ -69,3 +77,27 @@ sidebar_position: 3
 ### Gemini
 
 查看 [这里](../model-providers/top-level/gemini.md#嵌入模型) 获取如何使用 Gemini 嵌入的指令。
+
+### Vertex
+
+查看 [这里](../model-providers/top-level/vertexai.md#embeddings-model) 获取如何使用 Vertex 嵌入的指令。
+
+### Mistral
+
+查看 [这里](../model-providers/top-level/mistral.md#embeddings-model) 获取如何使用 Mistral 嵌入的指令。
+
+### NVIDIA
+
+查看 [这里](../model-providers/more/nvidia.md#embeddings-model) 获取如何使用 NVIDIA 嵌入的指令。
+
+### Bedrock
+
+查看 [这里](../model-providers/top-level/bedrock.md#embeddings-model) 获取如何使用 Bedrock 嵌入的指令。
+
+### WatsonX
+
+查看 [这里](../model-providers/more/watsonx.md#embeddings-model) 获取如何使用 WatsonX 嵌入的指令。
+
+### LMStudio
+
+查看 [这里](../model-providers/more/lmstudio.md#embeddings-model) 获取如何使用 LMStudio 嵌入的指令。

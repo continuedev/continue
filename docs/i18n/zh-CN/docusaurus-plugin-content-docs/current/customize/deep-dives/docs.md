@@ -1,18 +1,28 @@
 ---
 description: 了解如何在 Continue 中访问和搜索你的项目文档
-keywords: [文档, 索引, 上下文提供者, 嵌入, 文档]
+keywords:
+  [
+    文档,
+    索引,
+    上下文提供者,
+    嵌入,
+    文档,
+    嵌入器,
+    嵌入提供者,
+    文档,
+  ]
 toc_max_heading_level: 5
 ---
 
 # @Docs
 
-[`@Docs` 上下文提供者](http://localhost:3000/customization/context-providers#documentation) 允许你直接通过 Continue 与自己的文档交互。这个特性运行你索引任何静态网站或 Github markdown 页面，让你在编码时访问和利用你的文档更方便。
+[`@Docs` 上下文提供者](customize/context-providers.md#docs) 允许你直接通过 Continue 有效地引用本地索引的的文档。
 
 ## 启用 `@Docs` 上下文提供者
 
-为了启用 `@Docs` 上下文提供者，你需要添加它到你的 `config.json` 文件中的上下文提供者列表。
+为了启用 `@Docs` 上下文提供者，添加它到你的 `config.json` 文件中的上下文提供者列表。
 
-```json
+```json title="config.json"
 {
   "contextProviders": [
     {
@@ -24,66 +34,237 @@ toc_max_heading_level: 5
 
 ## 它是如何工作的
 
-`@Docs` 上下文提供者通过爬取指定的文档网站工作，生成嵌入，把它们保存再本地。这个过程允许快速有效地访问你的文档内容。
+`@Docs` 上下文提供者工作，通过
 
-1. 我们爬取指定的文档网站
-2. 生成内容的嵌入
+1. 爬去指定的文档网站
+2. 对于分块内容生成嵌入
 3. 本地保存嵌入在你的机器上
-4. 通过 `@Docs` 上下文提供者提供访问索引内容
+4. 嵌入聊天输入包含相同的文档分块作为上下文
 
-## 预先索引文档网站
+## 预索引文档网站
 
-我们提供一个流行的框架和库的预先索引文档网站的选择。你可以 [在这里查看可用的预先索引网站和请求附加内容](https://github.com/continuedev/continue/blob/main/core/indexing/docs/preIndexedDocs.ts) 列表。
+在 VS Code 中， Continue 对于流行的框架和库，提供一个预索引文档网站的选项。你可以查看一个列表 [可用的预索引网站和请求更多，在这里](https://github.com/continuedev/continue/blob/main/core/indexing/docs/preIndexedDocs.ts) 。
+
+预索引文档只在 VS Code 中有效，因为 VS Code 扩展有 Transformers.js 嵌入器内建，而 Jetbrains 当前没有。你可以覆盖一个预索引文档，使用你自己的嵌入提供者索引，通过添加它到你的配置中 (唯一 `startUrl`)。否则，它将总是使用 Transformers.js 查询。
 
 ## 索引你自己的文档
 
 ### 通过 `@Docs` 上下文提供者
 
-为了添加一个单独的文档网站，我们推荐使用 `@Docs` 上下文提供者。
+要添加一个独立的文档网站，我们推荐在 GUI 中使用 **Add Documentation** 表单。这可以访问
 
-1. 在聊天面板输入 `@Docs` ，点击回车
-2. 输入 "add" 并选择 "Add Docs" 选项
-3. 输入需要的信息到对话框
+- 从 `@Docs` 上下文提供者 - 在聊天中输入 `@Docs` ，点击 `Enter` ，搜索 `Add Docs`
+- 从 `More` 页面 (三个点的图标) 在 `@docs indexes` 一节
+  `@Docs` 上下文提供者。
 
-索引将在提交之后开始。
+在 **Add Documentation** 表单中，输入一个 `Title` 和网站的 `Start URL` 。
 
-### 通过 `config.json`
+- `Title`: 文档网站的名称，用来在 UI 中确认
+- `Start URL`: 索引进程开始的 URL
 
-为了添加多个文档网站，我们推荐批量添加它们到你的 `config.json` 文件中。索引将在文件保存后开始。
+索引将在提交之后开始。进程可以在表单中查看，或稍后在 `More` 页面的 `@docs indexes` 一节。
 
-[docs 的配置 schema](https://github.com/continuedev/continue/blob/v0.9.212-vscode/extensions/vscode/config_schema.json#L1943-L1973) 如下：
+文档来源建议基于你的仓库中的包文件。当前支持 Python `requirements.txt` 文件和 Node.js (Javascript/Typescript) `package.json` 文件。
 
-```json
-"docs": [
-    {
-    "title": "Continue",
-    "startUrl": "https://docs.continue.dev/intro",
-    "faviconUrl": "https://docs.continue.dev/favicon.ico",
-  }
-]
-```
+- 有合法文档 URL 的包（有一个 `+` 图标），可以点击直接开始索引
+- 有部分信息的包（有一个笔的图标），可以点击使用有效的信息填充表单
+- 注意你可以在信息图标上悬停，查看哪里查找包建议
 
-- `title`: 文档网站的名称，用来在 UI 中进行识别。
-- `startUrl`: 索引进程开始的 URL 。
-<!-- - `rootUrl`: 文档网站的基本 URL ，用来确定哪个页面索引。 -->
-- `faviconUrl`: 网站 favicon 的 URL ，用来在 UI 中进行视觉识别。
+![添加文档表单](/img/docs-form.png)
 
-## 使用 `useChromiumForDocsCrawling` 爬取动态生成的网站
+### 通过全局配置
 
-默认情况下，我们使用一个轻量的工具爬取文档网站，它不能渲染使用 JavaScript 动态生成的网站。
-
-If you want to crawl a site that is dynamically generated, or you get an error while attempting to crawl a site, you can enable the experimental `useChromiumForDocsCrawling` feature in your `config.json`. This will download and install Chromium to `~/.continue/.utils`.
-
-如果你想要爬取一个动态生成的网站，或者当你爬取网站时得到一个错误，你可以在你的 `config.json` 启用试验性的 `useChromiumForDocsCrawling` 特性。这将下载并安装 Chromium 到 `~/.continue/.utils` 。
+对于大量的文档网站添加或编辑，我们推荐直接编辑你的全局配置文件。文档网站保存在你的全局配置 `docs` 列表中， 如下所示：
 
 ```json title="config.json"
-"experimental": {
-    "useChromiumForDocsCrawling": true
+{
+  "docs": [
+    {
+      "title": "Nest.js",
+      "startUrl": "https://docs.nestjs.com/",
+      "faviconUrl": "https://docs.nestjs.com/favicon.ico"
+    }
+  ]
 }
 ```
 
-## 常见问题
+查看 [配置参考](../../reference) ，获取全部文档网站配置选项。
 
-### 索引内容多长时间更新？
+索引将会在保存配置文件后重新同步。
 
-当前，我们没有自动地重新索引你的文档。如果你想要强制重新刷新，你可以使用下面的命令： `Continue: Docs Force Re-Index` 。
+## 配置
+
+### 使用你的嵌入提供者
+
+如果你设置一个 [嵌入提供者](../model-types/embeddings.md) ， `@docs` 将会使用你的嵌入提供者。切换嵌入提供者将会触发你的配置中所有文档网站的重新索引。
+
+### 重排序
+
+使用 [@Codebase 上下文提供者配置](./codebase#configuration) ，你可以调整 `@Docs` 上下文提供者的重排序行为，使用 `nRetrieve`, `nFinal` 和 `useReranking` 。
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "docs",
+      "params": {
+        "nRetrieve": 25, // 从嵌入查询获取的文档数量
+        "nFinal": 5, // 返回 IF 重排序文档分块的数量
+        "useReranking": true // 使用重排序，如果重排序器被配置（默认为 true）
+      }
+    }
+  ]
+}
+```
+
+### Github
+
+Github API 频率限制公开请求为每小时 60 次。如果你想要可靠地索引 Github 仓库，你可以添加一个 Github token 到你的配置文件中：
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "docs",
+      "params": {
+        "githubToken": "github_..."
+      }
+    }
+  ]
+}
+```
+
+### 本地爬取
+
+默认情况下， Continue 爬取文档网站，使用指定的爬取服务，对于大多数用户和文档网站提供最好的体验。
+
+如果你的文档是私有的，你可以跳过默认的爬取器，使用一个本地的爬取器替代，通过设置 `useLocalCrawling` 为 `true` 。
+
+```json title="config.json"
+{
+  "docs": [
+    {
+      "title": "My Private Docs",
+      "startUrl": "http://10.2.1.2/docs",
+      "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
+      "useLocalCrawling": true
+    }
+  ]
+}
+```
+
+默认的本地爬取器是一个轻量的工具，不能渲染使用 JavaScript 动态生成的网站。如果你的网站需要被渲染，你可以启用试验的 `Use Chromium for Docs Crawling` 特性，从你的 [用户设置页面](../settings.md) 。这将下载和安装 Chromium 到 `~/.continue/.utils` ，使用它作为本地爬取器。
+
+更多注意：
+
+- 如果网站仅本地访问，默认的爬取器会失败，并返回到本地爬取器。 `useLocalCrawling` 是很有用的，如果 URL 本身是保密的。
+- 对于 Github 仓库，这没有效果，因为只有 Github Crawler 会被使用，如果仓库是私有的，它只能使用有权限的 Github token 访问。
+
+## 管理你的文档索引
+
+你可以查看索引状态，管理你的文档网站，在 `More` 页面（三个点）的 `@docs indexs` 章节
+
+- Continue 不会自动重新索引你的文档。使用 `Click to re-index` 来触发一个特定来源的重新索引
+- 当一个网站在索引时，点击 `Cancel indexing` 来取消进程
+- 失败的索引尝试会显示一个错误状态栏和图标
+- 使用垃圾图标从你的配置中删除一个文档网站
+
+![更多页面 @docs 索引章节](/img/docs-indexes.png)
+
+你也可以访问当前索引文档的完整状态，从聊天页面下方的一个隐藏进程栏中
+![文档索引查看](/img/docs-indexing-peek.png)
+
+你也可以使用下面的 IDE 命令强制所有文档的重新索引： `Continue: Docs Force Re-Index` 。
+
+## 示例
+
+### VS Code 最小化配置
+
+以下配置示例对于 VS Code 开箱即用。这使用内建的嵌入提供者，没有重排序。预索引文档将会被访问。
+
+```json title="config.json"
+  "contextProviders": [
+    {
+      "name": "docs",
+    }
+  ],
+  "docs": [
+    {
+      "title": "Nest.js",
+      "startUrl": "https://docs.nestjs.com/",
+    },
+  ],
+```
+
+### Jetbrains 最小化配置
+
+这是对于 Jetbrains 等效的最小示例，需要设置一个 [嵌入提供者](../model-types/embeddings.md) 。预索引文档将 _不会_ 访问。
+
+```json title="config.json"
+  "contextProviders": [
+    {
+      "name": "docs",
+    }
+  ],
+  "docs": [
+    {
+      "title": "Nest.js",
+      "startUrl": "https://docs.nestjs.com/",
+    },
+  ],
+  "embeddingsProvider": {
+    "provider": "lmstudio",
+    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+  },
+```
+
+### 全面设置 (VS Code 或 Jetbrains)
+
+以下配置示例包含：
+
+- 公开和私有文档来源的示例
+- 一个定制嵌入提供者
+- 一个重排序模型可用，使用定制的重排序参数
+- 一个 Github token 启用 Github 爬取
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "docs",
+      "params": {
+        "githubToken": "github_...",
+        "nRetrieve": 25,
+        "nFinal": 5,
+        "useReranking": true
+      }
+    }
+  ],
+  "docs": [
+    {
+      "title": "Nest.js",
+      "startUrl": "https://docs.nestjs.com/"
+    },
+    {
+      "title": "My Private Docs",
+      "startUrl": "http://10.2.1.2/docs",
+      "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
+      "maxDepth": 4,
+      "useLocalCrawling": true
+    }
+  ],
+  "reranker": {
+    "name": "voyage",
+    "params": {
+      "model": "rerank-2",
+      "apiKey": "<VOYAGE_API_KEY>"
+    }
+  },
+  "embeddingsProvider": {
+    "provider": "lmstudio",
+    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+  }
+}
+```
+
+这也涉及启用 Chromium 作为备用，对于本地文档 [用户设置页面](../settings.md) 。

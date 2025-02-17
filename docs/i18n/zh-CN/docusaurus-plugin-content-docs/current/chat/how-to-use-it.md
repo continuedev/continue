@@ -20,7 +20,7 @@ sidebar_position: 1
 
 ## 高亮代码片段作为上下文
 
-你使用鼠标选择代码片段，按下 `cmd/ctrl + L` (VS Code) 或 `cmd/ctrl + J` (JetBrains) 将它发送给 LLM ，然后让它给你解释，或者请求它以某种方式优化。
+你使用鼠标选择代码片段，按下 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) 或 <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) 将它发送给 LLM ，然后让它给你解释，或者请求它以某种方式优化。
 
 ## 使用 @ 符号标记上下文
 
@@ -32,8 +32,8 @@ sidebar_position: 1
 
 ## 对于新的任务开始一个新的会话
 
-一旦你完成任务，想要开始一个新的，按下 `cmd/ctrl + L` (VS Code) 或 `cmd/ctrl + J` (JetBrains) 来开始一个新的会话，确保只有下一个任务相关的上下文提供给 LLM 。
+一旦你完成任务，想要开始一个新的，按下 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) 或 <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) 来开始一个新的会话，确保只有下一个任务相关的上下文提供给 LLM 。
 
 ## 在不同的模型中切换
 
-如果你配置了多个模型，你可以使用下拉框或按下 `cmd/ctrl + ’`在不同的模型中切换。
+如果你配置了多个模型，你可以使用下拉框或按下 <kbd>cmd/ctrl</kbd> + <kbd>’</kbd>在不同的模型中切换。
