@@ -110,6 +110,8 @@ export class ControlPlaneClient {
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;
+      onPremProxyUrl: string | undefined;
+      useOnPremProxy: boolean | undefined;
     }[]
   > {
     const userId = await this.userId;

@@ -164,6 +164,7 @@ export class ConfigHandler {
               assistant.packageSlug,
               assistant.iconUrl,
               assistant.configResult.config?.version ?? "latest",
+              assistant.useOnPremProxy ? assistant.onPremProxyUrl : undefined,
               this.controlPlaneClient,
               this.ide,
               this.ideSettingsPromise,
