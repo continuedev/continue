@@ -80,6 +80,17 @@ export class ConfigHandler {
     void this.init();
   }
 
+  /**
+   * Retrieves the titles of additional context providers that are of type "submenu".
+   *
+   * @returns {string[]} An array of titles of the additional context providers that have a description type of "submenu".
+   */
+  getAdditionalSubmenuContextProviders(): string[] {
+    return this.additionalContextProviders
+      .filter(provider => provider.description.type === "submenu")
+      .map(provider => provider.description.title);
+  }
+
   private async init() {
     // Always load local profile immediately in case control plane doesn't load
     try {
