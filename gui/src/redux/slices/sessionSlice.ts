@@ -22,6 +22,7 @@ import {
   ToolCallState,
 } from "core";
 import { ProfileDescription } from "core/config/ConfigHandler";
+import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -30,7 +31,6 @@ import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -81,6 +81,8 @@ function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
   // If neither has a range, they are considered equal in this context
   return !("range" in a) && !("range" in b);
 }
+
+const THINKING_TAGS = ["think", "reason"];
 
 const initialState: SessionState = {
   allSessionMetadata: [],
@@ -371,19 +373,25 @@ export const sessionSlice = createSlice({
           } else {
             // Add to the existing message
             if (message.content) {
+              const matchedThinkingTag = THINKING_TAGS.find((tag) =>
+                messageContent.includes(`<${tag}>`),
+              );
+              const matchedEndThinkingTag = THINKING_TAGS.find((tag) =>
+                messageContent.includes(`</${tag}>`),
+              );
               const messageContent = renderChatMessage(message);
-              if (messageContent.includes("<think>")) {
+              if (matchedThinkingTag) {
                 lastItem.reasoning = {
                   startAt: Date.now(),
                   active: true,
-                  text: messageContent.replace("<think>", "").trim(),
+                  text: messageContent
+                    .replace(`<${matchedThinkingTag}>`, "")
+                    .trim(),
                 };
-              } else if (
-                lastItem.reasoning?.active &&
-                messageContent.includes("</think>")
-              ) {
-                const [reasoningEnd, answerStart] =
-                  messageContent.split("</think>");
+              } else if (lastItem.reasoning?.active && matchedEndThinkingTag) {
+                const [reasoningEnd, answerStart] = messageContent.split(
+                  `</${matchedEndThinkingTag}>`,
+                );
                 lastItem.reasoning.text += reasoningEnd.trimEnd();
                 lastItem.reasoning.active = false;
                 lastItem.reasoning.endAt = Date.now();
