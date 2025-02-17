@@ -217,9 +217,9 @@ export function getDevDataSqlitePath(): string {
 
 export function getDevDataFilePath(
   eventName: DevEventName,
-  schemaVersion: string,
+  schema: string,
 ): string {
-  const versionPath = path.join(getDevDataPath(), schemaVersion);
+  const versionPath = path.join(getDevDataPath(), schema);
   if (!fs.existsSync(versionPath)) {
     fs.mkdirSync(versionPath);
   }

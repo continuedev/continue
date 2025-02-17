@@ -8,5 +8,5 @@ export const tokensGeneratedEventSchema_0_1_0 =
     generatedTokens: true,
   });
 
-export const tokensGeneratedEventSchema_0_1_0_noPII =
+export const tokensGeneratedEventSchema_0_1_0_noCode =
   tokensGeneratedEventSchema_0_1_0;

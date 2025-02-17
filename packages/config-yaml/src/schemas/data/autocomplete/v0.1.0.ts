@@ -34,7 +34,7 @@ export const autocompleteEventSchema_0_1_0 = autocompleteEventAllSchema.pick({
   timestamp: true,
 });
 
-export const autocompleteEventSchema_0_1_0_noPII =
+export const autocompleteEventSchema_0_1_0_noCode =
   autocompleteEventSchema_0_1_0.omit({
     prefix: true,
     suffix: true,

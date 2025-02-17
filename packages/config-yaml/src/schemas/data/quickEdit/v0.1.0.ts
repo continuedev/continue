@@ -8,10 +8,9 @@ export const quickEditEventSchema_0_1_0 = quickEditEventAllSchema.pick({
   model: true,
 });
 
-export const quickEditEventSchema_0_1_0_noPII = quickEditEventSchema_0_1_0.omit(
-  {
+export const quickEditEventSchema_0_1_0_noCode =
+  quickEditEventSchema_0_1_0.omit({
     prompt: true,
     path: true,
     diffs: true,
-  },
-);
+  });

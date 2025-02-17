@@ -8,7 +8,7 @@ export const tokensGeneratedEventSchema_0_2_0 =
     userAgent: true,
     selectedProfileId: true,
     eventName: true,
-    schemaVersion: true,
+    schema: true,
 
     // tokens generated specific
     model: true,
@@ -17,5 +17,5 @@ export const tokensGeneratedEventSchema_0_2_0 =
     generatedTokens: true,
   });
 
-export const tokensGeneratedEventSchema_0_2_0_noPII =
+export const tokensGeneratedEventSchema_0_2_0_noCode =
   tokensGeneratedEventSchema_0_2_0;

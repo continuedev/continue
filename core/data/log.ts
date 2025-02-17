@@ -29,19 +29,19 @@ export class DataLogger {
     return DataLogger.instance;
   }
 
-  addBaseValues(body: object, schemaVersion: string): object {
+  addBaseValues(body: object, schema: string): object {
     if ("createdAt" in body) {
       body.createdAt = new Date().toISOString();
     }
-    if ("schemaVersion" in body) {
-      body.schemaVersion = schemaVersion;
+    if ("schema" in body) {
+      body.schema = schema;
     }
     if ("userAgent" in body) {
       body.userAgent = navigator.userAgent; // TODO sufficient user agent info?
     }
     if ("selectedProfileId" in body) {
       body.selectedProfileId =
-        this.core?.configHandler.currentProfile.profileDescription.id ?? "";
+        this.core?.configHandler.currentProfile?.profileDescription.id ?? "";
     }
     if ("userId" in body) {
       body.userId = "not-implemented";
@@ -80,7 +80,7 @@ export class DataLogger {
         config.data.map(async (dataConfig) => {
           try {
             // First extract the data schema based on the version and level
-            const { schemaVersion } = dataConfig;
+            const { schema } = dataConfig;
 
             const level = dataConfig.level ?? DEFAULT_DEV_DATA_LEVEL;
 
@@ -90,28 +90,28 @@ export class DataLogger {
               return;
             }
 
-            const versionSchemas = devDataVersionedSchemas[schemaVersion];
+            const versionSchemas = devDataVersionedSchemas[schema];
             if (!versionSchemas) {
               throw new Error(
-                `Attempting to log dev data to non-existent version ${schemaVersion}`,
+                `Attempting to log dev data to non-existent version ${schema}`,
               );
             }
 
             const levelSchemas = versionSchemas[level];
             if (!levelSchemas) {
               throw new Error(
-                `Attempting to log dev data at level ${level} for version ${schemaVersion} which does not exist`,
+                `Attempting to log dev data at level ${level} for version ${schema} which does not exist`,
               );
             }
 
-            const schema = levelSchemas[event.name];
-            if (!schema) {
+            const zodSchema = levelSchemas[event.name];
+            if (!zodSchema) {
               throw new Error(
-                `Attempting to log dev data for event ${event.name} at level ${level} for version ${schemaVersion}: no schema found`,
+                `Attempting to log dev data for event ${event.name} at level ${level} for version ${schema}: no schema found`,
               );
             }
 
-            const parsed = schema.safeParse(event.data);
+            const parsed = zodSchema.safeParse(event.data);
             if (!parsed.success) {
               throw new Error(
                 `Failed to parse event data ${parsed.error.toString()}`,
@@ -119,7 +119,7 @@ export class DataLogger {
             }
 
             // Add base values like createdAt etc. if keys present in body
-            const payload = this.addBaseValues(parsed.data, schemaVersion);
+            const payload = this.addBaseValues(parsed.data, schema);
 
             const uriComponents = URI.parse(dataConfig.destination);
 
@@ -143,7 +143,8 @@ export class DataLogger {
                 headers["Authorization"] = `Bearer ${accessToken}`;
               }
               const profileId =
-                this.core?.configHandler.currentProfile.profileDescription.id;
+                this.core?.configHandler.currentProfile?.profileDescription
+                  .id ?? "";
               const response = await fetchwithRequestOptions(
                 dataConfig.destination,
                 {
@@ -152,7 +153,7 @@ export class DataLogger {
                   body: JSON.stringify({
                     name: event.name,
                     data: payload,
-                    schemaVersion,
+                    schema,
                     level,
                     profileId,
                   }),
@@ -166,10 +167,7 @@ export class DataLogger {
               }
             } else if (uriComponents.scheme === "file") {
               // Write to jsonc file for local file URIs
-              const dirUri = joinPathsToUri(
-                dataConfig.destination,
-                schemaVersion,
-              );
+              const dirUri = joinPathsToUri(dataConfig.destination, schema);
               const dirPath = fileURLToPath(dirUri);
 
               if (!fs.existsSync(dirPath)) {

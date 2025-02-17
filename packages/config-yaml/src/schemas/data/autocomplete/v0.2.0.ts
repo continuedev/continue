@@ -7,7 +7,7 @@ export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
   userAgent: true,
   selectedProfileId: true,
   eventName: true,
-  schemaVersion: true,
+  schema: true,
 
   // autocomplete-specific
   disable: true,
@@ -43,7 +43,7 @@ export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
   timestamp: true,
 });
 
-export const autocompleteEventSchema_0_2_0_noPII =
+export const autocompleteEventSchema_0_2_0_noCode =
   autocompleteEventSchema_0_2_0.omit({
     prefix: true,
     suffix: true,

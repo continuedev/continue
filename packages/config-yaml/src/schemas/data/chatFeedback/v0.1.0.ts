@@ -9,7 +9,7 @@ export const chatFeedbackEventSchema_0_1_0 = chatFeedbackEventAllSchema.pick({
   sessionId: true,
 });
 
-export const chatFeedbackEventSchema_0_1_0_noPII =
+export const chatFeedbackEventSchema_0_1_0_noCode =
   chatFeedbackEventSchema_0_1_0.omit({
     prompt: true,
     completion: true,

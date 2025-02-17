@@ -30,7 +30,7 @@ export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
 
             eventName: "chatFeedback",
             createdAt: "",
-            schemaVersion: "",
+            schema: "",
             userAgent: "",
             selectedProfileId: "",
             userId: "",

@@ -102,7 +102,7 @@ export class AutocompleteLoggingService {
         ...outcome,
         eventName: "autocomplete",
         createdAt: "",
-        schemaVersion: "",
+        schema: "",
         userAgent: "",
         selectedProfileId: "",
         userId: "",

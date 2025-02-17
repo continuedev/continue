@@ -353,7 +353,7 @@ export abstract class BaseLLM implements ILLM {
 
         eventName: "tokensGenerated",
         createdAt: "",
-        schemaVersion: "",
+        schema: "",
         userAgent: "",
         selectedProfileId: "",
         userId: "",

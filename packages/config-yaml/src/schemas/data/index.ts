@@ -3,45 +3,45 @@ import { autocompleteEventAllSchema } from "./autocomplete/index.js";
 import { requestOptionsSchema } from "../models.js";
 import {
   autocompleteEventSchema_0_1_0,
-  autocompleteEventSchema_0_1_0_noPII,
+  autocompleteEventSchema_0_1_0_noCode,
 } from "./autocomplete/v0.1.0.js";
 import {
   quickEditEventSchema_0_1_0,
-  quickEditEventSchema_0_1_0_noPII,
+  quickEditEventSchema_0_1_0_noCode,
 } from "./quickEdit/v0.1.0.js";
 import {
   autocompleteEventSchema_0_2_0,
-  autocompleteEventSchema_0_2_0_noPII,
+  autocompleteEventSchema_0_2_0_noCode,
 } from "./autocomplete/v0.2.0.js";
 import { quickEditEventAllSchema } from "./quickEdit/index.js";
 import { chatFeedbackEventAllSchema } from "./chatFeedback/index.js";
 import { tokensGeneratedEventAllSchema } from "./tokensGenerated/index.js";
 import {
   chatFeedbackEventSchema_0_1_0,
-  chatFeedbackEventSchema_0_1_0_noPII,
+  chatFeedbackEventSchema_0_1_0_noCode,
 } from "./chatFeedback/v0.1.0.js";
 import {
   tokensGeneratedEventSchema_0_1_0,
-  tokensGeneratedEventSchema_0_1_0_noPII,
+  tokensGeneratedEventSchema_0_1_0_noCode,
 } from "./tokensGenerated/v0.1.0.js";
 import {
   chatFeedbackEventSchema_0_2_0,
-  chatFeedbackEventSchema_0_2_0_noPII,
+  chatFeedbackEventSchema_0_2_0_noCode,
 } from "./chatFeedback/v0.2.0.js";
 import {
   tokensGeneratedEventSchema_0_2_0,
-  tokensGeneratedEventSchema_0_2_0_noPII,
+  tokensGeneratedEventSchema_0_2_0_noCode,
 } from "./tokensGenerated/v0.2.0.js";
 
 const semverRegex =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
 
-const dataLevel = z.union([z.literal("all"), z.literal("noPII")]);
+const dataLevel = z.union([z.literal("all"), z.literal("noCode")]);
 
 export const dataSchema = z.object({
   name: z.string(),
   destination: z.string().url(),
-  schemaVersion: z.string().regex(semverRegex, {
+  schema: z.string().regex(semverRegex, {
     message: "Version must follow semver format, e.g. 0.2.0",
   }),
   level: dataLevel.optional(),
@@ -71,11 +71,11 @@ export const devDataVersionedSchemas = {
       chatFeedback: chatFeedbackEventSchema_0_1_0,
       tokensGenerated: tokensGeneratedEventSchema_0_1_0,
     },
-    noPII: {
-      autocomplete: autocompleteEventSchema_0_1_0_noPII,
-      quickEdit: quickEditEventSchema_0_1_0_noPII,
-      chatFeedback: chatFeedbackEventSchema_0_1_0_noPII,
-      tokensGenerated: tokensGeneratedEventSchema_0_1_0_noPII,
+    noCode: {
+      autocomplete: autocompleteEventSchema_0_1_0_noCode,
+      quickEdit: quickEditEventSchema_0_1_0_noCode,
+      chatFeedback: chatFeedbackEventSchema_0_1_0_noCode,
+      tokensGenerated: tokensGeneratedEventSchema_0_1_0_noCode,
     },
   },
   ["0.2.0" as string]: {
@@ -84,10 +84,10 @@ export const devDataVersionedSchemas = {
       chatFeedback: chatFeedbackEventSchema_0_2_0,
       tokensGenerated: tokensGeneratedEventSchema_0_2_0,
     },
-    noPII: {
-      autocomplete: autocompleteEventSchema_0_2_0_noPII,
-      chatFeedback: chatFeedbackEventSchema_0_2_0_noPII,
-      tokensGenerated: tokensGeneratedEventSchema_0_2_0_noPII,
+    noCode: {
+      autocomplete: autocompleteEventSchema_0_2_0_noCode,
+      chatFeedback: chatFeedbackEventSchema_0_2_0_noCode,
+      tokensGenerated: tokensGeneratedEventSchema_0_2_0_noCode,
     },
   },
 };

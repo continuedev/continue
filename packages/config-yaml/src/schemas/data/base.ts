@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const baseDevDataAllSchema = z.object({
   eventName: z.string(),
-  schemaVersion: z.string(),
+  schema: z.string(),
   createdAt: z.string(),
   userId: z.string(),
   userAgent: z.string(),
