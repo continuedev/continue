@@ -35,15 +35,6 @@ async function modelConfigToBaseLLM(
     return undefined;
   }
 
-  const usingContinueProxy = model.provider === "continue-proxy";
-  const modelName = usingContinueProxy
-    ? getContinueProxyModelName(
-        platformConfigMetadata!.ownerSlug,
-        platformConfigMetadata!.packageSlug,
-        model,
-      )
-    : model.model;
-
   let options: LLMOptions = {
     ...model,
     completionOptions: {
@@ -56,7 +47,6 @@ async function modelConfigToBaseLLM(
     writeLog,
     uniqueId,
     title: model.name,
-    model: modelName,
     systemMessage,
     promptTemplates: model.promptTemplates,
   };

@@ -440,6 +440,10 @@
             "uploadImage": {
               "type": "boolean",
               "description": "Indicates whether the model can upload images."
+            },
+            "tools": {
+              "type": "boolean",
+              "description": "Indicates whether the model can use tools"
             }
           }
         }
@@ -1682,33 +1686,6 @@
           }
         }
       ]
-    },
-    "ModelRoles": {
-      "title": "ModelRoles",
-      "type": "object",
-      "properties": {
-        "default": {
-          "title": "Default",
-          "description": "The default model. If other model roles are not set, they will fall back to default.",
-          "type": "string"
-        },
-        "chat": {
-          "title": "Chat",
-          "description": "The model to use for chat. If not set, will fall back to default.",
-          "type": "string"
-        },
-        "edit": {
-          "title": "Edit",
-          "description": "The model to use for editing. If not set, will fall back to default.",
-          "type": "string"
-        },
-        "summarize": {
-          "title": "Summarize",
-          "description": "The model to use for summarization. If not set, will fall back to default.",
-          "type": "string"
-        }
-      },
-      "required": ["default"]
     },
     "SlashCommand": {
       "title": "SlashCommand",

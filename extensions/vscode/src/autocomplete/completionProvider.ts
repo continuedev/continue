@@ -41,8 +41,7 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider
-{
+  implements vscode.InlineCompletionItemProvider {
   private onError(e: any) {
     let options = ["Documentation"];
     if (e.message.includes("Ollama may not be installed")) {
@@ -304,7 +303,7 @@ export class ContinueCompletionProvider
           } else {
             // If the first part of the diff isn't an insertion, then the model is
             // probably rewriting other parts of the line
-            return undefined;
+            // return undefined; - Let's assume it's simply an insertion
           }
         }
       } else {

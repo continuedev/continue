@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, PromptLog } from "core";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
@@ -27,8 +27,7 @@ export const streamNormalInput = createAsyncThunk<
     throw new Error("Default model not defined");
   }
 
-  const includeTools =
-    useTools && modelSupportsTools(defaultModel.model, defaultModel.provider);
+  const includeTools = useTools && modelSupportsTools(defaultModel);
 
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(
@@ -70,7 +69,8 @@ export const streamNormalInput = createAsyncThunk<
       toolSettings[toolCallState.toolCall.function.name] ===
       "allowedWithoutPermission"
     ) {
-      await dispatch(callTool());
+      const response = await dispatch(callTool());
+      unwrapResult(response);
     }
   }
 });

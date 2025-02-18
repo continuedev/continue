@@ -4,23 +4,10 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "extensions/intellij/**"
-      - "extensions/vscode/**"
-      - "core/**"
-      - "gui/**"
-      - ".github/workflows/**"
-      - "docs/**"
 
   push:
     branches:
       - main
-    paths:
-      - "extensions/intellij/**"
-      - "extensions/vscode/**"
-      - "core/**"
-      - "gui/**"
-      - ".github/workflows/**"
 
 jobs:
   install-root:
