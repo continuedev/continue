@@ -4,7 +4,7 @@ description: Reference for the Continue configuration YAML file
 keywords: [config, yaml, configuration, customize, customization]
 ---
 
-# Config YAML Reference
+# confg.yaml Reference
 
 <!-- TODO - data section -->
 
