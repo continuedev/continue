@@ -15,11 +15,11 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
-import { IdeMessengerContext } from "./IdeMessenger";
 import {
   updateOrgsThunk,
   updateProfilesThunk,
 } from "../redux/thunks/profileAndOrg";
+import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
@@ -111,6 +111,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
     setSession(data.sessionInfo);
+    // On logout, clear the list of orgs
+    if (!data.sessionInfo) {
+      dispatch(updateOrgsThunk([]));
+    }
   });
 
   useEffect(() => {
@@ -149,8 +153,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             dispatch(updateOrgsThunk([]));
           }
         });
-    } else {
-      dispatch(updateOrgsThunk([]));
     }
   }, [session]);
 
