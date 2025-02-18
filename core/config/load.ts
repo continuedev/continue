@@ -182,7 +182,7 @@ async function serializedToIntermediateConfig(
   initial: SerializedContinueConfig,
   ide: IDE,
 ): Promise<Config> {
-  // DEPRECATED - load cuastom slash commands
+  // DEPRECATED - load custom slash commands
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = slashCommandFromDescription(command);

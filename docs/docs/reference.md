@@ -354,6 +354,8 @@ Several experimental config parameters are available, as described below:
 
 - `defaultContext`: Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.=
 - `modelRoles`:
+  - `inlineEdit`: Model title for inline edits.
+  - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
 - `quickActions`: Array of custom quick actions
   - `title` (**required**): Display title for the quick action.
@@ -372,7 +374,7 @@ Example
 {
   "experimental": {
     "modelRoles": {
-      "repoMapFileSelection": "My Favorite Repo Map Selection Model"
+      "inlineEdit": "Edit Model"
     },
     "quickActions": [
       {

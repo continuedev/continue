@@ -399,6 +399,8 @@ Several experimental config parameters are available, as described below:
 
 - `defaultContext`: Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.=
 - `modelRoles`:
+  - `inlineEdit`: Model title for inline edits.
+  - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
 - `readResponseTTS`: If `true`, reads LLM responses aloud with TTS. Default is `true`.
 - `promptPath`: Change the path to custom prompt files from the default ".prompts"

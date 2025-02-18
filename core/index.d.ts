@@ -1029,8 +1029,8 @@ export interface ContextMenuConfig {
 
 export interface ExperimentalModelRoles {
   repoMapFileSelection?: string;
-  inlineEdit?: string; // DEPRECATED - this is removed from config.json if detected
-  applyCodeBlock?: string; // DEPRECATED - this removed from config.json if detected
+  inlineEdit?: string;
+  applyCodeBlock?: string;
 }
 
 export type EditStatus =
