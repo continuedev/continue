@@ -105,7 +105,12 @@
     "wink-nlp-utils": "^2.1.0",
     "workerpool": "^9.1.3",
     "yaml": "^2.4.2",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "@langchain/core": "^0.3.39",
+    "@langchain/deepseek": "^0.0.1",
+    "@langchain/langgraph": "^0.2.45",
+    "@langchain/ollama": "^0.2.0",
+    "@langchain/openai": "^0.4.4"
   },
   "engine-strict": true,
   "engines": {
