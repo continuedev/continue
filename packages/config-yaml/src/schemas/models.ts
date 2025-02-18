@@ -29,7 +29,7 @@ export const modelRolesSchema = z.enum([
   "apply",
   "summarize",
 ]);
-export type ModelRoles = z.infer<typeof modelRolesSchema>;
+export type ModelRole = z.infer<typeof modelRolesSchema>;
 
 export const completionOptionsSchema = z.object({
   contextLength: z.number().optional(),

@@ -18,7 +18,7 @@ import type {
   IdeSettings,
   LLMFullCompletionOptions,
   ModelDescription,
-  ModelRoles,
+  ExperimentalModelRoles,
   PromptLog,
   RangeInFile,
   SerializedContinueConfig,
@@ -52,7 +52,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/addModel": [
     {
       model: SerializedContinueConfig["models"][number];
-      role?: keyof ModelRoles;
+      role?: keyof ExperimentalModelRoles;
     },
     void,
   ];
@@ -62,7 +62,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
-      profileId: string;
+      profileId: string | null;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
@@ -183,8 +183,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/initStatuses": [undefined, void];
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
   addAutocompleteModel: [{ model: ModelDescription }, void];
-
-  "profiles/switch": [{ id: string }, undefined];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [

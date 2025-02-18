@@ -1,4 +1,3 @@
-import { r } from "tar";
 import {
   AssistantChatMessage,
   ChatMessage,
@@ -7,6 +6,7 @@ import {
   MessagePart,
   ToolCallDelta,
 } from "../../index.js";
+import { findLast } from "../../util/findLast.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -17,7 +17,6 @@ import {
   GeminiGenerationConfig,
   GeminiToolFunctionDeclaration,
 } from "./gemini-types.js";
-import { findLast } from "../../util/findLast.js";
 
 class Gemini extends BaseLLM {
   static providerName = "gemini";

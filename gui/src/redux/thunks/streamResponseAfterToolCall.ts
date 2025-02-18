@@ -63,8 +63,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const updatedHistory = getState().session.history;
         const messages = constructMessages(
           [...updatedHistory],
-          defaultModel.model,
-          defaultModel.provider,
+          defaultModel,
           useTools,
         );
         const output = await dispatch(streamNormalInput(messages));

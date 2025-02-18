@@ -867,6 +867,10 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     icon: "nebius.png",
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     packages: [
+      models.deepseekR1Chat,
+      models.deepseekV3Chat,
+      models.QwenQwQ_32b_preview,
+      models.Qwen25Coder_32b,
       models.llama318bChat,
       models.llama3170bChat,
       models.llama31405bChat,
