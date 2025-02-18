@@ -38,10 +38,6 @@ import {
   chatInteractionEventSchema_0_2_0_noCode,
 } from "./chatInteraction/v0.2.0.js";
 import { editInteractionEventAllSchema } from "./editInteraction/index.js";
-import {
-  editInteractionEventSchema_0_2_0,
-  editInteractionEventSchema_0_2_0_noCode,
-} from "./editInteraction/v0.2.0.js";
 
 const semverRegex =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
@@ -96,14 +92,14 @@ export const devDataVersionedSchemas = {
       chatFeedback: chatFeedbackEventSchema_0_2_0,
       tokensGenerated: tokensGeneratedEventSchema_0_2_0,
       chatInteraction: chatInteractionEventSchema_0_2_0,
-      editInteraction: editInteractionEventSchema_0_2_0,
+      // editInteraction: editInteractionEventSchema_0_2_0,
     },
     noCode: {
       autocomplete: autocompleteEventSchema_0_2_0_noCode,
       chatFeedback: chatFeedbackEventSchema_0_2_0_noCode,
       tokensGenerated: tokensGeneratedEventSchema_0_2_0_noCode,
       chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
-      editInteraction: editInteractionEventSchema_0_2_0_noCode,
+      // editInteraction: editInteractionEventSchema_0_2_0_noCode,
     },
   },
 };

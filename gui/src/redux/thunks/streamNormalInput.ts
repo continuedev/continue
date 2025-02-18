@@ -72,17 +72,17 @@ export const streamNormalInput = createAsyncThunk<
           },
         });
       }
-      if (state.session.mode === "edit") {
-        extra.ideMessenger.post("devdata/log", {
-          name: "editInteraction",
-          data: {
-            prompt: next.value.prompt,
-            completion: next.value.completion,
-            modelProvider: defaultModel.provider,
-            modelTitle: defaultModel.title,
-          },
-        });
-      }
+      // else if (state.session.mode === "edit") {
+      //   extra.ideMessenger.post("devdata/log", {
+      //     name: "editInteraction",
+      //     data: {
+      //       prompt: next.value.prompt,
+      //       completion: next.value.completion,
+      //       modelProvider: defaultModel.provider,
+      //       modelTitle: defaultModel.title,
+      //     },
+      //   });
+      // }
     } catch (e) {
       console.error("Failed to send dev data interaction log", e);
     }
