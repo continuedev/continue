@@ -7,7 +7,6 @@ import {
   IContextProvider,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
-import { ControlPlaneClient } from "../../control-plane/client";
 import { TEST_DIR } from "../../test/testDir";
 import FileSystemIde from "../../util/filesystem";
 
@@ -31,7 +30,7 @@ async function getContextProviderExtras(
     ide,
     ideSettingsPromise,
     async (text) => {},
-    new ControlPlaneClient(Promise.resolve(undefined), ideSettingsPromise),
+    Promise.resolve(undefined),
   );
   const { config } = await configHandler.loadConfig();
   if (!config) {
