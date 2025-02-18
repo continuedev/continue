@@ -104,6 +104,7 @@ export class Core {
       progress: 0,
     };
 
+    const ideInfoPromise = messenger.request("getIdeInfo", undefined);
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
@@ -144,6 +145,8 @@ export class Core {
     // Dev Data Logger
     const dataLogger = DataLogger.getInstance();
     dataLogger.core = this;
+    dataLogger.ideInfoPromise = ideInfoPromise;
+    dataLogger.ideSettingsPromise = ideSettingsPromise;
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;

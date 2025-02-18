@@ -13,12 +13,16 @@ import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { joinPathsToUri } from "../util/uri.js";
 import * as URI from "uri-js";
 import { fileURLToPath } from "url";
+import { ZodObject } from "zod";
+import { IdeInfo, IdeSettings } from "../index.js";
 
 const DEFAULT_DEV_DATA_LEVEL: DataLogLevel = "all";
 export const LOCAL_DEV_DATA_VERSION = "0.2.0";
 export class DataLogger {
   private static instance: DataLogger | null = null;
   core?: Core;
+  ideSettingsPromise?: Promise<IdeSettings>;
+  ideInfoPromise?: Promise<IdeInfo>;
 
   private constructor() {}
 
@@ -29,28 +33,39 @@ export class DataLogger {
     return DataLogger.instance;
   }
 
-  addBaseValues(body: object, eventName: string, schema: string): object {
-    if ("eventName" in body) {
-      body.eventName = eventName;
+  async addBaseValues(
+    body: Record<string, any>,
+    eventName: string,
+    schema: string,
+    zodSchema: ZodObject<any>,
+  ): Promise<Record<string, any>> {
+    const newBody = { ...body };
+    const ideSettings = await this.ideSettingsPromise;
+    const ideInfo = await this.ideInfoPromise;
+
+    if ("eventName" in zodSchema.shape) {
+      newBody.eventName = eventName;
     }
-    if ("createdAt" in body) {
-      body.createdAt = new Date().toISOString();
+    if ("timestamp" in zodSchema.shape) {
+      newBody.timestamp = new Date().toISOString();
     }
-    if ("schema" in body) {
-      body.schema = schema;
+    if ("schema" in zodSchema.shape) {
+      newBody.schema = schema;
     }
-    if ("userAgent" in body) {
-      body.userAgent = navigator.userAgent; // TODO sufficient user agent info?
+    if ("userAgent" in zodSchema.shape) {
+      newBody.userAgent = ideInfo
+        ? `${ideInfo.name}/${ideInfo.version} (Continue/${ideInfo.extensionVersion})`
+        : "Unknown/Unknown (Continue/Unknown)";
     }
-    if ("selectedProfileId" in body) {
-      body.selectedProfileId =
+    if ("selectedProfileId" in zodSchema.shape) {
+      newBody.selectedProfileId =
         this.core?.configHandler.currentProfile?.profileDescription.id ?? "";
     }
-    if ("userId" in body) {
-      body.userId = "not-implemented";
+    if ("userId" in zodSchema.shape) {
+      newBody.userId = ideSettings?.userToken ?? "";
     }
 
-    return body;
+    return newBody;
   }
 
   async logDevData(event: DevDataLogEvent) {
@@ -62,14 +77,23 @@ export class DataLogger {
       );
       const localSchema =
         devDataVersionedSchemas[LOCAL_DEV_DATA_VERSION]["all"][event.name];
-      const parsed = localSchema?.safeParse(event.data);
-      if (parsed?.success) {
-        const withBaseValues = this.addBaseValues(
-          parsed.data,
-          event.name,
-          LOCAL_DEV_DATA_VERSION,
+
+      if (!localSchema) {
+        throw new Error(
+          `Schema ${LOCAL_DEV_DATA_VERSION} doesn't exist at level "all"`,
         );
-        fs.writeFileSync(filepath, `${JSON.stringify(withBaseValues)}\n`, {
+      }
+
+      const eventDataWithBaseValues = await this.addBaseValues(
+        event.data,
+        event.name,
+        LOCAL_DEV_DATA_VERSION,
+        localSchema,
+      );
+
+      const parsed = localSchema?.safeParse(eventDataWithBaseValues);
+      if (parsed?.success) {
+        fs.writeFileSync(filepath, `${JSON.stringify(parsed.data)}\n`, {
           flag: "a",
         });
       }
@@ -115,15 +139,19 @@ export class DataLogger {
               );
             }
 
-            const parsed = zodSchema.safeParse(event.data);
+            const eventDataWithBaseValues = await this.addBaseValues(
+              event.data,
+              event.name,
+              schema,
+              zodSchema,
+            );
+
+            const parsed = zodSchema.safeParse(eventDataWithBaseValues);
             if (!parsed.success) {
               throw new Error(
-                `Failed to parse event data ${parsed.error.toString()}`,
+                `Failed to parse event data for event ${event.name} and schema ${schema}\n:${parsed.error.toString()}`,
               );
             }
-
-            // Add base values like createdAt etc. if keys present in body
-            const payload = this.addBaseValues(parsed.data, event.name, schema);
 
             const uriComponents = URI.parse(dataConfig.destination);
 
@@ -139,7 +167,7 @@ export class DataLogger {
                 headers["Authorization"] = `Bearer ${dataConfig.apiKey}`;
               }
 
-              // For Continue events, overwrite the access token
+              // For events going to Continue, overwrite the access token
               if (
                 uriComponents.host?.endsWith(".continue.dev") ||
                 uriComponents.host === "continue.dev"
@@ -159,7 +187,7 @@ export class DataLogger {
                   headers,
                   body: JSON.stringify({
                     name: event.name,
-                    data: payload,
+                    data: parsed.data,
                     schema,
                     level,
                     profileId,

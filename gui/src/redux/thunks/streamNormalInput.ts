@@ -60,19 +60,31 @@ export const streamNormalInput = createAsyncThunk<
     dispatch(addPromptCompletionPair([next.value]));
 
     try {
-      debugger;
-      extra.ideMessenger.post("devdata/log", {
-        name: "chatInteraction",
-        data: {
-          prompt: next.value.prompt,
-          completion: next.value.completion,
-          modelProvider: defaultModel.provider,
-          modelTitle: defaultModel.title,
-          sessionId: state.session.id,
-        },
-      });
+      if (state.session.mode === "chat") {
+        extra.ideMessenger.post("devdata/log", {
+          name: "chatInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: defaultModel.provider,
+            modelTitle: defaultModel.title,
+            sessionId: state.session.id,
+          },
+        });
+      }
+      if (state.session.mode === "edit") {
+        extra.ideMessenger.post("devdata/log", {
+          name: "editInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: defaultModel.provider,
+            modelTitle: defaultModel.title,
+          },
+        });
+      }
     } catch (e) {
-      console.error("Failed to send dev data chatInteraction log");
+      console.error("Failed to send dev data interaction log", e);
     }
   }
 
