@@ -168,14 +168,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
-  useEffect(() => {
-    ideMessenger.request("config/listProfiles", undefined).then((result) => {
-      if (result.status === "success") {
-        dispatch(updateProfilesThunk(result.content));
-      }
-    });
-  }, []);
-
   useWebviewListener(
     "didChangeAvailableProfiles",
     async (data) => {
