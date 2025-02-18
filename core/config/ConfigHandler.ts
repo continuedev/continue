@@ -49,7 +49,6 @@ export class ConfigHandler {
   private additionalContextProviders: IContextProvider[] = [];
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string | null;
-  private selectedOrgId: string | null;
   private localProfileManager: ProfileLifecycleManager;
 
   constructor(
@@ -75,7 +74,6 @@ export class ConfigHandler {
     );
     this.profiles = [this.localProfileManager];
     this.selectedProfileId = localProfileLoader.description.id;
-    this.selectedOrgId = null;
 
     void this.init();
   }
@@ -83,19 +81,10 @@ export class ConfigHandler {
   private async init() {
     // Always load local profile immediately in case control plane doesn't load
     try {
+      await this.loadAssistantsForSelectedOrg();
       await this.loadConfig();
     } catch (e) {
       console.error("Failed to load config: ", e);
-    }
-
-    const workspaceId = await this.getWorkspaceId();
-    const lastSelectedOrgIds =
-      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-    const selectedOrgId = lastSelectedOrgIds[workspaceId];
-
-    // We want to set the org ID before fetching control plane profiles
-    if (selectedOrgId) {
-      this.selectedOrgId = selectedOrgId;
     }
 
     // Load control plane profiles
@@ -138,73 +127,80 @@ export class ConfigHandler {
     }
   }
 
-  async loadPlatformProfiles() {
+  async loadAssistantsForSelectedOrg() {
     // Get the profiles and create their lifecycle managers
-    this.controlPlaneClient
-      .listAssistants(this.selectedOrgId)
-      .then(async (assistants) => {
-        const hubProfiles = await Promise.all(
-          assistants.map(async (assistant) => {
-            let renderedConfig: AssistantUnrolled | undefined = undefined;
-            if (assistant.configResult.config) {
-              renderedConfig = await clientRenderHelper(
-                {
-                  ownerSlug: assistant.ownerSlug,
-                  packageSlug: assistant.packageSlug,
-                },
-                YAML.stringify(assistant.configResult.config),
-                this.ide,
-                this.controlPlaneClient,
-              );
-            }
+    const userId = await this.controlPlaneClient.userId;
+    const selectedOrgId = await this.getSelectedOrgId();
 
-            const profileLoader = new PlatformProfileLoader(
-              { ...assistant.configResult, config: renderedConfig },
-              assistant.ownerSlug,
-              assistant.packageSlug,
-              assistant.iconUrl,
-              assistant.configResult.config?.version ?? "latest",
-              this.controlPlaneClient,
+    if (!userId) {
+      // Not logged in
+      this.profiles = [this.localProfileManager];
+    } else {
+      // Logged in
+      const assistants =
+        await this.controlPlaneClient.listAssistants(selectedOrgId);
+      const hubProfiles = await Promise.all(
+        assistants.map(async (assistant) => {
+          let renderedConfig: AssistantUnrolled | undefined = undefined;
+          if (assistant.configResult.config) {
+            renderedConfig = await clientRenderHelper(
+              {
+                ownerSlug: assistant.ownerSlug,
+                packageSlug: assistant.packageSlug,
+              },
+              YAML.stringify(assistant.configResult.config),
               this.ide,
-              this.ideSettingsPromise,
-              this.writeLog,
-              this.reloadConfig.bind(this),
+              this.controlPlaneClient,
             );
+          }
 
-            return new ProfileLifecycleManager(profileLoader, this.ide);
-          }),
-        );
-
-        this.profiles =
-          this.selectedOrgId === null
-            ? [this.localProfileManager, ...hubProfiles]
-            : hubProfiles;
-
-        this.notifyProfileListeners(
-          this.profiles.map((profile) => profile.profileDescription),
-        );
-
-        // Check the last selected workspace, and reload if it isn't local
-        const workspaceId = await this.getWorkspaceId();
-        const lastSelectedIds =
-          this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
-
-        const selectedProfileId = lastSelectedIds[workspaceId];
-        if (selectedProfileId) {
-          this.selectedProfileId = selectedProfileId;
-          await this.loadConfig();
-        } else {
-          // Otherwise we stick with local profile, and record choice
-          lastSelectedIds[workspaceId] = this.selectedProfileId;
-          this.globalContext.update(
-            "lastSelectedProfileForWorkspace",
-            lastSelectedIds,
+          const profileLoader = new PlatformProfileLoader(
+            { ...assistant.configResult, config: renderedConfig },
+            assistant.ownerSlug,
+            assistant.packageSlug,
+            assistant.iconUrl,
+            assistant.configResult.config?.version ?? "latest",
+            this.controlPlaneClient,
+            this.ide,
+            this.ideSettingsPromise,
+            this.writeLog,
+            this.reloadConfig.bind(this),
           );
-        }
-      })
-      .catch((e) => {
-        console.error("Failed to list assistants: ", e);
-      });
+
+          return new ProfileLifecycleManager(profileLoader, this.ide);
+        }),
+      );
+
+      if (selectedOrgId === null) {
+        // Personal
+        this.profiles = [...hubProfiles, this.localProfileManager];
+      } else {
+        // Organization
+        this.profiles = hubProfiles;
+      }
+    }
+
+    this.notifyProfileListeners(
+      this.profiles.map((profile) => profile.profileDescription),
+    );
+
+    // Check the last selected workspace, and reload if it isn't local
+    const workspaceId = await this.getWorkspaceId();
+    const lastSelectedIds =
+      this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+
+    const selectedProfileId = lastSelectedIds[workspaceId];
+    if (selectedProfileId) {
+      this.selectedProfileId = selectedProfileId;
+      await this.loadConfig();
+    } else {
+      // Otherwise we stick with local profile, and record choice
+      lastSelectedIds[workspaceId] = this.selectedProfileId;
+      this.globalContext.update(
+        "lastSelectedProfileForWorkspace",
+        lastSelectedIds,
+      );
+    }
   }
 
   private platformProfilesRefreshInterval: NodeJS.Timeout | undefined;
@@ -230,8 +226,9 @@ export class ConfigHandler {
   }
 
   private async reloadHubAssistants() {
+    const selectedOrgId = await this.getSelectedOrgId();
     const newFullSlugsList =
-      await this.controlPlaneClient.listAssistantFullSlugs(this.selectedOrgId);
+      await this.controlPlaneClient.listAssistantFullSlugs(selectedOrgId);
 
     if (newFullSlugsList) {
       const shouldReload = this.fullSlugsListsDiffer(
@@ -239,7 +236,7 @@ export class ConfigHandler {
         this.lastFullSlugsList,
       );
       if (shouldReload) {
-        await this.loadPlatformProfiles();
+        await this.loadAssistantsForSelectedOrg();
       }
       this.lastFullSlugsList = newFullSlugsList;
     }
@@ -248,7 +245,7 @@ export class ConfigHandler {
   private async fetchControlPlaneProfiles() {
     if (await useHub(this.ideSettingsPromise)) {
       clearInterval(this.platformProfilesRefreshInterval);
-      await this.loadPlatformProfiles();
+      await this.loadAssistantsForSelectedOrg();
 
       // Every 5 seconds we ask the platform whether there are any assistant updates in the last 5 seconds
       // If so, we do the full (more expensive) reload
@@ -303,8 +300,13 @@ export class ConfigHandler {
     }
   }
 
+  async getSelectedOrgId(): Promise<string | null> {
+    const selectedOrgs =
+      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
+    return selectedOrgs[await this.getWorkspaceId()] ?? null;
+  }
+
   async setSelectedOrgId(orgId: string | null) {
-    this.selectedOrgId = orgId;
     const selectedOrgs =
       this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
     selectedOrgs[await this.getWorkspaceId()] = orgId;
