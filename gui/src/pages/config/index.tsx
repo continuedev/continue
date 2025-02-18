@@ -1,16 +1,16 @@
+import { Listbox, Transition } from "@headlessui/react";
+import { ChevronUpDownIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { SecondaryButton } from "../../components";
 import PageHeader from "../../components/PageHeader";
+import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch } from "../../redux/hooks";
-import { SecondaryButton } from "../../components";
-import { useAuth } from "../../context/Auth";
+import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import { ScopeSelect } from "./ScopeSelect";
 import UserSettingsUI from "./UserSettings";
-import { Listbox, Transition } from "@headlessui/react";
-import { ChevronUpDownIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
-import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 
 function ConfigPage() {
   useNavigationListener();
@@ -122,7 +122,7 @@ function ConfigPage() {
                     leaveFrom="transform opacity-100 scale-100"
                     leaveTo="transform opacity-0 scale-95"
                   >
-                    <Listbox.Options className="bg-vsc-background max-h-80vh absolute mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
+                    <Listbox.Options className="bg-vsc-background max-h-80vh absolute z-50 mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
                       {profiles.map((option, idx) => (
                         <Listbox.Option
                           key={idx}
