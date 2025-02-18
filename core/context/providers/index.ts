@@ -29,7 +29,7 @@ import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import WebContextProvider from "./WebContextProvider";
-import RepoAgentContextProvider from "./RepoAgentContextProvider.js";
+import RepoAgentContextProvider from "./RepoAgentContextProvider";
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
