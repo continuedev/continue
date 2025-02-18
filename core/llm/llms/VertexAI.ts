@@ -16,7 +16,7 @@ class VertexAI extends BaseLLM {
   declare geminiInstance: Gemini;
 
   static defaultOptions: Partial<LLMOptions> | undefined = {
-    maxEmbeddingBatchSize: 5,
+    maxEmbeddingBatchSize: 250,
     region: "us-central1",
   };
 
@@ -35,6 +35,13 @@ class VertexAI extends BaseLLM {
   }
 
   constructor(_options: LLMOptions) {
+    if (_options.region !== "us-central1") {
+      // Any region outside of us-central1 has a max batch size of 5.
+      _options.maxEmbeddingBatchSize = Math.min(
+        _options.maxEmbeddingBatchSize ?? 5,
+        5,
+      );
+    }
     super(_options);
     this.apiBase ??= VertexAI.getDefaultApiBaseFrom(_options);
     this.vertexProvider =
