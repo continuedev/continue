@@ -14,6 +14,19 @@
 }
 ```
 
+### 嵌入模型
+
+LMStudio 支持嵌入断点，使用 `nomic-ai/nomic-embed-text-v1.5-GGUF` 模型（在 2024 年 12 月，检查你的模型）
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "lmstudio",
+    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+  }
+}
+```
+
 ## 设置一个远程实例
 
 要配置一个 LM Studio 的远程实例，在 config.json 中，添加 `"apiBase"` 属性到你的模型中：

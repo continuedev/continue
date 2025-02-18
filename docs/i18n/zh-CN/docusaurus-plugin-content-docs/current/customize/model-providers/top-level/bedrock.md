@@ -3,6 +3,8 @@ title: Amazon Bedrock
 slug: ../bedrock
 ---
 
+Amazon Bedrock 是一个在 AWS 上的全托管服务，通过一个单独的 API ，提供对来自不同的 AI 公司的基础模型的访问。
+
 ## 聊天模型
 
 我们推荐配置 **Claude 3.5 Sonnet** 作为你的聊天模型。
@@ -14,6 +16,23 @@ slug: ../bedrock
       "title": "Claude 3.5 Sonnet",
       "provider": "bedrock",
       "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "region": "us-east-1",
+      "profile": "bedrock"
+    }
+  ]
+}
+```
+
+> 如果你遇到下面的问题，当连接来自 AWS 新的 Claude 3.5 Sonnet 2 模型时 - `400 Invocation of model ID anthropic.claude-3-5-sonnet-20241022-v2:0 with on-demand throughput isn’t supported. Retry your request with the ID or ARN of an inference profile that contains this model.`
+
+> 你可以修复这个，使用下面的 config.json
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "Claude 3.5 Sonnet",
+      "provider": "bedrock",
+      "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
       "region": "us-east-1",
       "profile": "bedrock"
     }
@@ -44,9 +63,19 @@ Bedrock 当前不支持任何自动补全模型。
 
 ## 重排序模型
 
-Bedrock 当前没有任何重排序模型。
+我们推荐配置 `cohere.rerank-v3-5:0` 作为你的重排序模型，你也可以使用 `amazon.rerank-v1:0` 。
 
-[点击这里](../../model-types/reranking.md) 查看重排序模型提供者列表。
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "bedrock",
+    "params": {
+      "model": "cohere.rerank-v3-5:0",
+      "region": "us-west-2"
+    }
+  }
+}
+```
 
 ## 认证
 

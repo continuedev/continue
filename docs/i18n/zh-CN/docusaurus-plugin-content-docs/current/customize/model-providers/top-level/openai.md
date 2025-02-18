@@ -61,6 +61,7 @@ OpenAI 兼容服务器
 - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples)
 - [vLLM](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html)
+- [BerriAI/litellm](https://github.com/BerriAI/litellm)
 
 OpenAI 兼容 API
 

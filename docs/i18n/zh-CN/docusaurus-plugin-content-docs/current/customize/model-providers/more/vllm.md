@@ -1,22 +1,59 @@
 # vLLM
 
-通过 vLLM 使用 `vllm serve` 运行 OpenAI-兼用 服务器。查看他们的 [服务器文档](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) 和 [引擎参数文档](https://docs.vllm.ai/en/latest/models/engine_args.html) 。
+vLLM 是一个快速 LLM 推理的开源库，通常用来同时服务多个用户。它还可以用来在多个 GPU:s 上运行大模型（例如，当它不能放在一个单独的 GPU 时）。运行他们的 OpenAI-兼容服务器，使用 `vllm serve` 。查看他们的 [服务器文档](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) 和 [引擎参数文档](https://docs.vllm.ai/en/latest/usage/engine_args.html) 。
 
 ```shell
-vllm serve NousResearch/Meta-Llama-3-8B-Instruct --max-model-len 1024
+vllm serve meta-llama/Meta-Llama-3.1-8B-Instruct
 ```
 
-Continue 底层实现使用 [OpenAI](../top-level/openai.md) 并自动选择可用的模型。你只需要设置 `apiBase` ，像这样：
+## 聊天模型
+
+我们推荐配置 **Llama3.1 8B** 作为你的聊天模型。
 
 ```json title="config.json"
 {
   "models": [
     {
-      "title": "My vLLM OpenAI-compatible server",
-      "apiBase": "http://localhost:8000/v1"
+      "title": "Llama3.1 8B Instruct",
+      "provider": "vllm",
+      "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
+      "apiBase": "http://<vllm chat endpoint>/v1"
     }
   ]
 }
 ```
 
-[查看代码](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)
+## 自动补全模型
+
+我们推荐配置 **Qwen2.5-Coder 1.5B** 作为你的自动补全模型。
+
+```json title="config.json"
+{
+  "tabAutocompleteModel": {
+    "title": "Qwen2.5-Coder 1.5B",
+    "provider": "vllm",
+    "model": "Qwen/Qwen2.5-Coder-1.5B"
+    "apiBase": "http://<vllm autocomplete endpoint>/v1"
+  }
+}
+```
+
+## 嵌入模型
+
+我们推荐配置 **Nomic Embed Text** 作为你的嵌入模型。
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "vllm",
+    "model": "nomic-ai/nomic-embed-text-v1"
+    "apiBase": "http://<vllm embed endpoint>/v1"
+  }
+}
+```
+
+## 重排序模型
+
+[点击这里](../../model-types/reranking.md) 重看重排序模型提供者列表。
+
+Continue 底层实现使用 [OpenAI](../top-level/openai.md) 。[查看代码](https://github.com/continuedev/continue/blob/main/core/llm/llms/Vllm.ts)

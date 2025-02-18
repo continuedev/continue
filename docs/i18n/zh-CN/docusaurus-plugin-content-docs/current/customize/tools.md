@@ -1,0 +1,35 @@
+---
+title: 工具
+description: 工具使用和定制
+keywords: [工具, 使用, 函数调用, claude, 自动]
+---
+
+工具允许 Continue 在你的 IDE 中操作或更多（当你给了权限）。当前，它们仅支持 [Anthropic](./model-providers/top-level/anthropic.md) 。为了使用工具，点击像下面的输入工具栏图标。
+
+![tools](/img/tool-use-example.png)
+
+为了让你平衡速度和安全性，每个工具可以设置为 3 个模式之一：
+
+- `Automatic`: 当 LLM 请求使用工具， Continue 会自动调用它并发送响应给 LLM 。
+- `Allowed`: 当 LLM 请求使用工具， Continue 首先给你机会对工具 "Cancel" 或 "Continue" 。
+- `Disabled`: LLM 不会知道或能够使用工具。
+
+### 定制工具
+
+当前定制工具可以配置使用 [模型上下文协议](https://modelcontextprotocol.io/introduction) ，一个 Anthropic 的标准提议为了统一提示词，上下文和工具使用。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置本地服务器，然后配置你的 `config.json` 像这样：
+
+```json title="~/.continue/config.json"
+{
+  "experimental": {
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ]
+  }
+}
+```

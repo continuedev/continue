@@ -24,6 +24,7 @@
 - top_k: options.topK - 这个参数限制唯一 token 的数量，当考虑生成序列的下一个 token 时。较高的值增加生成序列的多样性，而较低的值导致更明确的输出。
 - num_predict: options.maxTokens - 这个决定生成 token 的最大数量 (字或字符) ，对于给定的输入提示词。
 - num_thread: options.numThreads - 这是多线程配置选项，控制模型并发使用多少个线程。更到的值导致更快的生成时间，但是也会增加内存使用和复杂性。在本地运行模型时，设置这个为 1 或 2 ，低于你的 CPU 可以处理的线程数量，留给你的 GUI 一些。
+- use_mmap: options.userMmap - 对于 Ollama ，这个参数允许模型映射到内存中。如果禁用，可以增强在低端设备上的响应时间，但是会减慢流式输出。
 
 ## 认证
 

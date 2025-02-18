@@ -5,7 +5,11 @@ keywords: [交互, 嵌入, 重排器, 代码库, 试验性的]
 
 # @Codebase
 
-Continue 索引你的代码库，以便它可以之后自动地拉取你的工作区最相关的上下文。这是通过基于嵌入的检索和关键字搜索结合完成的。默认情况下，所有嵌入都是通过 `all-MiniLM-L6-v2` 本地计算的，保存在 `~/.continue/index` 。
+Continue 索引你的代码库，以便它可以之后自动地拉取你的工作区最相关的上下文。这是通过基于嵌入的检索和关键字搜索结合完成的。默认情况下，所有嵌入都是通过使用 `transformers.js` 本地计算的，保存在 `~/.continue/index` 。
+
+:::info[`transformers.js 不能在 JetBrains 中使用`]
+当前， `transformers.js` 不能在 JetBrains IDEs 中使用。不过，你可以从 [这里的列表](../model-types/embeddings.md) 选择一个不同的嵌入模型。
+:::
 
 目前，代码库检索功能可用在 "codebase" 和 "folder" 上下文提供者。你可以使用它们，通过在输入框输入 `@Codebase` 或 `@Folder` ，然后询问问题。输入框的内容将会与其他代码库（或目录）的嵌入进行比较，来决定相关的文件。
 
@@ -34,7 +38,7 @@ Continue 索引你的代码库，以便它可以之后自动地拉取你的工�
 
 ## 配置
 
-这里有一些选项，让你可以配置 codebase 上下文提供者的行为。这些可以再 `config.json` 设置，对于 codebase 和 folder 上下文提供者是一样的：
+这里有一些选项，让你可以配置 codebase 上下文提供者的行为。这些可以再 `config.json` 设置，对于 codebase, docs 和 folder 上下文提供者是一样的：
 
 ```json title="config.json"
 {
@@ -67,10 +71,12 @@ Continue 索引你的代码库，以便它可以之后自动地拉取你的工�
 
 Continue 遵守 `.gitignore` 文件，为了确定哪些文件不需要索引。如果你想要忽略更多的文件，你可以添加它们到 `.continueignore` 文件，它遵守和 `.gitignore` 完全相同的规则。
 
+Continue 也支持一个 **全局的** `.continueignore` 文件，将作用于所有工作区，可以创建在 `~/.continue/.continueignore` 。
+
 如果你想要查看哪些文件被 Continue 索引，元数据存储在 `~/.continue/index/index.sqlite` 。你可以使用工具，比如 [DB Browser for SQLite](https://sqlitebrowser.org/) 查看这个文件是的 `tag_catalog` 表。
 
-如果你需要强制刷新索引，重新加载 VS Code 窗口使用 `cmd/ctrl + shift + p` + "Reload Window" 。
+如果你需要强制刷新索引，重新加载 VS Code 窗口使用 <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd> + "Reload Window" 。
 
 ## 仓库 map
 
-Claude 3, Llama 3.1, Gemini 1.5 和 GPT-4o 家族的模型在代码库检索时会自动地使用 [仓库 map](../context-providers.md#repository-map) ，允许模型理解你的代码库的结构，并使用它回答问题。当前，仓库 map 仅包含代码库中的文件路径。
+Claude 3, Llama 3.1/3.2, Gemini 1.5 和 GPT-4o 家族的模型在代码库检索时会自动地使用 [仓库 map](../context-providers.md#repository-map) ，允许模型理解你的代码库的结构，并使用它回答问题。当前，仓库 map 仅包含代码库中的文件路径。

@@ -5,6 +5,10 @@ keywords: [模型, 自动补全]
 sidebar_position: 2
 ---
 
+:::info
+This page recommends models and providers for Autocomplete. Read more about how to set up your `config.json` [here](../reference.md).
+:::
+
 ## 最好的总体体验
 
 为了最好的自动补全体验，我们推荐通过 [Mistral API](https://console.mistral.ai/) 使用 Codestral 。这个模型提供高质量的补全，使用极好的代码上下文理解：
@@ -26,27 +30,39 @@ Codestral 的 API key 和通常的 Mistral API 是不同的。如果你使用 Co
 
 ## 本地的，离线的/自托管的体验
 
-对于倾向于本地执行或自托管的， `StarCoder2-3b` 提供了一个对于大多数用户性能和质量的平衡：
+对于倾向于本地执行或自托管的， `Qwen2.5-Coder 1.5B` 提供了一个对于大多数用户性能和质量的平衡，(e.g. using [Ollama](../customize/model-providers/top-level/ollama.md) or [LM Studio](../customize/model-providers/more/lmstudio.md))：
 
 ```json title="config.json""
 {
   "tabAutocompleteModel": {
-    "title": "StarCoder2-3b",
-    "model": "starcoder2:3b",
+    "title": "Qwen2.5-Coder 1.5B",
+    "model": "qwen2.5-coder:1.5b-base",
     "provider": "ollama"
   }
 }
 ```
 
-## 可替代的体验
-
-- 补全太慢？在更弱的机器上，试试 `deepseek-coder:1.3b-base` 更快的补全
-- 有更多的计算？使用 `deepseek-coder:6.7b-base` 获取可能更高质量的建议
+有更多的计算？使用 `qwen2.5-coder:7b-base` 获取可能更高质量的建议。
 
 :::note
-对于 LM Studio 用户，导航到 "My Models" 章节，找到你想要的模型，复制它的路径 (例如， second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf) 。使用这个路径作为你的配置中的 `model` 值。
+对于 LM Studio 用户，导航到 "My Models" 章节，找到你想要的模型，复制它的路径（例如， `Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`）。使用这个路径作为你的配置中的 `model` 值。
 :::
+
+### 使用一个远程的实例
+
+当使用一个远程的实例时，你需要在配置中设置 `"apiBase"` 值：
+
+```json title="config.json""
+{
+  "tabAutocompleteModel": {
+    "title": "Qwen2.5-Coder 1.5B",
+    "model": "qwen2.5-coder:1.5b-base",
+    "provider": "ollama"
+    "apiBase": "http://<my endpoint>:11434"
+  }
+}
+```
 
 ## 其他体验
 
-有很多更多的模型或提供者可以用来补全。在 [这里](../customize/model-types/autocomplete.md) 查看它们。
+有很多更多的模型或提供者可以用来补全。在 [这里](../customize/model-types/autocomplete.md) 查看它们。你也可以在 [这里](../customize/deep-dives/autocomplete.md) 看到更多自动补全配置的示例 
