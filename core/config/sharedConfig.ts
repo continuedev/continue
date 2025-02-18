@@ -5,9 +5,19 @@ import {
   Config,
   SerializedContinueConfig,
 } from "..";
+import {
+  ModelRole,
+  modelRolesSchema,
+} from "@continuedev/config-yaml/dist/schemas/models";
 
 export const sharedConfigSchema = z
   .object({
+    selectedModels: z.record(
+      z.string(),
+      z.record(modelRolesSchema, z.string()),
+    ),
+
+    // boolean fields in config.json
     allowAnonymousTelemetry: z.boolean(),
     disableIndexing: z.boolean(),
     disableSessionTitles: z.boolean(),
@@ -65,7 +75,19 @@ export function salvageSharedConfig(sharedConfig: object): SharedConfigSchema {
   return salvagedConfig;
 }
 
-export function modifyContinueConfigWithSharedConfig<
+// Apply shared config to all forms of config
+// - SerializedContinueConfig (config.json)
+// - Config ("intermediate") - passed to config.ts
+// - ContinueConfig
+// - BrowserSerializedContinueConfig (final converted to be passed to GUI)
+
+// This modify function is split into two steps
+// - modifyAnyConfigWithSharedConfig - includes boolean flags like allowAnonymousTelemetry which
+//   must be added BEFORE config.ts and remote server config apply for JSON
+//   for security reasons
+// - modifyFinalConfigWithSharedConfig - exists because of selectedModelsByRole
+//   Which don't exist on SerializedContinueConfig/Config types, so must be added after the fact
+export function modifyAnyConfigWithSharedConfig<
   T extends
     | ContinueConfig
     | BrowserSerializedContinueConfig
@@ -92,6 +114,7 @@ export function modifyContinueConfigWithSharedConfig<
   configCopy.ui = {
     ...configCopy.ui,
   };
+
   if (sharedConfig.codeBlockToolbarPosition !== undefined) {
     configCopy.ui.codeBlockToolbarPosition =
       sharedConfig.codeBlockToolbarPosition;
@@ -136,27 +159,23 @@ export function modifyContinueConfigWithSharedConfig<
   return configCopy;
 }
 
-// continueConfig.tabAutocompleteOptions = {
-//   ...continueConfig.tabAutocompleteOptions,
-//   useCache: sharedConfig.useAutocompleteCache,
-//   disableInFiles: sharedConfig.disableAutocompleteInFiles,
-//   multilineCompletions: sharedConfig.useAutocompleteMultilineCompletions,
-// };
-// continueConfig.ui = {
-//   ...continueConfig.ui,
-//   codeBlockToolbarPosition: sharedConfig.codeBlockToolbarPosition,
-//   fontSize: sharedConfig.fontSize,
-//   codeWrap: sharedConfig.codeWrap,
-//   displayRawMarkdown: sharedConfig.displayRawMarkdown,
-//   showChatScrollbar: sharedConfig.showChatScrollbar,
-// };
-//   continueConfig.allowAnonymousTelemetry = sharedConfig.allowAnonymousTelemetry;
-//   continueConfig.disableIndexing = sharedConfig.disableIndexing;
-// continueConfig.disableIndexing = sharedConfig.disableIndexing;
-// continueConfig.disableSessionTitles = sharedConfig.disableSessionTitles;
-// continueConfig.experimental = {
-//   ...continueConfig.experimental,
-//   useChromiumForDocsCrawling: sharedConfig.useChromiumForDocsCrawling,
-//   readResponseTTS: sharedConfig.readResponseTTS,
-//   promptPath: sharedConfig.promptPath,
-// };
+export function modifyFinalConfigWithSharedConfig<
+  T extends ContinueConfig | BrowserSerializedContinueConfig,
+>(
+  continueConfig: T,
+  sharedConfig: SharedConfigSchema,
+  selectedProfileId: string | null,
+): T {
+  const configCopy = { ...continueConfig };
+  const selectedModelsForProfile: Record<ModelRole, string | null> = {
+    apply: null,
+    autocomplete: null,
+    chat: null,
+    edit: null,
+    embed: null,
+    rerank: null,
+    summarize: null,
+  };
+  configCopy.selectedModelByRole = selectedModelsForProfile;
+  return configCopy;
+}

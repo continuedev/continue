@@ -37,7 +37,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
-import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
+import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { llmsFromModelConfig } from "./models";
 
@@ -132,12 +132,30 @@ async function configYamlToContinueConfig(
       faviconUrl: doc.faviconUrl,
     })),
     contextProviders: [],
+    modelsByRole: {
+      chat: [],
+      edit: [],
+      apply: [],
+      embed: [],
+      autocomplete: [],
+      rerank: [],
+      summarize: [],
+    },
+    selectedModelByRole: {
+      chat: null, // not currently used - defaultModel on GUI is used
+      edit: null, // not currently used
+      apply: null,
+      embed: null,
+      autocomplete: null,
+      rerank: null,
+      summarize: null,
+    },
   };
 
   // Models
   const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
+    model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 roles if not specified
     if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
       // Main model array
       const llms = await llmsFromModelConfig(
@@ -392,7 +410,7 @@ export async function loadContinueConfigFromYaml(
   // Apply shared config
   // TODO: override several of these values with user/org shared config
   const sharedConfig = new GlobalContext().getSharedConfig();
-  const withShared = modifyContinueConfigWithSharedConfig(
+  const withShared = modifyAnyConfigWithSharedConfig(
     continueConfig,
     sharedConfig,
   );

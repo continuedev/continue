@@ -62,7 +62,11 @@ import {
   getEsbuildBinaryPath,
 } from "../util/paths";
 
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import {
+  ConfigResult,
+  ConfigValidationError,
+  ModelRole,
+} from "@continuedev/config-yaml";
 import { useHub } from "../control-plane/env";
 import { localPathToUri } from "../util/pathToUri";
 import {
@@ -72,7 +76,7 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
+import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
@@ -178,7 +182,7 @@ async function serializedToIntermediateConfig(
   initial: SerializedContinueConfig,
   ide: IDE,
 ): Promise<Config> {
-  // DEPRECATED - load custom slash commands
+  // DEPRECATED - load cuastom slash commands
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = slashCommandFromDescription(command);
@@ -497,6 +501,24 @@ async function intermediateToFinalConfig(
     tabAutocompleteModels,
     reranker: config.reranker as any,
     tools: allTools,
+    modelsByRole: {
+      chat: [],
+      edit: [],
+      apply: [],
+      embed: [],
+      autocomplete: [],
+      rerank: [],
+      summarize: [],
+    },
+    selectedModelByRole: {
+      chat: null,
+      edit: null,
+      apply: null,
+      embed: null,
+      autocomplete: null,
+      rerank: null,
+      summarize: null,
+    },
   };
 
   // Apply MCP if specified
@@ -541,27 +563,31 @@ async function intermediateToFinalConfig(
   return { config: continueConfig, errors };
 }
 
+function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
+  return {
+    provider: llm.providerName,
+    model: llm.model,
+    title: llm.title ?? llm.model,
+    apiKey: llm.apiKey,
+    apiBase: llm.apiBase,
+    contextLength: llm.contextLength,
+    template: llm.template,
+    completionOptions: llm.completionOptions,
+    systemMessage: llm.systemMessage,
+    requestOptions: llm.requestOptions,
+    promptTemplates: llm.promptTemplates as any,
+    capabilities: llm.capabilities,
+    roles: llm.roles,
+  };
+}
+
 async function finalToBrowserConfig(
   final: ContinueConfig,
   ide: IDE,
 ): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
-    models: final.models.map((m) => ({
-      provider: m.providerName,
-      model: m.model,
-      title: m.title ?? m.model,
-      apiKey: m.apiKey,
-      apiBase: m.apiBase,
-      contextLength: m.contextLength,
-      template: m.template,
-      completionOptions: m.completionOptions,
-      systemMessage: m.systemMessage,
-      requestOptions: m.requestOptions,
-      promptTemplates: m.promptTemplates as any,
-      capabilities: m.capabilities,
-      roles: m.roles,
-    })),
+    models: final.models.map(llmToSerializedModelDescription),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
     slashCommands: final.slashCommands?.map((s) => ({
@@ -580,6 +606,13 @@ async function finalToBrowserConfig(
     tools: final.tools,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
     usePlatform: await useHub(ide.getIdeSettings()),
+    modelsByRole: Object.fromEntries(
+      Object.entries(final.modelsByRole).map(([k, v]) => [
+        k,
+        v.map(llmToSerializedModelDescription),
+      ]),
+    ) as unknown as Record<ModelRole, ModelDescription[]>, // TODO better types here
+    selectedModelByRole: final.selectedModelByRole,
   };
 }
 
@@ -798,10 +831,7 @@ async function loadContinueConfigFromJson(
   // Apply shared config
   // TODO: override several of these values with user/org shared config
   const sharedConfig = new GlobalContext().getSharedConfig();
-  const withShared = modifyContinueConfigWithSharedConfig(
-    serialized,
-    sharedConfig,
-  );
+  const withShared = modifyAnyConfigWithSharedConfig(serialized, sharedConfig);
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(withShared, ide);

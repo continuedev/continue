@@ -43,13 +43,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-  | "loading"
-  | "indexing"
-  | "done"
-  | "failed"
-  | "paused"
-  | "disabled"
-  | "cancelled";
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
@@ -667,10 +667,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-      isUntitled: boolean;
-      path: string;
-      contents: string;
-    }
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
   >;
 
   getLastFileSaveTimestamp?(): number;
@@ -853,11 +853,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-  | string
-  | {
-    type: "text";
-    text: string;
-  }[];
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 export interface ToolExtras {
@@ -1028,9 +1028,9 @@ export interface ContextMenuConfig {
 }
 
 export interface ExperimentalModelRoles {
-  inlineEdit?: string;
-  applyCodeBlock?: string;
   repoMapFileSelection?: string;
+  inlineEdit?: string; // DEPRECATED - this is removed from config.json if detected
+  applyCodeBlock?: string; // DEPRECATED - this removed from config.json if detected
 }
 
 export type EditStatus =
@@ -1186,9 +1186,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1222,6 +1222,8 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  modelsByRole: Record<ModelRole, ILLM[]>;
+  selectedModelByRole: Record<ModelRole, string | null>;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1244,6 +1246,8 @@ export interface BrowserSerializedContinueConfig {
   tools: Tool[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  modelsByRole: Record<ModelRole, ModelDescription[]>;
+  selectedModelByRole: Record<ModelRole, string | null>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
@@ -1279,9 +1283,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-    | { error: string; details?: never }
-    | { details: PackageDetailsSuccess; error?: never }
-  );
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;

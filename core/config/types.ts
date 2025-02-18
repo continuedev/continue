@@ -957,8 +957,6 @@ declare global {
   }
   
   interface ExperimentalModelRoles {
-    inlineEdit?: string;
-    applyCodeBlock?: string;
     repoMapFileSelection?: string;
   }
   

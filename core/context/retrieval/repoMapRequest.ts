@@ -16,7 +16,7 @@ function isSupportedModel(
   config: ContinueConfig,
   modelTitle?: string,
 ): boolean {
-  if (config.experimental?.modelRoles?.applyCodeBlock) {
+  if (config.experimental?.modelRoles?.repoMapFileSelection) {
     return true;
   }
 

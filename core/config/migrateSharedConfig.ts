@@ -124,6 +124,46 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
         effected = true;
       }
 
+      const { modelRoles, ...withoutModelRoles } = migratedExperimental;
+      if (modelRoles !== undefined) {
+        let migratedModelRoles = { ...modelRoles };
+
+        const { applyCodeBlock, ...rest90 } = migratedModelRoles;
+        if (applyCodeBlock !== undefined) {
+          shareConfigUpdates.selectedModels = {
+            ...currentSharedConfig.selectedModels,
+            local: {
+              ...currentSharedConfig.selectedModels?.["local"],
+              apply: applyCodeBlock,
+            },
+          };
+          migratedModelRoles = rest90;
+          effected = true;
+        }
+
+        const { inlineEdit, ...rest91 } = migratedModelRoles;
+        if (inlineEdit !== undefined) {
+          shareConfigUpdates.selectedModels = {
+            ...currentSharedConfig.selectedModels,
+            local: {
+              ...currentSharedConfig.selectedModels?.["local"],
+              edit: inlineEdit,
+            },
+          };
+          migratedModelRoles = rest91;
+          effected = true;
+        }
+
+        if (Object.keys(migratedModelRoles).length > 0) {
+          migratedExperimental = {
+            ...migratedExperimental,
+            modelRoles: migratedModelRoles,
+          };
+        } else {
+          migratedExperimental = withoutModelRoles;
+        }
+      }
+
       if (Object.keys(migratedExperimental).length > 0) {
         config = {
           ...withoutExperimental,
