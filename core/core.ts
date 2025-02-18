@@ -936,6 +936,7 @@ export class Core {
     on("didChangeSelectedOrg", (msg) => {
       void this.configHandler.setSelectedOrgId(msg.data.id);
       void this.configHandler.reloadConfig();
+      void this.configHandler.loadPlatformProfiles();
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
