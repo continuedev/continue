@@ -50,22 +50,27 @@ export class ConfigHandler {
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string | null;
   private localProfileManager: ProfileLifecycleManager;
+  private controlPlaneClient: ControlPlaneClient;
 
   constructor(
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => Promise<void>,
-    private controlPlaneClient: ControlPlaneClient,
+    private sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
     this.writeLog = writeLog;
+    this.controlPlaneClient = new ControlPlaneClient(
+      sessionInfoPromise,
+      ideSettingsPromise,
+    );
 
     // Set local profile as default
     const localProfileLoader = new LocalProfileLoader(
       ide,
       ideSettingsPromise,
-      controlPlaneClient,
+      this.controlPlaneClient,
       writeLog,
     );
     this.localProfileManager = new ProfileLifecycleManager(
@@ -125,6 +130,10 @@ export class ConfigHandler {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
+  }
+
+  async listOrganizations() {
+    return await this.controlPlaneClient.listOrganizations();
   }
 
   async loadAssistantsForSelectedOrg() {
