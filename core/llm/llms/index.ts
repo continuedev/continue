@@ -13,6 +13,7 @@ import Asksage from "./Asksage";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
+import BedrockAgent from "./BedrockAgent";
 import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
@@ -76,6 +77,7 @@ export const LLMClasses = [
   Mistral,
   Bedrock,
   BedrockImport,
+  BedrockAgent,
   SageMaker,
   DeepInfra,
   Flowise,

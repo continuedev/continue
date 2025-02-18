@@ -178,6 +178,7 @@
             "cohere",
             "bedrock",
             "bedrockimport",
+            "bedrockagent",
             "sagemaker",
             "together",
             "novita",
@@ -448,7 +449,7 @@
           }
         }
       },
-      "required": ["title", "provider", "model"],
+      "required": ["title", "provider"],
       "allOf": [
         {
           "if": {
@@ -508,6 +509,48 @@
           },
           "then": {
             "required": ["modelArn"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "bedrockagent"
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "agentId": {
+                "type": "string"
+              },
+              "agentAliasId": {
+                "type": "string"
+              }
+            },
+            "required": ["agentId", "agentAliasId"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["bedrockagent"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "agentId": {
+                "type": "string"
+              },
+              "agentAliasId": {
+                "type": "string"
+              }
+            },
+            "required": ["agentId", "agentAliasId"]
           }
         },
         {

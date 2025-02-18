@@ -503,6 +503,8 @@ export interface LLMOptions {
   // AWS options
   profile?: string;
   modelArn?: string;
+  agentId?: string;
+  agentAliasId?: string; 
 
   // AWS and GCP Options
   region?: string;
