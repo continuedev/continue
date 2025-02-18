@@ -27,13 +27,6 @@ export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
             ...promptLog,
             feedback,
             sessionId,
-
-            eventName: "chatFeedback",
-            createdAt: "",
-            schema: "",
-            userAgent: "",
-            selectedProfileId: "",
-            userId: "",
           },
         });
       }

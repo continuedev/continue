@@ -3,7 +3,7 @@ import { tokensGeneratedEventAllSchema } from "./index.js";
 export const tokensGeneratedEventSchema_0_2_0 =
   tokensGeneratedEventAllSchema.pick({
     // base
-    createdAt: true,
+    timestamp: true,
     userId: true,
     userAgent: true,
     selectedProfileId: true,

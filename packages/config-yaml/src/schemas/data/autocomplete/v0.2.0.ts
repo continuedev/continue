@@ -2,7 +2,7 @@ import { autocompleteEventAllSchema } from "./index.js";
 
 export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
   // base
-  createdAt: true,
+  timestamp: true,
   userId: true,
   userAgent: true,
   selectedProfileId: true,
@@ -11,7 +11,6 @@ export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
 
   // autocomplete-specific
   disable: true,
-  useFileSuffix: true,
   maxPromptTokens: true,
   debounceDelay: true,
   maxSuffixPercentage: true,
@@ -24,7 +23,6 @@ export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
   useCache: true,
   onlyMyCode: true,
   useRecentlyEdited: true,
-  disableInFiles: true,
   useImports: true,
   accepted: true,
   time: true,
@@ -34,13 +32,13 @@ export const autocompleteEventSchema_0_2_0 = autocompleteEventAllSchema.pick({
   completion: true,
   modelProvider: true,
   modelName: true,
-  completionOptions: true,
   cacheHit: true,
   filepath: true,
   gitRepo: true,
   completionId: true,
   uniqueId: true,
-  timestamp: true,
+
+  // Note objects (completionOptions and disableInfiles) removed from 0.1.0 => 0.2.0
 });
 
 export const autocompleteEventSchema_0_2_0_noCode =

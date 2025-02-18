@@ -100,13 +100,7 @@ export class AutocompleteLoggingService {
       name: "autocomplete",
       data: {
         ...outcome,
-        eventName: "autocomplete",
-        createdAt: "",
-        schema: "",
-        userAgent: "",
-        selectedProfileId: "",
-        userId: "",
-        useFileSuffix: true,
+        useFileSuffix: true, // from outdated schema
       },
     });
 

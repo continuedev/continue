@@ -32,6 +32,16 @@ import {
   tokensGeneratedEventSchema_0_2_0,
   tokensGeneratedEventSchema_0_2_0_noCode,
 } from "./tokensGenerated/v0.2.0.js";
+import { chatInteractionEventAllSchema } from "./chatInteraction/index.js";
+import {
+  chatInteractionEventSchema_0_2_0,
+  chatInteractionEventSchema_0_2_0_noCode,
+} from "./chatInteraction/v0.2.0.js";
+import { editInteractionEventAllSchema } from "./editInteraction/index.js";
+import {
+  editInteractionEventSchema_0_2_0,
+  editInteractionEventSchema_0_2_0_noCode,
+} from "./editInteraction/v0.2.0.js";
 
 const semverRegex =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/;
@@ -60,6 +70,8 @@ const devEventAllVersionDataSchemas = z.object({
   quickEdit: quickEditEventAllSchema,
   chatFeedback: chatFeedbackEventAllSchema,
   tokensGenerated: tokensGeneratedEventAllSchema,
+  chatInteraction: chatInteractionEventAllSchema,
+  editInteraction: editInteractionEventAllSchema,
 });
 
 // Version and level specific schemas are organized here
@@ -83,11 +95,15 @@ export const devDataVersionedSchemas = {
       autocomplete: autocompleteEventSchema_0_2_0,
       chatFeedback: chatFeedbackEventSchema_0_2_0,
       tokensGenerated: tokensGeneratedEventSchema_0_2_0,
+      chatInteraction: chatInteractionEventSchema_0_2_0,
+      editInteraction: editInteractionEventSchema_0_2_0,
     },
     noCode: {
       autocomplete: autocompleteEventSchema_0_2_0_noCode,
       chatFeedback: chatFeedbackEventSchema_0_2_0_noCode,
       tokensGenerated: tokensGeneratedEventSchema_0_2_0_noCode,
+      chatInteraction: chatInteractionEventSchema_0_2_0_noCode,
+      editInteraction: editInteractionEventSchema_0_2_0_noCode,
     },
   },
 };
@@ -99,7 +115,15 @@ type DevEventAllVersionsSchema<T extends DevEventName> = DevEventDataSchemas[T];
 export type DevDataLogEvent = {
   [K in DevEventName]: {
     name: K;
-    data: DevEventAllVersionsSchema<K>;
+    data: Omit<
+      DevEventAllVersionsSchema<K>,
+      | "eventName"
+      | "schema"
+      | "timestamp"
+      | "userId"
+      | "userAgent"
+      | "selectedProfileId"
+    >;
   };
 }[DevEventName];
 

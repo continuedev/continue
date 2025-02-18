@@ -29,7 +29,10 @@ export class DataLogger {
     return DataLogger.instance;
   }
 
-  addBaseValues(body: object, schema: string): object {
+  addBaseValues(body: object, eventName: string, schema: string): object {
+    if ("eventName" in body) {
+      body.eventName = eventName;
+    }
     if ("createdAt" in body) {
       body.createdAt = new Date().toISOString();
     }
@@ -63,6 +66,7 @@ export class DataLogger {
       if (parsed?.success) {
         const withBaseValues = this.addBaseValues(
           parsed.data,
+          event.name,
           LOCAL_DEV_DATA_VERSION,
         );
         fs.writeFileSync(filepath, `${JSON.stringify(withBaseValues)}\n`, {
@@ -119,7 +123,7 @@ export class DataLogger {
             }
 
             // Add base values like createdAt etc. if keys present in body
-            const payload = this.addBaseValues(parsed.data, schema);
+            const payload = this.addBaseValues(parsed.data, event.name, schema);
 
             const uriComponents = URI.parse(dataConfig.destination);
 
@@ -136,7 +140,10 @@ export class DataLogger {
               }
 
               // For Continue events, overwrite the access token
-              if (uriComponents.host?.endsWith(".continue.dev")) {
+              if (
+                uriComponents.host?.endsWith(".continue.dev") ||
+                uriComponents.host === "continue.dev"
+              ) {
                 //
                 const accessToken =
                   await this.core?.controlPlaneClient.getAccessToken();
