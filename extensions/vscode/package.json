@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.262",
+  "version": "0.9.265",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -711,7 +711,7 @@
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
     "svg-builder": "^2.0.0",
-    "systeminformation": "^5.22.10",
+    "systeminformation": "^5.23.7",
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
     "uuid": "^9.0.1",
