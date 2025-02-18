@@ -107,7 +107,10 @@ export function AssistantSelectOptions({
             onClick={() => navigate(ROUTES.CONFIG)}
           >
             {selectedOrganization?.iconUrl ? (
-              <img src={selectedOrganization.iconUrl} className="h-4 w-4" />
+              <img
+                src={selectedOrganization.iconUrl}
+                className="h-4 w-4 rounded-full"
+              />
             ) : (
               <BuildingOfficeIcon className="h-4 w-4" />
             )}
