@@ -33,6 +33,7 @@ export async function retrieveContextItemsFromEmbeddings(
         "or configure your own. See here to learn more: " +
         "https://docs.continue.dev/customize/model-types/embeddings",
     );
+    return [];
   }
 
   // Get tags to retrieve for

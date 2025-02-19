@@ -41,13 +41,24 @@ const ModelRoleSelector = ({
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>
         {({ open }) => (
           <div className="relative">
-            <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-2 py-1 text-left">
-              <span className="lines lines-1">
-                {selectedModel?.title ?? `No ${displayName} models`}
-              </span>
-              <div className="pointer-events-none flex items-center">
-                <ChevronUpDownIcon className="h-3.5 w-3.5" aria-hidden="true" />
-              </div>
+            <Listbox.Button
+              className={`border-vsc-input-border bg-vsc-background ${!!models.length ? "hover:bg-vsc-input-background cursor-pointer" : ""} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-2 py-1 text-left`}
+            >
+              {models.length === 0 ? (
+                <span className="text-lightgray italic">{`No ${displayName} models`}</span>
+              ) : (
+                <span className="lines lines-1">
+                  {selectedModel?.title ?? `Select ${displayName} model`}
+                </span>
+              )}
+              {models.length ? (
+                <div className="pointer-events-none flex items-center">
+                  <ChevronUpDownIcon
+                    className="h-3.5 w-3.5"
+                    aria-hidden="true"
+                  />
+                </div>
+              ) : null}
             </Listbox.Button>
 
             <Transition
