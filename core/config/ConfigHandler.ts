@@ -56,7 +56,7 @@ export class ConfigHandler {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => Promise<void>,
-    private sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
+    sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
