@@ -60,7 +60,7 @@ export interface IndexingStatus {
   progress: number;
   description: string;
   status: "indexing" | "complete" | "paused" | "failed" | "aborted" | "pending";
-  embeddingsProviderId: string;
+  embeddingsProviderId?: string;
   isReindexing?: boolean;
   debugInfo?: string;
   title: string;
@@ -179,8 +179,8 @@ export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 export interface ContextProviderExtras {
   config: ContinueConfig;
   fullInput: string;
-  embeddingsProvider: ILLM;
-  reranker: ILLM | undefined;
+  embeddingsProvider: ILLM | null;
+  reranker: ILLM | null;
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
@@ -1213,11 +1213,8 @@ export interface ContinueConfig {
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
-  embeddingsProvider: ILLM;
-  tabAutocompleteModels?: ILLM[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
-  reranker?: ILLM;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
@@ -1237,9 +1234,7 @@ export interface BrowserSerializedContinueConfig {
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
-  embeddingsProvider?: string;
   ui?: ContinueUIConfig;
-  reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];

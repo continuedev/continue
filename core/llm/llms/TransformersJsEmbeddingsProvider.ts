@@ -43,7 +43,7 @@ export class TransformersJsEmbeddingsProvider extends BaseLLM {
   static maxGroupSize: number = 1;
   static model: string = "all-MiniLM-L6-v2";
   static mockVector: number[] = Array.from({ length: 384 }).fill(2) as number[];
-  static title: string = "Transformers.js";
+  static title: string = "Transformers.js (Built-In)";
 
   static defaultOptions: Partial<LLMOptions> | undefined = {
     model: TransformersJsEmbeddingsProvider.model,

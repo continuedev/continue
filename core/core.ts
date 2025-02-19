@@ -390,11 +390,11 @@ export class Core {
         const items = await provider.getContextItems(query, {
           config,
           llm,
-          embeddingsProvider: config.embeddingsProvider,
+          embeddingsProvider: config.selectedModelByRole.embed,
           fullInput,
           ide,
           selectedCode,
-          reranker: config.reranker,
+          reranker: config.selectedModelByRole.rerank,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
@@ -415,26 +415,25 @@ export class Core {
         let knownError = false;
 
         if (e instanceof Error) {
-          // A specific error where we're forcing the presence of embeddings provider on the config
-          // But Jetbrains doesn't support transformers JS
-          // So if a context provider needs it it will throw this error when the file isn't found
-          if (e.message.includes("all-MiniLM-L6-v2")) {
-            knownError = true;
-            const toastOption = "See Docs";
-            void this.ide
-              .showToast(
-                "error",
-                `Set up an embeddings model to use @${name}`,
-                toastOption,
-              )
-              .then((userSelection) => {
-                if (userSelection === toastOption) {
-                  void this.ide.openUrl(
-                    "https://docs.continue.dev/customize/model-types/embeddings",
-                  );
-                }
-              });
-          }
+          // After removing transformers JS embeddings provider from jetbrains
+          // Should no longer see this error
+          // if (e.message.toLowerCase().includes("embeddings provider")) {
+          //   knownError = true;
+          //   const toastOption = "See Docs";
+          //   void this.ide
+          //     .showToast(
+          //       "error",
+          //       `Set up an embeddings model to use @${name}`,
+          //       toastOption,
+          //     )
+          //     .then((userSelection) => {
+          //       if (userSelection === toastOption) {
+          //         void this.ide.openUrl(
+          //           "https://docs.continue.dev/customize/model-types/embeddings",
+          //         );
+          //       }
+          //     });
+          // }
         }
         if (!knownError) {
           void this.ide.showToast(

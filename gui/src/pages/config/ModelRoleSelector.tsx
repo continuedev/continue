@@ -45,7 +45,7 @@ const ModelRoleSelector = ({
               className={`border-vsc-input-border bg-vsc-background ${!!models.length ? "hover:bg-vsc-input-background cursor-pointer" : ""} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-2 py-1 text-left`}
             >
               {models.length === 0 ? (
-                <span className="text-lightgray italic">{`No ${displayName} models`}</span>
+                <span className="text-lightgray italic">{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
               ) : (
                 <span className="lines lines-1">
                   {selectedModel?.title ?? `Select ${displayName} model`}

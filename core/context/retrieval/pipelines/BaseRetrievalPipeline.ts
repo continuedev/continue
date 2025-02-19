@@ -7,6 +7,8 @@ import { FullTextSearchCodebaseIndex } from "../../../indexing/FullTextSearchCod
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
 import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache";
 
+const DEFAULT_CHUNK_SIZE = 384;
+
 export interface RetrievalPipelineOptions {
   llm: ILLM;
   config: ContinueConfig;
@@ -16,13 +18,13 @@ export interface RetrievalPipelineOptions {
   nFinal: number;
   tags: BranchAndDir[];
   filterDirectory?: string;
-  includeEmbeddings?: boolean; // Used to handle JB w/o an embeddings model
 }
 
 export interface RetrievalPipelineRunArguments {
   query: string;
   tags: BranchAndDir[];
   filterDirectory?: string;
+  includeEmbeddings: boolean;
 }
 
 export interface IRetrievalPipeline {
@@ -35,7 +37,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
 
   constructor(protected readonly options: RetrievalPipelineOptions) {
     this.lanceDbIndex = new LanceDbIndex(
-      options.config.embeddingsProvider,
+      options.config.selectedModelByRole.embed,
       (uri) => options.ide.readFile(uri),
     );
   }
@@ -109,7 +111,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
         filepath,
         contents,
         maxChunkSize:
-          this.options.config.embeddingsProvider.maxEmbeddingChunkSize,
+          this.options.config.selectedModelByRole.embed?.maxEmbeddingChunkSize ?? DEFAULT_CHUNK_SIZE,
         digest: filepath,
       });
 

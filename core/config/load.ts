@@ -18,6 +18,7 @@ import {
   EmbeddingsProviderDescription,
   IContextProvider,
   IDE,
+  IdeInfo,
   IdeSettings,
   IdeType,
   ILLM,
@@ -243,6 +244,7 @@ async function intermediateToFinalConfig(
   config: Config,
   ide: IDE,
   ideSettings: IdeSettings,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -442,15 +444,15 @@ async function intermediateToFinalConfig(
 
   // Embeddings Provider
   function getEmbeddingsILLM(
-    configEmbedder: EmbeddingsProviderDescription | ILLM | undefined,
-  ): ILLM {
-    if (!configEmbedder) {
-      return new TransformersJsEmbeddingsProvider();
+    embedConfig: EmbeddingsProviderDescription | ILLM | undefined,
+  ): ILLM | null {
+    if (!embedConfig) {
+      return null;
     }
-    if ("providerName" in configEmbedder) {
-      return configEmbedder;
+    if ("providerName" in embedConfig) {
+      return embedConfig;
     }
-    const { provider, ...options } = configEmbedder;
+    const { provider, ...options } = embedConfig;
     const embeddingsProviderClass = allEmbeddingsProviders[provider];
     if (embeddingsProviderClass) {
       if (
@@ -477,16 +479,16 @@ async function intermediateToFinalConfig(
         message: `Embeddings provider ${provider} not found. Using default`,
       });
     }
-    return new TransformersJsEmbeddingsProvider();
+    return null;
   }
   const newEmbedder = getEmbeddingsILLM(config.embeddingsProvider);
 
   // Reranker
   function getRerankingILLM(
     rerankingConfig: ILLM | RerankerDescription | undefined,
-  ): ILLM | undefined {
+  ): ILLM | null {
     if (!rerankingConfig) {
-      return undefined;
+      return null;
     }
     if ("providerName" in rerankingConfig) {
       return rerankingConfig;
@@ -501,7 +503,7 @@ async function intermediateToFinalConfig(
           fatal: false,
           message: `Unknown reranking model ${params?.modelTitle}`,
         });
-        return undefined;
+        return null;
       } else {
         return new LLMReranker(llm);
       }
@@ -512,7 +514,7 @@ async function intermediateToFinalConfig(
       };
       return new rerankerClass(llmOptions);
     }
-    return undefined;
+    return null;
   }
   const newReranker = getRerankingILLM(config.reranker);
 
@@ -520,17 +522,14 @@ async function intermediateToFinalConfig(
     ...config,
     contextProviders,
     models,
-    embeddingsProvider: newEmbedder,
-    tabAutocompleteModels,
-    reranker: newReranker,
     tools: allTools,
     modelsByRole: {
       chat: models,
       edit: models,
       apply: models,
       summarize: models,
-      embed: [newEmbedder],
       autocomplete: [...tabAutocompleteModels],
+      embed: newEmbedder ? [newEmbedder] : [],
       rerank: newReranker ? [newReranker] : [],
     },
     selectedModelByRole: {
@@ -619,6 +618,18 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Add transformers JS to the embed models list if not already added
+  if (
+    ideInfo.ideType === "vscode" &&
+    !continueConfig.modelsByRole.embed.find(
+      (m) => m.providerName === "transformers.js",
+    )
+  ) {
+    continueConfig.modelsByRole.embed.push(
+      new TransformersJsEmbeddingsProvider(),
+    );
+  }
+
   return { config: continueConfig, errors };
 }
 
@@ -658,7 +669,6 @@ async function finalToBrowserConfig(
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,
     userToken: final.userToken,
-    embeddingsProvider: final.embeddingsProvider?.embeddingId,
     ui: final.ui,
     experimental: final.experimental,
     docs: final.docs,
@@ -864,7 +874,7 @@ async function loadContinueConfigFromJson(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
-  ideType: IdeType,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -878,7 +888,7 @@ async function loadContinueConfigFromJson(
   } = loadSerializedConfig(
     workspaceConfigs,
     ideSettings,
-    ideType,
+    ideInfo.ideType,
     overrideConfigJson,
     ide,
   );
@@ -901,7 +911,10 @@ async function loadContinueConfigFromJson(
   let intermediate = await serializedToIntermediateConfig(withShared, ide);
 
   // Apply config.ts to modify intermediate config
-  const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
+  const configJsContents = await buildConfigTsandReadConfigJs(
+    ide,
+    ideInfo.ideType,
+  );
   if (configJsContents) {
     try {
       // Try config.ts first
@@ -961,6 +974,7 @@ async function loadContinueConfigFromJson(
       intermediate,
       ide,
       ideSettings,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,

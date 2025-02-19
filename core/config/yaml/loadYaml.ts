@@ -14,8 +14,8 @@ import {
   ContinueConfig,
   IContextProvider,
   IDE,
+  IdeInfo,
   IdeSettings,
-  IdeType,
   SlashCommand,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
@@ -98,6 +98,7 @@ async function configYamlToContinueConfig(
   config: AssistantUnrolled,
   ide: IDE,
   ideSettings: IdeSettings,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -111,10 +112,8 @@ async function configYamlToContinueConfig(
       ...(config.prompts?.map(slashFromCustomCommand) ?? []),
     ],
     models: [],
-    tabAutocompleteModels: [],
     tools: allTools,
     systemMessage: config.rules?.join("\n"),
-    embeddingsProvider: new TransformersJsEmbeddingsProvider(),
     experimental: {
       modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
         transport: {
@@ -188,17 +187,66 @@ async function configYamlToContinueConfig(
     }
 
     if (model.roles?.includes("autocomplete")) {
-      continueConfig.tabAutocompleteModels?.push(...llms);
       continueConfig.modelsByRole.autocomplete.push(...llms);
     }
 
     if (model.roles?.includes("embed")) {
-      continueConfig.modelsByRole.embed.push(...llms);
+      const { provider, ...options } = model;
+      const embeddingsProviderClass = allEmbeddingsProviders[provider];
+      if (embeddingsProviderClass) {
+        if (
+          embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
+        ) {
+          continueConfig.modelsByRole.embed.push(new embeddingsProviderClass());
+        } else {
+          continueConfig.modelsByRole.embed.push(
+            new embeddingsProviderClass(
+              options,
+              (url: string | URL, init: any) =>
+                fetchwithRequestOptions(url, init, {
+                  ...options.requestOptions,
+                }),
+            ),
+          );
+        }
+      } else {
+        errors.push({
+          fatal: false,
+          message: `Unsupported embeddings model provider found: ${provider}`,
+        });
+      }
     }
 
     if (model.roles?.includes("rerank")) {
-      continueConfig.modelsByRole.rerank.push(...llms);
+      const { provider, ...options } = model;
+      const rerankerClass = AllRerankers[provider];
+      if (rerankerClass) {
+        continueConfig.modelsByRole.rerank.push(
+          new rerankerClass(options, (url: string | URL, init: any) =>
+            fetchwithRequestOptions(url, init, {
+              ...options.requestOptions,
+            }),
+          ),
+        );
+      } else {
+        errors.push({
+          fatal: false,
+          message: `Unsupported reranking model provider found: ${provider}`,
+        });
+      }
     }
+  }
+
+  // Add transformers js to the embed models in vs code if not already added
+  if (
+    ideInfo.ideType === "vscode" &&
+    !continueConfig.modelsByRole.embed.find(
+      (m) => m.providerName === "transformers.js",
+    )
+  ) {
+    continueConfig.modelsByRole.embed.push(
+      new TransformersJsEmbeddingsProvider(),
+    );
   }
 
   if (allowFreeTrial) {
@@ -257,51 +305,6 @@ async function configYamlToContinueConfig(
     continueConfig.contextProviders.push(new DocsContextProvider({}));
   }
 
-  // Embeddings Provider
-  // IMPORTANT this currently will grab the first model found with an embed role
-  const embedConfig = config.models?.find((model) =>
-    model.roles?.includes("embed"),
-  );
-  if (embedConfig) {
-    const { provider, ...options } = embedConfig;
-    const embeddingsProviderClass = allEmbeddingsProviders[provider];
-    if (embeddingsProviderClass) {
-      if (
-        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-      ) {
-        continueConfig.embeddingsProvider = new embeddingsProviderClass();
-      } else {
-        continueConfig.embeddingsProvider = new embeddingsProviderClass(
-          options,
-          (url: string | URL, init: any) =>
-            fetchwithRequestOptions(url, init, {
-              ...options.requestOptions,
-            }),
-        );
-      }
-    }
-  }
-
-  // Reranker
-  // IMPORTANT this currently will grab the first model found with a rerank role
-  const rerankConfig = config.models?.find((model) =>
-    model.roles?.includes("rerank"),
-  );
-  if (rerankConfig) {
-    const { provider, ...options } = rerankConfig;
-    const rerankerClass = AllRerankers[provider];
-
-    if (rerankerClass) {
-      continueConfig.reranker = new rerankerClass(
-        options,
-        (url: string | URL, init: any) =>
-          fetchwithRequestOptions(url, init, {
-            ...options.requestOptions,
-          }),
-      );
-    }
-  }
-
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
   await Promise.all(
@@ -355,7 +358,7 @@ export async function loadContinueConfigFromYaml(
   ide: IDE,
   workspaceConfigs: string[],
   ideSettings: IdeSettings,
-  ideType: IdeType,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -365,7 +368,7 @@ export async function loadContinueConfigFromYaml(
 ): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(getConfigYamlPath(ideType), "utf-8")
+      ? fs.readFileSync(getConfigYamlPath(ideInfo.ideType), "utf-8")
       : "";
 
   const configYamlResult = await loadConfigYaml(
@@ -388,6 +391,7 @@ export async function loadContinueConfigFromYaml(
     configYamlResult.config,
     ide,
     ideSettings,
+    ideInfo,
     uniqueId,
     writeLog,
     workOsAccessToken,
