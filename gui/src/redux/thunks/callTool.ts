@@ -7,6 +7,7 @@ import {
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
+import { selectDefaultModel } from "../slices/configSlice";
 
 export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
   "chat/callTool",
@@ -22,15 +23,17 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
 
-    if (!state.config.defaultModelTitle) {
-      throw new Error("No model selected");
+    const defaultModel = selectDefaultModel(state);
+    if (!defaultModel) {
+      console.error("Cannot call tools, no model selected");
+      return;
     }
 
     dispatch(setCalling());
 
     const result = await extra.ideMessenger.request("tools/call", {
       toolCall: toolCallState.toolCall,
-      selectedModelTitle: state.config.defaultModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     if (result.status === "success") {
