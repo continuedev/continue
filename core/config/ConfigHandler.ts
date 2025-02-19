@@ -52,6 +52,8 @@ export class ConfigHandler {
   private localProfileManager: ProfileLifecycleManager;
   private controlPlaneClient: ControlPlaneClient;
 
+  initializedPromise: Promise<void>;
+
   constructor(
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
@@ -79,7 +81,15 @@ export class ConfigHandler {
     );
 
     // Profiles are loaded asynchronously
-    void this.init();
+    this.initializedPromise = new Promise((resolve, reject) => {
+      this.init()
+        .then(() => {
+          resolve();
+        })
+        .catch((e) => {
+          reject(e);
+        });
+    });
   }
 
   private async init() {
