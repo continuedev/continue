@@ -535,7 +535,7 @@ export const sessionSlice = createSlice({
     },
     // Important: these reducers don't handle selected profile/organization fallback logic
     // That is done in thunks
-    setSelectedProfileId: (
+    setSelectedProfile: (
       state,
       { payload }: PayloadAction<ProfileDescription | null>,
     ) => {
@@ -759,7 +759,7 @@ export const {
   setNewestCodeblocksForInput,
 
   setAvailableProfiles,
-  setSelectedProfileId,
+  setSelectedProfile,
   setOrganizations,
   setSelectedOrganizationId,
 } = sessionSlice.actions;

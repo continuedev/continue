@@ -5,7 +5,7 @@ import {
   setAvailableProfiles,
   setOrganizations,
   setSelectedOrganizationId,
-  setSelectedProfileId,
+  setSelectedProfile,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 
@@ -57,7 +57,7 @@ export const selectProfileThunk = createAsyncThunk<
   );
   if ((newId ?? null) !== (initialId ?? null)) {
     dispatch(
-      setSelectedProfileId(
+      setSelectedProfile(
         state.session.availableProfiles.find((p) => p.id === newId) ?? null,
       ),
     );
