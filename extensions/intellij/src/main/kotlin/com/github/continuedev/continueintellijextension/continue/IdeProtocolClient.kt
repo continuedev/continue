@@ -589,3 +589,4 @@ class IdeProtocolClient(
     fun deleteAtIndex(index: Int) {
         continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
     }
+}
