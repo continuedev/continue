@@ -14,6 +14,8 @@ import {
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
+import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
+import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
@@ -52,8 +54,6 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
-import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -304,12 +304,13 @@ export class Core {
     });
 
     on("config/updateSelectedModel", async (msg) => {
-      const newSharedConfig = this.globalContext.updateSelectedModel(
+      const newSelectedModels = this.globalContext.updateSelectedModel(
+        msg.data.profileId,
         msg.data.role,
         msg.data.title,
       );
       await this.configHandler.reloadConfig();
-      return newSharedConfig;
+      return newSelectedModels;
     });
 
     on("controlPlane/openUrl", async (msg) => {

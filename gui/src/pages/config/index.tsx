@@ -18,7 +18,6 @@ import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
-  modifyFinalConfigWithSharedConfig,
 } from "core/config/sharedConfig";
 import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
@@ -78,17 +77,19 @@ function ConfigPage() {
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
-    const firstPass = modifyAnyConfigWithSharedConfig(config, sharedConfig);
-    const secondPass = modifyFinalConfigWithSharedConfig(
-      firstPass,
-      sharedConfig,
-    );
-    dispatch(updateConfig(secondPass));
-    // Actual update to core which propogates back with config update event
+    const updatedConfig = modifyAnyConfigWithSharedConfig(config, sharedConfig);
+    dispatch(updateConfig(updatedConfig));
+    // IMPORTANT no need for model role updates (separate logic for selected model roles)
+    // simply because this function won't be used to update model roles
+
+    // Actual update to core which propagates back with config update event
     ideMessenger.post("config/updateSharedConfig", sharedConfig);
   }
 
   function handleRoleUpdate(role: ModelRole, model: ModelDescription | null) {
+    if (!selectedProfile) {
+      return;
+    }
     // Optimistic update
     dispatch(
       updateConfig({
@@ -100,6 +101,7 @@ function ConfigPage() {
       }),
     );
     ideMessenger.post("config/updateSelectedModel", {
+      profileId: selectedProfile.id,
       role,
       title: model?.title ?? null,
     });

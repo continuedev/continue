@@ -68,6 +68,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
         ownerSlug: this.ownerSlug,
         packageSlug: this.packageSlug,
       },
+      this.description.id,
     );
 
     return {

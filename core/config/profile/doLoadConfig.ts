@@ -24,6 +24,7 @@ import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
+import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -33,7 +34,7 @@ export default async function doLoadConfig(
   overrideConfigJson: SerializedContinueConfig | undefined,
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
-  workspaceId?: string,
+  profileId: string,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
@@ -87,7 +88,9 @@ export default async function doLoadConfig(
   }
 
   // Rectify model selections for each role
-  // These start out
+  if (newConfig) {
+    newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
+  }
 
   if (configLoadInterrupted || !newConfig) {
     return { errors, config: newConfig, configLoadInterrupted: true };
@@ -120,7 +123,7 @@ export default async function doLoadConfig(
     controlPlaneProxyUrl += "/";
   }
   const controlPlaneProxyInfo = {
-    workspaceId,
+    profileId,
     controlPlaneProxyUrl,
     workOsAccessToken,
   };

@@ -1,5 +1,8 @@
 import fs from "node:fs";
 
+import { ModelRole } from "@continuedev/config-yaml";
+
+import { SiteIndexingConfig } from "..";
 import {
   salvageSharedConfig,
   sharedConfigSchema,
@@ -7,8 +10,10 @@ import {
 } from "../config/sharedConfig";
 
 import { getGlobalContextFilePath } from "./paths";
-import { SiteIndexingConfig } from "..";
-import { ModelRole } from "@continuedev/config-yaml";
+
+export type GlobalContextModelSelections = Partial<
+  Record<ModelRole, string | null>
+>;
 
 export type GlobalContextType = {
   indexingPaused: boolean;
@@ -17,6 +22,9 @@ export type GlobalContextType = {
   };
   lastSelectedOrgIdForWorkspace: {
     [workspaceIdentifier: string]: string | null;
+  };
+  selectedModelsByProfileId: {
+    [profileId: string]: GlobalContextModelSelections;
   };
 
   /**
@@ -115,18 +123,21 @@ export class GlobalContext {
   }
 
   updateSelectedModel(
+    profileId: string,
     role: ModelRole,
     title: string | null,
-  ): SharedConfigSchema {
-    const currentSharedConfig = this.getSharedConfig();
-    const updatedSharedConfig = {
-      ...currentSharedConfig,
-      selectedModels: {
-        ...currentSharedConfig.selectedModels,
-        [role]: title,
-      },
+  ): GlobalContextModelSelections {
+    const currentSelections = this.get("selectedModelsByProfileId") ?? {};
+    const forProfile = currentSelections[profileId] ?? {};
+    const newSelections = {
+      ...forProfile,
+      [role]: title,
     };
-    this.update("sharedConfig", updatedSharedConfig);
-    return updatedSharedConfig;
+
+    this.update("selectedModelsByProfileId", {
+      ...currentSelections,
+      [profileId]: newSelections,
+    });
+    return newSelections;
   }
 }

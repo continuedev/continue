@@ -10,11 +10,12 @@ import {
   Config,
   SerializedContinueConfig,
 } from "..";
+import { GlobalContext } from "../util/GlobalContext";
+
+const selectedModelsSchema = z.record(modelRolesSchema, z.string().nullable());
 
 export const sharedConfigSchema = z
   .object({
-    selectedModels: z.record(modelRolesSchema, z.string().nullable()),
-
     // boolean fields in config.json
     allowAnonymousTelemetry: z.boolean(),
     disableIndexing: z.boolean(),
@@ -80,10 +81,10 @@ export function salvageSharedConfig(sharedConfig: object): SharedConfigSchema {
 // - BrowserSerializedContinueConfig (final converted to be passed to GUI)
 
 // This modify function is split into two steps
-// - modifyAnyConfigWithSharedConfig - includes boolean flags like allowAnonymousTelemetry which
+// - rectifySharedModelsFromSharedConfig - includes boolean flags like allowAnonymousTelemetry which
 //   must be added BEFORE config.ts and remote server config apply for JSON
 //   for security reasons
-// - modifyFinalConfigWithSharedConfig - exists because of selectedModelsByRole
+// - setSharedModelsFromSharedConfig - exists because of selectedModelsByRole
 //   Which don't exist on SerializedContinueConfig/Config types, so must be added after the fact
 export function modifyAnyConfigWithSharedConfig<
   T extends
@@ -154,22 +155,5 @@ export function modifyAnyConfigWithSharedConfig<
     configCopy.experimental.readResponseTTS = sharedConfig.readResponseTTS;
   }
 
-  return configCopy;
-}
-
-export function modifyFinalConfigWithSharedConfig<
-  T extends ContinueConfig | BrowserSerializedContinueConfig,
->(continueConfig: T, sharedConfig: SharedConfigSchema): T {
-  const configCopy = { ...continueConfig };
-  const selectedModelsForProfile: Record<ModelRole, string | null> = {
-    apply: null,
-    autocomplete: null,
-    chat: null,
-    edit: null,
-    embed: null,
-    rerank: null,
-    summarize: null,
-  };
-  // configCopy.selectedModelByRole = selectedModelsForProfile;
   return configCopy;
 }

@@ -1,14 +1,10 @@
-import { Fragment, useContext, useEffect, useState } from "react";
+import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import {
-  CheckIcon,
-  XMarkIcon,
   ChevronUpDownIcon,
-  PlusCircleIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { type ModelDescription } from "core";
-import HoverItem from "../../components/mainInput/InputToolbar/HoverItem";
 import { ToolTip } from "../../components/gui/Tooltip";
 
 interface ModelRoleSelectorProps {
@@ -47,7 +43,7 @@ const ModelRoleSelector = ({
           <div className="relative">
             <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-2 py-1 text-left">
               <span className="lines lines-1">
-                {selectedModel?.title ?? "No"}
+                {selectedModel?.title ?? `No ${displayName} models`}
               </span>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon className="h-3.5 w-3.5" aria-hidden="true" />

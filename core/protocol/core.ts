@@ -27,6 +27,7 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -71,10 +72,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
     {
+      profileId: string;
       role: ModelRole;
       title: string | null;
     },
-    SharedConfigSchema,
+    GlobalContextModelSelections,
   ];
   "context/getContextItems": [
     {
