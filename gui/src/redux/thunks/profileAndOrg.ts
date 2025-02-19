@@ -129,7 +129,7 @@ export const selectOrgThunk = createAsyncThunk<
   // Fallback to Personal (org = null)
 
   if (initialId !== newId) {
-    dispatch(setAvailableProfiles([]));
+    dispatch(setAvailableProfiles(null));
     dispatch(setSelectedOrganizationId(newId));
     extra.ideMessenger.post("didChangeSelectedOrg", {
       id: newId,
