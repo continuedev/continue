@@ -240,6 +240,14 @@ export const Solidity = {
   endOfLine: [";"],
 };
 
+// Lua
+export const Lua = {
+  name: "Lua",
+  topLevelKeywords: ["function"],
+  singleLineComment: "--",
+  endOfLine: [],
+};
+
 // YAML
 export const YAML: AutocompleteLanguageInfo = {
   name: "YAML",
@@ -367,6 +375,8 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   yaml: YAML,
   yml: YAML,
   md: Markdown,
+  lua: Lua,
+  luau: Lua,
 };
 
 export function languageForFilepath(fileUri: string): AutocompleteLanguageInfo {
