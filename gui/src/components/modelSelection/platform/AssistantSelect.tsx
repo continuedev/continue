@@ -14,7 +14,7 @@ import { getProfileDisplayText } from "./utils";
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, selectedOrganization } = useAuth();
+  const { selectedProfile, selectedOrganization, profiles } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
   useEffect(() => {

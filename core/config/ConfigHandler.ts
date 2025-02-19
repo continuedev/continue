@@ -86,14 +86,12 @@ export class ConfigHandler {
   private async init() {
     // Always load local profile immediately in case control plane doesn't load
     try {
-      await this.loadAssistantsForSelectedOrg();
-      await this.loadConfig();
+      await this.fetchControlPlaneProfiles();
+      const configResult = await this.loadConfig();
+      this.notifyConfigListeners(configResult);
     } catch (e) {
       console.error("Failed to load config: ", e);
     }
-
-    // Load control plane profiles
-    void this.fetchControlPlaneProfiles();
   }
 
   get currentProfile() {
@@ -106,7 +104,7 @@ export class ConfigHandler {
     return (
       this.profiles.find(
         (p) => p.profileDescription.id === this.selectedProfileId,
-      ) ?? this.profiles[0]
+      ) ?? null
     );
   }
 

@@ -43,6 +43,10 @@ export function AssistantSelectOptions({
     onClose();
   }
 
+  if (!profiles) {
+    return null;
+  }
+
   return (
     <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
       <div className={`max-h-[300px]`}>

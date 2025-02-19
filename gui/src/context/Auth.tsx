@@ -26,7 +26,7 @@ interface AuthContextType {
   logout: () => void;
   login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | null;
-  profiles: ProfileDescription[];
+  profiles: ProfileDescription[] | null;
   controlServerBetaEnabled: boolean;
   organizations: OrganizationDescription[];
   selectedOrganization: OrganizationDescription | null;

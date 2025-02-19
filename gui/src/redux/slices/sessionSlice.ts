@@ -45,7 +45,8 @@ type SessionState = {
   isStreaming: boolean;
   title: string;
   id: string;
-  availableProfiles: ProfileDescription[];
+  /** null indicates loading state */
+  availableProfiles: ProfileDescription[] | null;
   selectedProfileId: string | null;
   organizations: OrganizationDescription[];
   selectedOrganizationId: string | null;
@@ -89,7 +90,7 @@ const initialState: SessionState = {
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
   selectedProfileId: null,
-  availableProfiles: [],
+  availableProfiles: null,
   organizations: [],
   selectedOrganizationId: "",
   curCheckpointIndex: 0,

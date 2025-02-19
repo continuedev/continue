@@ -1,4 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { ProfileDescription } from "core/config/ConfigHandler";
+import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
+import { isLocalProfile } from "../../util";
 import {
   setAvailableProfiles,
   setOrganizations,
@@ -6,9 +9,6 @@ import {
   setSelectedProfileId,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { ProfileDescription } from "core/config/ConfigHandler";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
-import { isLocalProfile } from "../../util";
 
 export const selectProfileThunk = createAsyncThunk<
   void,
@@ -16,6 +16,12 @@ export const selectProfileThunk = createAsyncThunk<
   ThunkApiType
 >("profiles/select", async (id, { dispatch, extra, getState }) => {
   const state = getState();
+
+  if (state.session.availableProfiles === null) {
+    // Currently in loading state
+    return;
+  }
+
   const initialId = state.session.selectedProfileId;
 
   let newId = id;
@@ -55,6 +61,11 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
   "profiles/cycle",
   async (_, { dispatch, getState }) => {
     const state = getState();
+
+    if (state.session.availableProfiles === null) {
+      return;
+    }
+
     const profileIds = state.session.availableProfiles.map(
       (profile) => profile.id,
     );
