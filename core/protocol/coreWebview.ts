@@ -8,5 +8,8 @@ export type ToCoreFromWebviewProtocol = ToCoreFromIdeOrWebviewProtocol & {
   didChangeSelectedOrg: [{ id: string | null }, void];
 };
 export type ToWebviewFromCoreProtocol = ToWebviewFromIdeOrCoreProtocol & {
-  didChangeAvailableProfiles: [{ profiles: ProfileDescription[] }, void];
+  didChangeAvailableProfiles: [
+    { profiles: ProfileDescription[]; selectedProfileId: string | null },
+    void,
+  ];
 };
