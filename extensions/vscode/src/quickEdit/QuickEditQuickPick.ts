@@ -273,7 +273,7 @@ export class QuickEdit {
     }
 
     return (
-      getModelByRole(config, "inlineEdit")?.title ??
+      config.selectedModelByRole.edit?.title ??
       (await this.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,

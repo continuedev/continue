@@ -78,6 +78,7 @@ import {
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import { validateConfig } from "./validation.js";
+import { getModelByRole } from "./util";
 
 export function resolveSerializedConfig(
   filepath: string,
@@ -330,7 +331,7 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
-    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
+    model.roles = model.roles ?? ["chat", "apply", "edit", "summarize"]; // Default to chat role if not specified
   }
 
   if (allowFreeTrial) {
@@ -440,23 +441,28 @@ async function intermediateToFinalConfig(
   }
 
   // Embeddings Provider
-  const embeddingsProviderDescription = config.embeddingsProvider as
-    | EmbeddingsProviderDescription
-    | undefined;
-  if (embeddingsProviderDescription?.provider) {
-    const { provider, ...options } = embeddingsProviderDescription;
+  function getEmbeddingsILLM(
+    configEmbedder: EmbeddingsProviderDescription | ILLM | undefined,
+  ): ILLM {
+    if (!configEmbedder) {
+      return new TransformersJsEmbeddingsProvider();
+    }
+    if ("providerName" in configEmbedder) {
+      return configEmbedder;
+    }
+    const { provider, ...options } = configEmbedder;
     const embeddingsProviderClass = allEmbeddingsProviders[provider];
     if (embeddingsProviderClass) {
       if (
         embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
       ) {
-        config.embeddingsProvider = new embeddingsProviderClass();
+        return new embeddingsProviderClass();
       } else {
         const llmOptions: LLMOptions = {
           model: options.model ?? "UNSPECIFIED",
           ...options,
         };
-        config.embeddingsProvider = new embeddingsProviderClass(
+        return new embeddingsProviderClass(
           llmOptions,
           (url: string | URL, init: any) =>
             fetchwithRequestOptions(url, init, {
@@ -465,59 +471,76 @@ async function intermediateToFinalConfig(
             }),
         );
       }
+    } else {
+      errors.push({
+        fatal: false,
+        message: `Embeddings provider ${provider} not found. Using default`,
+      });
     }
+    return new TransformersJsEmbeddingsProvider();
   }
-
-  if (!config.embeddingsProvider) {
-    config.embeddingsProvider = new TransformersJsEmbeddingsProvider();
-  }
+  const newEmbedder = getEmbeddingsILLM(config.embeddingsProvider);
 
   // Reranker
-  if (config.reranker && !(config.reranker as ILLM | undefined)?.rerank) {
+  function getRerankingILLM(
+    rerankingConfig: ILLM | RerankerDescription | undefined,
+  ): ILLM | undefined {
+    if (!rerankingConfig) {
+      return undefined;
+    }
+    if ("providerName" in rerankingConfig) {
+      return rerankingConfig;
+    }
     const { name, params } = config.reranker as RerankerDescription;
     const rerankerClass = AllRerankers[name];
 
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
       if (!llm) {
-        console.warn(`Unknown model ${params?.modelTitle}`);
+        errors.push({
+          fatal: false,
+          message: `Unknown reranking model ${params?.modelTitle}`,
+        });
+        return undefined;
       } else {
-        config.reranker = new LLMReranker(llm);
+        return new LLMReranker(llm);
       }
     } else if (rerankerClass) {
       const llmOptions: LLMOptions = {
         model: "rerank-2",
         ...params,
       };
-      config.reranker = new rerankerClass(llmOptions);
+      return new rerankerClass(llmOptions);
     }
+    return undefined;
   }
+  const newReranker = getRerankingILLM(config.reranker);
 
-  let continueConfig: ContinueConfig = {
+  const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
     models,
-    embeddingsProvider: config.embeddingsProvider as any,
+    embeddingsProvider: newEmbedder,
     tabAutocompleteModels,
-    reranker: config.reranker as any,
+    reranker: newReranker,
     tools: allTools,
     modelsByRole: {
-      chat: [],
-      edit: [],
-      apply: [],
-      embed: [],
-      autocomplete: [],
-      rerank: [],
-      summarize: [],
+      chat: models,
+      edit: models,
+      apply: models,
+      summarize: models,
+      embed: [newEmbedder],
+      autocomplete: [...tabAutocompleteModels],
+      rerank: newReranker ? [newReranker] : [],
     },
     selectedModelByRole: {
-      chat: null,
+      chat: null, // Not implemented (uses GUI defaultModel)
       edit: null,
       apply: null,
-      embed: null,
+      embed: newEmbedder ?? null,
       autocomplete: null,
-      rerank: null,
-      summarize: null,
+      rerank: newReranker ?? null,
+      summarize: null, // Not implemented
     },
   };
 
@@ -560,6 +583,42 @@ async function intermediateToFinalConfig(
     );
   }
 
+  // Handle experimental modelRole config values for apply and edit
+  const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;
+  if (inlineEditModel) {
+    const match = continueConfig.models.find(
+      (m) => m.title === inlineEditModel,
+    );
+    if (match) {
+      continueConfig.selectedModelByRole.edit = match;
+      continueConfig.modelsByRole.edit = [match]; // The only option if inlineEdit role is set
+    } else {
+      errors.push({
+        fatal: false,
+        message: `experimental.modelRoles.inlineEdit model title ${inlineEditModel} not found in models array`,
+      });
+    }
+  }
+
+  const applyBlockModel = getModelByRole(
+    continueConfig,
+    "applyCodeBlock",
+  )?.title;
+  if (applyBlockModel) {
+    const match = continueConfig.models.find(
+      (m) => m.title === applyBlockModel,
+    );
+    if (match) {
+      continueConfig.selectedModelByRole.apply = match;
+      continueConfig.modelsByRole.apply = [match]; // The only option if applyCodeBlock role is set
+    } else {
+      errors.push({
+        fatal: false,
+        message: `experimental.modelRoles.applyCodeBlock model title ${inlineEditModel} not found in models array`,
+      });
+    }
+  }
+
   return { config: continueConfig, errors };
 }
 
@@ -593,7 +652,7 @@ async function finalToBrowserConfig(
     slashCommands: final.slashCommands?.map((s) => ({
       name: s.name,
       description: s.description,
-      params: s.params, //PZTODO: is this why params aren't referenced properly by slash commands?
+      params: s.params, // TODO: is this why params aren't referenced properly by slash commands?
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
@@ -611,8 +670,13 @@ async function finalToBrowserConfig(
         k,
         v.map(llmToSerializedModelDescription),
       ]),
-    ) as unknown as Record<ModelRole, ModelDescription[]>, // TODO better types here
-    selectedModelByRole: final.selectedModelByRole,
+    ) as Record<ModelRole, ModelDescription[]>, // TODO better types here
+    selectedModelByRole: Object.fromEntries(
+      Object.entries(final.selectedModelByRole).map(([k, v]) => [
+        k,
+        v ? llmToSerializedModelDescription(v) : null,
+      ]),
+    ) as Record<ModelRole, ModelDescription | null>, // TODO better types here
   };
 }
 

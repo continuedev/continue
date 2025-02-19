@@ -348,7 +348,7 @@ const getCommandsMap: (
     );
 
     const modelTitle =
-      getModelByRole(config, "inlineEdit")?.title ?? defaultModelTitle;
+      config.selectedModelByRole.edit?.title ?? defaultModelTitle;
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 

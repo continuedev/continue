@@ -28,6 +28,7 @@ import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { ILLM } from "core";
 
 /**
  * A shared messenger class between Core and Webview
@@ -177,7 +178,7 @@ export class VsCodeMessenger {
         return;
       }
 
-      let llm = getModelByRole(config, "applyCodeBlock");
+      let llm: ILLM | null | undefined = config.selectedModelByRole.apply;
 
       if (!llm) {
         llm = config.models.find(

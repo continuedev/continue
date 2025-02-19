@@ -1223,7 +1223,7 @@ export interface ContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   modelsByRole: Record<ModelRole, ILLM[]>;
-  selectedModelByRole: Record<ModelRole, string | null>;
+  selectedModelByRole: Record<ModelRole, ILLM | null>;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1247,7 +1247,7 @@ export interface BrowserSerializedContinueConfig {
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
-  selectedModelByRole: Record<ModelRole, string | null>;
+  selectedModelByRole: Record<ModelRole, ModelDescription | null>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
