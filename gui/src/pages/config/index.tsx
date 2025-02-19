@@ -24,7 +24,7 @@ import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setDefaultModel, updateConfig } from "../../redux/slices/configSlice";
 import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
-import { getFontSize } from "../../util";
+import { getFontSize, isJetBrains } from "../../util";
 import ModelRoleSelector from "./ModelRoleSelector";
 import { ScopeSelect } from "./ScopeSelect";
 
@@ -172,6 +172,8 @@ function ConfigPage() {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
   }, [promptPath]);
+
+  const jetbrains = isJetBrains();
 
   return (
     <div className="overflow-y-scroll">
@@ -321,16 +323,19 @@ function ConfigPage() {
                   selectedModel={config.selectedModelByRole.autocomplete}
                   onSelect={(model) => handleRoleUpdate("autocomplete", model)}
                 />
-                <ModelRoleSelector
-                  displayName="Edit"
-                  description="Used for inline and multi-file Edit mode requests"
-                  models={config.modelsByRole.edit}
-                  selectedModel={config.selectedModelByRole.edit}
-                  onSelect={(model) => handleRoleUpdate("edit", model)}
-                />
+                {/* Jetbrains has a model selector inline */}
+                {!jetbrains && (
+                  <ModelRoleSelector
+                    displayName="Edit"
+                    description="Used for inline edits"
+                    models={config.modelsByRole.edit}
+                    selectedModel={config.selectedModelByRole.edit}
+                    onSelect={(model) => handleRoleUpdate("edit", model)}
+                  />
+                )}
                 <ModelRoleSelector
                   displayName="Apply"
-                  description="Used to determine how to apply generated code to files"
+                  description="Used to apply generated codeblocks to files"
                   models={config.modelsByRole.apply}
                   selectedModel={config.selectedModelByRole.apply}
                   onSelect={(model) => handleRoleUpdate("apply", model)}

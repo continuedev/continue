@@ -448,7 +448,7 @@ class IdeProtocolClient(
                                     val config = result["config"] as Map<String, Any>
 
                                     val selectedModels = config["selectedModelByRole"] as Map<String, Any>
-                                    val applyCodeBlockModel = selectedModels["applyCodeBlock"] as Map<String, Any>
+                                    val applyCodeBlockModel = selectedModels["apply"] as Map<String, Any>
 
                                     if (applyCodeBlockModel != null) {
                                         continuation.resume(applyCodeBlockModel)
