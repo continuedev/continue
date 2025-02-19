@@ -187,12 +187,10 @@ export class Core {
 
     const getLlm = async () => {
       const { config } = await this.configHandler.loadConfig();
-      const selected = this.globalContext.get("selectedTabAutocompleteModel");
-      return (
-        config?.tabAutocompleteModels?.find(
-          (model) => model.title === selected,
-        ) ?? config?.tabAutocompleteModels?.[0]
-      );
+      if (!config) {
+        return undefined;
+      }
+      return config.selectedModelByRole.autocomplete ?? undefined;
     };
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -224,11 +222,6 @@ export class Core {
       } else {
         void this.ide.showToast("error", err.message);
       }
-    });
-
-    on("update/selectTabAutocompleteModel", async (msg) => {
-      this.globalContext.update("selectedTabAutocompleteModel", msg.data);
-      void this.configHandler.reloadConfig();
     });
 
     // Special
@@ -305,8 +298,18 @@ export class Core {
     });
 
     on("config/updateSharedConfig", async (msg) => {
-      this.globalContext.updateSharedConfig(msg.data);
+      const newSharedConfig = this.globalContext.updateSharedConfig(msg.data);
       await this.configHandler.reloadConfig();
+      return newSharedConfig;
+    });
+
+    on("config/updateSelectedModel", async (msg) => {
+      const newSharedConfig = this.globalContext.updateSelectedModel(
+        msg.data.role,
+        msg.data.title,
+      );
+      await this.configHandler.reloadConfig();
+      return newSharedConfig;
     });
 
     on("controlPlane/openUrl", async (msg) => {

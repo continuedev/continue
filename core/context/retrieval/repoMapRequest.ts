@@ -2,7 +2,6 @@ import { Chunk, ContinueConfig, IDE, ILLM } from "../..";
 import { getModelByRole } from "../../config/util";
 import generateRepoMap from "../../util/generateRepoMap";
 import { renderChatMessage } from "../../util/messageContent";
-import { getUriPathBasename } from "../../util/uri";
 
 const SUPPORTED_MODEL_TITLE_FAMILIES = [
   "claude-3",

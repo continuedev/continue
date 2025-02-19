@@ -1,21 +1,19 @@
+import {
+  ModelRole,
+  modelRolesSchema,
+} from "@continuedev/config-yaml/dist/schemas/models";
 import z from "zod";
+
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   Config,
   SerializedContinueConfig,
 } from "..";
-import {
-  ModelRole,
-  modelRolesSchema,
-} from "@continuedev/config-yaml/dist/schemas/models";
 
 export const sharedConfigSchema = z
   .object({
-    selectedModels: z.record(
-      z.string(),
-      z.record(modelRolesSchema, z.string()),
-    ),
+    selectedModels: z.record(modelRolesSchema, z.string().nullable()),
 
     // boolean fields in config.json
     allowAnonymousTelemetry: z.boolean(),
@@ -161,11 +159,7 @@ export function modifyAnyConfigWithSharedConfig<
 
 export function modifyFinalConfigWithSharedConfig<
   T extends ContinueConfig | BrowserSerializedContinueConfig,
->(
-  continueConfig: T,
-  sharedConfig: SharedConfigSchema,
-  selectedProfileId: string | null,
-): T {
+>(continueConfig: T, sharedConfig: SharedConfigSchema): T {
   const configCopy = { ...continueConfig };
   const selectedModelsForProfile: Record<ModelRole, string | null> = {
     apply: null,
@@ -176,6 +170,6 @@ export function modifyFinalConfigWithSharedConfig<
     rerank: null,
     summarize: null,
   };
-  configCopy.selectedModelByRole = selectedModelsForProfile;
+  // configCopy.selectedModelByRole = selectedModelsForProfile;
   return configCopy;
 }

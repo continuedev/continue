@@ -18,13 +18,17 @@ import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
+  modifyFinalConfigWithSharedConfig,
 } from "core/config/sharedConfig";
 import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
-import { updateConfig } from "../../redux/slices/configSlice";
+import { setDefaultModel, updateConfig } from "../../redux/slices/configSlice";
 import { getFontSize } from "../../util";
+import ModelRoleSelector from "./ModelRoleSelector";
+import { ModelDescription } from "core";
+import { ModelRole } from "@continuedev/config-yaml";
 
 function ConfigPage() {
   useNavigationListener();
@@ -67,14 +71,46 @@ function ConfigPage() {
 
   /////// User settings section //////
   const config = useAppSelector((state) => state.config.config);
+  const profileId = useAppSelector((state) => state.session.selectedProfileId);
+  const selectedChatModel = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
-    dispatch(
-      updateConfig(modifyAnyConfigWithSharedConfig(config, sharedConfig)),
+    const firstPass = modifyAnyConfigWithSharedConfig(config, sharedConfig);
+    const secondPass = modifyFinalConfigWithSharedConfig(
+      firstPass,
+      sharedConfig,
     );
+    dispatch(updateConfig(secondPass));
     // Actual update to core which propogates back with config update event
     ideMessenger.post("config/updateSharedConfig", sharedConfig);
+  }
+
+  function handleRoleUpdate(role: ModelRole, model: ModelDescription | null) {
+    // Optimistic update
+    dispatch(
+      updateConfig({
+        ...config,
+        selectedModelByRole: {
+          ...config.selectedModelByRole,
+          [role]: model?.title,
+        },
+      }),
+    );
+    ideMessenger.post("config/updateSelectedModel", {
+      role,
+      title: model?.title ?? null,
+    });
+  }
+
+  // TODO use handleRoleUpdate for chat
+  function handleChatModelSelection(model: ModelDescription | null) {
+    if (!model) {
+      return;
+    }
+    dispatch(setDefaultModel({ title: model.title }));
   }
 
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
@@ -225,10 +261,14 @@ function ConfigPage() {
                           value={null}
                           className={`text-vsc-foreground hover:bg-list-active bg-vsc-input-background flex cursor-pointer flex-row items-center gap-2 px-3 py-2`}
                           onClick={() => {
-                            ideMessenger.post("controlPlane/openUrl", {
-                              path: "new",
-                              orgSlug: selectedOrganization?.slug,
-                            });
+                            if (session) {
+                              ideMessenger.post("controlPlane/openUrl", {
+                                path: "new",
+                                orgSlug: selectedOrganization?.slug,
+                              });
+                            } else {
+                              login(true);
+                            }
                           }}
                         >
                           <PlusCircleIcon className="h-4 w-4" />
@@ -251,8 +291,59 @@ function ConfigPage() {
                     : "Open Workspace"}
               </SecondaryButton>
             )}
-            <h2 className="text-sm">Model Roles</h2>
-            
+            <div>
+              <h2 className="m-0 mb-3 p-0 text-center text-sm">
+                Active Models
+              </h2>
+              <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-[auto_1fr]">
+                <ModelRoleSelector
+                  displayName="Chat"
+                  description="Used in the chat interface"
+                  models={config.modelsByRole.chat}
+                  selectedModel={{
+                    title: selectedChatModel,
+                    provider: "mock",
+                    model: "mock",
+                  }}
+                  onSelect={(model) => handleChatModelSelection(model)}
+                />
+                <ModelRoleSelector
+                  displayName="Autocomplete"
+                  description="Used to generate code completion suggestions"
+                  models={config.modelsByRole.autocomplete}
+                  selectedModel={config.selectedModelByRole.autocomplete}
+                  onSelect={(model) => handleRoleUpdate("autocomplete", model)}
+                />
+                <ModelRoleSelector
+                  displayName="Edit"
+                  description="Used for inline and multi-file Edit mode requests"
+                  models={config.modelsByRole.edit}
+                  selectedModel={config.selectedModelByRole.edit}
+                  onSelect={(model) => handleRoleUpdate("edit", model)}
+                />
+                <ModelRoleSelector
+                  displayName="Apply"
+                  description="Used to determine how to apply generated code to files"
+                  models={config.modelsByRole.apply}
+                  selectedModel={config.selectedModelByRole.apply}
+                  onSelect={(model) => handleRoleUpdate("apply", model)}
+                />
+                <ModelRoleSelector
+                  displayName="Embed"
+                  description="Used to generate and query embeddings for the @codebase and @docs context providers"
+                  models={config.modelsByRole.embed}
+                  selectedModel={config.selectedModelByRole.embed}
+                  onSelect={(model) => handleRoleUpdate("embed", model)}
+                />
+                <ModelRoleSelector
+                  displayName="Rerank"
+                  description="Used for reranking results from the @codebase and @docs context providers"
+                  models={config.modelsByRole.rerank}
+                  selectedModel={config.selectedModelByRole.rerank}
+                  onSelect={(model) => handleRoleUpdate("rerank", model)}
+                />
+              </div>
+            </div>
           </div>
         </div>
         {!controlServerBetaEnabled || hubEnabled ? (
@@ -351,7 +442,7 @@ function ConfigPage() {
                   />
 
                   <label className="flex items-center justify-between gap-3">
-                    <span className="text-right">
+                    <span className="lines lines-1 text-left">
                       Codeblock Actions Position
                     </span>
                     <Select
@@ -370,7 +461,7 @@ function ConfigPage() {
                   </label>
 
                   <label className="flex items-center justify-between gap-3">
-                    <span className="text-right">
+                    <span className="lines lines-1 text-left">
                       Multiline Autocompletions
                     </span>
                     <Select
@@ -389,7 +480,7 @@ function ConfigPage() {
                   </label>
 
                   <label className="flex items-center justify-between gap-3">
-                    <span className="text-right">Font Size</span>
+                    <span className="text-left">Font Size</span>
                     <NumberInput
                       value={fontSize}
                       onChange={(val) =>
@@ -409,7 +500,7 @@ function ConfigPage() {
                       handleSubmitPromptPath();
                     }}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-1">
                       <span>Workspace prompts path</span>
                       <div className="flex items-center gap-2">
                         <Input
@@ -486,7 +577,7 @@ function ConfigPage() {
                         </div>
                       </div>
                     </div>
-                    <span className="text-vsc-foreground-muted self-end text-xs">
+                    <span className="text-vsc-foreground-muted text-lightgray self-end text-xs">
                       Comma-separated list of path matchers
                     </span>
                   </form>

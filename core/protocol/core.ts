@@ -1,4 +1,4 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, ModelRole } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
@@ -36,8 +36,6 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  "update/selectTabAutocompleteModel": [string, void];
-
   // Special
   ping: [string, string];
   abort: [undefined, void];
@@ -70,7 +68,14 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[]];
   "config/openProfile": [{ profileId: string | undefined }, void];
-  "config/updateSharedConfig": [SharedConfigSchema, void];
+  "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
+  "config/updateSelectedModel": [
+    {
+      role: ModelRole;
+      title: string | null;
+    },
+    SharedConfigSchema,
+  ];
   "context/getContextItems": [
     {
       name: string;

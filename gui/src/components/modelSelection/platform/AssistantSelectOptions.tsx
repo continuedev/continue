@@ -1,4 +1,8 @@
-import { BuildingOfficeIcon, PlusIcon } from "@heroicons/react/24/outline";
+import {
+  BuildingOfficeIcon,
+  PlusIcon,
+  UserCircleIcon,
+} from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { lightGray } from "../..";
@@ -21,7 +25,8 @@ export function AssistantSelectOptions({
   onClose,
 }: AssistantSelectOptionsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { profiles, selectedProfile, selectedOrganization } = useAuth();
+  const { profiles, selectedProfile, selectedOrganization, session, login } =
+    useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -83,7 +88,10 @@ export function AssistantSelectOptions({
       </div>
 
       <div className="mt-auto w-full">
-        <OptionDiv key={profiles.length} onClick={onNewAssistant}>
+        <OptionDiv
+          key={"new-assistant"}
+          onClick={session ? onNewAssistant : () => login(true)}
+        >
           <div
             className="flex items-center py-0.5"
             style={{ fontSize: getFontSize() - 2 }}

@@ -86,6 +86,9 @@ export default async function doLoadConfig(
     configLoadInterrupted = result.configLoadInterrupted;
   }
 
+  // Rectify model selections for each role
+  // These start out
+
   if (configLoadInterrupted || !newConfig) {
     return { errors, config: newConfig, configLoadInterrupted: true };
   }

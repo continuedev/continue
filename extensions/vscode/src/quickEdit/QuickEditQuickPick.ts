@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { IDE } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { getModelByRole } from "core/config/util";
 import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";

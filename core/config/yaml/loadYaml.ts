@@ -155,51 +155,49 @@ async function configYamlToContinueConfig(
   // Models
   const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 roles if not specified
+    model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
+    const llms = await llmsFromModelConfig(
+      model,
+      ide,
+      uniqueId,
+      ideSettings,
+      writeLog,
+      platformConfigMetadata,
+      continueConfig.systemMessage,
+    );
+
+    //
     if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
-      // Main model array
-      const llms = await llmsFromModelConfig(
-        model,
-        ide,
-        uniqueId,
-        ideSettings,
-        writeLog,
-        platformConfigMetadata,
-        continueConfig.systemMessage,
-      );
       continueConfig.models.push(...llms);
     }
 
+    if (model.roles?.includes("chat")) {
+      continueConfig.modelsByRole.chat.push(...llms);
+    }
+
+    if (model.roles?.includes("summarize")) {
+      continueConfig.modelsByRole.summarize.push(...llms);
+    }
+
+    if (model.roles?.includes("apply")) {
+      continueConfig.modelsByRole.apply.push(...llms);
+    }
+
+    if (model.roles?.includes("edit")) {
+      continueConfig.modelsByRole.edit.push(...llms);
+    }
+
     if (model.roles?.includes("autocomplete")) {
-      // Autocomplete models array
-      const llms = await llmsFromModelConfig(
-        model,
-        ide,
-        uniqueId,
-        ideSettings,
-        writeLog,
-        platformConfigMetadata,
-        continueConfig.systemMessage,
-      );
       continueConfig.tabAutocompleteModels?.push(...llms);
+      continueConfig.modelsByRole.autocomplete.push(...llms);
     }
 
-    if (
-      model.roles?.includes("apply") &&
-      !continueConfig.experimental?.modelRoles?.applyCodeBlock
-    ) {
-      continueConfig.experimental ??= {};
-      continueConfig.experimental!.modelRoles ??= {};
-      continueConfig.experimental!.modelRoles!.applyCodeBlock = model.name;
+    if (model.roles?.includes("embed")) {
+      continueConfig.modelsByRole.embed.push(...llms);
     }
 
-    if (
-      model.roles?.includes("edit") &&
-      !continueConfig.experimental?.modelRoles?.inlineEdit
-    ) {
-      continueConfig.experimental ??= {};
-      continueConfig.experimental!.modelRoles ??= {};
-      continueConfig.experimental!.modelRoles!.inlineEdit = model.name;
+    if (model.roles?.includes("rerank")) {
+      continueConfig.modelsByRole.rerank.push(...llms);
     }
   }
 
@@ -220,8 +218,6 @@ async function configYamlToContinueConfig(
       (model) => model.providerName !== "free-trial",
     );
   }
-
-  // TODO: Split into model roles.
 
   // Context providers
   const codebaseContextParams: IContextProvider[] =

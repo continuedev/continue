@@ -8,10 +8,10 @@ import {
 
 import { getGlobalContextFilePath } from "./paths";
 import { SiteIndexingConfig } from "..";
+import { ModelRole } from "@continuedev/config-yaml";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
-  selectedTabAutocompleteModel: string;
   lastSelectedProfileForWorkspace: {
     [workspaceIdentifier: string]: string | null;
   };
@@ -109,6 +109,22 @@ export class GlobalContext {
     const updatedSharedConfig = {
       ...currentSharedConfig,
       ...newValues,
+    };
+    this.update("sharedConfig", updatedSharedConfig);
+    return updatedSharedConfig;
+  }
+
+  updateSelectedModel(
+    role: ModelRole,
+    title: string | null,
+  ): SharedConfigSchema {
+    const currentSharedConfig = this.getSharedConfig();
+    const updatedSharedConfig = {
+      ...currentSharedConfig,
+      selectedModels: {
+        ...currentSharedConfig.selectedModels,
+        [role]: title,
+      },
     };
     this.update("sharedConfig", updatedSharedConfig);
     return updatedSharedConfig;
