@@ -96,7 +96,7 @@ function ConfigPage() {
         ...config,
         selectedModelByRole: {
           ...config.selectedModelByRole,
-          [role]: model?.title,
+          [role]: model,
         },
       }),
     );
