@@ -130,8 +130,12 @@ export class Core {
       });
     });
 
-    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
-      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    this.configHandler.onDidChangeAvailableProfiles(
+      (profiles, selectedProfileId) =>
+        this.messenger.send("didChangeAvailableProfiles", {
+          profiles,
+          selectedProfileId,
+        }),
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings

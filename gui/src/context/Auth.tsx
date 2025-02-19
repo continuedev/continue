@@ -59,15 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Profiles
   const profiles = useAppSelector((store) => store.session.availableProfiles);
-  const selectedProfileId = useAppSelector(
-    (store) => store.session.selectedProfileId,
+  const selectedProfile = useAppSelector(
+    (store) => store.session.selectedProfile,
   );
-  const selectedProfile = useMemo(() => {
-    if (!selectedProfileId) {
-      return null;
-    }
-    return profiles.find((p) => p.id === selectedProfileId) ?? null;
-  }, [profiles, selectedProfileId]);
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
     return new Promise((resolve) => {
@@ -168,10 +162,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
+  useEffect(() => {
+    ideMessenger.request("config/listProfiles", undefined).then((result) => {
+      if (result.status === "success") {
+        console.log("PROFILES: ", result.content);
+        dispatch(
+          updateProfilesThunk({
+            profiles: result.content,
+            selectedProfileId: null,
+          }),
+        );
+      }
+    });
+  }, []);
+
   useWebviewListener(
     "didChangeAvailableProfiles",
     async (data) => {
-      dispatch(updateProfilesThunk(data.profiles));
+      console.log("AVAILABLE: ", data.profiles, data.selectedProfileId);
+      dispatch(
+        updateProfilesThunk({
+          profiles: data.profiles,
+          selectedProfileId: data.selectedProfileId,
+        }),
+      );
     },
     [],
   );

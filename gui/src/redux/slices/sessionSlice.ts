@@ -47,7 +47,7 @@ type SessionState = {
   id: string;
   /** null indicates loading state */
   availableProfiles: ProfileDescription[] | null;
-  selectedProfileId: string | null;
+  selectedProfile: ProfileDescription | null;
   organizations: OrganizationDescription[];
   selectedOrganizationId: string | null;
   streamAborter: AbortController;
@@ -89,7 +89,7 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfileId: null,
+  selectedProfile: null,
   availableProfiles: null,
   organizations: [],
   selectedOrganizationId: "",
@@ -537,13 +537,13 @@ export const sessionSlice = createSlice({
     // That is done in thunks
     setSelectedProfileId: (
       state,
-      { payload }: PayloadAction<string | null>,
+      { payload }: PayloadAction<ProfileDescription | null>,
     ) => {
-      state.selectedProfileId = payload;
+      state.selectedProfile = payload;
     },
     setAvailableProfiles: (
       state,
-      { payload }: PayloadAction<ProfileDescription[]>,
+      { payload }: PayloadAction<ProfileDescription[] | null>,
     ) => {
       state.availableProfiles = payload;
     },

@@ -42,6 +42,17 @@ export default function AssistantSelect() {
     };
   }, []);
 
+  if (!profiles) {
+    return (
+      <div
+        className="text-lightgray hover:bg mb-1 mr-3 flex items-center gap-1"
+        style={{ fontSize: `${getFontSize() - 2}px` }}
+      >
+        Loading...
+      </div>
+    );
+  }
+
   if (!selectedProfile) {
     return (
       <div
