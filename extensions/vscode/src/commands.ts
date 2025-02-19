@@ -951,10 +951,14 @@ const getCommandsMap: (
         } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
-          core.invoke("config/updateSelectedModel", {
-            role: "autocomplete",
-            title: selectedOption,
-          });
+          if (core.configHandler.currentProfile?.profileDescription.id) {
+            core.invoke("config/updateSelectedModel", {
+              profileId:
+                core.configHandler.currentProfile?.profileDescription.id,
+              role: "autocomplete",
+              title: selectedOption,
+            });
+          }
         } else if (selectedOption === "$(feedback) Give feedback") {
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
         } else if (selectedOption === "$(comment) Open chat (Cmd+L)") {
