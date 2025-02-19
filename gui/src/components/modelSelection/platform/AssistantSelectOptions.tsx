@@ -1,21 +1,17 @@
-import {
-  BuildingOfficeIcon,
-  PlusIcon,
-  UserCircleIcon,
-} from "@heroicons/react/24/outline";
+import { BuildingOfficeIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
+import { selectProfileThunk } from "../../../redux/thunks/profileAndOrg";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
-import { ProfileDescription } from "core/config/ConfigHandler";
-import { selectProfileThunk } from "../../../redux/thunks/profileAndOrg";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -48,6 +44,10 @@ export function AssistantSelectOptions({
     onClose();
   }
 
+  if (!profiles) {
+    return null;
+  }
+
   return (
     <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
       <div className={`max-h-[300px]`}>
@@ -78,8 +78,6 @@ export function AssistantSelectOptions({
                   style={{ fontSize: getFontSize() - 2 }}
                 >
                   {getProfileDisplayText(profile)}
-                  {profile.fullSlug.versionSlug &&
-                    ` (${profile.fullSlug.versionSlug})`}
                 </span>
               </div>
             </Option>
@@ -115,7 +113,10 @@ export function AssistantSelectOptions({
             onClick={() => navigate(ROUTES.CONFIG)}
           >
             {selectedOrganization?.iconUrl ? (
-              <img src={selectedOrganization.iconUrl} className="h-4 w-4" />
+              <img
+                src={selectedOrganization.iconUrl}
+                className="h-4 w-4 rounded-full"
+              />
             ) : (
               <BuildingOfficeIcon className="h-4 w-4" />
             )}

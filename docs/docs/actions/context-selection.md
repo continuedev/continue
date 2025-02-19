@@ -7,7 +7,7 @@ sidebar_position: 3
 
 ## Slash commands
 
-Slash commands can be combined with additional instructions, including [context providers](chat/context-selection.md) or [highlighted code](chat/context-selection.md).
+Slash commands can be combined with additional instructions, including [context providers](../customize/context-providers.mdx) or [highlighted code](../edit/context-selection#highlighted-code).
 
 For example, with the “/edit” slash command you should describe the edit that you want the LLM to perform.
 

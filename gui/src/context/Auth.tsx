@@ -15,18 +15,18 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
-import { IdeMessengerContext } from "./IdeMessenger";
 import {
   updateOrgsThunk,
   updateProfilesThunk,
 } from "../redux/thunks/profileAndOrg";
+import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
   logout: () => void;
   login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | null;
-  profiles: ProfileDescription[];
+  profiles: ProfileDescription[] | null;
   controlServerBetaEnabled: boolean;
   organizations: OrganizationDescription[];
   selectedOrganization: OrganizationDescription | null;
@@ -59,15 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Profiles
   const profiles = useAppSelector((store) => store.session.availableProfiles);
-  const selectedProfileId = useAppSelector(
-    (store) => store.session.selectedProfileId,
+  const selectedProfile = useAppSelector(
+    (store) => store.session.selectedProfile,
   );
-  const selectedProfile = useMemo(() => {
-    if (!selectedProfileId) {
-      return null;
-    }
-    return profiles.find((p) => p.id === selectedProfileId) ?? null;
-  }, [profiles, selectedProfileId]);
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
     return new Promise((resolve) => {
@@ -111,6 +105,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
     setSession(data.sessionInfo);
+    // On logout, clear the list of orgs
+    if (!data.sessionInfo) {
+      dispatch(updateOrgsThunk([]));
+    }
   });
 
   useEffect(() => {
@@ -149,8 +147,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             dispatch(updateOrgsThunk([]));
           }
         });
-    } else {
-      dispatch(updateOrgsThunk([]));
     }
   }, [session]);
 
@@ -169,7 +165,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     ideMessenger.request("config/listProfiles", undefined).then((result) => {
       if (result.status === "success") {
-        dispatch(updateProfilesThunk(result.content));
+        console.log("PROFILES: ", result.content);
+        dispatch(
+          updateProfilesThunk({
+            profiles: result.content,
+            selectedProfileId: null,
+          }),
+        );
       }
     });
   }, []);
@@ -177,7 +179,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useWebviewListener(
     "didChangeAvailableProfiles",
     async (data) => {
-      dispatch(updateProfilesThunk(data.profiles));
+      console.log("AVAILABLE: ", data.profiles, data.selectedProfileId);
+      dispatch(
+        updateProfilesThunk({
+          profiles: data.profiles,
+          selectedProfileId: data.selectedProfileId,
+        }),
+      );
     },
     [],
   );

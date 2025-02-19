@@ -68,7 +68,7 @@ export function modifyConfig(config: Config): Config {
 }
 ```
 
-不需要对  `config.json` 做修改。
+不需要对 `config.json` 做修改。
 
 ## 定制有 submenu 或 query 的上下文提供者
 
@@ -174,7 +174,7 @@ Continue 将使用 [esbuild](https://esbuild.github.io/) 打包你的 `config.ts
 
 如果你想要用除了 TypeScript 的其他语言编写上下文提供者，你可以使用 "http" 上下文提供者，来调用一个托管你自己代码的服务器。添加上下文提供者到 `config.json` ，像这样：
 
-```json
+```json title="config.json"
 {
   "name": "http",
   "params": {
