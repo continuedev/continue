@@ -49,6 +49,7 @@ import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import Novita from "./Novita";
+import Venice from "./Venice";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
@@ -96,6 +97,7 @@ export const LLMClasses = [
   Cerebras,
   Asksage,
   Nebius,
+  Venice,
   VertexAI,
   xAI,
   SiliconFlow,
