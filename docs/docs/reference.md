@@ -151,7 +151,7 @@ Parameters that control the behavior of text generation and completion settings.
 - `topP`: The cumulative probability for nucleus sampling. Lower values limit responses to tokens within the top probability mass.
 - `topK`: The maximum number of tokens considered at each step. Limits the generated text to tokens within this probability.
 - `presencePenalty`: Discourages the model from generating tokens that have already appeared in the output.
-- `frequencePenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
+- `frequencyPenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
 - `mirostat`: Enables Mirostat sampling, which controls the perplexity during text generation. Supported by Ollama, LM Studio, and llama.cpp providers (default: `0`, where `0` = disabled, `1` = Mirostat, and `2` = Mirostat 2.0).
 - `stop`: An array of stop tokens that, when encountered, will terminate the completion. Allows specifying multiple end conditions.
 - `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
