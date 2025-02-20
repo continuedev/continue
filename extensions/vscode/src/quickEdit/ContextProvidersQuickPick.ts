@@ -41,8 +41,8 @@ export async function getContextProvidersString(
         return provider.getContextItems("", {
           config,
           ide,
-          embeddingsProvider: config.embeddingsProvider,
-          reranker: config.reranker,
+          embeddingsProvider: config.selectedModelByRole.embed,
+          reranker: config.selectedModelByRole.rerank,
           llm: config.models[0],
           fullInput: "",
           selectedCode: [],

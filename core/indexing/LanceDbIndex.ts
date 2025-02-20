@@ -40,11 +40,11 @@ type ChunkMap = Map<string, ItemWithChunks>;
 export class LanceDbIndex implements CodebaseIndex {
   relativeExpectedTime: number = 13;
   get artifactId(): string {
-    return `vectordb::${this.embeddingsProvider.embeddingId}`;
+    return `vectordb::${this.embeddingsProvider?.embeddingId}`;
   }
 
   constructor(
-    private readonly embeddingsProvider: ILLM,
+    private readonly embeddingsProvider: ILLM | null,
     private readonly readFile: (filepath: string) => Promise<string>,
     private readonly continueServerClient?: IContinueServerClient,
   ) {}
@@ -142,6 +142,9 @@ export class LanceDbIndex implements CodebaseIndex {
     item: PathAndCacheKey,
     content: string,
   ): Promise<Chunk[]> {
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     const chunks: Chunk[] = [];
 
     const chunkParams = {
@@ -163,6 +166,9 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async getEmbeddings(chunks: Chunk[]): Promise<number[][]> {
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     try {
       return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
     } catch (err) {
@@ -436,6 +442,9 @@ export class LanceDbIndex implements CodebaseIndex {
     tags: BranchAndDir[],
     filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     const [vector] = await this.embeddingsProvider.embed([query]);
     const db = await lance.connect(getLanceDbPath());
 

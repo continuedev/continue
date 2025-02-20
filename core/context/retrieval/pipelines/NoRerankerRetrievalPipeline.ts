@@ -9,7 +9,7 @@ import BaseRetrievalPipeline, {
 
 export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
   async run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
-    const { input, nFinal, filterDirectory, includeEmbeddings } = this.options;
+    const { input, nFinal, filterDirectory, config } = this.options;
 
     // We give 1/4 weight to recently edited files, 1/4 to full text search,
     // and the remaining 1/2 to embeddings
@@ -21,7 +21,7 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     const ftsChunks = await this.retrieveFts(args, ftsNFinal);
 
-    const embeddingsChunks = includeEmbeddings
+    const embeddingsChunks = !!config.selectedModelByRole.embed
       ? await this.retrieveEmbeddings(input, embeddingsNFinal)
       : [];
 

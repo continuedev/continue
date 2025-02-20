@@ -1,4 +1,4 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, ModelRole } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
@@ -27,6 +27,7 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -36,8 +37,6 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  "update/selectTabAutocompleteModel": [string, void];
-
   // Special
   ping: [string, string];
   abort: [undefined, void];
@@ -70,7 +69,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[] | null];
   "config/openProfile": [{ profileId: string | undefined }, void];
-  "config/updateSharedConfig": [SharedConfigSchema, void];
+  "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
+  "config/updateSelectedModel": [
+    {
+      profileId: string;
+      role: ModelRole;
+      title: string | null;
+    },
+    GlobalContextModelSelections,
+  ];
   "context/getContextItems": [
     {
       name: string;
