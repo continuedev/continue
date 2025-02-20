@@ -263,7 +263,9 @@ class VertexAI extends BaseLLM {
     });
 
     for await (const chunk of streamSse(response)) {
-      yield chunk.choices[0].delta.content;
+      if (chunk.choices?.[0].delta) {
+        yield chunk.choices[0].delta.content;
+      }
     }
   }
 
@@ -358,7 +360,7 @@ class VertexAI extends BaseLLM {
   }
 
   supportsFim(): boolean {
-    return ["code-gecko", "codestral-latest"].includes(this.model);
+    return this.model.includes("code-gecko") || this.model.includes("codestral");
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
