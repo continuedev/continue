@@ -16,7 +16,7 @@ Below is a quick example of setting up a prompt file to de
 2. Add a file called `rails.prompt` to this folder.
 3. Write the following contents to `rails.prompt` and save.
 
-```
+```.prompt
 name: Rails Project
 description: Information about this project
 ---
@@ -47,7 +47,7 @@ If you don't need any of these parameters, you can leave out the preamble and do
 
 ### Context
 
-Many [context provider](../context-providers.md) can be referenced by typing "@" followed by the name of the context provider. The currently supported list is:
+Many [context provider](../context-providers.mdx) can be referenced by typing "@" followed by the name of the context provider. The currently supported list is:
 
 - `@terminal` - The contents of the terminal
 - `@currentFile` - The currently active file

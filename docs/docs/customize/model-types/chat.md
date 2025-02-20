@@ -9,11 +9,11 @@ A "chat model" is an LLM that is trained to respond in a conversational format. 
 
 ## Recommended Chat models
 
-If you have the ability to use any model, we recommend [Claude 3.5 Sonnet](../model-providers/top-level/anthropic.md).
+If you have the ability to use any model, we recommend [Claude 3.5 Sonnet](../model-providers/top-level/anthropic.mdx).
 
 Otherwise, some of the next best options are:
 
-- [GPT-4o](../model-providers/top-level/openai.md)
-- [Grok-2](../model-providers/top-level/xAI.md)
-- [Gemini 1.5 Pro](../model-providers/top-level/gemini.md)
-- [Llama3.1 405B](../tutorials/llama3.1.md)
+- [GPT-4o](../model-providers/top-level/openai.mdx)
+- [Grok-2](../model-providers/top-level/xAI.mdx)
+- [Gemini 1.5 Pro](../model-providers/top-level/gemini.mdx)
+- [Llama3.1 405B](../tutorials/llama3.1.mdx)
