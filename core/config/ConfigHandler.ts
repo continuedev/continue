@@ -50,7 +50,7 @@ export class ConfigHandler {
   private profiles: ProfileLifecycleManager[] | null = null; // null until profiles are loaded
   private selectedProfileId: string | null = null;
   private localProfileManager: ProfileLifecycleManager;
-  private controlPlaneClient: ControlPlaneClient;
+  controlPlaneClient: ControlPlaneClient;
 
   initializedPromise: Promise<void>;
 

@@ -338,6 +338,7 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
+      selectedModelTitle,
     });
 
     dispatch(submitEdit(prompt));

@@ -1,10 +1,6 @@
 import * as z from "zod";
 import { modelSchema, partialModelSchema } from "./models.js";
-
-export const dataSchema = z.object({
-  destination: z.string(),
-  levels: z.string().optional(),
-});
+import { dataSchema } from "./data/index.js";
 
 export const contextSchema = z.object({
   provider: z.string(),

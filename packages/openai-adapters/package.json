@@ -14,7 +14,7 @@
   "dependencies": {
     "@azure/openai": "^1.0.0-beta.12",
     "@continuedev/config-types": "^1.0.5",
-    "@continuedev/config-yaml": "^1.0.31",
+    "@continuedev/config-yaml": "^1.0.32",
     "@continuedev/fetch": "^1.0.3",
     "json-schema": "^0.4.0",
     "node-fetch": "^3.3.2",
