@@ -360,7 +360,9 @@ class VertexAI extends BaseLLM {
   }
 
   supportsFim(): boolean {
-    return this.model.includes("code-gecko") || this.model.includes("codestral");
+    return (
+      this.model.includes("code-gecko") || this.model.includes("codestral")
+    );
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
