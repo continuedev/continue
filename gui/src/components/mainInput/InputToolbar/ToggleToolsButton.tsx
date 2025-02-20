@@ -82,8 +82,8 @@ export default function ToolDropdown(props: ToolDropdownProps) {
               <Listbox
                 value={null}
                 onChange={() => {}}
-                as="div"
-                onClick={(e) => e.stopPropagation()}
+                // as="div"
+                // onClick={(e) => e.stopPropagation()}
                 disabled={props.disabled}
               >
                 {({ open }) => (
@@ -101,7 +101,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                     </Listbox.Button>
                     <PopoverTransition
                       show={open}
-                      afterLeave={() => setDropdownOpen(false)}
+                      // afterLeave={() => setDropdownOpen(false)}
                     >
                       <Listbox.Options
                         className={`bg-vsc-editor-background border-lightgray/50 absolute -left-32 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}

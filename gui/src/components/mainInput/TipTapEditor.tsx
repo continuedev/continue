@@ -551,7 +551,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
   const debouncedShouldHideToolbar = debounce((value) => {
     setShouldHideToolbar(value);
-  }, 200);
+  }, 1000);
 
   function getPlaceholderText(
     placeholder: TipTapEditorProps["placeholder"],
@@ -591,7 +591,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   useEffect(() => {
     if (editor) {
       const handleFocus = () => {
-        debouncedShouldHideToolbar(false);
+        setShouldHideToolbar(false);
       };
 
       const handleBlur = () => {
