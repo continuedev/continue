@@ -67,7 +67,7 @@ const devEventAllVersionDataSchemas = z.object({
   chatFeedback: chatFeedbackEventAllSchema,
   tokensGenerated: tokensGeneratedEventAllSchema,
   chatInteraction: chatInteractionEventAllSchema,
-  editInteraction: editInteractionEventAllSchema,
+  // editInteraction: editInteractionEventAllSchema,
 });
 
 // Version and level specific schemas are organized here
