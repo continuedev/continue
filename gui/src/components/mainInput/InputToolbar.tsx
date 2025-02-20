@@ -154,7 +154,7 @@ function InputToolbar(props: InputToolbarProps) {
               </HoverItem>
             )}
 
-            {!isInEditMode && <ToggleToolsButton disabled={!toolsSupported} />}
+            <ToggleToolsButton disabled={!toolsSupported} />
           </div>
         </div>
 
