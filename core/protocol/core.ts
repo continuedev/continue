@@ -14,11 +14,11 @@ import type {
   ContextSubmenuItem,
   DiffLine,
   DocsIndexingDetails,
+  ExperimentalModelRoles,
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
   ModelDescription,
-  ExperimentalModelRoles,
   PromptLog,
   RangeInFile,
   SerializedContinueConfig,
@@ -69,7 +69,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/deleteModel": [{ title: string }, void];
   "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/listProfiles": [undefined, ProfileDescription[]];
+  "config/listProfiles": [undefined, ProfileDescription[] | null];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, void];
   "context/getContextItems": [

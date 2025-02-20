@@ -13,13 +13,13 @@ import {
   setInactive,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
-import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 
 function useSetup() {
   const dispatch = useAppDispatch();
@@ -45,6 +45,7 @@ function useSetup() {
       }
       hasLoadedConfig.current = true;
       dispatch(setConfigResult(configResult));
+      console.log("selecting 1", profileId);
       dispatch(selectProfileThunk(profileId));
 
       // Perform any actions needed with the config
@@ -94,6 +95,7 @@ function useSetup() {
   useWebviewListener(
     "configUpdate",
     async (update) => {
+      console.log("CONFIG UPDATE: ", update);
       if (!update) {
         return;
       }
