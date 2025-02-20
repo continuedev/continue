@@ -82,8 +82,8 @@ export default function ToolDropdown(props: ToolDropdownProps) {
               <Listbox
                 value={null}
                 onChange={() => {}}
-                // as="div"
-                // onClick={(e) => e.stopPropagation()}
+                as="div"
+                onClick={(e) => e.stopPropagation()}
                 disabled={props.disabled}
               >
                 {({ open }) => (
@@ -147,7 +147,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                             />
                           </div>
                         </div>
-                        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
+                        <div className="max-h-48 overflow-y-auto overflow-x-hidden pr-2">
                           {availableTools.map((tool: any) => (
                             <Listbox.Option
                               key={tool.function.name}
