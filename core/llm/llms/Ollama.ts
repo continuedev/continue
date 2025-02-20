@@ -1,6 +1,11 @@
 import { JSONSchema7, JSONSchema7Object } from "json-schema";
 
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  CompletionOptions,
+  EmbedOptions,
+  LLMOptions,
+} from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -261,6 +266,8 @@ class Ollama extends BaseLLM {
       stop: options.stop,
       num_ctx: this.contextLength,
       mirostat: options.mirostat,
+      mirostat_eta: options.mirostatEta,
+      mirostat_tau: options.mirostatTau,
       num_thread: options.numThreads,
       use_mmap: options.useMmap,
       min_p: options.minP,
@@ -521,13 +528,57 @@ class Ollama extends BaseLLM {
     }
   }
 
-  protected async _embed(chunks: string[]): Promise<number[][]> {
+  protected async _embed(
+    chunks: string[],
+    embedOptions: EmbedOptions = {},
+  ): Promise<number[][]> {
+    // Define the body_constructor object first
+    const body_constructor: {
+      model: string;
+      input: string[];
+      options?: Record<string, any>;
+      truncate?: boolean;
+      keep_alive?: string;
+    } = {
+      model: this.model,
+      input: chunks,
+    };
+    const _embedModelOptions = { ...(embedOptions?.modelOptions || {}) };
+    // Helper function to filter and transform options
+    const _getEmbedOptions = (): Record<string, any> => {
+      let filteredOptions: Record<string, any> = {};
+
+      // Handle special cases first
+      if (embedOptions?.maxChunkSize !== undefined) {
+        filteredOptions.num_ctx = embedOptions.maxChunkSize;
+      }
+
+      if (_embedModelOptions?.keepAlive !== undefined) {
+        body_constructor.keep_alive =
+          Math.floor(_embedModelOptions.keepAlive / 60).toString() + "m";
+        delete _embedModelOptions.keepAlive;
+      }
+
+      if (_embedModelOptions?.truncate !== undefined) {
+        body_constructor.truncate = _embedModelOptions.truncate;
+        delete _embedModelOptions.truncate;
+      }
+
+      // Map remaining options directly
+      filteredOptions = { ...filteredOptions, ..._embedModelOptions };
+
+      return filteredOptions;
+    };
+
+    const options = _getEmbedOptions();
+
+    if (Object.keys(options).length > 0) {
+      body_constructor.options = options;
+    }
+
     const resp = await this.fetch(new URL("api/embed", this.apiBase), {
       method: "POST",
-      body: JSON.stringify({
-        model: this.model,
-        input: chunks,
-      }),
+      body: JSON.stringify(body_constructor),
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
@@ -544,6 +595,7 @@ class Ollama extends BaseLLM {
     if (!embedding || embedding.length === 0) {
       throw new Error("Ollama generated empty embedding");
     }
+
     return embedding;
   }
 }
