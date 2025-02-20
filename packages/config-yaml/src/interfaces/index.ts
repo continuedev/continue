@@ -34,6 +34,11 @@ export function getLocationsToLook(
   secretName: string,
 ): SecretLocation[] {
   const locationsToLook: SecretLocation[] = [
+    // Models Add-On
+    {
+      secretType: SecretType.ModelsAddOn as const,
+      secretName,
+    },
     // Block
     ...(blockSlug
       ? [
@@ -56,10 +61,15 @@ export function getLocationsToLook(
       orgSlug: assistantSlug.ownerSlug,
       secretName,
     },
-    // Then user
+    // User
     {
       secretType: SecretType.User as const,
       userSlug: currentUserSlug,
+      secretName,
+    },
+    // Free Trial
+    {
+      secretType: SecretType.FreeTrial as const,
       secretName,
     },
   ];
