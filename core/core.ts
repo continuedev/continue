@@ -140,9 +140,12 @@ export class Core {
       });
 
       // update additional submenu context providers registered via VSCode API
-      this.messenger.send("refreshSubmenuItems", {
-        providers: this.configHandler.getAdditionalSubmenuContextProviders()
-      });
+      const additionalProviders = this.configHandler.getAdditionalSubmenuContextProviders();
+      if (additionalProviders.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: additionalProviders,
+        });
+      }
     });
 
     this.configHandler.onDidChangeAvailableProfiles((profiles) =>
