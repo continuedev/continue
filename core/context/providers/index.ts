@@ -46,8 +46,8 @@ export const Providers: (typeof BaseContextProvider)[] = [
   TerminalContextProvider,
   DebugLocalsProvider,
   OpenFilesContextProvider,
-  HttpContextProvider, // Deprecated but left here for functionality
   RemoteServerContextProvider,
+  HttpContextProvider, // Deprecated but left here for legacy support
   SearchContextProvider,
   OSContextProvider,
   ProblemsContextProvider,

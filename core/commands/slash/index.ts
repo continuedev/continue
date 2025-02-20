@@ -10,7 +10,7 @@ export default [
   DraftIssueCommand,
   ShareSlashCommand,
   GenerateTerminalCommand,
-  HttpSlashCommand, // deprecated, use remote, left here for functionality
+  HttpSlashCommand, // deprecated, use remote, left here for legacy support
   RemoteServerSlashCommand,
   CommitMessageCommand,
   ReviewMessageCommand,
