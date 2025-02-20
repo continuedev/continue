@@ -128,6 +128,14 @@ export class Core {
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
       });
+
+      // update additional submenu context providers registered via VSCode API
+      const additionalProviders = this.configHandler.getAdditionalSubmenuContextProviders();
+      if (additionalProviders.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: additionalProviders,
+        });
+      }
     });
 
     this.configHandler.onDidChangeAvailableProfiles(
