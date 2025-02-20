@@ -21,6 +21,7 @@ export async function clientRender(
   packageSlug: PackageSlug,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
+  orgScopeId: string | null, // The "scope" that the user is logged in with
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -67,7 +68,11 @@ export async function clientRender(
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
-  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml, packageSlug);
+  const finalConfig = useProxyForUnrenderedSecrets(
+    parsedYaml,
+    packageSlug,
+    orgScopeId,
+  );
   return finalConfig;
 }
 
@@ -106,6 +111,7 @@ function getContinueProxyModelName(
 function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
   packageSlug: PackageSlug,
+  orgScopeId: string | null,
 ): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
@@ -122,6 +128,7 @@ function useProxyForUnrenderedSecrets(
             config.models[i].model,
           ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
+          orgScopeId,
           apiKey: undefined,
         };
       }

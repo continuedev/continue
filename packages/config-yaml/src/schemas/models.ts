@@ -65,6 +65,7 @@ export const modelSchema = z.union([
     ...baseModelFields,
     provider: z.literal("continue-proxy"),
     apiKeyLocation: z.string(),
+    orgScopeId: z.string().nullable(),
   }),
   z.object({
     ...baseModelFields,

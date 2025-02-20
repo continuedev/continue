@@ -171,6 +171,7 @@ export class ConfigHandler {
                 packageSlug: assistant.packageSlug,
               },
               YAML.stringify(assistant.configResult.config),
+              selectedOrgId,
               this.ide,
               this.controlPlaneClient,
             );

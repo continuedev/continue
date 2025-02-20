@@ -19,6 +19,7 @@ class ContinueProxy extends OpenAI {
     super(options);
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
+    this.organizationSlug = options.organizationSlug;
   }
 
   static providerName = "continue-proxy";
@@ -31,6 +32,7 @@ class ContinueProxy extends OpenAI {
       continueProperties: {
         apiKeyLocation: this.apiKeyLocation,
         apiBase: this.actualApiBase,
+        organizationSlug: this.organizationSlug,
       },
     };
   }

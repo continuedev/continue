@@ -1,3 +1,4 @@
+import { ModelRole } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -56,7 +57,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { ModelRole } from "@continuedev/config-yaml";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -118,8 +118,12 @@ export abstract class BaseLLM implements ILLM {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
+  organizationSlug?: string;
+
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
@@ -198,9 +202,13 @@ export abstract class BaseLLM implements ILLM {
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
+
+    // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
-    this.aiGatewaySlug = options.aiGatewaySlug;
+    this.organizationSlug = options.organizationSlug;
     this.apiBase = options.apiBase;
+
+    this.aiGatewaySlug = options.aiGatewaySlug;
     this.cacheBehavior = options.cacheBehavior;
 
     // watsonx deploymentId

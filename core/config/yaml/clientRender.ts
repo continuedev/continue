@@ -11,6 +11,7 @@ import { ControlPlaneClient } from "../../control-plane/client";
 export async function clientRenderHelper(
   packageSlug: PackageSlug,
   unrolledAssistant: string,
+  orgScopeId: string | null,
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
 ) {
@@ -38,6 +39,7 @@ export async function clientRenderHelper(
     packageSlug,
     unrolledAssistant,
     ideSecretStore,
+    orgScopeId,
     userId ? platformClient : undefined,
   );
 }

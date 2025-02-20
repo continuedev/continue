@@ -123,6 +123,7 @@ describe("E2E Scenarios", () => {
       { ownerSlug: "test-org", packageSlug: "assistant" },
       YAML.stringify(unrolledConfig),
       localUserSecretStore,
+      "test-org",
       platformClient,
     );
 
