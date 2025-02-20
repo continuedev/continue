@@ -110,7 +110,6 @@ function InputToolbar(props: InputToolbarProps) {
       <StyledDiv
         isHidden={props.hidden}
         onClick={props.onClick}
-        id="input-toolbar"
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
