@@ -86,11 +86,11 @@ print(actual.text)
 
 为了 Continue 扩展能够访问你的定制 RAG 系统，你需要设置服务器。这个服务器负责接收来自扩展的查询，查询向量数据库，返回 Continue 想要的格式的结果。
 
-这是一个使用 FastAPI 的参考实现，适用于处理来自 Continue 的 "http" 上下文提供者的请求。
+这是一个使用 FastAPI 的参考实现，适用于处理来自 Continue 的 "remote" 上下文提供者的请求。
 
 ```python
 """
-This is an example of a server that can be used with the "http" context provider.
+This is an example of a server that can be used with the "remote" context provider.
 """
 
 from fastapi import FastAPI
@@ -121,15 +121,15 @@ async def create_item(item: ContextProviderInput):
     return context_items
 ```
 
-在你设置服务器之后，你可以配置 Continue 使用它，通过添加 "http" 上下文提供者到你的 `config.json` 中的 `contextProviders` 列表：
+在你设置服务器之后，你可以配置 Continue 使用它，通过添加 "remote" 上下文提供者到你的 `config.json` 中的 `contextProviders` 列表：
 
 ```json title="config.json"
 {
-  "name": "http",
+  "name": "remote",
   "params": {
     "url": "https://myserver.com/retrieve",
-    "title": "http",
-    "description": "Custom HTTP Context Provider",
+    "title": "remote",
+    "description": "Custom Remote Context Provider",
     "displayTitle": "My Custom Context"
   }
 }

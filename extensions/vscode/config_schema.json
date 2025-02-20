@@ -1701,7 +1701,7 @@
                 "cmd",
                 "edit",
                 "comment",
-                "http",
+                "remote",
                 "commit",
                 "review"
               ],
@@ -1868,7 +1868,7 @@
                 "open",
                 "google",
                 "search",
-                "http",
+                "remote",
                 "codebase",
                 "problems",
                 "folder",
@@ -2341,7 +2341,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["http"]
+                "enum": ["remote"]
               }
             }
           },
