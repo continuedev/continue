@@ -38,14 +38,16 @@ const saveSubsetFilters = [
     "id",
     "lastSessionId",
     "title",
+
+    // Persist edit mode in case closes in middle
     "mode",
+    "codeToEdit",
 
     // TODO consider removing persisted profiles/orgs
     "availableProfiles",
     "organizations",
 
     // higher risk to persist
-    // codeToEdit
     // codeBlockApplyStates
     // symbols
     // curCheckpointIndex
