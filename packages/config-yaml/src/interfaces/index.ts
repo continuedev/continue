@@ -74,7 +74,7 @@ export async function listAvailableSecrets(
   assistantSlug: PackageSlug,
   blockSlug: PackageSlug | undefined,
   currentUserSlug: string,
-) {
+): Promise<SecretLocation[]> {
   // Create a set of all secret names
   const allSecretNames = new Set([
     ...userSecretNames,
