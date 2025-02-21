@@ -1,5 +1,4 @@
 import { ConfigResult } from "@continuedev/config-yaml";
-import { ConfigResult } from "@continuedev/config-yaml";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 
@@ -23,7 +22,6 @@ import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbed
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
-import { GlobalContext } from "../../util/GlobalContext";
 import { GlobalContext } from "../../util/GlobalContext";
 import {
   editConfigJson,
