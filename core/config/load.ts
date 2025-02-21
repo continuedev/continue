@@ -78,8 +78,8 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
-import { validateConfig } from "./validation.js";
 import { getModelByRole } from "./util";
+import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
   filepath: string,
@@ -687,6 +687,7 @@ async function finalToBrowserConfig(
         v ? llmToSerializedModelDescription(v) : null,
       ]),
     ) as Record<ModelRole, ModelDescription | null>, // TODO better types here
+    // data not included here because client doesn't need
   };
 }
 

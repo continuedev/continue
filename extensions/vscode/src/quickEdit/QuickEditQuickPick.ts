@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { IDE } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
@@ -9,6 +8,7 @@ import { VerticalDiffManager } from "../diff/vertical/manager";
 import { FileSearch } from "../util/FileSearch";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
+import { DataLogger } from "core/data/log";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
@@ -225,13 +225,18 @@ export class QuickEdit {
           break;
       }
       let model = await this.getCurModelTitle();
-      logDevData("quickEdit", {
-        prompt,
-        path,
-        label,
-        diffs: this.verticalDiffManager.logDiffs,
-        model,
+
+      void DataLogger.getInstance().logDevData({
+        name: "quickEdit",
+        data: {
+          prompt,
+          path,
+          label,
+          diffs: this.verticalDiffManager.logDiffs,
+          model,
+        },
       });
+
       quickPick.dispose();
     });
   }

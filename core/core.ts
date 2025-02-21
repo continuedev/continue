@@ -30,14 +30,14 @@ import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
-import { logDevData } from "./util/devdata";
-import { DevDataSqliteDb } from "./util/devdataSqlite";
+import { DataLogger } from "./data/log";
+import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import {
   editConfigJson,
   getConfigJsonPath,
-  setupInitialDotContinueDirectory,
+  migrateV1DevDataFiles,
 } from "./util/paths";
 import { localPathToUri } from "./util/pathToUri";
 import { Telemetry } from "./util/posthog";
@@ -94,7 +94,7 @@ export class Core {
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
-    setupInitialDotContinueDirectory();
+    migrateV1DevDataFiles();
 
     this.codebaseIndexingState = {
       status: "loading",
@@ -102,6 +102,7 @@ export class Core {
       progress: 0,
     };
 
+    const ideInfoPromise = messenger.request("getIdeInfo", undefined);
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
@@ -145,6 +146,12 @@ export class Core {
           selectedProfileId,
         }),
     );
+
+    // Dev Data Logger
+    const dataLogger = DataLogger.getInstance();
+    dataLogger.core = this;
+    dataLogger.ideInfoPromise = ideInfoPromise;
+    dataLogger.ideSettingsPromise = ideSettingsPromise;
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;
@@ -259,8 +266,8 @@ export class Core {
     });
 
     // Dev data
-    on("devdata/log", (msg) => {
-      logDevData(msg.data.tableName, msg.data.data);
+    on("devdata/log", async (msg) => {
+      void DataLogger.getInstance().logDevData(msg.data);
     });
 
     // Edit config

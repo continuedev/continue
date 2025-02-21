@@ -1,4 +1,4 @@
-import { ModelRole } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 declare global {
@@ -1147,6 +1147,7 @@ export interface SerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  data?: DataDestination[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1199,6 +1200,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
+  data?: DataDestination[];
 }
 
 // in the actual Continue source code
@@ -1221,6 +1223,7 @@ export interface ContinueConfig {
   tools: Tool[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
+  data?: DataDestination[];
 }
 
 export interface BrowserSerializedContinueConfig {

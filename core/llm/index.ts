@@ -1,3 +1,4 @@
+import { ModelRole } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -7,6 +8,8 @@ import {
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
+import { DevDataSqliteDb } from "../data/devdataSqlite.js";
+import { DataLogger } from "../data/log.js";
 import {
   CacheBehavior,
   ChatMessage,
@@ -21,8 +24,6 @@ import {
   RequestOptions,
   TemplateType,
 } from "../index.js";
-import { logDevData } from "../util/devdata.js";
-import { DevDataSqliteDb } from "../util/devdataSqlite.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
@@ -56,7 +57,6 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
-import { ModelRole } from "@continuedev/config-yaml";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -288,7 +288,7 @@ export abstract class BaseLLM implements ILLM {
     return this.templateMessages(msgs);
   }
 
-  private _compileLogMessage(
+  private _compilePromptForLog(
     prompt: string,
     completionOptions: CompletionOptions,
   ): string {
@@ -343,11 +343,14 @@ export abstract class BaseLLM implements ILLM {
       generatedTokens,
     );
 
-    logDevData("tokens_generated", {
-      model: model,
-      provider: this.providerName,
-      promptTokens: promptTokens,
-      generatedTokens: generatedTokens,
+    void DataLogger.getInstance().logDevData({
+      name: "tokensGenerated",
+      data: {
+        model: model,
+        provider: this.providerName,
+        promptTokens: promptTokens,
+        generatedTokens: generatedTokens,
+      },
     });
   }
 
@@ -447,7 +450,7 @@ export abstract class BaseLLM implements ILLM {
       options,
     );
 
-    return { completionOptions, log, raw };
+    return { completionOptions, logEnabled: log, raw };
   }
 
   private _formatChatMessages(messages: ChatMessage[]): string {
@@ -500,12 +503,15 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string> {
-    const { completionOptions, log } = this._parseCompletionOptions(options);
+    const { completionOptions, logEnabled } =
+      this._parseCompletionOptions(options);
 
     const fimLog = `Prefix: ${prefix}\nSuffix: ${suffix}`;
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(fimLog, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(fimLog, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, fimLog);
@@ -541,7 +547,7 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, fimLog, completion);
 
-    if (log && this.writeLog) {
+    if (logEnabled && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
@@ -557,7 +563,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ) {
-    const { completionOptions, log, raw } =
+    const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
 
     let prompt = pruneRawPromptFromTop(
@@ -571,9 +577,11 @@ export abstract class BaseLLM implements ILLM {
       prompt = this._templatePromptLikeMessages(prompt);
     }
 
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(prompt, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -618,7 +626,7 @@ export abstract class BaseLLM implements ILLM {
     } finally {
       this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-      if (log && this.writeLog) {
+      if (logEnabled && this.writeLog) {
         await this.writeLog(`Completion:\n${completion}\n\n`);
       }
     }
@@ -636,7 +644,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ) {
-    const { completionOptions, log, raw } =
+    const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
 
     let prompt = pruneRawPromptFromTop(
@@ -650,9 +658,11 @@ export abstract class BaseLLM implements ILLM {
       prompt = this._templatePromptLikeMessages(prompt);
     }
 
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(prompt, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -675,7 +685,7 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-    if (log && this.writeLog) {
+    if (logEnabled && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
@@ -719,7 +729,8 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
-    let { completionOptions, log } = this._parseCompletionOptions(options);
+    let { completionOptions, logEnabled } =
+      this._parseCompletionOptions(options);
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
@@ -728,9 +739,11 @@ export abstract class BaseLLM implements ILLM {
     const prompt = this.templateMessages
       ? this.templateMessages(messages)
       : this._formatChatMessages(messages);
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(prompt, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -797,7 +810,7 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-    if (log && this.writeLog) {
+    if (logEnabled && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 

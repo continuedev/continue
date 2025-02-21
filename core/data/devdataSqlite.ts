@@ -5,8 +5,9 @@ import sqlite3 from "sqlite3";
 
 import { DatabaseConnection } from "../indexing/refreshIndex.js";
 
-import { getDevDataSqlitePath } from "./paths.js";
+import { getDevDataSqlitePath } from "../util/paths.js";
 
+/* The Dev Data SQLITE table is only used for local tokens generated */
 export class DevDataSqliteDb {
   static db: DatabaseConnection | null = null;
 

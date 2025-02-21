@@ -149,6 +149,7 @@ async function configYamlToContinueConfig(
       rerank: null,
       summarize: null,
     },
+    data: config.data,
   };
 
   // Models

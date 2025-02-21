@@ -27,6 +27,7 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { DevDataLogEvent } from "../../packages/config-yaml/src/schemas/data";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
@@ -46,7 +47,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
-  "devdata/log": [{ tableName: string; data: any }, void];
+  "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
     {
