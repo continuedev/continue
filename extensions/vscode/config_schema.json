@@ -253,7 +253,8 @@
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
             "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
             "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings.",
-            "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/)."
+            "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/).",
+            "### Venice\n Venice.AI is a privacy-focused generative AI platform, allowing users to interact with open-source LLMs without storing any private user data.\nHosted models support the OpenAI API standard, providing seamless integration for users seeking privacy and flexibility.\nTo get started with the Venice API, either purchase a pro account, stake $VVV for daily inference allotments, or fund your account with USD.\nVisit the [API settings page](https://venice.ai/settings/api) or learn more at the [Venice API documentation](https://venice.ai/api)."
           ],
           "type": "string"
         },
@@ -487,7 +488,8 @@
                   "nebius",
                   "xAI",
                   "kindo",
-                  "scaleway"
+                  "scaleway",
+                  "venice"
                 ]
               }
             },
@@ -1674,6 +1676,32 @@
                       "mistral-large",
                       "llama-3-chat",
                       "gemini-pro",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["novita"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
                       "AUTODETECT"
                     ]
                   },
