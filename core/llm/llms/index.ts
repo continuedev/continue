@@ -137,6 +137,7 @@ export async function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
     systemMessage,
+    replaceSystemMessage: desc.replaceSystemMessage ?? false,
     writeLog,
     uniqueId,
   };
