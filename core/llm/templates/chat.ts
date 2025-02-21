@@ -156,7 +156,7 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
   let prompt = "";
   let system: string | null = null;
   prompt +=
-    "You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n";
+    "You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and your  role is to assist with questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will not answer.\n";
   if (msgs[0].role === "system") {
     system = renderChatMessage(msgs.shift()!);
   }

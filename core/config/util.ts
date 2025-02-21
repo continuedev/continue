@@ -12,6 +12,8 @@ import {
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
 
+import { ConfigHandler } from "./ConfigHandler";
+
 function stringify(obj: any, indentation?: number): string {
   return JSON.stringify(
     obj,
@@ -22,16 +24,24 @@ function stringify(obj: any, indentation?: number): string {
   );
 }
 
-export function addContextProvider(provider: ContextProviderWithParams) {
+export function addContextProvider(provider: ContextProviderWithParams, configHandler?: ConfigHandler) {
+  let isAdded = false;
   editConfigJson((config) => {
+
     if (!config.contextProviders) {
-      config.contextProviders = [provider];
-    } else {
+      config.contextProviders = [];
+    }
+    if (!config.contextProviders.some((p) => p.name === provider.name)) {
       config.contextProviders.push(provider);
+      isAdded = true;
     }
 
     return config;
   });
+
+  if (isAdded && configHandler) {
+    void configHandler.reloadConfig();
+  }
 }
 
 export function addModel(

@@ -28,4 +28,4 @@ The following usage information is collected and reported:
 
 You can disable anonymous telemetry by visiting the [User Settings Page](./customize/settings.md) and toggling "Allow Anonymous Telemetry" off.
 
-Alternatively in VS Code, you can disable telemetry through your VS Code settings by unchecking the "Continue: Telemetry Enabled" box (this will override the Settings Page settings).
+Alternatively in VS Code, you can disable telemetry through your VS Code settings by unchecking the "Continue: Telemetry Enabled" box (this will override the Settings Page settings). VS Code settings can be accessed with `File` > `Preferences` > `Settings` (or use the keyboard shortcut <kbd>ctrl</kbd> + <kbd>,</kbd> on Windows/Linux or <kbd>cmd</kbd> + <kbd>,</kbd> on macOS).

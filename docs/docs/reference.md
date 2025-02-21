@@ -4,6 +4,10 @@ description: Reference for the Continue _config.json_ configuration file
 keywords: [config, config_schema.json, json]
 ---
 
+:::info
+We recently introduced a new configuration format, `config.yaml`, to replace `config.json`. See the `config.yaml` reference and migration guide [here](./yaml-reference.md).
+:::
+
 Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
 
 **All properties at all levels are optional unless explicitly marked required**
@@ -33,6 +37,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `engine`: Engine for Azure OpenAI requests.
 - `capabilities`: Override auto-detected capabilities:
   - `uploadImage`: Boolean indicating if the model supports image uploads.
+  - `tools`: Boolean indicating if the model supports tool use.
 
 _(AWS Only)_
 
