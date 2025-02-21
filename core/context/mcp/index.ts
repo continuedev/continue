@@ -121,6 +121,8 @@ class MCPConnection {
     config: ContinueConfig,
     mcpId: string,
     signal: AbortSignal,
+    name: string,
+    faviconUrl: string | undefined,
   ): Promise<ConfigValidationError | undefined> {
     try {
       await Promise.race([
@@ -152,6 +154,7 @@ class MCPConnection {
         title: resource.name,
         description: resource.description,
         id: resource.uri,
+        icon: faviconUrl,
       }));
 
       if (!config.contextProviders) {
@@ -161,6 +164,7 @@ class MCPConnection {
       config.contextProviders.push(
         new MCPContextProvider({
           submenuItems,
+          mcpId,
         }),
       );
     }
@@ -169,19 +173,20 @@ class MCPConnection {
     if (capabilities?.tools) {
       const { tools } = await this.client.listTools({}, { signal });
       const continueTools: Tool[] = tools.map((tool: any) => ({
-        displayTitle: tool.name,
+        displayTitle: name + " " + tool.name,
         function: {
           description: tool.description,
           name: tool.name,
           parameters: tool.inputSchema,
         },
+        faviconUrl,
         readonly: false,
         type: "function",
-        wouldLikeTo: `use the ${tool.name} tool`,
+        wouldLikeTo: `use the ${name} ${tool.name} tool`,
         uri: encodeMCPToolUri(mcpId, tool.name),
       }));
 
-      config.tools = [...config.tools, ...continueTools];
+      config.tools = [...continueTools, ...config.tools];
     }
 
     // Prompts <—> Slash commands

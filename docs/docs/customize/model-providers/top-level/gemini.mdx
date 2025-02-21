@@ -1,0 +1,82 @@
+---
+title: Gemini
+slug: ../gemini
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+:::info
+You can get an API key from the [Google AI Studio](https://aistudio.google.com/).
+:::
+
+## Chat model
+
+We recommend configuring **Gemini 1.5 Pro** as your chat model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Gemini 1.5 Pro
+      provider: gemini
+      model: gemini-1.5-pro-latest
+      apiKey: <YOUR_GEMINI_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Gemini 1.5 Pro", 
+        "provider": "gemini",
+        "model": "gemini-1.5-pro-latest",
+        "apiKey": "<YOUR_GEMINI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Autocomplete model
+
+Gemini currently does not offer any autocomplete models.
+
+[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+We recommend configuring **text-embedding-004** as your embeddings model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Gemini Embeddings
+      provider: gemini
+      model: models/text-embedding-004 
+      apiKey: <YOUR_GEMINI_API_KEY>
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "gemini",
+      "model": "models/text-embedding-004",
+      "apiKey": "<YOUR_GEMINI_API_KEY>"
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Reranking model
+
+Gemini currently does not offer any reranking models.
+
+[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.

@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, PromptLog } from "core";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
@@ -28,7 +28,9 @@ export const streamNormalInput = createAsyncThunk<
   }
 
   const includeTools =
-    useTools && modelSupportsTools(defaultModel.model, defaultModel.provider);
+    useTools &&
+    modelSupportsTools(defaultModel) &&
+    state.session.mode === "chat";
 
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(
@@ -70,7 +72,8 @@ export const streamNormalInput = createAsyncThunk<
       toolSettings[toolCallState.toolCall.function.name] ===
       "allowedWithoutPermission"
     ) {
-      await dispatch(callTool());
+      const response = await dispatch(callTool());
+      unwrapResult(response);
     }
   }
 });

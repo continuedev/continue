@@ -5,6 +5,7 @@ export default {
   transform: {
     "\\.[jt]sx?$": ["ts-jest", { useESM: true }],
   },
+  testMatch: ["<rootDir>/src/**/*.test.{js,jsx,ts,tsx}"],
 
   moduleNameMapper: {
     "(.+)\\.js": "$1",

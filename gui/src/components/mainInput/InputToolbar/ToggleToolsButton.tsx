@@ -14,8 +14,13 @@ import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
 import PopoverTransition from "./PopoverTransition";
 import ToolDropdownItem from "./ToolDropdownItem";
+import { selectIsInEditMode } from "../../../redux/slices/sessionSlice";
 
-export default function ToolDropdown() {
+interface ToolDropdownProps {
+  disabled: boolean;
+}
+
+export default function ToolDropdown(props: ToolDropdownProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dispatch = useDispatch();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -24,6 +29,7 @@ export default function ToolDropdown() {
   const useTools = useAppSelector((state) => state.ui.useTools);
   const availableTools = useAppSelector((state) => state.config.config.tools);
   const [showAbove, setShowAbove] = useState(false);
+  const isInEditMode = useAppSelector(selectIsInEditMode);
 
   const ToolsIcon = useTools
     ? WrenchScrewdriverIconSolid
@@ -44,26 +50,37 @@ export default function ToolDropdown() {
     }
   }, [isDropdownOpen]);
 
+  const isDisabled = props.disabled || isInEditMode;
+
   return (
-    <HoverItem onClick={() => dispatch(toggleUseTools())}>
+    <HoverItem onClick={() => !isDisabled && dispatch(toggleUseTools())}>
       <div
         data-tooltip-id="tools-tooltip"
         className={`-ml-1 -mt-1 flex flex-row items-center gap-1.5 rounded-md px-1 py-0.5 text-xs ${
-          useTools || isHovered ? "bg-lightgray/30" : ""
-        }`}
+          (useTools || isHovered) && !isDisabled ? "bg-lightgray/30" : ""
+        } ${isDisabled ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <ToolsIcon
-          className="h-4 w-4 text-gray-400"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          className={`h-4 w-4 text-gray-400 ${
+            isDisabled ? "cursor-not-allowed" : ""
+          }`}
+          onMouseEnter={() => !isDisabled && setIsHovered(true)}
+          onMouseLeave={() => !isDisabled && setIsHovered(false)}
         />
-        {!useTools && (
+        {isDisabled && (
+          <ToolTip id="tools-tooltip" place="top-middle">
+            {isInEditMode
+              ? "Tool use not supported in edit mode"
+              : "This model does not support tool use"}
+          </ToolTip>
+        )}
+        {!useTools && !isDisabled && (
           <ToolTip id="tools-tooltip" place="top-middle">
             Enable tool usage
           </ToolTip>
         )}
 
-        {useTools && (
+        {useTools && !isDisabled && (
           <>
             <span className="hidden align-top sm:flex">Tools</span>
 
@@ -73,6 +90,7 @@ export default function ToolDropdown() {
                 onChange={() => {}}
                 as="div"
                 onClick={(e) => e.stopPropagation()}
+                disabled={isDisabled}
               >
                 {({ open }) => (
                   <>
@@ -83,6 +101,7 @@ export default function ToolDropdown() {
                         setDropdownOpen(!isDropdownOpen);
                       }}
                       className="text-lightgray flex cursor-pointer items-center border-none bg-transparent px-0 outline-none"
+                      aria-disabled={isDisabled}
                     >
                       <EllipsisHorizontalIcon className="h-3 w-3 cursor-pointer hover:brightness-125" />
                     </Listbox.Button>
@@ -134,8 +153,8 @@ export default function ToolDropdown() {
                             />
                           </div>
                         </div>
-                        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
-                          {availableTools.map((tool) => (
+                        <div className="max-h-48 overflow-y-auto overflow-x-hidden pr-2">
+                          {availableTools.map((tool: any) => (
                             <Listbox.Option
                               key={tool.function.name}
                               value="addAllFiles"

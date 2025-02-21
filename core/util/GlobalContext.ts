@@ -7,11 +7,14 @@ import {
 } from "../config/sharedConfig";
 
 import { getGlobalContextFilePath } from "./paths";
+import { SiteIndexingConfig } from "..";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
   selectedTabAutocompleteModel: string;
-  lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
+  lastSelectedProfileForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
   lastSelectedOrgIdForWorkspace: {
     [workspaceIdentifier: string]: string | null;
   };
@@ -27,6 +30,7 @@ export type GlobalContextType = {
   showConfigUpdateToast: boolean;
   isSupportedLanceDbCpuTarget: boolean;
   sharedConfig: SharedConfigSchema;
+  failedDocs: SiteIndexingConfig[];
 };
 
 /**

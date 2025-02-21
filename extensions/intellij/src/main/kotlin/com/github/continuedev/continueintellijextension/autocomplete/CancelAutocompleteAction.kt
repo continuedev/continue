@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
@@ -26,5 +27,9 @@ class CancelAutocompleteAction : AnAction() {
         val project: Project? = e.project
         val editor: Editor? = e.getData(CommonDataKeys.EDITOR)
         return project != null && editor != null && editor.contentComponent.hasFocus()
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
     }
 }

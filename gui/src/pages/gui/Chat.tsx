@@ -21,6 +21,7 @@ import {
 } from "../../components";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
+import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
@@ -28,6 +29,7 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
+import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 import {
   OnboardingCard,
   useOnboardingCard,
@@ -40,7 +42,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUsePlatform } from "../../redux/selectors";
+import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
@@ -76,8 +78,6 @@ import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
-import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -222,7 +222,7 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const usePlatform = useAppSelector(selectUsePlatform);
+  const useHub = useAppSelector(selectUseHub);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -365,9 +365,11 @@ export function Chat() {
 
   useAutoScroll(stepsDivRef, history);
 
+  const showPageHeader = isInEditMode || useHub;
+
   return (
     <>
-      {(isInEditMode || usePlatform) && (
+      {showPageHeader && (
         <PageHeader
           title={isInEditMode ? "Edit Mode" : ""}
           onTitleClick={
@@ -380,7 +382,7 @@ export function Chat() {
                 }
               : undefined
           }
-          rightContent={usePlatform && <AssistantSelect />}
+          rightContent={useHub && <AssistantSelect />}
         />
       )}
 
@@ -388,7 +390,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -565,7 +567,7 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  {usePlatform ? (
+                  {useHub ? (
                     <PlatformOnboardingCard isDialog={false} />
                   ) : (
                     <OnboardingCard isDialog={false} />

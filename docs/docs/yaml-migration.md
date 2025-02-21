@@ -11,8 +11,8 @@ Continue's YAML configuration format provides more readable, maintainable, consi
 See also
 
 - [Intro to YAML](https://yaml.org/)
-- [JSON Continue Config Reference](/reference)
-- [YAML Continue Config Reference](/yaml-reference)
+- [JSON Continue Config Reference](/json-reference)
+- [YAML Continue Config Reference](/reference)
 
 ## Create YAML file
 
@@ -37,23 +37,22 @@ Add all model configurations in `config.json`, including models in `models`, `ta
   - `inlineEdit` -> e.g. `roles: [chat, edit]`
   - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
 
-Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/yaml-reference#requestoptions)
+Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/reference#requestoptions)
 
-Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/yaml-reference#completionoptions)
+Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/reference#completionoptions)
 
-<!-- TODO - API KEY -> apiKeySecret? -->
 <!-- TODO - ollama autodetect supported? -->
 
 **Before**
 
-```json title="config.json"
+```json title="config.json""
 {
   "models": [
     {
       "title": "GPT-4",
       "provider": "openai",
       "model": "gpt-4",
-      "apiKey": "YOUR_API_KEY",
+      "apiKey": "<YOUR_OPENAI_API_KEY>",
       "completionOptions": {
         "temperature": 0.5,
         "maxTokens": 2000
@@ -82,7 +81,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
   "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-ada-002",
-    "apiKey": "<API_KEY>",
+    "apiKey": "<YOUR_OPENAI_API_KEY>",
     "maxChunkSize": 256,
     "maxBatchSize": 5
   },
@@ -90,7 +89,7 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
     "name": "voyage",
     "params": {
       "model": "rerank-2",
-      "apiKey": "<VOYAGE_API_KEY>"
+      "apiKey": "<YOUR_VOYAGE_API_KEY>"
     }
   }
 }
@@ -103,7 +102,7 @@ models:
   - name: GPT-4
     provider: openai
     model: gpt-4
-    apiKey: <API_KEY>
+    apiKey: <YOUR_OPENAI_KEY>
     defaultCompletionOptions:
       temperature: 0.5
       maxTokens: 2000
@@ -113,8 +112,7 @@ models:
 
   - name: My Voyage Reranker
     provider: voyage
-    apiKey: <API_KEY>
-    roles:
+    apiKey: <YOUR_VOYAGE_KEY>
       - rerank
 
   - name: My Starcoder
@@ -125,7 +123,7 @@ models:
 
   - name: My Ada Embedder
     provider: openai
-    apiKey: <API_KEY>
+    apiKey: <YOUR_ADA_API_KEY>
     roles:
       - embed
 
@@ -139,7 +137,7 @@ models:
     apiBase: http://3.3.3.3/v1
     requestOptions:
       headers:
-        X-Auth-Token: <API_KEY>
+        X-Auth-Token: <MY_API_KEY>
     roles:
       - chat
       - apply
@@ -156,7 +154,7 @@ The JSON `contextProviders` field is replaced by the YAML `context` array.
 
 **Before**
 
-```json title="config.json"
+```json title="config.json""
 {
   "contextProviders": [
     {
@@ -188,7 +186,7 @@ context:
       nRetrieve: 30
       nFinal: 3
 
-  - params: diff
+  - provider: diff
 ```
 
 ### System Message
@@ -197,7 +195,7 @@ The `systemMessage` property has been replaced with a `rules` property that take
 
 **Before**
 
-```json title="config.json"
+```json title="config.json""
 {
   "systemMessage": "Always give concise responses"
 }
@@ -216,7 +214,7 @@ Rather than with `customCommands`, you can now use the `prompts` field to define
 
 **Before**
 
-```json title="config.json"
+```json title="config.json""
 {
   "customCommands": [
     {
@@ -251,7 +249,7 @@ Documentation is largely the same, but the `title` property has been replaced wi
 
 **Before**
 
-```json title="config.json"
+```json title="config.json""
 {
   "docs": [
     {
@@ -279,8 +277,6 @@ docs:
 
 ### MCP Servers
 
-<!-- TODO this is definitely wrong -->
-
 **Properties:**
 
 - `name` (**required**): The name of the MCP server.
@@ -290,7 +286,7 @@ docs:
 
 **Before**
 
-```json title="config.json"
+```json title="config.json""
 {
   "experimental": {
     "modelContextProtocolServers": [
@@ -345,10 +341,13 @@ The following top-level fields from `config.json` still work when using `config.
   - `template`
   - `onlyMyCode`
 - `analytics`
+
+The following top-level fields from `config.json` have been deprecated. Most UI-related and user-specific options will move into a settings page in the UI
+
 - `customCommands`
 - `experimental`
 - `userToken`
 
 ## New Configuration options
 
-The YAML configuration format offers new configuration options not available in the JSON format. See the [YAML Config Reference](/yaml-reference) for more information.
+The YAML configuration format offers new configuration options not available in the JSON format. See the [YAML Config Reference](./reference) for more information.

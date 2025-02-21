@@ -52,16 +52,14 @@ export const models: { [key: string]: ModelPackage } = {
         name: "Parameter Count",
         description: "The number of parameters in the model",
         options: {
-          "r1": {
+          r1: {
             model: "deepseek/deepseek_v3",
             title: "deepseek_v3",
-          }
+          },
         },
       },
     ],
-    providerOptions: [
-      "novita"
-    ],
+    providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
   deepseekR1Chat: {
@@ -79,16 +77,14 @@ export const models: { [key: string]: ModelPackage } = {
         name: "Parameter Count",
         description: "The number of parameters in the model",
         options: {
-          "r1": {
+          r1: {
             model: "deepseek/deepseek-r1",
             title: "deepseek-r1",
-          }
+          },
         },
       },
     ],
-    providerOptions: [
-      "novita"
-    ],
+    providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
   llama318BChat: {
@@ -109,13 +105,11 @@ export const models: { [key: string]: ModelPackage } = {
           "8b": {
             model: "meta-llama/llama-3.1-8b-instruct",
             title: "Llama3.1-8b",
-          }
+          },
         },
       },
     ],
-    providerOptions: [
-      "novita"
-    ],
+    providerOptions: ["novita"],
     isOpenSource: true,
   },
   mistralChat: {
@@ -140,9 +134,7 @@ export const models: { [key: string]: ModelPackage } = {
       },
     ],
     icon: "mistral.png",
-    providerOptions: [
-      "novita",
-    ],
+    providerOptions: ["novita"],
     isOpenSource: true,
   },
   llama31Chat: {
@@ -507,7 +499,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway"],
+    providerOptions: ["groq", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -520,7 +512,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway"],
+    providerOptions: ["groq", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama31405bChat: {
@@ -533,7 +525,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "nebius"],
     isOpenSource: false,
   },
   llama3170bNemotron: {
@@ -559,7 +551,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "nebius"],
     isOpenSource: false,
   },
   llama323bChat: {
@@ -995,14 +987,14 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude3Haiku: {
-    title: "Claude 3 Haiku",
+  claude35Haiku: {
+    title: "Claude 3.5 Haiku",
     description:
-      "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
+      "The fastest model in the Claude 3.5 series: a compact model for near-instant responsiveness",
     params: {
-      model: "claude-3-haiku-20240307",
+      model: "claude-3-5-haiku-latest",
       contextLength: 200_000,
-      title: "Claude 3 Haiku",
+      title: "Claude 3.5 Haiku",
       apiKey: "",
     },
     providerOptions: ["anthropic", "free-trial"],
@@ -1379,10 +1371,10 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Qwen 2.5 Coder 32b",
       model: "qwen2.5-coder-32b",
-      contextLength: 128_000,
+      contextLength: 32_000,
     },
     icon: "qwen.png",
-    providerOptions: ["scaleway"],
+    providerOptions: ["scaleway", "nebius"],
     isOpenSource: true,
   },
   grokBeta: {
