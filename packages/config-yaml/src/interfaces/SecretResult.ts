@@ -5,6 +5,8 @@ export enum SecretType {
   Package = "package",
   Organization = "organization",
   NotFound = "not_found",
+  ModelsAddOn = "models_add_on",
+  FreeTrial = "free_trial",
 }
 
 export interface OrgSecretLocation {
@@ -25,6 +27,16 @@ export interface UserSecretLocation {
   secretName: string;
 }
 
+export interface ModelsAddOnSecretLocation {
+  secretType: SecretType.ModelsAddOn;
+  secretName: string;
+}
+
+export interface FreeTrialSecretLocation {
+  secretType: SecretType.FreeTrial;
+  secretName: string;
+}
+
 /**
  * If not found in user/package/org secrets, then there's a chance it's in
  * - the on-prem proxy
@@ -40,7 +52,9 @@ export type SecretLocation =
   | OrgSecretLocation
   | PackageSecretLocation
   | UserSecretLocation
-  | NotFoundSecretLocation;
+  | NotFoundSecretLocation
+  | ModelsAddOnSecretLocation
+  | FreeTrialSecretLocation;
 
 export function encodeSecretLocation(secretLocation: SecretLocation): string {
   if (secretLocation.secretType === SecretType.Organization) {
@@ -51,6 +65,10 @@ export function encodeSecretLocation(secretLocation: SecretLocation): string {
     return `${SecretType.Package}:${encodePackageSlug(secretLocation.packageSlug)}/${secretLocation.secretName}`;
   } else if (secretLocation.secretType === SecretType.NotFound) {
     return `${SecretType.NotFound}:${secretLocation.secretName}`;
+  } else if (secretLocation.secretType === SecretType.ModelsAddOn) {
+    return `${SecretType.ModelsAddOn}:${secretLocation.secretName}`;
+  } else if (secretLocation.secretType === SecretType.FreeTrial) {
+    return `${SecretType.FreeTrial}:${secretLocation.secretName}`;
   } else {
     throw new Error(`Invalid secret type: ${secretLocation}`);
   }
@@ -85,6 +103,16 @@ export function decodeSecretLocation(secretLocation: string): SecretLocation {
         secretType: SecretType.NotFound,
         secretName,
       };
+    case SecretType.ModelsAddOn:
+      return {
+        secretType: SecretType.ModelsAddOn,
+        secretName,
+      };
+    case SecretType.FreeTrial:
+      return {
+        secretType: SecretType.FreeTrial,
+        secretName,
+      };
     default:
       throw new Error(`Invalid secret type: ${secretType}`);
   }
@@ -98,7 +126,11 @@ export interface NotFoundSecretResult {
 
 export interface FoundSecretResult {
   found: true;
-  secretLocation: OrgSecretLocation | PackageSecretLocation;
+  secretLocation:
+    | OrgSecretLocation
+    | PackageSecretLocation
+    | ModelsAddOnSecretLocation
+    | FreeTrialSecretLocation;
   fqsn: FQSN;
 }
 
