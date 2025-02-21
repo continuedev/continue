@@ -4,6 +4,7 @@ import { fetchwithRequestOptions } from "@continuedev/fetch";
 import ignore from "ignore";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
+import lance, { Table } from "vectordb";
 
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
@@ -35,6 +36,7 @@ import historyManager from "./util/history";
 import {
   editConfigJson,
   getConfigJsonPath,
+  getLanceDbPath,
   setupInitialDotContinueDirectory,
 } from "./util/paths";
 import { localPathToUri } from "./util/pathToUri";
@@ -55,6 +57,7 @@ import CodebaseContextProvider from "./context/providers/CodebaseContextProvider
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
+import { SqliteDb } from "./indexing/refreshIndex";
 
 export class Core {
   configHandler: ConfigHandler;
@@ -101,6 +104,11 @@ export class Core {
       desc: "loading",
       progress: 0,
     };
+
+    void (async () => {
+      const sqliteDb = await SqliteDb.get();
+      const lanceDb = await lance.connect(getLanceDbPath());
+    })();
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
