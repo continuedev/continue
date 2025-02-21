@@ -14,6 +14,7 @@ import {
 import { getLanceDbPath, migrate } from "../util/paths.js";
 
 import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
+import { basicChunker } from "./chunk/basic.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
@@ -436,7 +437,23 @@ export class LanceDbIndex implements CodebaseIndex {
     tags: BranchAndDir[],
     filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
-    const [vector] = await this.embeddingsProvider.embed([query]);
+    const chunks = [];
+    for await (const chunk of basicChunker(
+      query,
+      this.embeddingsProvider.maxEmbeddingChunkSize,
+    )) {
+      chunks.push(chunk);
+    }
+    let vector = null;
+    try {
+      [vector] = await this.embeddingsProvider.embed(
+        chunks.map((c) => c.content),
+      );
+    } catch (err) {
+      // If we fail to chunk, we just use what was happening before.
+      [vector] = await this.embeddingsProvider.embed([query]);
+    }
+
     const db = await lance.connect(getLanceDbPath());
 
     let allResults = [];
