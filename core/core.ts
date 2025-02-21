@@ -106,8 +106,8 @@ export class Core {
     };
 
     void (async () => {
-      const sqliteDb = await SqliteDb.get();
       const lanceDb = await lance.connect(getLanceDbPath());
+      const sqliteDb = await SqliteDb.get();
     })();
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
