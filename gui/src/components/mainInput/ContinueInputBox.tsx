@@ -109,7 +109,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         hideImageUpload: false,
         hideUseCodebase: true,
         hideSelectModel: false,
-        hideTools: true,
         enterText: editModeState.editStatus === "accepting" ? "Retry" : "Edit",
       }
     : {};
