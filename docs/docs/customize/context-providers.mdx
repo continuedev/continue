@@ -931,7 +931,7 @@ The HttpContextProvider makes a POST request to the url passed in the configurat
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - provider: http
+    - provider: remote
       params:
         url: "https://api.example.com/v1/users"
   ```
@@ -941,7 +941,7 @@ The HttpContextProvider makes a POST request to the url passed in the configurat
   {
     "contextProviders": [
       {
-        "name": "http", 
+        "name": "remote", 
         "params": {
           "url": "https://api.example.com/v1/users"
         }

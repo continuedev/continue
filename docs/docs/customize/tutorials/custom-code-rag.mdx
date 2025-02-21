@@ -90,11 +90,11 @@ In the beginning, you should probably run it by hand. Once you are confident tha
 
 In order for the Continue extension to access your custom RAG system, you'll need to set up a server. This server is responsible for recieving a query from the extension, querying the vector database, and returning the results in the format expected by Continue.
 
-Here is a reference implementation using FastAPI that is capable of handling requests from Continue's "http" context provider.
+Here is a reference implementation using FastAPI that is capable of handling requests from Continue's "remote" context provider.
 
 ```python
 """
-This is an example of a server that can be used with the "http" context provider.
+This is an example of a server that can be used with the "remote" context provider.
 """
 
 from fastapi import FastAPI
@@ -125,7 +125,7 @@ async def create_item(item: ContextProviderInput):
     return context_items
 ```
 
-After you've set up your server, you can configure Continue to use it by adding the "http" context provider to your `contextProviders` array in your configuration:
+After you've set up your server, you can configure Continue to use it by adding the "remote" context provider to your `contextProviders` array in your configuration:
 
 <Tabs groupId="config-example">
 <TabItem value="yaml" label="YAML">
@@ -135,7 +135,7 @@ After you've set up your server, you can configure Continue to use it by adding 
       params:
         url: https://myserver.com/retrieve
         name: http
-        description: Custom HTTP Context Provider
+        description: Custom Remote Server Context Provider
         displayTitle: My Custom Context
   ```
   </TabItem>
@@ -144,11 +144,11 @@ After you've set up your server, you can configure Continue to use it by adding 
   {
     "contextProviders": [
       {
-        "name": "http",
+        "name": "remote",
         "params": {
           "url": "https://myserver.com/retrieve",
-          "title": "http",
-          "description": "Custom HTTP Context Provider",
+          "title": "remote",
+          "description": "Custom Remote Server Context Provider",
           "displayTitle": "My Custom Context"
         }
       }

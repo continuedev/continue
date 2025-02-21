@@ -2,8 +2,8 @@ import { SlashCommand } from "../../index.js";
 import { removeQuotesAndEscapes } from "../../util/index.js";
 import { streamResponse } from "../../llm/stream.js";
 
-const HttpSlashCommand: SlashCommand = {
-  name: "http",
+export const RemoteServerSlashCommand: SlashCommand = {
+  name: "remote",
   description: "Call an HTTP endpoint to serve response",
   run: async function* ({ ide, llm, input, params, fetch }) {
     const url = params?.url;
@@ -30,4 +30,7 @@ const HttpSlashCommand: SlashCommand = {
   },
 };
 
-export default HttpSlashCommand;
+export const HttpSlashCommand: SlashCommand = {
+  ...RemoteServerSlashCommand,
+  name: "http",
+};

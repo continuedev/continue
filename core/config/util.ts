@@ -24,10 +24,12 @@ function stringify(obj: any, indentation?: number): string {
   );
 }
 
-export function addContextProvider(provider: ContextProviderWithParams, configHandler?: ConfigHandler) {
+export function addContextProvider(
+  provider: ContextProviderWithParams,
+  configHandler?: ConfigHandler,
+) {
   let isAdded = false;
   editConfigJson((config) => {
-
     if (!config.contextProviders) {
       config.contextProviders = [];
     }
@@ -136,7 +138,7 @@ export function isSupportedLanceDbCpuTarget(ide: IDE) {
   const platform = os.platform();
 
   // This check only applies to x64
-  //https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
+  // https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
   if (arch !== "x64") {
     globalContext.update("isSupportedLanceDbCpuTarget", true);
     return true;
