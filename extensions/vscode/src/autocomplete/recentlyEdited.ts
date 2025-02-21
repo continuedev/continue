@@ -47,7 +47,7 @@ export class RecentlyEditedTracker {
     editedRange: Omit<VsCodeRecentlyEditedRange, "lines" | "symbols">,
   ): Promise<void> {
 
-    if (editedRange.uri.scheme === "output") {
+    if (editedRange.uri.scheme !== "file") {
       return;
     }
 
@@ -83,7 +83,6 @@ export class RecentlyEditedTracker {
         RecentlyEditedTracker.maxRecentlyEditedRanges,
       );
     }
-
   }
 
   private insertDocument(uri: vscode.Uri): void {
