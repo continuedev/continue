@@ -23,6 +23,7 @@
   "scripts": {
     "test": "jest",
     "build": "node build.js",
+    "quick-build": "node build.js --target darwin-arm64",
     "build:darwin-x64": "node build.js --os darwin-x64"
   },
   "license": "Apache-2.0",
