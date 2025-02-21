@@ -279,7 +279,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 
     // Informs the `continue-binary` of where to look for node_sqlite3.node
     // https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
-    // fs.writeFileSync(`${targetDir}/package.json`, "");
+    fs.writeFileSync(`${targetDir}/package.json`, "");
   }
 
   // Cleanup - this is needed when running locally
