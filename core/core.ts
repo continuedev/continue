@@ -178,7 +178,7 @@ export class Core {
           return;
         }
 
-        // void this.refreshCodebaseIndex(dirs);
+        void this.refreshCodebaseIndex(dirs);
       });
     });
 
