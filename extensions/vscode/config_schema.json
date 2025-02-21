@@ -1691,7 +1691,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["novita"]
+                "enum": ["venice"]
               }
             },
             "required": ["provider"]
