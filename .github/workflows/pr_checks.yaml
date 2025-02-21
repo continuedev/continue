@@ -1,42 +1,19 @@
 name: PR checks
 
 on:
-  pull_request_target:
+  pull_request:
     branches:
       - main
-    paths:
-      - "extensions/intellij/**"
-      - "extensions/vscode/**"
-      - "core/**"
-      - "gui/**"
-      - ".github/workflows/**"
 
   push:
     branches:
       - main
-    paths:
-      - "extensions/intellij/**"
-      - "extensions/vscode/**"
-      - "core/**"
-      - "gui/**"
-      - ".github/workflows/**"
 
 jobs:
-  validate-pr:
-    runs-on: ubuntu-latest
-    environment: tests-requiring-secrets
-    steps:
-      - uses: actions/checkout@v4
-
   install-root:
-    needs: validate-pr
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          # This is important - it switches from the base repo to the fork
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -57,9 +34,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -86,12 +60,8 @@ jobs:
   core-checks:
     needs: install-core
     runs-on: ubuntu-latest
-    environment: tests-requiring-secrets
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -122,9 +92,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -157,9 +124,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -191,9 +155,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -231,9 +192,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -268,9 +226,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -303,9 +258,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -321,10 +273,13 @@ jobs:
           cd core
           npm test
         env:
+          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_FOUNDRY_API_KEY: ${{ secrets.AZURE_FOUNDRY_API_KEY }}
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
@@ -333,9 +288,6 @@ jobs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Cache node modules
         uses: actions/cache@v3
@@ -363,9 +315,6 @@ jobs:
     needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -399,9 +348,6 @@ jobs:
     needs: [install-vscode, install-core]
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -443,7 +389,6 @@ jobs:
       ]
     runs-on: ubuntu-latest
     # Tests requiring secrets need approval from maintainers
-    environment: tests-requiring-secrets
     strategy:
       fail-fast: false
       matrix:
@@ -451,9 +396,6 @@ jobs:
         command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -492,6 +434,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
           echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+        if: ${{ github.event.pull_request.head.repo.fork == false }}
 
       - name: Set up Xvfb
         run: |
@@ -501,7 +444,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
+          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 
@@ -517,9 +460,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - uses: actions/setup-node@v4
         with:
@@ -552,10 +492,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-
       - uses: actions/cache@v4
         with:
           path: core/node_modules

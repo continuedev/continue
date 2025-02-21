@@ -21,9 +21,9 @@ import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { loadContinueConfigFromJson } from "../load";
+import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
-import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -124,12 +124,14 @@ export default async function doLoadConfig(
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
-      newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
+      newConfig.analytics,
       uniqueId,
       ideInfo.extensionVersion,
       controlPlaneClient,
       controlPlaneProxyInfo,
     );
+  } else {
+    await TeamAnalytics.shutdown();
   }
 
   newConfig = await injectControlPlaneProxyInfo(

@@ -4,7 +4,7 @@ description: Reference for the Continue configuration YAML file
 keywords: [config, yaml, configuration, customize, customization]
 ---
 
-# Config YAML Reference
+# confg.yaml Reference
 
 <!-- TODO - data section -->
 
@@ -13,7 +13,7 @@ Continue can be configured using a YAML file `config.yaml` which for local confi
 Below are details for each property that can be set in `config.yaml`.
 
 :::info
-Config YAML does not work alongside `config.json` - it replaces it. View the **[Migration Guide](/yaml-migration)**. `config.yaml` currently only works in VS Code pre-release.
+Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**. `config.yaml` currently only works in VS Code pre-release.
 :::
 
 **All properties at all levels are optional unless explicitly marked as required.**
@@ -23,6 +23,7 @@ Config YAML does not work alongside `config.json` - it replaces it. View the **[
 The top-level properties in the `config.yaml` configuration file are:
 
 - [`name`](#name) (**required**)
+<!-- - [`packages`](#packages) -->
 - [`version`](#version) (**required**)
 - [`models`](#models)
 - [`context`](#context)
@@ -115,7 +116,7 @@ models:
 
 The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
 
-More information about usage/params for each context provider can be found [here](/customize/context-providers)
+More information about usage/params for each context provider can be found [here](/customize/context-providers.mdx)
 
 **Properties:**
 
@@ -179,9 +180,9 @@ List of documentation sites to index.
 - `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
 <!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
-- `maxDepth`: M
-- `useLocalCrawling`: Force use of local crawling
+- `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
 Example
 
@@ -208,7 +209,7 @@ The `tools` section specifies external tools or APIs that can be used within you
 ```yaml title="config.yaml"
 tools:
   - url: https://api.exampletool.com/tool1
-    apiKey: YOUR_API_KEY
+    apiKey: <YOUR_API_KEY>
 ```
 
 --- -->
@@ -252,7 +253,6 @@ The `data` section specifies data providers used in your configuration. Data pro
 data:
   - provider: embeddings
 ```
-
 --- -->
 
 ---
@@ -307,6 +307,7 @@ context:
   - provider: docs
     params:
       startUrl: https://docs.example.com/introduction
+      rootUrl: https://docs.example.com
       maxDepth: 3
 
 mcpServers:
@@ -318,3 +319,28 @@ mcpServers:
     env:
       PORT: "3000"
 ```
+
+### Fully deprecated settings
+
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
+
+- `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
+- `promptPath`: This value will override during migration.
+- `disableIndexing`: This value will be migrated to the safest merged value (`true` if either are `true`).
+- `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
+- `tabAutocompleteOptions`
+  - `useCache`: This value will override during migration.
+  - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
+  - `multilineCompletions`: This value will override during migration.
+- `experimental`
+  - `useChromiumForDocsCrawling`: This value will override during migration.
+  - `readResponseTTS`: This value will override during migration.
+- `ui` - all will override during migration
+
+  - `codeBlockToolbarPosition`
+  - `fontSize`
+  - `codeWrap`
+  - `displayRawMarkdown`
+  - `showChatScrollbar`
+
+  See [User Settings Page](./customize/settings.md) for more information about each option.

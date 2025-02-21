@@ -46,6 +46,10 @@ export function ThreadDiv(props: ThreadDivProps) {
     return rendered;
   }
 
+  const tool = availableTools.find(
+    (tool) => props.toolCall.function?.name === tool.function.name,
+  );
+
   return (
     <Container>
       <HeaderDiv>
@@ -60,13 +64,10 @@ export function ThreadDiv(props: ThreadDivProps) {
         >
           {props.icon}
         </div>
-        Continue wants to{" "}
-        {renderWouldLikeToMessage(
-          availableTools.find(
-            (tool) => props.toolCall.function?.name === tool.function.name,
-          ),
-          props.toolCallState,
+        {tool?.faviconUrl && (
+          <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
         )}
+        Continue wants to {renderWouldLikeToMessage(tool, props.toolCallState)}
       </HeaderDiv>
       <ChildrenDiv>{props.children}</ChildrenDiv>
     </Container>

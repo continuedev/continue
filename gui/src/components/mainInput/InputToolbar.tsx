@@ -10,7 +10,7 @@ import {
   vscInputBackground,
 } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseActiveFile, selectUsePlatform } from "../../redux/selectors";
+import { selectUseActiveFile } from "../../redux/selectors";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
@@ -26,7 +26,6 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
-import AssistantAndModelSelect from "../modelSelection/platform/AssistantAndModelSelect";
 import HoverItem from "./InputToolbar/HoverItem";
 import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
 
@@ -68,7 +67,6 @@ export interface ToolbarOptions {
   hideAddContext?: boolean;
   enterText?: string;
   hideSelectModel?: boolean;
-  hideTools?: boolean;
 }
 
 interface InputToolbarProps {
@@ -92,12 +90,7 @@ function InputToolbar(props: InputToolbarProps) {
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
-  const shouldRenderToolsButton =
-    defaultModel &&
-    modelSupportsTools(defaultModel.model, defaultModel.provider) &&
-    !props.toolbarOptions?.hideTools;
-
-  const usePlatform = useAppSelector(selectUsePlatform);
+  const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =
     defaultModel &&
@@ -113,11 +106,10 @@ function InputToolbar(props: InputToolbarProps) {
       <StyledDiv
         isHidden={props.hidden}
         onClick={props.onClick}
-        id="input-toolbar"
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
-          {usePlatform ? <AssistantAndModelSelect /> : <ModelSelect />}
+          <ModelSelect />
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
               (supportsImages && (
@@ -161,14 +153,14 @@ function InputToolbar(props: InputToolbarProps) {
               </HoverItem>
             )}
 
-            {shouldRenderToolsButton && <ToggleToolsButton />}
+            <ToggleToolsButton disabled={!toolsSupported} />
           </div>
         </div>
 
         <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
-              className={`${shouldRenderToolsButton ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
+              className={`${toolsSupported ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
             >
               {props.activeKey === "Alt" ? (
                 <HoverItem className="underline">
