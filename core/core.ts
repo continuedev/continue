@@ -149,38 +149,38 @@ export class Core {
       (resolve) => (continueServerClientResolve = resolve),
     );
 
-    void ideSettingsPromise.then((ideSettings) => {
-      const continueServerClient = new ContinueServerClient(
-        ideSettings.remoteConfigServerUrl,
-        ideSettings.userToken,
-      );
-      continueServerClientResolve(continueServerClient);
+    // void ideSettingsPromise.then((ideSettings) => {
+    //   const continueServerClient = new ContinueServerClient(
+    //     ideSettings.remoteConfigServerUrl,
+    //     ideSettings.userToken,
+    //   );
+    //   continueServerClientResolve(continueServerClient);
 
-      codebaseIndexerResolve(
-        new CodebaseIndexer(
-          this.configHandler,
-          this.ide,
-          this.indexingPauseToken,
-          continueServerClient,
-        ),
-      );
+    //   codebaseIndexerResolve(
+    //     new CodebaseIndexer(
+    //       this.configHandler,
+    //       this.ide,
+    //       this.indexingPauseToken,
+    //       continueServerClient,
+    //     ),
+    //   );
 
-      // Index on initialization
-      void this.ide.getWorkspaceDirs().then(async (dirs) => {
-        // Respect pauseCodebaseIndexOnStart user settings
-        if (ideSettings.pauseCodebaseIndexOnStart) {
-          this.indexingPauseToken.paused = true;
-          void this.messenger.request("indexProgress", {
-            progress: 0,
-            desc: "Initial Indexing Skipped",
-            status: "paused",
-          });
-          return;
-        }
+    //   // Index on initialization
+    //   void this.ide.getWorkspaceDirs().then(async (dirs) => {
+    //     // Respect pauseCodebaseIndexOnStart user settings
+    //     if (ideSettings.pauseCodebaseIndexOnStart) {
+    //       this.indexingPauseToken.paused = true;
+    //       void this.messenger.request("indexProgress", {
+    //         progress: 0,
+    //         desc: "Initial Indexing Skipped",
+    //         status: "paused",
+    //       });
+    //       return;
+    //     }
 
-        void this.refreshCodebaseIndex(dirs);
-      });
-    });
+    //     void this.refreshCodebaseIndex(dirs);
+    //   });
+    // });
 
     const getLlm = async () => {
       const { config } = await this.configHandler.loadConfig();

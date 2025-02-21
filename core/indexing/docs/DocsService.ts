@@ -130,8 +130,8 @@ export default class DocsService {
 
   // Initialization - load config and attach config listener
   private async init(configHandler: ConfigHandler) {
-    const result = await configHandler.loadConfig();
-    await this.handleConfigUpdate(result);
+    // const result = await configHandler.loadConfig();
+    // await this.handleConfigUpdate(result);
     configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
   }
 
