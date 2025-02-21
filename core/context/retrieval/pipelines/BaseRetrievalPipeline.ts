@@ -31,12 +31,16 @@ export interface IRetrievalPipeline {
 
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   private ftsIndex = new FullTextSearchCodebaseIndex();
-  private lanceDbIndex: LanceDbIndex;
+  private lanceDbIndex: LanceDbIndex | null = null;
 
   constructor(protected readonly options: RetrievalPipelineOptions) {
-    this.lanceDbIndex = new LanceDbIndex(
-      options.config.embeddingsProvider,
-      (uri) => options.ide.readFile(uri),
+    void this.initLanceDb();
+  }
+
+  private async initLanceDb() {
+    this.lanceDbIndex = await LanceDbIndex.create(
+      this.options.config.embeddingsProvider,
+      (uri) => this.options.ide.readFile(uri),
     );
   }
 
@@ -125,6 +129,13 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     input: string,
     n: number,
   ): Promise<Chunk[]> {
+    if (!this.lanceDbIndex) {
+      console.warn(
+        "LanceDB index not available, skipping embeddings retrieval",
+      );
+      return [];
+    }
+
     return this.lanceDbIndex.retrieve(
       input,
       n,
