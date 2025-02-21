@@ -6,16 +6,14 @@
       "type": "npm",
       "script": "tsc:watch",
       "isBackground": true,
-      "problemMatcher": {
-        "base": "$tsc-watch",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "Starting compilation in watch mode...",
-          "endsPattern": "Found 0 errors"
-        }
+      "problemMatcher": ["$tsc-watch"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
       },
       "presentation": {
-        "revealProblems": "onProblem"
+        "reveal": "always",
+        "panel": "new"
       }
     },
     // Compile and bundle the extension
@@ -185,6 +183,55 @@
       "type": "shell",
       "command": "node",
       "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "problemMatcher": []
+    },
+    {
+      "label": "refresh-dependencies:core",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/core"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:vscode",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/vscode"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:gui",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/gui"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:all",
+      "dependsOn": [
+        "refresh-dependencies:core",
+        "refresh-dependencies:gui",
+        "refresh-dependencies:vscode"
+      ],
+      "type": "shell",
       "problemMatcher": []
     }
   ]

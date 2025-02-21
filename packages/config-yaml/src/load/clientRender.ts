@@ -4,7 +4,12 @@ import {
   encodeSecretLocation,
   SecretLocation,
 } from "../interfaces/SecretResult.js";
-import { decodeFQSN, encodeFQSN, FQSN } from "../interfaces/slugs.js";
+import {
+  decodeFQSN,
+  encodeFQSN,
+  FQSN,
+  PackageSlug,
+} from "../interfaces/slugs.js";
 import { AssistantUnrolled } from "../schemas/index.js";
 import {
   fillTemplateVariables,
@@ -13,8 +18,9 @@ import {
 } from "./unroll.js";
 
 export async function clientRender(
+  packageSlug: PackageSlug,
   unrolledConfigContent: string,
-  secretStore: SecretStore,
+  clientSecretStore: SecretStore,
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -23,16 +29,9 @@ export async function clientRender(
   // 2. Then, we will check which of the secrets are found in the local personal secret store. Here we’re checking for anything that matches the last part of the FQSN, not worrying about the owner/package/owner/package slugs
   const secretsTemplateData: Record<string, string> = {};
 
-  const unresolvedFQSNs: FQSN[] = [];
-  for (const secret of secrets) {
-    const fqsn = decodeFQSN(secret.replace("secrets.", ""));
-    const secretValue = await secretStore.get(fqsn.secretName);
-    if (secretValue) {
-      secretsTemplateData[secret] = secretValue;
-    } else {
-      unresolvedFQSNs.push(fqsn);
-    }
-  }
+  const unresolvedFQSNs: FQSN[] = secrets.map((secret) => {
+    return decodeFQSN(secret.replace("secrets.", ""));
+  });
 
   // Don't use platform client in local mode
   if (platformClient) {
@@ -46,7 +45,9 @@ export async function clientRender(
       }
 
       if ("value" in secretResult) {
-        secretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // clientSecretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // const secretValue = await clientSecretStore.get(fqsn.secretName);
+        secretsTemplateData[encodeFQSN(secretResult.fqsn)] = secretResult.value;
       }
 
       secretsTemplateData["secrets." + encodeFQSN(secretResult.fqsn)] =
@@ -66,7 +67,7 @@ export async function clientRender(
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
-  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml);
+  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml, packageSlug);
   return finalConfig;
 }
 
@@ -94,8 +95,17 @@ function getUnrenderedSecretLocation(
   return undefined;
 }
 
+function getContinueProxyModelName(
+  packageSlug: PackageSlug,
+  provider: string,
+  model: string,
+): string {
+  return `${packageSlug.ownerSlug}/${packageSlug.packageSlug}/${provider}/${model}`;
+}
+
 function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
+  packageSlug: PackageSlug,
 ): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
@@ -106,6 +116,11 @@ function useProxyForUnrenderedSecrets(
         config.models[i] = {
           ...config.models[i],
           provider: "continue-proxy",
+          model: getContinueProxyModelName(
+            packageSlug,
+            config.models[i].provider,
+            config.models[i].model,
+          ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
           apiKey: undefined,
         };

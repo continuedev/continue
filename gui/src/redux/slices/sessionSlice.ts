@@ -22,6 +22,7 @@ import {
   ToolCallState,
 } from "core";
 import { ProfileDescription } from "core/config/ConfigHandler";
+import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -30,7 +31,6 @@ import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -45,10 +45,11 @@ type SessionState = {
   isStreaming: boolean;
   title: string;
   id: string;
-  selectedProfileId: string;
-  availableProfiles: ProfileDescription[];
+  /** null indicates loading state */
+  availableProfiles: ProfileDescription[] | null;
+  selectedProfile: ProfileDescription | null;
+  organizations: OrganizationDescription[];
   selectedOrganizationId: string | null;
-  availableOrganizations: OrganizationDescription[];
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
@@ -88,23 +89,10 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfileId: "local",
-  availableProfiles: [
-    {
-      id: "local",
-      title: "Local",
-      errors: undefined,
-      profileType: "local",
-      fullSlug: {
-        ownerSlug: "",
-        packageSlug: "",
-        versionSlug: "",
-      },
-      iconUrl: "",
-    },
-  ],
+  selectedProfile: null,
+  availableProfiles: null,
+  organizations: [],
   selectedOrganizationId: "",
-  availableOrganizations: [],
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   codeToEdit: [],
@@ -191,13 +179,13 @@ export const sessionSlice = createSlice({
       {
         payload,
       }: PayloadAction<{
-        index?: number;
+        index: number;
         editorState: JSONContent;
       }>,
     ) => {
       const { index, editorState } = payload;
 
-      if (typeof index === "number" && index < state.history.length) {
+      if (state.history.length && index < state.history.length) {
         // Resubmission - update input message, truncate history after resubmit with new empty response message
         if (index % 2 === 1) {
           console.warn(
@@ -208,6 +196,7 @@ export const sessionSlice = createSlice({
 
         historyItem.message.content = ""; // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
         historyItem.editorState = payload.editorState;
+        historyItem.contextItems = [];
 
         state.history = state.history.slice(0, index + 1).concat({
           message: {
@@ -260,7 +249,7 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       const { index, updates } = payload;
-      if (!state.history[index]) {
+      if (index !== 0 && !state.history[index]) {
         console.error(
           `attempting to update history item at nonexistent index ${index}`,
           updates,
@@ -544,49 +533,34 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
-      return {
-        ...state,
-        selectedProfileId: payload,
-      };
+    // Important: these reducers don't handle selected profile/organization fallback logic
+    // That is done in thunks
+    setSelectedProfile: (
+      state,
+      { payload }: PayloadAction<ProfileDescription | null>,
+    ) => {
+      state.selectedProfile = payload;
     },
     setAvailableProfiles: (
       state,
-      { payload }: PayloadAction<ProfileDescription[]>,
+      { payload }: PayloadAction<ProfileDescription[] | null>,
     ) => {
-      return {
-        ...state,
-        availableProfiles: payload,
-        selectedProfileId: payload.find(
-          (profile) => profile.id === state.selectedProfileId,
-        )
-          ? state.selectedProfileId
-          : payload[0]?.id,
-      };
+      state.availableProfiles = payload;
+    },
+    setOrganizations: (
+      state,
+      { payload }: PayloadAction<OrganizationDescription[]>,
+    ) => {
+      state.organizations = payload;
     },
     setSelectedOrganizationId: (
       state,
       { payload }: PayloadAction<string | null>,
     ) => {
-      return {
-        ...state,
-        selectedOrganizationId: payload,
-      };
+      state.selectedOrganizationId = payload;
     },
-    setAvailableOrganizations: (
-      state,
-      { payload }: PayloadAction<OrganizationDescription[]>,
-    ) => {
-      return {
-        ...state,
-        availableOrganizations: payload,
-        selectedOrganizationId: payload.find(
-          (org) => org.id === state.selectedOrganizationId,
-        )
-          ? state.selectedOrganizationId
-          : payload[0]?.id,
-      };
-    },
+    ///////////////
+
     updateCurCheckpoint: (
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
@@ -712,12 +686,6 @@ export const sessionSlice = createSlice({
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
     },
-    selectAvailableProfiles: (state) => {
-      return state.availableProfiles;
-    },
-    selectAvailableOrganizations: (state) => {
-      return state.availableOrganizations;
-    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -768,8 +736,6 @@ export const {
   updateHistoryItemAtIndex,
   clearLastEmptyResponse,
   setMainEditorContentTrigger,
-  setSelectedProfileId,
-  setSelectedOrganizationId,
   deleteMessage,
   setIsGatheringContext,
   updateCurCheckpoint,
@@ -782,8 +748,6 @@ export const {
   removeCodeToEdit,
   setCalling,
   cancelToolCall,
-  setAvailableProfiles,
-  setAvailableOrganizations,
   acceptToolCall,
   setToolGenerated,
   setToolCallOutput,
@@ -793,6 +757,11 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
+
+  setAvailableProfiles,
+  setSelectedProfile,
+  setOrganizations,
+  setSelectedOrganizationId,
 } = sessionSlice.actions;
 
 export const {
@@ -800,8 +769,6 @@ export const {
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
-  selectAvailableProfiles,
-  selectAvailableOrganizations,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

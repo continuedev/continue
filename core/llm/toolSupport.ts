@@ -2,6 +2,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   string,
   (model: string) => boolean | undefined
 > = {
+  "continue-proxy": (model) => {
+    return ["claude-3-5", "claude-3.5", "gpt-4", "o3", "gemini"].some((part) =>
+      model.toLowerCase().startsWith(part),
+    );
+  },
   anthropic: (model) => {
     if (
       ["claude-3-5", "claude-3.5"].some((part) =>
@@ -13,7 +18,10 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   },
   openai: (model) => {
     // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
-    if (model.toLowerCase().startsWith("gpt-4")) {
+    if (
+      model.toLowerCase().startsWith("gpt-4") ||
+      model.toLowerCase().startsWith("o3")
+    ) {
       return true;
     }
   },
