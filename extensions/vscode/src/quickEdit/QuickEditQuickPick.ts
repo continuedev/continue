@@ -2,7 +2,6 @@
 import { IDE } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
-import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
@@ -13,6 +12,7 @@ import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
+import { DataLogger } from "core/data/log";
 
 // @ts-ignore - error finding typings
 // @ts-ignore
@@ -226,13 +226,18 @@ export class QuickEdit {
           break;
       }
       let model = await this.getCurModelTitle();
-      logDevData("quickEdit", {
-        prompt,
-        path,
-        label,
-        diffs: this.verticalDiffManager.logDiffs,
-        model,
+
+      void DataLogger.getInstance().logDevData({
+        name: "quickEdit",
+        data: {
+          prompt,
+          path,
+          label,
+          diffs: this.verticalDiffManager.logDiffs,
+          model,
+        },
       });
+
       quickPick.dispose();
     });
   }

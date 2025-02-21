@@ -580,6 +580,7 @@ async function finalToBrowserConfig(
     tools: final.tools,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
     usePlatform: await useHub(ide.getIdeSettings()),
+    // data not included here
   };
 }
 

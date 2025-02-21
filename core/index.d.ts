@@ -1,4 +1,4 @@
-import { ModelRole } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 declare global {
@@ -43,13 +43,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-  | "loading"
-  | "indexing"
-  | "done"
-  | "failed"
-  | "paused"
-  | "disabled"
-  | "cancelled";
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
@@ -667,10 +667,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-      isUntitled: boolean;
-      path: string;
-      contents: string;
-    }
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
   >;
 
   getLastFileSaveTimestamp?(): number;
@@ -853,11 +853,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-  | string
-  | {
-    type: "text";
-    text: string;
-  }[];
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 export interface ToolExtras {
@@ -1147,6 +1147,7 @@ export interface SerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  data?: DataDestination[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1186,9 +1187,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1199,6 +1200,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
+  data?: DataDestination[];
 }
 
 // in the actual Continue source code
@@ -1222,6 +1224,7 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  data?: DataDestination[];
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1279,9 +1282,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-    | { error: string; details?: never }
-    | { details: PackageDetailsSuccess; error?: never }
-  );
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;
