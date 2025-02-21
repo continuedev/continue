@@ -1,5 +1,4 @@
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
-import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { getUriDescription } from "../../util/uri";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 
@@ -14,26 +13,16 @@ export async function retrieveContextItemsFromEmbeddings(
   options: any | undefined,
   filterDirectory: string | undefined,
 ): Promise<ContextItem[]> {
-  if (!extras.embeddingsProvider) {
-    return [];
-  }
-
-  // transformers.js not supported in JetBrains IDEs right now
-
-  const isJetBrainsAndTransformersJs =
-    extras.embeddingsProvider.providerName ===
-      TransformersJsEmbeddingsProvider.providerName &&
-    (await extras.ide.getIdeInfo()).ideType === "jetbrains";
-
-  if (isJetBrainsAndTransformersJs) {
-    void extras.ide.showToast(
-      "warning",
-      "Codebase retrieval is limited when `embeddingsProvider` is empty or set to `transformers.js` in JetBrains. " +
-        "You can use Ollama to set up local embeddings, use our 'free-trial', " +
-        "or configure your own. See here to learn more: " +
-        "https://docs.continue.dev/customize/model-types/embeddings",
-    );
-  }
+  // Currently you can use codebase without an embeddings provider and it will just skip the embeddings inputs
+  // if (!extras.embeddingsProvider) {
+  //   void extras.ide.showToast(
+  //     "warning",
+  //     "Set up an embeddings model to use this feature. Visit the docs to learn more: " +
+  //       "https://docs.continue.dev/customize/model-types/embeddings",
+  //   );
+  //   return [];
+  // }
+  const includeEmbeddings = !!extras.config.selectedModelByRole.embed;
 
   // Get tags to retrieve for
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
@@ -78,7 +67,6 @@ export async function retrieveContextItemsFromEmbeddings(
     input: extras.fullInput,
     llm: extras.llm,
     config: extras.config,
-    includeEmbeddings: !isJetBrainsAndTransformersJs,
   };
 
   const pipeline = new pipelineType(pipelineOptions);
@@ -86,16 +74,17 @@ export async function retrieveContextItemsFromEmbeddings(
     tags,
     filterDirectory,
     query: extras.fullInput,
+    includeEmbeddings,
   });
 
   if (results.length === 0) {
     if (extras.config.disableIndexing) {
-      void extras.ide.showToast("warning", "No embeddings results found.");
+      void extras.ide.showToast("warning", "No results found.");
       return [];
     } else {
       void extras.ide.showToast(
         "warning",
-        "No embeddings results found. If you think this is an error, re-index your codebase.",
+        "No results found. If you think this is an error, re-index your codebase.",
       );
       // TODO - add "re-index" option to warning message which clears and reindexes codebase
     }
