@@ -153,7 +153,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                             />
                           </div>
                         </div>
-                        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
+                        <div className="max-h-48 overflow-y-auto overflow-x-hidden pr-2">
                           {availableTools.map((tool: any) => (
                             <Listbox.Option
                               key={tool.function.name}
