@@ -17,7 +17,6 @@ import { addContextProvider, addModel, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
-import { ControlPlaneClient } from "./control-plane/client";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
@@ -63,7 +62,6 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   codebaseIndexingState: IndexingProgressUpdate;
-  controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
 
@@ -72,10 +70,6 @@ export class Core {
   );
 
   private abortedMessageIds: Set<string> = new Set();
-
-  private async config() {
-    return (await this.configHandler.loadConfig()).config;
-  }
 
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
@@ -114,16 +108,11 @@ export class Core {
       useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(
-      sessionInfoPromise,
-      ideSettingsPromise,
-    );
-
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
       this.onWrite,
-      this.controlPlaneClient,
+      sessionInfoPromise,
     );
 
     this.docsService = DocsService.createSingleton(
@@ -136,12 +125,25 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       });
+
+      // update additional submenu context providers registered via VSCode API
+      const additionalProviders = this.configHandler.getAdditionalSubmenuContextProviders();
+      if (additionalProviders.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: additionalProviders,
+        });
+      }
     });
 
-    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
-      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    this.configHandler.onDidChangeAvailableProfiles(
+      (profiles, selectedProfileId) =>
+        this.messenger.send("didChangeAvailableProfiles", {
+          profiles,
+          selectedProfileId,
+        }),
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
@@ -281,10 +283,8 @@ export class Core {
     });
 
     on("config/newPromptFile", async (msg) => {
-      await createNewPromptFileV2(
-        this.ide,
-        (await this.config())?.experimental?.promptPath,
-      );
+      const { config } = await this.configHandler.loadConfig();
+      await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
       await this.configHandler.reloadConfig();
     });
 
@@ -306,7 +306,7 @@ export class Core {
     });
 
     on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data);
+      addContextProvider(msg.data, this.configHandler);
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -324,7 +324,7 @@ export class Core {
     });
 
     on("controlPlane/listOrganizations", async (msg) => {
-      return await this.controlPlaneClient.listOrganizations();
+      return await this.configHandler.listOrganizations();
     });
 
     // Context providers
@@ -341,7 +341,7 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
@@ -358,12 +358,13 @@ export class Core {
     });
 
     on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode, selectedModelTitle } =
-        msg.data;
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
+
+      const { name, query, fullInput, selectedCode, selectedModelTitle } =
+        msg.data;
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider =
@@ -412,10 +413,36 @@ export class Core {
           id,
         }));
       } catch (e) {
-        void this.ide.showToast(
-          "error",
-          `Error getting context items from ${name}: ${e}`,
-        );
+        let knownError = false;
+
+        if (e instanceof Error) {
+          // A specific error where we're forcing the presence of embeddings provider on the config
+          // But Jetbrains doesn't support transformers JS
+          // So if a context provider needs it it will throw this error when the file isn't found
+          if (e.message.includes("all-MiniLM-L6-v2")) {
+            knownError = true;
+            const toastOption = "See Docs";
+            void this.ide
+              .showToast(
+                "error",
+                `Set up an embeddings model to use @${name}`,
+                toastOption,
+              )
+              .then((userSelection) => {
+                if (userSelection === toastOption) {
+                  void this.ide.openUrl(
+                    "https://docs.continue.dev/customize/model-types/embeddings",
+                  );
+                }
+              });
+          }
+        }
+        if (!knownError) {
+          void this.ide.showToast(
+            "error",
+            `Error getting context items from ${name}: ${e}`,
+          );
+        }
         return [];
       }
     });
@@ -428,7 +455,8 @@ export class Core {
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       };
     });
 
@@ -716,6 +744,8 @@ export class Core {
         llm,
         data.input,
         data.language,
+        false,
+        undefined,
       )) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
@@ -911,13 +941,19 @@ export class Core {
     on("didChangeSelectedOrg", (msg) => {
       void this.configHandler.setSelectedOrgId(msg.data.id);
       void this.configHandler.reloadConfig();
+      void this.configHandler.loadAssistantsForSelectedOrg();
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
-      this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+      await this.configHandler.updateControlPlaneSessionInfo(
+        msg.data.sessionInfo,
+      );
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
+      const url = await getAuthUrlForTokenPage(
+        ideSettingsPromise,
+        msg.data.useOnboarding,
+      );
       return { url };
     });
 

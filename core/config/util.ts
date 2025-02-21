@@ -7,10 +7,12 @@ import {
   IDE,
   ILLM,
   ModelDescription,
-  ModelRoles,
+  ExperimentalModelRoles,
 } from "../";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
+
+import { ConfigHandler } from "./ConfigHandler";
 
 function stringify(obj: any, indentation?: number): string {
   return JSON.stringify(
@@ -22,19 +24,30 @@ function stringify(obj: any, indentation?: number): string {
   );
 }
 
-export function addContextProvider(provider: ContextProviderWithParams) {
+export function addContextProvider(provider: ContextProviderWithParams, configHandler?: ConfigHandler) {
+  let isAdded = false;
   editConfigJson((config) => {
+
     if (!config.contextProviders) {
-      config.contextProviders = [provider];
-    } else {
+      config.contextProviders = [];
+    }
+    if (!config.contextProviders.some((p) => p.name === provider.name)) {
       config.contextProviders.push(provider);
+      isAdded = true;
     }
 
     return config;
   });
+
+  if (isAdded && configHandler) {
+    void configHandler.reloadConfig();
+  }
 }
 
-export function addModel(model: ModelDescription, role?: keyof ModelRoles) {
+export function addModel(
+  model: ModelDescription,
+  role?: keyof ExperimentalModelRoles,
+) {
   editConfigJson((config) => {
     if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
       return config;
@@ -85,7 +98,7 @@ export function deleteModel(title: string) {
   });
 }
 
-export function getModelByRole<T extends keyof ModelRoles>(
+export function getModelByRole<T extends keyof ExperimentalModelRoles>(
   config: ContinueConfig,
   role: T,
 ): ILLM | undefined {

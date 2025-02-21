@@ -1,4 +1,5 @@
 import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult } from "@continuedev/config-yaml";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 
@@ -22,6 +23,7 @@ import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbed
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
+import { GlobalContext } from "../../util/GlobalContext";
 import { GlobalContext } from "../../util/GlobalContext";
 import {
   editConfigJson,
@@ -178,7 +180,8 @@ export default class DocsService {
 
       const currentStatus = this.statuses.get(doc.startUrl);
       if (currentStatus) {
-        return currentStatus;
+        this.handleStatusUpdate(currentStatus);
+        return;
       }
 
       const sharedStatus = {
@@ -232,11 +235,7 @@ export default class DocsService {
     if (isAborted) {
       return true;
     }
-    // // Handle indexing disabled change mid-indexing
-    // if (this.config.disableIndexing) {
-    //   this.abort(startUrl);
-    //   return true;
-    // }
+
     // Handle embeddings provider change mid-indexing
     if (this.config.embeddingsProvider.embeddingId !== startedWithEmbedder) {
       this.abort(startUrl);
@@ -297,10 +296,6 @@ export default class DocsService {
     if (newConfig) {
       const oldConfig = this.config;
       this.config = newConfig; // IMPORTANT - need to set up top, other methods below use this without passing it in
-
-      // if (this.config.disableIndexing) {
-      //   return;
-      // }
 
       // No point in indexing if no docs context provider
       const hasDocsContextProvider = this.hasDocsContextProvider();
@@ -389,11 +384,14 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     forceReindex: boolean = false,
   ): Promise<void> {
-    // if (this.config.disableIndexing) {
-    //   console.warn("Attempting to add/index docs when indexing is disabled");
-    //   return;
-    // }
     const { startUrl, useLocalCrawling, maxDepth } = siteIndexingConfig;
+
+    // First, if indexing is already in process, don't attempt
+    // This queue is necessary because indexAndAdd is invoked circularly by config edits
+    // TODO shouldn't really be a gap between adding and checking in queue but probably fine
+    if (this.docsIndexingQueue.has(startUrl)) {
+      return;
+    }
 
     const { isPreindexed, provider } =
       await this.getEmbeddingsProvider(startUrl);
@@ -401,13 +399,10 @@ export default class DocsService {
       console.warn("Attempted to indexAndAdd pre-indexed doc");
       return;
     }
-
-    // Queue - indexAndAdd is invoked circularly by config edits. This prevents duplicate runs
-    if (this.docsIndexingQueue.has(startUrl)) {
-      return;
-    }
-
     const startedWithEmbedder = provider.embeddingId;
+
+    // Check if doc has been successfully indexed with the given embedder
+    // Note at this point we know it's not a pre-indexed doc
     const indexExists = await this.hasMetadata(startUrl);
 
     // Build status update - most of it is fixed values
@@ -424,22 +419,6 @@ export default class DocsService {
       icon: siteIndexingConfig.faviconUrl,
       url: siteIndexingConfig.startUrl,
     };
-
-    // Clear current indexes if reIndexing
-    if (indexExists) {
-      if (forceReindex) {
-        await this.deleteIndexes(startUrl);
-      } else {
-        this.handleStatusUpdate({
-          ...fixedStatus,
-          progress: 1,
-          description: "Complete",
-          status: "complete",
-          debugInfo: "Already indexed",
-        });
-        return;
-      }
-    }
 
     // If not force-reindexing and has failed with same config, don't reattempt
     if (!forceReindex) {
@@ -460,6 +439,27 @@ export default class DocsService {
         });
         return;
       }
+    }
+
+    if (indexExists && !forceReindex) {
+      this.handleStatusUpdate({
+        ...fixedStatus,
+        progress: 1,
+        description: "Complete",
+        status: "complete",
+        debugInfo: "Already indexed",
+      });
+      return;
+    }
+
+    // Do a test run on the embedder
+    // This particular failure will not mark as a failed config in global context
+    // Since SiteIndexingConfig is likely to be valid
+    try {
+      await provider.embed(["continue-test-run"]);
+    } catch (e) {
+      console.error("Failed to test embeddings connection", e);
+      return;
     }
 
     const markFailedInGlobalContext = () => {
@@ -483,6 +483,11 @@ export default class DocsService {
 
     try {
       this.docsIndexingQueue.add(startUrl);
+
+      // Clear current indexes if reIndexing
+      if (indexExists && forceReindex) {
+        await this.deleteIndexes(startUrl);
+      }
 
       this.addToConfig(siteIndexingConfig);
 
@@ -585,9 +590,10 @@ export default class DocsService {
         });
 
         try {
-          const subpathEmbeddings = await provider.embed(
-            article.chunks.map((c) => c.content),
-          );
+          const subpathEmbeddings =
+            article.chunks.length > 0
+              ? await provider.embed(article.chunks.map((c) => c.content))
+              : [];
           chunks.push(...article.chunks);
           embeddings.push(...subpathEmbeddings);
           const toWait = 100 * this.docsIndexingQueue.size + 50;
@@ -613,7 +619,6 @@ export default class DocsService {
         });
 
         void this.ide.showToast("info", `Failed to index ${startUrl}`);
-        this.docsIndexingQueue.delete(startUrl);
         markFailedInGlobalContext();
         return;
       }
@@ -656,11 +661,6 @@ export default class DocsService {
         favicon,
       });
 
-      this.docsIndexingQueue.delete(startUrl);
-
-      if (this.shouldCancel(startUrl, startedWithEmbedder)) {
-        return;
-      }
       this.handleStatusUpdate({
         ...fixedStatus,
         description: "Complete",
@@ -676,7 +676,11 @@ export default class DocsService {
 
       removeFromFailedGlobalContext();
     } catch (e) {
-      let description = `Error getting docs from: ${siteIndexingConfig.startUrl}`;
+      console.error(
+        `Error indexing docs at: ${siteIndexingConfig.startUrl}`,
+        e,
+      );
+      let description = `Error indexing docs at: ${siteIndexingConfig.startUrl}`;
       if (e instanceof Error) {
         if (
           e.message.includes("github.com") &&
@@ -685,7 +689,6 @@ export default class DocsService {
           description = "Github rate limit exceeded"; // This text is used verbatim elsewhere
         }
       }
-      console.error("Error indexing docs", e);
       this.handleStatusUpdate({
         ...fixedStatus,
         description,
@@ -937,7 +940,7 @@ export default class DocsService {
       // Anything found in old config, new config, AND sqlite that doesn't match should be reindexed
       // TODO if only favicon and title change, only update, don't embed
       // Otherwise anything found in new config that isn't in sqlite should be added/indexed
-      const newDocs: SiteIndexingConfig[] = [];
+      const addedDocs: SiteIndexingConfig[] = [];
       const changedDocs: SiteIndexingConfig[] = [];
       for (const doc of newConfigDocs) {
         const currentIndexedDoc = currentStartUrls.includes(doc.startUrl);
@@ -974,14 +977,14 @@ export default class DocsService {
             }
           }
         } else {
-          newDocs.push(doc);
+          addedDocs.push(doc);
           void Telemetry.capture("add_docs_config", { url: doc.startUrl });
         }
       }
 
       await Promise.allSettled([
         ...changedDocs.map((doc) => this.indexAndAdd(doc, true)),
-        ...newDocs.map((doc) => this.indexAndAdd(doc)),
+        ...addedDocs.map((doc) => this.indexAndAdd(doc)),
       ]);
 
       for (const doc of deletedDocs) {

@@ -12,7 +12,9 @@ import { SiteIndexingConfig } from "..";
 export type GlobalContextType = {
   indexingPaused: boolean;
   selectedTabAutocompleteModel: string;
-  lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
+  lastSelectedProfileForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
   lastSelectedOrgIdForWorkspace: {
     [workspaceIdentifier: string]: string | null;
   };
