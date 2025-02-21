@@ -67,7 +67,6 @@ export interface ToolbarOptions {
   hideAddContext?: boolean;
   enterText?: string;
   hideSelectModel?: boolean;
-  hideTools?: boolean;
 }
 
 interface InputToolbarProps {
@@ -91,10 +90,7 @@ function InputToolbar(props: InputToolbarProps) {
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
-  const toolsSupported =
-    defaultModel &&
-    modelSupportsTools(defaultModel) &&
-    !props.toolbarOptions?.hideTools;
+  const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =
     defaultModel &&
@@ -110,7 +106,6 @@ function InputToolbar(props: InputToolbarProps) {
       <StyledDiv
         isHidden={props.hidden}
         onClick={props.onClick}
-        id="input-toolbar"
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">

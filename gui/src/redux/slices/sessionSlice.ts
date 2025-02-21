@@ -53,7 +53,6 @@ type SessionState = {
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
-  currentMainEditorContent?: JSONContent;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;

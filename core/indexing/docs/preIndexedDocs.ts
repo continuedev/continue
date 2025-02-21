@@ -358,6 +358,11 @@ const preIndexedDocs: Record<
     startUrl: "https://angular.dev/",
     rootUrl: "https://angular.dev/",
   },
+  "https://docs.djangoproject.com/": {
+    title: "Django",
+    startUrl: "https://docs.djangoproject.com/",
+    rootUrl: "https://docs.djangoproject.com/",
+  }
 };
 
 export default preIndexedDocs;

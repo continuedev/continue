@@ -1054,7 +1054,7 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
-  // registerCopyBufferSpy(context, core);
+  registerCopyBufferSpy(context, core);
 
   for (const [command, callback] of Object.entries(
     getCommandsMap(
