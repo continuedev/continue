@@ -49,6 +49,7 @@ const CHAT_ONLY_MODELS = [
   "gpt-4o-mini",
   "o1-preview",
   "o1-mini",
+  "o3-mini",
 ];
 
 const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
@@ -92,8 +93,8 @@ class OpenAI extends BaseLLM {
     return model;
   }
 
-  private isO1Model(model?: string): boolean {
-    return !!model && model.startsWith("o1");
+  private isO3orO1Model(model?: string): boolean {
+    return !!model && (model.startsWith("o1") || model.startsWith("o3"));
   }
 
   protected supportsPrediction(model: string): boolean {
@@ -144,8 +145,8 @@ class OpenAI extends BaseLLM {
 
     finalOptions.stop = options.stop?.slice(0, this.getMaxStopWords());
 
-    // OpenAI o1-preview and o1-mini:
-    if (this.isO1Model(options.model)) {
+    // OpenAI o1-preview and o1-mini or o3-mini:
+    if (this.isO3orO1Model(options.model)) {
       // a) use max_completion_tokens instead of max_tokens
       finalOptions.max_completion_tokens = options.maxTokens;
       finalOptions.max_tokens = undefined;
@@ -205,16 +206,23 @@ class OpenAI extends BaseLLM {
   protected _getEndpoint(
     endpoint: "chat/completions" | "completions" | "models",
   ) {
-    if (this.apiType === "azure") {
-      return new URL(
-        `openai/deployments/${this.deployment}/${endpoint}?api-version=${this.apiVersion}`,
-        this.apiBase,
-      );
-    }
     if (!this.apiBase) {
       throw new Error(
         "No API base URL provided. Please set the 'apiBase' option in config.json",
       );
+    }
+
+    if (this.apiType?.includes("azure")) {
+      // Default is `azure-openai`, but previously was `azure`
+      const isAzureOpenAI =
+        this.apiType === "azure-openai" || this.apiType === "azure";
+
+      const path = isAzureOpenAI
+        ? `openai/deployments/${this.deployment}/${endpoint}`
+        : endpoint;
+
+      const version = this.apiVersion ? `?api-version=${this.apiVersion}` : "";
+      return new URL(`${path}${version}`, this.apiBase);
     }
 
     return new URL(endpoint, this.apiBase);
@@ -239,8 +247,8 @@ class OpenAI extends BaseLLM {
   ): ChatCompletionCreateParams {
     body.stop = body.stop?.slice(0, this.getMaxStopWords());
 
-    // OpenAI o1-preview and o1-mini:
-    if (this.isO1Model(body.model)) {
+    // OpenAI o1-preview and o1-mini or o3-mini:
+    if (this.isO3orO1Model(body.model)) {
       // a) use max_completion_tokens instead of max_tokens
       body.max_completion_tokens = body.max_tokens;
       body.max_tokens = undefined;
@@ -266,7 +274,7 @@ class OpenAI extends BaseLLM {
       body.max_completion_tokens = undefined;
     }
 
-    if (body.tools?.length) {
+    if (body.tools?.length && !body.model?.startsWith("o3")) {
       // To ensure schema adherence: https://platform.openai.com/docs/guides/function-calling#parallel-function-calling-and-structured-outputs
       // In practice, setting this to true and asking for multiple tool calls
       // leads to "arguments" being something like '{"file": "test.ts"}{"file": "test.js"}'

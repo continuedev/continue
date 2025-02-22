@@ -1,113 +1,103 @@
-import {
-  DocumentIcon,
-  PlusIcon,
-  SparklesIcon,
-} from "@heroicons/react/24/outline";
-import { useContext } from "react";
-import { lightGray } from "../..";
+import { Popover } from "@headlessui/react";
+import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ProfileDescription } from "core/config/ConfigHandler";
+import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
-import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
-import { setProfileId } from "../../../redux/thunks/setProfileId";
-import { getFontSize, getMetaKeyLabel } from "../../../util";
-import AboutAssistantDialog from "../../dialogs/AboutAssistantDialog";
-import { Divider, Option, OptionDiv } from "./shared";
+import { cycleProfile } from "../../../redux/thunks/profileAndOrg";
+import { getFontSize, isMetaEquivalentKeyPressed } from "../../../util";
+import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
+import AssistantIcon from "./AssistantIcon";
+import { AssistantSelectOptions } from "./AssistantSelectOptions";
+import { getProfileDisplayText } from "./utils";
 
-interface AssistantSelectProps {
-  onClose: () => void;
+function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
+  return (
+    <div className="flex max-w-[50vw] items-center gap-0.5">
+      <div className="mr-1 h-4 w-4 flex-shrink-0">
+        <AssistantIcon assistant={props.selectedProfile} />
+      </div>
+      <span className="truncate">
+        {getProfileDisplayText(props.selectedProfile)}
+      </span>
+      <ChevronDownIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+    </div>
+  );
 }
 
-export function AssistantSelect(props: AssistantSelectProps) {
-  const ideMessenger = useContext(IdeMessengerContext);
-  const { profiles, selectedProfile } = useAuth();
-
+export default function AssistantSelect() {
   const dispatch = useAppDispatch();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const { selectedProfile, selectedOrganization, profiles } = useAuth();
+  const ideMessenger = useContext(IdeMessengerContext);
 
-  function onNewAssistant() {
-    ideMessenger.post("controlPlane/openUrl", {
-      path: "new",
-    });
+  useEffect(() => {
+    let lastToggleTime = 0;
+    const DEBOUNCE_MS = 500;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key === "'" &&
+        isMetaEquivalentKeyPressed(event as any) &&
+        event.shiftKey
+      ) {
+        const now = Date.now();
+
+        if (now - lastToggleTime >= DEBOUNCE_MS) {
+          dispatch(cycleProfile());
+          lastToggleTime = now;
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  if (!selectedProfile) {
+    return (
+      <div
+        onClick={() => {
+          ideMessenger.request("controlPlane/openUrl", {
+            path: "/new?type=assistant",
+            orgSlug: selectedOrganization?.slug,
+          });
+        }}
+        className="text-lightgray hover:bg mb-1 mr-3 flex cursor-pointer items-center gap-1"
+        style={{ fontSize: `${getFontSize() - 2}px` }}
+      >
+        <PlusIcon className="h-4 w-4" /> Create your first assistant
+      </div>
+    );
   }
 
   return (
-    <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden border-0 border-r-[0.5px] border-solid pt-0">
-      <div className={`max-h-[300px]`}>
-        {profiles.map((option, idx) => (
-          <Option
-            key={idx}
-            idx={idx}
-            disabled={!!option.errors?.length}
-            showConfigure={true}
-            selected={option.id === selectedProfile?.id}
-            onLink={
-              option.id !== "local"
-                ? (e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-
-                    ideMessenger.post("config/openProfile", {
-                      profileId: option.id,
-                    });
-                  }
-                : undefined
-            }
-            onConfigure={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-
-              if (option.id === "local") {
-                ideMessenger.post("config/openProfile", {
-                  profileId: option.id,
-                });
-              } else {
-                props.onClose();
-                dispatch(setDialogMessage(<AboutAssistantDialog />));
-                dispatch(setShowDialog(true));
-              }
-            }}
-            errors={option.errors}
-            onClickError={() => {
-              ideMessenger.post("config/openProfile", {
-                profileId: option.id,
-              });
-            }}
-            onClick={() => dispatch(setProfileId(option.id))}
-          >
-            <div className="flex min-w-0 items-center">
-              {option.id === "local" ? (
-                <DocumentIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-              ) : (
-                <SparklesIcon
-                  className="mr-2 h-4 w-4 flex-shrink-0"
-                  color={
-                    option.id === selectedProfile?.id ? "yellow" : undefined
-                  }
-                />
-              )}
-              <span className="flex-1 truncate text-xs">{option.title}</span>
-            </div>
-          </Option>
-        ))}
-      </div>
-
-      <div className="mt-auto w-full">
-        <OptionDiv key={profiles.length} onClick={onNewAssistant}>
-          <div className="flex items-center py-0.5">
-            <PlusIcon className="mr-2 h-4 w-4 flex-shrink-0" />
-            New Assistant
-          </div>
-        </OptionDiv>
-
-        <Divider className="!my-0" />
-
-        <span
-          className="block px-3 py-2"
-          style={{ color: lightGray, fontSize: getFontSize() - 4 }}
+    <Popover>
+      <div className="relative">
+        <Popover.Button
+          data-testid="assistant-select-button"
+          ref={buttonRef}
+          className="text-lightgray cursor-pointer border-none bg-transparent hover:brightness-125"
+          style={{ fontSize: `${getFontSize() - 2}px` }}
         >
-          <code>{getMetaKeyLabel()}'</code> toggle assistant
-        </span>
+          <AssistantSelectButton selectedProfile={selectedProfile} />
+        </Popover.Button>
+
+        <PopoverTransition>
+          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border border-gray-400 p-0">
+            <AssistantSelectOptions
+              onClose={() => {
+                if (buttonRef.current) {
+                  buttonRef.current.click();
+                }
+              }}
+            />
+          </Popover.Panel>
+        </PopoverTransition>
       </div>
-    </div>
+    </Popover>
   );
 }

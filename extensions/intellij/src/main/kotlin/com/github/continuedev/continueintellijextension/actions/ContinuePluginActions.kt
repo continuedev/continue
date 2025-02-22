@@ -113,7 +113,8 @@ class NewContinueSessionAction : AnAction() {
 class ViewHistoryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.sendToWebview("viewHistory", null)
+        val params = mapOf("path" to "/history", "toggle" to true)
+        continuePluginService.sendToWebview("navigateTo", params)
     }
 }
 
@@ -132,12 +133,5 @@ class OpenMorePageAction : AnAction() {
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         val params = mapOf("path" to "/more", "toggle" to true)
         continuePluginService.sendToWebview("navigateTo", params)
-    }
-}
-
-class OpenAccountDialogAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.sendToWebview("openDialogMessage", "account")
     }
 }

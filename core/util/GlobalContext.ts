@@ -7,11 +7,18 @@ import {
 } from "../config/sharedConfig";
 
 import { getGlobalContextFilePath } from "./paths";
+import { SiteIndexingConfig } from "..";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
   selectedTabAutocompleteModel: string;
-  lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
+  lastSelectedProfileForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
+  lastSelectedOrgIdForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
+
   /**
    * This is needed to handle the case where a JetBrains user has created
    * docs embeddings using one provider, and then updates to a new provider.
@@ -23,6 +30,7 @@ export type GlobalContextType = {
   showConfigUpdateToast: boolean;
   isSupportedLanceDbCpuTarget: boolean;
   sharedConfig: SharedConfigSchema;
+  failedDocs: SiteIndexingConfig[];
 };
 
 /**

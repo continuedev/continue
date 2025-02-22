@@ -84,7 +84,7 @@ export default function StepContainerPreActionButtons({
       tabIndex={-1}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      className="bg-vsc-editor-background border-vsc-input-border relative rounded-md border-[1px] border-solid"
+      className="bg-vsc-editor-background border-vsc-input-border relative my-2.5 rounded-md border-[1px] border-solid"
     >
       <div className="h-full w-full overflow-hidden rounded-md">{children}</div>
       {hovering && !isStreaming && (

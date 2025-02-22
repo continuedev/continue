@@ -4,6 +4,10 @@ description: Reference for the Continue _config.json_ configuration file
 keywords: [config, config_schema.json, json]
 ---
 
+:::info
+We recently introduced a new configuration format, `config.yaml`, to replace `config.json`. See the `config.yaml` reference and migration guide [here](./yaml-reference.md).
+:::
+
 Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
 
 **All properties at all levels are optional unless explicitly marked required**
@@ -16,9 +20,9 @@ Each model has specific configuration options tailored to its provider and funct
 **Properties:**
 
 - `title` (**required**): The title to assign to your model, shown in dropdowns, etc.
-- `provider` (**required**): The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, etc., see intelliJ suggestions.
+- `provider` (**required**): The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, `xAI`, etc., see IntelliJ suggestions.
 - `model` (**required**): The name of the model, used for prompt template auto-detection. Use `AUTODETECT` special name to get all available models.
-- `apiKey`: API key required by providers like OpenAI, Anthropic, and Cohere.
+- `apiKey`: API key required by providers like OpenAI, Anthropic, Cohere, and xAI.
 - `apiBase`: The base URL of the LLM API.
 - `contextLength`: Maximum context length of the model, typically in tokens (default: 2048).
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
@@ -32,6 +36,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `engine`: Engine for Azure OpenAI requests.
 - `capabilities`: Override auto-detected capabilities:
   - `uploadImage`: Boolean indicating if the model supports image uploads.
+  - `tools`: Boolean indicating if the model supports tool use.
 
 _(AWS Only)_
 

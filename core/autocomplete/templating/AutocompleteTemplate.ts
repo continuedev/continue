@@ -51,6 +51,8 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 };
 
 // https://github.com/QwenLM/Qwen2.5-Coder?tab=readme-ov-file#3-file-level-code-completion-fill-in-the-middle
+// This issue asks about the use of <|repo_name|> and <|file_sep|> together with <|fim_prefix|>, <|fim_suffix|> and <|fim_middle|>
+// https://github.com/QwenLM/Qwen2.5-Coder/issues/343
 const qwenCoderFimTemplate: AutocompleteTemplate = {
   template:
     "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
@@ -85,6 +87,11 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     snippets,
     workspaceUris,
   ): [string, string] => {
+
+    function getFileName(snippet: { uri: string, uniquePath: string }) {
+      return snippet.uri.startsWith("file://") ? snippet.uniquePath : snippet.uri
+    }
+
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
         return [
@@ -111,14 +118,12 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
           return snippet.content;
         }
 
-        return `+++++ ${relativePaths[i].uri} \n${snippet.content}`;
+        return `+++++ ${getFileName(relativePaths[i])} \n${snippet.content}`;
       })
       .join("\n\n");
 
     return [
-      `${otherFiles}\n\n+++++ ${
-        relativePaths[relativePaths.length - 1].uri
-      }\n${prefix}`,
+      `${otherFiles}\n\n+++++ ${getFileName(relativePaths[relativePaths.length - 1])}\n${prefix}`,
       suffix,
     ];
   },
@@ -126,7 +131,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
   completionOptions: {
-    stop: ["[PREFIX]", "[SUFFIX]"],
+    stop: ["[PREFIX]", "[SUFFIX]", "\n+++++ "],
   },
 };
 
@@ -218,9 +223,8 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       [...snippets.map((snippet) => snippet.filepath), filepath],
       workspaceUris,
     );
-    const baseTemplate = `###PATH:${
-      relativePaths[relativePaths.length - 1]
-    }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
+    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]
+      }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
     if (snippets.length === 0) {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
@@ -395,7 +399,8 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("gpt") ||
     lowerCaseModel.includes("davinci-002") ||
     lowerCaseModel.includes("claude") ||
-    lowerCaseModel.includes("granite3")
+    lowerCaseModel.includes("granite3") ||
+    lowerCaseModel.includes("granite-3")
   ) {
     return holeFillerTemplate;
   }
