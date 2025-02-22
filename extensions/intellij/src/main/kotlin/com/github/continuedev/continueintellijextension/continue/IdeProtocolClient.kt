@@ -428,7 +428,7 @@ class IdeProtocolClient(
 
                         if (editor.document.text.trim().isEmpty()) {
                             WriteCommandAction.runWriteCommandAction(project) {
-                                editor.document.insertString(0, msg)
+                                editor.document.insertString(0, params.text)
                             }
                             respond(null)
                             return@launch
