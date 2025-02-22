@@ -33,9 +33,24 @@ const rootReducer = combineReducers({
 const saveSubsetFilters = [
   createFilter("session", [
     "history",
-    "sessionId",
     "selectedOrganizationId",
     "selectedProfile",
+    "id",
+    "lastSessionId",
+    "title",
+
+    // Persist edit mode in case closes in middle
+    "mode",
+    "codeToEdit",
+
+    // TODO consider removing persisted profiles/orgs
+    "availableProfiles",
+    "organizations",
+
+    // higher risk to persist
+    // codeBlockApplyStates
+    // symbols
+    // curCheckpointIndex
   ]),
   // Don't persist any of the edit state for now
   createFilter("editModeState", []),

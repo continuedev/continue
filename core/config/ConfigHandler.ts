@@ -50,7 +50,7 @@ export class ConfigHandler {
   private profiles: ProfileLifecycleManager[] | null = null; // null until profiles are loaded
   private selectedProfileId: string | null = null;
   private localProfileManager: ProfileLifecycleManager;
-  private controlPlaneClient: ControlPlaneClient;
+  controlPlaneClient: ControlPlaneClient;
 
   initializedPromise: Promise<void>;
 
@@ -90,6 +90,17 @@ export class ConfigHandler {
           reject(e);
         });
     });
+  }
+
+  /**
+   * Retrieves the titles of additional context providers that are of type "submenu".
+   *
+   * @returns {string[]} An array of titles of the additional context providers that have a description type of "submenu".
+   */
+  getAdditionalSubmenuContextProviders(): string[] {
+    return this.additionalContextProviders
+      .filter(provider => provider.description.type === "submenu")
+      .map(provider => provider.description.title);
   }
 
   private async init() {

@@ -82,7 +82,7 @@ export function getLocationsToLook(
   return locationsToLook;
 }
 
-export async function listAvailableSecrets(
+export function listAvailableSecrets(
   userSecretNames: string[],
   orgSecretNames: string[],
   assistantSecretNames: string[],
@@ -90,7 +90,7 @@ export async function listAvailableSecrets(
   assistantSlug: PackageSlug,
   blockSlug: PackageSlug | undefined,
   currentUserSlug: string,
-): Promise<SecretLocation[]> {
+): SecretLocation[] {
   // Create a set of all secret names
   const allSecretNames = new Set([
     ...userSecretNames,

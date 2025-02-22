@@ -591,11 +591,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   useEffect(() => {
     if (editor) {
       const handleFocus = () => {
-        debouncedShouldHideToolbar(false);
+        setShouldHideToolbar(false);
       };
 
       const handleBlur = () => {
-        debouncedShouldHideToolbar(true);
+        // TODO - make toolbar auto-hiding work without breaking tool dropdown focus
+        // debouncedShouldHideToolbar(true);
       };
 
       editor.on("focus", handleFocus);
