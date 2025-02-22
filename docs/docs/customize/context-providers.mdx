@@ -231,7 +231,7 @@ Reference the most relevant snippets from your codebase.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml" 
+  ```yaml title="Package or config.yaml"
   context:
     - provider: codebase
   ```
@@ -307,7 +307,7 @@ Reference the markdown converted contents of a given URL.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml" 
+  ```yaml title="Package or config.yaml"
   context:
     - provider: url
   ```
@@ -515,7 +515,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
             "type": "stdio",
             "command": "uvx",
             "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
-          }  
+          }
         }
       ]
     }
@@ -589,7 +589,7 @@ Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
               database: exampleDB
               password: yourPassword
               port: 5432
-          - name: exampleMssql 
+          - name: exampleMssql
             connection_type: mssql
             connection:
               user: username
@@ -612,7 +612,7 @@ Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
           "connections": [
             {
               "name": "examplePostgres",
-              "connection_type": "postgres", 
+              "connection_type": "postgres",
               "connection": {
                 "user": "username",
                 "host": "localhost",
@@ -657,7 +657,8 @@ Available connection types:
 
 ### `@Postgres`
 
-Reference the schema of a table, and some sample rows
+Reference the schema of a table or view, and some sample rows.
+Includes indexes, constraints, triggers and comments.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -687,6 +688,7 @@ Reference the schema of a table, and some sample rows
           "password": "catsarecool",
           "database": "animals",
           "schema": "public",
+          "excludePattern": "^BATCH_.+",
           "sampleRows": 3
         }
       }
@@ -697,8 +699,9 @@ Reference the schema of a table, and some sample rows
 </Tabs>
 
 The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
+By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3.
 
-By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
+Use `excludePattern` to exclude tables/views with matching names from context. Matching is case insensitive. By default, there is no exclusion.
 
 [Here is a short demo.](https://github.com/continuedev/continue/pull/859)
 
@@ -753,7 +756,7 @@ Reference an open MR for this branch on GitLab.
   {
     "contextProviders": [
       {
-        "name": "gitlab-mr", 
+        "name": "gitlab-mr",
         "params": {
           "token": "..."
         }
@@ -788,7 +791,7 @@ You can specify the domain to communicate with by setting the `domain` parameter
         "name": "gitlab-mr",
         "params": {
           "token": "...",
-          "domain": "gitlab.example.com" 
+          "domain": "gitlab.example.com"
         }
       }
     ]
@@ -820,7 +823,7 @@ Reference the conversation in a Jira issue.
   {
     "contextProviders": [
       {
-        "name": "jira", 
+        "name": "jira",
         "params": {
           "domain": "company.atlassian.net",
           "token": "ATATT..."
@@ -886,11 +889,11 @@ Reference the messages in a Discord channel.
     - provider: discord
       params:
         discordKey: "bot token"
-        guildId: "1234567890" 
+        guildId: "1234567890"
         channels:
           - id: "123456"
             name: "example-channel"
-          - id: "678901" 
+          - id: "678901"
             name: "example-channel-2"
   ```
   </TabItem>
@@ -910,7 +913,7 @@ Reference the messages in a Discord channel.
             },
             {
               "id": "678901",
-              "name": "example-channel-2" 
+              "name": "example-channel-2"
             }
           ]
         }
@@ -941,7 +944,7 @@ The HttpContextProvider makes a POST request to the url passed in the configurat
   {
     "contextProviders": [
       {
-        "name": "http", 
+        "name": "http",
         "params": {
           "url": "https://api.example.com/v1/users"
         }
@@ -999,7 +1002,7 @@ Reference specific git commit metadata and diff or all of the recent commits.
   {
     "contextProviders": [
       {
-        "name": "commit", 
+        "name": "commit",
         "params": {
           "Depth": 50,
           "LastXCommitsDepth": 10
@@ -1022,7 +1025,7 @@ Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
   <TabItem value="yaml" label="YAML">
   ```yaml title="Package or config.yaml"
   context:
-    - provider: greptile 
+    - provider: greptile
       params:
         greptileToken: "..."
         githubToken: "..."
