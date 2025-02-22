@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.266",
+  "version": "0.9.269",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -94,7 +94,7 @@
         "continue.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the gear icon to go to the settings page, and click Sign In."
         },
         "continue.enableContinueHub": {
           "type": "boolean",
@@ -328,20 +328,6 @@
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
-      },
-      {
-        "command": "continue.signInToControlPlane",
-        "title": "Sign In",
-        "category": "Continue",
-        "group": "Continue",
-        "icon": "$(account)"
-      },
-      {
-        "command": "continue.openAccountDialog",
-        "title": "Account",
-        "category": "Continue",
-        "group": "Continue",
-        "icon": "$(account)"
       }
     ],
     "keybindings": [
@@ -532,16 +518,6 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.signInToControlPlane",
-          "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && !continue.isSignedInToControlPlane"
-        },
-        {
-          "command": "continue.openAccountDialog",
-          "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && (config.continue.enableContinueForTeams || config.continue.enableContinueHub) && continue.isSignedInToControlPlane"
-        },
-        {
           "command": "continue.openMorePage",
           "group": "navigation@6",
           "when": "view == continue.continueGUIView"
@@ -656,7 +632,7 @@
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
     "chai": "^4.5.0",
-    "esbuild": "0.24.0",
+    "esbuild": "0.17.19",
     "esbuild-visualizer": "^0.6.0",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
@@ -683,7 +659,7 @@
     "dbinfoz": "^0.14.0",
     "diff": "^7.0.0",
     "downshift": "^7.6.0",
-    "esbuild": "0.24.0",
+    "esbuild": "0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",

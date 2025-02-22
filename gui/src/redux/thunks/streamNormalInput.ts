@@ -28,7 +28,9 @@ export const streamNormalInput = createAsyncThunk<
   }
 
   const includeTools =
-    useTools && modelSupportsTools(defaultModel.model, defaultModel.provider);
+    useTools &&
+    modelSupportsTools(defaultModel) &&
+    state.session.mode === "chat";
 
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(

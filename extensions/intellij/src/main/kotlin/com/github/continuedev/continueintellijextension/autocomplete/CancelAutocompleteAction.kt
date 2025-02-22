@@ -32,4 +32,8 @@ class CancelAutocompleteAction : AnAction() {
         val editor: Editor? = e.getData(CommonDataKeys.EDITOR)
         return project != null && editor != null && editor.contentComponent.hasFocus()
     }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.BGT
+    }
 }

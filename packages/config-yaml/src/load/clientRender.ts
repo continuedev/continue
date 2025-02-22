@@ -71,7 +71,7 @@ export async function clientRender(
   return finalConfig;
 }
 
-function getUnrenderedSecretLocation(
+export function getUnrenderedSecretLocation(
   value: string | undefined,
 ): SecretLocation | undefined {
   if (!value) return undefined;

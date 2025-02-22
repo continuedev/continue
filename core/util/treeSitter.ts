@@ -93,6 +93,7 @@ export const supportedLanguages: { [key: string]: LanguageName } = {
   htm: LanguageName.HTML,
   java: LanguageName.JAVA,
   lua: LanguageName.LUA,
+  luau: LanguageName.LUA,
   ocaml: LanguageName.OCAML,
   ml: LanguageName.OCAML,
   mli: LanguageName.OCAML,
