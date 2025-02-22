@@ -42,7 +42,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUsePlatform } from "../../redux/selectors";
+import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
@@ -222,7 +222,7 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const usePlatform = useAppSelector(selectUsePlatform);
+  const useHub = useAppSelector(selectUseHub);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -365,7 +365,7 @@ export function Chat() {
 
   useAutoScroll(stepsDivRef, history);
 
-  const showPageHeader = isInEditMode || usePlatform;
+  const showPageHeader = isInEditMode || useHub;
 
   return (
     <>
@@ -382,7 +382,7 @@ export function Chat() {
                 }
               : undefined
           }
-          rightContent={usePlatform && <AssistantSelect />}
+          rightContent={useHub && <AssistantSelect />}
         />
       )}
 
@@ -567,7 +567,7 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  {usePlatform ? (
+                  {useHub ? (
                     <PlatformOnboardingCard isDialog={false} />
                   ) : (
                     <OnboardingCard isDialog={false} />
