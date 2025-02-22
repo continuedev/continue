@@ -43,7 +43,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
         packageSlug,
         versionSlug,
       },
-      title: `${ownerSlug}/${packageSlug}@${versionSlug}`,
+      title: configResult.config?.name ?? `${ownerSlug}/${packageSlug}`,
       errors: configResult.errors,
       iconUrl: this.iconUrl,
     };
