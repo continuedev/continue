@@ -1,3 +1,5 @@
+import { ContinueProperties } from "@continuedev/config-yaml";
+
 import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
@@ -19,7 +21,7 @@ class ContinueProxy extends OpenAI {
     super(options);
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
-    this.organizationSlug = options.organizationSlug;
+    this.orgScopeId = options.orgScopeId;
   }
 
   static providerName = "continue-proxy";
@@ -28,12 +30,13 @@ class ContinueProxy extends OpenAI {
   };
 
   protected extraBodyProperties(): Record<string, any> {
+    const continueProperties: ContinueProperties = {
+      apiKeyLocation: this.apiKeyLocation,
+      apiBase: this.actualApiBase,
+      orgScopeId: this.orgScopeId ?? null,
+    };
     return {
-      continueProperties: {
-        apiKeyLocation: this.apiKeyLocation,
-        apiBase: this.actualApiBase,
-        organizationSlug: this.organizationSlug,
-      },
+      continueProperties,
     };
   }
 

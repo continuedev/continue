@@ -482,7 +482,7 @@ export interface LLMOptions {
   // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
-  organizationSlug?: string;
+  orgScopeId?: string | null;
 
   aiGatewaySlug?: string;
   cacheBehavior?: CacheBehavior;
@@ -928,7 +928,7 @@ export interface ModelDescription {
   // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
-  organizationSlug?: string;
+  orgScopeId?: string | null;
 
   contextLength?: number;
   maxStopWords?: number;

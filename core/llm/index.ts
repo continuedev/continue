@@ -122,7 +122,7 @@ export abstract class BaseLLM implements ILLM {
   // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
-  organizationSlug?: string;
+  orgScopeId?: string | null;
 
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
@@ -205,7 +205,7 @@ export abstract class BaseLLM implements ILLM {
 
     // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
-    this.organizationSlug = options.organizationSlug;
+    this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
 
     this.aiGatewaySlug = options.aiGatewaySlug;

@@ -46,7 +46,7 @@
     "@aws-sdk/client-sagemaker-runtime": "^3.621.0",
     "@aws-sdk/credential-providers": "^3.620.1",
     "@continuedev/config-types": "^1.0.13",
-    "@continuedev/config-yaml": "^1.0.38",
+    "@continuedev/config-yaml": "^1.0.42",
     "@continuedev/fetch": "^1.0.4",
     "@continuedev/llm-info": "^1.0.2",
     "@continuedev/openai-adapters": "^1.0.10",

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
 import {
   decodeSecretLocation,
@@ -137,3 +138,12 @@ function useProxyForUnrenderedSecrets(
 
   return config;
 }
+
+/** The additional properties that are added to the otherwise OpenAI-compatible body when requesting a Continue proxy */
+export const continuePropertiesSchema = z.object({
+  apiKeyLocation: z.string().optional(),
+  apiBase: z.string().optional(),
+  orgScopeId: z.string().nullable(),
+});
+
+export type ContinueProperties = z.infer<typeof continuePropertiesSchema>;
