@@ -46,8 +46,10 @@ describe("isUnifiedDiffFormat", () => {
 	it("should return true in case of empty lines", () => {
     const diffWithoutFileHeaders = `@@ -1,3 +1,4 @@
  line1
+
 -line2
 +newline2
+
  line3`;
     expect(isUnifiedDiffFormat(diffWithoutFileHeaders)).toBe(true);
   });
@@ -98,7 +100,9 @@ describe("applyUnifiedDiff", () => {
 
   it("should correctly apply multiple insertions and deletions", () => {
     const sourceCode = `package main
+
 import "fmt"
+
 func main() {
   fmt.Println("Hello")
   fmt.Println("World")
@@ -375,22 +379,21 @@ func TestLargeNumbers(t *testing.T) {
 
     expect(result[0].line).toEqual("package main");
     // 1st block
-		expect(result[21].line).toEqual("  fmt.Println(\"  log: Logarithm (use 'log base number')\")");
-    expect(result[22].line).toEqual("  fmt.Println(\"       Base must be > 0 and != 1, number must be > 0\")");
+		expect(result[18].line).toEqual("\tfmt.Println(\"  √  : Square root (use only one number)\")");
+		expect(result[19].line).toEqual("  fmt.Println(\"  log: Logarithm (use 'log base number')\")");
+    expect(result[20].line).toEqual("  fmt.Println(\"       Base must be > 0 and != 1, number must be > 0\")");
 		// 2nd block
-		expect(result[60]).toEqual({type: "same", line: "\t}"});
-		expect(result[61]).toEqual({type: "new", line: "\t"});
-		expect(result[62]).toEqual({type: "new", line: "\t// Handle logarithmic operations"});
-		expect(result[77]).toEqual({type: "new", line: ""});
-		expect(result[78]).toEqual({type: "same", line: "\tif len(parts) != 3 {"});
+		expect(result[56]).toEqual({type: "same", line: "\t}"});
+		expect(result[57]).toEqual({type: "new", line: "\t"});
+		expect(result[58]).toEqual({type: "new", line: "\t// Handle logarithmic operations"});
+		expect(result[73]).toEqual({type: "new", line: ""});
+		expect(result[74]).toEqual({type: "same", line: "\tif len(parts) != 3 {"});
 		// 3rd block
-		expect(result[145]).toEqual({type: "same", line: "}"});
-		expect(result[146]).toEqual({type: "new", line: ""});
-		expect(result[147]).toEqual({type: "new", line: "func TestLogarithmicCases(t *testing.T) {"});
-		expect(result[158]).toEqual({type: "new", line: "\t}"});
-		expect(result[159]).toEqual({type: "same", line: ""});
-		expect(result[160]).toEqual({type: "same", line: "func TestSpecialCases(t *testing.T) {"});		
-
+		expect(result[140]).toEqual({type: "same", line: "}"});
+		expect(result[141]).toEqual({type: "new", line: ""});
+		expect(result[142]).toEqual({type: "new", line: "func TestLogarithmicCases(t *testing.T) {"});
+		expect(result[153]).toEqual({type: "new", line: "\t}"});
+		expect(result[154]).toEqual({type: "same", line: "func TestSpecialCases(t *testing.T) {"});
 	});
 
 	it("should throw error when hunk cannot be matched to source", () => {
