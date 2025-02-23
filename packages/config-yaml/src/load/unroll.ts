@@ -2,7 +2,9 @@ import * as YAML from "yaml";
 import { PlatformClient, Registry } from "../interfaces/index.js";
 import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
+  decodeFQSN,
   decodeFullSlug,
+  encodeFQSN,
   encodePackageSlug,
   FQSN,
   FullSlug,
@@ -35,7 +37,9 @@ export function parseAssistantUnrolled(configYaml: string): AssistantUnrolled {
     const result = assistantUnrolledSchema.parse(parsed);
     return result;
   } catch (e: any) {
-    throw new Error(`Failed to parse unrolled assistant: ${e.message}`);
+    throw new Error(
+      `Failed to parse unrolled assistant: ${e.message}\n\n${configYaml}`,
+    );
   }
 }
 
@@ -126,9 +130,11 @@ function extractFQSNMap(
   return secretToFQSNMap(secrets, parentPackages);
 }
 
+/**
+ * All template vars are already FQSNs, here we just resolve them to either locations or values
+ */
 async function extractRenderedSecretsMap(
   rawContent: string,
-  parentPackages: PackageSlug[],
   platformClient: PlatformClient,
 ): Promise<Record<string, string>> {
   // Get all template variables
@@ -137,11 +143,7 @@ async function extractRenderedSecretsMap(
     .filter((v) => v.startsWith("secrets."))
     .map((v) => v.replace("secrets.", ""));
 
-  // Convert to FQSNs
-  const fqsns: FQSN[] = secrets.map((secretName) => ({
-    packageSlugs: parentPackages,
-    secretName,
-  }));
+  const fqsns: FQSN[] = secrets.map(decodeFQSN);
 
   // FQSN -> SecretResult
   const secretResults = await platformClient.resolveFQSNs(fqsns);
@@ -154,10 +156,10 @@ async function extractRenderedSecretsMap(
 
     // User secrets are rendered
     if ("value" in secretResult) {
-      map[secretResult.fqsn.secretName] = secretResult.value;
+      map[encodeFQSN(secretResult.fqsn)] = secretResult.value;
     } else {
       // Other secrets are rendered as secret locations and then converted to proxy types later
-      map[secretResult.fqsn.secretName] =
+      map[encodeFQSN(secretResult.fqsn)] =
         `\${{ secrets.${encodeSecretLocation(secretResult.secretLocation)} }}`;
     }
   }
@@ -197,63 +199,68 @@ export async function unrollAssistant(
   );
 }
 
+function renderTemplateData(
+  rawYaml: string,
+  templateData: Partial<TemplateData>,
+): string {
+  const fullTemplateData: TemplateData = {
+    inputs: {},
+    secrets: {},
+    continue: {},
+    ...templateData,
+  };
+  const templatedYaml = fillTemplateVariables(
+    rawYaml,
+    flattenTemplateData(fullTemplateData),
+  );
+  return templatedYaml;
+}
+
 export async function unrollAssistantFromContent(
   assistantSlug: FullSlug,
   rawYaml: string,
   registry: Registry,
   options: UnrollAssistantOptions,
 ): Promise<AssistantUnrolled> {
-  // Convert the raw YAML to unrolled config
-  let secrets: Record<string, string> = {};
-  if (options.renderSecrets) {
-    secrets = await extractRenderedSecretsMap(
-      rawYaml,
-      [assistantSlug],
-      options.platformClient,
-    );
-  } else {
-    secrets = extractFQSNMap(rawYaml, [assistantSlug]);
-  }
-  const templateData: TemplateData = {
-    // no inputs to an assistant
-    inputs: {},
-    // at this stage, secrets are mapped to a (still templated) FQSN
-    secrets,
-    // Built-in variables
-    continue: {},
-  };
-
-  // Render the template
-  const templatedYaml = fillTemplateVariables(
-    rawYaml,
-    flattenTemplateData(templateData),
-  );
-
   // Parse string to Zod-validated YAML
-  let parsedYaml = parseConfigYaml(templatedYaml);
+  let parsedYaml = parseConfigYaml(rawYaml);
 
-  // Unroll blocks
-  const unrolledAssistant = await unrollBlocks(
-    parsedYaml,
-    assistantSlug,
-    registry,
+  // Unroll blocks and convert their secrets to FQSNs
+  const unrolledAssistant = await unrollBlocks(parsedYaml, registry);
+
+  // Back to a string so we can fill in template variables
+  const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
+
+  // Convert all of the template variables to FQSNs
+  // Secrets from the block will have the assistant slug prepended to the FQSN
+  const templatedYaml = renderTemplateData(rawUnrolledYaml, {
+    secrets: extractFQSNMap(rawUnrolledYaml, [assistantSlug]),
+  });
+
+  if (!options.renderSecrets) {
+    return parseAssistantUnrolled(templatedYaml);
+  }
+
+  // Render secret values/locations for client
+  const secrets = await extractRenderedSecretsMap(
+    templatedYaml,
+    options.platformClient,
   );
+  const renderedYaml = renderTemplateData(templatedYaml, {
+    secrets,
+  });
 
-  // If rendering secrets, should replace models with proxy versions where secrets weren't rendered
-  const finalConfig = options.renderSecrets
-    ? useProxyForUnrenderedSecrets(
-        unrolledAssistant,
-        assistantSlug,
-        options.orgScopeId,
-      )
-    : unrolledAssistant;
-
+  // Parse again and replace models with proxy versions where secrets weren't rendered
+  const finalConfig = useProxyForUnrenderedSecrets(
+    parseAssistantUnrolled(renderedYaml),
+    assistantSlug,
+    options.orgScopeId,
+  );
   return finalConfig;
 }
 
 export async function unrollBlocks(
   assistant: ConfigYaml,
-  assistantFullSlug: FullSlug,
   registry: Registry,
 ): Promise<AssistantUnrolled> {
   const unrolledAssistant: AssistantUnrolled = {
@@ -282,7 +289,6 @@ export async function unrollBlocks(
           const blockConfigYaml = await resolveBlock(
             decodeFullSlug(unrolledBlock.uses),
             unrolledBlock.with,
-            assistantFullSlug,
             registry,
           );
           const block = blockConfigYaml[section]?.[0];
@@ -311,7 +317,6 @@ export async function unrollBlocks(
         const blockConfigYaml = await resolveBlock(
           decodeFullSlug(rule.uses),
           rule.with,
-          assistantFullSlug,
           registry,
         );
         const block = blockConfigYaml.rules?.[0];
@@ -330,25 +335,35 @@ export async function unrollBlocks(
 export async function resolveBlock(
   fullSlug: FullSlug,
   inputs: Record<string, string> | undefined,
-  parentFullSlug: FullSlug,
   registry: Registry,
 ): Promise<AssistantUnrolled> {
   // Retrieve block raw yaml
   const rawYaml = await registry.getContent(fullSlug);
 
+  // Convert any input secrets to FQSNs (they get FQSNs as if they are in the block. This is so that we know when to use models add-on / free trial secrets)
+  const renderedInputs = inputsToFQSNs(inputs || {}, fullSlug);
+
   // Render template variables
-  const templateData: TemplateData = {
-    inputs,
-    secrets: extractFQSNMap(rawYaml, [parentFullSlug, fullSlug]),
-    continue: {},
-  };
-  const templatedYaml = fillTemplateVariables(
-    rawYaml,
-    flattenTemplateData(templateData),
-  );
+  const templatedYaml = renderTemplateData(rawYaml, {
+    inputs: renderedInputs,
+    secrets: extractFQSNMap(rawYaml, [fullSlug]),
+  });
 
   const parsedYaml = parseBlock(templatedYaml);
   return parsedYaml;
+}
+
+function inputsToFQSNs(
+  inputs: Record<string, string>,
+  blockSlug: PackageSlug,
+): Record<string, string> {
+  const renderedInputs: Record<string, string> = {};
+  for (const [key, value] of Object.entries(inputs)) {
+    renderedInputs[key] = renderTemplateData(value, {
+      secrets: extractFQSNMap(value, [blockSlug]),
+    });
+  }
+  return renderedInputs;
 }
 
 export function mergeOverrides<T extends Record<string, any>>(
