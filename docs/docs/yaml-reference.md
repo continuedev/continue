@@ -320,6 +320,46 @@ mcpServers:
       PORT: "3000"
 ```
 
+## Using YAML anchors to avoid config duplication
+
+You can also use node anchors to avoid duplication of properties. To do so,
+adding the YAML version header `%YAML 1.1` is needed, here's an example of
+a `config.yaml` configuration file using anchors:
+
+```yaml title="config.yaml"
+%YAML 1.1
+---
+name: MyProject
+version: 0.0.1
+
+model_defaults: &model_defaults
+  provider: openai
+  apiKey: my-api-key
+  apiBase: https://api.example.com/llm
+
+models:
+- name: mistral
+  <<: *model_defaults
+  model: mistral-7b-instruct
+  roles:
+    - chat
+    - edit
+
+- name: qwen2.5-coder-7b-instruct
+  <<: *model_defaults
+  model: qwen2.5-coder-7b-instruct
+  roles:
+    - chat
+    - edit
+
+- name: qwen2.5-coder-7b
+  <<: *model_defaults
+  model: qwen2.5-coder-7b
+  useLegacyCompletionsEndpoint: false
+  roles:
+    - autocomplete
+```
+
 ### Fully deprecated settings
 
 Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
