@@ -1,0 +1,26 @@
+{
+  "title": {
+    "message": "Continue",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "Continue Logo",
+    "description": "The alt text of navbar logo"
+  },
+  "item.label.Docs": {
+    "message": "文档",
+    "description": "Navbar item with label Docs"
+  },
+  "item.label.Customize": {
+    "message": "定制",
+    "description": "Navbar item with label Customize"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  },
+  "item.label.Discord": {
+    "message": "Discord",
+    "description": "Navbar item with label Discord"
+  }
+}

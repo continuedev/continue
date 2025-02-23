@@ -1,28 +1,39 @@
 import { Editor, ReactRenderer } from "@tiptap/react";
-import { ContextProviderDescription, ContextSubmenuItem } from "core";
+import {
+  ContextProviderDescription,
+  ContextSubmenuItem,
+  ContextSubmenuItemWithProvider,
+} from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
-import { ideRequest } from "../../util/ide";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import MentionList from "./MentionList";
-import { ComboBoxItem, ComboBoxItemType } from "./types";
+import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
+import { TIPPY_DIV_ID } from "./TipTapEditor";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
   enterSubmenu: (editor: Editor, providerId: string) => void = (editor) => {},
   onClose: () => void = () => {},
-  onOpen: () => void = () => {}
+  onOpen: () => void = () => {},
 ) {
   return {
     items,
     allowSpaces: true,
     render: () => {
-      let component;
-      let popup;
+      let component: any;
+      let popup: any;
+
+      const onExit = () => {
+        popup?.[0]?.destroy();
+        component?.destroy();
+        onClose();
+      };
 
       return {
-        onStart: (props) => {
+        onStart: (props: any) => {
           component = new ReactRenderer(MentionList, {
-            props: { ...props, enterSubmenu },
+            props: { ...props, enterSubmenu, onClose: onExit },
             editor: props.editor,
           });
 
@@ -31,9 +42,16 @@ function getSuggestion(
             return;
           }
 
+          const container = document.getElementById(TIPPY_DIV_ID);
+
+          if (!container) {
+            console.log("no container");
+            return;
+          }
+
           popup = tippy("body", {
             getReferenceClientRect: props.clientRect,
-            appendTo: () => document.body,
+            appendTo: () => container,
             content: component.element,
             showOnCreate: true,
             interactive: true,
@@ -45,7 +63,7 @@ function getSuggestion(
           onOpen();
         },
 
-        onUpdate(props) {
+        onUpdate(props: any) {
           component.updateProps({ ...props, enterSubmenu });
 
           if (!props.clientRect) {
@@ -57,7 +75,7 @@ function getSuggestion(
           });
         },
 
-        onKeyDown(props) {
+        onKeyDown(props: any) {
           if (props.event.key === "Escape") {
             popup[0].hide();
 
@@ -67,34 +85,50 @@ function getSuggestion(
           return component.ref?.onKeyDown(props);
         },
 
-        onExit() {
-          popup?.[0]?.destroy();
-          component?.destroy();
-          onClose();
-        },
+        onExit,
       };
     },
   };
 }
 
-export function getMentionSuggestion(
+function getSubActionsForSubmenuItem(
+  item: ContextSubmenuItem & { providerTitle: string },
+  ideMessenger: IIdeMessenger,
+): ComboBoxSubAction[] | undefined {
+  if (item.providerTitle === "docs" && !item.metadata?.preIndexed) {
+    return [
+      {
+        label: "Open in new tab",
+        icon: "trash",
+        action: () => {
+          ideMessenger.post("context/removeDocs", { startUrl: item.id });
+        },
+      },
+    ];
+  }
+
+  return undefined;
+}
+
+export function getContextProviderDropdownOptions(
   availableContextProvidersRef: MutableRefObject<ContextProviderDescription[]>,
   getSubmenuContextItemsRef: MutableRefObject<
     (
       providerTitle: string | undefined,
-      query: string
-    ) => (ContextSubmenuItem & { providerTitle: string })[]
+      query: string,
+    ) => ContextSubmenuItemWithProvider[]
   >,
   enterSubmenu: (editor: Editor, providerId: string) => void,
   onClose: () => void,
   onOpen: () => void,
-  inSubmenu: MutableRefObject<string | undefined>
+  inSubmenu: MutableRefObject<string | undefined>,
+  ideMessenger: IIdeMessenger,
 ) {
-  const items = async ({ query }) => {
+  const items = async ({ query }: { query: string }) => {
     if (inSubmenu.current) {
       const results = getSubmenuContextItemsRef.current(
         inSubmenu.current,
-        query
+        query,
       );
       return results.map((result) => {
         return {
@@ -102,16 +136,17 @@ export function getMentionSuggestion(
           label: result.title,
           type: inSubmenu.current as ComboBoxItemType,
           query: result.id,
+          subActions: getSubActionsForSubmenuItem(result, ideMessenger),
         };
       });
     }
 
-    const mainResults: any[] =
+    const contextProviderMatches: ComboBoxItem[] =
       availableContextProvidersRef.current
         ?.filter(
           (provider) =>
             provider.title.toLowerCase().startsWith(query.toLowerCase()) ||
-            provider.displayTitle.toLowerCase().startsWith(query.toLowerCase())
+            provider.displayTitle.toLowerCase().startsWith(query.toLowerCase()),
         )
         .map((provider) => ({
           name: provider.displayTitle,
@@ -125,45 +160,60 @@ export function getMentionSuggestion(
         }))
         .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
 
-    if (mainResults.length === 0) {
-      const results = getSubmenuContextItemsRef.current(undefined, query);
-      return results.map((result) => {
-        return {
-          ...result,
-          label: result.title,
-          type: result.providerTitle as ComboBoxItemType,
-          query: result.id,
-        };
-      });
-    } else if (
-      mainResults.length === availableContextProvidersRef.current.length
-    ) {
-      mainResults.push({
+    if (contextProviderMatches.length) {
+      contextProviderMatches.push({
         title: "Add more context providers",
         type: "action",
         action: () => {
-          ideRequest(
+          ideMessenger.post(
             "openUrl",
-            "https://continue.dev/docs/customization/context-providers#built-in-context-providers"
+            "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
           );
         },
         description: "",
       });
+      return contextProviderMatches;
     }
-    return mainResults;
+
+    // No provider matches -> search all providers
+    const results = getSubmenuContextItemsRef.current(undefined, query);
+    return results.map((result) => {
+      return {
+        ...result,
+        label: result.title,
+        type: result.providerTitle as ComboBoxItemType,
+        query: result.id,
+        icon: result.icon,
+      };
+    });
   };
 
   return getSuggestion(items, enterSubmenu, onClose, onOpen);
 }
 
-export function getCommandSuggestion(
+export function getSlashCommandDropdownOptions(
   availableSlashCommandsRef: MutableRefObject<ComboBoxItem[]>,
   onClose: () => void,
-  onOpen: () => void
+  onOpen: () => void,
+  ideMessenger: IIdeMessenger,
 ) {
-  const items = async ({ query }) => {
+  const items = async ({ query }: { query: string }) => {
+    const options = [
+      ...availableSlashCommandsRef.current,
+      // {
+      //   title: "Build a custom prompt",
+      //   description: "Build a custom prompt",
+      //   type: "action",
+      //   id: "createPromptFile",
+      //   label: "Create Prompt File",
+      //   action: () => {
+      //     ideMessenger.post("config/newPromptFile", undefined);
+      //   },
+      //   name: "Create Prompt File",
+      // },
+    ];
     return (
-      availableSlashCommandsRef.current?.filter((slashCommand) => {
+      options.filter((slashCommand) => {
         const sc = slashCommand.title.substring(1).toLowerCase();
         const iv = query.toLowerCase();
         return sc.startsWith(iv);
@@ -174,7 +224,8 @@ export function getCommandSuggestion(
       id: provider.title,
       title: provider.title,
       label: provider.title,
-      type: "slashCommand" as ComboBoxItemType,
+      type: (provider.type ?? "slashCommand") as ComboBoxItemType,
+      action: provider.action,
     }));
   };
   return getSuggestion(items, undefined, onClose, onOpen);

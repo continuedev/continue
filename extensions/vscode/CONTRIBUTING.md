@@ -7,11 +7,11 @@ This is the Continue VS Code Extension. Its primary jobs are
 
 # How to run the extension
 
-See [Environment Setup](../CONTRIBUTING.md#environment-setup)
+See [Environment Setup](../../CONTRIBUTING.md#environment-setup)
 
 # How to run and debug tests
 
-After following the setup in [Environment Setup](../CONTRIBUTING.md#environment-setup) you can run the `Extension (VSCode)` launch configuration in VS Code.
+After following the setup in [Environment Setup](../../CONTRIBUTING.md#environment-setup) you can run the `Extension (VSCode)` launch configuration in VS Code.
 
 ## Notes
 

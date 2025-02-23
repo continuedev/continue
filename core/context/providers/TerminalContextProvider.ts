@@ -1,15 +1,15 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class TerminalContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "terminal",
     displayTitle: "Terminal",
-    description: "Reference the contents of the terminal",
+    description: "Reference the last terminal command",
     type: "normal",
   };
 

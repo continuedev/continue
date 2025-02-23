@@ -1,16 +1,34 @@
 {
   "version": "2.0.0",
   "tasks": [
+    {
+      "label": "tsc:watch",
+      "type": "npm",
+      "script": "tsc:watch",
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
     // Compile and bundle the extension
     {
       "label": "vscode-extension:build",
       "dependsOn": [
-        // To detect compile errors
-        "vscode-extension:tsc",
+        // TSC type checking
+        "tsc:watch",
         // To build the React app that is used in the extension
         "vscode-extension:continue-ui:build",
-        // To bundle the code the same way we do for publishing
+        // // To bundle the code the same way we do for publishing
         "vscode-extension:esbuild",
+        // To ensure extension.js is regenerated even if
+        // vscode-extension:esbuild was already running in background
+        "vscode-extension:esbuild-notify",
         // Start the React app that is used in the extension
         "gui:dev"
       ],
@@ -20,7 +38,15 @@
       }
     },
     {
+      "label": "vscode-extension:esbuild-notify",
+      "dependsOn": ["vscode-extension:esbuild"],
+      "type": "npm",
+      "script": "esbuild-notify",
+      "path": "extensions/vscode"
+    },
+    {
       "label": "vscode-extension:esbuild",
+      "dependsOn": ["vscode-extension:continue-ui:build"],
       "type": "npm",
       "script": "esbuild-watch",
       "path": "extensions/vscode",
@@ -40,25 +66,32 @@
           "background": {
             "activeOnStart": true,
             "beginsPattern": ">",
-            "endsPattern": ">"
+            "endsPattern": "VS Code Extension esbuild complete"
           }
         }
       ]
     },
-    // Tsc currently errors out due to testing setup issues, will be resolved in a different PR
-    // This will be useful for preventing debugging if there are compile errors
     {
-      "label": "vscode-extension:tsc",
+      "label": "vscode-extension:package",
+      "dependsOn": ["vscode-extension:esbuild"],
       "type": "npm",
-      "script": "tsc",
+      "script": "package",
       "path": "extensions/vscode",
-      "problemMatcher": ["$tsc"],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "clear": true
-      }
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
+              "file": 1,
+              "line": 2,
+              "column": 3,
+              "severity": 4,
+              "message": 5
+            }
+          ]
+        }
+      ]
     },
-    // Build the React app. It gets bundled into the extension as a file resource and has a seprate build step
     {
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
@@ -81,7 +114,7 @@
         // Build the extension
         "vscode-extension:build",
         // To detect compile errors - this type checks both the extension and the tests
-        "vscode-extension:tsc",
+        "tsc:watch",
         "vscode-extension:tests:esbuild"
       ]
     },
@@ -110,8 +143,8 @@
     {
       "label": "install-all-dependencies",
       "type": "shell",
-      "windows": { "command": "./install-dependencies.ps1" },
-      "command": "./install-dependencies.sh",
+      "windows": { "command": "./scripts/install-dependencies.ps1" },
+      "command": "./scripts/install-dependencies.sh",
       "problemMatcher": [] // Empty so users are not prompted to select progress reporting
     },
     //
@@ -142,18 +175,84 @@
           }
         }
       ]
-    },  
+    },
     //
     // esbuild for the core binary
     {
-      "label": "pkg:esbuild",
+      "label": "binary:esbuild",
       "type": "shell",
       "command": "npm",
       "args": ["run", "esbuild"],
       "problemMatcher": [],
       "options": {
-        "cwd": "pkg"
+        "cwd": "binary"
       }
+    },
+    {
+      "label": "docs:start",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "start", "--", "--no-open"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "docs"
+      }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "problemMatcher": []
+    },
+    {
+      "label": "refresh-dependencies:core",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/core"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:vscode",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/vscode"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:gui",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/gui"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:all",
+      "dependsOn": [
+        "refresh-dependencies:core",
+        "refresh-dependencies:gui",
+        "refresh-dependencies:vscode"
+      ],
+      "type": "shell",
+      "problemMatcher": []
     }
   ]
 }

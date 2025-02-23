@@ -1,12 +1,8 @@
 import socketIOClient, { Socket } from "socket.io-client";
-import { BaseLLM } from "..";
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
+
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import { renderChatMessage } from "../../util/messageContent.js";
+import { BaseLLM } from "../index.js";
 
 interface IFlowiseApiOptions {
   /** Sampling temperature to use */
@@ -57,7 +53,7 @@ interface IFlowiseProviderLLMOptions extends LLMOptions {
 }
 
 class Flowise extends BaseLLM {
-  static providerName: ModelProvider = "flowise";
+  static providerName = "flowise";
   static defaultOptions: Partial<IFlowiseProviderLLMOptions> = {
     apiBase: "http://localhost:3000",
   };
@@ -67,7 +63,7 @@ class Flowise extends BaseLLM {
   };
 
   protected additionalFlowiseConfiguration: IFlowiseKeyValueProperty[] = [];
-  protected timeout: number = 5000;
+  protected timeout = 5000;
   protected additionalHeaders: IFlowiseKeyValueProperty[] = [];
 
   constructor(options: IFlowiseProviderLLMOptions) {
@@ -92,7 +88,7 @@ class Flowise extends BaseLLM {
     };
 
     if (this.apiKey) {
-      headers["Authorization"] = `Bearer ${this.apiKey}`;
+      headers.Authorization = `Bearer ${this.apiKey}`;
     }
 
     for (const additionalHeader of this.additionalHeaders) {
@@ -120,16 +116,18 @@ class Flowise extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const message: ChatMessage = { role: "user", content: prompt };
-    for await (const chunk of this._streamChat([message], options)) {
-      yield stripImages(chunk.content);
+    for await (const chunk of this._streamChat([message], signal, options)) {
+      yield renderChatMessage(chunk);
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const requestBody = this._getRequestBody(messages, options);
@@ -138,6 +136,7 @@ class Flowise extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({ ...requestBody, socketIOClientId: socket.id }),
+      signal,
     }).then((res) => res.json());
 
     while (await socketInfo.hasNextToken()) {

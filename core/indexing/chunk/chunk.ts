@@ -1,29 +1,40 @@
-import { Chunk, ChunkWithoutID } from "../..";
-import { MAX_CHUNK_SIZE } from "../../llm/constants";
-import { countTokens } from "../../llm/countTokens";
-import { supportedLanguages } from "../../util/treeSitter";
-import { basicChunker } from "./basic";
-import { codeChunker } from "./code";
+import { Chunk, ChunkWithoutID } from "../../index.js";
+import { countTokensAsync } from "../../llm/countTokens.js";
+import { extractMinimalStackTraceInfo } from "../../util/extractMinimalStackTraceInfo.js";
+import { Telemetry } from "../../util/posthog.js";
+import { supportedLanguages } from "../../util/treeSitter.js";
+import { getUriFileExtension, getUriPathBasename } from "../../util/uri.js";
+
+import { basicChunker } from "./basic.js";
+import { codeChunker } from "./code.js";
+
+export type ChunkDocumentParam = {
+  filepath: string;
+  contents: string;
+  maxChunkSize: number;
+  digest: string;
+};
 
 async function* chunkDocumentWithoutId(
-  filepath: string,
+  fileUri: string,
   contents: string,
   maxChunkSize: number,
 ): AsyncGenerator<ChunkWithoutID> {
   if (contents.trim() === "") {
     return;
   }
-
-  const segs = filepath.split(".");
-  const ext = segs[segs.length - 1];
-  if (ext in supportedLanguages) {
+  const extension = getUriFileExtension(fileUri);
+  if (extension in supportedLanguages) {
     try {
-      for await (const chunk of codeChunker(filepath, contents, maxChunkSize)) {
+      for await (const chunk of codeChunker(fileUri, contents, maxChunkSize)) {
         yield chunk;
       }
       return;
-    } catch (e) {
-      // console.error(`Failed to parse ${filepath}: `, e);
+    } catch (e: any) {
+      void Telemetry.capture("code_chunker_error", {
+        fileExtension: extension,
+        stack: extractMinimalStackTraceInfo(e.stack),
+      });
       // falls back to basicChunker
     }
   }
@@ -31,32 +42,55 @@ async function* chunkDocumentWithoutId(
   yield* basicChunker(contents, maxChunkSize);
 }
 
-export async function* chunkDocument(
-  filepath: string,
-  contents: string,
-  maxChunkSize: number,
-  digest: string,
-): AsyncGenerator<Chunk> {
+export async function* chunkDocument({
+  filepath,
+  contents,
+  maxChunkSize,
+  digest,
+}: ChunkDocumentParam): AsyncGenerator<Chunk> {
   let index = 0;
-  for await (let chunkWithoutId of chunkDocumentWithoutId(
+  const chunkPromises: Promise<Chunk | undefined>[] = [];
+  for await (const chunkWithoutId of chunkDocumentWithoutId(
     filepath,
     contents,
     maxChunkSize,
   )) {
-    if (countTokens(chunkWithoutId.content) > MAX_CHUNK_SIZE) {
-      console.warn(
-        `Chunk with more than ${maxChunkSize} tokens constructed: `,
-        filepath,
-        countTokens(chunkWithoutId.content),
-      );
-      continue;
-    }
-    yield {
-      ...chunkWithoutId,
-      digest,
-      index,
-      filepath,
-    };
+    chunkPromises.push(
+      new Promise(async (resolve) => {
+        if ((await countTokensAsync(chunkWithoutId.content)) > maxChunkSize) {
+          // console.debug(
+          //   `Chunk with more than ${maxChunkSize} tokens constructed: `,
+          //   filepath,
+          //   countTokens(chunkWithoutId.content),
+          // );
+          return resolve(undefined);
+        }
+        resolve({
+          ...chunkWithoutId,
+          digest,
+          index,
+          filepath,
+        });
+      }),
+    );
     index++;
   }
+  for await (const chunk of chunkPromises) {
+    if (!chunk) {
+      continue;
+    }
+    yield chunk;
+  }
+}
+
+export function shouldChunk(fileUri: string, contents: string): boolean {
+  if (contents.length > 1000000) {
+    // if a file has more than 1m characters then skip it
+    return false;
+  }
+  if (contents.length === 0) {
+    return false;
+  }
+  const baseName = getUriPathBasename(fileUri);
+  return baseName.includes(".");
 }

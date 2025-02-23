@@ -1,14 +1,41 @@
-import { JSONContent } from "@tiptap/react";
-import { ContextItemWithId } from "core";
-import { useDispatch, useSelector } from "react-redux";
+import { Editor, JSONContent } from "@tiptap/react";
+import { ContextItemWithId, InputModifiers } from "core";
+import { useDispatch } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
-import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { selectSlashCommands } from "../../redux/selectors";
-import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
-import { RootState } from "../../redux/store";
+import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
+import { useAppSelector } from "../../redux/hooks";
+import { ToolbarOptions } from "./InputToolbar";
+import { useMemo } from "react";
+
+interface ContinueInputBoxProps {
+  isEditMode?: boolean;
+  isLastUserInput: boolean;
+  isMainInput?: boolean;
+  onEnter: (
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    editor: Editor,
+  ) => void;
+  editorState?: JSONContent;
+  contextItems?: ContextItemWithId[];
+  hidden?: boolean;
+  inputId: string; // used to keep track of things per input in redux
+}
+
+const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
+  "codebase",
+  "tree",
+  "open",
+  "web",
+  "diff",
+  "folder",
+  "search",
+  "debugger",
+  "repo-map",
+];
 
 const gradient = keyframes`
   0% {
@@ -22,8 +49,6 @@ const gradient = keyframes`
 const GradientBorder = styled.div<{
   borderRadius?: string;
   borderColor?: string;
-  isFirst: boolean;
-  isLast: boolean;
   loading: 0 | 1;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
@@ -47,77 +72,74 @@ const GradientBorder = styled.div<{
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-top: 8px;
 `;
 
-interface ContinueInputBoxProps {
-  isLastUserInput: boolean;
-  isMainInput?: boolean;
-  onEnter: (editorState: JSONContent) => void;
-
-  editorState?: JSONContent;
-  contextItems?: ContextItemWithId[];
-  hidden?: boolean;
-}
-
 function ContinueInputBox(props: ContinueInputBoxProps) {
-  const dispatch = useDispatch();
-
-  const active = useSelector((store: RootState) => store.state.active);
-  const availableSlashCommands = useSelector(selectSlashCommands);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const availableSlashCommands = useAppSelector(
+    selectSlashCommandComboBoxInputs,
   );
+  const availableContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
+  );
+  const editModeState = useAppSelector((state) => state.editModeState);
 
-  useWebviewListener(
-    "newSessionWithPrompt",
-    async (data) => {
-      if (props.isMainInput) {
-        dispatch(newSession());
-        dispatch(
-          setMessageAtIndex({
-            message: { role: "user", content: data.prompt },
-            index: 0,
-          })
-        );
+  const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
+  const filteredContextProviders = useMemo(() => {
+    if (!props.isEditMode) {
+      return availableContextProviders ?? [];
+    }
+
+    return (
+      availableContextProviders?.filter(
+        (provider) =>
+          !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
+      ) ?? []
+    );
+  }, [availableContextProviders]);
+
+  const historyKey = props.isEditMode ? "edit" : "chat";
+  const placeholder = props.isEditMode
+    ? "Describe how to modify the code - use '#' to add files"
+    : undefined;
+
+  const toolbarOptions: ToolbarOptions = props.isEditMode
+    ? {
+        hideAddContext: false,
+        hideImageUpload: false,
+        hideUseCodebase: true,
+        hideSelectModel: false,
+        enterText: editModeState.editStatus === "accepting" ? "Retry" : "Edit",
       }
-    },
-    [props.isMainInput]
-  );
+    : {};
 
   return (
-    <div
-      style={{
-        paddingTop: "4px",
-        backgroundColor: vscBackground,
-        display: props.hidden ? "none" : "inherit",
-      }}
-    >
-      <div
-        className="flex px-2 relative"
-        style={{
-          backgroundColor: vscBackground,
-        }}
-      >
+    <div className={`${props.hidden ? "hidden" : ""}`}>
+      <div className={`relative flex flex-col px-2`}>
         <GradientBorder
-          loading={active && props.isLastUserInput ? 1 : 0}
-          isFirst={false}
-          isLast={false}
+          loading={isStreaming && props.isLastUserInput ? 1 : 0}
           borderColor={
-            active && props.isLastUserInput ? undefined : vscBackground
+            isStreaming && props.isLastUserInput ? undefined : vscBackground
           }
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
             editorState={props.editorState}
             onEnter={props.onEnter}
-            isMainInput={props.isMainInput}
-            availableContextProviders={availableContextProviders}
-            availableSlashCommands={availableSlashCommands}
-          ></TipTapEditor>
+            placeholder={placeholder}
+            isMainInput={props.isMainInput ?? false}
+            availableContextProviders={filteredContextProviders}
+            availableSlashCommands={filteredSlashCommands}
+            historyKey={historyKey}
+            toolbarOptions={toolbarOptions}
+            inputId={props.inputId}
+          />
         </GradientBorder>
       </div>
-      <ContextItemsPeek contextItems={props.contextItems}></ContextItemsPeek>
+      <ContextItemsPeek
+        contextItems={props.contextItems}
+        isCurrentContextPeek={props.isLastUserInput}
+      />
     </div>
   );
 }

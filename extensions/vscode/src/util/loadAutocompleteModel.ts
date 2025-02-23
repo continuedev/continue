@@ -1,21 +1,15 @@
-import { ILLM } from "core";
-import { ConfigHandler } from "core/config/handler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import Ollama from "core/llm/llms/Ollama";
-import * as vscode from "vscode";
+import { GlobalContext } from "core/util/GlobalContext";
+
+import type { ILLM } from "core";
 
 export class TabAutocompleteModel {
   private _llm: ILLM | undefined;
-  private defaultTag: string = "starcoder:3b";
-  private defaultTagName: string = "Starcoder 3b";
+  private defaultTag = "qwen2.5-coder:1.5b";
+  private globalContext: GlobalContext = new GlobalContext();
 
-  private shownOllamaWarning: boolean = false;
-  private shownDeepseekWarning: boolean = false;
-
-  private configHandler: ConfigHandler;
-
-  constructor(configHandler: ConfigHandler) {
-    this.configHandler = configHandler;
-  }
+  constructor(private configHandler: ConfigHandler) {}
 
   clearLlm() {
     this._llm = undefined;
@@ -29,46 +23,9 @@ export class TabAutocompleteModel {
     try {
       const models = await llm.listModels();
       if (!models.includes(this.defaultTag)) {
-        if (!this.shownDeepseekWarning) {
-          vscode.window
-            .showWarningMessage(
-              `Your local Ollama instance doesn't yet have ${this.defaultTagName}. To download this model, run \`ollama run ${this.defaultTag}\` (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs`,
-              "Documentation",
-              "Copy Command",
-            )
-            .then((value) => {
-              if (value === "Documentation") {
-                vscode.env.openExternal(
-                  vscode.Uri.parse(
-                    "https://continue.dev/docs/walkthroughs/tab-autocomplete",
-                  ),
-                );
-              } else if (value === "Copy Command") {
-                vscode.env.clipboard.writeText(`ollama run ${this.defaultTag}`);
-              }
-            });
-          this.shownDeepseekWarning = true;
-        }
         return undefined;
       }
     } catch (e) {
-      if (!this.shownOllamaWarning) {
-        vscode.window
-          .showWarningMessage(
-            "Continue failed to connect to Ollama, which is used by default for tab-autocomplete. If you haven't downloaded it yet, you can do so at https://ollama.ai (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs",
-            "Documentation",
-          )
-          .then((value) => {
-            if (value === "Documentation") {
-              vscode.env.openExternal(
-                vscode.Uri.parse(
-                  "https://continue.dev/docs/walkthroughs/tab-autocomplete",
-                ),
-              );
-            }
-          });
-        this.shownOllamaWarning = true;
-      }
       return undefined;
     }
 
@@ -77,9 +34,27 @@ export class TabAutocompleteModel {
 
   async get() {
     if (!this._llm) {
-      const config = await this.configHandler.loadConfig();
-      if (config.tabAutocompleteModel) {
-        this._llm = this.configHandler.setupLlm(config.tabAutocompleteModel);
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        return undefined;
+      }
+
+      if (config.tabAutocompleteModels?.length) {
+        const selected = this.globalContext.get("selectedTabAutocompleteModel");
+        if (selected) {
+          this._llm =
+            config.tabAutocompleteModels?.find(
+              (model) => model.title === selected,
+            ) ?? config.tabAutocompleteModels?.[0];
+        } else {
+          if (config.tabAutocompleteModels[0].title) {
+            this.globalContext.update(
+              "selectedTabAutocompleteModel",
+              config.tabAutocompleteModels[0].title,
+            );
+          }
+          this._llm = config.tabAutocompleteModels[0];
+        }
       } else {
         this._llm = await this.getDefaultTabAutocompleteModel();
       }

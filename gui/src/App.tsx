@@ -1,36 +1,33 @@
-import { createContext } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
+import { VscThemeProvider } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
+import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
+import ConfigErrorPage from "./pages/config-error";
 import ErrorPage from "./pages/error";
-import GUI from "./pages/gui";
-import { default as Help, default as HelpPage } from "./pages/help";
+import Chat from "./pages/gui";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
-import ModelConfig from "./pages/modelconfig";
-import Models from "./pages/models";
-import MonacoPage from "./pages/monaco";
-import SettingsPage from "./pages/settings";
-
-import { ContextSubmenuItem } from "core";
-import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
-import { useVscTheme } from "./hooks/useVscTheme";
+import MorePage from "./pages/More";
 import Stats from "./pages/stats";
+import { ROUTES } from "./util/navigation";
+import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
+import ConfigPage from "./pages/config";
 
 const router = createMemoryRouter([
   {
-    path: "/",
+    path: ROUTES.HOME,
     element: <Layout />,
     errorElement: <ErrorPage />,
     children: [
       {
         path: "/index.html",
-        element: <GUI />,
+        element: <Chat />,
       },
       {
-        path: "/",
-        element: <GUI />,
+        path: ROUTES.HOME,
+        element: <Chat />,
       },
       {
         path: "/history",
@@ -41,28 +38,24 @@ const router = createMemoryRouter([
         element: <Stats />,
       },
       {
-        path: "/help",
-        element: <Help />,
+        path: "/addModel",
+        element: <AddNewModel />,
       },
       {
-        path: "/settings",
-        element: <SettingsPage />,
+        path: "/addModel/provider/:providerName",
+        element: <ConfigureProvider />,
       },
       {
-        path: "/models",
-        element: <Models />,
+        path: "/more",
+        element: <MorePage />,
       },
       {
-        path: "/help",
-        element: <HelpPage />,
+        path: ROUTES.CONFIG_ERROR,
+        element: <ConfigErrorPage />,
       },
       {
-        path: "/modelconfig/:modelName",
-        element: <ModelConfig />,
-      },
-      {
-        path: "/monaco",
-        element: <MonacoPage />,
+        path: ROUTES.CONFIG,
+        element: <ConfigPage />,
       },
       {
         path: "/migration",
@@ -72,35 +65,23 @@ const router = createMemoryRouter([
   },
 ]);
 
-export const SubmenuContextProvidersContext = createContext<{
-  getSubmenuContextItems: (
-    providerTitle: string | undefined,
-    query: string,
-  ) => (ContextSubmenuItem & { providerTitle: string })[];
-  addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
-}>({
-  getSubmenuContextItems: () => [],
-  addItem: () => {},
-});
-
-export const VscThemeContext = createContext<any>(undefined);
+/*
+  Prevents entire app from rerendering continuously with useSetup in App
+  TODO - look into a more redux-esque way to do this
+*/
+function SetupListeners() {
+  useSetup();
+  return <></>;
+}
 
 function App() {
-  const dispatch = useDispatch();
-
-  useSetup(dispatch);
-
-  const vscTheme = useVscTheme();
-  const submenuContextProvidersMethods = useSubmenuContextProviders();
-
   return (
-    <VscThemeContext.Provider value={vscTheme}>
-      <SubmenuContextProvidersContext.Provider
-        value={submenuContextProvidersMethods}
-      >
+    <VscThemeProvider>
+      <SubmenuContextProvidersProvider>
         <RouterProvider router={router} />
-      </SubmenuContextProvidersContext.Provider>
-    </VscThemeContext.Provider>
+      </SubmenuContextProvidersProvider>
+      <SetupListeners />
+    </VscThemeProvider>
   );
 }
 

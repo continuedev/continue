@@ -1,6 +1,5 @@
-import React from "react";
-import ContinueButton from "../components/mainInput/ContinueButton";
 import { useNavigate } from "react-router-dom";
+import ContinueButton from "../components/mainInput/ContinueButton";
 
 function MigrationPage() {
   const navigate = useNavigate();
@@ -23,11 +22,17 @@ function MigrationPage() {
       <p>
         For a summary of what changed and examples of <code>config.json</code>,
         please see the{" "}
-        <a href="https://continue.dev/docs/walkthroughs/config-file-migration">
+        <a
+          href="https://docs.continue.dev/walkthroughs/config-file-migration"
+          target="_blank"
+        >
           migration walkthrough
         </a>
         , and if you have any questions please reach out to us on{" "}
-        <a href="https://discord.gg/Y83xkG3uUW">Discord</a>.
+        <a href="https://discord.gg/Y83xkG3uUW" target="_blank">
+          Discord
+        </a>
+        .
       </p>
 
       <i>

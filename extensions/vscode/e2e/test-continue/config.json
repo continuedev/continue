@@ -1,0 +1,99 @@
+{
+  "ui": {
+    "displayRawMarkdown": false
+  },
+  "models": [
+    {
+      "title": "TEST LLM",
+      "provider": "test",
+      "model": "this field is not used"
+    },
+    {
+      "title": "Mock",
+      "provider": "mock",
+      "model": "this field is not used"
+    },
+    {
+      "provider": "mock",
+      "title": "TOOL MOCK LLM",
+      "model": "claude-3-5-sonnet-latest",
+      "requestOptions": {
+        "extraBodyProperties": {
+          "chatStream": [
+            [
+              {
+                "role": "assistant",
+                "content": "I'm going to call a tool:"
+              },
+              {
+                "role": "assistant",
+                "content": "",
+                "toolCalls": [
+                  {
+                    "id": "test_id",
+                    "type": "function",
+                    "function": {
+                      "name": "builtin_exact_search",
+                      "arguments": "{\"query\": \"\\\" won't be matched because of escaped quotes \\\"\"}"
+                    }
+                  }
+                ]
+              }
+            ],
+            ["REPEAT_LAST_MSG"]
+          ]
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "title": "SYSTEM MESSAGE MOCK LLM",
+      "model": "claude-3-5-sonnet-latest",
+      "requestOptions": {
+        "extraBodyProperties": {
+          "chatStream": [["REPEAT_SYSTEM_MSG"]]
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "title": "LAST MESSAGE MOCK LLM",
+      "model": "claude-3-5-sonnet-latest",
+      "requestOptions": {
+        "extraBodyProperties": {
+          "chatStream": [["REPEAT_LAST_MSG"]]
+        }
+      }
+    }
+  ],
+  "systemMessage": "TEST_SYS_MSG",
+  "analytics": {
+    "provider": "continue-proxy"
+  },
+  "tabAutocompleteModel": {
+    "title": "TEST LLM",
+    "provider": "test",
+    "model": "this field is not used"
+  },
+  "tabAutocompleteOptions": {
+    "useCache": false
+  },
+  "contextProviders": [
+    {
+      "name": "docs"
+    },
+    {
+      "name": "diff"
+    },
+    {
+      "name": "url"
+    },
+    {
+      "name": "folder"
+    },
+    {
+      "name": "terminal"
+    }
+  ],
+  "docs": []
+}

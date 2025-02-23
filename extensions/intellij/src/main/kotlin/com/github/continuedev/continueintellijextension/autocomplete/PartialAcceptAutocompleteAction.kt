@@ -8,11 +8,10 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actionSystem.EditorAction
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler
 
-class PartialAcceptAutocompleteAction: EditorAction(object : EditorActionHandler() {
+class PartialAcceptAutocompleteAction : EditorAction(object : EditorActionHandler() {
     override fun doExecute(editor: Editor, caret: Caret?, dataContext: DataContext?) {
         ApplicationManager.getApplication().runWriteAction {
-            // TODO
-//            editor.project?.service<AutocompleteService>()?.accept()
+            editor.project?.service<AutocompleteService>()?.partialAccept()
         }
     }
 

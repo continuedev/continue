@@ -1,17 +1,14 @@
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   CustomContextProvider,
   IContextProvider,
   LoadSubmenuItemsArgs,
-} from "../..";
+} from "../../";
 
 class CustomContextProviderClass implements IContextProvider {
-  custom: CustomContextProvider;
-  constructor(custom: CustomContextProvider) {
-    this.custom = custom;
-  }
+  constructor(private custom: CustomContextProvider) {}
 
   get description(): ContextProviderDescription {
     return {

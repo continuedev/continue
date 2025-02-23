@@ -1,11 +1,11 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class GitHubIssuesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -24,6 +24,12 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
 
     const octokit = new Octokit({
       auth: this.options?.githubToken,
+      baseUrl: this.options?.domain
+        ? `https://${this.options.domain}/api/v3`
+        : undefined,
+      request: {
+        fetch: extras.fetch,
+      },
     });
 
     const { owner, repo, issue_number } = JSON.parse(issueId);
@@ -46,7 +52,7 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
       issue.data.body || "No description",
       ...comments.data.map((comment) => comment.body),
     ];
-    content += "\n\n" + parts.join("\n\n---\n\n");
+    content += `\n\n${parts.join("\n\n---\n\n")}`;
 
     return [
       {
@@ -64,6 +70,9 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
 
     const octokit = new Octokit({
       auth: this.options?.githubToken,
+      request: {
+        fetch: args.fetch,
+      },
     });
 
     const allIssues = [];

@@ -1,9 +1,10 @@
 /* Terminal emulator - commented because node-pty is causing problems. */
 
-import * as os from "os";
+import * as os from "node:os";
+
+import { longestCommonSubsequence } from "core/util/lcs";
 import stripAnsi from "strip-ansi";
 import * as vscode from "vscode";
-import { longestCommonSubsequence } from "../util/lcs";
 
 function loadNativeModule<T>(id: string): T | null {
   try {
@@ -55,7 +56,7 @@ export class CapturedTerminal {
   private readonly ptyProcess: any;
 
   private shellPrompt: string | undefined = undefined;
-  private dataBuffer: string = "";
+  private dataBuffer = "";
 
   private onDataListeners: ((data: string) => void)[] = [];
 
@@ -68,7 +69,7 @@ export class CapturedTerminal {
   }
 
   private commandQueue: [string, (output: string) => void][] = [];
-  private hasRunCommand: boolean = false;
+  private hasRunCommand = false;
 
   private dataEndsInPrompt(strippedData: string): boolean {
     const lines = strippedData.split("\n");
@@ -128,8 +129,7 @@ export class CapturedTerminal {
 
   private readonly writeEmitter: vscode.EventEmitter<string>;
 
-  private splitByCommandsBuffer: string = "";
-  private readonly onCommandOutput: ((output: string) => void) | undefined;
+  private splitByCommandsBuffer = "";
 
   splitByCommandsListener(data: string) {
     // Split the output by commands so it can be sent to Continue Server
@@ -144,8 +144,8 @@ export class CapturedTerminal {
     }
   }
 
-  private runningClearToGetPrompt: boolean = false;
-  private seenClear: boolean = false;
+  private runningClearToGetPrompt = false;
+  private seenClear = false;
   private commandPromptString: string | undefined = undefined;
   private resolveMeWhenCommandPromptStringFound:
     | ((_: unknown) => void)
@@ -164,10 +164,8 @@ export class CapturedTerminal {
 
   constructor(
     options: { name: string } & Partial<vscode.ExtensionTerminalOptions>,
-    onCommandOutput?: (output: string) => void,
+    private readonly onCommandOutput?: (output: string) => void,
   ) {
-    this.onCommandOutput = onCommandOutput;
-
     // this.shellCmd = "bash"; // getDefaultShell();
     this.shellCmd = getDefaultShell();
 
@@ -225,7 +223,7 @@ export class CapturedTerminal {
             this.seenClear = false;
             this.commandPromptString = commandPromptString;
             console.log(
-              "Found command prompt string: " + this.commandPromptString,
+              `Found command prompt string: ${this.commandPromptString}`,
             );
             if (this.resolveMeWhenCommandPromptStringFound) {
               this.resolveMeWhenCommandPromptStringFound(undefined);
@@ -240,7 +238,7 @@ export class CapturedTerminal {
       this.writeEmitter.fire(data);
 
       this.splitByCommandsListener(data);
-      for (let listener of this.onDataListeners) {
+      for (const listener of this.onDataListeners) {
         listener(data);
       }
     });

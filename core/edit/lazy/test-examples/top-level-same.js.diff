@@ -1,0 +1,64 @@
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+}
+
+class Subtract extends Calculator {
+  sub(num1, num2) {
+    this.result = num1 - num2;
+    return this.result;
+  }
+}
+
+class Add extends Calculator {
+  add(num1, num2) {
+    this.result = num1 + num2;
+    return this.result;
+  }
+}
+
+---
+
+// ... existing code ...
+
+class Subtract extends Calculator {
+  sub(num1, num2) {
+    this.result = num1 - num2;
+
+    if (this.result < 0) {
+      throw new Error("Result cannot be negative");
+    }
+
+    return this.result;
+  }
+}
+
+// ... existing code ...
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+}
+
+class Subtract extends Calculator {
+  sub(num1, num2) {
+    this.result = num1 - num2;
++ 
++     if (this.result < 0) {
++       throw new Error("Result cannot be negative");
++     }
++ 
+    return this.result;
+  }
+}
+
+class Add extends Calculator {
+  add(num1, num2) {
+    this.result = num1 + num2;
+    return this.result;
+  }
+}

@@ -1,9 +1,9 @@
-import { BaseLLM } from "..";
-import { CompletionOptions, ModelProvider } from "../..";
-import { streamSse } from "../stream";
+import { CompletionOptions } from "../../index.js";
+import { BaseLLM } from "../index.js";
+import { streamSse } from "../stream.js";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
-  static providerName: ModelProvider = "huggingface-inference-api";
+  static providerName = "huggingface-inference-api";
 
   private _convertArgs(options: CompletionOptions) {
     return {
@@ -16,6 +16,7 @@ class HuggingFaceInferenceAPI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     if (!this.apiBase) {
@@ -36,14 +37,22 @@ class HuggingFaceInferenceAPI extends BaseLLM {
         stream: true,
         parameters: this._convertArgs(options),
       }),
+      signal,
     });
-    for await (const chunk of streamSse(response)) {
-      let text = chunk?.token?.text ?? "";
-      if (text.endsWith("</s>")) {
-        yield text.slice(0, -5);
-      } else {
-        yield text;
+
+    async function* stream() {
+      for await (const chunk of streamSse(response)) {
+        const text = chunk?.token?.text ?? "";
+        if (text.endsWith("</s>")) {
+          yield text.slice(0, -5);
+        } else {
+          yield text;
+        }
       }
+    }
+
+    for await (const text of stream()) {
+      yield text;
     }
   }
 }

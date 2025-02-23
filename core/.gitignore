@@ -3,3 +3,5 @@ target
 **/.DS_Store
 npm-debug.log*
 .env
+test/.continue-test
+coverage

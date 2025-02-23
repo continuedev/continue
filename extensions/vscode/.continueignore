@@ -1,3 +1,6 @@
 media
 **/*.tmLanguage
-textmate-syntaxes
+models/**/*
+builtin-themes/
+**/textmate-syntaxes/
+**/*.scm

@@ -7,10 +7,41 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "terminal.integrated.defaultProfile.linux": "bash",
-    "terminal.integrated.profiles.linux": {
-      "bash": {
-        "path": "bash",
-        "args": ["-l"]
-      }
+  "terminal.integrated.profiles.linux": {
+    "bash": {
+      "path": "bash",
+      "args": ["-l"]
     }
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "search.exclude": {
+    "**/package-lock.json": true,
+    "binary/bin/**": true,
+    "binary/build/**": true,
+    "binary/out/**": true,
+    "binary/tmp/**": true,
+    "core/edit/lazy/test-examples/**": true,
+    "core/llm/llamaTokenizer.js": true,
+    "core/llm/llamaTokenizer.mjs": true,
+    "core/vendor/**": true,
+    "docs/.docusaurus/**": true,
+    "extensions/intellij/build/**": true,
+    "extensions/vscode/bin/**": true,
+    "extensions/vscode/build/**": true,
+    "extensions/vscode/gui/**": true,
+    "extensions/vscode/models/all-MiniLM-L6-v2/**": true,
+    "extensions/vscode/out/**": true,
+    "extensions/vscode/tag-qry/**": true,
+    "extensions/vscode/textmate-syntaxes/**": true,
+    "extensions/vscode/tree-sitter/**": true,
+    "gui/dist/**": true,
+    "extensions/vscode/e2e/.test-extensions": true,
+    "extensions/vscode/e2e/_output": true,
+    "extensions/vscode/e2e/storage": true,
+    "extensions/vscode/e2e/vsix": true,
+    "extensions/.continue-debug": true
+    // "sync/**": true
+  },
+  "eslint.workingDirectories": ["./core"],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

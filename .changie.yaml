@@ -33,7 +33,3 @@ projects:
   - label: extensions/vscode
     key: extensions/vscode
     changelog: extensions/vscode/CHANGELOG.md
-
-  - label: docs
-    key: docs
-    changelog: docs/CHANGELOG.md # for releasing documents independently

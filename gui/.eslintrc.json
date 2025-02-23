@@ -1,0 +1,28 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "eslint-plugin-react"],
+  "parserOptions": {
+    "project": "gui/tsconfig.json"
+  },
+  "extends": [
+    // "eslint:recommended",
+    // "plugin:@typescript-eslint/recommended",
+    // "plugin:@typescript-eslint/recommended-requiring-type-checking"
+    // "plugin:react/recommended"
+  ],
+  "rules": {
+    "@typescript-eslint/naming-convention": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/**/*.{js,ts,jsx,tsx}"]
+    }
+  ],
+  "ignorePatterns": ["dist/**/*"],
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  }
+}

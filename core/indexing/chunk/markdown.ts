@@ -1,5 +1,6 @@
-import { ChunkWithoutID } from "../..";
+import { ChunkWithoutID } from "../../";
 import { countTokens } from "../../llm/countTokens";
+
 import { basicChunker } from "./basic";
 
 export function cleanFragment(
@@ -74,10 +75,11 @@ export async function* markdownChunker(
       },
     };
     return;
-  } else if (hLevel > 4) {
+  }
+  if (hLevel > 4) {
     const header = findHeader(content.split("\n"));
 
-    for (const chunk of basicChunker(content, maxChunkSize)) {
+    for await (const chunk of basicChunker(content, maxChunkSize)) {
       yield {
         ...chunk,
         otherMetadata: {
@@ -89,7 +91,7 @@ export async function* markdownChunker(
     return;
   }
 
-  const h = "#".repeat(hLevel + 1) + " ";
+  const h = `${"#".repeat(hLevel + 1)} `;
   const lines = content.split("\n");
   const sections = [];
 
@@ -131,7 +133,7 @@ export async function* markdownChunker(
       hLevel + 1,
     )) {
       yield {
-        content: section.header + "\n" + chunk.content,
+        content: `${section.header}\n${chunk.content}`,
         startLine: section.startLine + chunk.startLine,
         endLine: section.startLine + chunk.endLine,
         otherMetadata: {

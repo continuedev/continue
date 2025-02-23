@@ -135,16 +135,13 @@ cached_embeddings.pkl
 .ruff_cache
 codeql
 
-**/.continue
 .DS_Store
-.continue
 .test
 .tiktoken_cache
 
 
-# IntelliJ Plugin 
+# IntelliJ Plugin
 **/**/.gradle
-**/**/.idea
 **/**/.qodana
 **/**/build
 
@@ -153,3 +150,22 @@ continue_server.dist
 
 Icon
 Icon?
+
+.continuerc.json
+.aider*
+
+notes.md
+
+manual-testing-sandbox/.idea/**
+extensions/intellij/.idea/**
+
+**/.idea/workspace.xml
+**/.idea/usage.statistics.xml
+**/.idea/shelf/
+
+extensions/intellij/bin
+extensions/.continue-debug/
+
+*.vsix
+
+.continuerules

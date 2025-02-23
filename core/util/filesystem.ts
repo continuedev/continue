@@ -1,87 +1,183 @@
-import * as fs from "fs";
-import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range, Thread } from "..";
+import * as fs from "node:fs";
 
-import { getContinueGlobalPath } from "./paths";
+import { fileURLToPath } from "node:url";
+import {
+  ContinueRcJson,
+  FileStatsMap,
+  FileType,
+  IDE,
+  IdeInfo,
+  IdeSettings,
+  IndexTag,
+  Location,
+  Problem,
+  Range,
+  RangeInFile,
+  TerminalOptions,
+  Thread,
+  ToastType,
+} from "../index.js";
+import { GetGhTokenArgs } from "../protocol/ide.js";
 
 class FileSystemIde implements IDE {
-  getTags(artifactId: string): Promise<IndexTag[]> {
+  constructor(private readonly workspaceDir: string) {}
+
+  async readSecrets(keys: string[]): Promise<Record<string, string>> {
+    return {};
+  }
+
+  async writeSecrets(secrets: { [key: string]: string }): Promise<void> {}
+
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<void> {
+    return Promise.resolve();
+  }
+  fileExists(fileUri: string): Promise<boolean> {
+    const filepath = fileURLToPath(fileUri);
+    return Promise.resolve(fs.existsSync(filepath));
+  }
+
+  gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return Promise.resolve([]);
   }
+  onDidChangeActiveTextEditor(callback: (fileUri: string) => void): void {
+    return;
+  }
+
+  async getIdeSettings(): Promise<IdeSettings> {
+    return {
+      remoteConfigServerUrl: undefined,
+      remoteConfigSyncPeriod: 60,
+      userToken: "",
+      enableControlServerBeta: false,
+      continueTestEnvironment: "none",
+      pauseCodebaseIndexOnStart: false,
+    };
+  }
+  async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
+    return undefined;
+  }
+  async getFileStats(fileUris: string[]): Promise<FileStatsMap> {
+    const result: FileStatsMap = {};
+    for (const uri of fileUris) {
+      try {
+        const filepath = fileURLToPath(uri);
+        const stats = fs.statSync(filepath);
+        result[uri] = {
+          lastModified: stats.mtimeMs,
+          size: stats.size,
+        };
+      } catch (error) {
+        console.error(`Error getting last modified time for ${uri}:`, error);
+      }
+    }
+    return result;
+  }
+  getGitRootPath(dir: string): Promise<string | undefined> {
+    return Promise.resolve(dir);
+  }
+  async listDir(dir: string): Promise<[string, FileType][]> {
+    const filepath = fileURLToPath(dir);
+    const all: [string, FileType][] = fs
+      .readdirSync(filepath, { withFileTypes: true })
+      .map((dirent: any) => [
+        dirent.name,
+        dirent.isDirectory()
+          ? (2 as FileType.Directory)
+          : dirent.isSymbolicLink()
+            ? (64 as FileType.SymbolicLink)
+            : (1 as FileType.File),
+      ]);
+    return Promise.resolve(all);
+  }
+
+  getRepoName(dir: string): Promise<string | undefined> {
+    return Promise.resolve(undefined);
+  }
+
+  async getTags(artifactId: string): Promise<IndexTag[]> {
+    const directory = (await this.getWorkspaceDirs())[0];
+    return [
+      {
+        artifactId,
+        branch: await this.getBranch(directory),
+        directory,
+      },
+    ];
+  }
+
   getIdeInfo(): Promise<IdeInfo> {
     return Promise.resolve({
       ideType: "vscode",
       name: "na",
       version: "0.1",
       remoteName: "na",
+      extensionVersion: "na",
     });
   }
-  readRangeInFile(filepath: string, range: Range): Promise<string> {
+
+  readRangeInFile(fileUri: string, range: Range): Promise<string> {
     return Promise.resolve("");
   }
-  getStats(directory: string): Promise<{ [path: string]: number }> {
-    return Promise.resolve({});
-  }
+
   isTelemetryEnabled(): Promise<boolean> {
-    return Promise.resolve(false);
+    return Promise.resolve(true);
   }
+
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
   }
+
   getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
     return Promise.resolve([]);
   }
 
-  getDiff(): Promise<string> {
-    return Promise.resolve("");
+  getDiff(includeUnstaged: boolean): Promise<string[]> {
+    return Promise.resolve([]);
   }
+
+  getClipboardContent(): Promise<{ text: string; copiedAt: string }> {
+    return Promise.resolve({ text: "", copiedAt: new Date().toISOString() });
+  }
+
   getTerminalContents(): Promise<string> {
     return Promise.resolve("");
   }
+
   async getDebugLocals(threadIndex: number): Promise<string> {
     return Promise.resolve("");
   }
+
   async getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth: number
+    stackDepth: number,
   ): Promise<string[]> {
     return Promise.resolve([]);
   }
+
   async getAvailableThreads(): Promise<Thread[]> {
     return Promise.resolve([]);
   }
+
   showLines(
-    filepath: string,
+    fileUri: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ): Promise<void> {
     return Promise.resolve();
   }
-  listWorkspaceContents(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.readdir("/tmp/continue", (err, files) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(files);
-      });
-    });
-  }
+
   getWorkspaceDirs(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.mkdtemp("/tmp/continue", (err, folder) => {
-        if (err) {
-          reject(err);
-        }
-        resolve([folder]);
-      });
-    });
+    return Promise.resolve([this.workspaceDir]);
   }
-  listFolders(): Promise<string[]> {
-    return Promise.resolve([]);
-  }
-  writeFile(path: string, contents: string): Promise<void> {
+
+  writeFile(fileUri: string, contents: string): Promise<void> {
+    const filepath = fileURLToPath(fileUri);
     return new Promise((resolve, reject) => {
-      fs.writeFile(path, contents, (err) => {
+      fs.writeFile(filepath, contents, (err) => {
         if (err) {
           reject(err);
         }
@@ -89,22 +185,29 @@ class FileSystemIde implements IDE {
       });
     });
   }
+
   showVirtualFile(title: string, contents: string): Promise<void> {
     return Promise.resolve();
   }
-  getContinueDir(): Promise<string> {
-    return Promise.resolve(getContinueGlobalPath());
-  }
+
   openFile(path: string): Promise<void> {
     return Promise.resolve();
   }
-  runCommand(command: string): Promise<void> {
+
+  openUrl(url: string): Promise<void> {
     return Promise.resolve();
   }
-  saveFile(filepath: string): Promise<void> {
+
+  runCommand(command: string, options?: TerminalOptions): Promise<void> {
     return Promise.resolve();
   }
-  readFile(filepath: string): Promise<string> {
+
+  saveFile(fileUri: string): Promise<void> {
+    return Promise.resolve();
+  }
+
+  readFile(fileUri: string): Promise<string> {
+    const filepath = fileURLToPath(fileUri);
     return new Promise((resolve, reject) => {
       fs.readFile(filepath, "utf8", (err, contents) => {
         if (err) {
@@ -114,12 +217,9 @@ class FileSystemIde implements IDE {
       });
     });
   }
-  showDiff(
-    filepath: string,
-    newContents: string,
-    stepIndex: number
-  ): Promise<void> {
-    return Promise.resolve();
+
+  getCurrentFile(): Promise<undefined> {
+    return Promise.resolve(undefined);
   }
 
   getBranch(dir: string): Promise<string> {
@@ -138,11 +238,11 @@ class FileSystemIde implements IDE {
     return "";
   }
 
-  async getProblems(filepath?: string | undefined): Promise<Problem[]> {
+  async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
     return Promise.resolve([]);
   }
 
-  async subprocess(command: string): Promise<[string, string]> {
+  async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return ["", ""];
   }
 }

@@ -45,21 +45,6 @@ fn remove_seps_from_path(dir: &Path) -> String {
 fn path_for_tag(tag: &Tag) -> PathBuf {
     let mut path = get_my_home().unwrap().unwrap();
     path.push(".continue/index/tags");
-<<<<<<<< HEAD:sync/src/sync.rs
-    path.push(remove_seps_from_path(dir));
-    if let Some(branch) = branch {
-        path.push(branch);
-    } else {
-        path.push("main");
-    }
-    path
-}
-
-// /// Stored in ~/.continue/index/.last_sync
-// fn get_last_sync_time(dir: &Path, branch: Option<&str>) -> u64 {
-//     // TODO: Error handle here
-//     let path = path_for_tag(dir, branch).join(".last_sync");
-========
     path.push(remove_seps_from_path(tag.dir));
     path.push(tag.branch);
     path.push(tag.provider_id);
@@ -70,7 +55,6 @@ fn path_for_tag(tag: &Tag) -> PathBuf {
 fn get_last_sync_time(tag: &Tag) -> u64 {
     // TODO: Error handle here
     let path = path_for_tag(tag).join(".last_sync");
->>>>>>>> preview:sync/src/sync/mod.rs
 
 //     let mut file = File::open(path).unwrap();
 //     let mut contents = String::new();
@@ -90,11 +74,6 @@ fn write_sync_time(tag: &Tag) {
     file.write_all(now.to_string().as_bytes()).unwrap();
 }
 
-<<<<<<<< HEAD:sync/src/sync.rs
-// /// Use stat to find files since last sync time
-// pub fn get_modified_files(dir: &Path, branch: Option<&str>) -> Vec<PathBuf> {
-//     let last_sync_time = get_last_sync_time(dir, branch);
-========
 /// Use stat to find files since last sync time
 pub fn get_modified_files(tag: &Tag) -> Vec<PathBuf> {
     let last_sync_time = get_last_sync_time(tag);
@@ -104,7 +83,6 @@ pub fn get_modified_files(tag: &Tag) -> Vec<PathBuf> {
         let path = entry.path();
         let metadata = path.metadata().unwrap();
         let modified = metadata.modified().unwrap();
->>>>>>>> preview:sync/src/sync/mod.rs
 
 //     build_walk(dir)
 //         .filter_map(|entry| {
@@ -226,29 +204,6 @@ impl<'a> IndexCache<'a> {
     }
 
     fn tag_str(&self) -> String {
-<<<<<<<< HEAD:sync/src/sync.rs
-        format!("{}::{}", self.dir.to_str().unwrap(), self.branch)
-    }
-
-    fn new(dir: &Path, branch: Option<&str>) -> Self {
-        Self {
-            dir: Box::from(dir),
-            branch: Box::from(branch.unwrap_or("main")),
-            global_cache: DiskSet::new(
-                get_my_home()
-                    .unwrap()
-                    .unwrap()
-                    .join(".continue/index/.index_cache")
-                    .to_str()
-                    .unwrap(),
-            ),
-            tag_cache: DiskSet::new(
-                Self::index_cache_path_for_tag(dir, branch.unwrap_or("main"))
-                    .to_str()
-                    .unwrap(),
-            ),
-        }
-========
         return self.tag.to_string();
     }
 
@@ -270,21 +225,14 @@ impl<'a> IndexCache<'a> {
             ),
             tag_cache: DiskSet::new(IndexCache::index_cache_path_for_tag(tag).to_str().unwrap()),
         };
->>>>>>>> preview:sync/src/sync/mod.rs
     }
 
     // rev_tags files are just json files with the following format:
     // { "hash": ["tag1", "tag2", ...], ... }
 
     // TODO: You could add_bulk, remove_bulk if this gets slow
-
-<<<<<<<< HEAD:sync/src/sync.rs
-    fn read_rev_tags(hash: [u8; ITEM_SIZE]) -> HashMap<String, Vec<String>> {
-        let rev_tags_path = Self::rev_tags_path(hash);
-========
     fn read_rev_tags(&self, hash: [u8; ITEM_SIZE]) -> HashMap<String, Vec<String>> {
         let rev_tags_path = IndexCache::rev_tags_path(hash, self.tag.provider_id);
->>>>>>>> preview:sync/src/sync/mod.rs
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -297,13 +245,8 @@ impl<'a> IndexCache<'a> {
         serde_json::from_str(&contents).unwrap_or_default()
     }
 
-<<<<<<<< HEAD:sync/src/sync.rs
-    fn write_rev_tags(hash: [u8; ITEM_SIZE], rev_tags: &HashMap<String, Vec<String>>) {
-        let rev_tags_path = Self::rev_tags_path(hash);
-========
     fn write_rev_tags(&self, hash: [u8; ITEM_SIZE], rev_tags: HashMap<String, Vec<String>>) {
         let rev_tags_path = IndexCache::rev_tags_path(hash, self.tag.provider_id);
->>>>>>>> preview:sync/src/sync/mod.rs
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -532,37 +475,23 @@ mod tests {
     #[test]
     fn test_sync() {
         let ti = std::time::Instant::now();
-<<<<<<<< HEAD:sync/src/sync.rs
-        let _results = sync(
-            Path::new("/Users/natesesti/Desktop/continue"),
-            Some("nate/pyO3"),
-        );
-========
         let tag = Tag {
             dir: Path::new("../"),
             branch: "nate/pyO3",
             provider_id: "default",
         };
         let results = sync(&tag);
->>>>>>>> preview:sync/src/sync/mod.rs
         println!("Sync took {:?}", ti.elapsed());
         // Vast majority (90+%) of this time is spent in compute_tree_for_dir
     }
 
     #[test]
     fn test_on_vscode_extension() {
-<<<<<<<< HEAD:sync/src/sync.rs
-        let _results = sync(
-            Path::new("/Users/natesesti/Desktop/continue/extensions/vscode"),
-            Some("nate/pyO3"),
-        );
-========
         let results = sync(&Tag {
             dir: Path::new("../extensions/vscode"),
             branch: "nate/pyO3",
             provider_id: "default",
         });
->>>>>>>> preview:sync/src/sync/mod.rs
     }
 
     #[test]

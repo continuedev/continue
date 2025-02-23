@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class HttpContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -11,6 +11,7 @@ class HttpContextProvider extends BaseContextProvider {
     displayTitle: "HTTP",
     description: "Retrieve a context item from a custom server",
     type: "normal",
+    renderInlineAs: "",
   };
 
   override get description(): ContextProviderDescription {
@@ -21,6 +22,9 @@ class HttpContextProvider extends BaseContextProvider {
         this.options.description ||
         "Retrieve a context item from a custom server",
       type: "normal",
+      renderInlineAs:
+        this.options.renderInlineAs ||
+        HttpContextProvider.description.renderInlineAs,
     };
   }
 
@@ -28,7 +32,7 @@ class HttpContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const response = await fetch(this.options.url, {
+    const response = await extras.fetch(new URL(this.options.url), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -36,17 +40,29 @@ class HttpContextProvider extends BaseContextProvider {
       body: JSON.stringify({
         query: query || "",
         fullInput: extras.fullInput,
+        options: this.options.options,
       }),
     });
 
     const json = await response.json();
-    return [
-      {
-        description: json.description || "HTTP Context Item",
-        content: json.content || "",
-        name: json.name || this.options.title || "HTTP",
-      },
-    ];
+
+    try {
+      const createContextItem = (item: any) => ({
+        description: item.description ?? "HTTP Context Item",
+        content: item.content ?? "",
+        name: item.name ?? this.options.title ?? "HTTP",
+      });
+
+      return Array.isArray(json)
+        ? json.map(createContextItem)
+        : [createContextItem(json)];
+    } catch (e) {
+      console.warn(
+        `Failed to parse response from custom HTTP context provider.\nError:\n${e}\nResponse from server:\n`,
+        json,
+      );
+      return [];
+    }
   }
 }
 

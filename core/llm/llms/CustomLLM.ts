@@ -1,15 +1,21 @@
-import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, CustomLLM } from "../..";
+import { ChatMessage, CompletionOptions, CustomLLM } from "../../index.js";
+import { BaseLLM } from "../index.js";
 
 class CustomLLMClass extends BaseLLM {
+  get providerName() {
+    return "custom";
+  }
+
   private customStreamCompletion?: (
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
 
   private customStreamChat?: (
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
@@ -22,18 +28,20 @@ class CustomLLMClass extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (this.customStreamChat) {
       for await (const content of this.customStreamChat(
         messages,
+        signal,
         options,
         (...args) => this.fetch(...args),
       )) {
         yield { role: "assistant", content };
       }
     } else {
-      for await (const update of super._streamChat(messages, options)) {
+      for await (const update of super._streamChat(messages, signal, options)) {
         yield update;
       }
     }
@@ -41,11 +49,13 @@ class CustomLLMClass extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     if (this.customStreamCompletion) {
       for await (const content of this.customStreamCompletion(
         prompt,
+        signal,
         options,
         (...args) => this.fetch(...args),
       )) {
@@ -54,6 +64,7 @@ class CustomLLMClass extends BaseLLM {
     } else if (this.customStreamChat) {
       for await (const content of this.customStreamChat(
         [{ role: "user", content: prompt }],
+        signal,
         options,
         (...args) => this.fetch(...args),
       )) {

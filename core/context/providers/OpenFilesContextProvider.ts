@@ -1,10 +1,10 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
-import { getBasename } from "../../util";
+} from "../../index.js";
+import { getUriDescription } from "../../util/uri.js";
+import { BaseContextProvider } from "../index.js";
 
 class OpenFilesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -12,6 +12,7 @@ class OpenFilesContextProvider extends BaseContextProvider {
     displayTitle: "Open Files",
     description: "Reference the current open files",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(
@@ -22,14 +23,22 @@ class OpenFilesContextProvider extends BaseContextProvider {
     const openFiles = this.options?.onlyPinned
       ? await ide.getPinnedFiles()
       : await ide.getOpenFiles();
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
+
     return await Promise.all(
       openFiles.map(async (filepath: string) => {
+        const content = await ide.readFile(filepath);
+        const { relativePathOrBasename, last2Parts, baseName } =
+          getUriDescription(filepath, workspaceDirs);
+
         return {
-          description: filepath,
-          content: `\`\`\`${getBasename(filepath)}\n${await ide.readFile(
-            filepath,
-          )}\n\`\`\``,
-          name: (filepath.split("/").pop() ?? "").split("\\").pop() ?? "",
+          description: last2Parts,
+          content: `\`\`\`${relativePathOrBasename}\n${content}\n\`\`\``,
+          name: baseName,
+          uri: {
+            type: "file",
+            value: filepath,
+          },
         };
       }),
     );

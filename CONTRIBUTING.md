@@ -2,21 +2,34 @@
 
 ## Table of Contents
 
+- [Contributing to Continue](#contributing-to-continue)
+  - [Table of Contents](#table-of-contents)
 - [❤️ Ways to Contribute](#️-ways-to-contribute)
   - [👋 Continue Contribution Ideas](#-continue-contribution-ideas)
   - [🐛 Report Bugs](#-report-bugs)
   - [✨ Suggest Enhancements](#-suggest-enhancements)
   - [📖 Updating / Improving Documentation](#-updating--improving-documentation)
+    - [Running the Documentation Server Locally](#running-the-documentation-server-locally)
+      - [Method 1: NPM Script](#method-1-npm-script)
+      - [Method 2: VS Code Task](#method-2-vs-code-task)
   - [🧑‍💻 Contributing Code](#-contributing-code)
     - [Environment Setup](#environment-setup)
+      - [Pre-requisites](#pre-requisites)
+      - [Fork the Continue Repository](#fork-the-continue-repository)
+      - [VS Code](#vs-code)
+        - [Debugging](#debugging)
+      - [JetBrains](#jetbrains)
+    - [Our Git Workflow](#our-git-workflow)
+    - [Testing](#testing)
+    - [Formatting](#formatting)
     - [Writing Slash Commands](#writing-slash-commands)
     - [Writing Context Providers](#writing-context-providers)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
     - [Adding Pre-indexed Documentation](#adding-pre-indexed-documentation)
-- [📐 Continue Architecture](#-continue-architecture)
-  - [Continue VS Code Extension](#continue-vs-code-extension)
-  - [Continue JetBrains Extension](#continue-jetbrains-extension)
+  - [📐 Continue Architecture](#-continue-architecture)
+    - [Continue VS Code Extension](#continue-vs-code-extension)
+    - [Continue JetBrains Extension](#continue-jetbrains-extension)
 
 # ❤️ Ways to Contribute
 
@@ -36,7 +49,7 @@ If you find a bug, please [create an issue](https://github.com/continuedev/conti
 
 ## ✨ Suggest Enhancements
 
-Continue is quickly adding features, and we'd love to hear which are the most important to you. The best ways to suggest an enhancement are
+Continue is quickly adding features, and we'd love to hear which are the most important to you. The best ways to suggest an enhancement are:
 
 - Create an issue
 
@@ -48,56 +61,100 @@ Continue is quickly adding features, and we'd love to hear which are the most im
 
 ## 📖 Updating / Improving Documentation
 
-Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation! If you see something out-of-date or missing, you can help by clicking "Edit this page" at the bottom of any page on [continue.dev/docs](https://continue.dev/docs).
+Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation! If you see something out-of-date or missing, you can help by clicking "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev).
+
+### Running the Documentation Server Locally
+
+You can run the documentation server locally using either of the following methods:
+
+#### Method 1: NPM Script
+
+1. Open your terminal and navigate to the `docs` subdirectory of the project. The `docusaurus.config.js` file you'll see there is a sign you're in the right place.
+
+2. Run the following command to install the necessary dependencies for the documentation server:
+
+   ```bash
+   npm install
+   ```
+
+3. Run the following command to start the documentation server:
+
+   ```bash
+   npm run start
+   ```
+
+#### Method 2: VS Code Task
+
+1. Open VS Code in the root directory of the project.
+
+2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task`.
+
+3. Look for the `docs:start` task and select it.
+
+This will start a local server and you can see the documentation rendered in your default browser, typically accessible at `http://localhost:3000`.
 
 ## 🧑‍💻 Contributing Code
 
-> Please make PRs to the `preview` branch. We use this to first test changes in a pre-release version of the extension.
-
 ### Environment Setup
 
-#### VS Code
+#### Pre-requisites
 
-Pre-requisite: You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
 
 ```bash
 nvm use
 ```
 
-1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
+#### Fork the Continue Repository
 
-2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
+1. Go to the [Continue GitHub repository](https://github.com/continuedev/continue) and fork it to your GitHub account.
 
-3. Start debugging:
+2. Clone your forked repository to your local machine. Use: `git clone https://github.com/YOUR_USERNAME/continue.git`
+
+3. Navigate to the cloned directory and make sure you are on the main branch. Create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
+
+4. Send your pull request to the main branch.
+
+#### VS Code
+
+1. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
+
+2. Start debugging:
 
    1. Switch to Run and Debug view
-   2. Select `Extension (VS Code)` from drop down
+   2. Select `Launch extension` from drop down
    3. Hit play button
    4. This will start the extension in debug mode and open a new VS Code window with it installed
       1. The new VS Code window with the extension is referred to as the _Host VS Code_
       2. The window you started debugging from is referred to as the _Main VS Code_
 
-4. To package the extension, run `npm run package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-patch.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
+3. To package the extension, run `npm run package` in the `extensions/vscode` directory, select `Tasks: Run Task` and then select `vscode-extension:package`. This will generate `extensions/vscode/build/continue-{VERSION}.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
 
-> Note: Breakpoints can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code. Hot-reloading is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
+##### Debugging
+
+**Breakpoints** can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code.
+
+**Hot-reloading** is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. In some cases, you may need to refresh the _Host VS Code_ window to see the changes.
+
+Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
 
 #### JetBrains
 
-Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 19.
+See the [`CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBrains extension.
 
-1. Clone the repository
-2. Run `install-dependencies.sh` or `install-dependencies.ps1` on Windows
-3. Run `cd extensions/vscode && node scripts/prepackage.js` (this will copy over the built React application to the proper JetBrains directory)
-4. Select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button
-5. To package the extension, choose the "Build Plugin" Gradle configuration
+### Our Git Workflow
 
-> For changes to Typescript code, the binary/gui will currently need to be rebuilt. Changes to Kotlin code can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes"
+We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the `main` branch titled `v0.9.x-vscode`, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will create a new release titled `v0.8.x-vscode`, triggering a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow is well explained by <http://releaseflow.org>.
 
-Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `pkg` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
+### Testing
+
+We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on each pull request. If your PR causes one of these tests to fail, we will ask that you resolve the issue before we merge.
+
+When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
 
 ### Formatting
 
-Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install these extensions in VS Code and enable "Format on Save" in your settings.
+Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install the Prettier extension in VS Code and enable "Format on Save" in your settings.
 
 ### Writing Slash Commands
 
@@ -131,27 +188,26 @@ After you've written your context provider, make sure to complete the following:
 
 ### Adding an LLM Provider
 
-Continue has support for more than a dozen different LLM "providers", making it easy to use models running on OpenAI, Ollama, Together, LM Studio, and more. You can find all of the existing providers [here](https://github.com/continuedev/continue/tree/main/core/llm/llms), and if you see one missing, you can add it with the following steps:
+Continue has support for more than a dozen different LLM "providers", making it easy to use models running on OpenAI, Ollama, Together, LM Studio, Msty, and more. You can find all of the existing providers [here](https://github.com/continuedev/continue/tree/main/core/llm/llms), and if you see one missing, you can add it with the following steps:
 
 1. Create a new file in the `core/llm/llms` directory. The name of the file should be the name of the provider, and it should export a class that extends `BaseLLM`. This class should contain the following minimal implementation. We recommend viewing pre-existing providers for more details. The [LlamaCpp Provider](./core/llm/llms/LlamaCpp.ts) is a good simple example.
 
-- `providerName` - the identifier for your provider
+- `providerName` - the identifier for your provider.
 - At least one of `_streamComplete` or `_streamChat` - This is the function that makes the request to the API and returns the streamed response. You only need to implement one because Continue can automatically convert between "chat" and "raw completion".
 
 2. Add your provider to the `LLMs` array in [core/llm/llms/index.ts](./core/llm/llms/index.ts).
-3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array in [core/llm/index.ts](./core/llm/index.ts).
+3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array in [core/llm/autodetect.ts](./core/llm/autodetect.ts).
 4. Add the necessary JSON Schema types to [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what options are available for your provider when they are editing `config.json`.
-5. Add a documentation page for your provider in [`docs/docs/reference/Model Providers`](./docs/docs/reference/Model%20Providers). This should show an example of configuring your provider in `config.json` and explain what options are available.
+5. Add a documentation page for your provider in [`docs/docs/customize/model-providers`](./docs/docs/customize/model-providers). This should show an example of configuring your provider in `config.json` and explain what options are available.
 
 ### Adding Models
 
 While any model that works with a supported provider can be used with Continue, we keep a list of recommended models that can be automatically configured from the UI or `config.json`. The following files should be updated when adding a model:
 
 - [config_schema.json](./extensions/vscode/config_schema.json) - This is the JSON Schema definition that is used to validate `config.json`. You'll notice a number of rules defined in "definitions.ModelDescription.allOf". Here is where you write rules that can specify something like "for the provider 'anthropic', only models 'claude-2' and 'claude-instant-1' are allowed. Look through all of these rules and make sure that your model is included for providers that support it.
-- [modelData.ts](./gui/src/util/modelData.ts) - This file defines that information that is shown in the model selection UI in the side bar. To add a new model:
-  1. create a `ModelPackage` object, following the lead of the many examples near the top of the file
-  2. add the `ModelPackage` to the `MODEL_INFO` array if you would like it to be displayed in the "Models" tab
-  3. if you would like it to be displayed as an option under any of the providers, go to the `PROVIDER_INFO` object and add it to the `packages` array for each provider that you want it to be displayed under. If it is an OS model that should be valid for most providers offering OS models, you might just be able to add it to the `osModels` array as shorthand.
+- [AddNewModel page](./gui/src/pages/AddNewModel) - This directory defines which model options are shown in the side bar model selection UI. To add a new model:
+  1. Add a `ModelPackage` entry for the model into [configs/models.ts](./gui/src/pages/AddNewModel/configs/models.ts), following the lead of the many examples near the top of the file
+  2. Add the model within its provider's array to [AddNewModel.tsx](./gui/src/pages/AddNewModel/AddNewModel.tsx) (add provider if needed)
 - [index.d.ts](./core/index.d.ts) - This file defines the TypeScript types used throughout Continue. You'll find a `ModelName` type. Be sure to add the name of your model to this.
 - LLM Providers: Since many providers use their own custom strings to identify models, you'll have to add the translation from Continue's model name (the one you added to `index.d.ts`) and the model string for each of these providers: [Ollama](./core/llm/llms/Ollama.ts), [Together](./core/llm/llms/Together.ts), and [Replicate](./core/llm/llms/Replicate.ts). You can find their full model lists here: [Ollama](https://ollama.ai/library), [Together](https://docs.together.ai/docs/inference-models), [Replicate](https://replicate.com/collections/streaming-language-models).
 - [Prompt Templates](./core/llm/index.ts) - In this file you'll find the `autodetectTemplateType` function. Make sure that for the model name you just added, this function returns the correct template type. This is assuming that the chat template for that model is already built in Continue. If not, you will have to add the template type and corresponding edit and chat templates.
@@ -166,7 +222,7 @@ Continue consists of 2 parts that are split so that it can be extended to work i
 
 1. **Continue GUI** - The Continue GUI is a React application that gives the user control over Continue. It displays the current chat history, allows the user to ask questions, invoke slash commands, and use context providers. The GUI also handles most state and holds as much of the logic as possible so that it can be reused between IDEs.
 
-2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/debugPanel.ts).
+2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/ContinueGUIWebviewViewProvider.ts).
 
 ### Continue VS Code Extension
 

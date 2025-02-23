@@ -1,35 +1,31 @@
 ---
-title: 🦔 Telemetry
-description: Continue collects anonymous usage information
+title: Telemetry
+description: Learn how Continue collects anonymous usage information and how you can opt out.
 keywords: [telemetry, anonymous, usage info, opt out]
 ---
 
-# 🦔 Telemetry
-
 ## Overview
 
-Continue collects and reports **anonymous** usage information. This data is essential to understanding how we should improve the product. You can opt out of it at any time. We use [Posthog](https://posthog.com/), an open source platform for product analytics, to collect and store the data. You can review the code [here](https://github.com/continuedev/continue/blob/main/gui/src/hooks/CustomPostHogProvider.tsx).
+Continue collects and reports **anonymous** usage information to help us improve our product. This data enables us to understand user interactions and optimize the user experience effectively. You can opt out of telemetry collection at any time if you prefer not to share your usage information.
 
-## What we track
+We utilize [Posthog](https://posthog.com/), an open-source platform for product analytics, to gather and store this data. For transparency, you can review the implementation code [here](https://github.com/continuedev/continue/blob/main/gui/src/hooks/CustomPostHogProvider.tsx) or read our [official privacy policy](https://continue.dev/privacy).
 
-We track
+## Tracking Policy
 
-- whether you accept or reject suggestions (not the code itself)
-- the name of slash commands that are run
-- the name of your OS and IDE
-- the name of the default model you configured
+All data collected by Continue is anonymized and stripped of personally identifiable information (PII) before being sent to PostHog. We are committed to maintaining the privacy and security of your data.
 
-All data is anonymous and cleaned of PII before being sent to PostHog.
+## What We Track
 
-## How to opt out
+The following usage information is collected and reported:
 
-The `~/.continue` directory contains a `config.json` file that looks like this:
+- **Suggestion Interactions:** Whether you accept or reject suggestions (excluding the actual code or prompts involved).
+- **Model and Command Information:** The name of the model and command used.
+- **Token Metrics:** The number of tokens generated.
+- **System Information:** The name of your operating system (OS) and integrated development environment (IDE).
+- **Pageviews:** General pageview statistics.
 
-```json title="~/.continue/config.json"
-{
-    "allowAnonymousTelemetry": true,
-    ...
-}
-```
+## How to Opt Out
 
-You can turn off anonymous telemetry by changing the value of `allowAnonymousTelemetry` to `false`. Alternatively, you can uncheck the "Continue: Telemetry Enabled" box in VS Code settings.
+You can disable anonymous telemetry by visiting the [User Settings Page](./customize/settings.md) and toggling "Allow Anonymous Telemetry" off.
+
+Alternatively in VS Code, you can disable telemetry through your VS Code settings by unchecking the "Continue: Telemetry Enabled" box (this will override the Settings Page settings). VS Code settings can be accessed with `File` > `Preferences` > `Settings` (or use the keyboard shortcut <kbd>ctrl</kbd> + <kbd>,</kbd> on Windows/Linux or <kbd>cmd</kbd> + <kbd>,</kbd> on macOS).

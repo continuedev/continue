@@ -1,25 +1,30 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
-import ReactDOM from "react-dom";
-import { StyledTooltip } from ".";
+import { ReactNode } from "react";
+import { ToolTip } from "./gui/Tooltip";
 
-const InfoHover = ({ msg }: { msg: string }) => {
-  const id = `info-hover-${encodeURIComponent(msg)}`;
+const DEFAULT_SIZE = "5";
 
-  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
+const InfoHover = ({
+  msg,
+  size,
+  id,
+}: {
+  id: string;
+  msg: ReactNode;
+  size?: string;
+}) => {
+  const dataTooltipId = `info-hover-${encodeURIComponent(id)}`;
 
   return (
     <>
       <InformationCircleIcon
-        data-tooltip-id={id}
-        className="h-5 w-5 text-gray-500 cursor-help"
+        data-tooltip-id={dataTooltipId}
+        className={`h-${size ?? DEFAULT_SIZE} w-${size ?? DEFAULT_SIZE} cursor-help text-gray-500`}
       />
-      {tooltipPortalDiv &&
-        ReactDOM.createPortal(
-          <StyledTooltip id={id} place="bottom">
-            {msg}
-          </StyledTooltip>,
-          tooltipPortalDiv
-        )}
+
+      <ToolTip id={dataTooltipId} place="bottom">
+        {msg}
+      </ToolTip>
     </>
   );
 };

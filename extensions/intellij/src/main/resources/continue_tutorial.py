@@ -1,69 +1,57 @@
-"""
-Welcome to Continue!
+"""                    _________               _____ _____
+                       __  ____/______ _______ __  /____(_)_______ ____  _______
+                       _  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
+                       / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
+                       \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/
 
-_________               _____ _____                       
-__  ____/______ _______ __  /____(_)_______ ____  _______ 
-_  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
-/ /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
-\____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/ 
-
-This is a 2 minute tutorial.
-
-It will walk you through two basic features:
-1. Ask a question
-2. Edit code
+                                 Chat, Edit, and Autocomplete tutorial
 """
 
-# region —————————————————————————— Part 1: Ask a question about code [⌘ J] ——————————————————————————
+# ————————————————————————————————————————————————     Setup      ————————————————————————————————————————————————- 
 
+# First, open the Continue sidebar by pressing [Cmd + L] or clicking the Continue icon.
 
-"""Step 1: Highlight the function below"""
+# See an example at https://docs.continue.dev/getting-started/install
 
+# Follow the instructions in the sidebar to set up a Chat/Edit modela and an Autocomplete model.
 
-def mysterious_function(x):
+# —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— 
+
+## Highlight the code below
+## Press [Cmd + L] to add to Chat
+## Try asking Continue "what sorting algorithm is this?"
+def sorting_algorithm(x):
     for i in range(len(x)):
         for j in range(len(x) - 1):
             if x[j] > x[j + 1]:
                 x[j], x[j + 1] = x[j + 1], x[j]
-
     return x
 
+# [Cmd + L] always starts a new chat. Now, try the same thing using [Cmd + Shift + L].
+# This will add the code into the current chat
 
-"""Step 2: Use the keyboard shortcut [⌘ J] to
-select the code and toggle the Continue input box"""
+# —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— 
 
-"""Step 3: Ask a question and press enter"""
-# e.g.) what does this function do?
-# e.g.) what should I call this function?
-
-# endregion
-
-
-# region ————————————————————————————————— Part 2: Edit code [⌘ ⇧ J] —————————————————————————————————
-
-
-"""Step 1: Highlight this code"""
-
-
-def bubble_sort(x):
+## Highlight the code below
+## Press [Cmd + I] to Edit
+## Try asking Continue to "make this more readable"
+def sorting_algorithm(x):
     for i in range(len(x)):
         for j in range(len(x) - 1):
             if x[j] > x[j + 1]:
                 x[j], x[j + 1] = x[j + 1], x[j]
-
     return x
 
+# —————————————————————————————————————————————     Autocomplete     —————————————————————————————————————————————— 
 
-"""Step 2: Use the keyboard shortcut [⌘ J] to
-select the code"""
+## Place cursor after `sorting_algorithm:` below and press [Enter]
+## Press [Tab] to accept the Autocomplete suggestion
 
-"""Step 3: Type "/edit <your edit request>" and press Enter"""
-# e.g.) /edit optimize this function
-# e.g.) /edit write comments
+# Basic assertion for sorting_algorithm:
 
-"""Step 4: Use keyboard shortcuts to
-accept [⌘ ⇧ ⏎] or reject [⌘ ⇧ ⌫] the edit"""
 
-# endregion
 
-# Ready to learn more? Check out the Continue documentation: https://continue.dev/docs
+
+# —————————————————————————————————————————————-     Learn More     -—————————————————————————————————————————————— 
+
+# Visit the Continue Docs at https://docs.continue.dev/getting-started/overview

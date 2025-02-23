@@ -1,28 +1,23 @@
-import { ContextItemId, IDE } from "core";
-import { ConfigHandler } from "core/config/handler";
-import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
-import { indexDocs } from "core/indexing/docs";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { logDevData } from "core/util/devdata";
-import { DevDataSqliteDb } from "core/util/devdataSqlite";
-import historyManager from "core/util/history";
-import { Message } from "core/util/messenger";
-import { getConfigJsonPath } from "core/util/paths";
+import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import { Message } from "core/protocol/messenger";
+import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Telemetry } from "core/util/posthog";
-import {
-  ReverseWebviewProtocol,
-  WebviewProtocol,
-} from "core/web/webviewProtocol";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { showTutorial } from "./activation/activate";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 
-export class VsCodeWebviewProtocol {
-  listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
-  abortedMessageIds: Set<string> = new Set();
+import { IMessenger } from "../../../core/protocol/messenger";
 
-  private send(messageType: string, data: any, messageId?: string): string {
+import { showFreeTrialLoginMessage } from "./util/messages";
+
+export class VsCodeWebviewProtocol
+  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
+{
+  listeners = new Map<
+    keyof FromWebviewProtocol,
+    ((message: Message) => any)[]
+  >();
+
+  send(messageType: string, data: any, messageId?: string): string {
     const id = messageId ?? uuidv4();
     this.webview?.postMessage({
       messageType,
@@ -32,11 +27,11 @@ export class VsCodeWebviewProtocol {
     return id;
   }
 
-  on<T extends keyof WebviewProtocol>(
+  on<T extends keyof FromWebviewProtocol>(
     messageType: T,
     handler: (
-      message: Message<WebviewProtocol[T][0]>,
-    ) => Promise<WebviewProtocol[T][1]> | WebviewProtocol[T][1],
+      message: Message<FromWebviewProtocol[T][0]>,
+    ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
     if (!this.listeners.has(messageType)) {
       this.listeners.set(messageType, []);
@@ -55,520 +50,179 @@ export class VsCodeWebviewProtocol {
     this._webview = webView;
     this._webviewListener?.dispose();
 
-    this._webviewListener = this._webview.onDidReceiveMessage(async (msg) => {
-      if (!msg.messageType || !msg.messageId) {
-        throw new Error("Invalid webview protocol msg: " + JSON.stringify(msg));
+    const handleMessage = async (msg: Message): Promise<void> => {
+      if (!("messageType" in msg) || !("messageId" in msg)) {
+        throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
       }
 
       const respond = (message: any) =>
         this.send(msg.messageType, message, msg.messageId);
 
-      const handlers = this.listeners.get(msg.messageType) || [];
+      const handlers =
+        this.listeners.get(msg.messageType as keyof FromWebviewProtocol) || [];
       for (const handler of handlers) {
         try {
           const response = await handler(msg);
+          // For generator types e.g. llm/streamChat
           if (
             response &&
             typeof response[Symbol.asyncIterator] === "function"
           ) {
-            for await (const update of response) {
-              respond(update);
+            let next = await response.next();
+            while (!next.done) {
+              respond({
+                done: false,
+                content: next.value,
+                status: "success",
+              });
+              next = await response.next();
             }
-            respond({ done: true });
+            respond({
+              done: true,
+              content: next.value,
+              status: "success",
+            });
           } else {
-            respond(response || {});
+            respond({ done: true, content: response, status: "success" });
           }
         } catch (e: any) {
+          let message = e.message;
+          //Intercept Ollama errors for special handling
+          if (message.includes("Ollama may not")) {
+              const options = [];
+              if (message.includes("be installed")) {
+                options.push("Download Ollama");
+              } else if (message.includes("be running")) {
+                options.push("Start Ollama");
+              }
+              if (options.length > 0) {
+                // Respond without an error, so the UI doesn't show the error component
+                respond({ done: true, status: "error" });
+                // Show native vscode error message instead, with options to download/start Ollama
+                vscode.window.showErrorMessage(e.message, ...options).then(async (val) => {
+                  if (val === "Download Ollama") {
+                    vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
+                  } else if (val === "Start Ollama") {
+                    vscode.commands.executeCommand("continue.startLocalOllama");
+                  }
+                });
+                return;
+              }
+          }
+
+          respond({ done: true, error: e.message, status: "error" });
+
+          const stringified = JSON.stringify({ msg }, null, 2);
           console.error(
-            "Error handling webview message: " +
-              JSON.stringify({ msg }, null, 2),
+            `Error handling webview message: ${stringified}\n\n${e}`,
           );
 
-          let message = e.message;
+          if (
+            stringified.includes("llm/streamChat") ||
+            stringified.includes("chatDescriber/describe")
+          ) {
+            return;
+          }
+
           if (e.cause) {
             if (e.cause.name === "ConnectTimeoutError") {
-              message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://continue.dev/docs/reference/config`;
+              message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://docs.continue.dev/reference/config`;
             } else if (e.cause.code === "ECONNREFUSED") {
-              message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://continue.dev/docs/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
+              message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://docs.continue.dev/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
             } else {
               message = `The request failed with "${e.cause.name}": ${e.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
             }
           }
 
-          vscode.window
-            .showErrorMessage(message, "Show Logs", "Troubleshooting")
-            .then((selection) => {
-              if (selection === "Show Logs") {
-                vscode.commands.executeCommand(
-                  "workbench.action.toggleDevTools",
-                );
-              } else if (selection === "Troubleshooting") {
-                vscode.env.openExternal(
-                  vscode.Uri.parse("https://continue.dev/docs/troubleshooting"),
-                );
-              }
-            });
+          if (message.includes("https://proxy-server")) {
+            message = message.split("\n").filter((l: string) => l !== "")[1];
+            try {
+              message = JSON.parse(message).message;
+            } catch {}
+            if (message.includes("exceeded")) {
+              message +=
+                " To keep using Continue, you can set up a local model or use your own API key.";
+            }
+
+            vscode.window
+              .showInformationMessage(message, "Add API Key", "Use Local Model")
+              .then((selection) => {
+                if (selection === "Add API Key") {
+                  this.request("addApiKey", undefined);
+                } else if (selection === "Use Local Model") {
+                  this.request("setupLocalConfig", undefined);
+                }
+              });
+          } else if (message.includes("Please sign in with GitHub")) {
+            showFreeTrialLoginMessage(message, this.reloadConfig, () =>
+              this.request("openOnboardingCard", undefined),
+            );
+          } else {
+            Telemetry.capture(
+              "webview_protocol_error",
+              {
+                messageType: msg.messageType,
+                errorMsg: message.split("\n\n")[0],
+                stack: extractMinimalStackTraceInfo(e.stack),
+              },
+              false,
+            );
+          }
         }
       }
-    });
+    };
+
+    this._webviewListener = this._webview.onDidReceiveMessage(handleMessage);
   }
 
-  constructor(
-    private readonly ide: IDE,
-    private readonly configHandler: ConfigHandler,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager,
-  ) {
-    this.on("abort", (msg) => {
-      this.abortedMessageIds.add(msg.messageId);
-    });
-    this.on("showFile", (msg) => {
-      this.ide.openFile(msg.data.filepath);
-    });
-    this.on("openConfigJson", (msg) => {
-      this.ide.openFile(getConfigJsonPath());
-    });
-    this.on("readRangeInFile", async (msg) => {
-      return await vscode.workspace
-        .openTextDocument(msg.data.filepath)
-        .then((document) => {
-          let start = new vscode.Position(0, 0);
-          let end = new vscode.Position(5, 0);
-          let range = new vscode.Range(start, end);
+  constructor(private readonly reloadConfig: () => void) {}
 
-          let contents = document.getText(range);
-          return contents;
-        });
-    });
-    this.on("toggleDevTools", (msg) => {
-      vscode.commands.executeCommand("workbench.action.toggleDevTools");
-      vscode.commands.executeCommand("continue.viewLogs");
-    });
-    this.on("reloadWindow", (msg) => {
-      vscode.commands.executeCommand("workbench.action.reloadWindow");
-    });
-    this.on("focusEditor", (msg) => {
-      vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
-    });
-    this.on("toggleFullScreen", (msg) => {
-      vscode.commands.executeCommand("continue.toggleFullScreen");
-    });
-
-    // IDE
-    this.on("getDiff", async (msg) => {
-      return await ide.getDiff();
-    });
-    this.on("config/getBrowserSerialized", async (msg) => {
-      return await configHandler.getSerializedConfig();
-    });
-    this.on("getTerminalContents", async (msg) => {
-      return await ide.getTerminalContents();
-    });
-    this.on("getDebugLocals", async (msg) => {
-      return await ide.getDebugLocals(Number(msg.data.threadIndex));
-    });
-    this.on("getAvailableThreads", async (msg) => {
-      return await ide.getAvailableThreads();
-    });
-    this.on("getTopLevelCallStackSources", async (msg) => {
-      return await ide.getTopLevelCallStackSources(
-        msg.data.threadIndex,
-        msg.data.stackDepth,
-      );
-    });
-    this.on("listWorkspaceContents", async (msg) => {
-      return await ide.listWorkspaceContents();
-    });
-    this.on("getWorkspaceDirs", async (msg) => {
-      return await ide.getWorkspaceDirs();
-    });
-    this.on("listFolders", async (msg) => {
-      return await ide.listFolders();
-    });
-    this.on("writeFile", async (msg) => {
-      return await ide.writeFile(msg.data.path, msg.data.contents);
-    });
-    this.on("showVirtualFile", async (msg) => {
-      return await ide.showVirtualFile(msg.data.name, msg.data.content);
-    });
-    this.on("getContinueDir", async (msg) => {
-      return await ide.getContinueDir();
-    });
-    this.on("openFile", async (msg) => {
-      return await ide.openFile(msg.data.path);
-    });
-    this.on("runCommand", async (msg) => {
-      await ide.runCommand(msg.data.command);
-    });
-    this.on("getSearchResults", async (msg) => {
-      return await ide.getSearchResults(msg.data.query);
-    });
-    this.on("subprocess", async (msg) => {
-      return await ide.subprocess(msg.data.command);
-    });
-    // History
-    this.on("history/list", (msg) => {
-      return historyManager.list();
-    });
-    this.on("history/save", (msg) => {
-      historyManager.save(msg.data);
-    });
-    this.on("history/delete", (msg) => {
-      historyManager.delete(msg.data.id);
-    });
-    this.on("history/load", (msg) => {
-      return historyManager.load(msg.data.id);
-    });
-    this.on("saveFile", async (msg) => {
-      return await ide.saveFile(msg.data.filepath);
-    });
-    this.on("readFile", async (msg) => {
-      return await ide.readFile(msg.data.filepath);
-    });
-    this.on("showDiff", async (msg) => {
-      return await ide.showDiff(
-        msg.data.filepath,
-        msg.data.newContents,
-        msg.data.stepIndex,
-      );
-    });
-
-    this.on("getProblems", async (msg) => {
-      return await ide.getProblems(msg.data.filepath);
-    });
-    this.on("getBranch", async (msg) => {
-      const { dir } = msg.data;
-      return await ide.getBranch(dir);
-    });
-    this.on("getOpenFiles", async (msg) => {
-      return await ide.getOpenFiles();
-    });
-    this.on("getPinnedFiles", async (msg) => {
-      return await ide.getPinnedFiles();
-    });
-    this.on("showLines", async (msg) => {
-      const { filepath, startLine, endLine } = msg.data;
-      return await ide.showLines(filepath, startLine, endLine);
-    });
-    // Other
-    this.on("errorPopup", (msg) => {
-      vscode.window
-        .showErrorMessage(msg.data.message, "Show Logs")
-        .then((selection) => {
-          if (selection === "Show Logs") {
-            vscode.commands.executeCommand("workbench.action.toggleDevTools");
-          }
-        });
-    });
-    this.on("devdata/log", (msg) => {
-      logDevData(msg.data.tableName, msg.data.data);
-    });
-    this.on("config/addModel", (msg) => {
-      const model = msg.data.model;
-      const newConfigString = addModel(model);
-      this.configHandler.reloadConfig();
-      this.ide.openFile(getConfigJsonPath());
-
-      // Find the range where it was added and highlight
-      let lines = newConfigString.split("\n");
-      let startLine;
-      let endLine;
-      for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-
-        if (!startLine) {
-          if (line.trim() === `"title": "${model.title}",`) {
-            startLine = i - 1;
-          }
-        } else {
-          if (line.startsWith("    }")) {
-            endLine = i;
-            break;
-          }
-        }
-      }
-
-      if (startLine && endLine) {
-        this.ide.showLines(
-          getConfigJsonPath(),
-          startLine,
-          endLine,
-          // "#fff1"
-        );
-      }
-      vscode.window.showInformationMessage(
-        "🎉 Your model has been successfully added to config.json. You can use this file to further edit its configuration.",
-      );
-    });
-    this.on("config/deleteModel", (msg) => {
-      deleteModel(msg.data.title);
-      this.configHandler.reloadConfig();
-    });
-    this.on("config/addOpenAiKey", async (msg) => {
-      addOpenAIKey(msg.data);
-      this.configHandler.reloadConfig();
-    });
-
-    async function* llmStreamComplete(
-      protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["llm/streamComplete"][0]>,
-    ) {
-      const model = await protocol.configHandler.llmFromTitle(msg.data.title);
-      const gen = model.streamComplete(
-        msg.data.prompt,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (protocol.abortedMessageIds.has(msg.messageId)) {
-          protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
-          break;
-        }
-        yield { content: next.value };
-        next = await gen.next();
-      }
-
-      return { done: true, content: next.value };
-    }
-    this.on("llm/streamComplete", (msg) => llmStreamComplete(this, msg));
-
-    async function* llmStreamChat(
-      protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["llm/streamChat"][0]>,
-    ) {
-      const model = await protocol.configHandler.llmFromTitle(msg.data.title);
-      const gen = model.streamChat(
-        msg.data.messages,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (protocol.abortedMessageIds.has(msg.messageId)) {
-          protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
-          break;
-        }
-        yield { content: next.value.content };
-        next = await gen.next();
-      }
-
-      return { done: true, content: next.value };
-    }
-    this.on("llm/streamChat", (msg) => llmStreamChat(this, msg));
-    this.on("llm/complete", async (msg) => {
-      const model = await this.configHandler.llmFromTitle(msg.data.title);
-      const completion = await model.complete(
-        msg.data.prompt,
-        msg.data.completionOptions,
-      );
-      return completion;
-    });
-
-    async function* runNodeJsSlashCommand(
-      protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["command/run"][0]>,
-    ) {
-      const {
-        input,
-        history,
-        modelTitle,
-        slashCommandName,
-        contextItems,
-        params,
-        historyIndex,
-        selectedCode,
-      } = msg.data;
-
-      const config = await protocol.configHandler.loadConfig();
-      const llm = await protocol.configHandler.llmFromTitle(modelTitle);
-      const slashCommand = config.slashCommands?.find(
-        (sc) => sc.name === slashCommandName,
-      );
-      if (!slashCommand) {
-        throw new Error(`Unknown slash command ${slashCommandName}`);
-      }
-
-      Telemetry.capture("useSlashCommand", {
-        name: slashCommandName,
-      });
-
-      for await (const content of slashCommand.run({
-        input,
-        history,
-        llm,
-        contextItems,
-        params,
-        ide,
-        addContextItem: (item) => {
-          protocol.request("addContextItem", {
-            item,
-            historyIndex,
-          });
-        },
-        selectedCode,
-        config,
-      })) {
-        if (content) {
-          yield { content };
-        }
-      }
-      yield { done: true, content: "" };
-    }
-    this.on("command/run", (msg) => runNodeJsSlashCommand(this, msg));
-
-    this.on("context/loadSubmenuItems", async (msg) => {
-      const { title } = msg.data;
-      const config = await this.configHandler.loadConfig();
-      const provider = config.contextProviders?.find(
-        (p) => p.description.title === title,
-      );
-      if (!provider) {
-        vscode.window.showErrorMessage(
-          `Unknown provider ${title}. Existing providers: ${config.contextProviders
-            ?.map((p) => p.description.title)
-            .join(", ")}`,
-        );
-        return [];
-      }
-
-      try {
-        const items = await provider.loadSubmenuItems({ ide });
-        return items;
-      } catch (e) {
-        vscode.window.showErrorMessage(
-          `Error loading submenu items from ${title}: ${e}`,
-        );
-        return [];
-      }
-    });
-
-    this.on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode } = msg.data;
-      const config = await this.configHandler.loadConfig();
-      const llm = await this.configHandler.llmFromTitle();
-      const provider = config.contextProviders?.find(
-        (p) => p.description.title === name,
-      );
-      if (!provider) {
-        vscode.window.showErrorMessage(
-          `Unknown provider ${name}. Existing providers: ${config.contextProviders
-            ?.map((p) => p.description.title)
-            .join(", ")}`,
-        );
-        return [];
-      }
-
-      try {
-        const id: ContextItemId = {
-          providerTitle: provider.description.title,
-          itemId: uuidv4(),
-        };
-        const items = await provider.getContextItems(query, {
-          llm,
-          embeddingsProvider: config.embeddingsProvider,
-          fullInput,
-          ide,
-          selectedCode,
-        });
-
-        Telemetry.capture("useContextProvider", {
-          name: provider.description.title,
-        });
-
-        return items.map((item) => ({ ...item, id }));
-      } catch (e) {
-        vscode.window.showErrorMessage(
-          `Error getting context items from ${name}: ${e}`,
-        );
-        return [];
-      }
-    });
-    this.on("context/addDocs", (msg) => {
-      const { url, title } = msg.data;
-      const embeddingsProvider = new TransformersJsEmbeddingsProvider();
-      vscode.window.withProgress(
-        {
-          location: vscode.ProgressLocation.Notification,
-          title: `Indexing ${title}`,
-          cancellable: false,
-        },
-        async (progress) => {
-          for await (const update of indexDocs(
-            title,
-            new URL(url),
-            embeddingsProvider,
-          )) {
-            progress.report({
-              increment: update.progress,
-              message: update.desc,
-            });
-          }
-
-          vscode.window.showInformationMessage(
-            `🎉 Successfully indexed ${title}`,
-          );
-
-          this.request("refreshSubmenuItems", undefined);
-        },
-      );
-    });
-    this.on("applyToCurrentFile", async (msg) => {
-      // Select the entire current file
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showErrorMessage("No active editor to apply edits to");
-        return;
-      }
-      const document = editor.document;
-      const start = new vscode.Position(0, 0);
-      const end = new vscode.Position(
-        document.lineCount - 1,
-        document.lineAt(document.lineCount - 1).text.length,
-      );
-      editor.selection = new vscode.Selection(start, end);
-
-      this.verticalDiffManager.streamEdit(
-        `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
-        await this.request("getDefaultModelTitle", undefined),
-      );
-    });
-    this.on("showTutorial", (msg) => {
-      showTutorial();
-    });
-
-    this.on("openUrl", (msg) => {
-      vscode.env.openExternal(vscode.Uri.parse(msg.data));
-    });
-    this.on("stats/getTokensPerDay", async (msg) => {
-      const rows = await DevDataSqliteDb.getTokensPerDay();
-      return rows;
-    });
-    this.on("stats/getTokensPerModel", async (msg) => {
-      const rows = await DevDataSqliteDb.getTokensPerModel();
-      return rows;
-    });
-  }
-
-  public request<T extends keyof ReverseWebviewProtocol>(
+  invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,
-    data: ReverseWebviewProtocol[T][0],
-  ): Promise<ReverseWebviewProtocol[T][1]> {
+    data: FromWebviewProtocol[T][0],
+    messageId?: string,
+  ): FromWebviewProtocol[T][1] {
+    throw new Error("Method not implemented.");
+  }
+
+  onError(handler: (message: Message, error: Error) => void): void {
+    throw new Error("Method not implemented.");
+  }
+
+  public request<T extends keyof ToWebviewProtocol>(
+    messageType: T,
+    data: ToWebviewProtocol[T][0],
+    retry: boolean = true,
+  ): Promise<ToWebviewProtocol[T][1]> {
     const messageId = uuidv4();
-    return new Promise((resolve) => {
-      if (!this.webview) {
-        resolve(undefined);
-        return;
+    return new Promise(async (resolve) => {
+      if (retry) {
+        let i = 0;
+        while (!this.webview) {
+          if (i >= 10) {
+            resolve(undefined);
+            return;
+          } else {
+            await new Promise((res) => setTimeout(res, i >= 5 ? 1000 : 500));
+            i++;
+          }
+        }
       }
 
       this.send(messageType, data, messageId);
-      const disposable = this.webview.onDidReceiveMessage(
-        (msg: Message<ReverseWebviewProtocol[T][1]>) => {
-          if (msg.messageId === messageId) {
-            resolve(msg.data);
-            disposable?.dispose();
-          }
-        },
-      );
+
+      if (this.webview) {
+        const disposable = this.webview.onDidReceiveMessage(
+          (msg: Message<ToWebviewProtocol[T][1]>) => {
+            if (msg.messageId === messageId) {
+              resolve(msg.data);
+              disposable?.dispose();
+            }
+          },
+        );
+      } else if (!retry) {
+        resolve(undefined);
+      }
     });
   }
 }

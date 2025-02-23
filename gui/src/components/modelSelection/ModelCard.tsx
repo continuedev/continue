@@ -7,13 +7,28 @@ import {
   lightGray,
   vscFocusBorder,
 } from "..";
-import {
-  MODEL_PROVIDER_TAG_COLORS,
-  PROVIDER_INFO,
-  PackageDimension,
-} from "../../util/modelData";
-import HeaderButtonWithText from "../HeaderButtonWithText";
+import { PackageDimension } from "../../pages/AddNewModel/configs/models";
+import { providers } from "../../pages/AddNewModel/configs/providers";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import InfoHover from "../InfoHover";
+import { ModelProviderTag } from "./ModelProviderTag";
+import { ModelProviderTags } from "./utils";
+
+interface ModelCardProps {
+  title: string;
+  description: string;
+  tags?: ModelProviderTags[];
+  refUrl?: string;
+  icon?: string;
+  onClick?: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    dimensionChoices?: string[],
+    selectedProvider?: string,
+  ) => void;
+  disabled?: boolean;
+  dimensions?: PackageDimension[];
+  providerOptions?: string[];
+}
 
 const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
   border: 1px solid ${lightGray};
@@ -28,11 +43,11 @@ const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
     opacity: 0.5;
     `
       : props.hovered
-      ? `
+        ? `
     border: 1px solid ${props.color};
     background-color: ${props.color}22;
     cursor: pointer;`
-      : ""}
+        : ""}
 `;
 
 const DimensionsDiv = styled.div`
@@ -71,31 +86,15 @@ const DimensionOptionDiv = styled.div<{ selected: boolean }>`
   }
 `;
 
-interface ModelCardProps {
-  title: string;
-  description: string;
-  tags?: string[];
-  refUrl?: string;
-  icon?: string;
-  onClick?: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    dimensionChoices?: string[],
-    selectedProvider?: string
-  ) => void;
-  disabled?: boolean;
-  dimensions?: PackageDimension[];
-  providerOptions?: string[];
-}
-
 function ModelCard(props: ModelCardProps) {
   const [dimensionChoices, setDimensionChoices] = useState<string[]>(
-    props.dimensions?.map((d) => Object.keys(d.options)[0]) || []
+    props.dimensions?.map((d) => Object.keys(d.options)[0]) || [],
   );
 
   const [hovered, setHovered] = useState(false);
 
   const [selectedProvider, setSelectedProvider] = useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   useEffect(() => {
@@ -121,36 +120,35 @@ function ModelCard(props: ModelCardProps) {
                 if ((e.target as any).closest("a")) {
                   return;
                 }
-
-                props.onClick(e, dimensionChoices, selectedProvider);
+                props.onClick?.(e, dimensionChoices, selectedProvider);
               }
         }
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div
+          className="mb-2"
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           {window.vscMediaUrl && props.icon && (
             <img
               src={`${window.vscMediaUrl}/logos/${props.icon}`}
+              width="24px"
               height="24px"
-              style={{ marginRight: "10px" }}
+              style={{
+                borderRadius: "2px",
+                padding: "4px",
+                marginRight: "10px",
+                objectFit: "contain",
+              }}
             />
           )}
           <h3>{props.title}</h3>
         </div>
-        {props.tags?.map((tag) => {
-          return (
-            <span
-              style={{
-                backgroundColor: `${MODEL_PROVIDER_TAG_COLORS[tag]}55`,
-                color: "white",
-                padding: "2px 4px",
-                borderRadius: defaultBorderRadius,
-                marginRight: "4px",
-              }}
-            >
-              {tag}
-            </span>
-          );
-        })}
+
+        {props.tags?.map((tag, i) => <ModelProviderTag key={i} tag={tag} />)}
+
         <p>{props.description}</p>
 
         {props.refUrl && (
@@ -163,9 +161,9 @@ function ModelCard(props: ModelCardProps) {
             href={props.refUrl}
             target="_blank"
           >
-            <HeaderButtonWithText text="Read the docs">
+            <HeaderButtonWithToolTip text="Read the docs">
               <BookOpenIcon width="1.6em" height="1.6em" />
-            </HeaderButtonWithText>
+            </HeaderButtonWithToolTip>
           </a>
         )}
       </div>
@@ -177,8 +175,11 @@ function ModelCard(props: ModelCardProps) {
               <>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <InfoHover msg={dimension.description} />
-                    <p className="mx-2 text-sm my-0 py-0">{dimension.name}</p>
+                    <InfoHover
+                      id={dimension.name}
+                      msg={dimension.description}
+                    />
+                    <p className="mx-2 my-0 py-0 text-sm">{dimension.name}</p>
                   </div>
                   <div className="flex items-center">
                     {Object.keys(dimension.options).map((key) => {
@@ -203,24 +204,25 @@ function ModelCard(props: ModelCardProps) {
             );
           })}
           {props.providerOptions?.length && (
-            <div className="flex items-center flex-wrap justify-end rtl">
+            <div className="rtl flex flex-wrap items-center justify-end">
               <div className="flex items-center">
                 <InfoHover
+                  id={"provider-info"}
                   msg={
                     "Select the provider through which you will access the model"
                   }
                 />
               </div>
-              <div className="flex items-center flex-wrap justify-end rtl">
+              <div className="rtl flex flex-wrap items-center justify-end">
                 {props.providerOptions?.map((option, i) => {
-                  const info = PROVIDER_INFO[option];
+                  const info = providers[option];
                   if (!info) {
                     return null;
                   }
                   return (
-                    <HeaderButtonWithText
+                    <HeaderButtonWithToolTip
                       text={info.title}
-                      className="p-2 text-center mx-1 items-center"
+                      className="mx-1 items-center p-2 text-center"
                       style={{
                         backgroundColor:
                           (i === 0 &&
@@ -239,7 +241,7 @@ function ModelCard(props: ModelCardProps) {
                           height="24px"
                         />
                       )}
-                    </HeaderButtonWithText>
+                    </HeaderButtonWithToolTip>
                   );
                 })}
               </div>

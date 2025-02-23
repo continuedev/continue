@@ -2,20 +2,21 @@ import {
   ArrowRightIcon,
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
-  BeakerIcon,
+  Bars3BottomLeftIcon,
+  BoltIcon,
   BookOpenIcon,
-  ChevronDoubleRightIcon,
+  BugAntIcon,
+  CircleStackIcon,
   CodeBracketIcon,
-  Cog6ToothIcon,
   CommandLineIcon,
-  ExclamationCircleIcon,
+  CpuChipIcon,
+  DocumentTextIcon,
   ExclamationTriangleIcon,
   FolderIcon,
   FolderOpenIcon,
   GlobeAltIcon,
-  HashtagIcon,
   MagnifyingGlassIcon,
-  PaintBrushIcon,
+  PaperClipIcon,
   PlusIcon,
   SparklesIcon,
   TrashIcon,
@@ -23,6 +24,7 @@ import {
 import { Editor } from "@tiptap/react";
 import {
   forwardRef,
+  useContext,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -38,13 +40,17 @@ import {
   vscListActiveForeground,
   vscQuickInputBackground,
 } from "..";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import FileIcon from "../FileIcon";
+import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
-import { ComboBoxItem } from "./types";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { DiscordIcon } from "../svg/DiscordIcon";
+import { GithubIcon } from "../svg/GithubIcon";
+import { GitlabIcon } from "../svg/GitlabIcon";
+import { GoogleIcon } from "../svg/GoogleIcon";
+import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -58,18 +64,33 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   problems: ExclamationTriangleIcon,
   folder: FolderIcon,
   docs: BookOpenIcon,
-  issue: ExclamationCircleIcon,
-  "/edit": PaintBrushIcon,
+  web: GlobeAltIcon,
+  clipboard: PaperClipIcon,
+  database: CircleStackIcon,
+  postgres: CircleStackIcon,
+  debugger: BugAntIcon,
+  os: CpuChipIcon,
+  tree: Bars3BottomLeftIcon,
+  "prompt-files": DocumentTextIcon,
+  "repo-map": FolderIcon,
   "/clear": TrashIcon,
-  "/test": BeakerIcon,
-  "/config": Cog6ToothIcon,
-  "/comment": HashtagIcon,
   "/share": ArrowUpOnSquareIcon,
   "/cmd": CommandLineIcon,
-  "/codebase": SparklesIcon,
-  "/so": GlobeAltIcon,
-  "/issue": ExclamationCircleIcon,
+  issue: GithubIcon,
+  discord: DiscordIcon,
+  google: GoogleIcon,
+  "gitlab-mr": GitlabIcon,
+  http: GlobeAltIcon,
+  trash: TrashIcon,
 };
+
+export function getIconFromDropdownItem(
+  id: string | undefined,
+  type: ComboBoxItemType,
+) {
+  const typeIcon = type === "contextProvider" ? AtSymbolIcon : BoltIcon;
+  return id ? (ICONS_FOR_DROPDOWN[id] ?? typeIcon) : typeIcon;
+}
 
 function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
   if (props.item.type === "action") {
@@ -79,26 +100,33 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
   }
 
   const provider =
-    props.item.type === "contextProvider"
-      ? props.item.id
-      : props.item.type === "slashCommand"
+    props.item.type === "contextProvider" || props.item.type === "slashCommand"
       ? props.item.id
       : props.item.type;
 
-  const Icon = ICONS_FOR_DROPDOWN[provider];
-  const iconClass = `${props.className} flex-shrink-0`;
-  if (!Icon) {
-    return props.item.type === "contextProvider" ? (
-      <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
-    ) : (
-      <ChevronDoubleRightIcon
-        className={iconClass}
-        height="1.2em"
-        width="1.2em"
-      />
-    );
+  const IconComponent = getIconFromDropdownItem(provider, props.item.type);
+
+  const fallbackIcon = (
+    <IconComponent
+      className={`${props.className} flex-shrink-0`}
+      height="1.2em"
+      width="1.2em"
+    />
+  );
+
+  if (!props.item.icon) {
+    return fallbackIcon;
   }
-  return <Icon className={iconClass} height="1.2em" width="1.2em" />;
+
+  return (
+    <SafeImg
+      className="flex-shrink-0 pr-2"
+      src={props.item.icon}
+      height="18em"
+      width="18em"
+      fallback={fallbackIcon}
+    />
+  );
 }
 
 const ItemsDiv = styled.div`
@@ -107,9 +135,11 @@ const ItemsDiv = styled.div`
     0 0 0 1px rgba(0, 0, 0, 0.05),
     0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 330px;
   padding: 0.2rem;
-  position: relative;
+  position: relative; // absolute to test tippy.js bug
 
   background-color: ${vscQuickInputBackground};
   /* backdrop-filter: blur(12px); */
@@ -125,7 +155,6 @@ const ItemDiv = styled.div`
   text-align: left;
   width: 100%;
   color: ${vscForeground};
-  cursor: pointer;
 
   &.is-selected {
     background-color: ${vscListActiveBackground};
@@ -157,10 +186,13 @@ interface MentionListProps {
 
   editor: Editor;
   enterSubmenu?: (editor: Editor, providerId: string) => void;
+  onClose: () => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
   const dispatch = useDispatch();
+
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -168,6 +200,9 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     undefined,
   );
   const [querySubmenuItem, setQuerySubmenuItem] = useState<
+    ComboBoxItem | undefined
+  >(undefined);
+  const [loadingSubmenuItem, setLoadingSubmenuItem] = useState<
     ComboBoxItem | undefined
   >(undefined);
 
@@ -193,8 +228,27 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
         },
         description: "Add a new documentation source",
       });
+    } else if (subMenuTitle === ".prompt files") {
+      items.push({
+        title: "New .prompt file",
+        type: "action",
+        action: () => {
+          ideMessenger.post("config/newPromptFile", undefined);
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          if (start !== -1) {
+            props.editor.view.dispatch(
+              tr.delete(start, tr.selection.from).scrollIntoView(),
+            );
+          }
+          props.onClose(); // Escape the mention list after creating a new prompt file
+        },
+        description: "Create a new .prompt file",
+      });
     }
-    setAllItems(items);
+    setLoadingSubmenuItem(items.find((item) => item.id === "loading"));
+    setAllItems(items.filter((item) => item.id !== "loading"));
   }, [subMenuTitle, props.items, props.editor]);
 
   const queryInputRef = useRef<HTMLTextAreaElement>(null);
@@ -203,9 +257,9 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     if (queryInputRef.current) {
       queryInputRef.current.focus();
     }
-  }, [querySubmenuItem]);
+  }, [querySubmenuItem, queryInputRef]);
 
-  const selectItem = (index) => {
+  const selectItem = (index: number) => {
     const item = allItems[index];
 
     if (item.type === "action" && item.action) {
@@ -218,11 +272,22 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       item.contextProvider?.type === "submenu"
     ) {
       setSubMenuTitle(item.description);
-      props.enterSubmenu(props.editor, item.id);
+      if (item.id) {
+        props.enterSubmenu?.(props.editor, item.id);
+      }
       return;
     }
 
     if (item.contextProvider?.type === "query") {
+      // update editor to complete context provider title
+      const { tr } = props.editor.view.state;
+      const text = tr.doc.textBetween(0, tr.selection.from);
+      const partialText = text.slice(text.lastIndexOf("@") + 1);
+      const remainingText = item.title.slice(partialText.length);
+      props.editor.view.dispatch(
+        tr.insertText(remainingText, tr.selection.from),
+      );
+
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;
@@ -233,12 +298,30 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
   };
 
+  const totalItems = allItems.length;
+
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
   const upHandler = () => {
-    setSelectedIndex((selectedIndex + allItems.length - 1) % allItems.length);
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
   };
 
   const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % allItems.length);
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
   };
 
   const enterHandler = () => {
@@ -248,7 +331,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   useEffect(() => setSelectedIndex(0), [allItems]);
 
   useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }) => {
+    onKeyDown: ({ event }: { event: KeyboardEvent }) => {
       if (event.key === "ArrowUp") {
         upHandler();
         return true;
@@ -287,14 +370,24 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     return ["file", "code"].includes(item.type);
   };
 
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, allItems.length);
+  }, [allItems]);
+
   return (
     <ItemsDiv>
       {querySubmenuItem ? (
         <QueryInput
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
           rows={1}
           ref={queryInputRef}
           placeholder={querySubmenuItem.description}
           onKeyDown={(e) => {
+            if (!queryInputRef.current) {
+              return;
+            }
             if (e.key === "Enter") {
               if (e.shiftKey) {
                 queryInputRef.current.innerText += "\n";
@@ -315,60 +408,105 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       ) : (
         <>
           {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
-          {allItems.length ? (
-            allItems.map((item, index) => (
-              <ItemDiv
-                as="button"
-                className={`item ${
-                  index === selectedIndex ? "is-selected" : ""
-                }`}
-                key={index}
-                onClick={() => selectItem(index)}
-                onMouseEnter={() => setSelectedIndex(index)}
-              >
-                <span className="flex justify-between w-full items-center">
-                  <div className="flex items-center justify-center">
-                    {showFileIconForItem(item) && (
-                      <FileIcon
-                        height="20px"
-                        width="20px"
-                        filename={item.description}
-                      ></FileIcon>
-                    )}
-                    {!showFileIconForItem(item) && (
-                      <>
-                        <DropdownIcon item={item} className="mr-2" />
-                      </>
-                    )}
-                    {item.title}
-                    {"  "}
-                  </div>
-                  <span
-                    style={{
-                      color: vscListActiveForeground,
-                      float: "right",
-                      textAlign: "right",
-                      opacity: index !== selectedIndex ? 0 : 1,
-                      minWidth: "30px",
-                    }}
-                    className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
-                  >
-                    {item.description}
-                    {item.type === "contextProvider" &&
-                      item.contextProvider?.type === "submenu" && (
-                        <ArrowRightIcon
-                          className="ml-2 flex-shrink-0"
-                          width="1.2em"
-                          height="1.2em"
-                        />
-                      )}
-                  </span>
+          {loadingSubmenuItem && (
+            <ItemDiv>
+              <span className="flex w-full items-center justify-between">
+                <div className="flex items-center justify-center">
+                  <DropdownIcon item={loadingSubmenuItem} className="mr-2" />
+                  <span>{loadingSubmenuItem.title}</span>
+                  {"  "}
+                </div>
+                <span
+                  style={{
+                    color: lightGray,
+                    float: "right",
+                    textAlign: "right",
+                    minWidth: "30px",
+                  }}
+                  className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap text-xs"
+                >
+                  {loadingSubmenuItem.description}
                 </span>
-              </ItemDiv>
-            ))
+              </span>
+            </ItemDiv>
+          )}
+          {allItems.length ? (
+            allItems.map((item, index) => {
+              const isSelected = index === selectedIndex;
+              return (
+                <ItemDiv
+                  as="button"
+                  ref={(el) => (itemRefs.current[index] = el)}
+                  className={`item cursor-pointer ${isSelected ? "is-selected" : ""}`}
+                  key={index}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectItem(index);
+                  }}
+                  onMouseEnter={() => setSelectedIndex(index)}
+                  data-testid="context-provider-dropdown-item"
+                >
+                  <span className="flex w-full items-center justify-between">
+                    <div className="flex items-center justify-center">
+                      {showFileIconForItem(item) ? (
+                        <FileIcon
+                          height="20px"
+                          width="20px"
+                          filename={item.description}
+                        />
+                      ) : (
+                        <DropdownIcon item={item} className="mr-2" />
+                      )}
+                      <span title={item.id}>{item.title}</span>
+                      {"  "}
+                    </div>
+                    <span
+                      style={{
+                        color: lightGray,
+                        float: "right",
+                        textAlign: "right",
+                        opacity: isSelected ? 1 : 0,
+                        minWidth: "30px",
+                      }}
+                      className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap text-xs"
+                    >
+                      {item.description}
+                      {item.type === "contextProvider" &&
+                        item.contextProvider?.type === "submenu" && (
+                          <ArrowRightIcon
+                            className="ml-2 flex-shrink-0"
+                            width="1.2em"
+                            height="1.2em"
+                          />
+                        )}
+                      {item.subActions?.map((subAction) => {
+                        const Icon = getIconFromDropdownItem(
+                          subAction.icon,
+                          "action",
+                        );
+                        return (
+                          <HeaderButtonWithToolTip
+                            onClick={(e) => {
+                              subAction.action(item);
+                              e.stopPropagation();
+                              e.preventDefault();
+                              props.onClose();
+                            }}
+                            text={undefined}
+                          >
+                            <Icon width="1.2em" height="1.2em" />
+                          </HeaderButtonWithToolTip>
+                        );
+                      })}
+                    </span>
+                  </span>
+                </ItemDiv>
+              );
+            })
           ) : (
             <ItemDiv className="item">No results</ItemDiv>
           )}
+          {/* </CustomScrollbarDiv> */}
         </>
       )}
     </ItemsDiv>

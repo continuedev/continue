@@ -1,5 +1,12 @@
+import { execSync } from "child_process";
 import * as fs from "fs";
+import os from "os";
 import path from "path";
+
+import { fetchwithRequestOptions } from "@continuedev/fetch";
+import * as JSONC from "comment-json";
+import * as tar from "tar";
+
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -10,39 +17,69 @@ import {
   CustomLLM,
   EmbeddingsProviderDescription,
   IContextProvider,
+  IDE,
+  IdeSettings,
   IdeType,
+  ILLM,
+  LLMOptions,
   ModelDescription,
+  RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
-} from "../commands";
-import { contextProviderClassFromName } from "../context/providers";
+} from "../commands/index.js";
+import { AllRerankers } from "../context/allRerankers";
+import { MCPManagerSingleton } from "../context/mcp";
+import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
-import { AllEmbeddingsProviders } from "../indexing/embeddings";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { contextProviderClassFromName } from "../context/providers/index";
+import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
+import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
+import FreeTrial from "../llm/llms/FreeTrial";
+import { LLMReranker } from "../llm/llms/llm";
+import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
+import { slashCommandFromPromptFileV1 } from "../promptFiles/v1/slashCommandFromPromptFile";
+import { getAllPromptFiles } from "../promptFiles/v2/getPromptFiles";
+import { allTools } from "../tools";
 import { copyOf } from "../util";
+import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
 import {
-  getConfigJsPath,
-  getConfigJsPathForRemote,
+  DEFAULT_CONFIG_TS_CONTENTS,
   getConfigJsonPath,
   getConfigJsonPathForRemote,
+  getConfigJsPath,
+  getConfigJsPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  migrate,
+  getEsbuildBinaryPath,
 } from "../util/paths";
-const { execSync } = require("child_process");
 
-function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
+import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { useHub } from "../control-plane/env";
+import { localPathToUri } from "../util/pathToUri";
+import {
+  defaultContextProvidersJetBrains,
+  defaultContextProvidersVsCode,
+  defaultSlashCommandsJetBrains,
+  defaultSlashCommandsVscode,
+} from "./default";
+import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
+import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
+import { validateConfig } from "./validation.js";
+
+export function resolveSerializedConfig(
+  filepath: string,
+): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
-  let config = JSON.parse(content) as SerializedContinueConfig;
+  const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
     const env = {
       ...process.env,
@@ -51,7 +88,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
 
     config.env.forEach((envVar) => {
       if (envVar in env) {
-        content = content.replaceAll(
+        content = (content as any).replaceAll(
           new RegExp(`"${envVar}"`, "g"),
           `"${env[envVar]}"`,
         );
@@ -59,7 +96,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
     });
   }
 
-  return JSON.parse(content);
+  return JSONC.parse(content) as unknown as SerializedContinueConfig;
 }
 
 const configMergeKeys = {
@@ -71,53 +108,38 @@ const configMergeKeys = {
 
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
+  ideSettings: IdeSettings,
   ideType: IdeType,
-): SerializedContinueConfig {
-  const configPath = getConfigJsonPath(ideType);
-  let config: SerializedContinueConfig;
-  try {
-    config = resolveSerializedConfig(configPath);
-  } catch (e) {
-    throw new Error(`Failed to parse config.json: ${e}`);
+  overrideConfigJson: SerializedContinueConfig | undefined,
+  ide: IDE,
+): ConfigResult<SerializedContinueConfig> {
+  let config: SerializedContinueConfig = overrideConfigJson!;
+  if (!config) {
+    try {
+      config = resolveSerializedConfig(getConfigJsonPath(ideType));
+    } catch (e) {
+      throw new Error(`Failed to parse config.json: ${e}`);
+    }
+  }
+
+  const errors = validateConfig(config);
+
+  if (errors?.some((error) => error.fatal)) {
+    return {
+      errors,
+      config: undefined,
+      configLoadInterrupted: true,
+    };
   }
 
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
   }
 
-  migrate("codeContextProvider", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "code")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "code",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  migrate("docsContextProvider1", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "docs")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "docs",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  if (remoteConfigServerUrl) {
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
-        getConfigJsonPathForRemote(remoteConfigServerUrl),
+        getConfigJsonPathForRemote(ideSettings.remoteConfigServerUrl),
       );
       config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
     } catch (e) {
@@ -134,12 +156,29 @@ function loadSerializedConfig(
     );
   }
 
-  return config;
+  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
+  config.contextProviders ??=
+    ideType === "vscode"
+      ? [...defaultContextProvidersVsCode]
+      : [...defaultContextProvidersJetBrains];
+  config.slashCommands ??=
+    ideType === "vscode"
+      ? [...defaultSlashCommandsVscode]
+      : [...defaultSlashCommandsJetBrains];
+
+  // Temporarily disabling this check until we can verify the commands are accuarate
+  // if (!isSupportedLanceDbCpuTarget(ide)) {
+  //   config.disableIndexing = true;
+  // }
+
+  return { config, errors, configLoadInterrupted: false };
 }
 
-function serializedToIntermediateConfig(
+async function serializedToIntermediateConfig(
   initial: SerializedContinueConfig,
-): Config {
+  ide: IDE,
+): Promise<Config> {
+  // DEPRECATED - load custom slash commands
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = slashCommandFromDescription(command);
@@ -149,6 +188,21 @@ function serializedToIntermediateConfig(
   }
   for (const command of initial.customCommands || []) {
     slashCommands.push(slashFromCustomCommand(command));
+  }
+
+  // DEPRECATED - load slash commands from v1 prompt files
+  // NOTE: still checking the v1 default .prompts folder for slash commands
+  const promptFiles = await getAllPromptFiles(
+    ide,
+    initial.experimental?.promptPath,
+    true,
+  );
+
+  for (const file of promptFiles) {
+    const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
+    if (slashCommand) {
+      slashCommands.push(slashCommand);
+    }
   }
 
   const config: Config = {
@@ -166,27 +220,48 @@ function isModelDescription(
   return (llm as ModelDescription).title !== undefined;
 }
 
-function isContextProviderWithParams(
+export function isContextProviderWithParams(
   contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
 
+const getCodebaseProvider = async (params: any) => {
+  const { default: CodebaseContextProvider } = await import(
+    "../context/providers/CodebaseContextProvider"
+  );
+  return new CodebaseContextProvider(params);
+};
+
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
   config: Config,
-  readFile: (filepath: string) => Promise<string>,
-): Promise<ContinueConfig> {
-  const models: BaseLLM[] = [];
+  ide: IDE,
+  ideSettings: IdeSettings,
+  uniqueId: string,
+  writeLog: (log: string) => Promise<void>,
+  workOsAccessToken: string | undefined,
+  loadPromptFiles: boolean = true,
+  allowFreeTrial: boolean = true,
+): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+  const errors: ConfigValidationError[] = [];
+
+  // Auto-detect models
+  let models: BaseLLM[] = [];
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
         desc,
-        readFile,
+        ide.readFile.bind(ide),
+        uniqueId,
+        ideSettings,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
-      if (!llm) continue;
+      if (!llm) {
+        continue;
+      }
 
       if (llm.model === "AUTODETECT") {
         try {
@@ -197,9 +272,12 @@ async function intermediateToFinalConfig(
                 {
                   ...desc,
                   model: modelName,
-                  title: llm.title + " - " + modelName,
+                  title: `${llm.title} - ${modelName}`,
                 },
-                readFile,
+                ide.readFile.bind(ide),
+                uniqueId,
+                ideSettings,
+                writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
               );
@@ -217,7 +295,10 @@ async function intermediateToFinalConfig(
         models.push(llm);
       }
     } else {
-      const llm = new CustomLLMClass(desc);
+      const llm = new CustomLLMClass({
+        ...desc,
+        options: { ...desc.options, writeLog } as any,
+      });
       if (llm.model === "AUTODETECT") {
         try {
           const modelNames = await llm.listModels();
@@ -225,7 +306,7 @@ async function intermediateToFinalConfig(
             (modelName) =>
               new CustomLLMClass({
                 ...desc,
-                options: { ...desc.options, model: modelName },
+                options: { ...desc.options, model: modelName, writeLog },
               }),
           );
 
@@ -239,59 +320,231 @@ async function intermediateToFinalConfig(
     }
   }
 
-  let autocompleteLlm: BaseLLM | undefined = undefined;
-  if (config.tabAutocompleteModel) {
-    if (isModelDescription(config.tabAutocompleteModel)) {
-      autocompleteLlm = await llmFromDescription(
-        config.tabAutocompleteModel,
-        readFile,
-        config.completionOptions,
-        config.systemMessage,
-      );
-    } else {
-      autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
-    }
+  // Prepare models
+  for (const model of models) {
+    model.requestOptions = {
+      ...model.requestOptions,
+      ...config.requestOptions,
+    };
+    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
   }
 
-  const contextProviders: IContextProvider[] = [new FileContextProvider({})];
+  if (allowFreeTrial) {
+    // Obtain auth token (iff free trial being used)
+    const freeTrialModels = models.filter(
+      (model) => model.providerName === "free-trial",
+    );
+    if (freeTrialModels.length > 0) {
+      const ghAuthToken = await ide.getGitHubAuthToken({});
+      for (const model of freeTrialModels) {
+        (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+      }
+    }
+  } else {
+    // Remove free trial models
+    models = models.filter((model) => model.providerName !== "free-trial");
+  }
+
+  // Tab autocomplete model
+  let tabAutocompleteModels: BaseLLM[] = [];
+  if (config.tabAutocompleteModel) {
+    tabAutocompleteModels = (
+      await Promise.all(
+        (Array.isArray(config.tabAutocompleteModel)
+          ? config.tabAutocompleteModel
+          : [config.tabAutocompleteModel]
+        ).map(async (desc) => {
+          if (isModelDescription(desc)) {
+            const llm = await llmFromDescription(
+              desc,
+              ide.readFile.bind(ide),
+              uniqueId,
+              ideSettings,
+              writeLog,
+              config.completionOptions,
+              config.systemMessage,
+            );
+
+            if (llm?.providerName === "free-trial") {
+              if (!allowFreeTrial) {
+                // This shouldn't happen
+                throw new Error("Free trial cannot be used with control plane");
+              }
+              const ghAuthToken = await ide.getGitHubAuthToken({});
+              (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
+            }
+            return llm;
+          } else {
+            return new CustomLLMClass(desc);
+          }
+        }),
+      )
+    ).filter((x) => x !== undefined) as BaseLLM[];
+  }
+
+  // These context providers are always included, regardless of what, if anything,
+  // the user has configured in config.json
+
+  const codebaseContextParams =
+    (
+      (config.contextProviders || [])
+        .filter(isContextProviderWithParams)
+        .find((cp) => cp.name === "codebase") as
+        | ContextProviderWithParams
+        | undefined
+    )?.params || {};
+
+  const DEFAULT_CONTEXT_PROVIDERS = [
+    new FileContextProvider({}),
+    // Add codebase provider if indexing is enabled
+    ...(!config.disableIndexing
+      ? [await getCodebaseProvider(codebaseContextParams)]
+      : []),
+    // Add prompt files provider if enabled
+    ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
+  ];
+
+  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
+    ({ description: { title } }) => title,
+  );
+
+  // Context providers
+  const contextProviders: IContextProvider[] = DEFAULT_CONTEXT_PROVIDERS;
+
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
       const cls = contextProviderClassFromName(provider.name) as any;
       if (!cls) {
-        console.warn(`Unknown context provider ${provider.name}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(provider.name)) {
+          console.warn(`Unknown context provider ${provider.name}`);
+        }
+
         continue;
       }
-      contextProviders.push(new cls(provider.params));
+      const instance: IContextProvider = new cls(provider.params);
+
+      // Handle continue-proxy
+      if (instance.description.title === "continue-proxy") {
+        (instance as ContinueProxyContextProvider).workOsAccessToken =
+          workOsAccessToken;
+      }
+
+      contextProviders.push(instance);
     } else {
       contextProviders.push(new CustomContextProviderClass(provider));
     }
   }
 
-  if (
-    (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
-      ?.provider
-  ) {
-    const { provider, ...options } =
-      config.embeddingsProvider as EmbeddingsProviderDescription;
-    config.embeddingsProvider = new AllEmbeddingsProviders[provider](options);
+  // Embeddings Provider
+  const embeddingsProviderDescription = config.embeddingsProvider as
+    | EmbeddingsProviderDescription
+    | undefined;
+  if (embeddingsProviderDescription?.provider) {
+    const { provider, ...options } = embeddingsProviderDescription;
+    const embeddingsProviderClass = allEmbeddingsProviders[provider];
+    if (embeddingsProviderClass) {
+      if (
+        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
+      ) {
+        config.embeddingsProvider = new embeddingsProviderClass();
+      } else {
+        const llmOptions: LLMOptions = {
+          model: options.model ?? "UNSPECIFIED",
+          ...options,
+        };
+        config.embeddingsProvider = new embeddingsProviderClass(
+          llmOptions,
+          (url: string | URL, init: any) =>
+            fetchwithRequestOptions(url, init, {
+              ...config.requestOptions,
+              ...options.requestOptions,
+            }),
+        );
+      }
+    }
   }
 
   if (!config.embeddingsProvider) {
     config.embeddingsProvider = new TransformersJsEmbeddingsProvider();
   }
 
-  return {
+  // Reranker
+  if (config.reranker && !(config.reranker as ILLM | undefined)?.rerank) {
+    const { name, params } = config.reranker as RerankerDescription;
+    const rerankerClass = AllRerankers[name];
+
+    if (name === "llm") {
+      const llm = models.find((model) => model.title === params?.modelTitle);
+      if (!llm) {
+        console.warn(`Unknown model ${params?.modelTitle}`);
+      } else {
+        config.reranker = new LLMReranker(llm);
+      }
+    } else if (rerankerClass) {
+      const llmOptions: LLMOptions = {
+        model: "rerank-2",
+        ...params,
+      };
+      config.reranker = new rerankerClass(llmOptions);
+    }
+  }
+
+  let continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
     models,
     embeddingsProvider: config.embeddingsProvider as any,
-    tabAutocompleteModel: autocompleteLlm,
+    tabAutocompleteModels,
+    reranker: config.reranker as any,
+    tools: allTools,
   };
+
+  // Apply MCP if specified
+  const mcpManager = MCPManagerSingleton.getInstance();
+  if (config.experimental?.modelContextProtocolServers) {
+    await Promise.all(
+      config.experimental.modelContextProtocolServers?.map(
+        async (server, index) => {
+          const mcpId = index.toString();
+          const mcpConnection = mcpManager.createConnection(mcpId, server);
+          if (!mcpConnection) {
+            return;
+          }
+
+          const abortController = new AbortController();
+
+          try {
+            const mcpError = await mcpConnection.modifyConfig(
+              continueConfig,
+              mcpId,
+              abortController.signal,
+              "MCP Server",
+              server.faviconUrl,
+            );
+            if (mcpError) {
+              errors.push(mcpError);
+            }
+          } catch (e: any) {
+            errors.push({
+              fatal: false,
+              message: `Failed to load MCP server: ${e.message}`,
+            });
+            if (e.name !== "AbortError") {
+              throw e;
+            }
+          }
+        },
+      ) || [],
+    );
+  }
+
+  return { config: continueConfig, errors };
 }
 
-function finalToBrowserConfig(
+async function finalToBrowserConfig(
   final: ContinueConfig,
-): BrowserSerializedContinueConfig {
+  ide: IDE,
+): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     models: final.models.map((m) => ({
@@ -305,121 +558,281 @@ function finalToBrowserConfig(
       completionOptions: m.completionOptions,
       systemMessage: m.systemMessage,
       requestOptions: m.requestOptions,
-      promptTemplates: m.promptTemplates,
+      promptTemplates: m.promptTemplates as any,
+      capabilities: m.capabilities,
+      roles: m.roles,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((m) => ({
-      name: m.name,
-      description: m.description,
-      options: m.params,
+    slashCommands: final.slashCommands?.map((s) => ({
+      name: s.name,
+      description: s.description,
+      params: s.params, //PZTODO: is this why params aren't referenced properly by slash commands?
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,
     userToken: final.userToken,
-    embeddingsProvider: final.embeddingsProvider?.id,
+    embeddingsProvider: final.embeddingsProvider?.embeddingId,
     ui: final.ui,
+    experimental: final.experimental,
+    docs: final.docs,
+    tools: final.tools,
+    tabAutocompleteOptions: final.tabAutocompleteOptions,
+    usePlatform: await useHub(ide.getIdeSettings()),
   };
-}
-
-function getTarget() {
-  const os =
-    {
-      aix: "linux",
-      darwin: "darwin",
-      freebsd: "linux",
-      linux: "linux",
-      openbsd: "linux",
-      sunos: "linux",
-      win32: "win32",
-    }[process.platform as string] ?? "linux";
-  const arch = {
-    arm: "arm64",
-    arm64: "arm64",
-    ia32: "x64",
-    loong64: "arm64",
-    mips: "arm64",
-    mipsel: "arm64",
-    ppc: "x64",
-    ppc64: "x64",
-    riscv64: "arm64",
-    s390: "x64",
-    s390x: "x64",
-    x64: "x64",
-  }[process.arch];
-
-  return `${os}-${arch}`;
 }
 
 function escapeSpacesInPath(p: string): string {
   return p.replace(/ /g, "\\ ");
 }
 
-async function buildConfigTs() {
-  if (!fs.existsSync(getConfigTsPath())) {
-    return undefined;
+async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
+  // JetBrains is currently the only IDE that we've reached the plugin size limit and
+  // therefore need to install esbuild manually to reduce the size
+  if (ideType !== "jetbrains") {
+    return;
   }
 
+  const globalContext = new GlobalContext();
+  if (globalContext.get("hasDismissedConfigTsNoticeJetBrains")) {
+    return;
+  }
+
+  const esbuildPath = getEsbuildBinaryPath();
+
+  if (fs.existsSync(esbuildPath)) {
+    return;
+  }
+
+  console.debug("No esbuild binary detected");
+
+  const shouldInstall = await promptEsbuildInstallation(ide);
+
+  if (shouldInstall) {
+    await downloadAndInstallEsbuild(ide);
+  }
+}
+
+async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
+  const installMsg = "Install esbuild";
+  const dismissMsg = "Dismiss";
+
+  const res = await ide.showToast(
+    "warning",
+    "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
+    dismissMsg,
+    installMsg,
+  );
+
+  if (res === dismissMsg) {
+    const globalContext = new GlobalContext();
+    globalContext.update("hasDismissedConfigTsNoticeJetBrains", true);
+    return false;
+  }
+
+  return res === installMsg;
+}
+
+/**
+ * The download logic is adapted from here: https://esbuild.github.io/getting-started/#download-a-build
+ */
+async function downloadAndInstallEsbuild(ide: IDE) {
+  const esbuildPath = getEsbuildBinaryPath();
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esbuild-"));
+
+  try {
+    const target = `${os.platform()}-${os.arch()}`;
+    const version = "0.19.11";
+    const url = `https://registry.npmjs.org/@esbuild/${target}/-/${target}-${version}.tgz`;
+    const tgzPath = path.join(tempDir, `esbuild-${version}.tgz`);
+
+    console.debug(`Downloading esbuild from: ${url}`);
+    execSync(`curl -fo "${tgzPath}" "${url}"`);
+
+    console.debug(`Extracting tgz file to: ${tempDir}`);
+    await tar.x({
+      file: tgzPath,
+      cwd: tempDir,
+      strip: 2, // Remove the top two levels of directories
+    });
+
+    // Ensure the destination directory exists
+    const destDir = path.dirname(esbuildPath);
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    // Move the file
+    const extractedBinaryPath = path.join(tempDir, "esbuild");
+    fs.renameSync(extractedBinaryPath, esbuildPath);
+
+    // Ensure the binary is executable (not needed on Windows)
+    if (os.platform() !== "win32") {
+      fs.chmodSync(esbuildPath, 0o755);
+    }
+
+    // Clean up
+    fs.unlinkSync(tgzPath);
+    fs.rmSync(tempDir, { recursive: true });
+
+    await ide.showToast(
+      "info",
+      `'esbuild' successfully installed to ${esbuildPath}`,
+    );
+  } catch (error) {
+    console.error("Error downloading or saving esbuild binary:", error);
+    throw error;
+  }
+}
+
+async function tryBuildConfigTs() {
   try {
     if (process.env.IS_BINARY === "true") {
-      execSync(
-        escapeSpacesInPath(path.dirname(process.execPath)) +
-          `/esbuild${
-            getTarget().startsWith("win32") ? ".exe" : ""
-          } ${escapeSpacesInPath(
-            getConfigTsPath(),
-          )} --bundle --outfile=${escapeSpacesInPath(
-            getConfigJsPath(),
-          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
-      );
+      await buildConfigTsWithBinary();
     } else {
-      // Dynamic import esbuild so potentially disastrous errors can be caught
-      const esbuild = require("esbuild");
-
-      await esbuild.build({
-        entryPoints: [getConfigTsPath()],
-        bundle: true,
-        platform: "node",
-        format: "cjs",
-        outfile: getConfigJsPath(),
-        external: ["fetch", "fs", "path", "os", "child_process"],
-        sourcemap: true,
-      });
+      await buildConfigTsWithNodeModule();
     }
   } catch (e) {
     console.log(
-      "Build error. Please check your ~/.continue/config.ts file: " + e,
+      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
     );
-    return undefined;
   }
-
-  if (!fs.existsSync(getConfigJsPath())) {
-    return undefined;
-  }
-  return fs.readFileSync(getConfigJsPath(), "utf8");
 }
 
-async function loadFullConfigNode(
-  readFile: (filepath: string) => Promise<string>,
-  workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
-  ideType: IdeType,
-): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(
-    workspaceConfigs,
-    remoteConfigServerUrl,
-    ideType,
-  );
-  let intermediate = serializedToIntermediateConfig(serialized);
+async function buildConfigTsWithBinary() {
+  const cmd = [
+    escapeSpacesInPath(getEsbuildBinaryPath()),
+    escapeSpacesInPath(getConfigTsPath()),
+    "--bundle",
+    `--outfile=${escapeSpacesInPath(getConfigJsPath())}`,
+    "--platform=node",
+    "--format=cjs",
+    "--sourcemap",
+    "--external:fetch",
+    "--external:fs",
+    "--external:path",
+    "--external:os",
+    "--external:child_process",
+  ].join(" ");
 
-  const configJsContents = await buildConfigTs();
+  execSync(cmd);
+}
+
+async function buildConfigTsWithNodeModule() {
+  const { build } = await import("esbuild");
+
+  await build({
+    entryPoints: [getConfigTsPath()],
+    bundle: true,
+    platform: "node",
+    format: "cjs",
+    outfile: getConfigJsPath(),
+    external: ["fetch", "fs", "path", "os", "child_process"],
+    sourcemap: true,
+  });
+}
+
+function readConfigJs(): string | undefined {
+  const configJsPath = getConfigJsPath();
+
+  if (!fs.existsSync(configJsPath)) {
+    return undefined;
+  }
+
+  return fs.readFileSync(configJsPath, "utf8");
+}
+
+async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
+  const configTsPath = getConfigTsPath();
+
+  if (!fs.existsSync(configTsPath)) {
+    return;
+  }
+
+  const currentContent = fs.readFileSync(configTsPath, "utf8");
+
+  // If the user hasn't modified the default config.ts, don't bother building
+  if (currentContent.trim() === DEFAULT_CONFIG_TS_CONTENTS.trim()) {
+    return;
+  }
+
+  await handleEsbuildInstallation(ide, ideType);
+  await tryBuildConfigTs();
+
+  return readConfigJs();
+}
+
+async function loadContinueConfigFromJson(
+  ide: IDE,
+  workspaceConfigs: ContinueRcJson[],
+  ideSettings: IdeSettings,
+  ideType: IdeType,
+  uniqueId: string,
+  writeLog: (log: string) => Promise<void>,
+  workOsAccessToken: string | undefined,
+  overrideConfigJson: SerializedContinueConfig | undefined,
+): Promise<ConfigResult<ContinueConfig>> {
+  // Serialized config
+  let {
+    config: serialized,
+    errors,
+    configLoadInterrupted,
+  } = loadSerializedConfig(
+    workspaceConfigs,
+    ideSettings,
+    ideType,
+    overrideConfigJson,
+    ide,
+  );
+
+  if (!serialized || configLoadInterrupted) {
+    return { errors, config: undefined, configLoadInterrupted: true };
+  }
+
+  const systemPromptDotFile = await getSystemPromptDotFile(ide);
+  if (systemPromptDotFile) {
+    serialized.systemMessage = systemPromptDotFile;
+  }
+
+  // Apply shared config
+  // TODO: override several of these values with user/org shared config
+  const sharedConfig = new GlobalContext().getSharedConfig();
+  const withShared = modifyContinueConfigWithSharedConfig(
+    serialized,
+    sharedConfig,
+  );
+
+  // Convert serialized to intermediate config
+  let intermediate = await serializedToIntermediateConfig(withShared, ide);
+
+  // Apply config.ts to modify intermediate config
+  const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
   if (configJsContents) {
     try {
       // Try config.ts first
       const configJsPath = getConfigJsPath();
-      const module = await require(configJsPath);
-      delete require.cache[require.resolve(configJsPath)];
+      let module: any;
+
+      try {
+        module = await import(configJsPath);
+      } catch (e) {
+        console.log(e);
+        console.log(
+          "Could not load config.ts as absolute path, retrying as file url ...",
+        );
+        try {
+          module = await import(localPathToUri(configJsPath));
+        } catch (e) {
+          throw new Error("Could not load config.ts as file url either", {
+            cause: e,
+          });
+        }
+      }
+
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPath)];
+      }
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }
@@ -429,14 +842,16 @@ async function loadFullConfigNode(
     }
   }
 
-  // Remote config.js
-  if (remoteConfigServerUrl) {
+  // Apply remote config.js to modify intermediate config
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const configJsPathForRemote = getConfigJsPathForRemote(
-        remoteConfigServerUrl,
+        ideSettings.remoteConfigServerUrl,
       );
-      const module = await require(configJsPathForRemote);
-      delete require.cache[require.resolve(configJsPathForRemote)];
+      const module = await import(configJsPathForRemote);
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPathForRemote)];
+      }
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }
@@ -446,14 +861,26 @@ async function loadFullConfigNode(
     }
   }
 
-  const finalConfig = await intermediateToFinalConfig(intermediate, readFile);
-  return finalConfig;
+  // Convert to final config format
+  const { config: finalConfig, errors: finalErrors } =
+    await intermediateToFinalConfig(
+      intermediate,
+      ide,
+      ideSettings,
+      uniqueId,
+      writeLog,
+      workOsAccessToken,
+    );
+  return {
+    config: finalConfig,
+    errors: [...(errors ?? []), ...finalErrors],
+    configLoadInterrupted: false,
+  };
 }
 
 export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
-  loadFullConfigNode,
-  serializedToIntermediateConfig,
+  loadContinueConfigFromJson,
   type BrowserSerializedContinueConfig,
 };

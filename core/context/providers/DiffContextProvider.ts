@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class DiffContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -17,11 +17,16 @@ class DiffContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const diff = await extras.ide.getDiff();
+    const diff = await extras.ide.getDiff(
+      this.options?.includeUnstaged ?? true,
+    );
     return [
       {
         description: "The current git diff",
-        content: `\`\`\`git diff\n${diff}\n\`\`\``,
+        content:
+          diff.length === 0
+            ? "Git shows no current changes."
+            : `\`\`\`git diff\n${diff.join("\n")}\n\`\`\``,
         name: "Git Diff",
       },
     ];

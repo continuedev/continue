@@ -36,9 +36,7 @@ const SubDiv = styled.div<{ selected: boolean }>`
     props.selected &&
     `
     background-color: ${vscListActiveBackground};
-    box-shadow: 0px 0px 8px 0px ${lightGray}88;
     color: ${vscListActiveForeground};
-  
   `}
 `;
 

@@ -1,12 +1,19 @@
-import { BaseContextProvider } from "..";
+import { BaseContextProvider } from "../";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../..";
-import { getBasename, getLastNPathParts } from "../../util";
+} from "../../";
+import { walkDirs } from "../../indexing/walkDir";
+import {
+  getUriPathBasename,
+  getShortestUniqueRelativeUriPaths,
+  getUriDescription,
+} from "../../util/uri";
+
+const MAX_SUBMENU_ITEMS = 10_000;
 
 class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -21,13 +28,23 @@ class FileContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     // Assume the query is a filepath
-    query = query.trim();
-    const content = await extras.ide.readFile(query);
+    const fileUri = query.trim();
+    const content = await extras.ide.readFile(fileUri);
+
+    const { relativePathOrBasename, last2Parts, baseName } = getUriDescription(
+      fileUri,
+      await extras.ide.getWorkspaceDirs(),
+    );
+
     return [
       {
-        name: query.split(/[\\/]/).pop() ?? query,
-        description: query,
-        content: `\`\`\`${query}\n${content}\n\`\`\``,
+        name: baseName,
+        description: last2Parts,
+        content: `\`\`\`${relativePathOrBasename}\n${content}\n\`\`\``,
+        uri: {
+          type: "file",
+          value: fileUri,
+        },
       },
     ];
   }
@@ -36,17 +53,18 @@ class FileContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const workspaceDirs = await args.ide.getWorkspaceDirs();
-    const results = await Promise.all(
-      workspaceDirs.map((dir) => {
-        return args.ide.listWorkspaceContents(dir);
-      }),
+    const results = await walkDirs(args.ide, undefined, workspaceDirs);
+    const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
+    const withUniquePaths = getShortestUniqueRelativeUriPaths(
+      files,
+      workspaceDirs,
     );
-    const files = results.flat();
-    return files.map((file) => {
+
+    return withUniquePaths.map((file) => {
       return {
-        id: file,
-        title: getBasename(file),
-        description: getLastNPathParts(file, 2),
+        id: file.uri,
+        title: getUriPathBasename(file.uri),
+        description: file.uniquePath,
       };
     });
   }

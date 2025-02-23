@@ -1,9 +1,10 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
-import { Chunk } from "../..";
-import { MAX_CHUNK_SIZE } from "../../llm/constants";
-import { cleanFragment, cleanHeader } from "../chunk/markdown";
-import { PageData } from "./crawl";
+
+import { Chunk } from "../../";
+import { cleanFragment, cleanHeader, markdownChunker } from "../chunk/markdown";
+
+import { type PageData } from "./crawlers/DocsCrawler";
 
 export type ArticleComponent = {
   title: string;
@@ -17,137 +18,197 @@ export type Article = {
   article_components: ArticleComponent[];
 };
 
+export type ArticleWithChunks = {
+  article: Article;
+  chunks: Chunk[];
+};
+
 function breakdownArticleComponent(
   url: string,
   article: ArticleComponent,
   subpath: string,
+  max_chunk_size: number,
 ): Chunk[] {
-  let chunks: Chunk[] = [];
-
-  let lines = article.body.split("\n");
+  const chunks: Chunk[] = [];
+  const lines = article.body.split("\n");
   let startLine = 0;
   let endLine = 0;
   let content = "";
   let index = 0;
 
+  const fullUrl = new URL(
+    `${subpath}#${cleanFragment(article.title)}`,
+    url,
+  ).toString();
+
+  const createChunk = (
+    chunkContent: string,
+    chunkStartLine: number,
+    chunkEndLine: number,
+  ) => {
+    chunks.push({
+      content: chunkContent.trim(),
+      startLine: chunkStartLine,
+      endLine: chunkEndLine,
+      otherMetadata: {
+        title: cleanHeader(article.title),
+      },
+      index: index++,
+      filepath: fullUrl,
+      digest: fullUrl,
+    });
+  };
+
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-    if (content.length + line.length <= MAX_CHUNK_SIZE) {
-      content += line + "\n";
+    const line = lines[i];
+
+    // Handle oversized lines by splitting them
+    if (line.length > max_chunk_size) {
+      // First push any accumulated content
+      if (content.trim().length > 0) {
+        createChunk(content, startLine, endLine);
+        content = "";
+      }
+
+      // Split the long line into chunks
+      let remainingLine = line;
+      let subLineStart = i;
+      while (remainingLine.length > 0) {
+        const chunk = remainingLine.slice(0, max_chunk_size);
+        createChunk(chunk, subLineStart, i);
+        remainingLine = remainingLine.slice(max_chunk_size);
+      }
+      startLine = i + 1;
+      continue;
+    }
+
+    // Normal line handling
+    if (content.length + line.length + 1 <= max_chunk_size) {
+      content += `${line}\n`;
       endLine = i;
     } else {
-      chunks.push({
-        content: content.trim(),
-        startLine: startLine,
-        endLine: endLine,
-        otherMetadata: {
-          title: cleanHeader(article.title),
-        },
-        index: index,
-        filepath: new URL(
-          subpath + `#${cleanFragment(article.title)}`,
-          url,
-        ).toString(),
-        digest: subpath,
-      });
-      content = line + "\n";
+      if (content.trim().length > 0) {
+        createChunk(content, startLine, endLine);
+      }
+      content = `${line}\n`;
       startLine = i;
       endLine = i;
-      index += 1;
     }
   }
 
   // Push the last chunk
-  if (content) {
-    chunks.push({
-      content: content.trim(),
-      startLine: startLine,
-      endLine: endLine,
-      otherMetadata: {
-        title: cleanHeader(article.title),
-      },
-      index: index,
-      filepath: new URL(
-        subpath + `#${cleanFragment(article.title)}`,
-        url,
-      ).toString(),
-      digest: subpath,
-    });
+  if (content.trim().length > 0) {
+    createChunk(content, startLine, endLine);
   }
 
-  // Don't use small chunks. Probably they're a mistake. Definitely they'll confuse the embeddings model.
   return chunks.filter((c) => c.content.trim().length > 20);
 }
 
-export function chunkArticle(articleResult: Article): Chunk[] {
-  let chunks: Chunk[] = [];
+function chunkArticle(article: Article, maxChunkSize: number): Chunk[] {
+  const chunks: Chunk[] = [];
 
-  for (let article of articleResult.article_components) {
-    let articleChunks = breakdownArticleComponent(
-      articleResult.url,
-      article,
-      articleResult.subpath,
+  for (const component of article.article_components) {
+    const articleChunks = breakdownArticleComponent(
+      article.url,
+      component,
+      article.subpath,
+      maxChunkSize,
     );
-    chunks = [...chunks, ...articleChunks];
+    chunks.push(...articleChunks);
   }
 
   return chunks;
 }
 
-function extractTitlesAndBodies(html: string): ArticleComponent[] {
-  const dom = new JSDOM(html);
-  const document = dom.window.document;
-
-  const titles = Array.from(document.querySelectorAll("h2"));
-  const result = titles.map((titleElement) => {
-    const title = titleElement.textContent || "";
-    let body = "";
-    let nextSibling = titleElement.nextElementSibling;
-
-    while (nextSibling && nextSibling.tagName !== "H2") {
-      body += nextSibling.textContent || "";
-      nextSibling = nextSibling.nextElementSibling;
-    }
-
-    return { title, body };
-  });
-
-  return result;
-}
-
-export function stringToArticle(
-  url: string,
-  html: string,
-  subpath: string,
-): Article | undefined {
+export async function htmlPageToArticleWithChunks(
+  page: PageData,
+  maxChunkSize: number,
+): Promise<ArticleWithChunks | undefined> {
   try {
-    const dom = new JSDOM(html);
-    let reader = new Readability(dom.window.document);
-    let article = reader.parse();
+    const html = page.content;
+    const subpath = page.path;
+    const url = page.url;
 
-    if (!article) {
+    const dom = new JSDOM(html);
+    const reader = new Readability(dom.window.document);
+    const readability = reader.parse();
+
+    if (!readability) {
+      console.error("Docs indexing: Error getting readability for URL", url);
+
       return undefined;
     }
 
-    let article_components = extractTitlesAndBodies(article.content);
+    const title = readability.title || subpath;
 
-    return {
+    const titles = Array.from(dom.window.document.querySelectorAll("h2"));
+
+    const article_components =
+      titles.length > 0
+        ? titles.map((titleElement) => {
+            const title = titleElement.textContent || "";
+            let body = "";
+            let nextSibling = titleElement.nextElementSibling;
+
+            while (nextSibling && nextSibling.tagName !== "H2") {
+              body += nextSibling.textContent || "";
+              nextSibling = nextSibling.nextElementSibling;
+            }
+
+            return { title, body };
+          })
+        : [
+            {
+              title: title,
+              body: readability.textContent,
+            },
+          ];
+
+    const article = {
       url,
       subpath,
-      title: article.title,
+      title: title,
       article_components,
+    };
+    return {
+      article,
+      chunks: chunkArticle(article, maxChunkSize),
     };
   } catch (err) {
     console.error("Error converting URL to article components", err);
-    return undefined;
   }
 }
 
-export function pageToArticle(page: PageData): Article | undefined {
+export async function markdownPageToArticleWithChunks(
+  page: PageData,
+  maxChunkSize: number,
+): Promise<ArticleWithChunks | undefined> {
   try {
-    return stringToArticle(page.url, page.html, page.path);
+    let index = 0;
+    const chunks: Chunk[] = [];
+    const chunker = markdownChunker(page.content, maxChunkSize, 1);
+    for await (const chunk of chunker) {
+      const fullUrl = new URL(page.url);
+      fullUrl.hash = `#${cleanFragment(chunk.otherMetadata?.title)}`;
+
+      chunks.push({
+        ...chunk,
+        index,
+        filepath: fullUrl.toString(),
+        digest: fullUrl.toString(),
+      });
+      index++;
+    }
+    return {
+      article: {
+        url: page.url,
+        subpath: page.path,
+        article_components: [], // TODO: markdown chunker just skips this for now since not used outside, only for html chunker
+        title: chunks[0]?.otherMetadata?.title || page.path,
+      },
+      chunks,
+    };
   } catch (err) {
-    console.error("Error converting URL to article components", err);
-    return undefined;
+    console.error(`Docs indexing: failed to chunk markdown from ${page.url}`);
   }
 }

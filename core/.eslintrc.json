@@ -1,0 +1,12 @@
+{
+  "root": true,
+  "extends": ["../.eslintrc.shared.json"],
+  "parserOptions": {
+    "project": "./tsconfig.json"
+  },
+  "rules": {
+    "quotes": ["warn", "double", {}],
+    "@typescript-eslint/naming-convention": "off",
+    "@typescript-eslint/no-floating-promises": "warn"
+  }
+}
