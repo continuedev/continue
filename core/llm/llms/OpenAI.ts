@@ -52,17 +52,25 @@ const CHAT_ONLY_MODELS = [
   "o3-mini",
 ];
 
-const formatMessageForO1 = (messages: ChatCompletionMessageParam[]) => {
-  return messages?.map((message: any) => {
-    if (message?.role === "system") {
-      return {
-        ...message,
-        role: "user",
-      };
-    }
+const formatMessageForO1AndO3 = (messages: ChatCompletionMessageParam[]) => {
+  // Required for markdown formatting starting with o1-2024-12-17
+  const formattingMessage = {
+    role: "developer",
+    content: "Formatting re-enabled"
+  };
 
-    return message;
-  });
+  return [
+    formattingMessage,
+    ...messages?.map((message: any) => {
+      if (message?.role === "system") {
+        return {
+          ...message,
+          role: "user",
+        };
+      }
+      return message;
+    })
+  ];
 };
 
 class OpenAI extends BaseLLM {
@@ -152,7 +160,7 @@ class OpenAI extends BaseLLM {
       finalOptions.max_tokens = undefined;
 
       // b) don't support system message
-      finalOptions.messages = formatMessageForO1(finalOptions.messages);
+      finalOptions.messages = formatMessageForO1AndO3(finalOptions.messages);
     }
 
     if (options.model === "o1") {
@@ -254,7 +262,7 @@ class OpenAI extends BaseLLM {
       body.max_tokens = undefined;
 
       // b) don't support system message
-      body.messages = formatMessageForO1(body.messages);
+      body.messages = formatMessageForO1AndO3(body.messages);
     }
 
     if (body.model === "o1") {
