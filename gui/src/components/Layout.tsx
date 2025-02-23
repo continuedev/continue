@@ -294,9 +294,7 @@ const Layout = () => {
                 onClick={() => navigate(ROUTES.CONFIG_ERROR)}
               >
                 <strong className="font-bold">Error!</strong>{" "}
-                <span className="block sm:inline">
-                  Could not load config.json
-                </span>
+                <span className="block sm:inline">Could not load config</span>
                 <div className="mt-2 underline">Learn More</div>
               </div>
             )}

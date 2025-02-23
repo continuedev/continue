@@ -14,8 +14,8 @@ import {
   ContinueConfig,
   IContextProvider,
   IDE,
+  IdeInfo,
   IdeSettings,
-  IdeType,
   SlashCommand,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
@@ -37,7 +37,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
-import { modifyContinueConfigWithSharedConfig } from "../sharedConfig";
+import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { llmsFromModelConfig } from "./models";
 
@@ -98,6 +98,7 @@ async function configYamlToContinueConfig(
   config: AssistantUnrolled,
   ide: IDE,
   ideSettings: IdeSettings,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -111,10 +112,8 @@ async function configYamlToContinueConfig(
       ...(config.prompts?.map(slashFromCustomCommand) ?? []),
     ],
     models: [],
-    tabAutocompleteModels: [],
     tools: allTools,
     systemMessage: config.rules?.join("\n"),
-    embeddingsProvider: new TransformersJsEmbeddingsProvider(),
     experimental: {
       modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
         transport: {
@@ -132,57 +131,123 @@ async function configYamlToContinueConfig(
       faviconUrl: doc.faviconUrl,
     })),
     contextProviders: [],
+    modelsByRole: {
+      chat: [],
+      edit: [],
+      apply: [],
+      embed: [],
+      autocomplete: [],
+      rerank: [],
+      summarize: [],
+    },
+    selectedModelByRole: {
+      chat: null, // not currently used - defaultModel on GUI is used
+      edit: null, // not currently used
+      apply: null,
+      embed: null,
+      autocomplete: null,
+      rerank: null,
+      summarize: null,
+    },
+    data: config.data,
   };
 
   // Models
   const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
+    model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
+    const llms = await llmsFromModelConfig(
+      model,
+      ide,
+      uniqueId,
+      ideSettings,
+      writeLog,
+      platformConfigMetadata,
+      continueConfig.systemMessage,
+    );
+
+    //
     if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
-      // Main model array
-      const llms = await llmsFromModelConfig(
-        model,
-        ide,
-        uniqueId,
-        ideSettings,
-        writeLog,
-        platformConfigMetadata,
-        continueConfig.systemMessage,
-      );
       continueConfig.models.push(...llms);
     }
 
+    if (model.roles?.includes("chat")) {
+      continueConfig.modelsByRole.chat.push(...llms);
+    }
+
+    if (model.roles?.includes("summarize")) {
+      continueConfig.modelsByRole.summarize.push(...llms);
+    }
+
+    if (model.roles?.includes("apply")) {
+      continueConfig.modelsByRole.apply.push(...llms);
+    }
+
+    if (model.roles?.includes("edit")) {
+      continueConfig.modelsByRole.edit.push(...llms);
+    }
+
     if (model.roles?.includes("autocomplete")) {
-      // Autocomplete models array
-      const llms = await llmsFromModelConfig(
-        model,
-        ide,
-        uniqueId,
-        ideSettings,
-        writeLog,
-        platformConfigMetadata,
-        continueConfig.systemMessage,
-      );
-      continueConfig.tabAutocompleteModels?.push(...llms);
+      continueConfig.modelsByRole.autocomplete.push(...llms);
     }
 
-    if (
-      model.roles?.includes("apply") &&
-      !continueConfig.experimental?.modelRoles?.applyCodeBlock
-    ) {
-      continueConfig.experimental ??= {};
-      continueConfig.experimental!.modelRoles ??= {};
-      continueConfig.experimental!.modelRoles!.applyCodeBlock = model.name;
+    if (model.roles?.includes("embed")) {
+      const { provider, ...options } = model;
+      const embeddingsProviderClass = allEmbeddingsProviders[provider];
+      if (embeddingsProviderClass) {
+        if (
+          embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
+        ) {
+          continueConfig.modelsByRole.embed.push(new embeddingsProviderClass());
+        } else {
+          continueConfig.modelsByRole.embed.push(
+            new embeddingsProviderClass(
+              options,
+              (url: string | URL, init: any) =>
+                fetchwithRequestOptions(url, init, {
+                  ...options.requestOptions,
+                }),
+            ),
+          );
+        }
+      } else {
+        errors.push({
+          fatal: false,
+          message: `Unsupported embeddings model provider found: ${provider}`,
+        });
+      }
     }
 
-    if (
-      model.roles?.includes("edit") &&
-      !continueConfig.experimental?.modelRoles?.inlineEdit
-    ) {
-      continueConfig.experimental ??= {};
-      continueConfig.experimental!.modelRoles ??= {};
-      continueConfig.experimental!.modelRoles!.inlineEdit = model.name;
+    if (model.roles?.includes("rerank")) {
+      const { provider, ...options } = model;
+      const rerankerClass = AllRerankers[provider];
+      if (rerankerClass) {
+        continueConfig.modelsByRole.rerank.push(
+          new rerankerClass(options, (url: string | URL, init: any) =>
+            fetchwithRequestOptions(url, init, {
+              ...options.requestOptions,
+            }),
+          ),
+        );
+      } else {
+        errors.push({
+          fatal: false,
+          message: `Unsupported reranking model provider found: ${provider}`,
+        });
+      }
     }
+  }
+
+  // Add transformers js to the embed models in vs code if not already added
+  if (
+    ideInfo.ideType === "vscode" &&
+    !continueConfig.modelsByRole.embed.find(
+      (m) => m.providerName === "transformers.js",
+    )
+  ) {
+    continueConfig.modelsByRole.embed.push(
+      new TransformersJsEmbeddingsProvider(),
+    );
   }
 
   if (allowFreeTrial) {
@@ -202,8 +267,6 @@ async function configYamlToContinueConfig(
       (model) => model.providerName !== "free-trial",
     );
   }
-
-  // TODO: Split into model roles.
 
   // Context providers
   const codebaseContextParams: IContextProvider[] =
@@ -241,51 +304,6 @@ async function configYamlToContinueConfig(
     )
   ) {
     continueConfig.contextProviders.push(new DocsContextProvider({}));
-  }
-
-  // Embeddings Provider
-  // IMPORTANT this currently will grab the first model found with an embed role
-  const embedConfig = config.models?.find((model) =>
-    model.roles?.includes("embed"),
-  );
-  if (embedConfig) {
-    const { provider, ...options } = embedConfig;
-    const embeddingsProviderClass = allEmbeddingsProviders[provider];
-    if (embeddingsProviderClass) {
-      if (
-        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-      ) {
-        continueConfig.embeddingsProvider = new embeddingsProviderClass();
-      } else {
-        continueConfig.embeddingsProvider = new embeddingsProviderClass(
-          options,
-          (url: string | URL, init: any) =>
-            fetchwithRequestOptions(url, init, {
-              ...options.requestOptions,
-            }),
-        );
-      }
-    }
-  }
-
-  // Reranker
-  // IMPORTANT this currently will grab the first model found with a rerank role
-  const rerankConfig = config.models?.find((model) =>
-    model.roles?.includes("rerank"),
-  );
-  if (rerankConfig) {
-    const { provider, ...options } = rerankConfig;
-    const rerankerClass = AllRerankers[provider];
-
-    if (rerankerClass) {
-      continueConfig.reranker = new rerankerClass(
-        options,
-        (url: string | URL, init: any) =>
-          fetchwithRequestOptions(url, init, {
-            ...options.requestOptions,
-          }),
-      );
-    }
   }
 
   // Apply MCP if specified
@@ -341,7 +359,7 @@ export async function loadContinueConfigFromYaml(
   ide: IDE,
   workspaceConfigs: string[],
   ideSettings: IdeSettings,
-  ideType: IdeType,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -351,7 +369,7 @@ export async function loadContinueConfigFromYaml(
 ): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(getConfigYamlPath(ideType), "utf-8")
+      ? fs.readFileSync(getConfigYamlPath(ideInfo.ideType), "utf-8")
       : "";
 
   const configYamlResult = await loadConfigYaml(
@@ -374,6 +392,7 @@ export async function loadContinueConfigFromYaml(
     configYamlResult.config,
     ide,
     ideSettings,
+    ideInfo,
     uniqueId,
     writeLog,
     workOsAccessToken,
@@ -392,7 +411,7 @@ export async function loadContinueConfigFromYaml(
   // Apply shared config
   // TODO: override several of these values with user/org shared config
   const sharedConfig = new GlobalContext().getSharedConfig();
-  const withShared = modifyContinueConfigWithSharedConfig(
+  const withShared = modifyAnyConfigWithSharedConfig(
     continueConfig,
     sharedConfig,
   );
