@@ -15,14 +15,12 @@ function constructSystemPrompt(
   modelDescription: ModelDescription,
   useTools: boolean,
 ): string | null {
-  let systemMessage = "";
+  let systemMessage =
+    "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'.";
   if (useTools && modelSupportsTools(modelDescription)) {
-    if (systemMessage) {
-      systemMessage += "\n\n";
-    }
-    systemMessage += TOOL_USE_RULES;
+    systemMessage += "\n\n" + TOOL_USE_RULES;
   }
-  return systemMessage || null;
+  return systemMessage;
 }
 
 const CANCELED_TOOL_CALL_MESSAGE =
