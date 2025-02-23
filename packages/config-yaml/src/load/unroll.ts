@@ -1,8 +1,10 @@
 import * as YAML from "yaml";
-import { Registry } from "../interfaces/index.js";
+import { PlatformClient, Registry } from "../interfaces/index.js";
+import { encodeSecretLocation } from "../interfaces/SecretResult.js";
 import {
   decodeFullSlug,
   encodePackageSlug,
+  FQSN,
   FullSlug,
   PackageSlug,
 } from "../interfaces/slugs.js";
@@ -14,6 +16,7 @@ import {
   ConfigYaml,
   configYamlSchema,
 } from "../schemas/index.js";
+import { useProxyForUnrenderedSecrets } from "./clientRender.js";
 
 export function parseConfigYaml(configYaml: string): ConfigYaml {
   try {
@@ -123,28 +126,99 @@ function extractFQSNMap(
   return secretToFQSNMap(secrets, parentPackages);
 }
 
+async function extractRenderedSecretsMap(
+  rawContent: string,
+  parentPackages: PackageSlug[],
+  platformClient: PlatformClient,
+): Promise<Record<string, string>> {
+  // Get all template variables
+  const templateVars = getTemplateVariables(rawContent);
+  const secrets = templateVars
+    .filter((v) => v.startsWith("secrets."))
+    .map((v) => v.replace("secrets.", ""));
+
+  // Convert to FQSNs
+  const fqsns: FQSN[] = secrets.map((secretName) => ({
+    packageSlugs: parentPackages,
+    secretName,
+  }));
+
+  // FQSN -> SecretResult
+  const secretResults = await platformClient.resolveFQSNs(fqsns);
+
+  const map: Record<string, string> = {};
+  for (const secretResult of secretResults) {
+    if (!secretResult) {
+      continue;
+    }
+
+    // User secrets are rendered
+    if ("value" in secretResult) {
+      map[secretResult.fqsn.secretName] = secretResult.value;
+    } else {
+      // Other secrets are rendered as secret locations and then converted to proxy types later
+      map[secretResult.fqsn.secretName] =
+        `\${{ secrets.${encodeSecretLocation(secretResult.secretLocation)} }}`;
+    }
+  }
+
+  return map;
+}
+
+export interface DoNotRenderSecretsUnrollAssistantOptions {
+  renderSecrets: false;
+}
+
+export interface RenderSecretsUnrollAssistantOptions {
+  renderSecrets: true;
+  orgScopeId: string | null;
+  currentUserSlug: string;
+  platformClient: PlatformClient;
+}
+
+export type UnrollAssistantOptions =
+  | DoNotRenderSecretsUnrollAssistantOptions
+  | RenderSecretsUnrollAssistantOptions;
+
 export async function unrollAssistant(
   fullSlug: string,
   registry: Registry,
+  options: UnrollAssistantOptions,
 ): Promise<AssistantUnrolled> {
   const assistantSlug = decodeFullSlug(fullSlug);
 
   // Request the content from the registry
   const rawContent = await registry.getContent(assistantSlug);
-  return unrollAssistantFromContent(assistantSlug, rawContent, registry);
+  return unrollAssistantFromContent(
+    assistantSlug,
+    rawContent,
+    registry,
+    options,
+  );
 }
 
 export async function unrollAssistantFromContent(
   assistantSlug: FullSlug,
   rawYaml: string,
   registry: Registry,
+  options: UnrollAssistantOptions,
 ): Promise<AssistantUnrolled> {
   // Convert the raw YAML to unrolled config
+  let secrets: Record<string, string> = {};
+  if (options.renderSecrets) {
+    secrets = await extractRenderedSecretsMap(
+      rawYaml,
+      [assistantSlug],
+      options.platformClient,
+    );
+  } else {
+    secrets = extractFQSNMap(rawYaml, [assistantSlug]);
+  }
   const templateData: TemplateData = {
     // no inputs to an assistant
     inputs: {},
     // at this stage, secrets are mapped to a (still templated) FQSN
-    secrets: extractFQSNMap(rawYaml, [assistantSlug]),
+    secrets,
     // Built-in variables
     continue: {},
   };
@@ -165,7 +239,16 @@ export async function unrollAssistantFromContent(
     registry,
   );
 
-  return unrolledAssistant;
+  // If rendering secrets, should replace models with proxy versions where secrets weren't rendered
+  const finalConfig = options.renderSecrets
+    ? useProxyForUnrenderedSecrets(
+        unrolledAssistant,
+        assistantSlug,
+        options.orgScopeId,
+      )
+    : unrolledAssistant;
+
+  return finalConfig;
 }
 
 export async function unrollBlocks(

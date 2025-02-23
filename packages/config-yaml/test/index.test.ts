@@ -6,12 +6,12 @@ import {
   resolveSecretLocationInProxy,
 } from "../dist";
 import {
-  clientRender,
   FQSN,
   FullSlug,
   PlatformClient,
   PlatformSecretStore,
   Registry,
+  renderSecrets,
   resolveFQSN,
   SecretLocation,
   SecretResult,
@@ -119,7 +119,7 @@ describe("E2E Scenarios", () => {
       "https://docs.python.org/release/3.13.1",
     );
 
-    const clientRendered = await clientRender(
+    const clientRendered = await renderSecrets(
       { ownerSlug: "test-org", packageSlug: "assistant" },
       YAML.stringify(unrolledConfig),
       localUserSecretStore,

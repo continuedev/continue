@@ -18,7 +18,7 @@ import {
   parseAssistantUnrolled,
 } from "./unroll.js";
 
-export async function clientRender(
+export async function renderSecrets(
   packageSlug: PackageSlug,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
@@ -109,7 +109,7 @@ function getContinueProxyModelName(
   return `${packageSlug.ownerSlug}/${packageSlug.packageSlug}/${provider}/${model}`;
 }
 
-function useProxyForUnrenderedSecrets(
+export function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
   packageSlug: PackageSlug,
   orgScopeId: string | null,
