@@ -7,6 +7,7 @@ import { CohereApi } from "./apis/Cohere.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { JinaApi } from "./apis/Jina.js";
+import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
@@ -84,6 +85,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://localhost:8000/", config);
     case "lmstudio":
       return openAICompatible("http://localhost:1234/", config);
+    case "mock":
+      return new MockApi();
     default:
       return undefined;
   }
