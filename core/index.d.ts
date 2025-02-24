@@ -504,10 +504,10 @@ export interface LLMOptions {
   profile?: string;
   modelArn?: string;
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 
   // IBM watsonx Options
@@ -947,10 +947,10 @@ export interface EmbedOptions {
   // AWS options
   profile?: string;
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 }
 

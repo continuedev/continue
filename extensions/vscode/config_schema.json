@@ -1403,23 +1403,6 @@
           "if": {
             "properties": {
               "provider": {
-                "const": "llamafile"
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "llamafileCommand": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
                 "enum": ["cerebras"]
               }
             },
@@ -1429,23 +1412,6 @@
             "properties": {
               "model": {
                 "enum": ["llama3.1-8b", "llama3.1-70b"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["text-gen-webui"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "streamingUrl": {
-                "type": "string"
               }
             }
           }
