@@ -3,8 +3,8 @@ title: Azure AI Foundry
 slug: ../azure
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 Azure AI Foundry is a cloud-based service that provides access to models from OpenAI, Mistral AI, and others, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure AI Foundry resource in the [Azure portal](https://portal.azure.com).
 
@@ -26,10 +26,10 @@ We recommend configuring **GPT-4o** as your chat model.
 	    provider: azure
 	    model: gpt-4o
 	    apiBase: <YOUR_DEPLOYMENT_BASE>
-	    deployment: <YOUR_DEPLOYMENT_NAME>
 	    apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
       env:
-         apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+	      deployment: <YOUR_DEPLOYMENT_NAME>
+        apiType: azure-foundry # Or "azure-openai" if using OpenAI models
 	```
 	</TabItem>
 	<TabItem value="json" label="JSON">
@@ -89,9 +89,9 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
         provider: azure
         model: text-embedding-3-large
         apiBase: <YOUR_DEPLOYMENT_BASE>
-        deployment: <YOUR_DEPLOYMENT_NAME>
         apiKey: <YOUR_AZURE_API_KEY>
         env:
+          deployment: <YOUR_DEPLOYMENT_NAME>
           apiType: azure
     ```
     </TabItem>
@@ -141,11 +141,11 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
         model: gpt-4o
         provider: openai
         apiBase: https://just-an-example.openai.azure.com
-        deployment: gpt-4o-july
-        apiVersion: 2023-03-15-preview
         apiKey: <YOUR_AZURE_API_KEY>
         env:
-           apiType: azure-openai
+          apiVersion: 2023-03-15-preview
+          deployment: gpt-4o-july
+          apiType: azure-openai
     ```
 	</TabItem>
 	<TabItem value="json" label="JSON">

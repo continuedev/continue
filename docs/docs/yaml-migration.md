@@ -126,6 +126,9 @@ models:
     apiKey: <YOUR_ADA_API_KEY>
     roles:
       - embed
+    embedOptions:
+      - maxChunkSize: 256
+      - maxBatchSize: 5
 
   - name: Ollama Autodetect
     provider: ollama

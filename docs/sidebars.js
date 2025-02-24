@@ -140,15 +140,10 @@ const sidebars = {
     },
     {
       type: "link",
-      label: "JSON Reference",
-      href: "/json-reference",
+      label: "YAML Reference",
+      href: "/yaml-reference",
     },
     "customize/changelog",
-    // {
-    //   type: "link",
-    //   label: "YAML Reference",
-    //   href: "/yaml-reference",
-    // },
     // {
     //   type: "link",
     //   label: "YAML Migration",

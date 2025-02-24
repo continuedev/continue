@@ -1,5 +1,5 @@
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 # IBM watsonx
 
@@ -51,9 +51,10 @@ Add the following configuration:
       provider: watsonx
       model: model ID
       apiBase: https://us-south.ml.cloud.ibm.com
-      projectId: PROJECT_ID
       apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
-      apiVersion: 2024-03-14
+      env:
+        projectId: PROJECT_ID
+        apiVersion: 2024-03-14
   ```
 	</TabItem>
 	<TabItem value="json" label="JSON">
@@ -88,8 +89,9 @@ If you are using a custom deployment endpoint, set `deploymentID` to the model's
         model: model ID
         apiBase: watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com
         apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
-        apiVersion: 2024-03-14
-        deploymentId: DEPLOYMENT_ID
+        env:
+          apiVersion: 2024-03-14
+          deploymentId: DEPLOYMENT_ID
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
@@ -124,9 +126,7 @@ You can also configure generation parameters, such as temperature, topP, topK, f
       provider: watsonx
       model: ibm/granite-20b-code-instruct
       apiBase: watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com
-      projectId: PROJECT_ID
       apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
-      apiVersion: 2024-03-14
       template: granite
       contextLength: 8000
       defaultCompletionOptions:
@@ -138,6 +138,10 @@ You can also configure generation parameters, such as temperature, topP, topK, f
         stop:
           - Question:
           - "\n\n\n"
+      env:
+        projectId: PROJECT_ID
+        apiVersion: 2024-03-14
+        
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
