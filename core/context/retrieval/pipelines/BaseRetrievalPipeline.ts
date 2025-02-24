@@ -60,6 +60,11 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     return trigrams;
   }
 
+  private escapeFtsQueryString(query: string): string {
+    const escapedDoubleQuotes = query.replace(/"/g, '""');
+    return `"${escapedDoubleQuotes}"`;
+  }
+
   protected async retrieveFts(
     args: RetrievalPipelineRunArguments,
     n: number,
@@ -69,7 +74,8 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
         return [];
       }
 
-      const tokens = this.getCleanedTrigrams(args.query).join(" OR ");
+      const tokensRaw = this.getCleanedTrigrams(args.query).join(" OR ");
+      const tokens = this.escapeFtsQueryString(tokensRaw);
 
       return await this.ftsIndex.retrieve({
         n,
