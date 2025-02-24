@@ -118,8 +118,14 @@ export abstract class BaseLLM implements ILLM {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
@@ -198,9 +204,15 @@ export abstract class BaseLLM implements ILLM {
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
+
+    // continueProperties
     this.apiKeyLocation = options.apiKeyLocation;
-    this.aiGatewaySlug = options.aiGatewaySlug;
+    this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
+
+    this.onPremProxyUrl = options.onPremProxyUrl;
+
+    this.aiGatewaySlug = options.aiGatewaySlug;
     this.cacheBehavior = options.cacheBehavior;
 
     // watsonx deploymentId
