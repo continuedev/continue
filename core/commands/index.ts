@@ -20,11 +20,16 @@ export function slashFromCustomCommand(
       }
 
       // Render prompt template
-      const promptUserInput = await renderTemplatedString(
-        customCommand.prompt,
-        ide.readFile.bind(ide),
-        { input: userInput },
-      );
+      let promptUserInput: string;
+      if (customCommand.prompt.includes("{{{ input }}}")) {
+        promptUserInput = await renderTemplatedString(
+          customCommand.prompt,
+          ide.readFile.bind(ide),
+          { input: userInput },
+        );
+      } else {
+        promptUserInput = customCommand.prompt + "\n\n" + userInput;
+      }
 
       const messages = [...history];
       // Find the last chat message with this slash command and replace it with the user input
