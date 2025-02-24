@@ -19,7 +19,6 @@ import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
@@ -247,18 +246,19 @@ const Layout = () => {
   }, [location]);
 
   const useHub = useAppSelector(selectUseHub);
+
   // Existing users that have already seen the onboarding card
   // should be shown an intro card for hub.continue.dev
-  useEffect(() => {
-    if (useHub !== true) {
-      return;
-    }
-    const seenHubIntro = getLocalStorage("seenHubIntro");
-    if (!onboardingCard.show && !seenHubIntro) {
-      onboardingCard.setActiveTab("ExistingUserHubIntro");
-    }
-    setLocalStorage("seenHubIntro", true);
-  }, [onboardingCard.show, useHub]);
+  // useEffect(() => {
+  //   if (useHub !== true) {
+  //     return;
+  //   }
+  //   const seenHubIntro = getLocalStorage("seenHubIntro");
+  //   if (!onboardingCard.show && !seenHubIntro) {
+  //     onboardingCard.setActiveTab("ExistingUserHubIntro");
+  //   }
+  //   setLocalStorage("seenHubIntro", true);
+  // }, [onboardingCard.show, useHub]);
 
   return (
     <AuthProvider>

@@ -45,7 +45,6 @@ function ConfigPage() {
   } = useAuth();
 
   const changeProfileId = (id: string) => {
-    console.log("selecting 2", id);
     dispatch(selectProfileThunk(id));
   };
 
@@ -180,43 +179,45 @@ function ConfigPage() {
       <PageHeader onTitleClick={() => navigate("/")} title="Chat" />
 
       <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
-        <div className="flex flex-col">
-          <div className="flex max-w-[400px] flex-col gap-4 py-4">
-            <h2 className="mb-1 mt-0">Account</h2>
-            {!session ? (
-              <div className="flex flex-col gap-2">
-                <span>You are not signed in.</span>
-                <SecondaryButton onClick={() => login(false)}>
-                  Sign in
-                </SecondaryButton>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                {hubEnabled ? (
-                  // Hub: show org selector
-                  <div className="flex flex-col gap-1.5">
-                    <span className="text-lightgray">{`Organization`}</span>
-                    <ScopeSelect />
-                  </div>
-                ) : (
-                  // Continue for teams: show org text
-                  <div>You are using Continue for Teams</div>
-                )}
-                <div className="flex flex-row items-center gap-2">
-                  <span className="text-lightgray">
-                    {session.account.label === ""
-                      ? "Signed in"
-                      : `Signed in as ${session.account.label}`}
-                  </span>
-                  <span
-                    onClick={logout}
-                    className="text-lightgray cursor-pointer underline"
-                  >{`Sign out`}</span>
+        {(session || hubEnabled || controlServerBetaEnabled) && (
+          <div className="flex flex-col">
+            <div className="flex max-w-[400px] flex-col gap-4 py-4">
+              <h2 className="mb-1 mt-0">Account</h2>
+              {!session ? (
+                <div className="flex flex-col gap-2">
+                  <span>You are not signed in.</span>
+                  <SecondaryButton onClick={() => login(false)}>
+                    Sign in
+                  </SecondaryButton>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {hubEnabled ? (
+                    // Hub: show org selector
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-lightgray">{`Organization`}</span>
+                      <ScopeSelect />
+                    </div>
+                  ) : (
+                    // Continue for teams: show org text
+                    <div>You are using Continue for Teams</div>
+                  )}
+                  <div className="flex flex-row items-center gap-2">
+                    <span className="text-lightgray">
+                      {session.account.label === ""
+                        ? "Signed in"
+                        : `Signed in as ${session.account.label}`}
+                    </span>
+                    <span
+                      onClick={logout}
+                      className="text-lightgray cursor-pointer underline"
+                    >{`Sign out`}</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-col">
           <div className="flex max-w-[400px] flex-col gap-4 py-6">

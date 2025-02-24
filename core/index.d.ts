@@ -736,6 +736,7 @@ export interface ContinueSDK {
   selectedCode: RangeInFile[];
   config: ContinueConfig;
   fetch: FetchFunction;
+  completionOptions?: LLMFullCompletionOptions;
 }
 
 export interface SlashCommand {
