@@ -144,16 +144,44 @@ const sidebars = {
       href: "/json-reference",
     },
     "customize/changelog",
-    // {
-    //   type: "link",
-    //   label: "YAML Reference",
-    //   href: "/yaml-reference",
-    // },
-    // {
-    //   type: "link",
-    //   label: "YAML Migration",
-    //   href: "/yaml-migration",
-    // },
+  ],
+  hubSidebar: [
+    {
+      type: "category",
+      label: "Assistants",
+      items: [
+        "hub/assistants/intro",
+        "hub/assistants/use-an-assistant",
+        "hub/assistants/create-an-assistant",
+      ],
+    },
+    {
+      type: "category",
+      label: "Blocks",
+      items: [
+        "hub/blocks/introduction",
+        "hub/blocks/block-types",
+        "hub/blocks/use-a-block",
+        "hub/blocks/create-a-block",
+        "hub/blocks/bundles",
+      ],
+    },
+    {
+      type: "category",
+      label: "Secrets",
+      items: ["hub/secrets/secret-types", "hub/secrets/secret-resolution"],
+    },
+    {
+      type: "category",
+      label: "Governance",
+      items: [
+        "hub/governance/org-permissions",
+        "hub/governance/solo-tier",
+        "hub/governance/teams-tier",
+        "hub/governance/enterprise-tier",
+        "hub/governance/models-add-on",
+      ],
+    },
   ],
 };
 

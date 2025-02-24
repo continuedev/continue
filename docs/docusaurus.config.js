@@ -108,6 +108,13 @@ const config = {
             href: "/reference",
           },
           {
+            type: "docSidebar",
+            sidebarId: "hubSidebar",
+            position: "left",
+            label: "Hub",
+            href: "/hub/assistants/intro",
+          },
+          {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
             position: "right",
@@ -193,6 +200,14 @@ const config = {
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [
+          {
+            to: "/hub/overview",
+            from: "/hub",
+          },
+          {
+            to: "/customize/overview",
+            from: "/customize",
+          },
           {
             to: "/customize/overview",
             from: "/customization",
