@@ -158,7 +158,8 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tag TEXT NOT NULL,
         chunkId INTEGER NOT NULL,
-        FOREIGN KEY (chunkId) REFERENCES chunks (id)
+        FOREIGN KEY (chunkId) REFERENCES chunks (id),
+        UNIQUE (tag, chunkId)
     )`);
   }
 
