@@ -45,7 +45,6 @@ function ConfigPage() {
   } = useAuth();
 
   const changeProfileId = (id: string) => {
-    console.log("selecting 2", id);
     dispatch(selectProfileThunk(id));
   };
 
