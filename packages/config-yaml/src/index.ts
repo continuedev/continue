@@ -9,5 +9,5 @@ export * from "./load/proxySecretResolution.js";
 export * from "./load/unroll.js";
 export * from "./schemas/data/index.js";
 export * from "./schemas/index.js";
-export type { EmbedOptions, ModelConfig, ModelRole } from "./schemas/models.js";
+export * from "./schemas/models.js";
 export * from "./validation.js";

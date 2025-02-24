@@ -65,7 +65,9 @@ const baseModelFields = {
   requestOptions: requestOptionsSchema.optional(),
   embedOptions: embedOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
-  env: z.record(z.string(), z.string()).optional(),
+  env: z
+    .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
+    .optional(),
 };
 
 export const modelSchema = z.union([

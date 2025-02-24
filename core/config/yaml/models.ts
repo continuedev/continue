@@ -51,6 +51,52 @@ async function modelConfigToBaseLLM(
     promptTemplates: model.promptTemplates,
   };
 
+  if (model.embedOptions?.maxBatchSize) {
+    options.maxEmbeddingBatchSize = model.embedOptions.maxBatchSize;
+  }
+  if (model.embedOptions?.maxChunkSize) {
+    options.maxEmbeddingChunkSize = model.embedOptions.maxChunkSize;
+  }
+
+  // Things that are in config types for
+  const env = model.env ?? {};
+  if (
+    "useLegacyCompletionsEndpoint" in env &&
+    typeof env.useLegacyCompletionsEndpoint === "boolean"
+  ) {
+    options.useLegacyCompletionsEndpoint = env.useLegacyCompletionsEndpoint;
+  }
+  if ("apiType" in env && typeof env.apiType === "string") {
+    options.apiType = env.apiType;
+  }
+  if ("apiVersion" in env && typeof env.apiVersion === "string") {
+    options.apiVersion = env.apiVersion;
+  }
+  if ("deployment" in env && typeof env.deployment === "string") {
+    options.deployment = env.deployment;
+  }
+  if ("deploymentId" in env && typeof env.deploymentId === "string") {
+    options.deploymentId = env.deploymentId;
+  }
+  if ("projectId" in env && typeof env.projectId === "string") {
+    options.projectId = env.projectId;
+  }
+  if ("region" in env && typeof env.region === "string") {
+    options.region = env.region;
+  }
+  if ("profile" in env && typeof env.profile === "string") {
+    options.profile = env.profile;
+  }
+  if ("modelArn" in env && typeof env.modelArn === "string") {
+    options.modelArn = env.modelArn;
+  }
+  if ("aiGatewaySlug" in env && typeof env.aiGatewaySlug === "string") {
+    options.aiGatewaySlug = env.aiGatewaySlug;
+  }
+  if ("accountId" in env && typeof env.accountId === "string") {
+    options.accountId = env.accountId;
+  }
+
   const llm = new cls(options);
   return llm;
 }

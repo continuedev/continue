@@ -518,6 +518,8 @@ export interface LLMOptions {
 
   // IBM watsonx Options
   deploymentId?: string;
+
+  env?: Record<string, string | number | boolean>;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -956,7 +958,8 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxEmbeddingChunkSize?: number;
-  maxEmbeddingChunkSize?: number;
+  maxEmbeddingBatchSize?: number;
+
   // AWS options
   profile?: string;
 
