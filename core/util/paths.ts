@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
-import { DevEventName } from "../../packages/config-yaml/src/schemas/data";
+import { DevEventName } from "@continuedev/config-yaml";
 
 dotenv.config();
 
