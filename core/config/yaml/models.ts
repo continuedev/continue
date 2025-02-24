@@ -58,7 +58,10 @@ async function modelConfigToBaseLLM(
     options.maxEmbeddingChunkSize = model.embedOptions.maxChunkSize;
   }
 
-  // Things that are in config types for
+  // These are params that are at model config level in JSON
+  // But we decided to move to nested `env` in YAML
+  // Since types vary and we don't want to blindly spread env for now,
+  // Each one is handled individually here
   const env = model.env ?? {};
   if (
     "useLegacyCompletionsEndpoint" in env &&
