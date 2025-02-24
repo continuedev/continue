@@ -48,7 +48,7 @@ async function loadConfigYaml(
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<AssistantUnrolled>> {
-  const ideSettings = await ide.getIdeSettings();
+  // const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
     // (ideSettings.continueTestEnvironment === "production"
