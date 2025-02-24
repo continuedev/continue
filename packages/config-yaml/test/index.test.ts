@@ -107,6 +107,7 @@ describe("E2E Scenarios", () => {
         platformClient,
         orgScopeId: "test-org",
         currentUserSlug: "test-user",
+        onPremProxyUrl: null,
       },
     );
 

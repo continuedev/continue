@@ -484,6 +484,8 @@ export interface LLMOptions {
   apiBase?: string;
   orgScopeId?: string | null;
 
+  onPremProxyUrl?: string | null;
+
   aiGatewaySlug?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
@@ -929,6 +931,8 @@ export interface ModelDescription {
   apiKeyLocation?: string;
   apiBase?: string;
   orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
 
   contextLength?: number;
   maxStopWords?: number;

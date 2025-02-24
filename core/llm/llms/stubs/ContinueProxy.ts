@@ -9,7 +9,12 @@ import type { Chunk, LLMOptions } from "../../../index.js";
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
     this.apiKey = value.workOsAccessToken;
-    this.apiBase = new URL("openai/v1/", value.controlPlaneProxyUrl).toString();
+    if (!this.onPremProxyUrl) {
+      this.apiBase = new URL(
+        "openai/v1/",
+        value.controlPlaneProxyUrl,
+      ).toString();
+    }
   }
 
   // The apiKey and apiBase are set to the values for the proxy,
@@ -22,6 +27,10 @@ class ContinueProxy extends OpenAI {
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
     this.orgScopeId = options.orgScopeId;
+    this.onPremProxyUrl = options.onPremProxyUrl;
+    if (this.onPremProxyUrl) {
+      this.apiBase = new URL("openai/v1/", this.onPremProxyUrl).toString();
+    }
   }
 
   static providerName = "continue-proxy";

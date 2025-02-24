@@ -176,6 +176,7 @@ export interface RenderSecretsUnrollAssistantOptions {
   orgScopeId: string | null;
   currentUserSlug: string;
   platformClient: PlatformClient;
+  onPremProxyUrl: string | null;
 }
 
 export type UnrollAssistantOptions =
@@ -255,6 +256,7 @@ export async function unrollAssistantFromContent(
     parseAssistantUnrolled(renderedYaml),
     assistantSlug,
     options.orgScopeId,
+    options.onPremProxyUrl,
   );
   return finalConfig;
 }

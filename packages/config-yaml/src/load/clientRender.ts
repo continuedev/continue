@@ -23,6 +23,7 @@ export async function renderSecrets(
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
   orgScopeId: string | null, // The "scope" that the user is logged in with
+  onPremProxyUrl: string | null,
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -73,6 +74,7 @@ export async function renderSecrets(
     parsedYaml,
     packageSlug,
     orgScopeId,
+    onPremProxyUrl,
   );
   return finalConfig;
 }
@@ -113,6 +115,7 @@ export function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
   packageSlug: PackageSlug,
   orgScopeId: string | null,
+  onPremProxyUrl: string | null,
 ): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
@@ -130,6 +133,7 @@ export function useProxyForUnrenderedSecrets(
           ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
           orgScopeId,
+          onPremProxyUrl,
           apiKey: undefined,
         };
       }

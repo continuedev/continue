@@ -124,6 +124,8 @@ export abstract class BaseLLM implements ILLM {
   apiBase?: string;
   orgScopeId?: string | null;
 
+  onPremProxyUrl?: string | null;
+
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
@@ -207,6 +209,8 @@ export abstract class BaseLLM implements ILLM {
     this.apiKeyLocation = options.apiKeyLocation;
     this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
+
+    this.onPremProxyUrl = options.onPremProxyUrl;
 
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.cacheBehavior = options.cacheBehavior;
