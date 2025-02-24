@@ -19,20 +19,20 @@ For details on OpenAI model setup, see [Azure OpenAI Service configuration](#azu
 We recommend configuring **GPT-4o** as your chat model.
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
-	```yaml title="config.yaml"
-	models:
-	  - name: GPT-4o
-	    provider: azure
-	    model: gpt-4o
-	    apiBase: <YOUR_DEPLOYMENT_BASE>
-	    apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: azure
+      model: gpt-4o
+      apiBase: <YOUR_DEPLOYMENT_BASE>
+      apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
       env:
-	      deployment: <YOUR_DEPLOYMENT_NAME>
+        deployment: <YOUR_DEPLOYMENT_NAME>
         apiType: azure-foundry # Or "azure-openai" if using OpenAI models
-	```
-	</TabItem>
-	<TabItem value="json" label="JSON">
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
   ```json title="config.json"
   {
     "models": [{
@@ -46,7 +46,7 @@ We recommend configuring **GPT-4o** as your chat model.
     }]
   }
   ```
-	</TabItem>
+  </TabItem>
 </Tabs>
 
 ## Autocomplete model
@@ -54,18 +54,18 @@ We recommend configuring **GPT-4o** as your chat model.
 We recommend configuring **Codestral** as your autocomplete model.
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
-	```yaml title="Package or config.yaml"
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="Package or config.yaml"
   models:
     - name: Codestral
       provider: mistral
       model: codestral-latest
       roles:
         - autocomplete
-	```
-	</TabItem>
-	<TabItem value="json" label="JSON">
-	```json title="config.json"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
   {
     "tabAutocompleteModel": {
       "title": "Codestral",
@@ -73,8 +73,8 @@ We recommend configuring **Codestral** as your autocomplete model.
       "model": "codestral-latest"
     }
   }
-	```
-	</TabItem>
+  ```
+  </TabItem>
 </Tabs>
 
 ## Embeddings model
@@ -134,7 +134,7 @@ To find this information in _Azure AI Foundry_, first select the model that you 
 For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
+  <TabItem value="yaml" label="YAML">
     ```yaml title="Package or config.yaml"
     models:
       - name: GPT-4o Azure
@@ -147,8 +147,8 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
           deployment: gpt-4o-july
           apiType: azure-openai
     ```
-	</TabItem>
-	<TabItem value="json" label="JSON">
+  </TabItem>
+  <TabItem value="json" label="JSON">
     ```json title="config.json"
     {
       "title": "GPT-4o Azure",
@@ -161,5 +161,5 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
       "apiType": "azure-openai"
     }
     ```
-	</TabItem>
+  </TabItem>
 </Tabs>
