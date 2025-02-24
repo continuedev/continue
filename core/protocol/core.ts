@@ -1,10 +1,11 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, ModelRole } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 
+import { DevDataLogEvent } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -27,7 +28,7 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
-import { DevDataLogEvent } from "../../packages/config-yaml/src/schemas/data";
+import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -37,8 +38,6 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  "update/selectTabAutocompleteModel": [string, void];
-
   // Special
   ping: [string, string];
   abort: [undefined, void];
@@ -71,7 +70,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [undefined, ProfileDescription[] | null];
   "config/openProfile": [{ profileId: string | undefined }, void];
-  "config/updateSharedConfig": [SharedConfigSchema, void];
+  "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
+  "config/updateSelectedModel": [
+    {
+      profileId: string;
+      role: ModelRole;
+      title: string | null;
+    },
+    GlobalContextModelSelections,
+  ];
   "context/getContextItems": [
     {
       name: string;
@@ -100,6 +107,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       params: any;
       historyIndex: number;
       selectedCode: RangeInFile[];
+      completionOptions?: LLMFullCompletionOptions;
     },
     AsyncGenerator<string>,
   ];

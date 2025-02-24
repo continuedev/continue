@@ -143,7 +143,7 @@ models:
       - apply
 ```
 
-Note that the `repoMapFileSelection` experimental model role has been deprecated.
+Note that the `repoMapFileSelection` experimental model role has been deprecated and is only available in `config.json`.
 
 ### Context Providers
 

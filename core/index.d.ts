@@ -60,7 +60,7 @@ export interface IndexingStatus {
   progress: number;
   description: string;
   status: "indexing" | "complete" | "paused" | "failed" | "aborted" | "pending";
-  embeddingsProviderId: string;
+  embeddingsProviderId?: string;
   isReindexing?: boolean;
   debugInfo?: string;
   title: string;
@@ -179,8 +179,8 @@ export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 export interface ContextProviderExtras {
   config: ContinueConfig;
   fullInput: string;
-  embeddingsProvider: ILLM;
-  reranker: ILLM | undefined;
+  embeddingsProvider: ILLM | null;
+  reranker: ILLM | null;
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
@@ -478,9 +478,15 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
-  aiGatewaySlug?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
+  aiGatewaySlug?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
@@ -730,6 +736,7 @@ export interface ContinueSDK {
   selectedCode: RangeInFile[];
   config: ContinueConfig;
   fetch: FetchFunction;
+  completionOptions?: LLMFullCompletionOptions;
 }
 
 export interface SlashCommand {
@@ -920,8 +927,14 @@ export interface ModelDescription {
   provider: string;
   model: string;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
   contextLength?: number;
   maxStopWords?: number;
   template?: TemplateType;
@@ -1028,9 +1041,9 @@ export interface ContextMenuConfig {
 }
 
 export interface ExperimentalModelRoles {
+  repoMapFileSelection?: string;
   inlineEdit?: string;
   applyCodeBlock?: string;
-  repoMapFileSelection?: string;
 }
 
 export type EditStatus =
@@ -1215,15 +1228,14 @@ export interface ContinueConfig {
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
-  embeddingsProvider: ILLM;
-  tabAutocompleteModels?: ILLM[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
-  reranker?: ILLM;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  modelsByRole: Record<ModelRole, ILLM[]>;
+  selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
 }
 
@@ -1238,15 +1250,15 @@ export interface BrowserSerializedContinueConfig {
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
-  embeddingsProvider?: string;
   ui?: ContinueUIConfig;
-  reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  modelsByRole: Record<ModelRole, ModelDescription[]>;
+  selectedModelByRole: Record<ModelRole, ModelDescription | null>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

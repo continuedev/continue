@@ -14,10 +14,14 @@ import {
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
+import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
+import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
+import { DevDataSqliteDb } from "./data/devdataSqlite";
+import { DataLogger } from "./data/log";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
@@ -28,8 +32,6 @@ import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
-import { DataLogger } from "./data/log";
-import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import {
@@ -51,8 +53,6 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
-import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -131,7 +131,8 @@ export class Core {
       });
 
       // update additional submenu context providers registered via VSCode API
-      const additionalProviders = this.configHandler.getAdditionalSubmenuContextProviders();
+      const additionalProviders =
+        this.configHandler.getAdditionalSubmenuContextProviders();
       if (additionalProviders.length > 0) {
         this.messenger.send("refreshSubmenuItems", {
           providers: additionalProviders,
@@ -199,12 +200,10 @@ export class Core {
 
     const getLlm = async () => {
       const { config } = await this.configHandler.loadConfig();
-      const selected = this.globalContext.get("selectedTabAutocompleteModel");
-      return (
-        config?.tabAutocompleteModels?.find(
-          (model) => model.title === selected,
-        ) ?? config?.tabAutocompleteModels?.[0]
-      );
+      if (!config) {
+        return undefined;
+      }
+      return config.selectedModelByRole.autocomplete ?? undefined;
     };
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -236,11 +235,6 @@ export class Core {
       } else {
         void this.ide.showToast("error", err.message);
       }
-    });
-
-    on("update/selectTabAutocompleteModel", async (msg) => {
-      this.globalContext.update("selectedTabAutocompleteModel", msg.data);
-      void this.configHandler.reloadConfig();
     });
 
     // Special
@@ -317,8 +311,19 @@ export class Core {
     });
 
     on("config/updateSharedConfig", async (msg) => {
-      this.globalContext.updateSharedConfig(msg.data);
+      const newSharedConfig = this.globalContext.updateSharedConfig(msg.data);
       await this.configHandler.reloadConfig();
+      return newSharedConfig;
+    });
+
+    on("config/updateSelectedModel", async (msg) => {
+      const newSelectedModels = this.globalContext.updateSelectedModel(
+        msg.data.profileId,
+        msg.data.role,
+        msg.data.title,
+      );
+      await this.configHandler.reloadConfig();
+      return newSelectedModels;
     });
 
     on("controlPlane/openUrl", async (msg) => {
@@ -398,11 +403,11 @@ export class Core {
         const items = await provider.getContextItems(query, {
           config,
           llm,
-          embeddingsProvider: config.embeddingsProvider,
+          embeddingsProvider: config.selectedModelByRole.embed,
           fullInput,
           ide,
           selectedCode,
-          reranker: config.reranker,
+          reranker: config.selectedModelByRole.rerank,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
@@ -423,26 +428,25 @@ export class Core {
         let knownError = false;
 
         if (e instanceof Error) {
-          // A specific error where we're forcing the presence of embeddings provider on the config
-          // But Jetbrains doesn't support transformers JS
-          // So if a context provider needs it it will throw this error when the file isn't found
-          if (e.message.includes("all-MiniLM-L6-v2")) {
-            knownError = true;
-            const toastOption = "See Docs";
-            void this.ide
-              .showToast(
-                "error",
-                `Set up an embeddings model to use @${name}`,
-                toastOption,
-              )
-              .then((userSelection) => {
-                if (userSelection === toastOption) {
-                  void this.ide.openUrl(
-                    "https://docs.continue.dev/customize/model-types/embeddings",
-                  );
-                }
-              });
-          }
+          // After removing transformers JS embeddings provider from jetbrains
+          // Should no longer see this error
+          // if (e.message.toLowerCase().includes("embeddings provider")) {
+          //   knownError = true;
+          //   const toastOption = "See Docs";
+          //   void this.ide
+          //     .showToast(
+          //       "error",
+          //       `Set up an embeddings model to use @${name}`,
+          //       toastOption,
+          //     )
+          //     .then((userSelection) => {
+          //       if (userSelection === toastOption) {
+          //         void this.ide.openUrl(
+          //           "https://docs.continue.dev/customize/model-types/embeddings",
+          //         );
+          //       }
+          //     });
+          // }
         }
         if (!knownError) {
           void this.ide.showToast(
@@ -648,6 +652,7 @@ export class Core {
         params,
         historyIndex,
         selectedCode,
+        completionOptions,
       } = msg.data;
 
       const { config } = await configHandler.loadConfig();
@@ -696,6 +701,7 @@ export class Core {
           config,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          completionOptions,
         })) {
           if (abortedMessageIds.has(msg.messageId)) {
             abortedMessageIds.delete(msg.messageId);
