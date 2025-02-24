@@ -27,7 +27,7 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
-import { DevDataLogEvent } from "../../packages/config-yaml/src/schemas/data";
+import { DevDataLogEvent } from "@continuedev/config-yaml";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";

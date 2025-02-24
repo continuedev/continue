@@ -478,9 +478,15 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
-  aiGatewaySlug?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
+  aiGatewaySlug?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
@@ -920,8 +926,14 @@ export interface ModelDescription {
   provider: string;
   model: string;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
   contextLength?: number;
   maxStopWords?: number;
   template?: TemplateType;

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
 import {
   decodeSecretLocation,
@@ -17,10 +18,12 @@ import {
   parseAssistantUnrolled,
 } from "./unroll.js";
 
-export async function clientRender(
+export async function renderSecrets(
   packageSlug: PackageSlug,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
+  orgScopeId: string | null, // The "scope" that the user is logged in with
+  onPremProxyUrl: string | null,
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -67,7 +70,12 @@ export async function clientRender(
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
-  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml, packageSlug);
+  const finalConfig = useProxyForUnrenderedSecrets(
+    parsedYaml,
+    packageSlug,
+    orgScopeId,
+    onPremProxyUrl,
+  );
   return finalConfig;
 }
 
@@ -103,9 +111,11 @@ function getContinueProxyModelName(
   return `${packageSlug.ownerSlug}/${packageSlug.packageSlug}/${provider}/${model}`;
 }
 
-function useProxyForUnrenderedSecrets(
+export function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
   packageSlug: PackageSlug,
+  orgScopeId: string | null,
+  onPremProxyUrl: string | null,
 ): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
@@ -122,6 +132,8 @@ function useProxyForUnrenderedSecrets(
             config.models[i].model,
           ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
+          orgScopeId,
+          onPremProxyUrl,
           apiKey: undefined,
         };
       }
@@ -130,3 +142,12 @@ function useProxyForUnrenderedSecrets(
 
   return config;
 }
+
+/** The additional properties that are added to the otherwise OpenAI-compatible body when requesting a Continue proxy */
+export const continuePropertiesSchema = z.object({
+  apiKeyLocation: z.string().optional(),
+  apiBase: z.string().optional(),
+  orgScopeId: z.string().nullable(),
+});
+
+export type ContinueProperties = z.infer<typeof continuePropertiesSchema>;

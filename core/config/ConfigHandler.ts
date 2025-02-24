@@ -1,11 +1,6 @@
 import * as fs from "node:fs";
 
-import {
-  AssistantUnrolled,
-  ConfigResult,
-  FullSlug,
-} from "@continuedev/config-yaml";
-import * as YAML from "yaml";
+import { ConfigResult, FullSlug } from "@continuedev/config-yaml";
 
 import {
   ControlPlaneClient,
@@ -36,7 +31,6 @@ import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
-import { clientRenderHelper } from "./yaml/clientRender.js";
 
 export type { ProfileDescription };
 
@@ -99,8 +93,8 @@ export class ConfigHandler {
    */
   getAdditionalSubmenuContextProviders(): string[] {
     return this.additionalContextProviders
-      .filter(provider => provider.description.type === "submenu")
-      .map(provider => provider.description.title);
+      .filter((provider) => provider.description.type === "submenu")
+      .map((provider) => provider.description.title);
   }
 
   private async init() {
@@ -108,7 +102,7 @@ export class ConfigHandler {
       await this.fetchControlPlaneProfiles();
     } catch (e) {
       // If this fails, make sure at least local profile is loaded
-      console.error("Failed to fetch control plane profiles: ", e);
+      console.error("Failed to fetch control plane profiles in init: ", e);
       await this.updateAvailableProfiles([this.localProfileManager]);
     }
     try {
@@ -172,37 +166,26 @@ export class ConfigHandler {
       // Logged in
       const assistants =
         await this.controlPlaneClient.listAssistants(selectedOrgId);
-      const hubProfiles = await Promise.all(
-        assistants.map(async (assistant) => {
-          let renderedConfig: AssistantUnrolled | undefined = undefined;
-          if (assistant.configResult.config) {
-            renderedConfig = await clientRenderHelper(
-              {
-                ownerSlug: assistant.ownerSlug,
-                packageSlug: assistant.packageSlug,
-              },
-              YAML.stringify(assistant.configResult.config),
-              this.ide,
-              this.controlPlaneClient,
-            );
-          }
 
-          const profileLoader = new PlatformProfileLoader(
-            { ...assistant.configResult, config: renderedConfig },
-            assistant.ownerSlug,
-            assistant.packageSlug,
-            assistant.iconUrl,
-            assistant.configResult.config?.version ?? "latest",
-            this.controlPlaneClient,
-            this.ide,
-            this.ideSettingsPromise,
-            this.writeLog,
-            this.reloadConfig.bind(this),
-          );
+      const hubProfiles = assistants.map((assistant) => {
+        const profileLoader = new PlatformProfileLoader(
+          {
+            ...assistant.configResult,
+            config: assistant.configResult.config,
+          },
+          assistant.ownerSlug,
+          assistant.packageSlug,
+          assistant.iconUrl,
+          assistant.configResult.config?.version ?? "latest",
+          this.controlPlaneClient,
+          this.ide,
+          this.ideSettingsPromise,
+          this.writeLog,
+          this.reloadConfig.bind(this),
+        );
 
-          return new ProfileLifecycleManager(profileLoader, this.ide);
-        }),
-      );
+        return new ProfileLifecycleManager(profileLoader, this.ide);
+      });
 
       if (selectedOrgId === null) {
         // Personal
@@ -223,8 +206,16 @@ export class ConfigHandler {
     // Otherwise, choose the first profile
     const previouslySelectedProfileId =
       await this.getPersistedSelectedProfileId();
-    const selectedProfileId =
-      previouslySelectedProfileId ?? profiles[0].profileDescription.id ?? null;
+
+    // Check if the previously selected profile exists in the current profiles
+    const profileExists = profiles.some(
+      (profile) =>
+        profile.profileDescription.id === previouslySelectedProfileId,
+    );
+
+    const selectedProfileId = profileExists
+      ? previouslySelectedProfileId
+      : (profiles[0]?.profileDescription.id ?? null);
 
     // Notify listeners
     const profileDescriptions = profiles.map(
@@ -362,8 +353,10 @@ export class ConfigHandler {
       Promise.resolve(sessionInfo),
       this.ideSettingsPromise,
     );
-    this.fetchControlPlaneProfiles().catch((e) => {
+    this.fetchControlPlaneProfiles().catch(async (e) => {
       console.error("Failed to fetch control plane profiles: ", e);
+      await this.updateAvailableProfiles([this.localProfileManager]);
+      await this.reloadConfig();
     });
   }
 
