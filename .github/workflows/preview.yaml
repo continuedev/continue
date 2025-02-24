@@ -217,8 +217,8 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      - name: Pull latest changes
-        run: git pull origin main
+      - name: Pull latest changes from release
+        run: git fetch origin ${{ github.ref }} && git checkout ${{ github.ref }}
 
       # 1. Download the artifacts
       - uses: actions/download-artifact@v4
