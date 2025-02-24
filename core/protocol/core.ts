@@ -5,6 +5,7 @@ import { ProfileDescription } from "../config/ConfigHandler";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 
+import { DevDataLogEvent } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -27,7 +28,6 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
-import { DevDataLogEvent } from "@continuedev/config-yaml";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
@@ -107,6 +107,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       params: any;
       historyIndex: number;
       selectedCode: RangeInFile[];
+      completionOptions?: LLMFullCompletionOptions;
     },
     AsyncGenerator<string>,
   ];

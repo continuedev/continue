@@ -10,7 +10,7 @@ export function slashFromCustomCommand(
   return {
     name: customCommand.name,
     description: customCommand.description ?? "",
-    run: async function* ({ input, llm, history, ide }) {
+    run: async function* ({ input, llm, history, ide, completionOptions }) {
       // Remove slash command prefix from input
       let userInput = input;
       if (userInput.startsWith(`/${customCommand.name}`)) {
@@ -72,6 +72,7 @@ export function slashFromCustomCommand(
       for await (const chunk of llm.streamChat(
         messages,
         new AbortController().signal,
+        completionOptions,
       )) {
         yield renderChatMessage(chunk);
       }

@@ -20,6 +20,8 @@ import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFile
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { getControlPlaneEnv } from "./control-plane/env";
+import { DevDataSqliteDb } from "./data/devdataSqlite";
+import { DataLogger } from "./data/log";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
@@ -30,8 +32,6 @@ import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
-import { DataLogger } from "./data/log";
-import { DevDataSqliteDb } from "./data/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import {
@@ -131,7 +131,8 @@ export class Core {
       });
 
       // update additional submenu context providers registered via VSCode API
-      const additionalProviders = this.configHandler.getAdditionalSubmenuContextProviders();
+      const additionalProviders =
+        this.configHandler.getAdditionalSubmenuContextProviders();
       if (additionalProviders.length > 0) {
         this.messenger.send("refreshSubmenuItems", {
           providers: additionalProviders,
@@ -651,6 +652,7 @@ export class Core {
         params,
         historyIndex,
         selectedCode,
+        completionOptions,
       } = msg.data;
 
       const { config } = await configHandler.loadConfig();
@@ -699,6 +701,7 @@ export class Core {
           config,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          completionOptions,
         })) {
           if (abortedMessageIds.has(msg.messageId)) {
             abortedMessageIds.delete(msg.messageId);
