@@ -37,7 +37,6 @@ export const handleJetBrainsOSRMetaKeyIssues = (
 
   if (e.key in handlers) {
     e.stopPropagation();
-    debugger;
     e.preventDefault();
     handlers[e.key]();
   }
