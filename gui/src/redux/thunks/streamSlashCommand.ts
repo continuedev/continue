@@ -65,9 +65,10 @@ export const streamSlashCommand = createAsyncThunk<
         selectedCode,
         completionOptions: includeTools
           ? {
-              tools: state.config.config.tools.filter(
-                (tool) => toolSettings[tool.function.name] !== "disabled",
-              ),
+              // Temporarily commented out until slash commands are hooked up to the tool use feedback loop
+              // tools: state.config.config.tools.filter(
+              //   (tool) => toolSettings[tool.function.name] !== "disabled",
+              // ),
             }
           : {},
       },
