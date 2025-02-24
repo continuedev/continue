@@ -268,7 +268,10 @@ export async function unrollBlocks(
     version: assistant.version,
   };
 
-  const sections: (keyof Omit<ConfigYaml, "name" | "version" | "rules">)[] = [
+  const sections: (keyof Omit<
+    ConfigYaml,
+    "name" | "version" | "rules" | "schema"
+  >)[] = [
     "models",
     "context",
     "data",
