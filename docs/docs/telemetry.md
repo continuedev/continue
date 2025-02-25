@@ -12,7 +12,7 @@ We utilize [Posthog](https://posthog.com/), an open-source platform for product 
 
 ## Tracking Policy
 
-All data collected by Continue is anonymized and stripped of personally identifiable information (PII) before being sent to PostHog. We are committed to maintaining the privacy and security of your data.
+All data collected by the open-source Continue extensions is anonymized and stripped of personally identifiable information (PII) before being sent to PostHog. We are committed to maintaining the privacy and security of your data.
 
 ## What We Track
 
