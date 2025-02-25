@@ -495,15 +495,20 @@ export class VerticalDiffHandler implements vscode.Disposable {
     this.clearDecorations();
 
     // Then, get our old/new file content based on the original lines
+    // We need the input to be "newline terminated" rather than
+    // newline separated, because myersDiff() would consider
+    // ["A"] => "A" and ["A", ""] => "A\n" to be the same single line.
+    // "A\n" and "A\n\n" are unambiguous.
+    //
     const oldFileContent = diffLines
       .filter((line) => line.type === "same" || line.type === "old")
       .map((line) => line.line)
-      .join("\n");
+      .join("\n") + "\n";
 
     const newFileContent = diffLines
       .filter((line) => line.type === "same" || line.type === "new")
       .map((line) => line.line)
-      .join("\n");
+      .join("\n") + "\n";
 
     const diffs = myersDiff(oldFileContent, newFileContent);
 
