@@ -93,6 +93,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "haiku",
   "pixtral",
   "llama3.2",
+  "llama-3.2",
 ];
 
 function modelSupportsTools(modelDescription: ModelDescription) {
