@@ -703,12 +703,12 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     collectInputFor: [...completionParamsInputsConfigs],
   },
   sambanova: {
-    title: "SambaNova Cloud",
+    title: "SambaNova",
     provider: "sambanova",
     refPage: "sambanova",
     description: "Use SambaNova Cloud for fast inference performance",
     icon: "sambanova.png",
-    longDescription: `The SambaNova Cloud is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
+    longDescription: `The SambaNova Cloud is a cloud platform for running large open source AI models with the world record performance and zero data retention. You can sign up [here](https://cloud.sambanova.ai/)`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     params: {
       apiKey: "",
@@ -723,10 +723,22 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
       ...completionParamsInputsConfigs,
     ],
-    packages: [models.llama31Chat].map((p) => {
-      p.params.contextLength = 4096;
-      return p;
-    }),
+    packages:[
+      models.qwen25Coder32BInstruct,
+      models.llama3370BInstruct,
+      models.llama318BInstruct,
+      models.llama3170BInstruct,
+      models.llama31405BInstruct,
+      models.llama31Tulu3405B,
+      models.llama321BInstruct,
+      models.llama323BInstruct,
+      models.llama3211BInstruct,
+      models.llama3290BInstruct,
+      models.qwen2572BInstruct,
+      models.qwq32BPreview,
+      models.deepseekR1DistillLlama70B,
+      models.deepseekR1,
+    ],
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
   cerebras: {
