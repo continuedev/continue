@@ -30,9 +30,9 @@ The top-level properties in the `config.yaml` configuration file are:
 - [`rules`](#rules)
 - [`prompts`](#prompts)
 - [`docs`](#docs)
-  <!-- - [`data`](#data) -->
   <!-- - [`tools`](#tools) -->
 - [`mcpServers`](#mcpservers)
+- [`data`](#data)
 
 ---
 
@@ -239,21 +239,38 @@ mcpServers:
       - /Users/NAME/test.db
 ```
 
-<!-- ### `data`
+### `data`
 
-The `data` section specifies data providers used in your configuration. Data providers supply data or resources for use in various operations.
+Destinations to which [development data](./customize/development-data.md) will be sent.
 
 **Properties:**
 
-- `provider` (**required**): The name of the data provider.
+- `name` (**required**): The display name of the data destination
+- `destination` (**required**): The destination/endpoint that will receive the data. Can be:
+  - an HTTP endpoint that will receive a POST request with a JSON blob
+  - a file URL to a directory in which events will be dumpted to `.jsonl` files
+- `schema` (**required**): the schema version of the JSON blobs to be sent
+- `events`: an array of event names to include. Defaults to all events if not specified.
+- `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file contents, prompts, and completions. Defaults to `all`
+- `apiKey`: api key to be sent with request (Bearer header)
+- `requestOptions`: Options for event POST requests. Same format as [model requestOptions](#models).
 
-**Example:**
+  **Example:**
 
 ```yaml title="config.yaml"
 data:
-  - provider: embeddings
+  - name: Local Data Bank
+    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data
+    schema: 0.2.0
+    level: all
+  - name: My Private Company
+    destination: https://mycompany.com/ingest
+    schema: 0.2.0
+    level: noCode
+    events:
+      - autocomplete
+      - chatInteraction
 ```
---- -->
 
 ---
 
@@ -318,6 +335,9 @@ mcpServers:
       - dev
     env:
       PORT: "3000"
+
+data:
+  -
 ```
 
 ### Fully deprecated settings
