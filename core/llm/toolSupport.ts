@@ -61,4 +61,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  sambanova: (model) => {
+    // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
+    if (
+      model.toLowerCase().startsWith("meta-llama-3")
+    ) {
+      return true;
+    }
+  },
 };
