@@ -350,7 +350,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       // Clear deletion buffer
       await this.insertDeletionBuffer();
 
-      await this.reapplyWithMeyersDiff(diffLines);
+      await this.reapplyWithMyersDiff(diffLines);
 
       this.options.onStatusUpdate(
         "done",
@@ -473,10 +473,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
   /**
    * This method is used to apply diff decorations after the intiial stream.
    * This is to handle scenarios where we miscalculate the original diff blocks,
-   * and decide to follow up with a deterministic algorithm like Meyers Diff once
+   * and decide to follow up with a deterministic algorithm like Myers Diff once
    * we have received all of the diff lines.
    */
-  async reapplyWithMeyersDiff(diffLines: DiffLine[]) {
+  async reapplyWithMyersDiff(diffLines: DiffLine[]) {
     // Diff is messed up without this delay.
     await new Promise((resolve) => setTimeout(resolve, 100));
 
@@ -507,11 +507,11 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     const diffs = myersDiff(oldFileContent, newFileContent);
 
-    const meyersDiffLines = diffs.map((diff) => diff.line).join("\n");
+    const myersDiffLines = diffs.map((diff) => diff.line).join("\n");
 
     // Then, we insert our diff lines
     await this.editor.edit((editBuilder) => {
-      editBuilder.replace(this.range, meyersDiffLines),
+      editBuilder.replace(this.range, myersDiffLines),
         {
           undoStopAfter: false,
           undoStopBefore: false,
