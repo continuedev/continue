@@ -18,7 +18,7 @@ export const testConfigHandler = new ConfigHandler(
   testIde,
   ideSettingsPromise,
   async (text) => {},
-  testControlPlaneClient,
+  Promise.resolve(undefined),
 );
 
 export const testLLM = new Mock({

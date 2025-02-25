@@ -13,7 +13,7 @@ This page recommends models and providers for Autocomplete. Read more about how 
 
 为了最好的自动补全体验，我们推荐通过 [Mistral API](https://console.mistral.ai/) 使用 Codestral 。这个模型提供高质量的补全，使用极好的代码上下文理解：
 
-```json title="config.json""
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "Codestral",
@@ -32,7 +32,7 @@ Codestral 的 API key 和通常的 Mistral API 是不同的。如果你使用 Co
 
 对于倾向于本地执行或自托管的， `Qwen2.5-Coder 1.5B` 提供了一个对于大多数用户性能和质量的平衡，(e.g. using [Ollama](../customize/model-providers/top-level/ollama.md) or [LM Studio](../customize/model-providers/more/lmstudio.md))：
 
-```json title="config.json""
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "Qwen2.5-Coder 1.5B",

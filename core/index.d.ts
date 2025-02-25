@@ -1,6 +1,6 @@
+import { ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-import { ModelRole } from "@continuedev/config-yaml";
 declare global {
   interface Window {
     ide?: "vscode";
@@ -600,7 +600,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
-  continueTestEnvironment: "none" | "production" | "test" | "local";
+  continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
 }
 
@@ -672,6 +672,10 @@ export interface IDE {
       contents: string;
     }
   >;
+
+  getLastFileSaveTimestamp?(): number;
+
+  updateLastFileSaveTimestamp?(): void;
 
   getPinnedFiles(): Promise<string[]>;
 
@@ -908,6 +912,7 @@ export interface BaseCompletionOptions {
 
 export interface ModelCapability {
   uploadImage?: boolean;
+  tools?: boolean;
 }
 
 export interface ModelDescription {

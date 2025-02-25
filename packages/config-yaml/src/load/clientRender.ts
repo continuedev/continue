@@ -4,7 +4,12 @@ import {
   encodeSecretLocation,
   SecretLocation,
 } from "../interfaces/SecretResult.js";
-import { decodeFQSN, encodeFQSN, FQSN } from "../interfaces/slugs.js";
+import {
+  decodeFQSN,
+  encodeFQSN,
+  FQSN,
+  PackageSlug,
+} from "../interfaces/slugs.js";
 import { AssistantUnrolled } from "../schemas/index.js";
 import {
   fillTemplateVariables,
@@ -13,6 +18,7 @@ import {
 } from "./unroll.js";
 
 export async function clientRender(
+  packageSlug: PackageSlug,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
   platformClient?: PlatformClient,
@@ -61,11 +67,11 @@ export async function clientRender(
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
-  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml);
+  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml, packageSlug);
   return finalConfig;
 }
 
-function getUnrenderedSecretLocation(
+export function getUnrenderedSecretLocation(
   value: string | undefined,
 ): SecretLocation | undefined {
   if (!value) return undefined;
@@ -89,8 +95,17 @@ function getUnrenderedSecretLocation(
   return undefined;
 }
 
+function getContinueProxyModelName(
+  packageSlug: PackageSlug,
+  provider: string,
+  model: string,
+): string {
+  return `${packageSlug.ownerSlug}/${packageSlug.packageSlug}/${provider}/${model}`;
+}
+
 function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
+  packageSlug: PackageSlug,
 ): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
@@ -101,6 +116,11 @@ function useProxyForUnrenderedSecrets(
         config.models[i] = {
           ...config.models[i],
           provider: "continue-proxy",
+          model: getContinueProxyModelName(
+            packageSlug,
+            config.models[i].provider,
+            config.models[i].model,
+          ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
           apiKey: undefined,
         };

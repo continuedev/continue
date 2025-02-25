@@ -164,6 +164,7 @@ class MCPConnection {
       config.contextProviders.push(
         new MCPContextProvider({
           submenuItems,
+          mcpId,
         }),
       );
     }

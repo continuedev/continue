@@ -79,4 +79,4 @@ Continue 也支持一个 **全局的** `.continueignore` 文件，将作用于�
 
 ## 仓库 map
 
-Claude 3, Llama 3.1/3.2, Gemini 1.5 和 GPT-4o 家族的模型在代码库检索时会自动地使用 [仓库 map](../context-providers.md#repository-map) ，允许模型理解你的代码库的结构，并使用它回答问题。当前，仓库 map 仅包含代码库中的文件路径。
+Claude 3, Llama 3.1/3.2, Gemini 1.5 和 GPT-4o 家族的模型在代码库检索时会自动地使用 [仓库 map](../context-providers.mdx#repository-map) ，允许模型理解你的代码库的结构，并使用它回答问题。当前，仓库 map 仅包含代码库中的文件路径。

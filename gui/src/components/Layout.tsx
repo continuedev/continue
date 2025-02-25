@@ -13,13 +13,12 @@ import {
   setMode,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
-import AccountDialog from "./AccountDialog";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
@@ -95,17 +94,6 @@ const Layout = () => {
     },
     [location.pathname],
     location.pathname === ROUTES.HOME,
-  );
-
-  useWebviewListener(
-    "openDialogMessage",
-    async (message) => {
-      if (message === "account") {
-        dispatch(setShowDialog(true));
-        dispatch(setDialogMessage(<AccountDialog />));
-      }
-    },
-    [],
   );
 
   useWebviewListener(
