@@ -22,6 +22,7 @@ import {
   ToolCallState,
 } from "core";
 import { ProfileDescription } from "core/config/ConfigHandler";
+import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -30,7 +31,6 @@ import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -45,14 +45,14 @@ type SessionState = {
   isStreaming: boolean;
   title: string;
   id: string;
-  availableProfiles: ProfileDescription[];
-  selectedProfileId: string | null;
+  /** null indicates loading state */
+  availableProfiles: ProfileDescription[] | null;
+  selectedProfile: ProfileDescription | null;
   organizations: OrganizationDescription[];
   selectedOrganizationId: string | null;
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
-  currentMainEditorContent?: JSONContent;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
@@ -88,21 +88,8 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfileId: "local",
-  availableProfiles: [
-    {
-      id: "local",
-      title: "Local",
-      errors: undefined,
-      profileType: "local",
-      fullSlug: {
-        ownerSlug: "",
-        packageSlug: "",
-        versionSlug: "",
-      },
-      iconUrl: "",
-    },
-  ],
+  selectedProfile: null,
+  availableProfiles: null,
   organizations: [],
   selectedOrganizationId: "",
   curCheckpointIndex: 0,
@@ -547,15 +534,15 @@ export const sessionSlice = createSlice({
     },
     // Important: these reducers don't handle selected profile/organization fallback logic
     // That is done in thunks
-    setSelectedProfileId: (
+    setSelectedProfile: (
       state,
-      { payload }: PayloadAction<string | null>,
+      { payload }: PayloadAction<ProfileDescription | null>,
     ) => {
-      state.selectedProfileId = payload;
+      state.selectedProfile = payload;
     },
     setAvailableProfiles: (
       state,
-      { payload }: PayloadAction<ProfileDescription[]>,
+      { payload }: PayloadAction<ProfileDescription[] | null>,
     ) => {
       state.availableProfiles = payload;
     },
@@ -771,7 +758,7 @@ export const {
   setNewestCodeblocksForInput,
 
   setAvailableProfiles,
-  setSelectedProfileId,
+  setSelectedProfile,
   setOrganizations,
   setSelectedOrganizationId,
 } = sessionSlice.actions;

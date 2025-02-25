@@ -26,7 +26,7 @@ const initialState: ConfigState = {
     contextProviders: [],
     models: [],
     tools: [],
-    usePlatform: false,
+    usePlatform: true,
   },
 };
 

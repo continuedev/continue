@@ -17,7 +17,6 @@ import { addContextProvider, addModel, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
-import { ControlPlaneClient } from "./control-plane/client";
 import { getControlPlaneEnv } from "./control-plane/env";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
@@ -63,7 +62,6 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   codebaseIndexingState: IndexingProgressUpdate;
-  controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
 
@@ -110,16 +108,11 @@ export class Core {
       useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(
-      sessionInfoPromise,
-      ideSettingsPromise,
-    );
-
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
       this.onWrite,
-      this.controlPlaneClient,
+      sessionInfoPromise,
     );
 
     this.docsService = DocsService.createSingleton(
@@ -135,10 +128,22 @@ export class Core {
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
       });
+
+      // update additional submenu context providers registered via VSCode API
+      const additionalProviders = this.configHandler.getAdditionalSubmenuContextProviders();
+      if (additionalProviders.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: additionalProviders,
+        });
+      }
     });
 
-    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
-      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    this.configHandler.onDidChangeAvailableProfiles(
+      (profiles, selectedProfileId) =>
+        this.messenger.send("didChangeAvailableProfiles", {
+          profiles,
+          selectedProfileId,
+        }),
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
@@ -319,7 +324,7 @@ export class Core {
     });
 
     on("controlPlane/listOrganizations", async (msg) => {
-      return await this.controlPlaneClient.listOrganizations();
+      return await this.configHandler.listOrganizations();
     });
 
     // Context providers
@@ -936,7 +941,7 @@ export class Core {
     on("didChangeSelectedOrg", (msg) => {
       void this.configHandler.setSelectedOrgId(msg.data.id);
       void this.configHandler.reloadConfig();
-      void this.configHandler.loadPlatformProfiles();
+      void this.configHandler.loadAssistantsForSelectedOrg();
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {

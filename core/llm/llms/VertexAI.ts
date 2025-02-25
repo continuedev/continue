@@ -375,7 +375,7 @@ class VertexAI extends BaseLLM {
     }
 
     const resp = await this.fetch(
-      new URL(this.apiBase + `publishers/google/models/${this.model}:predict`),
+      new URL(`publishers/google/models/${this.model}:predict`, this.apiBase),
       {
         method: "POST",
         body: JSON.stringify({
