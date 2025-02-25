@@ -1,4 +1,4 @@
-import { ModelConfig, AssistantUnrolled } from "@continuedev/config-yaml";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 
 import { SerializedContinueConfig } from "../..";
 
@@ -8,6 +8,7 @@ export function convertConfigJsonToConfigYaml(
   return {
     name: "Local Config",
     version: "1.0.0",
+    schema: "v1",
     models: [
       ...configJson.models.map(
         (model): ModelConfig => ({
