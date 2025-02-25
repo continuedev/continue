@@ -409,6 +409,38 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     }),
     apiKeyUrl: "https://api.together.xyz/settings/api-keys",
   },
+  ncompass: {
+    title: "nCompass",
+    provider: "ncompass",
+    refPage: "ncompass",
+    description:
+      "Use the nCompass API for extremely fast streaming of open-source models",
+    icon: "ncompass.png",
+    longDescription: `nCompass is an extremely fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://app.ncompass.tech/api-settings).`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your nCompass API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.llama318bChat,
+      models.llama3370bChat,
+      models.Qwen25Coder32b,
+    ].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl: "https://app.ncompass.tech/api-settings",
+  },
   novita: {
     title: "NovitaAI",
     provider: "novita",
