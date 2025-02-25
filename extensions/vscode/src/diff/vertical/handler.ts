@@ -86,16 +86,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   private async insertDeletionBuffer() {
-    // Don't remove trailing whitespace line
     const totalDeletedContent = this.deletionBuffer.join("\n");
-
-    if (
-      totalDeletedContent === "" &&
-      this.currentLineIndex >= this.endLine + this.newLinesAdded &&
-      this.insertedInCurrentBlock === 0
-    ) {
-      return;
-    }
 
     if (this.deletionBuffer.length || this.insertedInCurrentBlock > 0) {
       const blocks = this.editorToVerticalDiffCodeLens.get(this.fileUri) || [];
