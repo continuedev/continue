@@ -155,6 +155,7 @@ Parameters that control the behavior of text generation and completion settings.
 - `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
 - `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
 - `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
+- `numGpu`: For Ollama, this parameter overrides the number of gpu layers that will be used to load the model into VRAM.
 - `useMmap`: For Ollama, this parameter allows the model to be mapped into memory. If disabled can enhance response time on low end devices but will slow down the stream.
 
 Example
