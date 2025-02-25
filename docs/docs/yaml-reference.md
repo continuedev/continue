@@ -6,9 +6,7 @@ keywords: [config, yaml, configuration, customize, customization]
 
 # confg.yaml Reference
 
-<!-- TODO - data section -->
-
-Continue can be configured using a YAML file `config.yaml` which for local configuration can be placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
+Continue hub assistants are defined using the `config.yaml` specification. Local assistants can also be configured using a YAML file `config.yaml` placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
 
 Below are details for each property that can be set in `config.yaml`.
 
@@ -16,9 +14,18 @@ Below are details for each property that can be set in `config.yaml`.
 Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**.
 :::
 
-**All properties at all levels are optional unless explicitly marked as required.**
+## Blocks
+
+An assistant is made up of
+
+1. Top level properties
+2. Composable arrays of Blocks
+
+Top level properties specify the name, version, and `config.yaml` schema
 
 ## Properties
+
+**All properties at all levels are optional unless explicitly marked as required.**
 
 The top-level properties in the `config.yaml` configuration file are:
 
@@ -220,7 +227,7 @@ mcpServers:
 
 ### `data`
 
-Destinations to which [development data](./customize/development-data.md) will be sent.
+Destinations to which [development data](./customize/deep-dives/development-data.md) will be sent.
 
 **Properties:**
 

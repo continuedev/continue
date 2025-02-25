@@ -302,11 +302,11 @@ const config = {
           },
           {
             to: "/customize/context-providers",
-            from: "/customization/context-providers",
+            from: ["/customization/context-providers"],
           },
           {
-            to: "/customize/development-data",
-            from: "/development-data",
+            to: "/customize/deep-dives/development-data",
+            from: ["/development-data", "/customize/development-data"],
           },
           {
             to: "/customize/deep-dives/docs",
