@@ -499,7 +499,20 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway", "nebius"],
+    providerOptions: ["groq", "scaleway", "nebius", "ncompass"],
+    isOpenSource: false,
+  },
+  llama3370bChat: {
+    title: "Llama3.3 70b Chat",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.3-70b",
+      model: "llama3.3-70b",
+      contextLength: 65536,
+    },
+    icon: "meta.png",
+    providerOptions: ["ncompass"],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -1374,7 +1387,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32_000,
     },
     icon: "qwen.png",
-    providerOptions: ["scaleway", "nebius"],
+    providerOptions: ["scaleway", "nebius", "ncompass"],
     isOpenSource: true,
   },
   grokBeta: {
