@@ -10,4 +10,4 @@ The solo tier allows individuals to create and share custom AI code assistants, 
 
 Blocks and assistants across both your profile and any organizations can have one of the following visibilities: public (Anyone on the internet), organization (Only visible to members of your organization), or private (Only you and admins of your organization). Since you only use user secrets on the solo tier, they will be sent to the IDE extensions alongside the config.yaml. This allows requests to APIs to be made directly from the IDE extensions.
 
-[Point to pricing page]
+[**View tier pricing**](https://hub.continue.dev/pricing)

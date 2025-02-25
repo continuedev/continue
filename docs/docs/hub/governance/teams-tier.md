@@ -10,4 +10,4 @@ Everything in the solo tier is available in the teams tier. Organization admins 
 
 Org secrets are assumed to not be shareable with the user (e.g. you are a team lead who wants to give team members access to models without passing out API keys). In this case, the LLM requests are proxied through Continue (api.continue.dev or the on-premise proxy) and the secrets are never sent to the IDE extensions. The data plane can be separated from the control with an on-premises proxy that can be deployed in your own cloud and ensure no code or other sensitive data leaves your environment.
 
-[Point to pricing page]
+[**View tier pricing**](https://hub.continue.dev/pricing)

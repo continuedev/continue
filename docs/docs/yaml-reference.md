@@ -23,14 +23,12 @@ Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration
 The top-level properties in the `config.yaml` configuration file are:
 
 - [`name`](#name) (**required**)
-<!-- - [`packages`](#packages) -->
 - [`version`](#version) (**required**)
 - [`models`](#models)
 - [`context`](#context)
 - [`rules`](#rules)
 - [`prompts`](#prompts)
 - [`docs`](#docs)
-  <!-- - [`tools`](#tools) -->
 - [`mcpServers`](#mcpservers)
 - [`data`](#data)
 
@@ -195,25 +193,6 @@ docs:
 
 ---
 
-<!-- ### `tools`
-
-The `tools` section specifies external tools or APIs that can be used within your configuration.
-
-**Properties:**
-
-- `url` (**required**): The URL of the tool's API or endpoint.
-- `apiKey`: An optional API key required by the tool.
-
-**Example:**
-
-```yaml title="config.yaml"
-tools:
-  - url: https://api.exampletool.com/tool1
-    apiKey: <YOUR_API_KEY>
-```
-
---- -->
-
 ### `mcpServers`
 
 <!-- TODO is this correct? -->
@@ -335,9 +314,14 @@ mcpServers:
       - dev
     env:
       PORT: "3000"
-
 data:
-  -
+  - name: My Private Company
+    destination: https://mycompany.com/ingest
+    schema: 0.2.0
+    level: noCode
+    events:
+      - autocomplete
+      - chatInteraction
 ```
 
 ### Fully deprecated settings
