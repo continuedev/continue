@@ -23,15 +23,15 @@ sidebar_position: 3
 
 ## 指定目录
 
-你可以通过输入 [`@Folder`](../customize/context-providers.mdx#folder) 并选择目录，包含当前工作区中指定目录作为上下文。它像 [`@Codebase`](../customize/deep-dives/codebase.md) 一样工作，但是只包含指定目录中的文件。
+你可以通过输入 [`@Folder`](../customize/context-providers.mdx#folder) 并选择目录，包含当前工作区中指定目录作为上下文。它像 [`@Codebase`](../customize/deep-dives/codebase.mdx) 一样工作，但是只包含指定目录中的文件。
 
 ## 代码库搜索
 
-你可以通过输入 [`@Codebase`](../customize/context-providers.mdx#codebase) 自动包含与你的代码库相关的文件作为上下文。你可以 [在这里](../customize/deep-dives/codebase.md) 了解 `@Codebase` 是如何工作的。
+你可以通过输入 [`@Codebase`](../customize/context-providers.mdx#codebase) 自动包含与你的代码库相关的文件作为上下文。你可以 [在这里](../customize/deep-dives/codebase.mdx) 了解 `@Codebase` 是如何工作的。
 
 ## 文档网址
 
-你可以通过输入 [`@Docs`](../customize/context-providers.mdx#docs) 并选择文档网址，包含文档网址作文上下文。你可以 [在这里](../customize/deep-dives/docs.md) 了解 `@Docs` 是如何工作的。
+你可以通过输入 [`@Docs`](../customize/context-providers.mdx#docs) 并选择文档网址，包含文档网址作文上下文。你可以 [在这里](../customize/deep-dives/docs.mdx) 了解 `@Docs` 是如何工作的。
 
 ## 终端内容
 

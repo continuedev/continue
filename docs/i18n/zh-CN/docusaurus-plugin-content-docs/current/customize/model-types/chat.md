@@ -9,11 +9,11 @@ sidebar_position: 2
 
 ## 推荐的聊天模型
 
-如果你有使用任何模型的能力，我们推荐 [Claude 3.5 Sonnet](../model-providers/top-level/anthropic.md) 。
+如果你有使用任何模型的能力，我们推荐 [Claude 3.5 Sonnet](../model-providers/top-level/anthropic.mdx) 。
 
 否则，以下是一些最好的选择：
 
-- [GPT-4o](../model-providers/top-level/openai.md)
-- [Grok-2](../model-providers/top-level/xAI.md)
-- [Gemini 1.5 Pro](../model-providers/top-level/gemini.md)
-- [Llama3.1 405B](../tutorials/llama3.1.md)
+- [GPT-4o](../model-providers/top-level/openai.mdx)
+- [Grok-2](../model-providers/top-level/xAI.mdx)
+- [Gemini 1.5 Pro](../model-providers/top-level/gemini.mdx)
+- [Llama3.1 405B](../tutorials/llama3.1.mdx)

@@ -48,7 +48,7 @@ description: Information about this project
 
 ### 上下文
 
-很多 [上下文提供者](../context-providers.md) 可以被引用，通过输入 "@" 跟着上下文提供者的名称。当前支持的列表如下：
+很多 [上下文提供者](../context-providers.mdx) 可以被引用，通过输入 "@" 跟着上下文提供者的名称。当前支持的列表如下：
 
 - `@terminal` - 终端的内容
 - `@currentFile` - 当前激活的文件

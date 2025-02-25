@@ -15,7 +15,7 @@ keywords: [安装, 开始, vs code, jetbrains]
 ![move-to-right-sidebar](/img/move-to-right-sidebar.gif)
 
 :::info[故障排除]
-如果你有任何问题，查看 [故障排除指南](troubleshooting.md) 或者在 [我们的 Discord](https://discord.gg/NWtdYexhMs) 寻求帮助
+如果你有任何问题，查看 [故障排除指南](../troubleshooting.mdx) 或者在 [我们的 Discord](https://discord.gg/NWtdYexhMs) 寻求帮助
 :::
 
 ## JetBrains
@@ -29,5 +29,5 @@ keywords: [安装, 开始, vs code, jetbrains]
 ![jetbrains-getting-started.png](/img/jetbrains-getting-started.png)
 
 :::info[故障排除]
-如果你有任何问题，查看 [故障排除指南](troubleshooting.md) 或者在 [我们的 Discord](https://discord.com/invite/EfJEfdFnDQ) 寻求帮助
+如果你有任何问题，查看 [故障排除指南](../troubleshooting.mdx) 或者在 [我们的 Discord](https://discord.com/invite/EfJEfdFnDQ) 寻求帮助
 :::

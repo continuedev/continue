@@ -8,7 +8,7 @@ keywords: [交互, 嵌入, 重排器, 代码库, 试验性的]
 Continue 索引你的代码库，以便它可以之后自动地拉取你的工作区最相关的上下文。这是通过基于嵌入的检索和关键字搜索结合完成的。默认情况下，所有嵌入都是通过使用 `transformers.js` 本地计算的，保存在 `~/.continue/index` 。
 
 :::info[`transformers.js 不能在 JetBrains 中使用`]
-当前， `transformers.js` 不能在 JetBrains IDEs 中使用。不过，你可以从 [这里的列表](../model-types/embeddings.md) 选择一个不同的嵌入模型。
+当前， `transformers.js` 不能在 JetBrains IDEs 中使用。不过，你可以从 [这里的列表](../model-types/embeddings.mdx) 选择一个不同的嵌入模型。
 :::
 
 目前，代码库检索功能可用在 "codebase" 和 "folder" 上下文提供者。你可以使用它们，通过在输入框输入 `@Codebase` 或 `@Folder` ，然后询问问题。输入框的内容将会与其他代码库（或目录）的嵌入进行比较，来决定相关的文件。

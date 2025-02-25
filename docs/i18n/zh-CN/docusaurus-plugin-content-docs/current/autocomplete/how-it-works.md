@@ -28,6 +28,6 @@ sidebar_position: 4
 
 如果响应是坏的，我们也会偶尔过滤掉整个响应。这通常是因为过度的重复。
 
-You can learn more about how it works in the [Autocomplete deep dive](../customize/deep-dives/autocomplete.md).
+You can learn more about how it works in the [Autocomplete deep dive](../customize/deep-dives/autocomplete.mdx).
 
-你可以在 [深入理解自动补全](../customize/deep-dives/autocomplete.md) 中了解它是如何工作的。
+你可以在 [深入理解自动补全](../customize/deep-dives/autocomplete.mdx) 中了解它是如何工作的。

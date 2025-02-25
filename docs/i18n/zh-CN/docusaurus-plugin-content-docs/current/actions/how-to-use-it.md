@@ -18,7 +18,7 @@ Actions 是常见用例的快捷方式。例如，你可能想要审查代码，
 
 ![slash-commands](/img/slash-commands.png)
 
-一些最常用的斜杠命令默认是可用的，比如 "/edit", "/comment" 和 "/share" ，但是 Continue 有大量内置的其他选择的库。要启用它们，[在这里](../customize/slash-commands.md) 了解更多。
+一些最常用的斜杠命令默认是可用的，比如 "/edit", "/comment" 和 "/share" ，但是 Continue 有大量内置的其他选择的库。要启用它们，[在这里](../customize/slash-commands.mdx) 了解更多。
 
 ### prompt 文件
 

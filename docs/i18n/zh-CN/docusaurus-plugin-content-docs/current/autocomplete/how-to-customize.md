@@ -19,4 +19,4 @@ Continue 在 [`config.json`](../json-reference.md) 提供少量的参数，对�
 - `prefixPercentage`: 决定提示词使用光标前代码的比例
 - `multilineCompletions`: 控制建议是否可以跨多行 ("always", "never" 或 "auto")
 
-对于所有配置选项和它们的影响的综合指南，查看 [深入理解自动补全](../customize/deep-dives/autocomplete.md) 。
+对于所有配置选项和它们的影响的综合指南，查看 [深入理解自动补全](../customize/deep-dives/autocomplete.mdx) 。
