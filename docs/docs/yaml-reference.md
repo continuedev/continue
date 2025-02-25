@@ -264,6 +264,7 @@ Putting it all together, here's a complete example of a `config.yaml` configurat
 ```yaml title="config.yaml"
 name: MyProject
 version: 0.0.1
+schema: v1
 
 models:
   - name: GPT-4
@@ -331,6 +332,7 @@ a `config.yaml` configuration file using anchors:
 ---
 name: MyProject
 version: 0.0.1
+schema: v1
 
 model_defaults: &model_defaults
   provider: openai
@@ -338,26 +340,26 @@ model_defaults: &model_defaults
   apiBase: https://api.example.com/llm
 
 models:
-- name: mistral
-  <<: *model_defaults
-  model: mistral-7b-instruct
-  roles:
-    - chat
-    - edit
+  - name: mistral
+    <<: *model_defaults
+    model: mistral-7b-instruct
+    roles:
+      - chat
+      - edit
 
-- name: qwen2.5-coder-7b-instruct
-  <<: *model_defaults
-  model: qwen2.5-coder-7b-instruct
-  roles:
-    - chat
-    - edit
+  - name: qwen2.5-coder-7b-instruct
+    <<: *model_defaults
+    model: qwen2.5-coder-7b-instruct
+    roles:
+      - chat
+      - edit
 
-- name: qwen2.5-coder-7b
-  <<: *model_defaults
-  model: qwen2.5-coder-7b
-  useLegacyCompletionsEndpoint: false
-  roles:
-    - autocomplete
+  - name: qwen2.5-coder-7b
+    <<: *model_defaults
+    model: qwen2.5-coder-7b
+    useLegacyCompletionsEndpoint: false
+    roles:
+      - autocomplete
 ```
 
 ### Fully deprecated settings
