@@ -1617,8 +1617,8 @@ export const models: { [key: string]: ModelPackage } = {
     description: "A model from Meta, fine-tuned for multimodal chat with images",
     refUrl: "",
     params: {
-      title: "Llama 3.2 11B Vision Instruct",
-      model: "Llama-3.2-11B-Vision-Instruct",
+      title: "Llama 3.2 90B Vision Instruct",
+      model: "Llama-3.2-90B-Vision-Instruct",
       contextLength: 4096,
     },
     icon: "meta.png",
