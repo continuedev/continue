@@ -11,13 +11,13 @@ sidebar_label: Types
 
 Models are blocks that let you specify Large Language Models (LLMs) and other deep learning models to be used for various roles in the Continue Extension, like Chat, Autocomplete, Edit, or @Codebase, and @Docs embeddings. Explore available models on [the hub](https://hub.continue.dev/explore/models).
 
-Continue supports [many model providers](../../customize/model-providers), including Anthropic, OpenAI, Gemini, Ollama, Amazon Bedrock, Azure, xAI, DeepSeek, and more. Models can have one or more of the following roles depending on its capabilities, including `chat`, `edit`, `apply`, `autocomplete`, `embed`, and `rerank`. Read more about roles [here](../../customize/model-types). View [`models`](../../yaml-reference.md#models) in the YAML Reference for more details.
+Continue supports [many model providers](../../customize/model-providers), including Anthropic, OpenAI, Gemini, Ollama, Amazon Bedrock, Azure, xAI, DeepSeek, and more. Models can have one or more of the following roles depending on its capabilities, including `chat`, `edit`, `apply`, `autocomplete`, `embed`, and `rerank`. Read more about roles [here](../../customize/model-roles). View [`models`](../../yaml-reference.md#models) in the YAML Reference for more details.
 
 ## Context
 
 Context blocks define a context provider which can be referenced in Chat with `@` to pull in data from external sources such as files and folders, a URL, Jira or Confluence, and Github issues, among others. [Explore context provider blocks](https://hub.continue.dev/explore/context) on the hub.
 
-Learn more about context providers [here](../../yaml-reference.md#context), and check out [this guide](../../customize/tutorials/build-your-own-context-provider.md) to creating your own custom context provider. The `config.yaml` spec for context can be found [`here`](../../yaml-reference.md#context).
+Learn more about context providers [here](../../yaml-reference.md#context), and check out [this guide](../../customize/tutorials/build-your-own-context-provider.mdx) to creating your own custom context provider. The `config.yaml` spec for context can be found [`here`](../../yaml-reference.md#context).
 
 ## Docs
 

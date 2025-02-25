@@ -57,4 +57,4 @@ slug: ../mistral
 
 Mistral 当前没有提供任何重排序模型。
 
-[点击这里](../../model-types/reranking.md) 查看重排序模型提供者列表。
+[点击这里](../../model-roles/reranking.md) 查看重排序模型提供者列表。

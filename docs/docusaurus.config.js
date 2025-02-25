@@ -237,8 +237,24 @@ const config = {
           //   from: "/getting-started",
           // },
           {
-            to: "/customize/model-types",
-            from: "/setup/overview",
+            to: "/customize/model-roles",
+            from: ["/customize/model-types", "/setup/overview"],
+          },
+          {
+            to: "/customize/model-roles/embeddings",
+            from: "/customize/model-types/embeddings",
+          },
+          {
+            to: "/customize/model-roles/autocomplete",
+            from: "/customize/model-types/autocomplete",
+          },
+          {
+            to: "/customize/model-roles/chat",
+            from: "/customize/model-types/chat",
+          },
+          {
+            to: "/customize/model-roles/reranking",
+            from: "/customize/model-types/reranking",
           },
           {
             to: "/getting-started/overview",
