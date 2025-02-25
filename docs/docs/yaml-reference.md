@@ -6,24 +6,86 @@ keywords: [config, yaml, configuration, customize, customization]
 
 # confg.yaml Reference
 
-Continue hub assistants are defined using the `config.yaml` specification. Local assistants can also be configured using a YAML file `config.yaml` placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
+## Introduction
 
-Below are details for each property that can be set in `config.yaml`.
+Continue hub assistants are defined using the `config.yaml` specification. Local assistants can also be configured using a YAML file `config.yaml` placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
 
 :::info
 Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**.
 :::
 
-## Blocks
+An assistant is made up of:
 
-An assistant is made up of
+1. **Top level properties**, which specify the `name`, `version`, and `config.yaml` `schema` for the assistant
+2. **Block lists**, which are composable arrays of coding assistant building blocks available to the assistant, such as models, docs, and context providers.
 
-1. Top level properties
-2. Composable arrays of Blocks
+A block is a single standalone building block of a coding assistants, e.g., one model or one documentation source. In `config.yaml` syntax, a block consists of the same top-level properties as assistants (`name`, `version`, and `schema`), but only has **ONE** item under whichever block type it is.
 
-Top level properties specify the name, version, and `config.yaml` schema
+Examples of blocks and assistants can be found on the [Continue hub](https://hub.continue.dev/explore/assistants).
+
+Assistants can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
+
+### Using Blocks
+
+Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization.
+
+Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
+
+For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
+
+```yaml title="Assistant models section"
+models:
+  - uses: anthropic/claude-3.5-sonnet # an imported model block
+  - model: deepseek-reasoner # an explicit model block
+    provider: ollama
+```
+
+### Inputs
+
+Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
+
+```yaml title="Block config.yaml"
+name: myprofile/custom-model
+models:
+  - name: My Favorite Model
+    provider: anthropic
+    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}
+    defaultCompletionOptions:
+      temperature: ${{ inputs.TEMP }}
+```
+
+Which can then be imported like
+
+```yaml title="Assistant config.yaml"
+name: myprofile/custom-assistant
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+```
+
+Note that hub secrets can be passed as inputs, using the a similar mustache format: `secrets.SECRET_NAME`.
+
+### Overrides
+
+Block properties can be also be directly overriden using `overrides`. For example:
+
+```yaml title="Assistant config.yaml"
+name: myprofile/custom-assistant
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+    overrides:
+      roles:
+        - chat
+```
 
 ## Properties
+
+Below are details for each property that can be set in `config.yaml`.
 
 **All properties at all levels are optional unless explicitly marked as required.**
 
@@ -31,6 +93,7 @@ The top-level properties in the `config.yaml` configuration file are:
 
 - [`name`](#name) (**required**)
 - [`version`](#version) (**required**)
+- [`schema`](#schema) (**required**)
 - [`models`](#models)
 - [`context`](#context)
 - [`rules`](#rules)
@@ -49,9 +112,15 @@ The `name` property specifies the name of your project or configuration.
 name: MyProject
 ```
 
+---
+
 ### `version`
 
 The `version` property specifies the version of your project or configuration.
+
+### `schema`
+
+The `schema` property specifies the schema version used for the `config.yaml`, e.g. `v1`
 
 ---
 
@@ -153,6 +222,9 @@ Example
 
 ```yaml title="config.yaml"
 rules:
+  - uses: myprofile/my-mood-setter
+    with:
+      MOOD: happy
   - Always annotate Python functions with their parameter and return types
   - Always write Google style docstrings for functions and classes
 ```
@@ -267,8 +339,15 @@ Putting it all together, here's a complete example of a `config.yaml` configurat
 ```yaml title="config.yaml"
 name: MyProject
 version: 0.0.1
+schema: v1
 
 models:
+  - uses: anthropic/claude-3.5-sonnet
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    overrides:
+      defaultCompletionOptions:
+        temperature: 0.8
   - name: GPT-4
     provider: openai
     model: gpt-4
@@ -301,6 +380,7 @@ prompts:
     description: Unit test a function
     prompt: |
       Please write a complete suite of unit tests for this function. You should use the Jest testing framework.  The tests should cover all possible edge cases and should be as thorough as possible.  You should also include a description of each test case.
+  - uses: myprofile/my-favorite-prompt
 
 context:
   - provider: diff
@@ -321,6 +401,7 @@ mcpServers:
       - dev
     env:
       PORT: "3000"
+
 data:
   - name: My Private Company
     destination: https://mycompany.com/ingest
