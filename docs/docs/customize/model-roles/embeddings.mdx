@@ -1,8 +1,8 @@
 ---
-title: Embeddings model
-description: Embeddings model
-keywords: [embedding]
-sidebar_position: 3
+title: Embed Role
+description: Embed model role
+keywords: [embedding, model, role, embeddings]
+sidebar_position: 5
 ---
 
 import TabItem from "@theme/TabItem";
@@ -26,7 +26,10 @@ If you want to generate embeddings locally, we recommend using `nomic-embed-text
 
 After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [Voyage Code 3 Embedder Block](https://hub.continue.dev/voyageai/voyage-code-3)
+  </TabItem>
     <TabItem value="yaml" label="YAML">
     ```yaml title="config.yaml"
     models:
@@ -85,6 +88,7 @@ See [here](../model-providers/top-level/ollama.mdx#embeddings-model) for instruc
 [Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own embeddings endpoint. You can configure embeddings to use your endpoint as follows:
 
 <Tabs groupId="config-example">
+
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
