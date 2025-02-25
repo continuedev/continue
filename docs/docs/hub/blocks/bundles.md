@@ -11,23 +11,29 @@ Bundles are collections of blocks that are commonly used together. You can use t
 
 ## Use a bundle
 
-Once you know which block you want to use, you’ll need to
+Once you know which bundle you want to use, you’ll need to
 
 1. Make sure the correct assistant is in the sidebar
-2. Click “Add bundle on its page
-3. Add any required inputs (e.g. secrets)
+2. Click “Add bundle from the bundle page. This adds the individual blocks to your assistant.
+3. Add any required inputs (e.g. secrets) for each block.
 4. Select “Save” in assistant sidebar on the right hand side
 
-[SCREENSHOT OF BLOCK READY TO BE SAVED]
-
-After this, you can then go to your IDE extension using the "Open VS Code" or "Open Jetbrains" button and begin using the new blocks.
-
-[SCREENSHOT OF VS CODE WITH BLOCK READY TO BE USED IN TOGGLE]
+After this, you can then go to your IDE extension using the "Open VS Code" or "Open Jetbrains" buttons and begin using the new blocks.
 
 ## Create a bundle
 
-To create a bundle, click “New bundle” in the top bar.
+To create a bundle, click “New bundle” in the header.
 
-For values that the user of the block needs to set, you can use template variables (e.g. `${{ inputs.API_KEY}}`, where API_KEY will be set by the user from the `with` clause in their assistant.
+![New bundle button](/img/hub/bundle-new-button.png)
 
-It’s not currently possible to remix a bundle.
+Choose a name, slug, description, and visibility for your bundle.
+
+Then, search blocks using the "Search Blocks" input and add them to your bundle.
+
+![Create bundle page](/img/hub/bundle-create-page.png)
+
+Once you have added all the blocks you want in your bundle, click "Create Bundle" to save it and make it available for use.
+
+## Remix a bundle
+
+It is not currently possible to remix a bundle.

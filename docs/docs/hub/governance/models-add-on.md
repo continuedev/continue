@@ -6,14 +6,11 @@ keywords: [governance, models, add-on]
 
 # Models Add-On
 
-The models add-on allows you to use a variety of frontier models for a flat monthly fee. It’s designed to cover the usage of most developers.
+The Models Add-On allows you to use a variety of frontier models for a flat monthly fee. It’s designed to cover the usage of most developers. See the [**pricing page**](https://hub.continue.dev/pricing) for information on pricing and usage limits.
 
-You can use the following Chat / Edit / Apply official model blocks (up to 500 requests): Claude Sonnet 3.5 from Anthropic, [ADD ALL MODEL BLOCKS AND LINK]
+Currently, the following models are included in the Models Add-On:
 
-You can use the following Autocomplete official model blocks (up to 10,000 requests): Codestral from Mistral, [ADD ALL MODEL BLOCKS AND LINK]
-
-<!-- HUB_TODO - best experience bundle -->
-
-You can use the following Embeddings / Rerank (regular Continue usage): Voyage AI, [ADD ALL MODEL BLOCKS AND LINK]
-
-[**View pricing here**](https://hub.continue.dev/pricing)
+- [Anthropic Claude Sonnet 3.5](https://hub.continue.dev/anthropic/claude-3-5-sonnet) for Chat, Edit, and Apply
+- [Mistral Codestral](https://hub.continue.dev/mistral/codestral) for Autocomplete
+- [Voyage AI Code 3](https://hub.continue.dev/voyageai/voyage-code-3) for Embedding
+- [Voyage AI Rerank 2](https://hub.continue.dev/voyageai/rerank-2) for Reranking

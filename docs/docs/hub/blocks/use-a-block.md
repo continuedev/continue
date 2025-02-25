@@ -6,15 +6,11 @@ keywords: [blocks, usage, use]
 
 # Use a Block
 
-Once you know which block you want to use, you’ll need to
+Blocks can be used by adding the to assistants. See
 
-1. Make sure the correct assistant is selected in the assistant sidebar
-2. Click “Add block” on its page
-3. Add any required inputs (e.g. secrets)
-4. Select “Save” in the assistant sidebar
+- [Create an assistant](../assistants/create-an-assistant.md)
+- [Edit an assistant](../assistants/edit-an-assistant.md)
 
-[SCREENSHOT OF BLOCK READY TO BE SAVED]
+Some blocks require inputs. If you are missing an input for a block, a notification icon will show in the sidebar next to the block. Click the notification to select which secret to use for the block input.
 
-After this, you can then go to your IDE extension and begin using this block.
-
-[SCREENSHOT OF VS CODE WITH BLOCK READY TO BE USED IN TOGGLE]
+![Block inputs](/img/hub/block-inputs.png)
