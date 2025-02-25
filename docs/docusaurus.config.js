@@ -112,7 +112,7 @@ const config = {
             sidebarId: "hubSidebar",
             position: "left",
             label: "Hub",
-            href: "/hub/assistants/intro",
+            href: "/hub/getting-started",
           },
           {
             to: "https://github.com/continuedev/continue",
@@ -201,8 +201,24 @@ const config = {
       {
         redirects: [
           {
-            to: "/hub/overview",
+            to: "/hub/getting-started",
             from: "/hub",
+          },
+          {
+            to: "/hub/governance/org-permissions",
+            from: "/hub/governance",
+          },
+          {
+            to: "/hub/secrets/types",
+            from: "/hub/secrets",
+          },
+          {
+            to: "/hub/assistants/intro",
+            from: "/hub/assistants",
+          },
+          {
+            to: "/hub/blocks/intro",
+            from: "/hub/blocks",
           },
           {
             to: "/customize/overview",

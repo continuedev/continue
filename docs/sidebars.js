@@ -146,6 +146,7 @@ const sidebars = {
     "customize/changelog",
   ],
   hubSidebar: [
+    "hub/getting-started",
     {
       type: "category",
       label: "Assistants",
@@ -159,7 +160,7 @@ const sidebars = {
       type: "category",
       label: "Blocks",
       items: [
-        "hub/blocks/introduction",
+        "hub/blocks/intro",
         "hub/blocks/block-types",
         "hub/blocks/use-a-block",
         "hub/blocks/create-a-block",

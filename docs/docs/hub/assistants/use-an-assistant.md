@@ -6,3 +6,7 @@ keywords: [assistants, usage, use, guide]
 ---
 
 # Use an Assistant
+
+Assistants
+
+You can explore pre-made [here](https://hub.continue.dev/explore/assistants)
