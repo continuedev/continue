@@ -154,6 +154,7 @@ const sidebars = {
         "hub/assistants/intro",
         "hub/assistants/use-an-assistant",
         "hub/assistants/create-an-assistant",
+        "hub/assistants/edit-an-assistant",
       ],
     },
     {

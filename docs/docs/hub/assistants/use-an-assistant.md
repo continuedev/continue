@@ -7,16 +7,14 @@ keywords: [assistants, usage, use, guide]
 
 # Use an Assistant
 
-Once you know which assistant you want to use, you’ll need to
+To use an existing assistant, you can explore pre-made assistants [here](https://hub.continue.dev/explore/assistants).
+
+Once you've found the assistant you want to use
 
 1. Click “Add assistant” on its page
-2. Add any required inputs (e.g. secrets)
+2. Add any required inputs (e.g. secrets like API keys)
 3. Select “Save” in assistant sidebar on the right hand side
 
-[SCREENSHOT OF ASSISTANT READY TO BE SAVED]
+After this, you can then go to your IDE extension and begin using the assistant by selecting it from the assistant dropdown.
 
-After this, you can then go to your IDE extension and begin using the assistant.
-
-[SCREENSHOT OF VS CODE WITH ASSISTANT READY TO BE USED]
-
-You can explore pre-made assistants [here](https://hub.continue.dev/explore/assistants)
+[Extension Assistant Selector](/img/hub/assistant-extension-select.png)
