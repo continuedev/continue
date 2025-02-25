@@ -5,8 +5,8 @@ keywords: [embedding]
 sidebar_position: 3
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
@@ -32,7 +32,7 @@ After obtaining an API key from [here](https://www.voyageai.com/), you can confi
 
 <Tabs groupId="config-example">
     <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+    ```yaml title="config.yaml"
     models:
       - name: Voyage Code 3
         provider: voyage
@@ -65,7 +65,7 @@ See [here](../model-providers/top-level/ollama.mdx#embeddings-model) for instruc
 
 <Tabs groupId="config-example">
     <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+    ```yaml title="config.yaml"
     models:
       - name: default-transformers
         provider: transformers.js
@@ -90,7 +90,7 @@ See [here](../model-providers/top-level/ollama.mdx#embeddings-model) for instruc
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Huggingface TEI Embedder
       provider: huggingface-tei

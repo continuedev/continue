@@ -5,8 +5,8 @@ keywords: [model]
 sidebar_position: 2
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 :::info
 This page recommends models and providers for Chat. Read more about how to set up your config [here](../reference.md).
@@ -22,7 +22,7 @@ Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customiz
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Claude 3.5 Sonnet
       provider: anthropic
@@ -54,7 +54,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
   <TabItem value="yaml" label="YAML">
     <Tabs groupId="providers">
         <TabItem value="Together">
-        ```yaml title="Package or config.yaml"
+        ```yaml title="config.yaml"
         models:
           - name: "Llama 3.1 405B"
             provider: "together"
@@ -63,7 +63,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
         ```
         </TabItem>
         <TabItem value="Groq">
-        ```yaml title="Package or config.yaml"
+        ```yaml title="config.yaml"
         models:
           - name: "Llama 3.1 405B"
             provider: "groq"
@@ -72,7 +72,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
         ```
         </TabItem>
         <TabItem value="vLLM">
-        ```yaml title="Package or config.yaml"
+        ```yaml title="config.yaml"
         models:
           - name: "Llama 3.1 405B"
             provider: "vllm"
@@ -80,7 +80,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
         ```
         </TabItem>
         <TabItem value="Ollama">
-        ```yaml title="Package or config.yaml"
+        ```yaml title="config.yaml"
         models:
           - name: "Llama 3.1 405B"
             provider: "ollama"
@@ -155,7 +155,7 @@ If you prefer to use a model from [OpenAI](../customize/model-providers/top-leve
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: GPT-4o
       provider: openai
@@ -185,7 +185,7 @@ If you prefer to use a model from [xAI](../customize/model-providers/top-level/x
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Grok-2
       provider: xAI
@@ -215,7 +215,7 @@ If you prefer to use a model from [Google](../customize/model-providers/top-leve
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Gemini 1.5 Pro
       provider: gemini
@@ -251,7 +251,7 @@ If your local machine can run an 8B parameter model, then we recommend running L
   <TabItem value="yaml" label="YAML">
     <Tabs groupId="providers">
       <TabItem value="Ollama">
-      ```yaml title="Package or config.yaml"
+      ```yaml title="config.yaml"
       models:
         - name: Llama 3.1 8B
           provider: ollama
@@ -259,7 +259,7 @@ If your local machine can run an 8B parameter model, then we recommend running L
       ```
       </TabItem>
       <TabItem value="LM Studio">
-      ```yaml title="Package or config.yaml"
+      ```yaml title="config.yaml"
       models:
         - name: Llama 3.1 8B
           provider: lmstudio
@@ -308,7 +308,7 @@ If your local machine can run a 16B parameter model, then we recommend running D
   <TabItem value="yaml" label="YAML">
     <Tabs groupId="providers">
         <TabItem value="Ollama">
-        ```yaml title="Package or config.yaml"
+        ```yaml title="config.yaml"
         models:
           - name: DeepSeek Coder 2 16B
             provider: ollama
@@ -316,7 +316,7 @@ If your local machine can run a 16B parameter model, then we recommend running D
         ```
         </TabItem>
         <TabItem value="LM Studio">
-        ```yaml title="Package or config.yaml"
+        ```yaml title="config.yaml"
         models:
           - name: DeepSeek Coder 2 16B
             provider: lmstudio
