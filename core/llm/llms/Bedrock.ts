@@ -157,10 +157,10 @@ class Bedrock extends BaseLLM {
               toolCalls: [{
                 id: this._currentToolResponse.toolUseId,
                 type: "function",
-              function: {
-                name: this._currentToolResponse.name,
-                arguments: this._currentToolResponse.input,
-              },
+                function: {
+                  name: this._currentToolResponse.name,
+                  arguments: this._currentToolResponse.input
+                }
               }],
             };
             this._currentToolResponse = null;
@@ -229,66 +229,94 @@ class Bedrock extends BaseLLM {
   }
 
   private _convertMessage(message: ChatMessage): any {
+    // Handle system messages explicitly
+    if (message.role === "system") {
+      return;
+    }
+
+    // Tool response handling
     if (message.role === "tool") {
       return {
         role: "user",
         content: [
           {
-            type: "tool_result",
-            tool_use_id: message.toolCallId,
-            text: renderChatMessage(message) || undefined,
-          },
-        ],
-      };
-    } else if (message.role === "assistant" && message.toolCalls && message.toolCalls.length > 0) {
-      return {
-        role: "assistant",
-        content: message.toolCalls.map((toolCall) => {
-          if (!toolCall.function) {
-            return null;
+            toolResult: {
+              toolUseId: message.toolCallId,
+              content: [
+                {
+                  text: message.content || ""
+                }
+              ]
+            }
           }
-          return {
-            type: "tool_use",
-            id: toolCall.id,
-            name: toolCall.function.name,
-            input: toolCall.function.arguments ? JSON.parse(toolCall.function.arguments) : {},
-          };
-        }).filter(Boolean),
+        ]
       };
     }
 
+    // Tool calls handling
+    if (message.role === "assistant" && message.toolCalls) {
+      return {
+        role: "assistant",
+        content: message.toolCalls.map((toolCall) => ({
+            toolUse: {
+              toolUseId: toolCall.id,
+              name: toolCall.function?.name,
+              input: JSON.parse(toolCall.function?.arguments || "{}"),
+            }
+        }))
+      };
+    }
+
+    // Standard text message
     if (typeof message.content === "string") {
       return {
         role: message.role,
-        content: [{ text: message.content }],
+        content: [{ text: message.content }]
       };
     }
 
-    return {
-      role: message.role,
-      content: message.content.map((part) => {
-        if (part.type === "text") {
-          return { text: part.text };
-        }
-        if (part.type === "imageUrl" && part.imageUrl) {
-          return {
-            image: {
-              format: "jpeg",
-              source: {
-                bytes: Buffer.from(part.imageUrl.url.split(",")[1], "base64"),
-              },
-            },
-          };
-        }
-        return null;
-      }).filter(Boolean),
-    };
+    // Improved multimodal content handling
+    if (Array.isArray(message.content)) {
+      return {
+        role: message.role,
+        content: message.content.map(part => {
+          if (part.type === "text") {
+            return { text: part.text };
+          }
+          if (part.type === "imageUrl" && part.imageUrl) {
+            try {
+              const [mimeType, base64Data] = part.imageUrl.url.split(",");
+              const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
+              return {
+                image: {
+                  format,
+                  source: {
+                    bytes: Buffer.from(base64Data, "base64")
+                  }
+                }
+              };
+            } catch (error) {
+              console.warn(`Failed to process image: ${error}`);
+              return null;
+            }
+          }
+          return null;
+        }).filter(Boolean)
+      };
+    }
   }
 
   private _convertMessages(messages: ChatMessage[]): any[] {
     return messages
-      .filter((message) => message.role !== "system" && !!message.content)
-      .map((message) => this._convertMessage(message));
+      .map((message) => {
+        try {
+          return this._convertMessage(message);
+        } catch (error) {
+          console.error(`Failed to convert message: ${error}`);
+          return null;
+        }
+      })
+      .filter(Boolean);
   }
 
   private async _getCredentials() {
