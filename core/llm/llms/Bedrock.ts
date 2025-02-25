@@ -10,7 +10,6 @@ import {
   Chunk,
   CompletionOptions,
   LLMOptions,
-  MessageContent,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -455,13 +454,13 @@ class Bedrock extends BaseLLM {
         .map((result: any) => result.relevance_score);
     } catch (error: unknown) {
       if (error instanceof Error) {
-        if ('code' in error) {
+        if ("code" in error) {
           // AWS SDK specific errors
           throw new Error(`AWS Bedrock rerank error (${(error as any).code}): ${error.message}`);
         }
         throw new Error(`Error in BedrockReranker.rerank: ${error.message}`);
       }
-      throw new Error('Error in BedrockReranker.rerank: Unknown error occurred');
+      throw new Error("Error in BedrockReranker.rerank: Unknown error occurred");
     }
   }
 }
