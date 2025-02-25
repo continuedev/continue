@@ -78,15 +78,3 @@ Voyage AI 提供代码最好的重排序模型， 使用他们的 `rerank-1` 模
   }
 }
 ```
-
-### 免费试用 (Voyage AI)
-
-Continue 提供 Voyage AI 重排序模型的免费试用。
-
-```json title="config.json"
-{
-  "reranker": {
-    "name": "free-trial"
-  }
-}
-```

@@ -313,7 +313,7 @@ const config = {
             from: "/reference/Model Providers/deepseek",
           },
           {
-            to: "/customize/model-providers/free-trial",
+            to: "/customize/model-providers",
             from: "/reference/Model Providers/freetrial",
           },
           {

@@ -50,6 +50,6 @@ The `config.yaml` spec for `prompts` can be found [here](../../yaml-reference.md
 
 ## Data
 
-Data blocks allow you send your development data to custom destinations of your choice. Development data is used for a variety of purposes, including analyzing usage, gethering insights, or fine-tuning models. You can read more about development data [here](../../customize/development-data.md).
+Data blocks allow you send your development data to custom destinations of your choice. Development data can be used for a variety of purposes, including analyzing usage, gathering insights, or fine-tuning models. You can read more about development data [here](../../customize/development-data.md). Explore data block examples [here](https://hub.continue.dev/explore/data).
 
 Data destinations are configured in the[`data`](../../yaml-reference.md#data) section of `config.yaml`.

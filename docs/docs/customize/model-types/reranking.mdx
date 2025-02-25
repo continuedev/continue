@@ -139,28 +139,3 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
     ```
     </TabItem>
 </Tabs>
-
-### Free Trial (Voyage AI)
-
-Continue offers a free trial of Voyage AI's reranking model.
-
-<Tabs groupId="config-example">
-    <TabItem value="yaml" label="YAML">
-    ```yaml title="config.yaml"
-    models:
-      - name: Free Trial Reranker
-        provider: free-trial
-        roles:
-          - rerank
-    ```
-    </TabItem>
-    <TabItem value="json" label="JSON">
-    ```json title="config.json"
-    {
-      "reranker": {
-        "name": "free-trial"
-      }
-    }
-    ```
-    </TabItem>
-</Tabs>
