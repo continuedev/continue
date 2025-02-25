@@ -84,19 +84,26 @@ class Bedrock extends BaseLLM {
       },
     });
 
-    // Add custom headers if provided
-    if (this.requestOptions && this.requestOptions.headers) {
-      client.middlewareStack.add(
-        (next) => async (args: any) => {
-          args.request.headers = {
-            ...args.request.headers,
-            ...this.requestOptions.headers,
-          };
-          return next(args);
-        },
-        { step: "build" }
-      );
-    }
+    let config_headers =
+    this.requestOptions && this.requestOptions.headers
+      ? this.requestOptions.headers
+      : {};
+    // AWS SigV4 requires strict canonicalization of headers.
+    // DO NOT USE "_" in your header name. It will return an error like below.
+    // "The request signature we calculated does not match the signature you provided."
+
+    client.middlewareStack.add(
+      (next) => async (args: any) => {
+        args.request.headers = {
+          ...args.request.headers,
+          ...config_headers,
+        };
+        return next(args);
+      },
+      {
+        step: "build",
+      },
+    );
 
     const input = this._generateConverseInput(messages, { ...options, stream: true });
     const command = new ConverseStreamCommand(input);
