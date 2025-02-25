@@ -404,7 +404,7 @@ Several experimental config parameters are available, as described below:
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
-- `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#model-context-protocol)
+- `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#模型上下文协议)
 
 Example
 

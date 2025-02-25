@@ -366,7 +366,7 @@ _(仅 AWS)_
   - `docstring`: 添加 docstring 的提示词。
   - `fix`: 修复代码的提示词。
   - `optimize`: 优化代码的提示词。
-- `modelContextProtocolServers`: 查看 [模型上下文协议](/customize/context-providers#model-context-protocol)
+- `modelContextProtocolServers`: 查看 [模型上下文协议](/customize/context-providers#模型上下文协议)
 
 示例：
 

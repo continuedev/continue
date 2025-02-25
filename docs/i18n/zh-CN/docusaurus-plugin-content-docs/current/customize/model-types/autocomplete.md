@@ -11,6 +11,6 @@ sidebar_position: 1
 
 ## 推荐的自动补全模型
 
-如果你有使用任何模型的能力，我们推荐通过 [Mistral](../model-providers/top-level/mistral.mdx#自动补全模型) 使用 `Codestral` 或 [Vertex AI](../model-providers/top-level/vertexai.mdx#autocomplete-model) 。
+如果你有使用任何模型的能力，我们推荐通过 [Mistral](../model-providers/top-level/mistral.mdx#自动补全模型) 使用 `Codestral` 或 [Vertex AI](../model-providers/top-level/vertexai.mdx#自动补全模型) 。
 
 如果你想要在本地运行模型，我们推荐通过 [Ollama](../model-providers/top-level/ollama.mdx#自动补全模型) 使用 `Qwen2.5-Coder 1.5B` 。
