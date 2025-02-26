@@ -5,6 +5,9 @@ keywords: [chat, model, role]
 sidebar_position: 1
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters.
 
 In Continue, these models are used for [Chat](../../chat/how-to-use-it.md) and [Actions](../../actions/how-to-use-it.md). The selected chat model will also be used for [Edit](../../edit/how-to-use-it.md) and [Apply](./apply.mdx) if no `edit` or `apply` models are specified, respectively.
@@ -17,9 +20,12 @@ For the best overall Chat experience, you will want to use a 400B+ parameter mod
 
 ### Claude Sonnet 3.5 from Anthropic
 
-Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customize/model-providers/top-level/anthropic.mdx).
+Our current top recommendation is Claude Sonnet 3.7 from [Anthropic](../customize/model-providers/top-level/anthropic.mdx).
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  View the [Claude 3.7 Sonnet model block](https://hub.continue.dev/anthropic/claude-3-7-sonnet) on the hub.
+  </TabItem>
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
@@ -49,7 +55,27 @@ Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customiz
 
 If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your best option right now. You will need to decide if you use it through a SaaS model provider (e.g. [Together](../customize/model-providers/more/together.mdx) or [Groq](../customize/model-providers/more/groq.mdx)) or self-host it (e.g. using [vLLM](../customize/model-providers//more/vllm.mdx) or [Ollama](../customize/model-providers/top-level/ollama.mdx)).
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+    <Tabs groupId="providers">
+        {/* HUB_TODO nonexistent block */}
+        <TabItem value="Together">
+        Add the [Together Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+        {/* HUB_TODO nonexistent block */}
+         <TabItem value="Groq">
+        Add the [Groq Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+        {/* HUB_TODO nonexistent block */}
+        <TabItem value="vLLM">
+        Add the [vLLM Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+        {/* HUB_TODO nonexistent block */}
+        <TabItem value="Ollama">
+        Add the [Ollama Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+    </Tabs>
+  </TabItem>
   <TabItem value="yaml" label="YAML">
     <Tabs groupId="providers">
         <TabItem value="Together">
@@ -152,7 +178,10 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
 
 If you prefer to use a model from [OpenAI](../customize/model-providers/top-level/openai.mdx), then we recommend GPT-4o.
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+    <TabItem value="hub" label="Hub">
+    Add the [OpenAI GPT-4o block](https://hub.continue.dev/openai/gpt-4o) from the hub
+    </TabItem>
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
@@ -182,7 +211,10 @@ If you prefer to use a model from [OpenAI](../customize/model-providers/top-leve
 
 If you prefer to use a model from [xAI](../customize/model-providers/top-level/xAI.mdx), then we recommend Grok-2.
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+    <TabItem value="hub" label="Hub">
+    Add the [xAI Grok-2 block](https://hub.continue.dev/xai/grok-2) from the hub
+    </TabItem>
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
@@ -212,7 +244,10 @@ If you prefer to use a model from [xAI](../customize/model-providers/top-level/x
 
 If you prefer to use a model from [Google](../customize/model-providers/top-level/gemini.mdx), then we recommend Gemini 1.5 Pro.
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+    <TabItem value="hub" label="Hub">
+    Add the [Gemini 1.5 Pro block](https://hub.continue.dev/google/gemini-1.5-pro) from the hub
+    </TabItem>
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
@@ -246,7 +281,18 @@ For the best local, offline Chat experience, you will want to use a model that i
 
 If your local machine can run an 8B parameter model, then we recommend running Llama 3.1 8B on your machine (e.g. using [Ollama](../customize/model-providers/top-level/ollama.mdx) or [LM Studio](../customize/model-providers/more/lmstudio.mdx)).
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+    <Tabs groupId="providers">
+        <TabItem value="ollama" label="Ollama">
+    Add the [Ollama Llama 3.1 8b block](https://hub.continue.dev/ollama/llama3.1-8b) from the hub
+    </TabItem>
+        {/* HUB_TODO nonexistent block */}
+        <TabItem value="lmstudio" label="LM Studio">
+    Add the [LM Studio Llama 3.1 8b block](https://hub.continue.dev/explore/models) from the hub
+    </TabItem>
+    </Tabs>
+  </TabItem>
   <TabItem value="yaml" label="YAML">
     <Tabs groupId="providers">
       <TabItem value="Ollama">
@@ -303,7 +349,19 @@ If your local machine can run an 8B parameter model, then we recommend running L
 
 If your local machine can run a 16B parameter model, then we recommend running DeepSeek Coder 2 16B (e.g. using [Ollama](../customize/model-providers/top-level/ollama.mdx) or [LM Studio](../customize/model-providers/more/lmstudio.mdx)).
 
-<Tabs groupId="config-example">
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+    <Tabs groupId="providers">
+    {/* HUB_TODO nonexistent block */}
+        <TabItem value="ollama" label="Ollama">
+    Add the [Ollama Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
+    </TabItem>
+        {/* HUB_TODO nonexistent block */}
+        <TabItem value="lmstudio" label="LM Studio">
+    Add the [LM Studio Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
+    </TabItem>
+    </Tabs>
+  </TabItem>
   <TabItem value="yaml" label="YAML">
     <Tabs groupId="providers">
         <TabItem value="Ollama">
@@ -359,4 +417,4 @@ If your local machine can run a 16B parameter model, then we recommend running D
 
 ## Other experiences
 
-There are many more models and providers you can use with Chat beyond those mentioned above. Read more [here](../customize/model-roles/chat.mdx)
+There are many more models and providers you can use with Chat beyond those mentioned above. Read more [here](../model-roles/chat.mdx)
