@@ -13,6 +13,7 @@ export const completionOptionsSchema = z.object({
   numThreads: z.number().optional(),
   useMmap: z.boolean().optional(),
   keepAlive: z.number().optional(),
+  numGpu: z.number().optional(),
   raw: z.boolean().optional(),
   stream: z.boolean().optional(),
 });
