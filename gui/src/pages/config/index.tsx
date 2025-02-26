@@ -273,7 +273,7 @@ function ConfigPage() {
                                     orgSlug: selectedOrganization?.slug,
                                   });
                                 } else {
-                                  login(true);
+                                  login(false);
                                 }
                               }}
                             >
