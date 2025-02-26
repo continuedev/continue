@@ -112,7 +112,7 @@ const config = {
             sidebarId: "hubSidebar",
             position: "left",
             label: "Hub",
-            href: "/hub/getting-started",
+            href: "/hub/introduction",
           },
           {
             to: "https://github.com/continuedev/continue",
@@ -201,7 +201,7 @@ const config = {
       {
         redirects: [
           {
-            to: "/hub/getting-started",
+            to: "/hub/introduction",
             from: "/hub",
           },
           {

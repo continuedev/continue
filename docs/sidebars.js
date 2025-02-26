@@ -142,7 +142,7 @@ const sidebars = {
     "customize/changelog",
   ],
   hubSidebar: [
-    "hub/getting-started",
+    "hub/introduction",
     {
       type: "category",
       label: "Assistants",
@@ -174,10 +174,7 @@ const sidebars = {
       label: "Governance",
       items: [
         "hub/governance/org-permissions",
-        "hub/governance/solo-tier",
-        "hub/governance/teams-tier",
-        "hub/governance/enterprise-tier",
-        "hub/governance/models-add-on",
+        "hub/governance/pricing",
       ],
     },
   ],
