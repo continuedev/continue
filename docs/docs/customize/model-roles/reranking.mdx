@@ -54,11 +54,11 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
 
 See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rerank-2).
 
-<Tabs groupId="hub-config-example">
-  <TabItem value="hub" label="Hub">
-  [Cohere Reranker English v3](https://hub.continue.dev/)
+<Tabs groupId="config-example">
   {/* HUB_TODO block doesn't exist */}
-  </TabItem>
+  {/* <TabItem value="hub" label="Hub">
+  [Cohere Reranker English v3](https://hub.continue.dev/)
+  </TabItem> */}
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
@@ -89,11 +89,11 @@ See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rer
 
 If you only have access to a single LLM, then you can use it as a reranker. This is discouraged unless truly necessary, because it will be much more expensive and still less accurate than any of the above models trained specifically for the task. Note that this will not work if you are using a local model, for example with Ollama, because too many parallel requests need to be made.
 
-<Tabs groupId="hub-config-example">
-  <TabItem value="hub" label="Hub">
+<Tabs groupId="config-example">
+  {/* HUB_TODO block doesn't exist */}
+  {/* <TabItem value="hub" label="Hub">
   [GPT-4o LLM Reranker Block](https://hub.continue.dev/)
-    {/* HUB_TODO block doesn't exist */}
-  </TabItem>
+  </TabItem> */}
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
@@ -124,11 +124,11 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
 
 [Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own [reranker endpoint](https://huggingface.github.io/text-embeddings-inference/#/Text%20Embeddings%20Inference/rerank). You can configure your reranker as follows:
 
-<Tabs groupId="hub-config-example">
-  <TabItem value="hub" label="Hub">
-  [HuggingFace TEI Reranker block](https://hub.continue.dev/)
+<Tabs groupId="config-example">
   {/* HUB_TODO */}
-  </TabItem>
+  {/* <TabItem value="hub" label="Hub">
+  [HuggingFace TEI Reranker block](https://hub.continue.dev/)
+  </TabItem> */}
     <TabItem value="yaml" label="YAML">
     ```yaml title="config.yaml"
     models:
