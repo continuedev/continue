@@ -362,9 +362,6 @@ export class VsCodeExtension {
       void this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
-    const enableContinueHub = vscode.workspace
-      .getConfiguration(EXTENSION_NAME)
-      .get<boolean>("enableContinueHub");
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
@@ -372,14 +369,6 @@ export class VsCodeExtension {
         void webviewProtocol.request("didChangeIdeSettings", {
           settings,
         });
-
-        if (
-          enableContinueHub
-            ? settings.continueTestEnvironment !== "production"
-            : settings.continueTestEnvironment === "production"
-        ) {
-          await vscode.commands.executeCommand("workbench.action.reloadWindow");
-        }
       }
     });
   }

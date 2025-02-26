@@ -99,20 +99,12 @@ class IntelliJIDE(
         val settings = service<ContinueExtensionSettings>()
 
 
-        var continueTestEnvironment = settings.continueState.continueTestEnvironment
-        if (continueTestEnvironment != "production") {
-            val enableHub = enableHubContinueDev()
-            if (enableHub) {
-                continueTestEnvironment = "production"
-            }
-        }
-
         return IdeSettings(
             remoteConfigServerUrl = settings.continueState.remoteConfigServerUrl,
             remoteConfigSyncPeriod = settings.continueState.remoteConfigSyncPeriod,
             userToken = settings.continueState.userToken ?: "",
             enableControlServerBeta = settings.continueState.enableContinueTeamsBeta,
-            continueTestEnvironment = continueTestEnvironment,
+            continueTestEnvironment = "production",
             pauseCodebaseIndexOnStart = false, // TODO: Needs to be implemented
         )
     }

@@ -68,14 +68,22 @@ export async function getControlPlaneEnv(
   ideSettingsPromise: Promise<IdeSettings>,
 ): Promise<ControlPlaneEnv> {
   const ideSettings = await ideSettingsPromise;
-  return getControlPlaneEnvSync(ideSettings.continueTestEnvironment);
+  return getControlPlaneEnvSync(
+    ideSettings.continueTestEnvironment,
+    ideSettings.enableControlServerBeta,
+  );
 }
 
 export function getControlPlaneEnvSync(
   ideTestEnvironment: IdeSettings["continueTestEnvironment"],
+  enableControlServerBeta: IdeSettings["enableControlServerBeta"],
 ): ControlPlaneEnv {
   if (fs.existsSync(getStagingEnvironmentDotFilePath())) {
     return STAGING_ENV;
+  }
+
+  if (enableControlServerBeta === true) {
+    return PRODUCTION_ENV;
   }
 
   const env =

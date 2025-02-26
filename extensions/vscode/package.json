@@ -96,11 +96,6 @@
           "default": false,
           "markdownDescription": "Enable Continue for teams beta features. To sign in, click the gear icon to go to the settings page, and click Sign In."
         },
-        "continue.enableContinueHub": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable Continue Hub (internal)"
-        },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,
