@@ -91,6 +91,7 @@ class MessageTypes {
             "config/listProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
+            "config/updateSelectedModel",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
