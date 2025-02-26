@@ -151,6 +151,14 @@ This can be accomplished using the following command: `Continue: Rebuild codebas
 
 This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then selecting the latest version, and then restarting Android Studio. [See this thread](https://github.com/continuedev/continue/issues/596#issuecomment-1789327178) for details.
 
+### I received a "Codebase indexing disabled - Your Linux system lacks required CPU features (AVX2, FMA)" notification
+
+We use LanceDB as our vector database for codebase search features. On x64 Linux systems, LanceDB requires specific CPU features (FMA and AVX2) which may not be available on older processors.
+
+Most Continue features will work normally, including autocomplete and chat. However, commands that rely on codebase indexing, such as `@codebase`, `@files`, and `@folder`, will be disabled.
+
+For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
+
 ## Still having trouble?
 
 You can also join our Discord community [here](https://discord.gg/vapESyrFmJ) for additional support and discussions. Alternatively, you can create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), providing details of your problem, and we'll be able to help you out more quickly.

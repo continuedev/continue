@@ -21,9 +21,8 @@ function MorePage() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const disableIndexing = useAppSelector(
-    (state) => state.config.config.disableIndexing,
-  );
+  const config = useAppSelector((store) => store.config.config);
+  const { disableIndexing } = config;
 
   return (
     <div className="overflow-y-scroll">
@@ -38,8 +37,14 @@ function MorePage() {
             </span>
           </div>
           {disableIndexing ? (
-            <div className="pb-2 pt-5 text-center font-semibold">
-              Indexing is disabled
+            <div className="pb-2 pt-5">
+              <p className="py-1 text-center font-semibold">
+                Indexing is disabled
+              </p>
+              <p className="text-lightgray cursor-pointer text-center text-xs">
+                Open settings and toggle <code>Disable Indexing</code> to
+                re-enable
+              </p>
             </div>
           ) : (
             <IndexingProgress />
