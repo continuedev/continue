@@ -14,5 +14,5 @@ sidebar_position: 2
 否则，以下是一些最好的选择：
 
 - [GPT-4o](../model-providers/top-level/openai.md)
-- [Gemini 1.5 Pro](../model-providers/top-level/gemini.md)
+- [Gemini 2.0 Flash](../model-providers/top-level/gemini.md)
 - [Llama3.1 405B](../tutorials/llama3.1.md)

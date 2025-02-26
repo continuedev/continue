@@ -54,8 +54,8 @@ We recommend configuring **GPT-4o** as your chat model.
 We recommend configuring **Codestral** as your autocomplete model.
 
 <Tabs groupId="config-example">
-  <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+	<TabItem value="yaml" label="YAML">
+	```yaml title="config.yaml"
   models:
     - name: Codestral
       provider: mistral
@@ -83,7 +83,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 <Tabs groupId="config-example">
     <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+    ```yaml title="config.yaml"
     models:
       - name: Text Embedding-3 Large
         provider: azure
@@ -115,7 +115,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 Azure OpenAI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.mdx) to see a list of reranking models.
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking models.
 
 ## Privacy
 
@@ -134,8 +134,8 @@ To find this information in _Azure AI Foundry_, first select the model that you 
 For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
 <Tabs groupId="config-example">
-  <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+	<TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
     models:
       - name: GPT-4o Azure
         model: gpt-4o

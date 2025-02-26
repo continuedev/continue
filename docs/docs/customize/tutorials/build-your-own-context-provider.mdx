@@ -2,14 +2,60 @@
 title: Build your own context provider
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+# Build Your Own Context Provider
+
+Continue offers several way to provide your custom context to the extension.
+
+## HTTP Context Provider
+
+Continue can retrieve context from a custom HTTP server that you create and serve. Add the `@HTTP` context provider to your configuration like this:
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    provider: http
+    params:
+      url: https://myserver.com/context-provider
+      title: http
+      displayTitle: My Custom Context
+      description: Gets things from my private list
+      options:
+        maxItems: 20
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "name": "http",
+    "params": {
+      "url": "https://myserver.com/context-provider",
+      "title": "http",
+      "description": "Custom HTTP Context Provider",
+      "displayTitle": "My Custom Context",
+      "options": {
+        "maxItems": 20
+      }
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Then, create a server that responds to requests as are made from [HttpContextProvider.ts](https://github.com/continuedev/continue/blob/main/core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](https://github.com/continuedev/continue/blob/main/core/context/providers/context_provider_server.py) for an example that uses FastAPI.
+
+The `"options"` property can be used to send additional parameters to your endpoint, which will be included in the request body.
+
 :::info
-Custom context providers are added through `~/config.ts`. The [`YAML Config Format`](../../reference.md) is the new and preferred config format. We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) and [MCP Servers](../context-providers.mdx#modelcontextprotocol) to achieve similar functionality.
+The following methods for creating custom context providers are deprecated. We recommend using HTTP context providers, [MCP Servers](../context-providers.mdx#model-context-protocol), and [Prompt files](../deep-dives/prompt-files.md) where possible.
 :::
 
-## Introductory Example
+## Using CustomContextProvider
 
-To write your own context provider, you just have to implement the `CustomContextProvider`
-interface:
+Custom context providers can be implemented in a `config.ts` placed in your Continue global directory (`~/.continue` for MacOS, `%USERPROFILE%/.continue` for Windows). You can implement the `CustomContextProvider` interface in your `config.ts`
 
 ```typescript
 interface CustomContextProvider {
@@ -75,7 +121,7 @@ export function modifyConfig(config: Config): Config {
 
 This is automatically appended to your configuration.
 
-## Custom Context Providers with Submenu or Query
+### Custom Context Providers with Submenu or Query
 
 There are 3 types of context providers: "normal", "query", and "submenu". The "normal" type is the default, and is what we've seen so far.
 
@@ -163,13 +209,13 @@ The flow of information in the above example is as follows:
 3. The `id` of the chosen `ContextSubmenuItem` is passed to `getContextItems` as the `query` argument. In this case it is the filepath of the README.
 4. The `getContextItems` function can then use the `query` to retrieve the full contents of the README and format the content before returning the context item which will be included in the prompt.
 
-## Importing outside modules
+### Importing outside modules
 
 To include outside Node modules in your config.ts, run `npm install <module_name>` from the `~/.continue` directory, and then import them in config.ts.
 
 Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.ts` and any dependencies into a single Javascript file. The exact configuration used can be found [here](https://github.com/continuedev/continue/blob/5c9874400e223bbc9786a8823614a2e501fbdaf7/extensions/vscode/src/ideProtocol.ts#L45-L52).
 
-## `CustomContextProvider` Reference
+### `CustomContextProvider` Reference
 
 - `title`: An identifier for the context provider
 - `displayTitle` (optional): The title displayed in the dropdown
@@ -183,27 +229,7 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
   - `extras.ide`: An instance of the `IDE` class, which lets you gather various sources of information from the IDE, including the contents of the terminal, the list of open files, or any warnings in the currently open file.
   - `query`: (not currently used) A string representing the query
 - `loadSubmenuItems` (optional): A function that returns a list of `ContextSubmenuItem`s to display in a submenu. It is given access to an `IDE`, the same that is passed to `getContextItems`.
-
-## Writing Context Providers in Other Languages
-
-If you'd like to write a context provider in a language other than TypeScript, you can use the "http" context provider to call a server that hosts your own code. Add the context provider to `config.json` like this:
-
-```json title="config.json"
-{
-  "name": "http",
-  "params": {
-    "url": "https://myserver.com/context-provider",
-    "title": "http",
-    "description": "Custom HTTP Context Provider",
-    "displayTitle": "My Custom Context",
-    "options": {}
-  }
-}
-```
-
-Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
-
-The `"options"` property can be used to send additional parameters to your endpoint, which will be included in the request body.
+  .
 
 ## Extension API for VSCode
 

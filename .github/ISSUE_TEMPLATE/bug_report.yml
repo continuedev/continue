@@ -27,8 +27,7 @@ body:
         - **Continue version**: v0.9.4
         - **IDE version**:  VSCode 1.85.1
         - Model: Claude Sonnet 3.5
-        - config.yaml: `models: ...`
-        - OR config.json: `{ "models": ... }`
+        - Assistant configuration
       value: |
         - OS:
         - Continue version:
@@ -38,6 +37,7 @@ body:
           ```yaml
 
           ```
+          OR link to assistant in Continue hub:
       render: Markdown
     validations:
       required: false
