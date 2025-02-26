@@ -140,13 +140,6 @@ const sidebars = {
       href: "/yaml-reference",
     },
     "customize/changelog",
-<<<<<<< HEAD
-    // {
-    //   type: "link",
-    //   label: "YAML Migration",
-    //   href: "/yaml-migration",
-    // },
-=======
   ],
   hubSidebar: [
     "hub/introduction",
@@ -179,12 +172,8 @@ const sidebars = {
     {
       type: "category",
       label: "Governance",
-      items: [
-        "hub/governance/org-permissions",
-        "hub/governance/pricing",
-      ],
+      items: ["hub/governance/org-permissions", "hub/governance/pricing"],
     },
->>>>>>> 1407b27e6eb023262729ac2e05dec2c0c1ccecb1
   ],
 };
 
