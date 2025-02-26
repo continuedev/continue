@@ -4,7 +4,7 @@ import { SelectorUtils } from "./SelectorUtils";
 
 export class GUISelectors {
   public static getDescription(view: WebView) {
-    return view.findWebElement(By.xpath("//*[contains(text(), 'Quickly')]"));
+    return view.findWebElement(By.xpath("//*[contains(text(), 'quickly')]"));
   }
 
   public static getMessageInputFields(view: WebView) {
