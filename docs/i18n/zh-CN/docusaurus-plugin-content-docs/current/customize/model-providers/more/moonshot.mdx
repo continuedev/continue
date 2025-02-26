@@ -1,0 +1,60 @@
+# Moonshot
+
+[Moonshot AI](https://platform.moonshot.cn/) 提供高质量的大语言模型服务，使用有竞争力的价格和优秀的性能。
+
+## 配置
+
+要使用 Moonshot AI 模型，你需要：
+
+1. 从 [Moonshot AI Platform](https://platform.moonshot.cn/) 获取 API key
+2. 添加以下配置到你的 `config.json` ：
+
+```json
+{
+  "models": [
+    {
+      "title": "Moonshot",
+      "provider": "moonshot",
+      "model": "moonshot-v1-8k",
+      "apiKey": "YOUR_API_KEY"
+    }
+  ]
+}
+```
+
+## 可用的模型
+
+Moonshot AI 当前支持以下模型：
+
+- `moonshot-v1-8k`: 8K 上下文窗口的基础模型
+- `moonshot-v1-32k`: 32K 上下文窗口的基础模型
+- `moonshot-v1-128k`: 128K 上下文窗口的基础模型
+
+## 配置选项
+
+| 选项      | 描述              | 默认值                        |
+|-----------|-------------------|-------------------------------|
+| `apiKey`  | Moonshot API key  | 必需的                        |
+| `apiBase` | API 基础 URL      | `https://api.moonshot.cn/v1/` |
+| `model`   | 使用的 Model 名称 | `moonshot-v1-8k`              |
+
+## 示例
+
+这是一个完整的配置示例：
+
+```json
+{
+  "models": [
+    {
+      "title": "Moonshot-8K",
+      "provider": "moonshot",
+      "model": "moonshot-v1-8k",
+      "apiKey": "YOUR_API_KEY",
+      "completionOptions": {
+        "temperature": 0.7,
+        "topP": 0.95,
+        "maxTokens": 2048
+      }
+    }
+  ]
+}
