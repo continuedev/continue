@@ -1,7 +1,7 @@
 ---
 title: Bundles
 sidebar_label: Bundles
-description: Introduction to Bundles
+description: Introduction to bundles
 keywords: [blocks, bundles]
 ---
 
@@ -14,9 +14,9 @@ Bundles are collections of blocks that are commonly used together. You can use t
 Once you know which bundle you want to use, you’ll need to
 
 1. Make sure the correct assistant is in the sidebar
-2. Click “Add bundle from the bundle page. This adds the individual blocks to your assistant.
+2. Click “Add all blocks". This adds the individual blocks to your assistant.
 3. Add any required inputs (e.g. secrets) for each block.
-4. Select “Save” in assistant sidebar on the right hand side
+4. Select “Save changes” in assistant sidebar on the right hand side
 
 After this, you can then go to your IDE extension using the "Open VS Code" or "Open Jetbrains" buttons and begin using the new blocks.
 
@@ -28,7 +28,7 @@ To create a bundle, click “New bundle” in the header.
 
 Choose a name, slug, description, and visibility for your bundle.
 
-Then, search blocks using the "Search Blocks" input and add them to your bundle.
+Then, search blocks using the "Search blocks" input and add them to your bundle.
 
 ![Create bundle page](/img/hub/bundle-create-page.png)
 

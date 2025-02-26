@@ -1,11 +1,11 @@
 ---
-title: Create an Assistant
-sidebar_label: Create an Assistant
-description: How to create a custom AI coding assistant.
+title: Create an assistant
+sidebar_label: Create an assistant
+description: How to create a custom AI code assistant
 keywords: [assistants, creation, guide]
 ---
 
-# Create an Assistant
+# Create an assistant
 
 ## Remix an assistant
 
@@ -15,23 +15,24 @@ By clicking the “remix” button, you’ll be taken to the “Create a remix�
 
 ![Remix Assistant Button](/img/hub/assistant-remix-button.png)
 
-Once here, you’ll be able to:
+Once here, you’ll be able to
 
-1. Add or remove blocks in YAML configuration
-2. Change the name, description, icon, etc.
+1. add or remove blocks in YAML configuration
+2. change the name, description, icon, etc.
 
 Clicking “Create assistant” will make this assistant available for use.
 
 ## Create an assistant from scratch
 
-To create an assistant from scratch, click “New assistant” in the top bar.
+To create an assistant from scratch, select “New assistant” in the top bar.
 
-![New Assistant Button](/img/hub/assistant-new-button.png)
+![New assistant button](/img/hub/assistant-new-button.png)
 
 Choose a name, slug, description, and icon for your assistant.
 
-Then, you can edit the assistant YAML directly before clicking "Create assistant" to make it available for use. To edit the YAML directly, refer to examples of assistants on [hub.continue.dev](https://hub.continue.dev/explore/assistants) and visit the [YAML Reference](../../yaml-reference.md#complete-yaml-config-example) for more details.
+The easiest way to create an assistant is to click "Create assistant" with the default configuration and then add / remove blocks using the sidebar.
 
-![New Assistant YAML](/img/hub/assistant-create-yaml.png)
+Alternatively, you can edit the assistant YAML directly before clicking "Create assistant". Refer to examples of assistants on [hub.continue.dev](https://hub.continue.dev/explore/assistants) and visit the [YAML Reference](../../yaml-reference.md#complete-yaml-config-example) docs for more details.
 
-You can also go ahead and Create the Assistant and then edit it using the sidebar.
+![New assistant YAML](/img/hub/assistant-create-yaml.png)
+

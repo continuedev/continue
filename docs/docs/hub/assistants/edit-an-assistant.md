@@ -23,4 +23,4 @@ If a block you want to use does not exist yet, you can [create a new block](../b
 
 When you are done editing, click "Publish" to publish a new version of the assistant.
 
-Click "Open VS Code" or "Open Jetbrains" to open your IDE for using the assistant.
+Click "Open VS Code" or "Open JetBrains" to open your IDE for using the assistant.
