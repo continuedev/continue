@@ -19,7 +19,7 @@ export default function MainTab({
   const auth = useAuth();
 
   function onGetStarted() {
-    auth.login(true).then((success) => {
+    auth.login(false).then((success) => {
       if (success) {
         onboardingCard.close(isDialog);
       }
