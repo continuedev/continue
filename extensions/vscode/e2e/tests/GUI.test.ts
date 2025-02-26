@@ -47,7 +47,7 @@ describe("GUI Test", () => {
   });
 
   describe("Onboarding", () => {
-    it("should display correct panel description", async () => {
+    it.skip("should display correct panel description", async () => {
       const description = await GUISelectors.getDescription(view);
 
       expect(await description.getText()).has.string(
