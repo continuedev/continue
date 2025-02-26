@@ -1,18 +1,11 @@
-import {
-  ModelRole,
-  modelRolesSchema,
-} from "@continuedev/config-yaml/dist/schemas/models";
 import z from "zod";
 
 import {
   BrowserSerializedContinueConfig,
-  ContinueConfig,
   Config,
+  ContinueConfig,
   SerializedContinueConfig,
 } from "..";
-import { GlobalContext } from "../util/GlobalContext";
-
-const selectedModelsSchema = z.record(modelRolesSchema, z.string().nullable());
 
 export const sharedConfigSchema = z
   .object({

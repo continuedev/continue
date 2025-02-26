@@ -88,7 +88,7 @@ export function AssistantSelectOptions({
       <div className="mt-auto w-full">
         <OptionDiv
           key={"new-assistant"}
-          onClick={session ? onNewAssistant : () => login(true)}
+          onClick={session ? onNewAssistant : () => login(false)}
         >
           <div
             className="flex items-center py-0.5"

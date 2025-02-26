@@ -42,6 +42,12 @@ export const completionOptionsSchema = z.object({
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
+export const embedOptionsSchema = z.object({
+  maxChunkSize: z.number().optional(),
+  maxBatchSize: z.number().optional(),
+});
+export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
+
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
@@ -57,7 +63,11 @@ const baseModelFields = {
   roles: modelRolesSchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
+  embedOptions: embedOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
+  env: z
+    .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
+    .optional(),
 };
 
 export const modelSchema = z.union([

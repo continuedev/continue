@@ -116,8 +116,8 @@ Embeddings model settings - the model used for @Codebase and @docs.
 - `apiKey`: API key for the provider.
 - `apiBase`: Base URL for API requests.
 - `requestOptions`: Additional HTTP request settings specific to the embeddings provider.
-- `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
-- `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+- `maxEmbeddingChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+- `maxEmbeddingBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
 
 (AWS ONLY)
 
@@ -132,8 +132,8 @@ Example:
     "provider": "openai",
     "model": "text-embedding-ada-002",
     "apiKey": "<API_KEY>",
-    "maxChunkSize": 256,
-    "maxBatchSize": 5
+    "maxEmbeddingChunkSize": 256,
+    "maxEmbeddingBatchSize": 5
   }
 }
 ```

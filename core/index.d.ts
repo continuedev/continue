@@ -510,14 +510,16 @@ export interface LLMOptions {
   profile?: string;
   modelArn?: string;
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 
   // IBM watsonx Options
   deploymentId?: string;
+
+  env?: Record<string, string | number | boolean>;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -955,15 +957,16 @@ export interface EmbedOptions {
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
-  maxChunkSize?: number;
-  maxBatchSize?: number;
+  maxEmbeddingChunkSize?: number;
+  maxEmbeddingBatchSize?: number;
+
   // AWS options
   profile?: string;
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 }
 
