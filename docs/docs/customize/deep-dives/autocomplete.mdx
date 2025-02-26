@@ -39,6 +39,10 @@ If you want to have the best autocomplete experience, we recommend using Codestr
   </TabItem>
 </Tabs>
 
+:::tip[Codestral API Key]
+The API keys for Codestral and the general Mistral APIs are different. If you are using Codestral, you probably want a Codestral API key, but if you are sharing the key as a team or otherwise want to use `api.mistral.ai`, then make sure to set `"apiBase": "https://api.mistral.ai/v1"` in your `tabAutocompleteModel`.
+:::
+
 ### Setting up with Ollama (default)
 
 If you'd like to run your autocomplete model locally, we recommend using Ollama. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
@@ -47,16 +51,42 @@ If you'd like to run your autocomplete model locally, we recommend using Ollama.
 ollama run qwen2.5-coder:1.5b
 ```
 
-Once it has been downloaded, you should begin to see completions in VS Code.
-
-### Setting up a custom model
-
-All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
+Then, add the model to your configuration:
 
 <Tabs groupId="hub-config-example">
   <TabItem value="hub" label="Hub">
   [Qwen 2.5 Coder 1.5B model block](https://hub.continue.dev/lmstudio/qwen2.5-coder-1.5b)
   </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Qwen 1.5b Autocomplete Model
+      provider: ollama
+      model: qwen2.5-coder:1.5b
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Qwen 1.5b Autocomplete Model",
+      "provider": "ollama", 
+      "model": "qwen2.5-coder:1.5b",
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Once the model has been downloaded, you should begin to see completions in VS Code.
+
+### Setting up a custom model
+
+All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
+
+<Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
