@@ -26,7 +26,7 @@ See the full reference for `config.yaml` [here](../../reference.md).
 View the `config.json` migration guide [here](../../yaml-migration.md)
 :::
 
-- [`config.json`](../../json-reference.md) - The original configuration format which is stored in a file at the same location as `config.yaml`
+- [`config.json`](../../reference.md) - The original configuration format which is stored in a file at the same location as `config.yaml`
 - [`.continuerc.json`](#continuercjson) - Workspace-level configuration
 - [`config.ts`](#configts) - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
   - `~/.continue/config.ts` (MacOS / Linux)

@@ -21,8 +21,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
       - name: Claude 3.5 Sonnet
         provider: vertexai
         model: claude-3-5-sonnet-20240620
-        projectId: <PROJECT_ID>
-        region: us-east5
+        env:
+          projectId: <PROJECT_ID>
+          region: us-east5
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
@@ -53,10 +54,12 @@ We recommend configuring **Codestral** or **code-gecko** as your autocomplete mo
       - name: Codestral (Vertex AI)
         provider: vertexai
         model: codestral
-        projectId: <PROJECT_ID>
-        region: us-central1
         roles:
           - autocomplete
+        env:
+          projectId: <PROJECT_ID>
+          region: us-central1
+          
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
@@ -85,8 +88,9 @@ We recommend configuring **text-embedding-004** as your embeddings model.
       - name: Text Embedding-004
         provider: vertexai
         model: text-embedding-004
-        projectId: <PROJECT_ID>
-        region: us-central1
+        env:
+          projectId: <PROJECT_ID>
+          region: us-central1
         roles:
           - embed
     ```

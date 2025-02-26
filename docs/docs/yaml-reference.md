@@ -134,6 +134,11 @@ The `models` section defines the language models used in your configuration. Mod
 - `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 - `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
+- `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
+
+  - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+  - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+
 - `defaultCompletionOptions`: Default completion options for model settings.
 
   **Properties:**

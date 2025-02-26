@@ -19,8 +19,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
     - name: Claude 3.5 Sonnet
       provider: bedrock
       model: anthropic.claude-3-5-sonnet-20240620-v1:0
-      region: us-east-1
-      profile: bedrock
+      env:
+        region: us-east-1
+        profile: bedrock
       roles:
         - chat
   ```
@@ -53,8 +54,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
     - name: Claude 3.5 Sonnet
       provider: bedrock
       model: us.anthropic.claude-3-5-sonnet-20241022-v2:0
-      region: us-east-1
-      profile: bedrock
+      env:
+        region: us-east-1
+        profile: bedrock
       roles:
         - chat
   ```
@@ -93,7 +95,8 @@ We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazo
     - name: Embeddings Model
       provider: bedrock
       model: amazon.titan-embed-text-v2:0
-      region: us-west-2
+      env:
+        region: us-west-2
       roles:
         - embed
   ```
@@ -123,7 +126,8 @@ We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may
     - name: Bedrock Reranker
       provider: bedrock
       model: cohere.rerank-v3-5:0
-      region: us-west-2
+      env:
+        region: us-west-2
       roles:
         - rerank
   ```

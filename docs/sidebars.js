@@ -136,10 +136,17 @@ const sidebars = {
     },
     {
       type: "link",
-      label: "JSON Reference",
-      href: "/json-reference",
+      label: "YAML Reference",
+      href: "/yaml-reference",
     },
     "customize/changelog",
+<<<<<<< HEAD
+    // {
+    //   type: "link",
+    //   label: "YAML Migration",
+    //   href: "/yaml-migration",
+    // },
+=======
   ],
   hubSidebar: [
     "hub/introduction",
@@ -177,6 +184,7 @@ const sidebars = {
         "hub/governance/pricing",
       ],
     },
+>>>>>>> 1407b27e6eb023262729ac2e05dec2c0c1ccecb1
   ],
 };
 
