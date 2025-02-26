@@ -209,7 +209,7 @@ const config = {
             from: "/hub/governance",
           },
           {
-            to: "/hub/secrets/types",
+            to: "/hub/secrets/secret-types",
             from: "/hub/secrets",
           },
           {
