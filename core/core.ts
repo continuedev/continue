@@ -1091,6 +1091,7 @@ export class Core {
     this.messenger.send("refreshSubmenuItems", {
       providers: "dependsOnIndexing",
     });
+    this.indexingCancellationController = undefined;
   }
 
   // private
