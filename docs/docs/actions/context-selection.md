@@ -9,10 +9,6 @@ sidebar_position: 3
 
 Slash commands can be combined with additional instructions, including [context providers](../customize/context-providers.mdx) or [highlighted code](../edit/context-selection#highlighted-code).
 
-For example, with the “/edit” slash command you should describe the edit that you want the LLM to perform.
-
-Some slash commands will not acknowledge your input; for example, the “/share” slash command just creates a markdown copy of the current conversation, regardless of what else you may request it to do.
-
 ## Quick actions
 
 Quick actions are always displayed above a class or function and will edit that class or function, but nothing outside of it.

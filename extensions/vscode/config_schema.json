@@ -1424,23 +1424,6 @@
           "if": {
             "properties": {
               "provider": {
-                "const": "llamafile"
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "llamafileCommand": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
                 "enum": ["cerebras"]
               }
             },
@@ -1450,23 +1433,6 @@
             "properties": {
               "model": {
                 "enum": ["llama3.1-8b", "llama3.1-70b"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["text-gen-webui"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "streamingUrl": {
-                "type": "string"
               }
             }
           }
@@ -2791,14 +2757,14 @@
               "description": "Request options to be used in any fetch requests made by the embeddings provider",
               "$ref": "#/$defs/RequestOptions"
             },
-            "maxChunkSize": {
+            "maxEmbeddingChunkSize": {
               "title": "Maximum Chunk Size",
               "description": "The maximum number of tokens that each chunk of a document is allowed to have",
               "type": "integer",
               "minimum": 128,
               "exclusiveMaximum": 2147483647
             },
-            "maxBatchSize": {
+            "maxEmbeddingBatchSize": {
               "title": "Maximum Batch Size",
               "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
               "type": "integer",

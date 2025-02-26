@@ -82,10 +82,12 @@ export const defaultConfig: SerializedContinueConfig = {
   models: [],
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
+  data: [],
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
   models: [],
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
+  data: [],
 };
