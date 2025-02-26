@@ -193,6 +193,7 @@
             "deepinfra",
             "groq",
             "fireworks",
+            "ncompass",
             "cloudflare",
             "deepseek",
             "azure",
@@ -238,6 +239,7 @@
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
             "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
             "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
+            "### Ncompass\nnCompass is an extremely fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://app.ncompass.tech/api-settings).",
             "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
             "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
@@ -264,7 +266,7 @@
         },
         "apiKey": {
           "title": "Api Key",
-          "description": "OpenAI, Anthropic, Cohere, Together, Novita AI, or other API key",
+          "description": "OpenAI, Anthropic, Cohere, Together, Novita AI, nCompass, or other API key",
           "type": "string"
         },
         "apiBase": {
@@ -481,6 +483,7 @@
                   "huggingface-inference-api",
                   "replicate",
                   "together",
+                  "ncompass",
                   "novita",
                   "cloudflare",
                   "sambanova",
@@ -1365,6 +1368,23 @@
             "properties": {
               "model": {
                 "enum": ["starcoder-7b"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["ncompass"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["qwen2.5-coder-32b", "qwen2.5-72b", "llama3.3-70b"]
               }
             }
           }
