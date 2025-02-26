@@ -133,7 +133,7 @@ The `models` section defines the language models used in your configuration. Mod
 - `name` (**required**): A unique name to identify the model within your configuration.
 - `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 - `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
-- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`.
+- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 - `defaultCompletionOptions`: Default completion options for model settings.
 
   **Properties:**

@@ -12,8 +12,10 @@ An "embeddings model" is trained to convert a piece of text into a vector, which
 
 In Continue, embeddings are generated during indexing and then used by [@Codebase](../deep-dives/codebase.mdx) to perform similarity search over your codebase.
 
-:::info[Default model (VS Code only)]
-`transformers.js` is used as a default embeddings model in VS Code. In JetBrains, there currently is no default.
+You can add `embed` to a model's `roles` to specify that it can be used to embed.
+
+:::info[Built-in model (VS Code only)]
+`transformers.js` is used as a built-in embeddings model in VS Code. In JetBrains, there currently is no built-in embedder.
 :::
 
 ## Recommended embedding models
@@ -87,8 +89,11 @@ See [here](../model-providers/top-level/ollama.mdx#embeddings-model) for instruc
 
 [Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own embeddings endpoint. You can configure embeddings to use your endpoint as follows:
 
-<Tabs groupId="config-example">
-
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [HuggingFace Text Embedder Block](https://hub.continue.dev/)
+  {/* HUB_TODO block doesn't exist */}
+  </TabItem>
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
