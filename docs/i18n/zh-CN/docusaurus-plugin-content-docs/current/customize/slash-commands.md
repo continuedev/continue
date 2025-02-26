@@ -98,7 +98,7 @@ Comment 工作就像 `/Edit` ，除了它将自动地给 LLM 注释代码的提�
 {
   "slashCommands": [
     {
-      "name": "http",
+      "name": "remote",
       "description": "Does something custom",
       "params": { "url": "<my server endpoint>" }
     }

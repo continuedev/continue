@@ -172,21 +172,21 @@ Continue 将使用 [esbuild](https://esbuild.github.io/) 打包你的 `config.ts
 
 ## 使用其他语言编写上下文提供者
 
-如果你想要用除了 TypeScript 的其他语言编写上下文提供者，你可以使用 "http" 上下文提供者，来调用一个托管你自己代码的服务器。添加上下文提供者到 `config.json` ，像这样：
+如果你想要用除了 TypeScript 的其他语言编写上下文提供者，你可以使用 "remote" 上下文提供者，来调用一个托管你自己代码的服务器。添加上下文提供者到 `config.json` ，像这样：
 
 ```json title="config.json"
 {
-  "name": "http",
+  "name": "remote",
   "params": {
     "url": "https://myserver.com/context-provider",
-    "title": "http",
-    "description": "Custom HTTP Context Provider",
+    "title": "remote",
+    "description": "Custom Remote Server Context Provider",
     "displayTitle": "My Custom Context"
   }
 }
 ```
 
-<!-- Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI. -->
+<!-- Then, create a server that responds to requests as are made from [RemoteServerContextProvider.ts](../../../core/context/providers/RemoteServerContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI. -->
 
 ## VSCode 的扩展 API
 

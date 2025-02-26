@@ -1,5 +1,5 @@
 """
-This is an example of a server that can be used with the "http" context provider.
+This is an example of a server that can be used with the "remote" context provider.
 This can be useful if you want to write custom logic in another language, or on a server.
 """
 
