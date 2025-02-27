@@ -22,6 +22,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/getSerializedProfileInfo",
     "config/deleteModel",
     "config/listProfiles",
+    "config/refreshProfiles",
     "config/openProfile",
     "config/updateSharedConfig",
     "config/updateSelectedModel",

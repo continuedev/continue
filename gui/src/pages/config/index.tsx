@@ -224,70 +224,76 @@ function ConfigPage() {
             <h2 className="mb-1 mt-0">Configuration</h2>
             {profiles ? (
               <>
-                <Listbox value={selectedProfile?.id} onChange={changeProfileId}>
-                  {({ open }) => (
-                    <div className="relative w-full">
-                      <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
-                        <span className="lines lines-1">
-                          {selectedProfile?.title ?? "No Assistant Selected"}
-                        </span>
-                        <div className="pointer-events-none flex items-center">
-                          <ChevronUpDownIcon
-                            className="h-5 w-5"
-                            aria-hidden="true"
-                          />
-                        </div>
-                      </Listbox.Button>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-lightgray">{`${hubEnabled ? "Assistant" : "Profile"}`}</span>
+                  <Listbox
+                    value={selectedProfile?.id}
+                    onChange={changeProfileId}
+                  >
+                    {({ open }) => (
+                      <div className="relative w-full">
+                        <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
+                          <span className="lines lines-1">
+                            {selectedProfile?.title ?? "No Assistant Selected"}
+                          </span>
+                          <div className="pointer-events-none flex items-center">
+                            <ChevronUpDownIcon
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            />
+                          </div>
+                        </Listbox.Button>
 
-                      <Transition
-                        as={Fragment}
-                        show={open}
-                        enter="transition ease-out duration-100"
-                        enterFrom="transform opacity-0 scale-95"
-                        enterTo="transform opacity-100 scale-100"
-                        leave="transition ease-in duration-75"
-                        leaveFrom="transform opacity-100 scale-100"
-                        leaveTo="transform opacity-0 scale-95"
-                      >
-                        <Listbox.Options className="bg-vsc-background max-h-80vh absolute z-50 mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
-                          {profiles.map((option, idx) => (
-                            <Listbox.Option
-                              key={idx}
-                              value={option.id}
-                              className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === option.id ? "bg-list-active" : "bg-vsc-input-background"}`}
-                            >
-                              <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
-                                {option.title}
-                              </span>
-                            </Listbox.Option>
-                          ))}
-                          {hubEnabled && (
-                            <Listbox.Option
-                              key={"no-profiles"}
-                              value={null}
-                              className={`text-vsc-foreground hover:bg-list-active bg-vsc-input-background flex cursor-pointer flex-row items-center gap-2 px-3 py-2`}
-                              onClick={() => {
-                                if (session) {
-                                  ideMessenger.post("controlPlane/openUrl", {
-                                    path: "new",
-                                    orgSlug: selectedOrganization?.slug,
-                                  });
-                                } else {
-                                  login(false);
-                                }
-                              }}
-                            >
-                              <PlusCircleIcon className="h-4 w-4" />
-                              <span className="lines lines-1 flex items-center justify-between text-xs">
-                                Create new Assistant
-                              </span>
-                            </Listbox.Option>
-                          )}
-                        </Listbox.Options>
-                      </Transition>
-                    </div>
-                  )}
-                </Listbox>
+                        <Transition
+                          as={Fragment}
+                          show={open}
+                          enter="transition ease-out duration-100"
+                          enterFrom="transform opacity-0 scale-95"
+                          enterTo="transform opacity-100 scale-100"
+                          leave="transition ease-in duration-75"
+                          leaveFrom="transform opacity-100 scale-100"
+                          leaveTo="transform opacity-0 scale-95"
+                        >
+                          <Listbox.Options className="bg-vsc-background max-h-80vh absolute z-50 mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
+                            {profiles.map((option, idx) => (
+                              <Listbox.Option
+                                key={idx}
+                                value={option.id}
+                                className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === option.id ? "bg-list-active" : "bg-vsc-input-background"}`}
+                              >
+                                <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
+                                  {option.title}
+                                </span>
+                              </Listbox.Option>
+                            ))}
+                            {hubEnabled && (
+                              <Listbox.Option
+                                key={"no-profiles"}
+                                value={null}
+                                className={`text-vsc-foreground hover:bg-list-active bg-vsc-input-background flex cursor-pointer flex-row items-center gap-2 px-3 py-2`}
+                                onClick={() => {
+                                  if (session) {
+                                    ideMessenger.post("controlPlane/openUrl", {
+                                      path: "new",
+                                      orgSlug: selectedOrganization?.slug,
+                                    });
+                                  } else {
+                                    login(false);
+                                  }
+                                }}
+                              >
+                                <PlusCircleIcon className="h-4 w-4" />
+                                <span className="lines lines-1 flex items-center justify-between text-xs">
+                                  Create new Assistant
+                                </span>
+                              </Listbox.Option>
+                            )}
+                          </Listbox.Options>
+                        </Transition>
+                      </div>
+                    )}
+                  </Listbox>
+                </div>
                 {selectedProfile && (
                   <SecondaryButton onClick={handleOpenConfig}>
                     {selectedProfile.id === "local"
@@ -297,14 +303,20 @@ function ConfigPage() {
                         : "Open Workspace"}
                   </SecondaryButton>
                 )}
+                {/* {hubEnabled && session && (
+                  <div className="flex flex-col gap-1">
+                    <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+                    <SecondaryButton onClick={refreshProfiles}>
+                      Refresh assistants
+                    </SecondaryButton>
+                  </div>
+                )} */}
               </>
             ) : (
               <div>Loading...</div>
             )}
             <div>
-              <h2 className="m-0 mb-3 p-0 text-center text-sm">
-                Active Models
-              </h2>
+              <h2 className="m-0 mb-3 p-0 text-center text-sm">Model Roles</h2>
               <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-[auto_1fr]">
                 <ModelRoleSelector
                   displayName="Chat"

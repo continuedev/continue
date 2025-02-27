@@ -306,6 +306,10 @@ export class Core {
       return this.configHandler.listProfiles();
     });
 
+    on("config/refreshProfiles", async (msg) => {
+      await this.configHandler.loadAssistantsForSelectedOrg();
+    });
+
     on("config/addContextProvider", async (msg) => {
       addContextProvider(msg.data, this.configHandler);
     });

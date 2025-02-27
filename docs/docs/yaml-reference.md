@@ -69,7 +69,7 @@ Note that hub secrets can be passed as inputs, using the a similar mustache form
 
 ### Overrides
 
-Block properties can be also be directly overriden using `overrides`. For example:
+Block properties can be also be directly overriden using `override`. For example:
 
 ```yaml title="Assistant config.yaml"
 name: myprofile/custom-assistant
@@ -78,7 +78,7 @@ models:
     with:
       ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
       TEMP: 0.9
-    overrides:
+    override:
       roles:
         - chat
 ```
@@ -350,7 +350,7 @@ models:
   - uses: anthropic/claude-3.5-sonnet
     with:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-    overrides:
+    override:
       defaultCompletionOptions:
         temperature: 0.8
   - name: GPT-4
@@ -435,26 +435,26 @@ model_defaults: &model_defaults
   apiBase: https://api.example.com/llm
 
 models:
-- name: mistral
-  <<: *model_defaults
-  model: mistral-7b-instruct
-  roles:
-    - chat
-    - edit
+  - name: mistral
+    <<: *model_defaults
+    model: mistral-7b-instruct
+    roles:
+      - chat
+      - edit
 
-- name: qwen2.5-coder-7b-instruct
-  <<: *model_defaults
-  model: qwen2.5-coder-7b-instruct
-  roles:
-    - chat
-    - edit
+  - name: qwen2.5-coder-7b-instruct
+    <<: *model_defaults
+    model: qwen2.5-coder-7b-instruct
+    roles:
+      - chat
+      - edit
 
-- name: qwen2.5-coder-7b
-  <<: *model_defaults
-  model: qwen2.5-coder-7b
-  useLegacyCompletionsEndpoint: false
-  roles:
-    - autocomplete
+  - name: qwen2.5-coder-7b
+    <<: *model_defaults
+    model: qwen2.5-coder-7b
+    useLegacyCompletionsEndpoint: false
+    roles:
+      - autocomplete
 ```
 
 ### Fully deprecated settings
