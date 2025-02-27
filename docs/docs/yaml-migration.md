@@ -82,8 +82,8 @@ Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with
     "provider": "openai",
     "model": "text-embedding-ada-002",
     "apiKey": "<YOUR_OPENAI_API_KEY>",
-    "maxChunkSize": 256,
-    "maxBatchSize": 5
+    "maxEmbeddingChunkSize": 256,
+    "maxEmbeddingBatchSize": 5
   },
   "reranker": {
     "name": "voyage",
@@ -126,6 +126,9 @@ models:
     apiKey: <YOUR_ADA_API_KEY>
     roles:
       - embed
+    embedOptions:
+      - maxChunkSize: 256
+      - maxBatchSize: 5
 
   - name: Ollama Autodetect
     provider: ollama
@@ -143,7 +146,7 @@ models:
       - apply
 ```
 
-Note that the `repoMapFileSelection` experimental model role has been deprecated.
+Note that the `repoMapFileSelection` experimental model role has been deprecated and is only available in `config.json`.
 
 ### Context Providers
 

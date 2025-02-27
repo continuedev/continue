@@ -126,7 +126,7 @@ function InputToolbar(props: InputToolbarProps) {
                       }
                     }}
                   />
-                  <HoverItem>
+                  <HoverItem className="">
                     <PhotoIcon
                       className="h-4 w-4 hover:brightness-125"
                       data-tooltip-id="image-tooltip"
@@ -160,7 +160,7 @@ function InputToolbar(props: InputToolbarProps) {
         <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
-              className={`${toolsSupported ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
+              className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
             >
               {props.activeKey === "Alt" ? (
                 <HoverItem className="underline">

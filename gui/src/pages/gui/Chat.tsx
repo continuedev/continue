@@ -111,7 +111,7 @@ const StepsDiv = styled.div`
   }
 
   .thread-message {
-    margin: 0px 4px 0 4px;
+    margin: 0px 0px 0px 1px;
   }
 `;
 
@@ -338,6 +338,7 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
+      selectedModelTitle,
     });
 
     dispatch(submitEdit(prompt));
