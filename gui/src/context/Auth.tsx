@@ -27,6 +27,7 @@ interface AuthContextType {
   login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
+  refreshProfiles: () => void;
   controlServerBetaEnabled: boolean;
   organizations: OrganizationDescription[];
   selectedOrganization: OrganizationDescription | null;
@@ -175,6 +176,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, []);
 
+  const refreshProfiles = () => {
+    try {
+      ideMessenger.post("config/refreshProfiles", undefined);
+    } catch (e) {
+      console.error("Failed to refresh profiles", e);
+    }
+  };
+
   useWebviewListener(
     "didChangeAvailableProfiles",
     async (data) => {
@@ -196,6 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         selectedProfile,
         profiles,
+        refreshProfiles,
         selectedOrganization,
         organizations: orgs,
         controlServerBetaEnabled,

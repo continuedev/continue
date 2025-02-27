@@ -353,11 +353,7 @@ export class ConfigHandler {
       Promise.resolve(sessionInfo),
       this.ideSettingsPromise,
     );
-    this.fetchControlPlaneProfiles().catch(async (e) => {
-      console.error("Failed to fetch control plane profiles: ", e);
-      await this.updateAvailableProfiles([this.localProfileManager]);
-      await this.reloadConfig();
-    });
+    await this.refreshProfiles();
   }
 
   private profilesListeners: ((
@@ -433,6 +429,14 @@ export class ConfigHandler {
 
   listProfiles(): ProfileDescription[] | null {
     return this.profiles?.map((p) => p.profileDescription) ?? null;
+  }
+
+  async refreshProfiles() {
+    this.fetchControlPlaneProfiles().catch(async (e) => {
+      console.error("Failed to fetch control plane profiles: ", e);
+      await this.updateAvailableProfiles([this.localProfileManager]);
+      await this.reloadConfig();
+    });
   }
 
   async loadConfig(): Promise<ConfigResult<ContinueConfig>> {

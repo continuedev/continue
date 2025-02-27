@@ -435,26 +435,26 @@ model_defaults: &model_defaults
   apiBase: https://api.example.com/llm
 
 models:
-- name: mistral
-  <<: *model_defaults
-  model: mistral-7b-instruct
-  roles:
-    - chat
-    - edit
+  - name: mistral
+    <<: *model_defaults
+    model: mistral-7b-instruct
+    roles:
+      - chat
+      - edit
 
-- name: qwen2.5-coder-7b-instruct
-  <<: *model_defaults
-  model: qwen2.5-coder-7b-instruct
-  roles:
-    - chat
-    - edit
+  - name: qwen2.5-coder-7b-instruct
+    <<: *model_defaults
+    model: qwen2.5-coder-7b-instruct
+    roles:
+      - chat
+      - edit
 
-- name: qwen2.5-coder-7b
-  <<: *model_defaults
-  model: qwen2.5-coder-7b
-  useLegacyCompletionsEndpoint: false
-  roles:
-    - autocomplete
+  - name: qwen2.5-coder-7b
+    <<: *model_defaults
+    model: qwen2.5-coder-7b
+    useLegacyCompletionsEndpoint: false
+    roles:
+      - autocomplete
 ```
 
 ### Fully deprecated settings

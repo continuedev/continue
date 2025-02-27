@@ -89,6 +89,7 @@ class MessageTypes {
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/listProfiles",
+            "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
             "config/updateSelectedModel",
