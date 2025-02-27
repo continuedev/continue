@@ -34,14 +34,15 @@ export function getLocationsToLook(
   secretName: string,
 ): SecretLocation[] {
   const locationsToLook: SecretLocation[] = [
-    // Models Add-On
-    {
-      secretType: SecretType.ModelsAddOn as const,
-      secretName,
-    },
-    // Block
     ...(blockSlug
       ? [
+          // Models Add-On
+          {
+            secretType: SecretType.ModelsAddOn as const,
+            secretName,
+            blockSlug,
+          },
+          // Block
           {
             secretType: SecretType.Package as const,
             packageSlug: blockSlug,
@@ -67,11 +68,16 @@ export function getLocationsToLook(
       userSlug: currentUserSlug,
       secretName,
     },
-    // Free Trial
-    {
-      secretType: SecretType.FreeTrial as const,
-      secretName,
-    },
+    // Free Trial (must be using a eligible block)
+    ...(blockSlug
+      ? [
+          {
+            secretType: SecretType.FreeTrial as const,
+            secretName,
+            blockSlug,
+          },
+        ]
+      : []),
   ];
   return locationsToLook;
 }

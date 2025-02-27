@@ -1,4 +1,0 @@
-project: extensions/intellij
-kind: Fixed
-body: Fixes for inline edit in JetBrains
-time: 2024-11-08T11:47:07.953304-08:00
