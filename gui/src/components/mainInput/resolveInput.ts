@@ -79,11 +79,12 @@ async function resolveEditorContent({
             const fileExtension = getUriFileExtension(rif.filepath);
             // let extName = relativeFilepath.split(".").slice(-1)[0];
             const text =
-              "\n\n" +
+              "\n" +
+              `code file info: ${contextItem.description}` +
+              "\n" +
               "```" +
               fileExtension +
               " " +
-              contextItem.description +
               "\n" +
               contextItem.content +
               "\n```";
