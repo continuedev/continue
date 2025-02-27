@@ -435,10 +435,6 @@ export class ConfigHandler {
     return this.profiles?.map((p) => p.profileDescription) ?? null;
   }
 
-  async refreshProfiles() {
-    await this.loadAssistantsForSelectedOrg();
-  }
-
   async loadConfig(): Promise<ConfigResult<ContinueConfig>> {
     if (!this.currentProfile) {
       return {
