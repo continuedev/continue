@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.269",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -95,11 +95,6 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable Continue for teams beta features. To sign in, click the gear icon to go to the settings page, and click Sign In."
-        },
-        "continue.enableContinueHub": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable Continue Hub (internal)"
         },
         "continue.showInlineTip": {
           "type": "boolean",
