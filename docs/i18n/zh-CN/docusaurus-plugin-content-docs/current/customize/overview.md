@@ -47,4 +47,4 @@ Continue 可以被深度定制。例如，你可以：
 
 `config.json` 可以处理大多数必须的配置，所以我们在可能的情况下推荐使用它。不过，如果你需要编程式的配置 Continue ，你可以使用 `config.ts` ，它位于 `~/.continue/config.ts` (MacOS / Linux) 或 `%USERPROFILE%\.continue\config.ts` (Windows) 。
 
-如何使用 `config.ts` 的示例，查看 [编写定制斜杠命令](./tutorials/build-your-own-slash-command.md#自定义斜杠命令) 或 [编写定制上下文提供者](./tutorials/build-your-own-context-provider.md) 。
+如何使用 `config.ts` 的示例，查看 [编写定制斜杠命令](./tutorials/build-your-own-slash-command.md#自定义斜杠命令) 或 [编写定制上下文提供者](./tutorials/build-your-own-context-provider.mdx) 。

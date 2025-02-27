@@ -11,5 +11,5 @@ sidebar_position: 5
 - 你可以配置 [`@Codebase`](../customize/deep-dives/codebase.mdx)
 - 你可以创建自己的 [定制代码 RAG](../customize/tutorials/custom-code-rag.mdx)
 - 你可以配置 [`@Docs`](../customize/deep-dives/docs.mdx)
-- 你可以 [构建自己的上下文提供者](../customize/tutorials/build-your-own-context-provider.md)
+- 你可以 [构建自己的上下文提供者](../customize/tutorials/build-your-own-context-provider.mdx)
 - 你可以配置和创建定制的 [工具](../customize/tools.mdx)

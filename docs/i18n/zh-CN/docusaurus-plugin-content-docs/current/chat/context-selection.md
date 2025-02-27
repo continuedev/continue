@@ -43,4 +43,4 @@ sidebar_position: 3
 
 ## 其他上下文
 
-你可以 [在这里](../customize/context-providers.mdx) 看到完整的内置上下文提供者列表，以及 [在这里](../customize/tutorials/build-your-own-context-provider.md) 看到如何创建你自己定制的上下文提供者。
+你可以 [在这里](../customize/context-providers.mdx) 看到完整的内置上下文提供者列表，以及 [在这里](../customize/tutorials/build-your-own-context-provider.mdx) 看到如何创建你自己定制的上下文提供者。
