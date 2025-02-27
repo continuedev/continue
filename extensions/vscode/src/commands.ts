@@ -8,8 +8,7 @@ import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
-import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
@@ -919,9 +918,6 @@ const getCommandsMap: (
           label: quickPickStatusText(targetStatus),
         },
         {
-          label: "$(gear) Configure autocomplete options",
-        },
-        {
           label: "$(feedback) Give feedback",
         },
         {
@@ -945,10 +941,6 @@ const getCommandsMap: (
             targetStatus === StatusBarStatus.Enabled,
             vscode.ConfigurationTarget.Global,
           );
-        } else if (
-          selectedOption === "$(gear) Configure autocomplete options"
-        ) {
-          ide.openFile(vscode.Uri.file(getConfigJsonPath()).toString());
         } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
