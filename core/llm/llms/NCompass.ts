@@ -1,5 +1,5 @@
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { ChatCompletionCreateParams } from "openai/resources/index";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
@@ -11,10 +11,8 @@ class NCompass extends OpenAI {
   static embeddingsApiEndpoint: "https://api.gcp.ncompass.tech/v1/embeddings"
 
   private static modelConversion: { [key: string]: string } = {
+    "qwen2.5-coder-7b": "Qwen/Qwen2.5-Coder-7B-Instruct",
     "qwen2.5-coder-32b": "Qwen/Qwen2.5-Coder-32B-Instruct",
-    "qwen2.5-72b": "Qwen/Qwen2.5-72B-Instruct",
-    "llama3.3-70b": "meta-llama/Llama-3.3-70B-Instruct",
-    "llama3.1-8b": "meta-llama/Llama-3.1-8B-Instruct",
   };
   protected _convertModelName(model: string): string {
     return NCompass.modelConversion[model] ?? model;

@@ -499,7 +499,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway", "nebius", "ncompass"],
+    providerOptions: ["groq", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama3370bChat: {
@@ -512,7 +512,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 65536,
     },
     icon: "meta.png",
-    providerOptions: ["ncompass"],
+    providerOptions: [],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -1374,7 +1374,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["nebius"],
+    providerOptions: ["nebius", "ncompass"],
     isOpenSource: true,
   },
   Qwen25Coder32b: {
