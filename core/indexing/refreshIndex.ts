@@ -157,32 +157,64 @@ async function getAddRemoveForTag(
   const remove: PathAndCacheKey[] = [];
   const updateLastUpdated: PathAndCacheKey[] = [];
 
-  for (const item of saved) {
-    const { lastUpdated, ...pathAndCacheKey } = item;
+  // First, group items by path and find latest timestamp for each
+  const pathGroups = new Map<string, {
+    latest: { lastUpdated: number, cacheKey: string },
+    allVersions: Array<{ cacheKey: string }>
+  }>();
 
-    if (files[item.path] === undefined) {
-      // Was indexed, but no longer exists. Remove
-      remove.push(pathAndCacheKey);
+  for (const item of saved) {
+    const { lastUpdated, path, cacheKey } = item;
+    
+    if (!pathGroups.has(path)) {
+      pathGroups.set(path, {
+        latest: { lastUpdated, cacheKey },
+        allVersions: [{ cacheKey }]
+      });
+    } else {
+      const group = pathGroups.get(path)!;
+      group.allVersions.push({ cacheKey });
+      if (lastUpdated > group.latest.lastUpdated) {
+        group.latest = { lastUpdated, cacheKey };
+      }
+    }
+  }
+
+  // Now process each unique path
+  for (const [path, group] of pathGroups) {
+    if (files[path] === undefined) {
+      // Was indexed, but no longer exists. Remove all versions
+      for (const version of group.allVersions) {
+        remove.push({ path, cacheKey: version.cacheKey });
+      }
     } else {
       // Exists in old and new, so determine whether it was updated
-      if (lastUpdated < files[item.path].lastModified) {
+      if (group.latest.lastUpdated < files[path].lastModified) {
         // Change was made after last update
-        const newHash = calculateHash(await readFile(pathAndCacheKey.path));
-        if (pathAndCacheKey.cacheKey !== newHash) {
+        const newHash = calculateHash(await readFile(path));
+        if (group.latest.cacheKey !== newHash) {
           updateNewVersion.push({
-            path: pathAndCacheKey.path,
+            path,
             cacheKey: newHash,
           });
-          updateOldVersion.push(pathAndCacheKey);
+          for (const version of group.allVersions) {
+            updateOldVersion.push({ path, cacheKey: version.cacheKey });
+          }
         } else {
-          updateLastUpdated.push(pathAndCacheKey);
+          // File contents did not change
+          updateLastUpdated.push({ path, cacheKey: group.latest.cacheKey });
+          for (const version of group.allVersions) {
+            if (version.cacheKey !== group.latest.cacheKey) {
+              updateOldVersion.push({ path, cacheKey: version.cacheKey });
+            }
+          }
         }
       } else {
         // Already updated, do nothing
       }
 
-      // Remove so we can check leftovers afterward
-      delete files[item.path];
+      // Remove path, so that only newly created paths remain
+      delete files[path];
     }
   }
 
