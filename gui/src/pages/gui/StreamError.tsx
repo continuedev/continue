@@ -26,6 +26,12 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   );
   const { session, refreshProfiles } = useAuth();
 
+  const handleRefreshProfiles = () => {
+    refreshProfiles();
+    dispatch(setShowDialog(false));
+    dispatch(setDialogMessage(undefined));
+  };
+
   // Collect model information to display useful error info
   let modelTitle = "Chat model";
   let providerName = "the model provider";
@@ -151,9 +157,9 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
           session &&
           selectedProfile &&
           !isLocalProfile(selectedProfile) && (
-            <div>
-              <span>{`If your hub secret values may have changed, refresh your profiles`}</span>
-              <SecondaryButton onClick={refreshProfiles}>
+            <div className="flex flex-col gap-1">
+              <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+              <SecondaryButton onClick={handleRefreshProfiles}>
                 Refresh profile secrets
               </SecondaryButton>
             </div>
