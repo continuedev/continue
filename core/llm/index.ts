@@ -11,6 +11,7 @@ import Handlebars from "handlebars";
 import { DevDataSqliteDb } from "../data/devdataSqlite.js";
 import { DataLogger } from "../data/log.js";
 import {
+  EmbedOptions,
   CacheBehavior,
   ChatMessage,
   Chunk,
@@ -932,7 +933,10 @@ export abstract class BaseLLM implements ILLM {
     return completion;
   }
 
-  protected async _embed(chunks: string[]): Promise<number[][]> {
+  protected async _embed(
+    chunks: string[],
+    options: EmbedOptions = {},
+  ): Promise<number[][]> {
     throw new Error(
       `Embedding is not supported for provider type ${this.providerName}`,
     );

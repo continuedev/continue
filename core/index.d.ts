@@ -305,6 +305,8 @@ export interface ContinueError {
 }
 
 export interface CompletionOptions extends BaseCompletionOptions {
+  mirostatTau?: number;
+  mirostatEta?: number;
   model: string;
 }
 
@@ -949,6 +951,11 @@ export interface ModelDescription {
   roles?: ModelRole[];
 }
 
+export interface EmbedModelOptions extends BaseCompletionOptions {
+  keepAlive?: number; // list in seconds how long to keep model loaded
+  truncate?: boolean;
+}
+
 export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
@@ -968,6 +975,9 @@ export interface EmbedOptions {
 
   // VertexAI and Watsonx Options
   projectId?: string;
+
+  // Support embeddings model-specific options to be passed
+  modelOptions?: EmbedModelOptions;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
