@@ -29,6 +29,16 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     // All gemini models support function calling
     return model.toLowerCase().includes("gemini");
   },
+  bedrock: (model) => {
+    // Support only Claude 3.5 models on Bedrock, mirroring anthropic configuration
+    if (
+      ["claude-3-5", "claude-3.5"].some((part) =>
+        model.toLowerCase().includes(part),
+      )
+    ) {
+      return true;
+    }
+  },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
     if (
