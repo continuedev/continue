@@ -160,7 +160,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
             <div className="flex flex-col gap-1">
               <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
               <SecondaryButton onClick={handleRefreshProfiles}>
-                Refresh profile secrets
+                Refresh assistant secrets
               </SecondaryButton>
             </div>
           )}

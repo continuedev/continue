@@ -42,6 +42,7 @@ function ConfigPage() {
     selectedProfile,
     controlServerBetaEnabled,
     selectedOrganization,
+    refreshProfiles,
   } = useAuth();
 
   const changeProfileId = (id: string) => {
@@ -296,6 +297,14 @@ function ConfigPage() {
                         ? "Open Assistant"
                         : "Open Workspace"}
                   </SecondaryButton>
+                )}
+                {hubEnabled && session && (
+                  <div className="flex flex-col gap-1">
+                    <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+                    <SecondaryButton onClick={refreshProfiles}>
+                      Refresh assistants
+                    </SecondaryButton>
+                  </div>
                 )}
               </>
             ) : (

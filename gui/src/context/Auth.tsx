@@ -176,11 +176,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   }, []);
 
-  const refreshProfiles = () => {
+  const refreshProfiles = async () => {
     try {
-      ideMessenger.post("config/refreshProfiles", undefined);
+      await ideMessenger.request("config/refreshProfiles", undefined);
+      ideMessenger.post("showToast", ["info", "Config refreshed"]);
     } catch (e) {
       console.error("Failed to refresh profiles", e);
+      ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
     }
   };
 
