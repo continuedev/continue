@@ -33,7 +33,6 @@ export const patchNestedMarkdown = (source: string): string => {
 
         if (file) {
           const ext = file.split(".").at(-1);
-          debugger;
           if (ext === "md" || ext === "markdown") {
             nestCount = 1;
             lines[i] = lines[i].replaceAll("`", "~"); // Replace backticks with tildes
