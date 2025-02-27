@@ -61,6 +61,34 @@ export const streamNormalInput = createAsyncThunk<
   // Attach prompt log
   if (next.done && next.value) {
     dispatch(addPromptCompletionPair([next.value]));
+
+    try {
+      if (state.session.mode === "chat") {
+        extra.ideMessenger.post("devdata/log", {
+          name: "chatInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: defaultModel.provider,
+            modelTitle: defaultModel.title,
+            sessionId: state.session.id,
+          },
+        });
+      }
+      // else if (state.session.mode === "edit") {
+      //   extra.ideMessenger.post("devdata/log", {
+      //     name: "editInteraction",
+      //     data: {
+      //       prompt: next.value.prompt,
+      //       completion: next.value.completion,
+      //       modelProvider: defaultModel.provider,
+      //       modelTitle: defaultModel.title,
+      //     },
+      //   });
+      // }
+    } catch (e) {
+      console.error("Failed to send dev data interaction log", e);
+    }
   }
 
   // If it's a tool call that is automatically accepted, we should call it

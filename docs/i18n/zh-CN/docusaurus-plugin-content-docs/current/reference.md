@@ -130,8 +130,8 @@ _(仅 AWS)_
     "provider": "openai",
     "model": "text-embedding-ada-002",
     "apiKey": "<API_KEY>",
-    "maxChunkSize": 256,
-    "maxBatchSize": 5
+    "maxEmbeddingChunkSize": 256,
+    "maxEmbeddingBatchSize": 5
   }
 }
 ```

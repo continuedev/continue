@@ -1,4 +1,4 @@
-import { ModelRole } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 declare global {
@@ -43,13 +43,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-  | "loading"
-  | "indexing"
-  | "done"
-  | "failed"
-  | "paused"
-  | "disabled"
-  | "cancelled";
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
@@ -60,7 +60,7 @@ export interface IndexingStatus {
   progress: number;
   description: string;
   status: "indexing" | "complete" | "paused" | "failed" | "aborted" | "pending";
-  embeddingsProviderId: string;
+  embeddingsProviderId?: string;
   isReindexing?: boolean;
   debugInfo?: string;
   title: string;
@@ -179,8 +179,8 @@ export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 export interface ContextProviderExtras {
   config: ContinueConfig;
   fullInput: string;
-  embeddingsProvider: ILLM;
-  reranker: ILLM | undefined;
+  embeddingsProvider: ILLM | null;
+  reranker: ILLM | null;
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
@@ -478,9 +478,15 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
-  aiGatewaySlug?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
+  aiGatewaySlug?: string;
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
@@ -504,14 +510,16 @@ export interface LLMOptions {
   profile?: string;
   modelArn?: string;
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 
   // IBM watsonx Options
   deploymentId?: string;
+
+  env?: Record<string, string | number | boolean>;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -667,10 +675,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-      isUntitled: boolean;
-      path: string;
-      contents: string;
-    }
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
   >;
 
   getLastFileSaveTimestamp?(): number;
@@ -730,6 +738,7 @@ export interface ContinueSDK {
   selectedCode: RangeInFile[];
   config: ContinueConfig;
   fetch: FetchFunction;
+  completionOptions?: LLMFullCompletionOptions;
 }
 
 export interface SlashCommand {
@@ -853,11 +862,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-  | string
-  | {
-    type: "text";
-    text: string;
-  }[];
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 export interface ToolExtras {
@@ -920,8 +929,14 @@ export interface ModelDescription {
   provider: string;
   model: string;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
   contextLength?: number;
   maxStopWords?: number;
   template?: TemplateType;
@@ -942,15 +957,16 @@ export interface EmbedOptions {
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
-  maxChunkSize?: number;
-  maxBatchSize?: number;
+  maxEmbeddingChunkSize?: number;
+  maxEmbeddingBatchSize?: number;
+
   // AWS options
   profile?: string;
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 }
 
@@ -1028,9 +1044,9 @@ export interface ContextMenuConfig {
 }
 
 export interface ExperimentalModelRoles {
+  repoMapFileSelection?: string;
   inlineEdit?: string;
   applyCodeBlock?: string;
-  repoMapFileSelection?: string;
 }
 
 export type EditStatus =
@@ -1147,6 +1163,7 @@ export interface SerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  data?: DataDestination[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1186,9 +1203,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1199,6 +1216,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
+  data?: DataDestination[];
 }
 
 // in the actual Continue source code
@@ -1213,15 +1231,15 @@ export interface ContinueConfig {
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
-  embeddingsProvider: ILLM;
-  tabAutocompleteModels?: ILLM[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
-  reranker?: ILLM;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  modelsByRole: Record<ModelRole, ILLM[]>;
+  selectedModelByRole: Record<ModelRole, ILLM | null>;
+  data?: DataDestination[];
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1235,15 +1253,15 @@ export interface BrowserSerializedContinueConfig {
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
-  embeddingsProvider?: string;
   ui?: ContinueUIConfig;
-  reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  modelsByRole: Record<ModelRole, ModelDescription[]>;
+  selectedModelByRole: Record<ModelRole, ModelDescription | null>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
@@ -1279,9 +1297,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-    | { error: string; details?: never }
-    | { details: PackageDetailsSuccess; error?: never }
-  );
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;

@@ -1,3 +1,4 @@
+import { ConfigResult } from "@continuedev/config-yaml";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import lancedb, { Connection } from "vectordb";
@@ -19,6 +20,7 @@ import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbed
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
+import { GlobalContext } from "../../util/GlobalContext";
 import {
   editConfigJson,
   getDocsSqlitePath,
@@ -26,8 +28,6 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 
-import { ConfigResult } from "@continuedev/config-yaml";
-import { GlobalContext } from "../../util/GlobalContext";
 import {
   ArticleWithChunks,
   htmlPageToArticleWithChunks,
@@ -161,16 +161,22 @@ export default class DocsService {
         return;
       }
 
-      const sharedStatus = {
-        type: "docs" as IndexingStatus["type"],
+      const sharedStatus: Omit<
+        IndexingStatus,
+        "progress" | "description" | "status"
+      > = {
+        type: "docs",
         id: doc.startUrl,
-        embeddingsProviderId: this.config.embeddingsProvider.embeddingId,
         isReindexing: false,
         title: doc.title,
         debugInfo: `max depth: ${doc.maxDepth}`,
         icon: doc.faviconUrl,
         url: doc.startUrl,
       };
+      if (this.config.selectedModelByRole.embed) {
+        sharedStatus.embeddingsProviderId =
+          this.config.selectedModelByRole.embed.embeddingId;
+      }
       const indexedStatus: IndexingStatus = metadata.find(
         (meta) => meta.startUrl === doc.startUrl,
       )
@@ -214,7 +220,9 @@ export default class DocsService {
     }
 
     // Handle embeddings provider change mid-indexing
-    if (this.config.embeddingsProvider.embeddingId !== startedWithEmbedder) {
+    if (
+      this.config.selectedModelByRole.embed?.embeddingId !== startedWithEmbedder
+    ) {
       this.abort(startUrl);
       return true;
     }
@@ -232,14 +240,6 @@ export default class DocsService {
       return false;
     }
     return true;
-  }
-
-  async isUsingUnsupportedPreIndexedEmbeddingsProvider() {
-    const isPreIndexedDocsProvider =
-      this.config.embeddingsProvider.embeddingId ===
-      DocsService.preIndexedDocsEmbeddingsProvider.embeddingId;
-    const canUsePreindexedDocs = await this.canUsePreindexedDocs();
-    return isPreIndexedDocsProvider && !canUsePreindexedDocs;
   }
 
   // Determines if using preIndexed and returns proper embeddings provider
@@ -262,7 +262,7 @@ export default class DocsService {
       }
     }
     return {
-      provider: this.config.embeddingsProvider,
+      provider: this.config.selectedModelByRole.embed,
       isPreindexed: false,
     };
   }
@@ -282,9 +282,7 @@ export default class DocsService {
 
       // Skip docs indexing if not supported
       // No warning message here because would show on ANY config update
-      const unsupported =
-        await this.isUsingUnsupportedPreIndexedEmbeddingsProvider();
-      if (unsupported) {
+      if (!this.config.selectedModelByRole.embed) {
         return;
       }
 
@@ -323,18 +321,21 @@ export default class DocsService {
 
   // Returns true if startUrl has been indexed with current embeddingsProvider
   async hasMetadata(startUrl: string): Promise<boolean> {
+    if (!this.config.selectedModelByRole.embed) {
+      return false;
+    }
     const db = await this.getOrCreateSqliteDb();
     const title = await db.get(
       `SELECT title FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
-      this.config.embeddingsProvider.embeddingId,
+      this.config.selectedModelByRole.embed.embeddingId,
     );
 
     return !!title;
   }
 
   async listMetadata() {
-    const embeddingsProvider = this.config.embeddingsProvider;
+    const embeddingsProvider = this.config.selectedModelByRole.embed;
     if (!embeddingsProvider) {
       return [];
     }
@@ -376,6 +377,11 @@ export default class DocsService {
       console.warn("Attempted to indexAndAdd pre-indexed doc");
       return;
     }
+    if (!provider) {
+      console.warn("@docs indexAndAdd: no embeddings provider found");
+      return;
+    }
+
     const startedWithEmbedder = provider.embeddingId;
 
     // Check if doc has been successfully indexed with the given embedder
@@ -716,20 +722,17 @@ export default class DocsService {
     startUrl: string,
     nRetrieve: number,
   ) {
-    if (await this.isUsingUnsupportedPreIndexedEmbeddingsProvider()) {
-      await this.ide.showToast(
-        "error",
-        `${DocsService.preIndexedDocsEmbeddingsProvider.embeddingId} is configured as ` +
-          "the embeddings provider, but it cannot be used with JetBrains. " + // TODO "with this IDE"
-          "Please select a different embeddings provider to use the '@docs' " +
-          "context provider.",
-      );
-
-      return [];
-    }
-
     const { isPreindexed, provider } =
       await this.getEmbeddingsProvider(startUrl);
+
+    if (!provider) {
+      void this.ide.showToast(
+        "error",
+        "Set up an embeddings model to use the @docs context provider. See: " +
+          "https://docs.continue.dev/customize/model-roles/embeddings",
+      );
+      return [];
+    }
 
     if (isPreindexed) {
       void Telemetry.capture("docs_pre_indexed_doc_used", {
@@ -761,8 +764,10 @@ export default class DocsService {
     try {
       const { isPreindexed, provider } =
         await this.getEmbeddingsProvider(startUrl);
-      const preIndexedDoc = preIndexedDocs[startUrl];
-      const isPreIndexedDoc = !!preIndexedDoc;
+
+      if (!provider) {
+        throw new Error("No embeddings model set");
+      }
 
       const result = await db.get(
         `SELECT startUrl, title, favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
@@ -793,7 +798,7 @@ export default class DocsService {
         config: siteIndexingConfig,
         indexingStatus: this.statuses.get(startUrl),
         chunks: rows.map(this.lanceDBRowToChunk),
-        isPreIndexedDoc,
+        isPreIndexedDoc: isPreindexed,
       };
     } catch (e) {
       console.warn("Error getting details", e);
@@ -867,7 +872,7 @@ export default class DocsService {
   }
 
   async getFavicon(startUrl: string) {
-    if (!this.config.embeddingsProvider) {
+    if (!this.config.selectedModelByRole.embed) {
       console.warn(
         "Attempting to get favicon without embeddings provider specified",
       );
@@ -877,7 +882,7 @@ export default class DocsService {
     const result = await db.get(
       `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
-      this.config.embeddingsProvider.embeddingId,
+      this.config.selectedModelByRole.embed.embeddingId,
     );
 
     if (!result) {
@@ -941,7 +946,7 @@ export default class DocsService {
                 type: "docs",
                 id: doc.startUrl,
                 embeddingsProviderId:
-                  this.config.embeddingsProvider.embeddingId,
+                  this.config.selectedModelByRole.embed?.embeddingId,
                 isReindexing: false,
                 title: doc.title,
                 debugInfo: "Config sync: not changed",
@@ -1033,6 +1038,13 @@ export default class DocsService {
     const conn = await lancedb.connect(getLanceDbPath());
     const tableNames = await conn.tableNames();
     const { provider } = await this.getEmbeddingsProvider(startUrl);
+
+    if (!provider) {
+      throw new Error(
+        "Could not retrieve @docs Lance Table: no embeddings provider specified",
+      );
+    }
+
     const tableNameFromEmbeddingsProvider =
       await this.getLanceTableName(provider);
 
@@ -1089,13 +1101,19 @@ export default class DocsService {
     siteIndexingConfig: { title, startUrl },
     favicon,
   }: AddParams) {
+    if (!this.config.selectedModelByRole.embed) {
+      console.warn(
+        `Attempting to add metadata for ${startUrl} without embeddings provider specified`,
+      );
+      return;
+    }
     const db = await this.getOrCreateSqliteDb();
     await db.run(
       `INSERT INTO ${DocsService.sqlitebTableName} (title, startUrl, favicon, embeddingsProviderId) VALUES (?, ?, ?, ?)`,
       title,
       startUrl,
       favicon,
-      this.config.embeddingsProvider.embeddingId,
+      this.config.selectedModelByRole.embed.embeddingId,
     );
   }
 
@@ -1147,7 +1165,7 @@ export default class DocsService {
   }
 
   private async deleteMetadataFromSqlite(startUrl: string) {
-    if (!this.config.embeddingsProvider) {
+    if (!this.config.selectedModelByRole.embed) {
       console.warn(
         `Attempting to delete metadata for ${startUrl} without embeddings provider specified`,
       );
@@ -1158,7 +1176,7 @@ export default class DocsService {
     await db.run(
       `DELETE FROM ${DocsService.sqlitebTableName} WHERE startUrl = ? AND embeddingsProviderId = ?`,
       startUrl,
-      this.config.embeddingsProvider.embeddingId,
+      this.config.selectedModelByRole.embed.embeddingId,
     );
   }
 
