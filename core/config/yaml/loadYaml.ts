@@ -291,7 +291,11 @@ async function configYamlToContinueConfig(
         }
         return undefined;
       }
-      const instance: IContextProvider = new cls(context.params ?? {});
+      // Context providers are only instantiated using the params, so add top-level name to params
+      const instance: IContextProvider = new cls({
+        name: context.name,
+        ...context.params,
+      });
       return instance;
     })
     .filter((p) => !!p) ?? []) as IContextProvider[];
