@@ -12,13 +12,13 @@ const SVG_CONFIG = {
   strokeWidth: 1,
   shortcutColor: "#999998",
   filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.2))",
-  radius: 4,
+  radius: 3,
   leftMargin: 40,
   debounceDelay: 500,
   chatLabel: "Chat",
-  chatShortcut: `${getMetaKeyLabel()}L`,
+  chatShortcut: `${getMetaKeyLabel()}+L`,
   editLabel: "Edit",
-  editShortcut: `${getMetaKeyLabel()}I`,
+  editShortcut: `${getMetaKeyLabel()}+I`,
 
   get fontSize() {
     return Math.ceil(
@@ -32,14 +32,11 @@ const SVG_CONFIG = {
       "helvetica"
     );
   },
-  get paddingY() {
-    return Math.ceil(this.fontSize * 0.4);
-  },
   get paddingX() {
-    return Math.ceil(this.fontSize * 0.8);
+    return Math.ceil(this.getEstimatedTextWidth(" "));
   },
   get gap() {
-    return this.fontSize * 2.5;
+    return this.fontSize * 0.5;
   },
   get tipWidth() {
     return (
@@ -49,22 +46,22 @@ const SVG_CONFIG = {
     );
   },
   get tipHeight() {
-    return this.fontSize + this.paddingY * 2;
+    return this.fontSize;
   },
   get textY() {
-    return this.tipHeight / 2 + this.fontSize * 0.35;
+    return (this.tipHeight + this.fontSize)/2;
   },
   get chatLabelX() {
     return this.paddingX;
   },
   get chatShortcutX() {
-    return this.chatLabelX + this.getEstimatedTextWidth(this.chatLabel) + 4;
+    return this.chatLabelX + this.getEstimatedTextWidth(this.chatLabel + " ");
   },
   get editLabelX() {
-    return this.chatShortcutX + this.gap;
+    return this.chatShortcutX + this.getEstimatedTextWidth(this.chatShortcut) + this.gap;
   },
   get editShortcutX() {
-    return this.editLabelX + this.getEstimatedTextWidth(this.editLabel) + 4;
+    return this.editLabelX + this.getEstimatedTextWidth(this.editLabel + " ");
   },
   getEstimatedTextWidth(text: string): number {
     return text.length * this.fontSize * 0.6;
@@ -234,10 +231,17 @@ export class InlineTipManager {
   }
 
   private createSvgTooltipDecoration() {
+    var backgroundColour = 0;
+    if (this.theme) {
+      backgroundColour = this.theme.colors["editor.background"];
+    }
     return vscode.window.createTextEditorDecorationType({
       after: {
         contentIconPath: this.svgTooltip,
-        margin: `-5px 0 0 ${SVG_CONFIG.leftMargin}px`,
+        border: `;box-shadow: inset 0 0 0 ${SVG_CONFIG.strokeWidth}px ${SVG_CONFIG.stroke}, inset 0 0 0 ${SVG_CONFIG.tipHeight}px ${backgroundColour};
+                  border-radius: ${SVG_CONFIG.radius}px;
+                  filter: ${SVG_CONFIG.filter}`,
+        margin: `0 0 0 ${SVG_CONFIG.leftMargin}px`,
         width: `${SVG_CONFIG.tipWidth}px`,
       },
     });
@@ -258,19 +262,6 @@ export class InlineTipManager {
       const svgContent = svgBuilder
         .width(SVG_CONFIG.tipWidth)
         .height(SVG_CONFIG.tipHeight)
-        // Main rectangle
-        .rect({
-          x: 0,
-          y: 0,
-          width: SVG_CONFIG.tipWidth,
-          height: SVG_CONFIG.tipHeight,
-          rx: SVG_CONFIG.radius,
-          ry: SVG_CONFIG.radius,
-          fill: this.theme.colors["editor.background"],
-          stroke: SVG_CONFIG.stroke,
-          "stroke-width": SVG_CONFIG.strokeWidth,
-          filter: SVG_CONFIG.filter,
-        })
         // Chat
         .text(
           {

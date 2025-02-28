@@ -19,6 +19,7 @@ import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Fireworks from "./Fireworks";
+import NCompass from "./NCompass";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import FunctionNetwork from "./FunctionNetwork";
@@ -81,6 +82,7 @@ export const LLMClasses = [
   Flowise,
   Groq,
   Fireworks,
+  NCompass,
   ContinueProxy,
   Cloudflare,
   Deepseek,

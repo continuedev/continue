@@ -18,7 +18,8 @@ export async function applyCodeBlock(
   llm: ILLM,
   fastLlm: ILLM,
 ): Promise<[boolean, AsyncGenerator<DiffLine>]> {
-  if (canUseInstantApply(filename)) {
+  // This was buggy, removed for now, maybe forever
+  if (false && canUseInstantApply(filename)) {
     const diffLines = await deterministicApplyLazyEdit(
       oldFile,
       newFile,

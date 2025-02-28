@@ -15,10 +15,11 @@ export function convertConfigJsonToConfigYaml(
           name: model.title,
           // defaultCompletionOptions: model.completionOptions,
           provider: model.provider,
-          roles: ["chat"],
+          roles: ["chat", "edit", "apply", "summarize"],
         }),
       ),
-      //   ... tabAutocompleteModels
+      // TODO
+      // tabAutocompleteModels
       // embeddingsModels
       // rerankModels
     ],

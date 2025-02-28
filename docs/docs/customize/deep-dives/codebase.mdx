@@ -3,15 +3,15 @@ description: Talk to your codebase
 keywords: [talk, embeddings, reranker, codebase, experimental]
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 # @Codebase
 
 Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally using `transformers.js` and stored locally in `~/.continue/index`.
 
 :::info[`transformers.js cannot be used in JetBrains`]
-Currently, `transformers.js` cannot be used in JetBrains IDEs. However, you can select a differet embeddings model from [the list here](../model-types/embeddings.mdx).
+Currently, `transformers.js` cannot be used in JetBrains IDEs. However, you can select a differet embeddings model from [the list here](../model-roles/embeddings.mdx).
 :::
 
 Currently, the codebase retrieval feature is available as the "codebase" and "folder" context providers. You can use them by typing `@Codebase` or `@Folder` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase (or folder) to determine relevant files.
@@ -45,7 +45,7 @@ There are a few options that let you configure the behavior of the `@codebase` c
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml" 
+  ```yaml title="config.yaml" 
   context:
     - provider: codebase
       params:
