@@ -46,8 +46,14 @@ class MCPContextProvider extends BaseContextProvider {
     if (!connection) {
       throw new Error(`No MCP connection found for ${mcpId}`);
     }
+    // some special arguments to tell MCP about the context
+    // for example, to extract the workspace directories or project structure,
+    // or to adapt context to the current model
+    // MCP protocol allows any additional arguments, server will ignore unknown
+    const workspaceDirs = JSON.stringify(await extras.ide.getWorkspaceDirs());
+    const model = extras.llm.model;
 
-    const { contents } = await connection.client.readResource({ uri });
+    const { contents } = await connection.client.readResource({ uri, model, workspaceDirs });
 
     return await Promise.all(
       contents.map(async (resource) => {
