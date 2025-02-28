@@ -3,13 +3,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   (model: string) => boolean | undefined
 > = {
   "continue-proxy": (model) => {
-    return ["claude-3-5", "claude-3.5", "gpt-4", "o3", "gemini"].some((part) =>
+    return ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7", "gpt-4", "o3", "gemini"].some((part) =>
       model.toLowerCase().startsWith(part),
     );
   },
   anthropic: (model) => {
     if (
-      ["claude-3-5", "claude-3.5"].some((part) =>
+      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7"].some((part) =>
         model.toLowerCase().startsWith(part),
       )
     ) {

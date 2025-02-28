@@ -2,7 +2,7 @@ import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
 
 import { Range } from "core";
-import { enableHubContinueDev, EXTENSION_NAME } from "core/control-plane/env";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import { GetGhTokenArgs } from "core/protocol/ide";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import * as vscode from "vscode";
@@ -645,9 +645,7 @@ class VsCodeIde implements IDE {
         "enableContinueForTeams",
         false,
       ),
-      continueTestEnvironment: settings.get<boolean>("enableContinueHub")
-        ? "production"
-        : "none",
+      continueTestEnvironment: "production",
       pauseCodebaseIndexOnStart: settings.get<boolean>(
         "pauseCodebaseIndexOnStart",
         false,
@@ -662,15 +660,6 @@ class VsCodeIde implements IDE {
 
   async getIdeSettings(): Promise<IdeSettings> {
     const ideSettings = this.getIdeSettingsSync();
-
-    // Feature flag for when hub is enabled
-    if (ideSettings.continueTestEnvironment !== "production") {
-      const enableHub = await enableHubContinueDev();
-      if (enableHub) {
-        ideSettings.continueTestEnvironment = "production";
-      }
-    }
-
     return ideSettings;
   }
 }

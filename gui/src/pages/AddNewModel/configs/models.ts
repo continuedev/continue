@@ -502,6 +502,19 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["groq", "scaleway", "nebius"],
     isOpenSource: false,
   },
+  llama3370bChat: {
+    title: "Llama3.3 70b Chat",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.3-70b",
+      model: "llama3.3-70b",
+      contextLength: 65536,
+    },
+    icon: "meta.png",
+    providerOptions: [],
+    isOpenSource: false,
+  },
   llama3170bChat: {
     title: "Llama3.1 70b Chat",
     description: "A model from Meta, fine-tuned for chat",
@@ -1361,7 +1374,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["nebius"],
+    providerOptions: ["nebius", "ncompass"],
     isOpenSource: true,
   },
   Qwen25Coder32b: {
@@ -1374,7 +1387,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32_000,
     },
     icon: "qwen.png",
-    providerOptions: ["scaleway", "nebius"],
+    providerOptions: ["scaleway", "nebius", "ncompass"],
     isOpenSource: true,
   },
   grokBeta: {

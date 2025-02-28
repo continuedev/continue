@@ -14,43 +14,23 @@ Actions are shortcuts for common use cases. For example, you might want to revie
 
 ### Slash commands
 
-The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' in a chat session (press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)), and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
+The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' in a chat session (press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)), and selecting from the dropdown.
 
 ![slash-commands](/img/slash-commands.png)
 
-A few of the most useful slash commands are available by default, like “/edit”, “/comment”, and “/share”, but Continue has a large built-in library of other options. To enable these, learn more [here](../customize/slash-commands.mdx).
+In YAML assistants, slash commands are generated from [`prompts` blocks](../hub/blocks/block-types.md#prompts).
+
+Learn more about slash commands [here](../customize/slash-commands.mdx).
+
+:::info
+Important: For assistants, slash commands only come from `prompts` blocks. When using older `config.json` configuration, other slash commands like `/share` and `/cmd` are included by default.
+:::
 
 ### Prompt files
 
 It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
 
-The full .prompt file reference can be found [here](../customize/deep-dives/prompt-files.md).
-
-:::tip[Prompt library]
-To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-examples). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
-:::
-
-Below is a quick example of setting up a prompt file to write unit tests using Jest.
-
-1. Create a folder called `.prompts/` at the top level of your workspace.
-2. Add a file called `test.prompt` to this folder. The name of this file will be the name of the slash command you will use to generate your prompt.
-3. Write the following contents to `test.prompt` and save.
-
-```.prompt
-{{{ input }}}
-
-Write unit tests for the above selected code, following each of these instructions:
-- Use `jest`
-- Properly set up and tear down
-- Include important edge cases
-- The tests should be complete and sophisticated
-- Give the tests just as chat output, don't edit any file
-- Don't explain how to set up `jest`
-```
-
-Now to use this prompt, you can highlight code and use <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> to select it in the Continue sidebar.
-
-Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
+Learn more about prompt files [here](../customize/deep-dives/prompt-files.md)
 
 ### Other triggers for Actions (VS Code)
 

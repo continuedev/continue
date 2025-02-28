@@ -430,7 +430,7 @@ class IdeProtocolClient(
 
                         if (editor.document.text.trim().isEmpty()) {
                             WriteCommandAction.runWriteCommandAction(project) {
-                                editor.document.insertString(0, msg)
+                                editor.document.insertString(0, params.text)
                             }
                             respond(null)
                             return@launch
@@ -448,7 +448,9 @@ class IdeProtocolClient(
                                         val responseContent = responseObject["content"] as Map<*, *>
                                         val result = responseContent["result"] as Map<*, *>
                                         val config = result["config"] as Map<String, Any>
-                                        val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
+
+                                        val selectedModels = config["selectedModelByRole"] as Map<String, Any>
+                                        val applyCodeBlockModel = selectedModels["apply"] as Map<String, Any>
 
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)
@@ -591,20 +593,5 @@ class IdeProtocolClient(
 
     fun deleteAtIndex(index: Int) {
         continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
-    }
-
-    private fun getModelByRole(
-        config: Any,
-        role: Any
-    ): Any? {
-        val experimental = (config as? Map<*, *>)?.get("experimental") as? Map<*, *>
-        val roleTitle = (experimental?.get("modelRoles") as? Map<*, *>)?.get(role) as? String ?: return null
-
-        val models = (config as? Map<*, *>)?.get("models") as? List<*>
-        val matchingModel = models?.find { model ->
-            (model as? Map<*, *>)?.get("title") == roleTitle
-        }
-
-        return matchingModel
     }
 }

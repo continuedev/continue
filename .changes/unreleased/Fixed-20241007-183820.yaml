@@ -1,5 +1,0 @@
-project: extensions/intellij
-kind: Fixed
-body: Off-screen rendering to solve white flash on load and lack of changing cursor
-  type
-time: 2024-10-07T18:38:20.733658-07:00
