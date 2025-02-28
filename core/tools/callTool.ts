@@ -77,9 +77,17 @@ async function callToolFromUri(
       if (!client) {
         throw new Error("MCP connection not found");
       }
+      // some special arguments to tell MCP about the context
+      // for example, to extract the workspace directories or project structure,
+      // or to adapt context to the current model
+      // MCP protocol allows any additional arguments, server will ignore unknown
+      const workspaceDirs = JSON.stringify(await extras.ide.getWorkspaceDirs());
+      const model = extras.llm.model;
       const response = await client.client.callTool({
         name: toolName,
         arguments: args,
+        model,
+        workspaceDirs,
       });
 
       if (response.isError === true) {
