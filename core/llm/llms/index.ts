@@ -54,6 +54,7 @@ import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
+import VscodeLm from "./VsCodeLm";
 
 export const LLMClasses = [
   Anthropic,
@@ -102,6 +103,7 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Scaleway,
+  VscodeLm,
 ];
 
 export async function llmFromDescription(
