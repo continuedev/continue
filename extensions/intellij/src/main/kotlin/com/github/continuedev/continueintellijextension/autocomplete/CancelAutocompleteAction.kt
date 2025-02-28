@@ -23,10 +23,6 @@ class CancelAutocompleteAction : AnAction() {
         e.presentation.isEnabledAndVisible = isInvokedInEditor(e)
     }
 
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.EDT
-    }
-
     private fun isInvokedInEditor(e: AnActionEvent): Boolean {
         val project: Project? = e.project
         val editor: Editor? = e.getData(CommonDataKeys.EDITOR)

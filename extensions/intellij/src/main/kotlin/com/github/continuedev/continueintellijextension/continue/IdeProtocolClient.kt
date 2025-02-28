@@ -447,24 +447,24 @@ class IdeProtocolClient(
                                         val responseObject = response as Map<*, *>
                                         val responseContent = responseObject["content"] as Map<*, *>
                                         val result = responseContent["result"] as Map<*, *>
-                                        val config = result["config"] as Map<String, Any>
+                                        val config = result["config"] as Map<*, *>
 
-                                        val selectedModels = config["selectedModelByRole"] as Map<String, Any>
-                                        val applyCodeBlockModel = selectedModels["apply"] as Map<String, Any>
+                                        val selectedModels = config["selectedModelByRole"] as? Map<*, *>
+                                        val applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
 
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)
-                                        }
-
-                                        val models =
-                                            config["models"] as List<Map<String, Any>>
-                                        val curSelectedModel =
-                                            models.find { it["title"] == params.curSelectedModelTitle }
-
-                                        if (curSelectedModel == null) {
-                                            continuation.resumeWithException(IllegalStateException("Model '${params.curSelectedModelTitle}' not found in config."))
                                         } else {
-                                            continuation.resume(curSelectedModel)
+                                            val models =
+                                                config["models"] as List<Map<String, Any>>
+                                            val curSelectedModel =
+                                                models.find { it["title"] == params.curSelectedModelTitle }
+
+                                            if (curSelectedModel == null) {
+                                                continuation.resumeWithException(IllegalStateException("Model '${params.curSelectedModelTitle}' not found in config."))
+                                            } else {
+                                                continuation.resume(curSelectedModel)
+                                            }
                                         }
                                     } catch (e: Exception) {
                                         continuation.resumeWithException(e)
