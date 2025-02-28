@@ -38,6 +38,7 @@ import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
+import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
@@ -195,6 +196,9 @@ export function Chat() {
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const selectedModelTitle = useAppSelector(
     (store) => store.config.defaultModelTitle,
+  );
+  const showSessionTabs = useAppSelector(
+    (store) => store.config.config.ui?.showSessionTabs,
   );
   const defaultModel = useAppSelector(selectDefaultModel);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
@@ -388,6 +392,8 @@ export function Chat() {
       )}
 
       {widget}
+
+      {!!showSessionTabs && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
