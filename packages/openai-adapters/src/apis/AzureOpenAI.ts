@@ -40,8 +40,10 @@ export class AzureOpenAIApi implements BaseLlmApi {
     if (PROXY) {
       const url = new URL(PROXY);
       proxyOptions = {
-        host: url.hostname,
-        port: Number(url.port),
+        host: (url.protocol ? url.protocol + "//" : "") + url.hostname,
+        port: Number(url.port || 80),
+        username: url.username,
+        password: url.password,
       };
     }
 
