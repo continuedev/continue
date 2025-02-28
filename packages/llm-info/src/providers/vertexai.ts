@@ -21,17 +21,17 @@ export const Gemini: ModelProvider = {
     },
     // embed
     {
-      model: "text-embedding-004",
+      model: "text-embedding-005",
       displayName: "Vertex Text Embedding",
       recommendedFor: ["embed"],
     },
     //autocomplete
     {
-        model: "code-gecko",
-        displayName: "VertexAI Code Gecko",
-        recommendedFor: ["autocomplete"],
-        maxCompletionTokens: 64,
-    }
+      model: "code-gecko",
+      displayName: "VertexAI Code Gecko",
+      recommendedFor: ["autocomplete"],
+      maxCompletionTokens: 64,
+    },
   ],
   id: "gemini",
   displayName: "Gemini",
