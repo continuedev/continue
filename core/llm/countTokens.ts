@@ -1,6 +1,6 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
-import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+import { ChatMessage, LLMOptions, MessageContent, MessagePart } from "../index.js";
 
 import { renderChatMessage } from "../util/messageContent.js";
 import {
@@ -27,9 +27,9 @@ class LlamaEncoding implements Encoding {
 }
 
 class NonWorkerAsyncEncoder implements AsyncEncoder {
-  constructor(private readonly encoding: Encoding) {}
+  constructor(private readonly encoding: Encoding) { }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> { }
 
   async encode(text: string): Promise<number[]> {
     return this.encoding.encode(text);
@@ -380,14 +380,17 @@ function compileChatMessages(
   prompt: string | undefined = undefined,
   functions: any[] | undefined = undefined,
   systemMessage: string | undefined = undefined,
+  llmOptions?: LLMOptions,
 ): ChatMessage[] {
   let msgsCopy = msgs
     ? msgs
-        .map((msg) => ({ ...msg }))
-        .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
+      .map((msg) => ({ ...msg }))
+      .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
+
+  const replaceSystemMessage = llmOptions?.replaceSystemMessage ?? false;
 
   if (prompt) {
     const promptMsg: ChatMessage = {
@@ -406,11 +409,15 @@ function compileChatMessages(
       content = renderChatMessage(msgs?.[0]);
     }
     if (systemMessage && systemMessage.trim() !== "") {
-      const shouldAddNewLines = content !== "";
-      if (shouldAddNewLines) {
-        content += "\n\n";
+      if (replaceSystemMessage) {
+        content = systemMessage;
+      } else {
+        const shouldAddNewLines = content !== "";
+        if (shouldAddNewLines) {
+          content += "\n\n";
+        }
+        content += systemMessage;
       }
-      content += systemMessage;
     }
     const systemChatMsg: ChatMessage = {
       role: "system",
