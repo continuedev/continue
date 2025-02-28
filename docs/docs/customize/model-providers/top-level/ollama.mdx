@@ -1,0 +1,128 @@
+---
+title: Ollama
+slug: ../ollama
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+Ollama is an open-source tool that allows to run large language models (LLMs) locally on their own computers. To use Ollama, you can install it [here](https://ollama.ai/download) and download the model you want to run with the `ollama run` command.
+
+## Chat model
+
+We recommend configuring **Llama3.1 8B** as your chat model.
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Llama3.1 8B
+        provider: ollama
+        model: llama3.1:8b
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Llama3.1 8B",
+          "provider": "ollama",
+          "model": "llama3.1:8b"
+        }
+      ]
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **Qwen2.5-Coder 1.5B** as your autocomplete model.
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Qwen2.5-Coder 1.5B
+        provider: ollama
+        model: qwen2.5-coder:1.5b-base
+        roles:
+          - autocomplete
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "tabAutocompleteModel": {
+        "title": "Qwen2.5-Coder 1.5B",
+        "provider": "ollama",
+        "model": "qwen2.5-coder:1.5b-base"
+      }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+## Embeddings model
+
+We recommend configuring **Nomic Embed Text** as your embeddings model.
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Nomic Embed Text
+        provider: ollama
+        model: nomic-embed-text
+        roles:
+          - embed
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "ollama",
+        "model": "nomic-embed-text"
+      }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+## Reranking model
+
+Ollama currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
+
+## Using a remote instance
+
+To configure a remote instance of Ollama, add the `"apiBase"` property to your model in config.json:
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Llama3.1 8B
+        provider: ollama
+        model: llama3.1:8b
+        apiBase: http://<my endpoint>:11434
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Llama3.1 8B",
+          "provider": "ollama",
+          "model": "llama3.1:8b",
+          "apiBase": "http://<my endpoint>:11434"
+        }
+      ]
+    }
+    ```
+    </TabItem>
+</Tabs>

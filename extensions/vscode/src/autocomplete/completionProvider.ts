@@ -23,7 +23,6 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { IDE } from "core";
 
 interface VsCodeCompletionInput {
@@ -74,13 +73,19 @@ export class ContinueCompletionProvider
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly tabAutocompleteModel: TabAutocompleteModel,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
   ) {
+    async function getAutocompleteModel() {
+      const { config } = await configHandler.loadConfig();
+      if (!config) {
+        return;
+      }
+      return config.selectedModelByRole.autocomplete ?? undefined;
+    }
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
-      this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
+      getAutocompleteModel,
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );

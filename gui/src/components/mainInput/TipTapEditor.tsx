@@ -5,13 +5,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
-import {
-  AnyExtension,
-  Editor,
-  EditorContent,
-  JSONContent,
-  useEditor,
-} from "@tiptap/react";
+import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
@@ -30,9 +24,10 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBadgeBackground,
+  vscCommandCenterActiveBorder,
+  vscCommandCenterInactiveBorder,
   vscForeground,
   vscInputBackground,
-  vscInputBorder,
   vscInputBorderFocus,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -66,6 +61,7 @@ import {
 import { AddCodeToEdit } from "./AddCodeToEditExtension";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
+import { MockExtension } from "./FillerExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
 import { Mention } from "./MentionExtension";
 import "./TipTapEditor.css";
@@ -78,9 +74,8 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import { MockExtension } from "./FillerExtension";
 
-const InputBoxDiv = styled.div<{ border?: string }>`
+const InputBoxDiv = styled.div<{}>`
   resize: none;
   padding-bottom: 4px;
   font-family: inherit;
@@ -90,8 +85,13 @@ const InputBoxDiv = styled.div<{ border?: string }>`
   width: 100%;
   background-color: ${vscInputBackground};
   color: ${vscForeground};
-  border: ${(props) =>
-    props.border ? props.border : `0.5px solid ${vscInputBorder}`};
+
+  border: 1px solid ${vscCommandCenterInactiveBorder};
+  transition: border-color 0.15s ease-in-out;
+  &:focus-within {
+    border: 1px solid ${vscCommandCenterActiveBorder};
+  }
+
   outline: none;
   font-size: ${getFontSize()}px;
 
@@ -173,7 +173,6 @@ interface TipTapEditorProps {
   ) => void;
   editorState?: JSONContent;
   toolbarOptions?: ToolbarOptions;
-  border?: string;
   placeholder?: string;
   historyKey: string;
   inputId: string;
@@ -592,11 +591,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   useEffect(() => {
     if (editor) {
       const handleFocus = () => {
-        debouncedShouldHideToolbar(false);
+        setShouldHideToolbar(false);
       };
 
       const handleBlur = () => {
-        debouncedShouldHideToolbar(true);
+        // TODO - make toolbar auto-hiding work without breaking tool dropdown focus
+        // debouncedShouldHideToolbar(true);
       };
 
       editor.on("focus", handleFocus);
@@ -730,6 +730,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         await dispatch(
           saveCurrentSession({
             openNewSession: false,
+            generateTitle: true,
           }),
         );
       }
@@ -763,6 +764,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       setTimeout(() => {
@@ -925,7 +927,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   return (
     <InputBoxDiv
-      border={props.border}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       className="cursor-text"

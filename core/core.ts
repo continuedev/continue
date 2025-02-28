@@ -11,15 +11,17 @@ import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 import {
   setupBestConfig,
   setupLocalConfig,
-  setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
+import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
+import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
-import { ControlPlaneClient } from "./control-plane/client";
 import { getControlPlaneEnv } from "./control-plane/env";
+import { DevDataSqliteDb } from "./data/devdataSqlite";
+import { DataLogger } from "./data/log";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
@@ -30,14 +32,12 @@ import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
-import { logDevData } from "./util/devdata";
-import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import {
   editConfigJson,
   getConfigJsonPath,
-  setupInitialDotContinueDirectory,
+  migrateV1DevDataFiles,
 } from "./util/paths";
 import { localPathToUri } from "./util/pathToUri";
 import { Telemetry } from "./util/posthog";
@@ -62,7 +62,6 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   codebaseIndexingState: IndexingProgressUpdate;
-  controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
 
@@ -71,10 +70,6 @@ export class Core {
   );
 
   private abortedMessageIds: Set<string> = new Set();
-
-  private async config() {
-    return (await this.configHandler.loadConfig()).config;
-  }
 
   invoke<T extends keyof ToCoreProtocol>(
     messageType: T,
@@ -99,7 +94,7 @@ export class Core {
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
-    setupInitialDotContinueDirectory();
+    migrateV1DevDataFiles();
 
     this.codebaseIndexingState = {
       status: "loading",
@@ -107,22 +102,18 @@ export class Core {
       progress: 0,
     };
 
+    const ideInfoPromise = messenger.request("getIdeInfo", undefined);
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
       useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(
-      sessionInfoPromise,
-      ideSettingsPromise,
-    );
-
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
       this.onWrite,
-      this.controlPlaneClient,
+      sessionInfoPromise,
     );
 
     this.docsService = DocsService.createSingleton(
@@ -135,13 +126,33 @@ export class Core {
       const serializedResult = await this.configHandler.getSerializedConfig();
       this.messenger.send("configUpdate", {
         result: serializedResult,
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       });
+
+      // update additional submenu context providers registered via VSCode API
+      const additionalProviders =
+        this.configHandler.getAdditionalSubmenuContextProviders();
+      if (additionalProviders.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: additionalProviders,
+        });
+      }
     });
 
-    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
-      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    this.configHandler.onDidChangeAvailableProfiles(
+      (profiles, selectedProfileId) =>
+        this.messenger.send("didChangeAvailableProfiles", {
+          profiles,
+          selectedProfileId,
+        }),
     );
+
+    // Dev Data Logger
+    const dataLogger = DataLogger.getInstance();
+    dataLogger.core = this;
+    dataLogger.ideInfoPromise = ideInfoPromise;
+    dataLogger.ideSettingsPromise = ideSettingsPromise;
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;
@@ -189,12 +200,10 @@ export class Core {
 
     const getLlm = async () => {
       const { config } = await this.configHandler.loadConfig();
-      const selected = this.globalContext.get("selectedTabAutocompleteModel");
-      return (
-        config?.tabAutocompleteModels?.find(
-          (model) => model.title === selected,
-        ) ?? config?.tabAutocompleteModels?.[0]
-      );
+      if (!config) {
+        return undefined;
+      }
+      return config.selectedModelByRole.autocomplete ?? undefined;
     };
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -228,11 +237,6 @@ export class Core {
       }
     });
 
-    on("update/selectTabAutocompleteModel", async (msg) => {
-      this.globalContext.update("selectedTabAutocompleteModel", msg.data);
-      void this.configHandler.reloadConfig();
-    });
-
     // Special
     on("abort", (msg) => {
       this.abortedMessageIds.add(msg.messageId);
@@ -263,8 +267,8 @@ export class Core {
     });
 
     // Dev data
-    on("devdata/log", (msg) => {
-      logDevData(msg.data.tableName, msg.data.data);
+    on("devdata/log", async (msg) => {
+      void DataLogger.getInstance().logDevData(msg.data);
     });
 
     // Edit config
@@ -280,10 +284,8 @@ export class Core {
     });
 
     on("config/newPromptFile", async (msg) => {
-      await createNewPromptFileV2(
-        this.ide,
-        (await this.config())?.experimental?.promptPath,
-      );
+      const { config } = await this.configHandler.loadConfig();
+      await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
       await this.configHandler.reloadConfig();
     });
 
@@ -304,22 +306,41 @@ export class Core {
       return this.configHandler.listProfiles();
     });
 
+    on("config/refreshProfiles", async (msg) => {
+      await this.configHandler.loadAssistantsForSelectedOrg();
+    });
+
     on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data);
+      addContextProvider(msg.data, this.configHandler);
     });
 
     on("config/updateSharedConfig", async (msg) => {
-      this.globalContext.updateSharedConfig(msg.data);
+      const newSharedConfig = this.globalContext.updateSharedConfig(msg.data);
       await this.configHandler.reloadConfig();
+      return newSharedConfig;
+    });
+
+    on("config/updateSelectedModel", async (msg) => {
+      const newSelectedModels = this.globalContext.updateSelectedModel(
+        msg.data.profileId,
+        msg.data.role,
+        msg.data.title,
+      );
+      await this.configHandler.reloadConfig();
+      return newSelectedModels;
     });
 
     on("controlPlane/openUrl", async (msg) => {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.messenger.request("openUrl", `${env.APP_URL}${msg.data.path}`);
+      let url = `${env.APP_URL}${msg.data.path}`;
+      if (msg.data.orgSlug) {
+        url += `?org=${msg.data.orgSlug}`;
+      }
+      await this.messenger.request("openUrl", url);
     });
 
     on("controlPlane/listOrganizations", async (msg) => {
-      return await this.controlPlaneClient.listOrganizations();
+      return await this.configHandler.listOrganizations();
     });
 
     // Context providers
@@ -336,7 +357,7 @@ export class Core {
     });
 
     on("context/loadSubmenuItems", async (msg) => {
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
@@ -353,17 +374,26 @@ export class Core {
     });
 
     on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode, selectedModelTitle } =
-        msg.data;
-      const config = await this.config();
+      const { config } = await this.configHandler.loadConfig();
       if (!config) {
         return [];
       }
 
+      const { name, query, fullInput, selectedCode, selectedModelTitle } =
+        msg.data;
+
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
-      const provider = config.contextProviders?.find(
-        (provider) => provider.description.title === name,
-      );
+      const provider =
+        config.contextProviders?.find(
+          (provider) => provider.description.title === name,
+        ) ??
+        [
+          // user doesn't need these in their config.json for the shortcuts to work
+          // option+enter
+          new CurrentFileContextProvider({}),
+          // cmd+enter
+          new CodebaseContextProvider({}),
+        ].find((provider) => provider.description.title === name);
       if (!provider) {
         return [];
       }
@@ -377,11 +407,11 @@ export class Core {
         const items = await provider.getContextItems(query, {
           config,
           llm,
-          embeddingsProvider: config.embeddingsProvider,
+          embeddingsProvider: config.selectedModelByRole.embed,
           fullInput,
           ide,
           selectedCode,
-          reranker: config.reranker,
+          reranker: config.selectedModelByRole.rerank,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
@@ -399,10 +429,35 @@ export class Core {
           id,
         }));
       } catch (e) {
-        void this.ide.showToast(
-          "error",
-          `Error getting context items from ${name}: ${e}`,
-        );
+        let knownError = false;
+
+        if (e instanceof Error) {
+          // After removing transformers JS embeddings provider from jetbrains
+          // Should no longer see this error
+          // if (e.message.toLowerCase().includes("embeddings provider")) {
+          //   knownError = true;
+          //   const toastOption = "See Docs";
+          //   void this.ide
+          //     .showToast(
+          //       "error",
+          //       `Set up an embeddings model to use @${name}`,
+          //       toastOption,
+          //     )
+          //     .then((userSelection) => {
+          //       if (userSelection === toastOption) {
+          //         void this.ide.openUrl(
+          //           "https://docs.continue.dev/customize/model-roles/embeddings",
+          //         );
+          //       }
+          //     });
+          // }
+        }
+        if (!knownError) {
+          void this.ide.showToast(
+            "error",
+            `Error getting context items from ${name}: ${e}`,
+          );
+        }
         return [];
       }
     });
@@ -415,7 +470,8 @@ export class Core {
     on("config/getSerializedProfileInfo", async (msg) => {
       return {
         result: await this.configHandler.getSerializedConfig(),
-        profileId: this.configHandler.currentProfile.profileDescription.id,
+        profileId:
+          this.configHandler.currentProfile?.profileDescription.id ?? null,
       };
     });
 
@@ -600,6 +656,7 @@ export class Core {
         params,
         historyIndex,
         selectedCode,
+        completionOptions,
       } = msg.data;
 
       const { config } = await configHandler.loadConfig();
@@ -648,6 +705,7 @@ export class Core {
           config,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          completionOptions,
         })) {
           if (abortedMessageIds.has(msg.messageId)) {
             abortedMessageIds.delete(msg.messageId);
@@ -703,6 +761,8 @@ export class Core {
         llm,
         data.input,
         data.language,
+        false,
+        undefined,
       )) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
@@ -732,10 +792,6 @@ export class Core {
 
         case "Quickstart":
           editConfigJsonCallback = setupQuickstartConfig;
-          break;
-
-        case "LocalAfterFreeTrial":
-          editConfigJsonCallback = setupLocalConfigAfterFreeTrial;
           break;
 
         case "Best":
@@ -841,12 +897,18 @@ export class Core {
 
     on("files/created", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: ["file"],
+        });
         await this.refreshCodebaseIndexFiles(data.uris);
       }
     });
@@ -896,13 +958,19 @@ export class Core {
     on("didChangeSelectedOrg", (msg) => {
       void this.configHandler.setSelectedOrgId(msg.data.id);
       void this.configHandler.reloadConfig();
+      void this.configHandler.loadAssistantsForSelectedOrg();
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
-      this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+      await this.configHandler.updateControlPlaneSessionInfo(
+        msg.data.sessionInfo,
+      );
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage(ideSettingsPromise);
+      const url = await getAuthUrlForTokenPage(
+        ideSettingsPromise,
+        msg.data.useOnboarding,
+      );
       return { url };
     });
 
@@ -940,15 +1008,22 @@ export class Core {
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
       const contextItems = await callTool(
-        tool.uri ?? tool.function.name,
+        tool,
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
           llm,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          tool,
         },
       );
+
+      if (tool.faviconUrl) {
+        contextItems.forEach((item) => {
+          item.icon = tool.faviconUrl;
+        });
+      }
 
       return { contextItems };
     });

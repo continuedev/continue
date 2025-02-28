@@ -31,8 +31,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const defaultModel = selectDefaultModel(state);
 
         if (!defaultModel) {
-          console.error("No default model found");
-          return;
+          throw new Error("No model selected");
         }
 
         resetStateForNewMessage();
@@ -44,7 +43,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           content: renderContextItems(toolOutput),
           toolCallId,
         };
-
         dispatch(streamUpdate([newMessage]));
         dispatch(
           addContextItemsAtIndex({
@@ -64,11 +62,11 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         const updatedHistory = getState().session.history;
         const messages = constructMessages(
           [...updatedHistory],
-          defaultModel.model,
-          defaultModel.provider,
+          defaultModel,
           useTools,
         );
-        unwrapResult(await dispatch(streamNormalInput(messages)));
+        const output = await dispatch(streamNormalInput(messages));
+        unwrapResult(output);
       }),
     );
   },

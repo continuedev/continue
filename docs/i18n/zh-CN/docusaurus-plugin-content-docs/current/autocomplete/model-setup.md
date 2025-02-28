@@ -9,7 +9,7 @@ sidebar_position: 2
 
 为了最好的自动补全体验，我们推荐通过 [Mistral API](https://console.mistral.ai/) 使用 Codestral 。这个模型提供高质量的补全，使用极好的代码上下文理解：
 
-```json title="config.json""
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "Codestral",
@@ -28,7 +28,7 @@ Codestral 的 API key 和通常的 Mistral API 是不同的。如果你使用 Co
 
 对于倾向于本地执行或自托管的， `StarCoder2-3b` 提供了一个对于大多数用户性能和质量的平衡：
 
-```json title="config.json""
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "StarCoder2-3b",
@@ -49,4 +49,4 @@ Codestral 的 API key 和通常的 Mistral API 是不同的。如果你使用 Co
 
 ## 其他体验
 
-有很多更多的模型或提供者可以用来补全。在 [这里](../customize/model-types/autocomplete.md) 查看它们。
+有很多更多的模型或提供者可以用来补全。在 [这里](../customize/model-roles/autocomplete.md) 查看它们。

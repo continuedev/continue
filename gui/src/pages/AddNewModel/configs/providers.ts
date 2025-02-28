@@ -111,7 +111,7 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
       models.claude35Sonnet,
       models.claude3Opus,
       models.claude3Sonnet,
-      models.claude3Haiku,
+      models.claude35Haiku,
     ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
@@ -370,7 +370,11 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [models.deepseekCoderApi, models.deepseekChatApi, models.deepseekReasonerApi],
+    packages: [
+      models.deepseekCoderApi,
+      models.deepseekChatApi,
+      models.deepseekReasonerApi,
+    ],
     apiKeyUrl: "https://platform.deepseek.com/api_keys",
   },
   together: {
@@ -405,6 +409,38 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     }),
     apiKeyUrl: "https://api.together.xyz/settings/api-keys",
   },
+  ncompass: {
+    title: "nCompass",
+    provider: "ncompass",
+    refPage: "ncompass",
+    description:
+      "Use the nCompass API for extremely fast streaming of open-source models",
+    icon: "ncompass.png",
+    longDescription: `nCompass is an extremely fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://app.ncompass.tech/api-settings).`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your nCompass API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.llama318bChat,
+      models.llama3370bChat,
+      models.Qwen25Coder32b,
+    ].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl: "https://app.ncompass.tech/api-settings",
+  },
   novita: {
     title: "NovitaAI",
     provider: "novita",
@@ -427,8 +463,12 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
       ...completionParamsInputsConfigs,
     ],
-    packages: [models.llama318BChat, models.mistralChat,
-      models.deepseekR1Chat, models.deepseekV3Chat].map((p) => {
+    packages: [
+      models.llama318BChat,
+      models.mistralChat,
+      models.deepseekR1Chat,
+      models.deepseekV3Chat,
+    ].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),
@@ -681,7 +721,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       { ...models.claude35Sonnet, title: "Claude 3.5 Sonnet (trial)" },
       { ...models.gpt4o, title: "GPT-4o (trial)" },
       { ...models.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
-      { ...models.claude3Haiku, title: "Claude 3 Haiku (trial)" },
+      { ...models.claude35Haiku, title: "Claude 3.5 Haiku (trial)" },
       models.mixtralTrial,
       { ...models.gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
       {
@@ -859,6 +899,10 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     icon: "nebius.png",
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     packages: [
+      models.deepseekR1Chat,
+      models.deepseekV3Chat,
+      models.QwenQwQ_32b_preview,
+      models.Qwen25Coder_32b,
       models.llama318bChat,
       models.llama3170bChat,
       models.llama31405bChat,

@@ -5,8 +5,8 @@ import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
-
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
+
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
@@ -80,14 +80,19 @@ export class CodebaseIndexer {
       return [];
     }
 
+    const embeddingsModel = config.selectedModelByRole.embed;
+    if (!embeddingsModel) {
+      return [];
+    }
+
     const indexes = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
-        config.embeddingsProvider.maxEmbeddingChunkSize,
+        embeddingsModel.maxEmbeddingChunkSize,
       ), // Chunking must come first
       new LanceDbIndex(
-        config.embeddingsProvider,
+        embeddingsModel,
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
       ),

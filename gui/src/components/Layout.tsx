@@ -2,28 +2,29 @@ import { useEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
+import { AuthProvider } from "../context/Auth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setEditStatus, focusEdit } from "../redux/slices/editModeState";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { selectUseHub } from "../redux/selectors";
+import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
 import {
   addCodeToEdit,
-  updateApplyState,
-  setMode,
   newSession,
+  selectIsInEditMode,
+  setMode,
+  updateApplyState,
 } from "../redux/slices/sessionSlice";
+import { setShowDialog } from "../redux/slices/uiSlice";
+import { exitEditMode } from "../redux/thunks";
+import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
-import PostHogPageView from "./PosthogPageView";
-import AccountDialog from "./AccountDialog";
-import { AuthProvider } from "../context/Auth";
-import { exitEditMode } from "../redux/thunks";
-import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
-import { incrementFreeTrialCount } from "../util/freeTrial";
 import OSRContextMenu from "./OSRContextMenu";
+import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -63,6 +64,7 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       dispatch(exitEditMode());
@@ -86,6 +88,7 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       dispatch(exitEditMode());
@@ -95,35 +98,11 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "openDialogMessage",
-    async (message) => {
-      if (message === "account") {
-        dispatch(setShowDialog(true));
-        dispatch(setDialogMessage(<AccountDialog />));
-      }
-    },
-    [],
-  );
-
-  useWebviewListener(
     "addModel",
     async () => {
       navigate("/models");
     },
     [navigate],
-  );
-
-  useWebviewListener(
-    "viewHistory",
-    async () => {
-      // Toggle the history page / main page
-      if (location.pathname === "/history") {
-        navigate("/");
-      } else {
-        navigate("/history");
-      }
-    },
-    [location, navigate],
   );
 
   useWebviewListener(
@@ -182,6 +161,8 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: false,
+          // Because this causes a lag before Edit mode is focused. TODO just have that happen in background
+          generateTitle: false,
         }),
       );
       dispatch(newSession());
@@ -197,6 +178,7 @@ const Layout = () => {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       dispatch(focusEdit());
@@ -221,7 +203,11 @@ const Layout = () => {
     [],
   );
 
+  const isInEditMode = useAppSelector(selectIsInEditMode);
   useWebviewListener("exitEditMode", async () => {
+    if (!isInEditMode) {
+      return;
+    }
     dispatch(
       loadLastSession({
         saveCurrentSession: false,
@@ -259,6 +245,21 @@ const Layout = () => {
     }
   }, [location]);
 
+  const useHub = useAppSelector(selectUseHub);
+
+  // Existing users that have already seen the onboarding card
+  // should be shown an intro card for hub.continue.dev
+  // useEffect(() => {
+  //   if (useHub !== true) {
+  //     return;
+  //   }
+  //   const seenHubIntro = getLocalStorage("seenHubIntro");
+  //   if (!onboardingCard.show && !seenHubIntro) {
+  //     onboardingCard.setActiveTab("ExistingUserHubIntro");
+  //   }
+  //   setLocalStorage("seenHubIntro", true);
+  // }, [onboardingCard.show, useHub]);
+
   return (
     <AuthProvider>
       <LayoutTopDiv>
@@ -293,9 +294,7 @@ const Layout = () => {
                 onClick={() => navigate(ROUTES.CONFIG_ERROR)}
               >
                 <strong className="font-bold">Error!</strong>{" "}
-                <span className="block sm:inline">
-                  Could not load config.json
-                </span>
+                <span className="block sm:inline">Could not load config</span>
                 <div className="mt-2 underline">Learn More</div>
               </div>
             )}

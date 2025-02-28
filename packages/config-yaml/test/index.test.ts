@@ -1,12 +1,6 @@
 import * as fs from "fs";
-import * as YAML from "yaml";
+import { decodeSecretLocation, resolveSecretLocationInProxy } from "../dist";
 import {
-  decodeSecretLocation,
-  encodeSecretLocation,
-  resolveSecretLocationInProxy,
-} from "../dist";
-import {
-  clientRender,
   FQSN,
   FullSlug,
   PlatformClient,
@@ -19,7 +13,6 @@ import {
   SecretType,
   unrollAssistant,
 } from "../src";
-import exp = require("constants");
 
 // Test e2e flows from raw yaml -> unroll -> client render -> resolve secrets on proxy
 describe("E2E Scenarios", () => {
@@ -27,9 +20,8 @@ describe("E2E Scenarios", () => {
     OPENAI_API_KEY: "sk-123",
   };
 
-  const packageSecrets: Record<string, string> = {
-    "test-org/assistant/ANTHROPIC_API_KEY": "sk-ant",
-    "test-org/gemini/GEMINI_API_KEY": "gemini-api-key",
+  const orgSecrets: Record<string, string> = {
+    GEMINI_API_KEY: "gemini-api-key",
   };
 
   const proxyEnvSecrets: Record<string, string> = {
@@ -71,14 +63,27 @@ describe("E2E Scenarios", () => {
     getSecretFromSecretLocation: async function (
       secretLocation: SecretLocation,
     ): Promise<string | undefined> {
-      if (secretLocation.secretType === SecretType.Package) {
-        return packageSecrets[
-          encodeSecretLocation(secretLocation).split(":")[1]
-        ];
-      } else if (secretLocation.secretType === SecretType.User) {
-        return userSecrets[secretLocation.secretName];
-      } else {
-        return undefined;
+      switch (secretLocation.secretType) {
+        case SecretType.Package:
+          return undefined;
+        case SecretType.User:
+          return userSecrets[secretLocation.secretName];
+        case SecretType.Organization:
+          return orgSecrets[secretLocation.secretName];
+        case SecretType.ModelsAddOn:
+        case SecretType.FreeTrial:
+          if (
+            secretLocation.blockSlug.ownerSlug === "test-org" &&
+            secretLocation.blockSlug.packageSlug === "claude35sonnet" &&
+            secretLocation.secretName === "ANTHROPIC_API_KEY"
+          ) {
+            return "sk-ant";
+          }
+          return undefined;
+        case SecretType.NotFound:
+          return undefined;
+        default:
+          return undefined;
       }
     },
   };
@@ -97,18 +102,34 @@ describe("E2E Scenarios", () => {
     const unrolledConfig = await unrollAssistant(
       "test-org/assistant",
       registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+      },
     );
 
     // Test that packages were correctly unrolled and params replaced
     expect(unrolledConfig.models?.length).toBe(3);
-    expect(unrolledConfig.models?.[0].apiKey).toBe(
-      "${{ secrets.test-org/assistant/OPENAI_API_KEY }}",
-    );
-    expect(unrolledConfig.models?.[1].apiKey).toBe(
-      "${{ secrets.test-org/assistant/test-org/gemini/GEMINI_API_KEY }}",
-    );
-    expect(unrolledConfig.models?.[2].apiKey).toBe(
-      "${{ secrets.test-org/assistant/ANTHROPIC_API_KEY }}",
+
+    const openAiModel = unrolledConfig.models?.[0]!;
+    expect(openAiModel.apiKey).toBe("sk-123");
+
+    const geminiModel = unrolledConfig.models?.[1]!;
+    expect(geminiModel.provider).toBe("continue-proxy");
+    expect(geminiModel.apiKey).toBeUndefined();
+    const geminiSecretLocation = "organization:test-org/GEMINI_API_KEY";
+    expect((geminiModel as any).apiKeyLocation).toBe(geminiSecretLocation);
+
+    const anthropicModel = unrolledConfig.models?.[2]!;
+    expect(anthropicModel.provider).toBe("continue-proxy");
+    expect(anthropicModel.apiKey).toBeUndefined();
+    const anthropicSecretLocation =
+      "models_add_on:test-org/claude35sonnet/ANTHROPIC_API_KEY";
+    expect((anthropicModel as any).apiKeyLocation).toBe(
+      anthropicSecretLocation,
     );
 
     expect(unrolledConfig.rules?.length).toBe(2);
@@ -118,28 +139,6 @@ describe("E2E Scenarios", () => {
     expect(unrolledConfig.docs?.[0].rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
-
-    const clientRendered = await clientRender(
-      YAML.stringify(unrolledConfig),
-      localUserSecretStore,
-      platformClient,
-    );
-
-    // Test that user secrets were injected and others were changed to use proxy
-    const anthropicSecretLocation =
-      "package:test-org/assistant/ANTHROPIC_API_KEY";
-    const geminiSecretLocation = "package:test-org/gemini/GEMINI_API_KEY";
-    expect(clientRendered.models?.[0].apiKey).toBe("sk-123");
-    expect(clientRendered.models?.[1].provider).toBe("continue-proxy");
-    expect((clientRendered.models?.[1] as any).apiKeyLocation).toBe(
-      geminiSecretLocation,
-    );
-    expect(clientRendered.models?.[1].apiKey).toBeUndefined();
-    expect(clientRendered.models?.[2].provider).toBe("continue-proxy");
-    expect((clientRendered.models?.[2] as any).apiKeyLocation).toBe(
-      anthropicSecretLocation,
-    );
-    expect(clientRendered.models?.[2].apiKey).toBeUndefined();
 
     // Test that proxy can correctly resolve secrets
     const decodedAnthropicSecretLocation = decodeSecretLocation(
@@ -176,4 +175,6 @@ describe("E2E Scenarios", () => {
     );
     expect(geminiSecretValue2).toBe("gemini-api-key");
   });
+
+  it.skip("should prioritize org over user / package secrets", () => {});
 });

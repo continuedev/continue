@@ -41,8 +41,8 @@ const getSlashCommandForInput = (
 
   if (lastText.startsWith("/")) {
     slashCommandName = lastText.split(" ")[0].substring(1);
-    slashCommand = slashCommands.find(
-      (command) => command.name === slashCommandName,
+    slashCommand = slashCommands.find((command) =>
+      lastText.startsWith(`/${command.name} `),
     );
   }
   if (!slashCommand || !slashCommandName) {
@@ -74,13 +74,15 @@ export const streamResponseThunk = createAsyncThunk<
         const useTools = state.ui.useTools;
         const defaultModel = selectDefaultModel(state);
         const slashCommands = state.config.config.slashCommands || [];
-        const inputIndex = index ?? state.session.history.length;
+        const inputIndex = index ?? state.session.history.length; // Either given index or concat to end
 
         if (!defaultModel) {
           throw new Error("No chat model selected");
         }
 
-        dispatch(submitEditorAndInitAtIndex({ index, editorState }));
+        dispatch(
+          submitEditorAndInitAtIndex({ index: inputIndex, editorState }),
+        );
         resetStateForNewMessage();
 
         const result = await dispatch(
@@ -120,8 +122,7 @@ export const streamResponseThunk = createAsyncThunk<
         const updatedHistory = getState().session.history;
         const messages = constructMessages(
           [...updatedHistory],
-          defaultModel.model,
-          defaultModel.provider,
+          defaultModel,
           useTools,
         );
 
