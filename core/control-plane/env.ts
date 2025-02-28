@@ -110,5 +110,8 @@ export async function useHub(
   ideSettingsPromise: Promise<IdeSettings>,
 ): Promise<boolean> {
   const ideSettings = await ideSettingsPromise;
+  if (ideSettings.enableControlServerBeta) {
+    return false;
+  }
   return ideSettings.continueTestEnvironment !== "none";
 }
