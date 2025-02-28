@@ -5,6 +5,7 @@ import { EXTENSION_NAME } from "core/control-plane/env";
 import { getConfigJsonPathForRemote } from "core/util/paths";
 import * as vscode from "vscode";
 
+import { canParseUrl } from "core/util/url";
 import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
 
 export class RemoteConfigSync {
@@ -66,18 +67,6 @@ export class RemoteConfigSync {
     };
   }
 
-  private canParse(url: string): boolean {
-    if ((URL as any).canParse) {
-      return (URL as any).canParse(url);
-    }
-    try {
-      new URL(url);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
   async setup() {
     if (
       this.userToken === null ||
@@ -86,7 +75,7 @@ export class RemoteConfigSync {
     ) {
       return;
     }
-    if (!this.canParse(this.remoteConfigServerUrl)) {
+    if (!canParseUrl(this.remoteConfigServerUrl)) {
       vscode.window.showErrorMessage(
         "The value set for 'remoteConfigServerUrl' is not valid: ",
         this.remoteConfigServerUrl,
