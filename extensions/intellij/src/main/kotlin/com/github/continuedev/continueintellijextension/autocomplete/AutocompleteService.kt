@@ -62,7 +62,9 @@ class AutocompleteService(private val project: Project) {
 
     init {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
-        widget = statusBar.getWidget("AutocompleteSpinnerWidget") as? AutocompleteSpinnerWidget
+        if (statusBar != null) {
+            widget = statusBar.getWidget("AutocompleteSpinnerWidget") as? AutocompleteSpinnerWidget
+        }    
     }
 
     fun triggerCompletion(editor: Editor) {
