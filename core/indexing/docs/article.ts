@@ -1,5 +1,6 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
+import * as cheerio from "cheerio";
 
 import { Chunk } from "../../";
 import { cleanFragment, cleanHeader, markdownChunker } from "../chunk/markdown";
@@ -141,18 +142,19 @@ export async function htmlPageToArticleWithChunks(
 
     const title = readability.title || subpath;
 
-    const titles = Array.from(dom.window.document.querySelectorAll("h2"));
-
+    const $ = cheerio.load(html);
+  
+    const titles = $('h2').toArray();
     const article_components =
       titles.length > 0
         ? titles.map((titleElement) => {
-            const title = titleElement.textContent || "";
+            const title = $(titleElement).text() || "";
             let body = "";
-            let nextSibling = titleElement.nextElementSibling;
+            let nextSibling = $(titleElement).next();
 
-            while (nextSibling && nextSibling.tagName !== "H2") {
-              body += nextSibling.textContent || "";
-              nextSibling = nextSibling.nextElementSibling;
+            while (nextSibling.length && nextSibling[0].tagName !== "h2") {
+              body += nextSibling.text() || "";
+              nextSibling = nextSibling.next();
             }
 
             return { title, body };
