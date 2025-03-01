@@ -23,8 +23,9 @@ jobs:
       - name: Compute excluded assignees
         id: excluded-assignees
         run: |
-          node ./scripts/getExcludedAssignees.js sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa ${{ matrix.assignee }}
+          result=$(node ./scripts/getExcludedAssignees.js sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa ${{ matrix.assignee }})
 
+          echo "Result: $result"
           echo "excluded_assignees=$result" >> $GITHUB_OUTPUT
 
       - uses: actions/stale@v9
