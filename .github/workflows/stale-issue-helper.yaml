@@ -9,9 +9,11 @@ on:
 jobs:
   stale:
     runs-on: ubuntu-latest
+    env:
+      TEAM_MEMBERS: "sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa"
     strategy:
       matrix:
-        assignee: [sestinj, Patrick-Erichsen, tomasz-stefaniak, RomneyDa]
+        assignee: ${{ env.TEAM_MEMBERS }}
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +25,7 @@ jobs:
       - name: Compute excluded assignees
         id: excluded-assignees
         run: |
-          result=$(node ./scripts/getExcludedAssignees.js sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa ${{ matrix.assignee }})
+          result=$(node ./scripts/getExcludedAssignees.js ${{ env.TEAM_MEMBERS }} ${{ matrix.assignee }})
 
           echo "Result: $result"
           echo "excluded_assignees=$result" >> $GITHUB_OUTPUT
@@ -39,6 +41,6 @@ jobs:
           stale-pr-label: "stale"
           debug-only: true
           exempt-issue-labels: "needs-triage,no-stale"
-          exempt-pr-labels: "no-stale,no-stale"
+          exempt-pr-labels: "no-stale"
           exempt-assignees: ${{ steps.excluded-assignees.outputs.excluded_assignees }}
           include-only-assigned: true
