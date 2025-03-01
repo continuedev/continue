@@ -13,7 +13,7 @@ jobs:
       TEAM_MEMBERS: "sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa"
     strategy:
       matrix:
-        assignee: ${{ env.TEAM_MEMBERS }}
+        assignee: [sestinj, Patrick-Erichsen, tomasz-stefaniak, RomneyDa]
     steps:
       - uses: actions/checkout@v4
 
