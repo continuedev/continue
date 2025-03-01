@@ -40,3 +40,4 @@ jobs:
           exempt-issue-labels: "needs-triage,no-stale"
           exempt-pr-labels: "no-stale,no-stale"
           exempt-assignees: ${{ steps.excluded-assignees.outputs.excluded_assignees }}
+          include-only-assigned: true
