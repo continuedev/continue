@@ -1,7 +1,10 @@
 name: "Label stale issues and PRs"
 on:
+  push:
+    branches:
+      - nate/stale-issue-helper
   schedule:
-    - cron: "*/5 * * * *"
+    - cron: "30 1 * * *"
 
 jobs:
   stale:
