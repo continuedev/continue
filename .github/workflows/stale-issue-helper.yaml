@@ -13,6 +13,20 @@ jobs:
       matrix:
         assignee: [sestinj, Patrick-Erichsen, tomasz-stefaniak, RomneyDa]
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Compute excluded assignees
+        id: excluded-assignees
+        run: |
+          node ./scripts/getExcludedAssignees.js sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa ${{ matrix.assignee }}
+
+          echo "excluded_assignees=$result" >> $GITHUB_OUTPUT
+
       - uses: actions/stale@v9
         with:
           stale-issue-message: "This issue hasn't been updated in a while. @${{ matrix.assignee }} can you take a look?"
@@ -25,4 +39,4 @@ jobs:
           debug-only: true
           exempt-issue-labels: "needs-triage,no-stale"
           exempt-pr-labels: "no-stale,no-stale"
-          exempt-assignees: ${{ toJSON(fromJSON('["sestinj", "Patrick-Erichsen", "tomasz-stefaniak", "RomneyDa"]').filter(user => user != matrix.assignee)) }}
+          exempt-assignees: ${{ steps.excluded-assignees.outputs.excluded_assignees }}
