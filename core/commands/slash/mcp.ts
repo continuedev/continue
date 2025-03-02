@@ -3,6 +3,19 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { ChatMessage, MessagePart, SlashCommand, UserChatMessage } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 
+function findLastIndex<T>(array: T[], predicate: (value: T) => boolean): number {
+  if (!array || array.length === 0) {
+    return -1;
+  }
+  
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i])) {
+      return i;
+    }
+  }
+  
+  return -1;
+}
 /**
  *  Function substitutes the content of the message with the prompt
  *  Find the last text message that contains the input in content,
@@ -21,7 +34,7 @@ function substituteContent(content: MessagePart[], input: string, prompt: Messag
   const newContent = [...content];
   
   // Find the last text message part that contains the input
-  const foundIndex = newContent.findLastIndex((part) => part.type === "text" && part.text.includes(input));
+  const foundIndex = findLastIndex(newContent,(part) => part.type === "text" && part.text.includes(input));
   
   if (foundIndex !== -1) {
     // Found a part containing the input
@@ -62,7 +75,7 @@ function substituteLastUserMessage(messages: ChatMessage[], input: string, promp
   const newMessages = [...messages];
   
   // Find the last user message
-  const lastUserMessageIndex = newMessages.findLastIndex((msg) => msg.role === "user");
+  const lastUserMessageIndex = findLastIndex(newMessages,(msg) => msg.role === "user");
   
   if (lastUserMessageIndex === -1) {
     // No user message found
@@ -75,7 +88,7 @@ function substituteLastUserMessage(messages: ChatMessage[], input: string, promp
     }
   } else {
     
-    const lastUserPromptIndex = prompt.findLastIndex((msg) => msg.role === "user");
+    const lastUserPromptIndex = findLastIndex(prompt,(msg) => msg.role === "user");
 
     let promptContent: MessagePart[];
     if (lastUserPromptIndex === -1) {
@@ -133,14 +146,11 @@ export function constructMcpSlashCommand(
 
       // Prepare arguments for MCP client
       // some special arguments to tell MCP about the context
-      const workspaceDirs = JSON.stringify(await ide.getWorkspaceDirs());
       const argsObject: { [key: string]: string } = {};
       if (args) {
         args.forEach((arg) => {
           switch (arg) {
             case "model":argsObject["model"] = llm.model;
-            break;
-            case "workspaceDirs": argsObject["workspaceDirs"] = workspaceDirs;
             break;
             case "history": argsObject["history"] = JSON.stringify(history);
             break;
@@ -149,8 +159,6 @@ export function constructMcpSlashCommand(
           }
         });
       }
-      argsObject["workspaceDirs"] = (await ide.getWorkspaceDirs()).join(",");
-      argsObject["model"] = llm.model;
 
       // Get prompt from MCP
       const result = await client.getPrompt({ name, arguments: argsObject });
