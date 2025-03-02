@@ -30,9 +30,9 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     return model.toLowerCase().includes("gemini");
   },
   bedrock: (model) => {
-    // Support only Claude 3.5 models on Bedrock, mirroring anthropic configuration
+    // Support Claude 3.5 and 3.7 models on Bedrock, mirroring anthropic configuration
     if (
-      ["claude-3-5", "claude-3.5"].some((part) =>
+      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7"].some((part) =>
         model.toLowerCase().includes(part),
       )
     ) {

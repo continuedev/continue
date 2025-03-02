@@ -13,6 +13,7 @@ import {
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
+import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -199,12 +200,12 @@ class Bedrock extends BaseLLM {
   ): any {
     const convertedMessages = this._convertMessages(messages);
 
-    const isClaudeModel = options.model?.toLowerCase().includes("claude");
+    const supportsTools = PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
     return {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
-      toolConfig: isClaudeModel && options.tools ? {
+      toolConfig: supportsTools && options.tools ? {
         tools: options.tools.map(tool => ({
           toolSpec: {
             name: tool.function.name,
