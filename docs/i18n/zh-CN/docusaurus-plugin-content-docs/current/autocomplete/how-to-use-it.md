@@ -2,7 +2,7 @@
 title: 自动补全
 description: 自动补全 \- 如何使用它
 sidebar_label: 如何使用它
-keywords: [如何]
+keywords: [自动补全模]
 sidebar_position: 1
 ---
 

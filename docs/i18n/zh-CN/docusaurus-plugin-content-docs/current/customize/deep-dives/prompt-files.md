@@ -4,19 +4,19 @@ title: 提示词文件
 
 提示词文件提供一个方便的方式，来标准化通用模式，并与你的团队分享一批 LLM 提示词。它们让构建和使用这些提示词更简单。
 
+在 [hub](../../hub/introduction.md) 中，提示词文件保存在 [prompt blocks](../../hub/blocks/block-types.md#prompts) 中，像 [斜杠命令](../slash-commands.mdx) 一样在聊天中显示。访问 hub [查看提示词](https://hub.continue.dev/explore/prompts) 或者 [创建你自己的](https://hub.continue.dev/new?type=block&block=rules) 。
+
+提示词文件可以以 `.prompt` 文件保存你的项目根目录。查看下面的。
+
 ## 快速开始
 
-<!-- :::tip[提示词库]
-为了帮助你开始，[我们精心编写了一个小的 `.prompt` 文件库](https://github.com/continuedev/prompt-file-examples)。我们鼓励社区贡献到这个仓库，所有请考虑为你的 prompt 创建一个拉取请求！
-::: -->
-
-以下是一个快速示例，设置一个 prompt 文件到 de
+以下是一个快速示例，设置一个 prompt 文件：
 
 1. 创建一个名为 `.continue/prompts` 的目录，在你的工作区的最高层级（或者你可以使用 UI 中的按钮，输入 @ ，选择 "Prompt Files" ，选择 "New Prompt File"）。
 2. 添加一个名为 `rails.prompt` 的文件到这个目录中。
 3. 写入以下内容到 `rails.prompt` 并保存。
 
-```
+```.prompt
 name: Rails Project
 description: Information about this project
 ---

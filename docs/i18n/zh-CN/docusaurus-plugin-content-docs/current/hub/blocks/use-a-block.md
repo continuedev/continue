@@ -1,15 +1,15 @@
 ---
-title: Use a block
-description: Guide to using blocks
-keywords: [blocks, usage, use]
+title: 使用一个块
+description: 使用块的指南
+keywords: [块, 使用]
 ---
 
-# Use a block
+# 使用一个块
 
-Blocks can be used by adding them to assistants:
-- [Create an assistant](../assistants/create-an-assistant.md)
-- [Edit an assistant](../assistants/edit-an-assistant.md)
+块可以通过添加它们到助手中使用：
+- [创建一个助手](../assistants/create-an-assistant.md)
+- [编程一个助手](../assistants/edit-an-assistant.md)
 
-Some blocks require inputs. If you are missing an input for a block, a notification icon will show up in the sidebar next to the block. Click the notification to select which secret to use for the block input:
+一些块需要输入。如果你错误一个块的输入，一个提示图标会在块的侧边栏显示。点击提示选择块输入使用哪个加密：
 
-![Block inputs](/img/hub/block-inputs.png)
+![块输入](/img/hub/block-inputs.png)

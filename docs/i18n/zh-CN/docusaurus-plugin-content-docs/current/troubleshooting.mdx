@@ -4,6 +4,9 @@ description: 故障排除，在等待 beta / alpha 测试帮助时
 keywords: [重新加载, 删除, 手动, 日志, 服务器, 控制台]
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如果你有问题，请跟随下面的步骤。
 
 1. [检查日志](#检查日志)
@@ -83,22 +86,34 @@ Continue VS Code 扩展现在是 beta ， JetBrains 扩展现在是 Alpha 。如
 
 #### 配置证书
 
-如果你看到 `fetch failed` 错误，并且你的网络需要自定义证书，你需要在 `config.json` 配置它们。在 `"models"` 列表的每个对象中，添加 `requestOptions.caBundlePath` ，像这样：
+如果你看到 `fetch failed` 错误，并且你的网络需要自定义证书，你需要在你的配置文件中配置它们。在 `"models"` 列表的每个对象中，添加 `requestOptions.caBundlePath` ，像这样：
 
-```json
-{
-  "models": [
-    {
-      "title": "My Model",
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: My Model
       ...
-      "requestOptions": {
-        "caBundlePath": "/path/to/cert.pem"
+      requestOptions:
+        caBundlePath: /path/to/cert.pem
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "My Model",
+        ...
+        "requestOptions": {
+          "caBundlePath": "/path/to/cert.pem"
+        }
       }
-    }
-  ],
-  ...
-}
-```
+    ],
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 你可能也需要为多个证书设置 `requestOptions.caBundlePath` 到路径列表。
 

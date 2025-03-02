@@ -14,6 +14,9 @@ keywords:
 toc_max_heading_level: 5
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # @Docs
 
 [`@Docs` 上下文提供者](customize/context-providers.mdx#docs) 允许你直接通过 Continue 有效地引用本地索引的的文档。
@@ -22,15 +25,25 @@ toc_max_heading_level: 5
 
 为了启用 `@Docs` 上下文提供者，添加它到你的 `config.json` 文件中的上下文提供者列表。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 它是如何工作的
 
@@ -48,6 +61,10 @@ toc_max_heading_level: 5
 预索引文档只在 VS Code 中有效，因为 VS Code 扩展有 Transformers.js 嵌入器内建，而 Jetbrains 当前没有。你可以覆盖一个预索引文档，使用你自己的嵌入提供者索引，通过添加它到你的配置中 (唯一 `startUrl`)。否则，它将总是使用 Transformers.js 查询。
 
 ## 索引你自己的文档
+
+### hub `docs` 块
+
+@Docs 使用 hub 中助手的 [`docs` 块](../../hub/blocks/block-types.md#docs) 。访问 hub [查看 `docs` 块](https://hub.continue.dev/explore/docs) 或 [创建你自己的](https://hub.continue.dev/new?type=block&block=docs) 。
 
 ### 通过 `@Docs` 上下文提供者
 
@@ -76,17 +93,29 @@ toc_max_heading_level: 5
 
 对于大量的文档网站添加或编辑，我们推荐直接编辑你的全局配置文件。文档网站保存在你的全局配置 `docs` 列表中， 如下所示：
 
-```json title="config.json"
-{
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/",
-      "faviconUrl": "https://docs.nestjs.com/favicon.ico"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+      faviconUrl: https://docs.nestjs.com/favicon.ico
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/",
+        "faviconUrl": "https://docs.nestjs.com/favicon.ico"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 查看 [配置参考](../../reference) ，获取全部文档网站配置选项。
 
@@ -102,37 +131,63 @@ toc_max_heading_level: 5
 
 使用 [@Codebase 上下文提供者配置](./codebase#配置) ，你可以调整 `@Docs` 上下文提供者的重排序行为，使用 `nRetrieve`, `nFinal` 和 `useReranking` 。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs",
-      "params": {
-        "nRetrieve": 25, // 从嵌入查询获取的文档数量
-        "nFinal": 5, // 返回 IF 重排序文档分块的数量
-        "useReranking": true // 使用重排序，如果重排序器被配置（默认为 true）
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+      params:
+        nRetrieve: 25 # The number of docs to retreive from the embeddings query
+        nFinal: 5 # The number of docs chunks to return IF reranking
+        useReranking: true # use reranking if a reranker is configured (defaults to true)
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+        "params": {
+          "nRetrieve": 25, // The number of docs to retreive from the embeddings query
+          "nFinal": 5, // The number of docs chunks to return IF reranking
+          "useReranking": true // use reranking if a reranker is configured (defaults to true)
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### Github
 
 Github API 频率限制公开请求为每小时 60 次。如果你想要可靠地索引 Github 仓库，你可以添加一个 Github token 到你的配置文件中：
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs",
-      "params": {
-        "githubToken": "github_..."
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+      params:
+        githubToken: <GITHUB_TOKEN>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+        "params": {
+          "githubToken": "github_..."
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### 本地爬取
 
@@ -140,18 +195,31 @@ Github API 频率限制公开请求为每小时 60 次。如果你想要可靠�
 
 如果你的文档是私有的，你可以跳过默认的爬取器，使用一个本地的爬取器替代，通过设置 `useLocalCrawling` 为 `true` 。
 
-```json title="config.json"
-{
-  "docs": [
-    {
-      "title": "My Private Docs",
-      "startUrl": "http://10.2.1.2/docs",
-      "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
-      "useLocalCrawling": true
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  docs:
+    - title: My Private Docs
+      startUrl: http://10.2.1.2/docs
+      faviconUrl: http://10.2.1.2/docs/assets/favicon.ico,
+      useLocalCrawling: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "docs": [
+      {
+        "title": "My Private Docs",
+        "startUrl": "http://10.2.1.2/docs",
+        "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
+        "useLocalCrawling": true
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 默认的本地爬取器是一个轻量的工具，不能渲染使用 JavaScript 动态生成的网站。如果你的网站需要被渲染，你可以启用试验的 `Use Chromium for Docs Crawling` 特性，从你的 [用户设置页面](../settings.md) 。这将下载和安装 Chromium 到 `~/.continue/.utils` ，使用它作为本地爬取器。
 
@@ -182,41 +250,78 @@ Github API 频率限制公开请求为每小时 60 次。如果你想要可靠�
 
 以下配置示例对于 VS Code 开箱即用。这使用内建的嵌入提供者，没有重排序。预索引文档将会被访问。
 
-```json title="config.json"
-  "contextProviders": [
-    {
-      "name": "docs",
-    }
-  ],
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/",
-    },
-  ],
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+    
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+      }
+    ],
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/",
+      },
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### Jetbrains 最小化配置
 
 这是对于 Jetbrains 等效的最小示例，需要设置一个 [嵌入提供者](../model-roles/embeddings.mdx) 。预索引文档将 _不会_ 访问。
 
-```json title="config.json"
-  "contextProviders": [
-    {
-      "name": "docs",
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: LMStudio embedder
+      provider: lmstudio
+      model: nomic-ai/nomic-embed-text-v1.5-GGUF
+      roles:
+        - embed
+  context:
+    - provider: docs
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+      }
+    ],
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/",
+      },
+    ],
+    "embeddingsProvider": {
+      "provider": "lmstudio",
+      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
     }
-  ],
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/",
-    },
-  ],
-  "embeddingsProvider": {
-    "provider": "lmstudio",
-    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
-  },
-```
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### 全面设置 (VS Code 或 Jetbrains)
 
@@ -227,44 +332,79 @@ Github API 频率限制公开请求为每小时 60 次。如果你想要可靠�
 - 一个重排序模型可用，使用定制的重排序参数
 - 一个 Github token 启用 Github 爬取
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs",
-      "params": {
-        "githubToken": "github_...",
-        "nRetrieve": 25,
-        "nFinal": 5,
-        "useReranking": true
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: LMStudio Nomic Text
+      provider: lmstudio
+      model: nomic-ai/nomic-embed-text-v1.5-GGUF
+      roles:
+        - embed
+    - name: Voyage Rerank-2
+      provider: voyage
+      apiKey: <VOYAGE_API_KEY>
+      model: rerank-2
+      roles:
+        - rerank
+  context:
+    - provider: docs
+      params:
+         githubToken: <GITHUB_TOKEN>
+         nRetrieve: 25
+         nFinal: 5
+         useReranking: true
+  docs:
+    - title: Nest.js
+      startUrl: https://docs.nestjs.com/
+    - title: My Private Docs
+      startUrl: http://10.2.1.2/docs
+      faviconUrl: http://10.2.1.2/docs/assets/favicon.ico
+      maxDepth: 4
+      useLocalCrawling: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs",
+        "params": {
+          "githubToken": "github_...",
+          "nRetrieve": 25,
+          "nFinal": 5,
+          "useReranking": true
+        }
       }
-    }
-  ],
-  "docs": [
-    {
-      "title": "Nest.js",
-      "startUrl": "https://docs.nestjs.com/"
+    ],
+    "docs": [
+      {
+        "title": "Nest.js",
+        "startUrl": "https://docs.nestjs.com/"
+      },
+      {
+        "title": "My Private Docs",
+        "startUrl": "http://10.2.1.2/docs",
+        "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
+        "maxDepth": 4,
+        "useLocalCrawling": true
+      }
+    ],
+    "reranker": {
+      "name": "voyage",
+      "params": {
+        "model": "rerank-2",
+        "apiKey": "<YOUR_VOYAGE_API_KEY>"
+      }
     },
-    {
-      "title": "My Private Docs",
-      "startUrl": "http://10.2.1.2/docs",
-      "faviconUrl": "http://10.2.1.2/docs/assets/favicon.ico",
-      "maxDepth": 4,
-      "useLocalCrawling": true
+    "embeddingsProvider": {
+      "provider": "lmstudio",
+      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
     }
-  ],
-  "reranker": {
-    "name": "voyage",
-    "params": {
-      "model": "rerank-2",
-      "apiKey": "<VOYAGE_API_KEY>"
-    }
-  },
-  "embeddingsProvider": {
-    "provider": "lmstudio",
-    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 这也涉及启用 Chromium 作为备用，对于本地文档 [用户设置页面](../settings.md) 。

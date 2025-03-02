@@ -6,3 +6,6 @@ sidebar_position: 2
 ---
 
 默认情况下， action 使用与 [聊天](chat/model-setup.mdx) 相同的模型，所以，对于执行的复杂指令，我们推荐相同的 400B+ 参数模型或者领先的模型之一。
+
+你也可以指定模型用来编辑和应用 action 。查看 [Model roles](../customize/model-roles/intro.mdx) 页面获取更多详情。
+

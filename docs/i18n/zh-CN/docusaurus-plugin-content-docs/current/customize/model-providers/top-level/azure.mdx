@@ -3,6 +3,9 @@ title: Azure AI Foundry
 slug: ../azure
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 Azure AI Foundry 是一个基于云的服务，提供对 OpenAI, Mistral AI 和其他模型的访问，集成微软 Azure 平台的安全和企业特性。为了开始，在 [Azure portal](https://portal.azure.com) 中，创建一个 Azure AI Foundry 资源。
 
 :::info
@@ -15,46 +18,98 @@ Azure AI Foundry 是一个基于云的服务，提供对 OpenAI, Mistral AI 和�
 
 我们推荐配置 **GPT-4o** 作为你的聊天模型。
 
-```json title="config.json"
-"models": [{
-    "title": "GPT-4o",
-    "provider": "azure",
-    "model": "gpt-4o",
-    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "deployment": "<YOUR_DEPLOYMENT_NAME>",
-    "apiKey": "<MY_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
-    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
-}]
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: azure
+      model: gpt-4o
+      apiBase: <YOUR_DEPLOYMENT_BASE>
+      apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
+      env:
+        deployment: <YOUR_DEPLOYMENT_NAME>
+        apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [{
+        "title": "GPT-4o",
+        "provider": "azure",
+        "model": "gpt-4o",
+        "apiBase": "<YOUR_DEPLOYMENT_BASE>",
+        "deployment": "<YOUR_DEPLOYMENT_NAME>",
+        "apiKey": "<YOUR_AZURE_API_KEY>", // If you use subscription key, try using Azure gateway to rename it apiKey
+        "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
+    }]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
 我们推荐配置 **Codestral** 作为你的自动补全模型。
 
-```json title="config.json"
-{
-  "tabAutocompleteModel": {
-    "title": "Codestral",
-    "provider": "mistral",
-    "model": "codestral-latest"
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+	```yaml title="config.yaml"
+  models:
+    - name: Codestral
+      provider: mistral
+      model: codestral-latest
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Codestral",
+      "provider": "mistral",
+      "model": "codestral-latest"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ## 嵌入模型
 
 我们推荐配置 **text-embedding-3-large** 作为你的嵌入模型。
 
-```json title="config.json"
-"embeddingsProvider": {
-    "provider": "azure",
-    "model": "text-embedding-3-large",
-    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "deployment": "<YOUR_DEPLOYMENT_NAME>",
-    "apiKey": "<MY_API_KEY>",
-    "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Text Embedding-3 Large
+        provider: azure
+        model: text-embedding-3-large
+        apiBase: <YOUR_DEPLOYMENT_BASE>
+        apiKey: <YOUR_AZURE_API_KEY>
+        env:
+          deployment: <YOUR_DEPLOYMENT_NAME>
+          apiType: azure
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "azure",
+        "model": "text-embedding-3-large",
+        "apiBase": "<YOUR_DEPLOYMENT_BASE>",
+        "deployment": "<YOUR_DEPLOYMENT_NAME>",
+        "apiKey": "<YOUR_AZURE_API_KEY>",
+        "apiType": "azure-foundry" // Or "azure-openai" if using OpenAI models
+      }
+    }
+    ```
+    </TabItem>
+</Tabs>
 
 ## 重排序模型
 
@@ -80,15 +135,33 @@ Azure OpenAI 服务需要配置一些额外的参数，例如部署名称和 API
 
 例如， Target URI `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` 匹配以下配置：
 
-```json
-{
-  "title": "GPT-4o Azure",
-  "model": "gpt-4o",
-  "provider": "azure",
-  "apiBase": "https://just-an-example.openai.azure.com",
-  "deployment": "gpt-4o-july",
-  "apiVersion": "2023-03-15-preview",
-  "apiKey": "<MY_API_KEY>",
-  "apiType": "azure-openai"
-}
-```
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: GPT-4o Azure
+        model: gpt-4o
+        provider: openai
+        apiBase: https://just-an-example.openai.azure.com
+        apiKey: <YOUR_AZURE_API_KEY>
+        env:
+          apiVersion: 2023-03-15-preview
+          deployment: gpt-4o-july
+          apiType: azure-openai
+    ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "title": "GPT-4o Azure",
+      "model": "gpt-4o",
+      "provider": "openai",
+      "apiBase": "https://just-an-example.openai.azure.com",
+      "deployment": "gpt-4o-july",
+      "apiVersion": "2023-03-15-preview",
+      "apiKey": "<YOUR_AZURE_API_KEY>",
+      "apiType": "azure-openai"
+    }
+    ```
+  </TabItem>
+</Tabs>

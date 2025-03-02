@@ -1,20 +1,417 @@
 ---
-title: 聊天模型
-description: 聊天模型
-keywords: [聊天]
-sidebar_position: 2
+title: 聊天角色
+description: 聊天模型角色
+keywords: [聊天, 模型, 角色]
+sidebar_position: 1
 ---
 
-"聊天模型" 是一个训练为在交谈格式中响应的 LLM 。因为它们应该回答通用问题和生成复杂代码，最好的聊天模型通常是很大的，通常 405B+ 参数。在 Continue 中，这些模型用来 [聊天](../../chat/how-to-use-it.md) ， [编辑](../../edit/how-to-use-it.md) 和 [Actions](../../actions/how-to-use-it.md) 。
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+
+"聊天模型" 是一个训练为在交谈格式中响应的 LLM 。因为它们应该回答通用问题和生成复杂代码，最好的聊天模型通常是很大的，通常 405B+ 参数。
+
+在 Continue 中，这些模型用来 [聊天](../../chat/how-to-use-it.md) 和 [Actions](../../actions/how-to-use-it.md) 。选择的模型也用来 [编辑](../../edit/how-to-use-it.md) 和 [Apply](./apply.mdx) ，如果没有 `edit` 或 `apply` 模型是分开的。
 
 ## 推荐的聊天模型
 
-如果你有使用任何模型的能力，我们推荐 [Claude 3.5 Sonnet](../model-providers/top-level/anthropic.mdx) 。
+## 最好的完整体验
 
-否则，以下是一些最好的选择：
+为了最好的完整聊天体验，你想要使用一个 400B+ 参数模型或者领先的模型之一。
 
-- [GPT-4o](../model-providers/top-level/openai.mdx)
-- [Grok-2](../model-providers/top-level/xAI.mdx)
-- [Gemini 1.5 Pro](../model-providers/top-level/gemini.mdx)
-- [Llama3.1 405B](../tutorials/llama3.1.mdx)
+### 来自 Anthropic 的 Claude Sonnet 3.5
 
+我们当前最推荐的是来自 [Anthropic](../model-providers/top-level/anthropic.mdx) 的 Claude 3.7 Sonnet 。
+
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  View the [Claude 3.7 Sonnet model block](https://hub.continue.dev/anthropic/claude-3-7-sonnet) on the hub.
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.7 Sonnet
+      provider: anthropic
+      model: claude-3-7-sonnet-latest
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-latest",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### 来自 Meta 的 Llama 3.1 405B 
+
+如果你倾向于使用一个开放权重模型，那么现在来自 Meta 的 Llama 3.1 405B 是你最好的选择。你需要决定，通过 SaaS 模型提供者 (例如 [Together](../model-providers/more/together.mdx) 或 [Groq](../model-providers/more/groq.mdx)) 使用它，或者自托管它 (例如，使用 [vLLM](../model-providers//more/vllm.mdx) 或 [Ollama](../model-providers/top-level/ollama.mdx)) 。
+
+<Tabs groupId="config-example">
+  {/* HUB_TODO nonexistent blocks */}
+  {/* <TabItem value="hub" label="Hub">
+    <Tabs groupId="providers">
+        <TabItem value="Together">
+        Add the [Together Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+         <TabItem value="Groq">
+        Add the [Groq Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+        <TabItem value="vLLM">
+        Add the [vLLM Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+        <TabItem value="Ollama">
+        Add the [Ollama Llama 3.1 405b block](https://hub.continue.dev/explore/assistants) from the hub
+        </TabItem>
+    </Tabs>
+  </TabItem> */}
+  <TabItem value="yaml" label="YAML">
+    <Tabs groupId="providers">
+        <TabItem value="Together">
+        ```yaml title="config.yaml"
+        models:
+          - name: "Llama 3.1 405B"
+            provider: "together"
+            model: "llama3.1-405b"
+            apiKey: <YOUR_TOGETHER_API_KEY>
+        ```
+        </TabItem>
+        <TabItem value="Groq">
+        ```yaml title="config.yaml"
+        models:
+          - name: "Llama 3.1 405B"
+            provider: "groq"
+            model: "llama3.1-405b"
+            apiKey: <YOUR_GROQ_API_KEY>
+        ```
+        </TabItem>
+        <TabItem value="vLLM">
+        ```yaml title="config.yaml"
+        models:
+          - name: "Llama 3.1 405B"
+            provider: "vllm"
+            model: "llama3.1-405b"
+        ```
+        </TabItem>
+        <TabItem value="Ollama">
+        ```yaml title="config.yaml"
+        models:
+          - name: "Llama 3.1 405B"
+            provider: "ollama"
+            model: "llama3.1:405b"
+        ```
+        </TabItem>
+    </Tabs>
+  </TabItem>
+  <TabItem value="json" label="JSON">
+    <Tabs groupId="providers">
+        <TabItem value="Together">
+        ```json title="config.json"
+        {
+          "models": [
+            {
+              "title": "Llama 3.1 405B",
+              "provider": "together",
+              "model": "llama3.1-405b",
+              "apiKey": "<YOUR_TOGETHER_API_KEY>"
+            }
+          ]
+        }
+        ```
+        </TabItem>
+        <TabItem value="Groq">
+        ```json title="config.json"
+        {
+          "models": [
+            {
+              "title": "Llama 3.1 405B",
+              "provider": "groq",
+              "model": "llama3.1-405b",
+              "apiKey": "<YOUR_GROQ_API_KEY>"
+            }
+          ]
+        }
+        ```
+        </TabItem>
+        <TabItem value="vLLM">
+        ```json title="config.json"
+        {
+          "models": [
+            {
+              "title": "Llama 3.1 405B",
+              "provider": "vllm",
+              "model": "llama3.1-405b"
+            }
+          ]
+        }
+        ```
+        </TabItem>
+        <TabItem value="Ollama">
+        ```json title="config.json"
+        {
+          "models": [
+            {
+              "title": "Llama 3.1 405B",
+              "provider": "ollama",
+              "model": "llama3.1:405b"
+            }
+          ]
+        }
+        ```
+        </TabItem>
+    </Tabs>
+  </TabItem>
+</Tabs>
+
+### 来自 OpenAI 的 GPT-4o
+
+如果你倾向于使用来自 [OpenAI](../model-providers/top-level/openai.mdx) 的模型，那么我们推荐 GPT-4o 。
+
+<Tabs groupId="hub-config-example">
+    <TabItem value="hub" label="Hub">
+    Add the [OpenAI GPT-4o block](https://hub.continue.dev/openai/gpt-4o) from the hub
+    </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: openai
+      model: ''
+      apiKey: <YOUR_OPENAI_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4o",
+        "provider": "openai",
+        "model": "",
+        "apiKey": "<YOUR_OPENAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### 来自 xAI 的 Grok-2
+
+如果你倾向于使用来自 [xAI](../model-providers/top-level/xAI.mdx) 的模型，那么我们推荐 Grok-2 。
+
+<Tabs groupId="hub-config-example">
+    <TabItem value="hub" label="Hub">
+    Add the [xAI Grok-2 block](https://hub.continue.dev/xai/grok-2) from the hub
+    </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Grok-2
+      provider: xAI
+      model: grok-2-latest
+      apiKey: <YOUR_XAI_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Grok-2",
+        "provider": "xAI",
+        "model": "grok-2-latest",
+        "apiKey": "<YOUR_XAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### 来自 Google 的 Gemini 2.0 Flash
+
+如果你倾向于使用来自 [Google](../model-providers/top-level/gemini.mdx) 的模型，那么我们推荐 Gemini 2.0 Flash 。
+
+<Tabs groupId="hub-config-example">
+    <TabItem value="hub" label="Hub">
+    Add the [Gemini 2.0 Flash block](https://hub.continue.dev/google/gemini-2.0-flash) from the hub
+    </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Gemini 2.0 Flash
+      provider: gemini
+      model: gemini-2.0-flash
+      apiKey: <YOUR_GEMINI_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Gemini 2.0 Flash",
+        "provider": "gemini",
+        "model": "gemini-2.0-flash",
+        "apiKey": "<YOUR_GEMINI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## 本地的，离线的体验
+
+对于最好的本地的，离线的聊天体验，你想要使用一个大的但是在你的机器上足够块的模型。
+
+### Llama 3.1 8B
+
+如果你的本地极其可以运行一个 8B 参数模型，那么我们推荐在你的机器上运行 Llama 3.1 8B (例如，使用 [Ollama](../model-providers/top-level/ollama.mdx) 或 [LM Studio](../model-providers/more/lmstudio.mdx)) 。
+
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+    <Tabs groupId="providers">
+        <TabItem value="ollama" label="Ollama">
+    Add the [Ollama Llama 3.1 8b block](https://hub.continue.dev/ollama/llama3.1-8b) from the hub
+    </TabItem>
+    {/* HUB_TODO nonexistent block */}
+    {/* <TabItem value="lmstudio" label="LM Studio">
+    Add the [LM Studio Llama 3.1 8b block](https://hub.continue.dev/explore/models) from the hub
+    </TabItem> */}
+    </Tabs>
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+    <Tabs groupId="providers">
+      <TabItem value="Ollama">
+      ```yaml title="config.yaml"
+      models:
+        - name: Llama 3.1 8B
+          provider: ollama
+          model: llama3.1:8b
+      ```
+      </TabItem>
+      <TabItem value="LM Studio">
+      ```yaml title="config.yaml"
+      models:
+        - name: Llama 3.1 8B
+          provider: lmstudio
+          model: llama3.1:8b
+      ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+  <TabItem value="json" label="JSON">
+    <Tabs groupId="providers">
+      <TabItem value="Ollama">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "Llama 3.1 8B",
+            "provider": "ollama",
+            "model": "llama3.1:8b"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+      <TabItem value="LM Studio">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "Llama 3.1 8B",
+            "provider": "lmstudio",
+            "model": "llama3.1-8b"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+</Tabs>
+
+### DeepSeek Coder 2 16B
+
+如果你的本地机器可以运行一个 16B 参数模型，那么我们推荐运行 DeepSeek Coder 2 16B (例如， 使用 [Ollama](../model-providers/top-level/ollama.mdx) 或 [LM Studio](../model-providers/more/lmstudio.mdx)) 。
+
+<Tabs groupId="config-example">
+  {/* HUB_TODO nonexistent blocks */}
+  {/* <TabItem value="hub" label="Hub">
+    <Tabs groupId="providers">
+    <TabItem value="ollama" label="Ollama">
+    Add the [Ollama Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
+    </TabItem>
+    <TabItem value="lmstudio" label="LM Studio">
+    Add the [LM Studio Deepseek Coder 2 16B block](https://hub.continue.dev/explore/models) from the hub
+    </TabItem>
+    </Tabs>
+  </TabItem> */}
+  <TabItem value="yaml" label="YAML">
+    <Tabs groupId="providers">
+        <TabItem value="Ollama">
+        ```yaml title="config.yaml"
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: ollama
+            model: deepseek-coder-v2:16b
+        ```
+        </TabItem>
+        <TabItem value="LM Studio">
+        ```yaml title="config.yaml"
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: lmstudio
+            model: deepseek-coder-v2:16b
+        ```
+        </TabItem>
+    </Tabs>
+  </TabItem>
+  <TabItem value="json" label="JSON">
+    <Tabs groupId="providers">
+      <TabItem value="Ollama">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "DeepSeek Coder 2 16B",
+            "provider": "ollama",
+            "model": "deepseek-coder-v2:16b",
+            "apiBase": "http://localhost:11434"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+      <TabItem value="LM Studio">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "DeepSeek Coder 2 16B",
+            "provider": "lmstudio",
+            "model": "deepseek-coder-v2:16b"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+    </Tabs>
+  </TabItem>
+</Tabs>
+
+## 其他体验
+
+除了上面提到的，这里有更多模型和提供者你可以用来聊天。在 [这里](../model-roles/chat.mdx) 查看更多。

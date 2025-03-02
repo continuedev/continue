@@ -1,38 +1,38 @@
 ---
-title: Create an assistant
-sidebar_label: Create an assistant
-description: How to create a custom AI code assistant
-keywords: [assistants, creation, guide]
+title: 创建一个助手
+sidebar_label: 创建一个助手
+description: 如何创建一个定制 AI 代码助手
+keywords: [助手, 创建, 指南]
 ---
 
-# Create an assistant
+# 创建一个助手
 
-## Remix an assistant
+## 合成一个助手
 
-You should remix an assistant if you want to use it after some modifications.
+你应该合成一个助手，如果你在一些修改之后想要使用它。
 
-By clicking the “remix” button, you’ll be taken to the “Create a remix” page.
+通过点击 “remix” 按钮，你会去到 “Create a remix” 页面。
 
 ![Remix Assistant Button](/img/hub/assistant-remix-button.png)
 
-Once here, you’ll be able to
+到了这里，你将能够
 
-1. add or remove blocks in YAML configuration
-2. change the name, description, icon, etc.
+1. 添加或删除 YAML 配置中的块
+2. 修改名称，描述，图标等等
 
-Clicking “Create assistant” will make this assistant available for use.
+点击 "Create assistant" 将使这个助手可用。
 
-## Create an assistant from scratch
+## 从零开始创建一个助手
 
-To create an assistant from scratch, select “New assistant” in the top bar.
+为了从零开始创建一个助手，在最上面的栏中选择 "New assistant" 。
 
 ![New assistant button](/img/hub/assistant-new-button.png)
 
-Choose a name, slug, description, and icon for your assistant.
+为你的助手选择一个名称，slug，描述和图标。
 
-The easiest way to create an assistant is to click "Create assistant" with the default configuration and then add / remove blocks using the sidebar.
+创建助手最简单的方法是，点击 "Create assistant" 使用默认的配置，然后使用侧边栏 添加/删除 块。
 
-Alternatively, you can edit the assistant YAML directly before clicking "Create assistant". Refer to examples of assistants on [hub.continue.dev](https://hub.continue.dev/explore/assistants) and visit the [YAML Reference](../../yaml-reference.md#complete-yaml-config-example) docs for more details.
+另外，你可以在点击 "Create assistant" 之前直接编辑助手 YAML 。查询助手示例在 [hub.continue.dev](https://hub.continue.dev/explore/assistants) ，访问 [YAML 参考](../../yaml-reference.md#complete-yaml-config-example) 文档获取更多详情。
 
 ![New assistant YAML](/img/hub/assistant-create-yaml.png)
 

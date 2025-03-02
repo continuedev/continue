@@ -1,3 +1,6 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # Moonshot
 
 [Moonshot AI](https://platform.moonshot.cn/) 提供高质量的大语言模型服务，使用有竞争力的价格和优秀的性能。
@@ -9,18 +12,31 @@
 1. 从 [Moonshot AI Platform](https://platform.moonshot.cn/) 获取 API key
 2. 添加以下配置到你的 `config.json` ：
 
-```json
-{
-  "models": [
-    {
-      "title": "Moonshot",
-      "provider": "moonshot",
-      "model": "moonshot-v1-8k",
-      "apiKey": "YOUR_API_KEY"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Moonshot
+      provider: moonshot
+      model: moonshot-v1-8k
+      apiKey: <YOUR_MOONSHOT_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Moonshot",
+        "provider": "moonshot",
+        "model": "moonshot-v1-8k",
+        "apiKey": "<YOUR_MOONSHOT_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 可用的模型
 
@@ -42,19 +58,37 @@ Moonshot AI 当前支持以下模型：
 
 这是一个完整的配置示例：
 
-```json
-{
-  "models": [
-    {
-      "title": "Moonshot-8K",
-      "provider": "moonshot",
-      "model": "moonshot-v1-8k",
-      "apiKey": "YOUR_API_KEY",
-      "completionOptions": {
-        "temperature": 0.7,
-        "topP": 0.95,
-        "maxTokens": 2048
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Moonshot-8K
+      provider: moonshot
+      model: moonshot-v1-8k
+      apiKey: <YOUR_MOONSHOT_API_KEY>
+      defaultCompletionOptions:
+        temperature: 0.7
+        topP: 0.95
+        maxTokens: 2048
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Moonshot-8K",
+        "provider": "moonshot",
+        "model": "moonshot-v1-8k",
+        "apiKey": "<YOUR_MOONSHOT_API_KEY>",
+        "completionOptions": {
+          "temperature": 0.7,
+          "topP": 0.95,
+          "maxTokens": 2048
+        }
       }
-    }
-  ]
-}
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>

@@ -4,6 +4,10 @@ description: Continue _config.json_ 配置文件参考
 keywords: [配置, config_schema.json, json]
 ---
 
+:::info
+我们最近引入了一个新的配置格式， `config.yaml` ，用来替代 `config.json` 。查看 `config.yaml` 参考和迁移指南 [在这里](./yaml-reference.md) 。
+:::
+
 以下是可以在 `config.json` 中设置的每个属性的细节。配置 schema 代码可以在 [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json) 找到。
 
 **任何级别的所有属性都是可选的，除非标记为必需的**
@@ -33,6 +37,7 @@ keywords: [配置, config_schema.json, json]
 - `engine`: Azure OpenAI 请求的引擎。
 - `capabilities`: 覆盖自动检测能力：
   - `uploadImage`: 布尔型，表示模型是否支持图片上传。
+  - `tools`: Boolean indicating if the model supports tool use.
 
 _(仅 AWS)_
 
@@ -109,13 +114,13 @@ _(仅 AWS)_
 
 **属性：**
 
-- `provider` (**必需的**): 指定嵌入模型，可选项是 `transformers.js`, `ollama`, `openai`, `cohere`, `free-trial`, `gemini` 等。
+- `provider` (**必需的**): 指定嵌入模型，可选项是 `transformers.js`, `ollama`, `openai`, `cohere`, `gemini` 等。
 - `model`: 嵌入的模型名称。
 - `apiKey`: 提供者的 API key 。
 - `apiBase`: API 请求的基础 URL 。
 - `requestOptions`: 特定嵌入提供者额外的 HTTP 请求设置。
-- `maxChunkSize`: 每个文档分块的最大 token 。最小值是 128 token 。
-- `maxBatchSize`: 每个请求分块的最大数量。最小值是 1 个分块。
+- `maxEmbeddingChunkSize`: 每个文档分块的最大 token 。最小值是 128 token 。
+- `maxEmbeddingBatchSize`: 每个请求分块的最大数量。最小值是 1 个分块。
 
 (仅 AWS)
 
@@ -203,7 +208,7 @@ _(仅 AWS)_
 
 **属性：**
 
-- `name` (**必需的**): 排序器名称，例如 `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`, `bedrock`
+- `name` (**必需的**): 排序器名称，例如 `cohere`, `voyage`, `llm`, `huggingface-tei`, `bedrock`
 - `params`:
   - `model`: 模型名称
   - `apiKey`: Api key
@@ -401,7 +406,7 @@ _(仅 AWS)_
 
 ### 完全弃用的设置
 
-一些弃用的 `config.json` 设置不再保存在配置中，移动到 [用户设置页面](./customize/settings.md) 编辑。如果在 `config.json` 发现，它们会迁移到 [用户设置页面](./customize/settings.md) ，并从 `config.json` 中移除。
+一些废弃的 `config.json` 设置不再保存在配置中，移动到 [用户设置页面](./customize/settings.md) 编辑。如果在 `config.json` 发现，它们会迁移到 [用户设置页面](./customize/settings.md) ，并从 `config.json` 中移除。
 
 - `allowAnonymousTelemetry`: 这个值将会迁移到最安全的合并值（`false` 如果是 `false`）。
 - `promptPath`: 这个值将会在迁移中覆盖。

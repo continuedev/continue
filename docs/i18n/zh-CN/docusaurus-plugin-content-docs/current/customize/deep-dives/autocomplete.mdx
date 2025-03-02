@@ -3,88 +3,102 @@ title: 自动补全
 keywords: [自动补全]
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 ### 设置 Codestral (推荐)
 
-如果你想要有最好的自动补全体验，我们推荐使用 Codestral ，它可以通过 [Mistral API](https://console.mistral.ai/) 使用。要做这个，获取一个 API key 并把它添加到你的 `config.json` 中：
+如果你想要有最好的自动补全体验，我们推荐使用 Codestral ，它可以通过 [Mistral API](https://console.mistral.ai/) 使用。要做这个，获取一个 API key 并把它添加到你的配置中：
 
-```json
-{
-  "tabAutocompleteModel": {
-    "title": "Codestral",
-    "provider": "mistral",
-    "model": "codestral-latest",
-    "apiKey": "YOUR_API_KEY"
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [Mistral Codestral model block](https://hub.continue.dev/mistral/codestral)
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Codestral
+      provider: mistral
+      model: codestral-latest
+      apiKey: <YOUR_CODESTRAL_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Codestral",
+      "provider": "mistral", 
+      "model": "codestral-latest",
+      "apiKey": "<YOUR_CODESTRAL_API_KEY>"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
+
+:::tip[Codestral API Key]
+Codestral 和通用 Mistral API 的 API key 是不同的。如果你使用 Codestral ，你可能想要一个 Codestral API key ，但是如果你分享 key 给团队，或者想要使用 `api.mistral.ai` ，那么确保设置 `"apiBase": "https://api.mistral.ai/v1"` 在你的 `tabAutocompleteModel` 。
+:::
 
 ### 设置 Ollama (默认)
 
 如果你想要本地运行自己的自动补全模型，我们推荐使用 Ollama 。要做这个，首先从 [这里](https://ollama.ai) 下载最新版的 Ollama 。然后，运行下面的命令下载我们推荐的模型：
 
 ```bash
-ollama run qwen2.5-coder:1.5b-base
+ollama run qwen2.5-coder:1.5b
 ```
 
-一旦它下载完成，你应该可以再 VS Code 中看到补全。
+然后，添加模型到你的配置中：
 
-### 设置自定义模型
-
-所有配置选项对聊天可用的模型对 tab 自动补全可用。例如，如果你想要使用一个远程 Ollama 实例，你应该编辑你的 `config.json` 像这样（注意，它不在 models 列表中）：
-
-```json title="config.json"
-{
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [Ollama Qwen 2.5 Coder 1.5B model block](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Qwen 1.5b Autocomplete Model
+      provider: ollama
+      model: qwen2.5-coder:1.5b
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
     "tabAutocompleteModel": {
-        "title": "Tab Autocomplete Model",
-        "provider": "ollama",
-        "model": "qwen2.5-coder:1.5b-base",
-        "apiBase": "https://<my endpoint>"
-    },
-    ...
-}
-```
+      "title": "Qwen 1.5b Autocomplete Model",
+      "provider": "ollama", 
+      "model": "qwen2.5-coder:1.5b",
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-如果你对可用选项不熟悉，你可以在 [这里](./configuration.md) 查找完整的参考。
+一旦模型下载完成，你应该可以在 VS Code 中看到补全。
 
 ## 配置选项
 
-以下可以在 `config.json` 配置：
+### Hub 自动补全模型
 
-### `tabAutocompleteModel`
+在 [hub](https://hub.continue.dev/explore/models?roles=autocomplete) 中查看自动补全模型配置。
 
-这是另一个对象，就像 `config.json` 中的 `"models"` 列表。你可以选择和配置任何你想要的模型，但是我们强烈建议使用针对 tab 自动补全的小的模型，例如 `deepseek-1b`, `qwen2.5-coder:1.5b` 或 `starcoder2-3b` 。
+### 自动补全用户设置
 
-### `tabAutocompleteOptions`
+以为设置可以在 IDE 扩展[用户设置页面](../settings.md) 中为自动补全配置：
 
-这个对象允许你定制 tab 自动补全的行为。可用的选项显示在下面，你可以在 [这里](https://github.com/continuedev/continue/blob/fbeb2e4fe15d4b434a30a136f74b672485c852d9/core/util/parameters.ts) 找到它们的默认值。
+- `Use autocomplete cache`: 如果打开，缓存补全
+- `Multiline Autocompletions`: 控制自动补全的多行补全。可以设置为 `always`, `never` 或 `auto` 。默认情况下是 `auto`
+- `Disable autocomplete in files`: 逗号分隔的 glob 模式，禁用匹配文件中的自动补全。例如， "\_/.md, \*/.txt"
 
-- `disable`: 禁用自动补全（也可以在 IDE 配置中完成）（默认值： false）
-- `template`: 一个用来自动补全的可选的模板字符串。它使用 Mustache 模板语言渲染，并且传递 'prefix' 和 'suffix' 变量。（字符串）
-- `maxPromptTokens`: 提示词使用的 token 的最大数量。一个较小的数字生成较快的补全，但是较少的上下文。（数字）（默认值： `1024`）
-- `prefixPercentage`: 输入专注于前缀的百分比。（数字）（默认值： `0.3`）
-- `maxSuffixPercentage`: 提示词专注于后缀的最大百分比。（数字）（默认值： `0.2`）
-- `debounceDelay`: 在按键之后触发自动补全的毫秒延迟。（数字）（默认值： `350`）
-- `multilineCompletions`: 是否启用多行补全 ("always", "never" 或 "auto") 。默认情况下是 "auto" 。（默认值： `auto`）
-- `useCache`: 是否缓存和重新使用补全，当提示词与前一个相同时。对于测试的目的可能是有用的。（默认值： `true`）
-- `disableInFiles`: 一个你想要禁用 tab 自动补全的 glob 模式的文件列表。（默认值： `[]`）
+### `config.json` 配置
 
-### 完整示例
-
-```json title="config.json"
-{
-  "tabAutocompleteModel": {
-    "title": "Tab Autocomplete Model",
-    "provider": "ollama",
-    "model": "qwen2.5-coder:1.5b-base",
-    "apiBase": "https://<my endpoint>"
-  },
-  "tabAutocompleteOptions": {
-    "debounceDelay": 500,
-    "maxPromptTokens": 1500,
-    "disableInFiles": ["*.md"]
-  }
-}
-```
+`config.json` 配置格式（废弃）通过 `tabAutocompleteOptions` 提供更多的配置选项。查看 [JSON Reference](../../reference.md#tabautocompleteoptions) 获取更多详情。
 
 ## 常见问题
 
@@ -108,7 +122,7 @@ ollama run qwen2.5-coder:1.5b-base
 
 为了确保你能收到多行补全，你可以设置 `"multilineCompletions": "always"` 再 `tabAutocompleteOptions` 中。默认情况下，它是 `"auto"` 。如果你仍然发现你只能看到单行补全，这可能是因为一些模型偏向产生短的补全，当在文件中开始时。你可以尝试临时移动光标下的文本到激活文件外，或者切换到一个更大的模型。
 
-### 我是否可以配置自动补全 "trigger key" ？
+### 我是否可以配置自动补全 "触发键" ？
 
 是的，在 VS Code 中，如果你不想要自动显示建议，你可以：
 

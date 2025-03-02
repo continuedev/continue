@@ -2,6 +2,12 @@
 title: 构建你自己的斜杠命令
 ---
 
+:::info
+
+斜杠命令当前值添加到 [`config.json`](../reference.md) 。 [`YAML Config Format`](../reference.md) 是新的和更推荐的格式。我们推荐查看 [Prompt Files](../customize/deep-dives/prompt-files.md) 获取相同的功能。
+
+:::
+
 这里有两种方式可以添加自定义斜杠命令：
 
 1. 使用自然语言提示词 - 这个比较简单，只需要编写一个字符串或字符串模板。
@@ -18,11 +24,15 @@ title: 构建你自己的斜杠命令
 当你频繁使用一个提示词时，自定义命令很好用。例如，如果你精心制作了一个很好的提示词，频繁地问 LLM 检查你代码中的错误，你可以添加一个命令，像这样：
 
 ```json title="config.json"
-customCommands=[{
-        "name": "check",
-        "description": "Check for mistakes in my code",
-        "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
-}]
+{
+  "customCommands": [
+    {
+      "name": "check",
+      "description": "Check for mistakes in my code",
+      "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
+    }
+  ]
+}
 ```
 
 #### 模板

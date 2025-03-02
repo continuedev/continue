@@ -16,7 +16,7 @@ sidebar_position: 4
 
 ## 上下文
 
-就像 [上下文选择](context-selection.md) 页面解释的那样， Continue 使用了大量的检索方法，来查找你的代码库中相关的片断，包含在提示词中。
+就像 [上下文选择](./context-selection.md) 页面解释的那样， Continue 使用了大量的检索方法，来查找你的代码库中相关的片断，包含在提示词中。
 
 ## 过滤
 
@@ -27,7 +27,5 @@ sidebar_position: 4
 - 修复缩进
 
 如果响应是坏的，我们也会偶尔过滤掉整个响应。这通常是因为过度的重复。
-
-You can learn more about how it works in the [Autocomplete deep dive](../customize/deep-dives/autocomplete.mdx).
 
 你可以在 [深入理解自动补全](../customize/deep-dives/autocomplete.mdx) 中了解它是如何工作的。

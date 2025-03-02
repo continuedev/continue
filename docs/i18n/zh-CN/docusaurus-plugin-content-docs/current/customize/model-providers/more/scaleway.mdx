@@ -2,6 +2,9 @@
 title: Scaleway
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 :::info
 
 Scaleway Generative APIs 给你立即访问到托管在欧洲数据中心的领先的 AI 模型，特别适合需要低延迟，完整数据隐私，适配 EU AI Act 的开发者。
@@ -16,18 +19,31 @@ Scaleway Generative APIs 给你立即访问到托管在欧洲数据中心的领�
 
 [点击这里](https://www.scaleway.com/en/docs/ai-data/generative-apis/reference-content/supported-models/) 查看可用的聊天模型列表。
 
-```json title="config.json"
-{
-  "models": [
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Qwen2.5-Coder-32B-Instruct
+        provider: scaleway
+        model: qwen2.5-coder-32b-instruct
+        apiKey: <YOUR_SCALEWAY_API_KEY>
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
     {
-      "title": "Qwen2.5-Coder-32B-Instruct",
-      "provider": "scaleway",
-      "model": "qwen2.5-coder-32b-instruct",
-      "apiKey": "[API_KEY]"
+      "models": [
+        {
+          "title": "Qwen2.5-Coder-32B-Instruct",
+          "provider": "scaleway",
+          "model": "qwen2.5-coder-32b-instruct",
+          "apiKey": "<YOUR_SCALEWAY_API_KEY>"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
+    </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
@@ -39,12 +55,27 @@ Scaleway 当前没有提供任何自动补全模型。
 
 我们推荐配置 **BGE-Multilingual-Gemma2** 作为你的嵌入模型。
 
-```json title="config.json"
-{
-  "embeddingsProvider": {
-    "provider": "scaleway",
-    "model": "bge-multilingual-gemma2",
-    "apiKey": "[API_KEY]"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: BGE Multilingual Gemma2
+      provider: scaleway
+      model: bge-multilingual-gemma2
+      apiKey: <YOUR_SCALEWAY_API_KEY>
+      roles: 
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "scaleway",
+      "model": "bge-multilingual-gemma2",
+      "apiKey": "<YOUR_SCALEWAY_API_KEY>"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>

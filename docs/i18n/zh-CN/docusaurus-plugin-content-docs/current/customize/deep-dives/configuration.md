@@ -5,27 +5,34 @@ keywords: [配置, 设置, 定制]
 
 # 配置
 
-Continue 可以深度定制。用户级配置被保存和编辑在你的家目录的 [`config.json`](#configjson) 中：
+## YAML 配置
 
-- `~/.continue/config.json` (MacOS / Linux)
-- `%USERPROFILE%\.continue\config.json` (Windows)
+Continue 可以深度定制。本地的用户级别配置保存和编辑在你的家目录的 `config.yaml` 中：
 
-要打开 `config.json` ，你可以点击 "齿轮" 图标，在 Continue 聊天侧边栏的右下角。当编辑这个文件时，随着你的输入，你可以看到有效的选项，或者检查下面的参考。
+要打开 `config.yaml` ，你可以点击 Continue 聊天侧边栏上面的 "齿轮" 图标，打开设置页面，然后点击 `Open Config File` 来打开这个文件。当编辑这个文件时，随着你的输入，你可以看到可用的选项建议，或者查看下面的参考。
 
-当你保存 `config.json` 时， Continue 将自动刷新应用你的修改。 `config.json` 在你第一次使用 Continue 时自动创建。 `config.json` 将自动生成，如果它不存在。
+- `~/.continue/config.yaml` (MacOS / Linux)
+- `%USERPROFILE%\.continue\config.yaml` (Windows)
 
-在大多数情况下，你只需要编辑 `config.json` 。不过， Continue 提供了两个更多的方法定制配置：
+要打开你的配置文件，你可以点击 Continue 聊天侧边栏右下角的 "齿轮" 图标。当编辑这个文件时，随着你的输入，你可以看到可用的选项建议，或者查看下面的参考。
 
-- [`.continuerc.json`](#continuercjson) - 工作区级别配置。如果你想要限制当前的配置到一个指定的工作区，你可以添加一个 `.continuerc.json` 到你的项目的根目录。这个可以设置合并 _或_ 覆盖用户级别 `config.json`
-- [`config.ts`](#configts) - 高级配置（可能不需要） - 一个 TypeScript 文件，在你的家目录，可以用来以编程方式修改（_合并_） `config.json` schema ：
+当你在 IDE 中保存配置文件时， Continue 会自动刷新，应用你的变更。配置文件在你第一次使用 Continue 时自动创建，并且如果它不存在，总会使用默认值自动生成。
+
+查看 `config.yaml` 的完整参考 [在这里](../../reference.md) 。
+
+## 废弃的配置方法
+
+:::info
+查看 `config.json` 迁移指南 [在这里](../../yaml-migration.md)
+:::
+
+- [`config.json`](../../reference.md) - 原始的配置格式，保存为一个文件，和 `config.yaml` 相同的位置
+- [`.continuerc.json`](#continuercjson) - 工作区级别配置
+- [`config.ts`](#configts) - 高级配置（可能是不需要的） - 一个在你的家目录的 TypeScript 文件，可以用来编程式地修改 (_合并_) `config.json` schema ：
   - `~/.continue/config.ts` (MacOS / Linux)
   - `%USERPROFILE%\.continue\config.ts` (Windows)
 
-## `config.json`
-
-查看完整的参考 `config.json` 在[这里](../../reference.md) 。
-
-## `.continuerc.json`
+### `.continuerc.json`
 
 `.continuerc.json` 的格式和 `config.json` 一样，加上一个 _更多的_ 属性 `mergeBehavior` ，它可以设置为 "merge" 或 "overwrite" 。如果设置为 "merge" （默认情况）， `.continuerc.json` 将应用在 `config.json` 之上（列表和对象被合并）。如果设置为 "overwrite" ，那么 `.continuerc.json` 中每个高级别的属性将会覆盖 `config.json` 中的属性。
 
@@ -40,7 +47,7 @@ Continue 可以深度定制。用户级配置被保存和编辑在你的家目�
 }
 ```
 
-## `config.ts`
+### `config.ts`
 
 为了编程式地扩展 `config.json` ，你可以放置一个 `config.ts` 脚本在 `config.json` 相同的目录， export 一个 `modifyConfig` 函数，像这样：
 

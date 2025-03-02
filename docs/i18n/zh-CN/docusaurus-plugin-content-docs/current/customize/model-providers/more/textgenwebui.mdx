@@ -1,16 +1,33 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # TextGenWebUI
 
 TextGenWebUI 是一个综合的，开源语言模型 UI 和本地服务器。你可以使用 OpenAI-兼容服务器插件设置它，然后在你的 `config.json` 配置它，像这样：
 
-```json title="config.json"
-{
-  "models": [
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Text Generation WebUI
+        provider: text-gen-webui
+        apiBase: http://localhost:5000/v1
+        model: MODEL_NAME
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
     {
-      "title": "Text Generation WebUI",
-      "provider": "text-gen-webui",
-      "apiBase": "http://localhost:5000/v1",
-      "model": "MODEL_NAME"
+      "models": [
+        {
+          "title": "Text Generation WebUI",
+          "provider": "text-gen-webui",
+          "apiBase": "http://localhost:5000/v1",
+          "model": "MODEL_NAME"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
+    </TabItem>
+</Tabs>
+

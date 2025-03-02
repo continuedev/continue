@@ -1,3 +1,6 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # IBM watsonx
 
 watsonx, 由 IBM 开发，提供不同的预训练 AI 基础模型，可以用来自然语言处理 (NLP) ，计算机视觉和语音识别任务。
@@ -40,81 +43,158 @@ watsonx, 由 IBM 开发，提供不同的预训练 AI 基础模型，可以用�
 
 添加下面的配置到你的 `config.json` 文件来使用 watsonx 提供者。
 
-```json title="~/.continue/config.json"
-{
-  "models": [
-    {
-      "model": "model ID",
-      "title": "watsonx - Model Name",
-      "provider": "watsonx",
-      "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
-      "projectId": "PROJECT_ID",
-      "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
-      "apiVersion": "2024-03-14"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: watsonx - Model Name
+      provider: watsonx
+      model: model ID
+      apiBase: https://us-south.ml.cloud.ibm.com
+      apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
+      env:
+        projectId: PROJECT_ID
+        apiVersion: 2024-03-14
+  ```
+	</TabItem>
+	<TabItem value="json" label="JSON">
+	```json title="config.json"
+  {
+		"models": [
+		  {
+		    "model": "model ID",
+		    "title": "watsonx - Model Name",
+		    "provider": "watsonx",
+		    "apiBase": "https://us-south.ml.cloud.ibm.com",
+		    "projectId": "PROJECT_ID",
+		    "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+		    "apiVersion": "2024-03-14"
+		  }
+		]
+  }
+	```
+	</TabItem>
+</Tabs>
 
 `apiVersion` 是可选的，默认为最新版。
 
 如果你使用一个自定义的部署端点，设置 `deploymentID` 到模型的部署 ID 。你可以在 watsonx.ai Prompt Lab UI 中找到它，通过选择对应的模型，在右边打开 `</>` 标签，将会显示包含部署 ID 的端点 URL 。
 
-```json title="~/.continue/config.json"
-{
-  "models": [
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: watsonx - Model Name
+        provider: watsonx
+        model: model ID
+        apiBase: watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com
+        apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
+        env:
+          apiVersion: 2024-03-14
+          deploymentId: DEPLOYMENT_ID
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
     {
-      "model": "model ID",
-      "title": "watsonx - Model Name",
-      "provider": "watsonx",
-      "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
-      "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
-      "apiVersion": "2024-03-14",
-      "deploymentId": "DEPLOYMENT_ID"
+      "models": [
+        {
+          "model": "model ID",
+          "title": "watsonx - Model Name",
+          "provider": "watsonx",
+          "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+          "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+          "apiVersion": "2024-03-14",
+          "deploymentId": "DEPLOYMENT_ID"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
+    </TabItem>
+</Tabs>
 
 ### 配置选项
 
 确保指定一个模板名称，比如 `granite` 或 `llama3` ，并设置 `contextLength` 为模型上下文窗口大小。
 你也可以配置生成参数，比如 temperature, topP, topK, frequency penalty, 和 stop sequences ：
 
-```json title="~/.continue/config.json"
-{
-  "models": [
-    {
-      "model": "ibm/granite-20b-code-instruct",
-      "title": "Granite Code 20b",
-      "provider": "watsonx",
-      "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
-      "projectId": "PROJECT_ID",
-      "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
-      "apiVersion": "2024-03-14",
-      "template": "granite",
-      "contextLength": 8000,
-      "completionOptions": {
-        "temperature": 0.1,
-        "topP": 0.3,
-        "topK": 20,
-        "maxTokens": 2000,
-        "frequencyPenalty": 1.1,
-        "stop": [
-          "Question:",
-          "\n\n\n"
-        ]
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Granite Code 20b
+      provider: watsonx
+      model: ibm/granite-20b-code-instruct
+      apiBase: watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com
+      apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
+      template: granite
+      contextLength: 8000
+      defaultCompletionOptions:
+        temperature: 0.1
+        topP: 0.3
+        topK: 20
+        maxTokens: 2000
+        frequencyPenalty: 1.1
+        stop:
+          - Question:
+          - "\n\n\n"
+      env:
+        projectId: PROJECT_ID
+        apiVersion: 2024-03-14
+        
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "model": "ibm/granite-20b-code-instruct",
+        "title": "Granite Code 20b",
+        "provider": "watsonx",
+        "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+        "projectId": "PROJECT_ID",
+        "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+        "apiVersion": "2024-03-14",
+        "template": "granite",
+        "contextLength": 8000,
+        "completionOptions": {
+          "temperature": 0.1,
+          "topP": 0.3,
+          "topK": 20,
+          "maxTokens": 2000,
+          "frequencyPenalty": 1.1,
+          "stop": ["Question:", "\n\n\n"]
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## Tab 自动补全模型
 
 Granite 模型推荐为 tab 自动补全。配置类似于聊天模型：
-```json title="~/.continue/config.json"
-{
+
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Granite Code 8b
+      provider: watsonx
+      model: ibm/granite-8b-code-instruct
+      apiBase: watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com
+      projectId: PROJECT_ID
+      apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
+      apiVersion: 2024-03-14
+      roles:
+        - autocomplete
+  ```
+	</TabItem>
+	<TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
     "tabAutocompleteModel": {
       "model": "ibm/granite-8b-code-instruct",
       "title": "Granite Code 8b",
@@ -125,21 +205,42 @@ Granite 模型推荐为 tab 自动补全。配置类似于聊天模型：
       "apiVersion": "2024-03-14",
       "contextLength": 4000
     }
-}
-```
+  }
+  ```
+	</TabItem>
+</Tabs>
 
 ## 嵌入模型
 
 为了查看可用的嵌入模型列表，访问 [这个页面](https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&pos=2#ibm-provided) 。
-```json title="~/.continue/config.json
-{
-  "embeddingsProvider": {
-    "provider": "watsonx",
-    "model": "ibm/slate-30m-english-rtrvr-v2",
-    "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
-    "projectId": "PROJECT_ID",
-    "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
-    "apiVersion": "2024-03-14"
+
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Watsonx Embedder
+      provider: watsonx
+      model: ibm/slate-30m-english-rtrvr-v2
+      apiBase: https://us-south.ml.cloud.ibm.com
+      projectId: PROJECT_ID
+      apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
+      apiVersion: 2024-03-14
+      roles:
+        - embed
+  ```
+	</TabItem>
+	<TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "watsonx",
+      "model": "ibm/slate-30m-english-rtrvr-v2",
+      "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+      "projectId": "PROJECT_ID",
+      "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+      "apiVersion": "2024-03-14"
+    }
   }
-}
-```
+  ```
+	</TabItem>
+</Tabs>

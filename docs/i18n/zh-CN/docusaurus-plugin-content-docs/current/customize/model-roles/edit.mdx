@@ -1,16 +1,16 @@
 ---
-title: Edit Role
-description: Edit model role
-keywords: [edit, editing, model, role]
+title: 编辑角色
+description: 编辑模型角色
+keywords: [编辑, 模型, 角色]
 sidebar_position: 3
 ---
 
 import TabItem from "@theme/TabItem";
 import Tabs from "@theme/Tabs";
 
-It's often useful to select a different model to respond to Edit prompts than for chat prompts, as Edits are often more code-specific and may require less conversational readability.
+通常选择一个与响应聊天提示词不同的模型响应编辑提示词是有用的，因为编辑通常更加代码特定，可能需要更少的可读对话。
 
-In Continue, you can add `edit` to a model's roles to specify that it can be used for Edit requests. If no edit models are specified, the selected `chat` model is used.
+在 Continue 中，你可以添加 `edit` 到一个模型角色，指定它可以用来编辑请求。如果没有编辑模型被指定，选择的 `聊天` 模型将被使用。
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
@@ -45,4 +45,4 @@ In Continue, you can add `edit` to a model's roles to specify that it can be use
   </TabItem>
 </Tabs>
 
-Explore edit models in [the hub](https://hub.continue.dev/explore/models?roles=edit). Generally, we our recommendations for Edit overlap with recommendations for Chat.
+在 [hub](https://hub.continue.dev/explore/models?roles=edit) 中查看编辑模型。通常，我们对编辑的推荐和对聊天的推荐是重叠的。

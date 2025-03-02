@@ -4,6 +4,15 @@ description: 以 '/' 为开头激活的快捷方式
 keywords: [斜杠命令, 自定义命令, 步骤]
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+:::info
+
+斜杠命令当前值添加到 [`config.json`](../reference.md) 。 [`YAML Config Format`](../reference.md) 是新的和更推荐的格式。我们推荐查看 [Prompt Files](../customize/deep-dives/prompt-files.md) 获取相同的功能。
+
+:::
+
 斜杠命令是可以通过输入 '/' 来激活，并从下拉框中选择的快捷方式。例如，内置的 '/edit' 斜杠命令，让你可以直接在你的编辑器中流式地编辑。
 
 ![slash-commands](/img/slash-commands.png)
@@ -109,23 +118,39 @@ onboard 斜杠命令帮助你自己熟悉一个新的项目，通过分析项目
 
 ### Model Context Protocol
 
-[Model Context Protocol](https://modelcontextprotocol.io/introduction) 是一个 Anthropic 标准建议，为了统一提示词，上下文，使用的工具。 Continue 支持 MCP "prompts" ，通过创建斜杠命令。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置本地服务器，并配置你的 `config.json` 像这样：
+[Model Context Protocol](https://modelcontextprotocol.io/introduction) 是一个 Anthropic 标准建议，为了统一提示词，上下文，使用的工具。 Continue 支持 MCP "prompts" ，通过创建斜杠命令。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置本地服务器，并设置你的配置像这样：
 
-```json
-{
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  mcpServers:
+    - name: My MCP Server
+      command: uvx
+      args:
+        - mcp-server-sqlite
+        - --db-path
+        - /Users/NAME/test.db
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "experimental": {
+      "modelContextProtocolServers": [
+        {
+          "transport": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+          }  
         }
-      }
-    ]
+      ]
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ### 构建你自己的斜杠命令
+
 你可以构建自己的斜杠命令，通过跟随 [这个入门](/customize/tutorials/build-your-own-slash-command) 。

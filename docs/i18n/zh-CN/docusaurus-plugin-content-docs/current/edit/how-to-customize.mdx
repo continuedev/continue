@@ -5,12 +5,7 @@ description: 如何定制编辑
 keywords: [编辑, cmd i, 工作]
 ---
 
-你可以配置编辑使用指定的模型，使用 `inlineEdit` 属性。
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
-```json title="config.json"
-"experimental": {
-    "modelRoles": {
-        "inlineEdit": "MODEL_TITLE",
-    }
-}
-```
+你可以配置特定的模型来编辑，通过 设置/覆盖 模型 YAML 配置中的 `roles` 。查看 [Edit role](../customize/model-roles/edit.mdx) 获取更多详情。

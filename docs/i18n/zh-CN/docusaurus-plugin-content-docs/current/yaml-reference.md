@@ -1,29 +1,29 @@
 ---
-title: Config YAML Reference
-description: Reference for the Continue configuration YAML file
-keywords: [config, yaml, configuration, customize, customization]
+title: 配置 YAML 参考
+description: Continue 配置 YAML 文件参考
+keywords: [配置, yaml, 定制]
 ---
 
-# Config YAML Reference
+# 配置 YAML 参考
 
 <!-- TODO - data section -->
 
-Continue can be configured using a YAML file `config.yaml` which for local configuration can be placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
+Continue 可以被配置使用 YAML 文件 `config.yaml` ，作为本地配置，放在全局 `.continue` 文件夹 (`~/.continue` 在 Mac 上， `%USERPROFILE%\.continue`)
 
-Below are details for each property that can be set in `config.yaml`.
+以下是可以在 `config.yaml` 中设置的每个属性的详情。
 
 :::info
-Config YAML does not work alongside `config.json` - it replaces it. View the **[Migration Guide](/yaml-migration)**. `config.yaml` currently only works in VS Code pre-release.
+配置 YAML 不是和 `config.json` 一起工作 - 它替换了它。查看 **[迁移指南](/yaml-migration)** 。 `config.yaml` 当前只在 VS Code 预览版有效。
 :::
 
-**All properties at all levels are optional unless explicitly marked as required.**
+**任何级别的所有属性都是可选的，除非标记为必需的**
 
-## Properties
+## 属性
 
-The top-level properties in the `config.yaml` configuration file are:
+在 `config.yaml` 配置文件中最高级别的属性是：
 
-- [`name`](#name) (**required**)
-- [`version`](#version) (**required**)
+- [`name`](#name) (**必需的**)
+- [`version`](#version) (**必需的**)
 - [`models`](#models)
 - [`context`](#context)
 - [`rules`](#rules)
@@ -37,7 +37,7 @@ The top-level properties in the `config.yaml` configuration file are:
 
 ### `name`
 
-The `name` property specifies the name of your project or configuration.
+`name` 属性指定你的项目或配置的名称。
 
 ```yaml title="config.yaml"
 name: MyProject
@@ -45,35 +45,47 @@ name: MyProject
 
 ### `version`
 
-The `version` property specifies the version of your project or configuration.
+`version` 属性指定你的项目或配置的版本。
 
 ---
 
 ### `models`
 
-The `models` section defines the language models used in your configuration. Models are used for functionalities such as chat, editing, and summarizing.
+`models` 小节定义你的配置中使用的语言模型。模型用来实现功能，比如聊天、编辑和总结。
 
-**Properties:**
+**属性：**
 
-- `name` (**required**): A unique name to identify the model within your configuration.
-- `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
-- `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
-- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`.
-- `defaultCompletionOptions`: Default completion options for model settings.
+- `name` (**必需的**): 一个唯一的名称，在你的配置中确定模型。
+- `provider` (**必需的**): 模型的提供者 (例如，`openai`, `ollama`) 。
+- `model` (**必需的**): 指定模型的名称 (例如，`gpt-4`, `starcoder`) 。
+- `roles`: 指定这个模型可以实现的角色，例如 `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize` 。
+- `defaultCompletionOptions`: 模型设置的默认的补全选项。
 
-  **Properties:**
+  **属性：**
 
-  - `contextLength`: Maximum context length of the model, typically in tokens.
-  - `maxTokens`: Maximum number of tokens to generate in a completion.
-  - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
-  - `topP`: The cumulative probability for nucleus sampling.
-  - `topK`: Maximum number of tokens considered at each step.
-  - `stop`: An array of stop tokens that will terminate the completion.
-  - `n`: Number of completions to generate.
+  - `contextLength`: 模型的最大上下文长度，通常是 token 。
+  - `maxTokens`: 在补全中生成的 token 的最大数量。
+  - `temperature`: 控制补全的随机性。值的范围在 `0.0` (确定的) 到 `1.0` (随机的) 。
+  - `topP`: 核采样的累计可能性。
+  - `topK`: 每一步考虑 token 的最大数量。
+  - `stop`: 一个停止补全的 token 的列表。
+  - `n`: 生成补全的数量。
 
-- `requestOptions`: HTTP request options specific to the model.
+- `requestOptions`: 模型特定的 HTTP 请求选项。
 
-  **Properties:**
+  **属性：**
+
+  - `timeout`: 每个请求到 LLM 的超时时间。
+  - `verifySsl`: 是否验证请求的 SSL 证书。
+  - `caBundlePath`: HTTP 请求定制 CA 证书集的路径。
+  - `proxy`: HTTP 请求使用的代理 URL 。
+  - `headers`: HTTP 请求的定制头。
+  - `extraBodyProperties`: HTTP 请求体合并的额外的属性。
+  - `noProxy`: 绕过指定代理的主机名列表。
+  - `clientCertificate`: HTTP 请求的客户端证书。
+    - `cert`: 客户端证书文件的路径。
+    - `key`: 客户端证书 key 文件的路径。
+    - `passphrase`: 可选的客户端证书 key 文件的密钥。
 
   - `timeout`: Timeout for each request to the language model.
   - `verifySsl`: Whether to verify SSL certificates for requests.
@@ -87,7 +99,7 @@ The `models` section defines the language models used in your configuration. Mod
     - `key`: Path to the client certificate key file.
     - `passphrase`: Optional passphrase for the client certificate key file.
 
-#### Example:
+#### 示例：
 
 ```yaml title="config.yaml"
 models:
@@ -113,16 +125,16 @@ models:
 
 ### `context`
 
-The `context` section defines context providers, which supply additional information or context to the language models. Each context provider can be configured with specific parameters.
+`context` 小节定义了上下文提供者，给语言模型提供额外的信息或上下文。每个上下文提供者可以使用特定的参数配置。
 
-More information about usage/params for each context provider can be found [here](/customize/context-providers)
+更多关于每个上下文提供者 使用/参数 的信息可以 [在这里](/customize/context-providers) 找到。
 
-**Properties:**
+**属性：**
 
-- `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
-- `params`: Optional parameters to configure the context provider's behavior.
+- `provider` (**必需的**): 上下文提供者的标识符或名称 (例如，`code`, `docs`, `web`) 。
+- `params`: 可选的参数来配置上下文的行为。
 
-**Example:**
+**示例：**
 
 ```yaml title="config.yaml"
 context:
@@ -141,9 +153,9 @@ context:
 
 ### `rules`
 
-List of rules that the LLM should follow. These are inserted into the system message for all chat requests.
+LLM 应该遵守的规则。它们插入到每个聊天请求的系统信息中。
 
-Example
+**示例：**
 
 ```yaml title="config.yaml"
 rules:
@@ -155,7 +167,7 @@ rules:
 
 ### `prompts`
 
-A list of custom prompts that can be invoked from the chat window. Each prompt has a name, description, and the actual prompt text.
+可以从聊天窗口触发的提示词列表。每个提示词有一个名称、描述和实际的提示词文本。
 
 ```yaml title="config.yaml"
 prompts:
@@ -172,18 +184,18 @@ prompts:
 
 ### `docs`
 
-List of documentation sites to index.
+需要索引的文档网站的列表。
 
 **Properties:**
 
-- `name` (**required**): Name of the documentation site, displayed in dropdowns, etc.
-- `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
+- `name` (**必需的**): 文档网站的名称，在下拉框等中显示。
+- `startUrl` (**必需的**): 爬取开始的页面 - 通常是文档的根或介绍页面。
 <!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
-- `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `favicon`: 网站 favicon 的 URL (默认是 `startUrl` 的 `/favicon.ico`)。
 - `maxDepth`: M
-- `useLocalCrawling`: Force use of local crawling
+- `useLocalCrawling`: 强制使用本地爬取。
 
-Example
+**示例：**
 
 ```yaml title="config.yaml"
 docs:
@@ -217,16 +229,16 @@ tools:
 
 <!-- TODO is this correct? -->
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider.
+[模型上下文协议](https://modelcontextprotocol.io/introduction) 是一个 Anthropic 的标准建议，用来统一提示词、上下文和工具的使用。 Continue 支持任何有 MCP 上下文提供者的 MCP 服务器。
 
-**Properties:**
+**属性：**
 
-- `name` (**required**): The name of the MCP server.
-- `command` (**required**): The command used to start the server.
-- `args`: An optional array of arguments for the command.
-- `env`: An optional map of environment variables for the server process.
+- `name` (**必需的**): MCP 服务器的名称。
+- `command` (**必需的**): 启动服务器的命令。
+- `args`: 一个可选的命令的参数列表。
+- `env`: 一个可选的服务器进程的环境变量映射。
 
-**Example:**
+**示例：**
 
 ```yaml title="config.yaml"
 mcpServers:
@@ -257,9 +269,9 @@ data:
 
 ---
 
-## Complete YAML Config Example
+## 完整的 YAML 配置示例
 
-Putting it all together, here's a complete example of a `config.yaml` configuration file:
+把它们放在一起，这是一个完整的 `config.yaml` 配置文件示例。
 
 ```yaml title="config.yaml"
 name: MyProject

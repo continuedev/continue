@@ -1,3 +1,6 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 # 定制代码 RAG
 
 虽然 Continue 的 [@Codebase](../deep-dives/codebase.mdx) 开箱即用，你可能想要设置自己的向量数据库，并构建一个定制的检索增强生成（RAG）系统。这允许你访问不在本地可用的代码，对每个用户每次索引代码，或者包含定制的逻辑。在这个指南中，我们将展示构建这个的步骤。
@@ -121,19 +124,38 @@ async def create_item(item: ContextProviderInput):
     return context_items
 ```
 
-在你设置服务器之后，你可以配置 Continue 使用它，通过添加 "http" 上下文提供者到你的 `config.json` 中的 `contextProviders` 列表：
+在你设置服务器之后，你可以配置 Continue 使用它，通过添加 "http" 上下文提供者到你的配置中的 `contextProviders` 列表：
 
-```json title="config.json"
-{
-  "name": "http",
-  "params": {
-    "url": "https://myserver.com/retrieve",
-    "title": "http",
-    "description": "Custom HTTP Context Provider",
-    "displayTitle": "My Custom Context"
+<Tabs groupId="config-example">
+<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: http
+      params:
+        url: https://myserver.com/retrieve
+        name: http
+        description: Custom HTTP Context Provider
+        displayTitle: My Custom Context
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "http",
+        "params": {
+          "url": "https://myserver.com/retrieve",
+          "title": "http",
+          "description": "Custom HTTP Context Provider",
+          "displayTitle": "My Custom Context"
+        }
+      }
+    ]
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ## 步骤 7 （额外的）：设置重排序
 

@@ -4,398 +4,654 @@ description: 输入 '@' 选择内容到 LLM 作为上下文
 keywords: [上下文, "@", 提供者, LLM]
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 上下文提供者允许你输入 '@' ，看到一个上下文下拉框，都可以提供给 LLM 作为上下文。每个上下文提供者是一个插件，也就是说，如果你想要关联一些没有在这里看到的信息源，你可以请求（或构建！）一个新的上下文提供者。
 
 举一个例子，比如你工作在解决一个新的 GitHub Issue 。你输入 '@Issue' 并选择你工作的那个。 Continue 现在可以看到 issue 标题和内容。你还知道那个 issue 关联到文件 'readme.md' 和 'helloNested.py' ，所以你输入 '@readme' 和 '@hello' 查看并选择它们。现在，这里有 3 个 "上下文条目" 在行内显示，和你的其他输入一起。
 
 ![上下文条目](/img/context-provider-example.png)
 
+## 上下文块
+
+你可以使用 [`context` 块](../hub/blocks/block-types.md#context) 添加上下文提供者到助手。在 hub](https://hub.continue.dev/explore/context) 中查看可用的上下文块。
+
 ## 内置的上下文提供者
 
-为了使用任何内置的上下文提供者，打开 `config.json` 并将它添加到 `contextProviders` 列表中。
+你可以在你的配置文件中添加内置的上下文提供者，像下面这样：
 
 ### `@File`
 
-关联你的当前工作区的任何文件。
+关联你当前工作区的任何文件。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "file"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: file
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "file"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Code`
 
-关联你的项目中特定的函数或类。
+关联你的项目中指定的函数或类。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "code"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: code
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "code"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Git Diff`
 
-关联你对当前分支所在的所有修改。这是有用的，如果你想要在提交之前，总结你做了什么，或询问一个关于你的工作通用的评审。
+关联你对当前分支做出的变更。这是有用的，如果你想要在提交之前，总结你做了什么，或者要求一个你的工作的一般性审查。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "diff"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: diff
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "diff"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Current File`
 
 关联当前打开的文件。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "currentFile"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: currentFile
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "currentFile"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Terminal`
 
-关联你的 IDE 终端中最后运行的命令和它的输出。
+关联你在 IDE 的终端运行的最后一条命令和它的输出。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "terminal"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: terminal
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "terminal"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Docs`
 
-关联任何文档网站的内容。
+关联来自任何文档网站的内容。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "docs"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-注意这只启用 `@Docs` 上下文提供者。
+注意，这只允许 `@Docs` 上下文提供者。
 
-为了使用它，你需要添加一个文档网站到你的 `config.json` 。查看 [docs](../customize/deep-dives/docs.mdx) 页面获取更多信息。
+为了使用它，你需要添加一个文档网站到你的配置文件。查看 [文档](../customize/deep-dives/docs.mdx) 页面获取更多信息。
 
 ### `@Open`
 
-关联你打开的所有文件的内容。设置 `onlyPinned` 为 `true` 只关联固定的文件。
+关联所有你打开的文件的内容。设置 `onlyPinned` 为 `true` 只关联固定的文件。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "open",
-      "params": {
-        "onlyPinned": true
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: open
+      params:
+        onlyPinned: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "open",
+        "params": {
+          "onlyPinned": true
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Web`
 
-通过网络引用相关的页面，通过你的输入自动确定。
+关联 web 上相关的页面，自动地从你的输入确定。
 
-可选地，设置 "n" 来限制返回结果的个数（默认是 6）。
+可选的，设置 `n` 为返回结果的限制数量 (默认值 6) 。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "web",
-      "params": {
-        "n": 5
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: web
+      params:
+        n: 5
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "web",
+        "params": {
+          "n": 5
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Codebase`
 
-关联你的代码库中最相关的片段。
+关联你的代码库中最相关的片断。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "codebase"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml" 
+  context:
+    - provider: codebase
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "codebase"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-在 [这里](../customize/deep-dives/codebase.mdx) 查看更多关于索引和检索。
+查看更多关于索引和检索 [在这里](../customize/deep-dives/codebase.mdx) 。
 
 ### `@Folder`
 
-使用和 `@Codebase` 相同的检索机制，但是只在一个单独的文件夹上。
+使用与 `@Codebase` 相同的检索机制，但是只在单个文件夹上。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "folder"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: folder
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "folder"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Search`
 
-关联代码库搜索的结果，就像你从 VS Code 搜索获得的结果。
+关联代码库搜索的结果，就像你从 VS Code 搜索中得到的结果。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "search"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: search
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "search"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-这个上下文提供者是由 [ripgrep](https://github.com/BurntSushi/ripgrep) 支持的。
+这个上下文提供者由 [ripgrep](https://github.com/BurntSushi/ripgrep) 驱动。
 
 ### `@Url`
 
-关联给定 URL 的 markdown 转换内容。
+关联给定 URL 内容转换的 markdown 。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "url"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml" 
+  context:
+    - provider: url
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "url"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Clipboard`
 
-关联最近的剪贴板条目
+关联最近粘贴板上的条目。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "clipboard"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: clipboard
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "clipboard"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Tree`
 
 关联你当前工作区的结构。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "tree"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: tree
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "tree"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Problems`
 
 获取当前文件的问题。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "problems"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: problems
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "problems"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `@Debugger`
 
-关联调试器中本地变量的内容。目前只在 VS Code 中可用。
+关联调试器中的本地变量内容。当前只在 VS Code 中可用。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "debugger",
-      "params": {
-        "stackDepth": 3
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: debugger
+      params:
+        stackDepth: 3
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "debugger",
+        "params": {
+          "stackDepth": 3
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-使用最多 _n_ 级 (默认是 3) 的当前线程的调用栈。
+使用线程的最高 _n_ 级 (默认为 3) 调用栈。
 
 ### `@Repository Map`
 
-关联你的代码库的概览。默认情况下， signature 与文件一起包含在仓库映射中。
+关联你的代码库的概述。默认情况下，签名和仓库映射一起。
 
-`includeSignatures` 参数可以设置为 false 来排除 signature 。这对大的仓库是需要的，或许可以明显减少上下文大小。 signature 不会被包含，如果索引被禁止。
+`includeSignatures` 参数可以设置为 false 来排除签名。这对于大的代码仓库是必要的，并明显地减少上下文的大小。如果索引是禁用的，签名将不会被包含。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "repo-map",
-      "params": {
-        "includeSignatures": false // default true
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: repo-map
+      params:
+        includeSignatures: false # default true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "repo-map",
+        "params": {
+          "includeSignatures": false // default true
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-提供一个文件列表，以及这些文件中的最高级的类、函数和方法的调用签名。这帮助模型更好地理解，一段特定的代码如何关联其他的代码库。
+提供一个文件列表， 以及这些文件中的最高级的类、函数和方法的调用签名。这帮助模型更好地理解，一段特定的代码如何关联其他的代码库。
 
-在出现的子菜单中，你可以选择 `Entire codebase` 或指定一个子文件夹，来生成仓库映射。
+在出现的子菜单中，你可以选择 `Entire codebase` 或执行一个子文件夹，来生成仓库映射。
 
-这个上下文提供者想法来自 [Aider's repository map](https://aider.chat/2023/10/22/repomap.html) 。
+这个上下文提供者的想法来自 [Aider's repository map](https://aider.chat/2023/10/22/repomap.html) 。
 
 ### `@Operating System`
 
 关联你当前操作系统的架构和平台。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "os"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: os
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "os"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### 模型上下文协议
 
-[模型上下文协议](https://modelcontextprotocol.io/introduction) 是一个由 Anthropic 提议的标准，用于统一提示词，上下文和工具使用。 Continue 支持任何 MCP 服务器，使用 MCP 上下文提供者。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置一个本地服务器，然后像这样配置你的 `config.json` ：
+[模型上下文协议](https://modelcontextprotocol.io/introduction) 是一个来自 Anthropic 的标准提议，为了统一提示词、上下文和工具的使用。 Continue 支持带有 MCP 上下文提供者的任何 MCP 服务器。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置本地服务器，然后设置你的配置如下：
 
-```json
-{
-  "experimental": {
-    "modelContextProtocolServers": [
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  mcpServers:
+    - name: My MCP Server
+      command: uvx
+      args:
+        - mcp-server-sqlite
+        - --db-path
+        - /Users/NAME/test.db
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "experimental": {
+      "modelContextProtocolServers": [
+        {
+          "transport": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+          }  
+        }
+      ]
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+然后你可以输入 "@" 看到 "MCP" 在上下文提供者下拉框中。
+
+### 提示词文件
+
+查看 [提示词文件](./deep-dives/prompt-files.md) 。提示词文件不是直接添加到配置文件中；提示词文件自动解析和插入到配置中，像其他上下文提供者一样使用。
+
+### `@Issue`
+
+关联一个 Github issue 的交谈。
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: issue
+      params:
+        repos:
+          - owner: continuedev
+            repo: continue
+        githubToken: ghp_xxx
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
       {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        "name": "issue",
+        "params": {
+          "repos": [
+            {
+              "owner": "continuedev",
+              "repo": "continue"
+            }
+          ],
+          "githubToken": "ghp_xxx"
         }
       }
     ]
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
-然后你能够输入 "@" ，在上下文提供者下拉框中看到 "MCP" 。
-
-### 提示词文件
-
-查看 [提示词文件](/customize/deep-dives/prompt-files) 。提示词文件不是直接添加到配置文件中；提示词文件自动地解析和插入到配置中，像其他上下文提供者一样使用。
-
-### `@Issue`
-
-关联一个 Github issue 的交谈信息。
-
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "issue",
-      "params": {
-        "repos": [
-          {
-            "owner": "continuedev",
-            "repo": "continue"
-          }
-        ],
-        "githubToken": "ghp_xxx"
-      }
-    }
-  ]
-}
-```
-
-确保包含你自己的 [GitHub 个人访问 token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) 来避免频率限制。
+确保包含你自己的 [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) 避免频率限制。
 
 ### `@Database`
 
-关联 Sqlite, Postgres, MSSQL 和 MySQL 数据库的表 schema 。
+关联 Sqlite, Postgres, MSSQL 和 MySQL 数据库的表结构。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "database",
-      "params": {
-        "connections": [
-          {
-            "name": "examplePostgres",
-            "connection_type": "postgres",
-            "connection": {
-              "user": "username",
-              "host": "localhost",
-              "database": "exampleDB",
-              "password": "yourPassword",
-              "port": 5432
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: database
+      params:
+        connections:
+          - name: examplePostgres
+            connection_type: postgres
+            connection:
+              user: username
+              host: localhost
+              database: exampleDB
+              password: yourPassword
+              port: 5432
+          - name: exampleMssql 
+            connection_type: mssql
+            connection:
+              user: username
+              server: localhost
+              database: exampleDB
+              password: yourPassword
+          - name: exampleSqlite
+            connection_type: sqlite
+            connection:
+              filename: /path/to/your/sqlite/database.db
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "database",
+        "params": {
+          "connections": [
+            {
+              "name": "examplePostgres",
+              "connection_type": "postgres", 
+              "connection": {
+                "user": "username",
+                "host": "localhost",
+                "database": "exampleDB",
+                "password": "yourPassword",
+                "port": 5432
+              }
+            },
+            {
+              "name": "exampleMssql",
+              "connection_type": "mssql",
+              "connection": {
+                "user": "username",
+                "server": "localhost",
+                "database": "exampleDB",
+                "password": "yourPassword"
+              }
+            },
+            {
+              "name": "exampleSqlite",
+              "connection_type": "sqlite",
+              "connection": {
+                "filename": "/path/to/your/sqlite/database.db"
+              }
             }
-          },
-          {
-            "name": "exampleMssql",
-            "connection_type": "mssql",
-            "connection": {
-              "user": "username",
-              "server": "localhost",
-              "database": "exampleDB",
-              "password": "yourPassword"
-            }
-          },
-          {
-            "name": "exampleSqlite",
-            "connection_type": "sqlite",
-            "connection": {
-              "filename": "/path/to/your/sqlite/database.db"
-            }
-          }
-        ]
+          ]
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-每个连接应该有一个单独的名称，`connection_type` ，以及每个数据库类型特定的必须的连接参数。
+每个连接应该包含一个唯一的名字， `connection_type`, 以及每个特定数据库类型必须的连接参数。
 
 可用的连接类型：
 
@@ -405,190 +661,300 @@ keywords: [上下文, "@", 提供者, LLM]
 
 ### `@Postgres`
 
-关联表的 schema ，以及一些示例行
+关联表结构，以及一些示例行。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "postgres",
-      "params": {
-        "host": "localhost",
-        "port": 5436,
-        "user": "myuser",
-        "password": "catsarecool",
-        "database": "animals",
-        "schema": "public",
-        "sampleRows": 3
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: postgres
+      params:
+        host: localhost
+        port: 5436
+        user: myuser
+        password: catsarecool
+        database: animals
+        schema: public
+        sampleRows: 3
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "postgres",
+        "params": {
+          "host": "localhost",
+          "port": 5436,
+          "user": "myuser",
+          "password": "catsarecool",
+          "database": "animals",
+          "schema": "public",
+          "sampleRows": 3
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-仅需要的配置是那些创建数据库连接所需要的： `host`, `port`, `user`, `password` 和 `database` 。
+仅需要的设置是那些创建数据库连接的： `host`, `port`, `user`, `password` 和 `database` 。
 
 默认情况下， `schema` 过滤器设置为 `public` ， `sampleRows` 设置为 3 。你可以取消设置 schema ，如果你想要包含所有 schema 的表。
 
-[这是一个简单的 demo](https://github.com/continuedev/continue/pull/859) 。
+[这是一个简单的 demo ](https://github.com/continuedev/continue/pull/859) 。
 
 ### `@Google`
 
 关联 Google 搜索的结果。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "google",
-      "params": {
-        "serperApiKey": "<your serper.dev api key>"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: google
+      params:
+        serperApiKey: <YOUR_SERPER.DEV_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "google",
+        "params": {
+          "serperApiKey": "<YOUR_SERPER.DEV_API_KEY>"
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-例如，输入 "@Google python tutorial" ，如果你想要搜索或讨论学习 Python 的方法。
+例如，输入 "@Google python tutorial" ，如果你想要搜索和讨论学习 Python 的方法。
 
-注意：你可以在 [serper.dev](https://serper.dev) 免费获得 API key 。
+注意：你可以免费从 [serper.dev](https://serper.dev) 获取一个 API key 。
 
 ### `@Gitlab Merge Request`
 
-关联一个 Gitlab 上这个分支上打开的 MR 。
+关联 Gitlab 上这个分支打开的 PR 。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "gitlab-mr",
-      "params": {
-        "token": "..."
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: gitlab-mr
+      params:
+        token: "..."
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "gitlab-mr", 
+        "params": {
+          "token": "..."
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-你需要创建一个使用 `read_api` 范围的 [个人访问 token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html)。
+你需要创建一个 [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) ，使用 `read_api` 范围。
 
 #### 使用自托管的 GitLab
 
-你可以指定要访问的域名，通过在你的配置中设置 `domain` 参数。默认情况下是 `gitlab.com` 。
+你可以指定访问的域名，通过在你的配置中设置 `domain` 参数。默认情况下，这个设置为 `gitlab.com` 。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "gitlab-mr",
-      "params": {
-        "token": "...",
-        "domain": "gitlab.example.com"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: gitlab-mr
+      params:
+        token: "..."
+        domain: "gitlab.example.com"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "gitlab-mr",
+        "params": {
+          "token": "...",
+          "domain": "gitlab.example.com" 
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 #### 过滤评论
 
-如果你选择一些代码被编辑，你可以有上下文提供者过滤其他文件的评论。要启用这个特性，设置 `filterComments` 为 `true` 。
+如果你选择一些代码编辑，你可以使用上下文提供者过滤掉其他文件的评论。为了打开这个功能，设置 `filterComments` 为 `true` 。
 
 ### `@Jira`
 
-关联一个 Jira issue 的交谈信息。
+关联一个 Jira issue 的对话。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "jira",
-      "params": {
-        "domain": "company.atlassian.net",
-        "token": "ATATT..."
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: jira
+      params:
+        domain: company.atlassian.net
+        token: ATATT...
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "jira", 
+        "params": {
+          "domain": "company.atlassian.net",
+          "token": "ATATT..."
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-确认包含你自己的 [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens) ，或者使用你的 `email` 和 `token` ， token 设置为你的密码获得基本认证。如果你使用自己的 Atlassian API Token ，不要配置你的邮箱。
+确保包含你自己的 [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens) ，或使用你的 `email` 和 `token` ， token 设置为你的密码，使用 basic 认证。如果你使用自己的 Atlassian API Token ，不要配置你的邮箱。
 
 #### Jira Datacenter 支持
 
-这个上下文提供者支持 Jira API 版本 2 和 3 。默认情况下，它将使用版本 3 ，因为这是云版本使用的，但是如果你有 datacenter 版本的 Jira ，你需要使用 `apiVersion` 属性设置 API Version 为 2 。
+这个上下文提供者支持 Jira API 版本 2 和 3 。它默认使用版本 3 ，因为这是云版本使用的，但是如果你有 datacenter 版本的 Jira ，你需要使用 `apiVersion` 属性设置 API 版本为 2 。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "jira",
-      "params": {
-        "apiVersion": "2"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: jira
+      params:
+        apiVersion: "2"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "jira",
+        "params": {
+          "apiVersion": "2"
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-#### Issue 查询
+#### Issue Query
 
-默认情况下，以下查询用来查找 issue ：
+默认情况下，使用以下查询来寻找 issue ：
 
 ```jql
 assignee = currentUser() AND resolution = Unresolved order by updated DESC
 ```
 
-你可以覆盖这个查询，通过设置 `issueQuery` 参数。
+你可以通过设置 `issueQuery` 参数覆盖这个查询。
 
 ### `@Discord`
 
-引用 Discord 频道的消息。
+关联一个 Discord 频道的消息。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "discord",
-      "params": {
-        "discordKey": "bot token",
-        "guildId": "1234567890",
-        "channels": [
-          {
-            "id": "123456",
-            "name": "example-channel"
-          },
-          {
-            "id": "678901",
-            "name": "example-channel-2"
-          }
-        ]
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: discord
+      params:
+        discordKey: "bot token"
+        guildId: "1234567890" 
+        channels:
+          - id: "123456"
+            name: "example-channel"
+          - id: "678901" 
+            name: "example-channel-2"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "discord",
+        "params": {
+          "discordKey": "bot token",
+          "guildId": "1234567890",
+          "channels": [
+            {
+              "id": "123456",
+              "name": "example-channel"
+            },
+            {
+              "id": "678901",
+              "name": "example-channel-2" 
+            }
+          ]
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-确保包含你自己的 [Bot Token](https://discord.com/developers/applications) ，并把它加入你关联的服务器。如果你想要关于搜索哪个频道的更细粒度的控制，你可以指定一个要搜索的频道 ID 列表。如果你不想要指定任何频道，只需要包含 guild id(Server ID) ，所有频道将会被包含。提供者只会读取文本频道。
+确保包含你自己的 [Bot Token](https://discord.com/developers/applications) ，并加入到你的相关服务器。如果你需要关于哪个频道被搜索更细粒度的控制，你可以指定一个 channel ID 列表来搜索。如果你不指定任何频道，只包含 guild id(Server ID) ，所有频道都会被包含。这个提供者只读取文本频道。
 
 ### `@HTTP`
 
-HttpContextProvider 创建一个 POST 请求到配置中传递的 url 。服务器必须返回 200 OK ，包含一个 ContextItem 对象或一个 ContextItems 列表。
+HttpContextProvider 创建一个 POST 请求到传给配置中的 url 。服务器必须返回 200 OK ，以及一个 ContextItem 对象或一个 ContextItems 列表。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "http",
-      "params": {
-        "url": "https://api.example.com/v1/users"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: http
+      params:
+        url: "https://api.example.com/v1/users"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "http", 
+        "params": {
+          "url": "https://api.example.com/v1/users"
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-接收的 URL 应该接收以下参数：
+接收的 URL 应该接收下面的参数：
 
 ```js title="POST parameters"
 {
@@ -597,7 +963,7 @@ HttpContextProvider 创建一个 POST 请求到配置中传递的 url 。服务�
 }
 ```
 
-响应 200 OK 应该是一个 JSON 对象，有以下结构：
+响应 200 OK 应该是有以下结构的 JSON 对象：
 
 ```json title="Response"
 [
@@ -618,43 +984,69 @@ HttpContextProvider 创建一个 POST 请求到配置中传递的 url 。服务�
 
 ### `@Commits`
 
-关联指定的 git commit 元数据和 diff 或所有最近的 commit 。
+关联指定的 git 提交元数据和 diff 或所有最近的提交。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "commit",
-      "params": {
-        "Depth": 50,
-        "LastXCommitsDepth": 10
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: commit
+      params:
+        Depth: 50
+        LastXCommitsDepth: 10
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "commit", 
+        "params": {
+          "Depth": 50,
+          "LastXCommitsDepth": 10
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
-Depth 是将要加载到子菜单的 commit 数量，默认是 50 。
-LastXCommitsDepth 是将要包含的最近 commit 的数量，默认是 10 。
+depth 是提交加载到子菜单的数量，默认是 50 。
+LastXCommitsDepth 是包含最近提交的数量，默认是 10 。
 
 ### `@Greptile`
 
-查询一个 [Greptile](https://www.greptile.com/) 索引，关于当前的仓库/分支。
+查询当前仓库/分支的 [Greptile](https://www.greptile.com/) 索引。
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "greptile",
-      "params": {
-        "GreptileToken": "...",
-        "GithubToken": "..."
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: greptile 
+      params:
+        greptileToken: "..."
+        githubToken: "..."
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "greptile",
+        "params": {
+          "GreptileToken": "...",
+          "GithubToken": "..."
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### 请求上下文提供者
 
-没有看到你想要的？[在这里](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) 创建一个 issue 来请求一个新的上下文提供者。
+没有看到你想要的？[在这里](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) 创建一个 issue ，来请求一个新的上下文提供者。

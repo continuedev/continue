@@ -1,14 +1,14 @@
 ---
-title: Assistants Introduction
-sidebar_label: Introduction
-description: Overview of assistants functionality.
-keywords: [assistants, overview, customization]
+title: 助手介绍
+sidebar_label: 介绍
+description: 助手功能概览
+keywords: [助手, 概览, 定制]
 ---
 
-# Introduction to Assistants
+# 助手介绍
 
-Custom AI code assistants are configurations of building [blocks](../blocks/intro.md) that enable a coding experience tailored to your specific use cases.
+定制 AI 代码助手通过构建 [blocks](../blocks/intro.md) 来配置，允许编码体验裁剪为你指定的使用情况。
 
-`config.yaml` is a format for defining custom AI code assistants. An assistant has some top-level properties (e.g. `name`, `version`), but otherwise consists of composable lists of **blocks** such as `models` and `rules`, which are the atomic building blocks of an assistant.
+`config.yaml` 是一个定制代码助手的格式。一个助手有一些最高级别的属性 (例如， `name`, `version`) ，但是除此以外还包含 **块** （比如 `models` 和 `rules`）的列表的组合，它们是组成助手的原子构建块。
 
-The `config.yaml` is parsed by the open-source Continue IDE extensions to create custom assistant experiences. When you log in to [hub.continue.dev](https://hub.continue.dev/), your assistants will automatically be synced with the IDE extensions.
+`config.yaml` 由开源的 Continue IDE 扩展解析，创建定制的助手体验。当你登录到 [hub.continue.dev](https://hub.continue.dev/) ，你的助手会自动地同步到 IDE 扩展。

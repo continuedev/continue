@@ -2,9 +2,60 @@
 title: 构建你自己的上下文提供者
 ---
 
-## 入门示例
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
-要编写你自己的上下文提供者，你只需要实现 `CustomContextProvider` 接口：
+# 构建你自己的上下文提供者
+
+Continue 提供了多个方法来提供你自己的上下文给扩展。
+
+## HTTP 上下文提供者
+
+Continue 可以从你创建和服务的定制的 HTTP 服务器获取上下文。添加 `@HTTP` 上下文提供者到你的配置中，像这样：
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    provider: http
+    params:
+      url: https://myserver.com/context-provider
+      title: http
+      displayTitle: My Custom Context
+      description: Gets things from my private list
+      options:
+        maxItems: 20
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "name": "http",
+    "params": {
+      "url": "https://myserver.com/context-provider",
+      "title": "http",
+      "description": "Custom HTTP Context Provider",
+      "displayTitle": "My Custom Context",
+      "options": {
+        "maxItems": 20
+      }
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+然后，创建一个服务器响应来自 [HttpContextProvider.ts](https://github.com/continuedev/continue/blob/main/core/context/providers/HttpContextProvider.ts) 创建的请求。查看 `hello` 端点 [context_provider_server.py](https://github.com/continuedev/continue/blob/main/core/context/providers/context_provider_server.py) ，一个使用 FastAPI 的例子。
+
+`"options"` 属性可以用来发送更多的参数到你的端点，将会包含在请求体中。
+
+:::info
+以下创建定制上下文提供者的方法已经废弃。我们推荐尽可能使用 HTTP 上下文提供者， [MCP Servers](../context-providers.mdx#model-context-protocol) 和 [Prompt files](../deep-dives/prompt-files.md) 。
+:::
+
+## 使用 CustomContextProvider
+
+定制上下文提供者可以在 `config.ts` 文件中实现，放在你的 Continue 全局目录 (`~/.continue` for MacOS, `%USERPROFILE%/.continue` for Windows) 。你可以在你的 `config.ts` 实现 `CustomContextProvider` 接口：
 
 ```typescript
 interface CustomContextProvider {
@@ -68,7 +119,7 @@ export function modifyConfig(config: Config): Config {
 }
 ```
 
-不需要对 `config.json` 做修改。
+这会自动地添加到你的配置中。
 
 ## 定制有 submenu 或 query 的上下文提供者
 
@@ -178,27 +229,6 @@ Continue 将使用 [esbuild](https://esbuild.github.io/) 打包你的 `config.ts
   - `query`: (not currently used) A string representing the query
   - `query`: （当前没有使用） 代表 query 的字符串
 - `loadSubmenuItems` （可选）： 一个返回 `ContextSubmenuItem` 列表的函数，显示在子菜单中。它可以访问 `IDE` ，同样传递给 `getContextItems` 。
-
-## 使用其他语言编写上下文提供者
-
-如果你想要用除了 TypeScript 的其他语言编写上下文提供者，你可以使用 "http" 上下文提供者，来调用一个托管你自己代码的服务器。添加上下文提供者到 `config.json` ，像这样：
-
-```json title="config.json"
-{
-  "name": "http",
-  "params": {
-    "url": "https://myserver.com/context-provider",
-    "title": "http",
-    "description": "Custom HTTP Context Provider",
-    "displayTitle": "My Custom Context",
-    "options": {}
-  }
-}
-```
-
-然后，创建一个服务器，响应请求像来自 [HttpContextProvider.ts](../../../../../../../core/context/providers/HttpContextProvider.ts) 。查看 `hello` 端点在 [context_provider_server.py](../../../../../../../core/context/providers/context_provider_server.py) 中，作为使用 FastAPI 的示例。
-
-`"options"` 属性可以用来发送额外的参数到你的端点，将会包含在请求体中。
 
 ## VSCode 的扩展 API
 

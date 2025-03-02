@@ -3,6 +3,9 @@ title: xAI
 slug: ../xai
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 :::info
 
 你可以从 [xAI console](https://console.x.ai/) 获取一个 API key
@@ -11,20 +14,36 @@ slug: ../xai
 
 ## 聊天模型
 
-我们推荐配置 **grok-beta** 作为你的聊天模型。
+我们推荐配置 **grok-2-latest** 作为你的聊天模型。为了获取其他可用模型的信息，访问 [xAI 文档](https://docs.x.ai/docs/models) 。
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Grok Beta",
-      "provider": "xAI",
-      "model": "grok-beta",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="hub-config-example">
+	<TabItem value="hub" label="Config">
+  Add the [xAI Grok 2 model block](https://hub.continue.dev/xai/grok-2) on the hub.
+  </TabItem>
+	<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Grok 2
+      provider: xAI
+      model: grok-2-latest
+      apiKey: <YOUR_XAI_API_KEY>
+  ```
+  </TabItem>
+	<TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Grok 2",
+        "provider": "xAI",
+        "model": "grok-2-latest",
+        "apiKey": "<YOUR_XAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
@@ -43,11 +62,3 @@ xAI 当前没有提供任何嵌入模型。
 xAI 当前没有提供任何重排序模型。
 
 [点击这里](../../model-roles/reranking.mdx) 查看重排序模型提供者列表。
-
-## Legacy Completions
-
-为了强制使用 `chat/completions` 替代 `completions` 端点，你可以设置
-
-```json
-"useLegacyCompletionsEndpoint": false
-```

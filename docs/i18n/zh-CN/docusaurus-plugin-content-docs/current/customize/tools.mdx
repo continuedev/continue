@@ -4,7 +4,17 @@ description: 工具使用和定制
 keywords: [工具, 使用, 函数调用, claude, 自动]
 ---
 
-工具允许 Continue 在你的 IDE 中操作或更多（当你给了权限）。当前，它们仅支持 [Anthropic](./model-providers/top-level/anthropic.mdx) 。为了使用工具，点击像下面的输入工具栏图标。
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+工具允许 Continue 在你的 IDE 中操作或更多（当你给了权限）。当前，它们仅支持以下提供者：
+
+- [Anthropic](./model-providers/top-level/anthropic.mdx) - 查看推荐的模型 [在这里](https://docs.anthropic.com/en/docs/build-with-claude/tool-use#choosing-a-model) 。
+- [Ollama](./model-providers/top-level/ollama.mdx) - 查看推荐的模型 [在这里](https://ollama.com/search?c=tools) 。
+- [OpenAI](./model-providers/top-level/openai.mdx)
+- [Gemini](./model-providers/top-level/gemini.mdx)
+
+为了使用工具，点击输入工具栏中的图标，像下面这样。
 
 ![tools](/img/tool-use-example.png)
 
@@ -16,20 +26,39 @@ keywords: [工具, 使用, 函数调用, claude, 自动]
 
 ### 定制工具
 
-当前定制工具可以配置使用 [模型上下文协议](https://modelcontextprotocol.io/introduction) ，一个 Anthropic 的标准提议为了统一提示词，上下文和工具使用。查看他们的 [快速入门](https://modelcontextprotocol.io/quickstart) 了解如何设置本地服务器，然后配置你的 `config.json` 像这样：
+当前定制工具可以配置使用 [模型上下文协议](https://modelcontextprotocol.io/introduction) ，一个 Anthropic 的标准提议为了统一提示词，上下文和工具使用。
 
-```json title="~/.continue/config.json"
-{
-  "experimental": {
-    "modelContextProtocolServers": [
-      {
-        "transport": {
-          "type": "stdio",
-          "command": "uvx",
-          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+MCP 服务器可以使用 `mcpServers` 块添加到 hub 助手。你可以访问可用的 MCP 服务器块，[在这里](https://hub.continue.dev/explore/mcp) 。
+
+为了设置你自己的 MCP 服务器，查看 [MCP 快速入门](https://modelcontextprotocol.io/quickstart) ，然后 [创建一个 `mcpServers` 块](https://hub.continue.dev/new?type=block&block=mcpServers) 或者添加以下到你的 [配置文件](../customize/deep-dives/configuration.md) ：
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  mcpServers:
+    - name: My MCP Server
+      command: uvx
+      args:
+        - mcp-server-sqlite
+        - --db-path
+        - /Users/NAME/test.db
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "experimental": {
+      "modelContextProtocolServers": [
+        {
+          "transport": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+          }  
         }
-      }
-    ]
+      ]
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>

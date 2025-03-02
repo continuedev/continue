@@ -1,20 +1,20 @@
 ---
-title: Use an assistant
-sidebar_label: Use an assistant
-description: Guide to using assistants in your Continue workflow.
-keywords: [assistants, usage, use, guide]
+title: 使用一个助手
+sidebar_label: 使用一个助手
+description: 在你的 Continue 工作流中使用助手
+keywords: [助手, 使用, 指南]
 ---
 
-# Use an assistant
+# 使用一个助手
 
-To use an existing assistant, you can explore other assistants [here](https://hub.continue.dev/explore/assistants).
+为了使用一个存在的助手，你可以查看其他助手 [在这里](https://hub.continue.dev/explore/assistants) 。
 
-Once you've found the assistant you want to use
+一旦你发现你想要使用的助手
 
-1. Click “Add Assistant” on its page
-2. Add any required inputs (e.g. secrets like API keys)
-3. Select “Save changes” in assistant sidebar on the right hand side
+1. 在它的页面中点击 "Add Assistant"
+2. 添加任何需要的输入 (例如，加密，比如 API key)
+3. 在助手侧边栏右手边选择 "Save changes"
 
-After this, you can then go to your IDE extension and begin using the assistant by selecting it from the assistant dropdown.
+在这之后，你可以去你的 IDE 扩展，通过在助手下栏框选择它，开始使用助手。
 
 [Extension Assistant Selector](/img/hub/assistant-extension-select.png)

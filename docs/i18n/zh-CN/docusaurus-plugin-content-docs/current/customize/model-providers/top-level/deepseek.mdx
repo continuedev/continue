@@ -3,6 +3,9 @@ title: DeepSeek
 slug: ../deepseek
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 :::info
 你可以从 [DeepSeek 控制台](https://www.deepseek.com/) 获取 API key 。
 :::
@@ -11,32 +14,61 @@ slug: ../deepseek
 
 我们推荐配置 **DeepSeek Chat** 作为你的聊天模型。
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "DeepSeek Chat",
-      "provider": "deepseek",
-      "model": "deepseek-chat",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: DeepSeek Chat
+       provider: deepseek
+       model: deepseek-chat
+       apiKey: <YOUR_DEEPSEEK_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "DeepSeek Chat",
+         "provider": "deepseek",
+         "model": "deepseek-chat",
+         "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+       }
+     ]
+   }
+   ```
+   </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
 我们推荐配置 **DeepSeek Coder** 作为你的自动补全模型。
 
-```json title="config.json"
-{
-  "tabAutocompleteModel": {
-    "title": "DeepSeek Coder",
-    "provider": "deepseek",
-    "model": "deepseek-coder"
-  }
-}
-```
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: DeepSeek Coder
+        provider: deepseek
+        model: deepseek-coder
+        apiKey: <YOUR_DEEPSEEK_API_KEY>
+        roles:
+          - autocomplete
+    ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "tabAutocompleteModel": {
+        "title": "DeepSeek Coder",
+        "provider": "deepseek",
+        "model": "deepseek-coder",
+        "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+      }
+    }
+    ```
+   </TabItem>
+</Tabs>
 
 ## 嵌入模型
 

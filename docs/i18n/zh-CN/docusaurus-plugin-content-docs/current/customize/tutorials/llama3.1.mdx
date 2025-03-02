@@ -1,8 +1,11 @@
 ---
 title: Continue 使用 Llama 3.1
 description: Continue 如何使用 Llama 3.1
-keywords: [llama, meta, togetherai, novita, ollama, replicate]
+keywords: [llama, meta, togetherai, ollama, replicate]
 ---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 Continue 让使用最新的开源模型编码变得简单，包括整个 Llama 3.1 家族模型。 Llama 3.2 模型也被支持，但是布推荐聊天使用，因为它们特别为小的或多模态而设计。
 
@@ -18,24 +21,34 @@ Ollama 是最快的配置和运行本地语言模型的方法。我们推荐尝�
 2. 打开终端并运行 `ollama run llama3.1:8b`
 3. 修改 Continue 配置文件像这样：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Llama 3.1 8b",
-      "provider": "ollama",
-      "model": "llama3.1-8b"
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: Llama 3.1 8b
+       provider: ollama
+       model: llama3.1-8b
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+      "models": [
+        {
+          "title": "Llama 3.1 8b",
+          "provider": "ollama",
+          "model": "llama3.1-8b"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
+   </TabItem>
+</Tabs>
 
 ## Groq
 
 :::info
-
 检查你选择的模型是否仍然支持，通过查阅 [模型文档](https://console.groq.com/docs/models) 。如果模型被丢弃，你可能遇到一个 404 错误，当尝试使用它时。
-
 :::
 
 Groq 提供最快的可用的开源语言模型推理，包括整个 Llama 3.1 家族。
@@ -43,18 +56,31 @@ Groq 提供最快的可用的开源语言模型推理，包括整个 Llama 3.1 �
 1. 获取 API key [在这里](https://console.groq.com/keys)
 2. 更新你的 Continue 配置文件像这样：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Llama 3.3 70b Versatile",
-      "provider": "groq",
-      "model": "llama-3.3-70b-versatile",
-      "apiKey": "<API_KEY>"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: Llama 3.3 70b Versatile
+       provider: groq
+       model: llama-3.3-70b-versatile
+       apiKey: <YOUR_GROQ_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+	 "models": [
+	   {
+	     "title": "Llama 3.3 70b Versatile",
+	     "provider": "groq",
+	     "model": "llama-3.3-70b-versatile",
+	     "apiKey": "<YOUR_GROQ_API_KEY>"
+	   }
+	 ]
+   }
+   ```
+   </TabItem>
+</Tabs>
 
 ## Together AI
 
@@ -64,18 +90,31 @@ Together AI 提供开源模型的快速和可信任的推理。你可以以良�
 2. 复制出现在欢迎屏幕上你的 API key
 3. 更新你的 Continue 配置文件像这样：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Llama 3.1 405b",
-      "provider": "together",
-      "model": "llama3.1-405b",
-      "apiKey": "<API_KEY>"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: Llama 3.1 405b
+       provider: together
+       model: llama3.1-405b
+       apiKey: <YOUR_TOGETHER_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+      "models": [
+        {
+          "title": "Llama 3.1 405b",
+          "provider": "together",
+          "model": "llama3.1-405b",
+          "apiKey": "<YOUR_TOGETHER_API_KEY>"
+        }
+      ]
+   }
+   ```
+   </TabItem>
+</Tabs>
 
 ## Replicate
 
@@ -84,18 +123,31 @@ Replicate 让使用 API 托管和运行开源 AI 变得简单。
 1. 获取你的 Replicate API key [在这里](https://replicate.ai/)
 2. 修改你的 Continue 配置文件像这样：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Llama 3.1 405b",
-      "provider": "replicate",
-      "model": "llama3.1-405b",
-      "apiKey": "<API_KEY>"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: Llama 3.1 405b
+       provider: replicate
+       model: llama3.1-405b
+       apiKey: <YOUR_REPLICATE_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+      "models": [
+        {
+          "title": "Llama 3.1 405b",
+          "provider": "replicate",
+          "model": "llama3.1-405b",
+          "apiKey": "<YOUR_REPLICATE_API_KEY>"
+        }
+      ]
+   }
+   ```
+   </TabItem>
+</Tabs>
 
 ## SambaNova
 
@@ -105,18 +157,31 @@ SambaNova Cloud 提供 Llama3.1 70B/405B 服务的世界记录。
 2. 复制你的 API key
 3. 更新你的 Continue 配置文件像这样：
 
-```json title="config.json"
-{
-  "models": [
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: SambaNova Llama 3.1 405B
+        provider: sambanova
+        model: llama3.1-405b
+        apiKey: <YOUR_SAMBA_API_KEY>
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
     {
-      "title": "SambaNova Llama 3.1 405B",
-      "provider": "sambanova",
-      "model": "llama3.1-405b",
-      "apiKey": "YOUR_API_KEY"
+      "models": [
+        {
+          "title": "SambaNova Llama 3.1 405B",
+          "provider": "sambanova",
+          "model": "llama3.1-405b",
+          "apiKey": "<YOUR_SAMBA_API_KEY>"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
+    </TabItem>
+</Tabs>
 
 ## Cerebras Inference
 
@@ -126,15 +191,28 @@ Cerebras Inference 使用专用的芯片提供 Llama3.1 8B/70B 的快速的推�
 2. 创建和复制 API key 在 Continue 中使用。
 3. 更新你的 Continue 配置文件：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Cerebras Llama 3.1 70B",
-      "provider": "cerebras",
-      "model": "llama3.1-70b",
-      "apiKey": "YOUR_API_KEY"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cerebras Llama 3.1 70B
+      provider: cerebras
+      model: llama3.1-70b
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+     {
+        "title": "Cerebras Llama 3.1 70B",
+        "provider": "cerebras",
+        "model": "llama3.1-70b",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>

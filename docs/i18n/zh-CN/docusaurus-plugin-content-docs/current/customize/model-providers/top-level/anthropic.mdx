@@ -3,6 +3,9 @@ title: Anthropic
 slug: ../anthropic
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 :::info
 你可以从 [Anthropic 控制台](https://console.anthropic.com/account/keys) 获取 API key 。
 :::
@@ -11,18 +14,31 @@ slug: ../anthropic
 
 我们推荐配置 **Claude 3.5 Sonnet** 作为你的聊天模型。
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Claude 3.5 Sonnet",
-      "provider": "anthropic",
-      "model": "claude-3-5-sonnet-latest",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-latest",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
@@ -48,20 +64,37 @@ Anthropic 提供 [Claude 的提示词缓存](https://docs.anthropic.com/en/docs/
 
 为了打开系统消息和逐轮交谈的缓存，像下面这样更新你的模型配置：
 
-```json
-{
-  "models": [
-    {
-      // Enable prompt caching
-      "cacheBehavior": {
-        "cacheSystemMessage": true,
-        "cacheConversation": true
-      },
-      "title": "Anthropic",
-      "provider": "anthropic",
-      "model": "claude-3-5-sonnet-latest",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Anthropic
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - chat
+      cacheBehavior:
+        cacheSystemMessage: true
+        cacheConversation: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "cacheBehavior": {
+          "cacheSystemMessage": true,
+          "cacheConversation": true
+        },
+        "title": "Anthropic",
+        "provider": "anthropic",
+        "model": "claude-3-5-sonnet-latest",
+        "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>

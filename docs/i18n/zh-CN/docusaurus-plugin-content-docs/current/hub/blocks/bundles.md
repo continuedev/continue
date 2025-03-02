@@ -1,39 +1,39 @@
 ---
 title: Bundles
 sidebar_label: Bundles
-description: Introduction to bundles
-keywords: [blocks, bundles]
+description: bundles 介绍
+keywords: [块, bundles]
 ---
 
 # Bundles
 
-Bundles are collections of blocks that are commonly used together. You can use them to add multiple building blocks to your custom AI code assistants at once. They are only a concept on [hub.continue.dev](https://hub.continue.dev), so they are not represented in `config.yaml`.
+Bundles 是一般一起使用的块的集合。你可以使用它们一次添加多个构建的块到你的定制 AI 代码助手中。它们只是 [hub.continue.dev](https://hub.continue.dev) 上的一个概念，所以它们没有出现在 `config.yaml` 中。
 
-## Use a bundle
+## 使用一个 bundle
 
-Once you know which bundle you want to use, you’ll need to
+一旦你指导哪个想要使用哪个 bundle ，你需要
 
-1. Make sure the correct assistant is in the sidebar
-2. Click “Add all blocks". This adds the individual blocks to your assistant.
-3. Add any required inputs (e.g. secrets) for each block.
-4. Select “Save changes” in assistant sidebar on the right hand side
+1. 确保正确的助手在侧边栏中
+2. 点击 "Add all blocks" 。这添加单独的块到你的助手中。
+3. 添加每个块需要的任何输入 (例如， secrets) 。
+4. 在助手侧边栏右手边选择 "Save changes" 。
 
-After this, you can then go to your IDE extension using the "Open VS Code" or "Open Jetbrains" buttons and begin using the new blocks.
+在这之后，你可以去你的 IDE 扩展，使用 "Open VS Code" 或 "Open Jetbrains" 按钮，并开始使用新的块。
 
-## Create a bundle
+## 创建一个 bundle
 
-To create a bundle, click “New bundle” in the header.
+要创建一个 bundle ，点击页头上的 "New bundle" 。
 
 ![New bundle button](/img/hub/bundle-new-button.png)
 
-Choose a name, slug, description, and visibility for your bundle.
+为你的 bundle 选择一个名称， slug ，描述和可见性。
 
-Then, search blocks using the "Search blocks" input and add them to your bundle.
+然后，使用 "Search blocks" 输入搜索块，添加它们到你的 bundle 中。
 
 ![Create bundle page](/img/hub/bundle-create-page.png)
 
-Once you have added all the blocks you want in your bundle, click "Create Bundle" to save it and make it available for use.
+一旦你添加你想要的所有的块到你的 bundle 中，点击 "Create Bundle" 保存它，使它可用。
 
-## Remix a bundle
+## 合成一个 bundle
 
-It is not currently possible to remix a bundle.
+当前不能合成一个 bundle 。

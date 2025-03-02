@@ -2,6 +2,10 @@
 title: Function Network
 slug: ../function-network
 ---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # Function Network
 
 > 私有的，可负担的，用户自己的 AI
@@ -16,18 +20,33 @@ slug: ../function-network
 
 Function Network 支持多个聊天模型。我们推荐使用 LLama 3.1 70b 或 Qwen2.5-Coder-32B-Instruct 。
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Llama 3.1 70b",
-      "provider": "function-network",
-      "model": "meta/llama-3.1-70b-instruct",
-      "apiKey": "YOUR_API_KEY"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Llama 3.1 70b
+      provider: function-network
+      model: meta/llama-3.1-70b-instruct
+      apiKey: <YOUR_FUNCTION_NETWORK_API_KEY>
+      roles:
+        - chat
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Llama 3.1 70b",
+        "provider": "function-network",
+        "model": "meta/llama-3.1-70b-instruct",
+        "apiKey": "<YOUR_FUNCTION_NETWORK_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 [点击这里](https://docs.function.network/models-supported/chat-and-code-completion) 查看聊天模型提供者列表。
 
@@ -35,30 +54,60 @@ Function Network 支持多个聊天模型。我们推荐使用 LLama 3.1 70b 或
 
 Function Network 支持多个自动补全模型。我们推荐使用 Llama 3.1 8b 或 Qwen2.5-Coder-1.5B 。
 
-```json title="config.json"
-{
-  "tabAutocompleteModel": {
-    "title": "Deepseek Coder 6.7b",
-    "provider": "function-network",
-    "model": "thebloke/deepseek-coder-6.7b-base-awq",
-    "apiKey": "YOUR_API_KEY"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Deepseek Coder 6.7b
+      provider: function-network
+      model: thebloke/deepseek-coder-6.7b-base-awq
+      apiKey: <YOUR_FUNCTION_NETWORK_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Deepseek Coder 6.7b",
+      "provider": "function-network",
+      "model": "thebloke/deepseek-coder-6.7b-base-awq",
+      "apiKey": "<YOUR_FUNCTION_NETWORK_API_KEY>"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ## 嵌入模型
 
 Function Network 支持多个嵌入模型。我们推荐使用 baai/bge-base-en-v1.5 。
 
-```json title="config.json"
-{
-  "embeddingsProvider": {
-    "provider": "function-network",
-    "model": "baai/bge-base-en-v1.5",
-    "apiKey": "YOUR_API_KEY"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: BGE Base En
+      provider: function-network
+      model: baai/bge-base-en-v1.5
+      apiKey: <YOUR_FUNCTION_NETWORK_API_KEY>
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "function-network",
+      "model": "baai/bge-base-en-v1.5",
+      "apiKey": "<YOUR_FUNCTION_NETWORK_API_KEY>"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 [点击这里](https://docs.function.network/models-supported/embeddings) 查看嵌入模型提供者列表。
 

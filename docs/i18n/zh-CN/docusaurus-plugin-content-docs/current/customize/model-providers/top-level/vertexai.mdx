@@ -3,6 +3,9 @@ title: Vertex AI
 slug: ../vertexai
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 :::info
 
 你需要启用 [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) 并设置 [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc) 。
@@ -13,50 +16,100 @@ slug: ../vertexai
 
 我们推荐配置 **Claude 3.5 Sonnet** 作为你的聊天模型。
 
-```json title="config.json"
-{
-  "models": [
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Claude 3.5 Sonnet
+        provider: vertexai
+        model: claude-3-5-sonnet-20240620
+        env:
+          projectId: <PROJECT_ID>
+          region: us-east5
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
     {
-      "title": "Claude 3.5 Sonnet",
-      "provider": "vertexai",
-      "model": "claude-3-5-sonnet-20240620",
-      "projectId": "[PROJECT_ID]",
-      "region": "us-east5"
+      "models": [
+        {
+          "title": "Claude 3.5 Sonnet",
+          "provider": "vertexai",
+          "model": "claude-3-5-sonnet-20240620",
+          "projectId": "[PROJECT_ID]",
+          "region": "us-east5"
+        }
+      ]
     }
-  ]
-}
-```
+    ```
+    </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
 我们推荐配置 **Codestral** 或 **code-gecko** 作为你的自动补全模型。
 
-```json title="config.json"
-{
-  "tabAutocompleteModel": {
-    "title": "Codestral (Vertex AI)",
-    "provider": "vertexai",
-    "model": "codestral",
-    "projectId": "[PROJECT_ID]",
-    "region": "us-central1"
-  }
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Codestral (Vertex AI)
+        provider: vertexai
+        model: codestral
+        roles:
+          - autocomplete
+        env:
+          projectId: <PROJECT_ID>
+          region: us-central1
+          
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "tabAutocompleteModel": {
+          "title": "Codestral (Vertex AI)",
+          "provider": "vertexai",
+          "model": "codestral",
+          "projectId": "[PROJECT_ID]",
+          "region": "us-central1"
+      }
+    }
+    ```
+    </TabItem>
+</Tabs>
 
 ## 嵌入模型
 
 我们推荐配置 **text-embedding-004** 作为你的嵌入模型。
 
-```json title="config.json"
-{
-  "embeddingsProvider": {
-    "provider": "vertexai",
-    "model": "text-embedding-004",
-    "projectId": "[PROJECT_ID]",
-    "region": "us-central1"
-  }
-}
-```
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Text Embedding-004
+        provider: vertexai
+        model: text-embedding-004
+        env:
+          projectId: <PROJECT_ID>
+          region: us-central1
+        roles:
+          - embed
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "vertexai",
+        "model": "text-embedding-004",
+        "projectId": "[PROJECT_ID]",
+        "region": "us-central1"
+      }
+    }
+    ```
+    </TabItem>
+</Tabs>
 
 ## 重排序模型
 

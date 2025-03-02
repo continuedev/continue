@@ -14,43 +14,60 @@ Actions 是常见用例的快捷方式。例如，你可能想要审查代码，
 
 ### 斜杠命令
 
-最常见的调用 action 的方法是使用斜杠命令。通过输入 '/' 可以激活快捷方式，在聊天会话中（按下 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) 或 <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)），并在下拉框中选择。例如，内置的 '/edit' 斜杠命令，让你可以直接在你的编辑器中流式地编辑。
+最常见的调用 action 的方法是使用斜杠命令。通过输入 '/' 可以激活快捷方式，在聊天会话中（按下 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) 或 <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)），并在下拉框中选择。
 
 ![slash-commands](/img/slash-commands.png)
 
-一些最常用的斜杠命令默认是可用的，比如 "/edit", "/comment" 和 "/share" ，但是 Continue 有大量内置的其他选择的库。要启用它们，[在这里](../customize/slash-commands.mdx) 了解更多。
 
-### prompt 文件
+In YAML assistants, slash commands are generated from [`prompts` blocks](../hub/blocks/block-types.md#prompts).
 
-通过定义一个 ".prompt 文件" ，也可以编写你自己的斜杠命令。 prompt 文件可以是个简单的文本文件，但是也包含模板，所以你可以引用文件， URL ，高亮代码以及更多。
+Learn more about slash commands [here](../customize/slash-commands.mdx).
 
-完整的 .prompt 文件可以参考 [这里](../customize/deep-dives/prompt-files.md) 。
-
-:::tip[Prompt 库]
-为了帮助你开始，[我们精心编写了一个小的 `.prompt` 文件库](https://github.com/continuedev/prompt-file-examples) 。我们鼓励社区贡献到这个仓库，所以请考虑为你的 prompt 创建一个拉取请求！
+:::info
+Important: For assistants, slash commands only come from `prompts` blocks. When using older `config.json` configuration, other slash commands like `/share` and `/cmd` are included by default.
 :::
 
-以下是一个快速示例，设置一个使用 Jest 编写单元测试的 prompt 文件。
+### Prompt files
 
-1. 在你的工作区的最高层级，创建一个名为 `.prompts/` 的目录。
-2. 在这个目录中，添加一个名为 `test.prompt` 的文件。这个文件的名称将是你用来生成提示词的斜杠命令的名称。
-3. 写入以下内容到 `test.prompt` 并保存。
+It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
 
-```
-{{{ input }}}
+Learn more about prompt files [here](../customize/deep-dives/prompt-files.md)
 
-Write unit tests for the above selected code, following each of these instructions:
-- Use `jest`
-- Properly set up and tear down
-- Include important edge cases
-- The tests should be complete and sophisticated
-- Give the tests just as chat output, don't edit any file
-- Don't explain how to set up `jest`
-```
+### Other triggers for Actions (VS Code)
 
-现在要使用这个提示词，你可以高亮代码，并使用 <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> 来选择它到 Continue 侧边栏中。
+:::info
+Currently all of these are only available in VS Code
+:::
 
-然后，输入 "/" 来查看斜杠命令列表，选择名为 "test" 的那个。按下回车， LLM 会响应你的 prompt 文件中给出的指令。
+To make common use cases even more accessible, we provide a handful of other ways to invoke actions.
+
+#### Quick actions
+
+Quick Actions are displayed as buttons above top-level classes and functions in your source code, letting you invoke actions with one click. They can also be customized with .prompt files to perform custom actions.
+
+![quick-actions](/img/quick-actions.png)
+
+By default, quick actions are disabled, but can be enabled with the “Continue: Enable Quick Actions” in VS Code settings.
+
+#### Right click actions
+
+Right click actions let you highlight a desired region of code, right click, and then select an action from the dropdown menu.
+
+![context-menu](/img/context-menu.png)
+
+#### Debug action
+
+The debug action is a special built-in keyboard shortcut in the VS Code extension. Use <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>R</kbd> to instantly copy the contents of the current terminal into the chat sidebar and get debugging advice.
+
+#### Quick fixes
+
+Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> again and Continue will attempt to help solve the problem.
+
+![ask-continue](/img/ask-continue.png)
+
+
+
+
 
 ### action 的其他触发器 (VS Code)
 

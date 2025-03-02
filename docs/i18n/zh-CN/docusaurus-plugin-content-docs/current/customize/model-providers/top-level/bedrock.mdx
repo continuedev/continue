@@ -3,42 +3,80 @@ title: Amazon Bedrock
 slug: ../bedrock
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 Amazon Bedrock 是一个在 AWS 上的全托管服务，通过一个单独的 API ，提供对来自不同的 AI 公司的基础模型的访问。
 
 ## 聊天模型
 
 我们推荐配置 **Claude 3.5 Sonnet** 作为你的聊天模型。
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Claude 3.5 Sonnet",
-      "provider": "bedrock",
-      "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
-      "region": "us-east-1",
-      "profile": "bedrock"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: bedrock
+      model: anthropic.claude-3-5-sonnet-20240620-v1:0
+      env:
+        region: us-east-1
+        profile: bedrock
+      roles:
+        - chat
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet", 
+        "provider": "bedrock",
+        "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        "region": "us-east-1",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 > 如果你遇到下面的问题，当连接来自 AWS 新的 Claude 3.5 Sonnet 2 模型时 - `400 Invocation of model ID anthropic.claude-3-5-sonnet-20241022-v2:0 with on-demand throughput isn’t supported. Retry your request with the ID or ARN of an inference profile that contains this model.`
 
-> 你可以修复这个，使用下面的 config.json
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Claude 3.5 Sonnet",
-      "provider": "bedrock",
-      "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
-      "region": "us-east-1",
-      "profile": "bedrock"
-    }
-  ]
-}
-```
+> 你可以修复这个，使用下面的配置：
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: bedrock
+      model: us.anthropic.claude-3-5-sonnet-20241022-v2:0
+      env:
+        region: us-east-1
+        profile: bedrock
+      roles:
+        - chat
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet",
+        "provider": "bedrock",
+        "model": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "region": "us-east-1",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
@@ -50,32 +88,64 @@ Bedrock 当前不支持任何自动补全模型。
 
 我们推荐配置 [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazon.com/bedrock/latest/devguide/models.html#amazon.titan-embed-text-v2-0) 作为你的嵌入模型。
 
-```json title="~/.continue/config.json"
-{
-  "embeddingsProvider": {
-    "title": "Embeddings Model",
-    "provider": "bedrock",
-    "model": "amazon.titan-embed-text-v2:0",
-    "region": "us-west-2"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Embeddings Model
+      provider: bedrock
+      model: amazon.titan-embed-text-v2:0
+      env:
+        region: us-west-2
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "title": "Embeddings Model",
+      "provider": "bedrock",
+      "model": "amazon.titan-embed-text-v2:0",
+      "region": "us-west-2"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ## 重排序模型
 
 我们推荐配置 `cohere.rerank-v3-5:0` 作为你的重排序模型，你也可以使用 `amazon.rerank-v1:0` 。
 
-```json title="~/.continue/config.json"
-{
-  "reranker": {
-    "name": "bedrock",
-    "params": {
-      "model": "cohere.rerank-v3-5:0",
-      "region": "us-west-2"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Bedrock Reranker
+      provider: bedrock
+      model: cohere.rerank-v3-5:0
+      env:
+        region: us-west-2
+      roles:
+        - rerank
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "bedrock",
+      "params": {
+        "model": "cohere.rerank-v3-5:0",
+        "region": "us-west-2"
+      }
     }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ## 认证
 
@@ -90,22 +160,37 @@ aws_session_token = pqrstuvwxyz # Optional: means short term creds.
 
 ## 定制导入模型
 
-为了设置 Bedrock 使用定制导入模型，将下面的配置添加到你的 `config.json` 文件中：
+为了设置 Bedrock 使用定制导入模型，将下面的配置添加到你的配置文件中：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "AWS Bedrock deepseek-coder-6.7b-instruct",
-      "provider": "bedrockimport",
-      "model": "deepseek-coder-6.7b-instruct",
-      "modelArn": "arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX",
-      "region": "us-west-2",
-      "profile": "bedrock"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: AWS Bedrock deepseek-coder-6.7b-instruct
+      provider: bedrockimport
+      model: deepseek-coder-6.7b-instruct
+      modelArn: arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX
+      region: us-west-2
+      profile: bedrock
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "AWS Bedrock deepseek-coder-6.7b-instruct",
+        "provider": "bedrockimport",
+        "model": "deepseek-coder-6.7b-instruct",
+        "modelArn": "arn:aws:bedrock:us-west-2:XXXXX:imported-model/XXXXXX", 
+        "region": "us-west-2",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 认证可以通过 `~/.aws/credentials` 配置属性中临时的或长期的证书，(例如 "bedrock") 。
 

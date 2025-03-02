@@ -1,31 +1,31 @@
 ---
-title: Intro to Roles
-description: Apply model role
-keywords: [apply, model, role]
+title: 角色介绍
+description: 应用模型角色
+keywords: [应用, 模型, 角色]
 sidebar_position: 0
-sidebar_label: Introduction
+sidebar_label: 介绍
 ---
 
 import TabItem from "@theme/TabItem";
 import Tabs from "@theme/Tabs";
 
-Models in Continue can be configured to be used for various roles in the extension.
+在 Continue 中的模型可以配置用来扩展中不同的角色。
 
-- [`chat`](./chat.mdx): Used for chat conversations in the extension sidebar
-- [`autocomplete`](./autocomplete.md): Used for autocomplete code suggestions in the editor
-- [`edit`](./edit.mdx): Used to generate code based on edit prompts
-- [`apply`](./apply.mdx): Used to decide how to apply edits to a file
-- [`embed`](./embeddings.mdx): Used to generate embeddings used for vector search (@Codebase and @Docs context providers)
-- [`rerank`](./reranking.mdx): Used to rerank results from vector search
+- [`chat`](./chat.mdx): 用来在扩展侧边栏中聊天交谈
+- [`autocomplete`](./autocomplete.md): 用来在编辑器中自动补全代码建议
+- [`edit`](./edit.mdx): 用来基于编辑提示词生成代码
+- [`apply`](./apply.mdx): 用来决定如何应用编辑到文件中
+- [`embed`](./embeddings.mdx): 用来生成向量搜索的嵌入 (@Codebase 和 @Docs 上下文提供者)
+- [`rerank`](./reranking.mdx): 用来对向量搜索的结果重排序
 
-These roles can be specified for a `config.yaml` model block using `roles`. See the [YAML Specification](../../yaml-reference.md#models) for more details.
+这些角色可以使用 `roles` 指定为`config.yaml` 中的模型块。查看 [YAML 说明](../../yaml-reference.md#models) 获取更多详情。
 
-## Selecting model roles
+## 选择模型角色
 
-You can control which of the models in your assistant for a given role will be currently used for that role. Visit the [Settings page](../settings.md) and go to the **Active Models** section.
+你可以控制在你的助手中给定角色的哪个模型当前用来那个角色。访问 [设置页面](../settings.md) 并去到 **Active Models** 章节。
 
 ![Settings Active Models Section](/img/settings-model-roles.png)
 
 :::info
-Note that `roles` do not exist within `config.json` - they are infered by the top level keys like `embeddingsProvider`
+注意， `roles` 不存在在 `config.json` 中 - 它们由最高级的键引用，比如 `embeddingsProvider`
 :::

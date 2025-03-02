@@ -2,6 +2,9 @@
 title: 如何自托管模型
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 你可以在你的 [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), [Lambda](https://lambdalabs.com/) 或 [其他云](https://github.com/continuedev/deploy-os-code-llm#others-2) 上部署模型，使用：
 
 - [HuggingFace TGI](https://github.com/continuedev/deploy-os-code-llm#tgi)
@@ -20,57 +23,102 @@ title: 如何自托管模型
 
 对于任何提供者，基本认证可以通过使用 `apiKey` 字段完成：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "llama2-7b",
-      "apiKey": "xxx"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Ollama
+      provider: ollama
+      model: llama2-7b
+      apiKey: <YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Ollama",
+        "provider": "ollama",
+        "model": "llama2-7b",
+        "apiKey": "<YOUR_CUSTOM_OLLAMA_SERVER_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 这会转换为 header `"Authorization": "Bearer xxx"` 。
 
 如果你需要发送定制的 header 来认证，你可能使用 `requestOptions.headers` 属性，比如这里例子中的 Ollama ：
 
-```json title="config.json"
-{
-  "models": [
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Ollama
+        provider: ollama
+        model: llama2-7b
+        requestOptions:
+          headers:
+            X-Auth-Token: xxx
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
     {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "llama2-7b",
-      "requestOptions": {
-        "headers": {
-          "X-Auth-Token": "xxx"
+      "models": [
+        {
+          "title": "Ollama",
+          "provider": "ollama",
+          "model": "llama2-7b",
+          "requestOptions": {
+            "headers": {
+              "X-Auth-Token": "xxx"
+            }
+          }
         }
-      }
+      ]
     }
-  ]
-}
-```
+    ```
+    </TabItem>
+</Tabs>
 
 类似地，如果你的模型需要 Certificate 来认证，你可能使用 `requestOptions.clientCertificate` 属性，比如下面的例子：
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "llama2-7b",
-      "requestOptions": {
-        "clientCertificate": {
-          "cert": "C:\tempollama.pem",
-          "key": "C:\tempollama.key",
-          "passphrase": "c0nt!nu3"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Ollama
+      provider: ollama
+      model: llama2-7b
+      requestOptions:
+        clientCertificate:
+          cert: C:\tempollama.pem
+          key: C:\tempollama.key
+          passphrase: c0nt!nu3
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Ollama",
+        "provider": "ollama",
+        "model": "llama2-7b",
+        "requestOptions": {
+          "clientCertificate": {
+            "cert": "C:\\tempollama.pem",
+            "key": "C:\\tempollama.key",
+            "passphrase": "c0nt!nu3"
+          }
         }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>

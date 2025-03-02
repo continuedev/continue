@@ -2,6 +2,9 @@
 title: NVIDIA
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 :::info
 
 [查看文档](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog) 了解如何获取一个 API key 。
@@ -12,18 +15,31 @@ title: NVIDIA
 
 我们推荐配置 **Nemotron-4-340B-Instruct** 作为你的聊天模型。
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Nemotron-4-340B-Instruct",
-      "provider": "nvidia",
-      "model": "nvidia-nemotron-4-340b-instruct",
-      "apiKey": "[API_KEY]"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Nemotron-4-340B-Instruct
+      provider: nvidia
+      model: nvidia-nemotron-4-340b-instruct
+      apiKey: <YOUR_NVIDIA_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Nemotron-4-340B-Instruct",
+        "provider": "nvidia",
+        "model": "nvidia-nemotron-4-340b-instruct",
+        "apiKey": "<YOUR_NVIDIA_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
@@ -35,15 +51,30 @@ NVIDIA 当前不提供任何自动补全模型。
 
 我们推荐配置 **NVIDIA Retrieval QA Mistral 7B** 作为你的嵌入模型。
 
-```json title="config.json"
-{
-  "embeddingsProvider": {
-    "provider": "nvidia",
-    "model": "nvidia/nv-embedqa-mistral-7b-v2",
-    "apiKey": "[API_KEY]"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Nvidia Embedder
+      provider: nvidia
+      model: nvidia/nv-embedqa-mistral-7b-v2
+      apiKey: <YOUR_NVIDIA_API_KEY>
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "nvidia",
+      "model": "nvidia/nv-embedqa-mistral-7b-v2",
+      "apiKey": "<YOUR_NVIDIA_API_KEY>"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ## 重排序模型
 

@@ -3,6 +3,9 @@ description: 与你的代码库交互
 keywords: [交互, 嵌入, 重排器, 代码库, 试验性的]
 ---
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # @Codebase
 
 Continue 索引你的代码库，以便它可以之后自动地拉取你的工作区最相关的上下文。这是通过基于嵌入的检索和关键字搜索结合完成的。默认情况下，所有嵌入都是通过使用 `transformers.js` 本地计算的，保存在 `~/.continue/index` 。
@@ -38,22 +41,36 @@ Continue 索引你的代码库，以便它可以之后自动地拉取你的工�
 
 ## 配置
 
-这里有一些选项，让你可以配置 codebase 上下文提供者的行为。这些可以再 `config.json` 设置，对于 codebase, docs 和 folder 上下文提供者是一样的：
+这里有一些选项，让你可以配置 `@codebase` 上下文提供者的行为，它和 `@folder` 上下文提供者是一样的：
 
-```json title="config.json"
-{
-  "contextProviders": [
-    {
-      "name": "codebase",
-      "params": {
-        "nRetrieve": 25,
-        "nFinal": 5,
-        "useReranking": true
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml" 
+  context:
+    - provider: codebase
+      params:
+        nRetrieve: 25,
+        nFinal: 5,
+        useReranking: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "codebase",
+        "params": {
+          "nRetrieve": 25,
+          "nFinal": 5,
+          "useReranking": true
+        }
       }
-    }
-  ]
-}
-```
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ### `nRetrieve`
 

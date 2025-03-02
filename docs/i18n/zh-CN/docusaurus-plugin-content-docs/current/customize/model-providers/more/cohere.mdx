@@ -1,3 +1,6 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 # Cohere
 
 在使用 Cohere 之前，访问 [Cohere dashboard](https://dashboard.cohere.com/api-keys) 创建 API key 。
@@ -6,18 +9,31 @@
 
 我们推荐配置 **Command-R Plus** 作为你的聊天模型。
 
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Cohere",
-      "provider": "cohere",
-      "model": "command-r-plus",
-      "apiKey": "YOUR_API_KEY"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere
+      provider: cohere
+      model: command-r-plus
+      apiKey: <YOUR_COHERE_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Cohere",
+        "provider": "cohere",
+        "model": "command-r-plus",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 ## 自动补全模型
 
@@ -29,28 +45,58 @@ Cohere 当前没有提供任何自动补全模型。
 
 我们推荐配置 **embed-english-v3.0** 作为你的嵌入模型。
 
-```json title="config.json"
-{
-  "embeddingsProvider": {
-    "provider": "cohere",
-    "model": "embed-english-v3.0",
-    "apiKey": "<COHERE_API_KEY>"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere Embed
+      provider: cohere
+      model: embed-english-v3.0
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "cohere",
+      "model": "embed-english-v3.0",
+      "apiKey": "<YOUR_COHERE_API_KEY>"
+    }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>
 
 ## 重排序模型
 
 我们推荐配置 **rerank-english-v3.0** 作为你的重排序模型。
 
-```json title="config.json"
-{
-  "reranker": {
-    "name": "cohere",
-    "params": {
-      "model": "rerank-english-v3.0",
-      "apiKey": "<COHERE_API_KEY>"
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere Reranker
+      provider: cohere
+      model: rerank-english-v3.0
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - rerank
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "cohere",
+      "params": {
+        "model": "rerank-english-v3.0",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
     }
   }
-}
-```
+  ```
+  </TabItem>
+</Tabs>

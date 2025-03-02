@@ -1,34 +1,49 @@
 # Ask Sage
 
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
 :::info
-
 为了获取 Ask Sage API key ，登录 Ask Sage 平台（如果你没有帐号，可以在 [这里](https://chat.asksage.ai/) 创建一个）跟随 Ask Sage 文档： [Ask Sage API Key](https://docs.asksage.ai/docs/api-documentation/api-documentation.html) 中的指令
-
 :::
 
 ## 配置
 
-为了使用 Ask Sage 模型，以下配置是必需的，在 `config.json` 文件中：
+为了使用 Ask Sage 模型，你可以使用下面的
 
-```json
-{
-  "models": [
-    {
-      "apiKey": "YOUR_API_KEY", 
-      "apiBase": "https://api.asksage.ai/server/", // apiBase will be the same for all models, but will vary based on tenant. 
-      "model": "gpt4-gov",
-      "title": "GPT-4 gov",
-      "provider": "askSage"
-    }
-  ]
-}
-```
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4 gov
+      provider: askSage
+      model: gpt4-gov
+      apiBase: https://api.asksage.ai/server/
+      apiKey: <YOUR_ASK_SAGE_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "GPT-4 gov",
+        "provider": "askSage",
+        "model": "gpt4-gov",
+        "apiBase": "https://api.asksage.ai/server/",
+        "apiKey": "<YOUR_ASK_SAGE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
 
 `apiBase` 在 Ask Sage 平台列出，当你生成 `API key` 时。你会看到上下文，如下所示：
 
-> Server API for query/training etc.:
-> - Documentation: https://app.swaggerhub.com/apis-docs/NICOLASCHAILLAN_1/server_ask-sage_api/1.0
-> - URL for this API is: https://api.asksage.ai/server/
+> 用于 查询/训练 等的服务器 API ：
+> - 文档： https://app.swaggerhub.com/apis-docs/NICOLASCHAILLAN_1/server_ask-sage_api/1.0
+> - 这个 API 的 URL 是： https://api.asksage.ai/server/
 
 ## 使用
 
