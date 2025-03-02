@@ -920,8 +920,9 @@ export interface BaseCompletionOptions {
 }
 
 export interface ModelCapability {
-  uploadImage?: boolean;
   tools?: boolean;
+  uploadImage?: boolean;
+  outputImage?: boolean;
 }
 
 export interface ModelDescription {
