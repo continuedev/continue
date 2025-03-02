@@ -114,24 +114,32 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
   describe("bedrock", () => {
     const supportsFn = PROVIDER_TOOL_SUPPORT["bedrock"];
 
-    it("should return true for Claude 3.5 models", () => {
+    it("should return true for Claude 3.5 Sonnet models", () => {
       expect(supportsFn("anthropic.claude-3-5-sonnet-20240620-v1:0")).toBe(true);
-      expect(supportsFn("amazon.claude-3.5-sonnet-20240620-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3.5-sonnet-20240620-v1:0")).toBe(true);
     });
 
-    it("should return true for Claude 3.7 models", () => {
-      expect(supportsFn("anthropic.claude-3-7-haiku-20240620-v1:0")).toBe(true);
-      expect(supportsFn("amazon.claude-3.7-sonnet-20240620-v1:0")).toBe(true);
+    it("should return true for Claude 3.7 Sonnet models", () => {
+      expect(supportsFn("anthropic.claude-3-7-sonnet-20240620-v1:0")).toBe(true);
+      expect(supportsFn("anthropic.claude-3.7-sonnet-20240620-v1:0")).toBe(true);
     });
 
-    it("should return undefined for unsupported models", () => {
+    it("should return undefined for Claude Haiku and Opus models", () => {
+      expect(supportsFn("anthropic.claude-3-5-haiku-20240307-v1:0")).toBeUndefined();
+      expect(supportsFn("anthropic.claude-3.5-haiku-20240620-v1:0")).toBeUndefined();
+      expect(supportsFn("anthropic.claude-3-7-haiku-20240620-v1:0")).toBeUndefined();
+      expect(supportsFn("anthropic.claude-3-5-opus-20240620-v1:0")).toBeUndefined();
+      expect(supportsFn("anthropic.claude-3.7-opus-20240620-v1:0")).toBeUndefined();
+    });
+
+    it("should return undefined for other unsupported models", () => {
       expect(supportsFn("anthropic.claude-instant-v1")).toBeUndefined();
-      expect(supportsFn("amazon.titan-text-express-v1")).toBeUndefined();
+      expect(supportsFn("anthropic.titan-text-express-v1")).toBeUndefined();
     });
 
     it("should handle case insensitivity", () => {
-      expect(supportsFn("ANTHROPIC.CLAUDE-3-5-sonnet-20240620-v1:0")).toBe(true);
-      expect(supportsFn("AMAZON.CLAUDE-3.7-haiku-20240620-v1:0")).toBe(true);
+      expect(supportsFn("ANTHROPIC.CLAUDE-3-5-SONNET-20240620-v1:0")).toBe(true);
+      expect(supportsFn("ANTHROPIC.CLAUDE-3.7-SONNET-20240620-v1:0")).toBe(true);
     });
   });
 
