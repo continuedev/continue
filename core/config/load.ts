@@ -543,7 +543,7 @@ async function intermediateToFinalConfig(
       config.experimental.modelContextProtocolServers?.map(
         async (server, index) => {
           const mcpId = index.toString();
-          const mcpConnection = mcpManager.createConnection(mcpId, server);
+          const mcpConnection = mcpManager.createConnection(mcpId, server, ide);
           if (!mcpConnection) {
             return;
           }
