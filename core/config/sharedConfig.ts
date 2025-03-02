@@ -20,6 +20,7 @@ export const sharedConfigSchema = z
     promptPath: z.string(),
 
     // `ui` in `ContinueConfig`
+    showSessionTabs: z.boolean(),
     codeBlockToolbarPosition: z.enum(["top", "bottom"]),
     fontSize: z.number(),
     codeWrap: z.boolean(),
@@ -132,6 +133,10 @@ export function modifyAnyConfigWithSharedConfig<
   }
   if (sharedConfig.disableSessionTitles !== undefined) {
     configCopy.disableSessionTitles = sharedConfig.disableSessionTitles;
+  }
+
+  if (sharedConfig.showSessionTabs !== undefined) {
+    configCopy.ui.showSessionTabs = sharedConfig.showSessionTabs;
   }
 
   configCopy.experimental = {
