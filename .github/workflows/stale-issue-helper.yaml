@@ -1,4 +1,4 @@
-name: "Label stale issues and PRs"
+name: "Label and close stale issues"
 on:
   push:
     branches:
