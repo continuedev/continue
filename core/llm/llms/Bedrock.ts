@@ -91,11 +91,15 @@ class Bedrock extends BaseLLM {
     );
 
     const input = this._generateConverseInput(messages, options);
+
+    console.log("input", input)
+
     const command = new ConverseStreamCommand(input);
     const response = await client.send(command, { abortSignal: signal });
 
     if (response.stream) {
       for await (const chunk of response.stream) {
+        console.log("chunk", chunk);
         if (chunk.contentBlockDelta?.delta?.text) {
           yield {
             role: "assistant",
@@ -112,7 +116,10 @@ class Bedrock extends BaseLLM {
   ): any {
     const convertedMessages = this._convertMessages(messages);
 
-    return {
+    return options.reasoning ?
+    
+    
+    : {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
@@ -120,6 +127,10 @@ class Bedrock extends BaseLLM {
         maxTokens: options.maxTokens,
         temperature: options.temperature,
         topP: options.topP,
+        thinking: options.reasoning ? {
+          "type": "enabled",
+          "budget_tokens": options.reasoningBudgetTokens || 1024
+        } : undefined,
         // TODO: The current approach selects the first 4 items from the list to comply with Bedrock's requirement
         // of having at most 4 stop sequences, as per the AWS documentation:
         // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_InferenceConfiguration.html
