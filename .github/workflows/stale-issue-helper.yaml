@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/stale@v9
         with:
-          close-issue-message: "This issue was closed because it hasn't been updated for 120 days. If it's still important, please reopen + comment and we will glady take another look."
+          close-issue-message: "This issue was closed because it hasn't been updated for 120 days. If it's still important, please reopen + comment and we'll gladly take another look!"
           stale-issue-message: "This issue hasn't been updated in 90 days and will be closed after 120 days without activity. If it's still important, please leave a comment and share any new information that would help us address the issue."
           days-before-stale: -1
           days-before-close: 90
