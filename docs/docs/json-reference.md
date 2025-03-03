@@ -374,7 +374,7 @@ Example:
 
 ### `allowAnonymousTelemetry`
 
-When `true`, anonymous usage data is collected using Posthog, to improve features. Default is `true`.
+When `true`, anonymous usage data is collected using Posthog, to improve features. Default is `false`.
 
 ### `userToken`
 
