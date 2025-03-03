@@ -9,38 +9,15 @@ on:
 jobs:
   stale:
     runs-on: ubuntu-latest
-    env:
-      TEAM_MEMBERS: "sestinj,Patrick-Erichsen,tomasz-stefaniak,RomneyDa"
-    strategy:
-      matrix:
-        assignee: [sestinj, Patrick-Erichsen, tomasz-stefaniak, RomneyDa]
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: Compute excluded assignees
-        id: excluded-assignees
-        run: |
-          result=$(node ./scripts/getExcludedAssignees.js ${{ env.TEAM_MEMBERS }} ${{ matrix.assignee }})
-
-          echo "Result: $result"
-          echo "excluded_assignees=$result" >> $GITHUB_OUTPUT
-
       - uses: actions/stale@v9
         with:
-          stale-issue-message: "This issue hasn't been updated in a while. @${{ matrix.assignee }} can you take a look?"
-          stale-pr-message: "This PR hasn't been updated in a while. @${{ matrix.assignee }} can you take a look?"
-          days-before-stale: 180
-          days-before-close: -1
-          days-before-pr-close: -1
+          close-issue-message: "This issue was closed because it hasn't been updated for 120 days. If it's still important, please reopen + comment and we will glady take another look."
+          stale-issue-message: "It looks like this issue hasn't been updated in 90 days. If there's still no activity after 120 days, it will be closed."
+          days-before-stale: 90
+          days-before-close: 120
           stale-issue-label: "stale"
           stale-pr-label: "stale"
           debug-only: true
           exempt-issue-labels: "needs-triage,no-stale"
           exempt-pr-labels: "no-stale"
-          exempt-assignees: ${{ steps.excluded-assignees.outputs.excluded_assignees }}
-          include-only-assigned: true
