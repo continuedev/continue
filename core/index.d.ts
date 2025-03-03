@@ -308,7 +308,7 @@ export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
 }
 
-export type ChatMessageRole = "user" | "assistant" | "system" | "tool";
+export type ChatMessageRole = "user" | "assistant" | "thinking" | "system" | "tool";
 
 export type TextMessagePart = {
   type: "text";

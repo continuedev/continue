@@ -181,11 +181,11 @@ export abstract class BaseLLM implements ILLM {
         options.completionOptions?.maxTokens ??
         (llmInfo?.maxCompletionTokens
           ? Math.min(
-              llmInfo.maxCompletionTokens,
-              // Even if the model has a large maxTokens, we don't want to use that every time,
-              // because it takes away from the context length
-              this.contextLength / 4,
-            )
+            llmInfo.maxCompletionTokens,
+            // Even if the model has a large maxTokens, we don't want to use that every time,
+            // because it takes away from the context length
+            this.contextLength / 4,
+          )
           : DEFAULT_MAX_TOKENS),
     };
     this.requestOptions = options.requestOptions;
@@ -811,8 +811,8 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-            completion += chunk.content;
-            yield chunk;
+
+            if (chunk.role === "assistant") {
               completion += chunk.content;
               yield chunk;
             }
@@ -912,7 +912,7 @@ export abstract class BaseLLM implements ILLM {
     );
   }
 
-  protected async *_streamComplete(
+  protected async * _streamComplete(
     prompt: string,
     signal: AbortSignal,
     options: CompletionOptions,
@@ -920,7 +920,7 @@ export abstract class BaseLLM implements ILLM {
     throw new Error("Not implemented");
   }
 
-  protected async *_streamChat(
+  protected async * _streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,
