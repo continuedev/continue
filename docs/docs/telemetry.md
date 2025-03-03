@@ -24,7 +24,7 @@ The following usage information is collected and reported:
 - **System Information:** The name of your operating system (OS) and integrated development environment (IDE).
 - **Pageviews:** General pageview statistics.
 
-## How to Opt Out
+## How to Opt In
 
 You can enable anonymous telemetry by visiting the [User Settings Page](./customize/settings.md) and toggling "Allow Anonymous Telemetry" on.
 
