@@ -27,9 +27,9 @@ class LlamaEncoding implements Encoding {
 }
 
 class NonWorkerAsyncEncoder implements AsyncEncoder {
-  constructor(private readonly encoding: Encoding) {}
+  constructor(private readonly encoding: Encoding) { }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> { }
 
   async encode(text: string): Promise<number[]> {
     return this.encoding.encode(text);
@@ -366,6 +366,7 @@ function chatMessageIsEmpty(message: ChatMessage): boolean {
         message.content.trim() === "" &&
         !message.toolCalls
       );
+    case "thinking":
     case "tool":
       return false;
   }
@@ -383,8 +384,8 @@ function compileChatMessages(
 ): ChatMessage[] {
   let msgsCopy = msgs
     ? msgs
-        .map((msg) => ({ ...msg }))
-        .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
+      .map((msg) => ({ ...msg }))
+      .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
@@ -469,5 +470,6 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop,
+  pruneStringFromTop
 };
+
