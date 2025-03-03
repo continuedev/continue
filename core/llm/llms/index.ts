@@ -19,7 +19,6 @@ import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Fireworks from "./Fireworks";
-import NCompass from "./NCompass";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import FunctionNetwork from "./FunctionNetwork";
@@ -35,7 +34,9 @@ import Mistral from "./Mistral";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
+import NCompass from "./NCompass";
 import Nebius from "./Nebius";
+import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -49,7 +50,6 @@ import ContinueProxy from "./stubs/ContinueProxy";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
-import Novita from "./Novita";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
@@ -112,6 +112,7 @@ export async function llmFromDescription(
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
+  isAutocomplete = false
 ): Promise<BaseLLM | undefined> {
   const cls = LLMClasses.find((llm) => llm.providerName === desc.provider);
 
@@ -137,6 +138,11 @@ export async function llmFromDescription(
       maxTokens:
         finalCompletionOptions.maxTokens ??
         cls.defaultOptions?.completionOptions?.maxTokens,
+      autoCompleteMaxTokens:
+        finalCompletionOptions.autoCompleteMaxTokens ??
+        finalCompletionOptions.maxTokens ??
+        cls.defaultOptions?.completionOptions?.autoCompleteMaxTokens ??
+        256
     },
     systemMessage,
     writeLog,

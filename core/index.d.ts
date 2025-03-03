@@ -909,6 +909,7 @@ export interface BaseCompletionOptions {
   mirostat?: number;
   stop?: string[];
   maxTokens?: number;
+  autoCompleteMaxTokens?: number;
   numThreads?: number;
   useMmap?: boolean;
   keepAlive?: number;
