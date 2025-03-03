@@ -2,6 +2,7 @@ import {
   BedrockRuntimeClient,
   ConverseStreamCommand,
   InvokeModelCommand,
+  InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
@@ -90,24 +91,54 @@ class Bedrock extends BaseLLM {
       },
     );
 
-    const input = this._generateConverseInput(messages, options);
+    if (options.reasoning && options.model.includes("anthropic.claude")) {
+      const input = this._generateInvokeInput(messages, options);
+      const command = new InvokeModelWithResponseStreamCommand(input);
+      try {
+        const response = await client.send(command, { abortSignal: signal });
+        if (response.body) {
+          for await (const chunk of response.body) {
+            if (chunk.chunk?.bytes) {
+              const chunkData = JSON.parse(new TextDecoder().decode(chunk.chunk.bytes));
+              if (chunkData?.delta?.text) {
+                yield {
+                  role: "assistant",
+                  content: chunkData.delta.text,
+                };
+              } else {
+                if (chunkData?.delta?.thinking) {
+                  yield {
+                    role: "thinking",
+                    content: chunkData.delta.thinking,
+                  };
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error while invoke Bedrock model");
+        console.error(e);
+        throw e;
+      }
 
-    console.log("input", input)
+    } else {
+      const input = this._generateConverseInput(messages, options);
 
-    const command = new ConverseStreamCommand(input);
-    const response = await client.send(command, { abortSignal: signal });
-
-    if (response.stream) {
-      for await (const chunk of response.stream) {
-        console.log("chunk", chunk);
-        if (chunk.contentBlockDelta?.delta?.text) {
-          yield {
-            role: "assistant",
-            content: chunk.contentBlockDelta.delta.text,
-          };
+      const command = new ConverseStreamCommand(input);
+      const response = await client.send(command, { abortSignal: signal });
+      if (response.stream) {
+        for await (const chunk of response.stream) {
+          if (chunk.contentBlockDelta?.delta?.text) {
+            yield {
+              role: "assistant",
+              content: chunk.contentBlockDelta.delta.text,
+            };
+          }
         }
       }
     }
+
   }
 
   private _generateConverseInput(
@@ -116,10 +147,7 @@ class Bedrock extends BaseLLM {
   ): any {
     const convertedMessages = this._convertMessages(messages);
 
-    return options.reasoning ?
-    
-    
-    : {
+    return {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
@@ -127,10 +155,6 @@ class Bedrock extends BaseLLM {
         maxTokens: options.maxTokens,
         temperature: options.temperature,
         topP: options.topP,
-        thinking: options.reasoning ? {
-          "type": "enabled",
-          "budget_tokens": options.reasoningBudgetTokens || 1024
-        } : undefined,
         // TODO: The current approach selects the first 4 items from the list to comply with Bedrock's requirement
         // of having at most 4 stop sequences, as per the AWS documentation:
         // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_InferenceConfiguration.html
@@ -171,6 +195,67 @@ class Bedrock extends BaseLLM {
               source: {
                 bytes: Buffer.from(part.imageUrl.url.split(",")[1], "base64"),
               },
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
+  }
+
+  private _generateInvokeInput(
+    messages: ChatMessage[],
+    options: CompletionOptions,
+  ): any {
+    const convertedMessages = this._convertMessagesForInvoke(messages);
+
+    return {
+      modelId: options.model,
+      contentType: "application/json",
+      accept: "application/json",
+      body: JSON.stringify({
+        anthropic_version: "bedrock-2023-05-31",
+        temperature: options.temperature,
+        system: this.systemMessage,
+        max_tokens: options.maxTokens,
+        top_p: options.topP,
+        stop_sequences: options.stop
+          ?.filter((stop) => stop.trim() !== "")
+          .slice(0, 4),
+        thinking: options.reasoning ? {
+          type: "enabled",
+          budget_tokens: options.reasoningBudgetTokens || 1024
+        } : undefined,
+        messages: convertedMessages
+      })
+    }
+  }
+
+  private _convertMessagesForInvoke(messages: ChatMessage[]): any[] {
+    return messages
+      .filter((message) => message.role !== "system")
+      .map((message) => ({
+        role: message.role,
+        content: this._convertMessageContentForInvoke(message.content),
+      }));
+  }
+
+  private _convertMessageContentForInvoke(messageContent: MessageContent): any[] {
+    if (typeof messageContent === "string") {
+      return [{ type: "text", text: messageContent }];
+    }
+    return messageContent
+      .map((part) => {
+        if (part.type === "text") {
+          return { type: "text", text: part.text };
+        }
+        if (part.type === "imageUrl" && part.imageUrl) {
+          return {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: "image/jpeg",
+              data: Buffer.from(part.imageUrl.url.split(",")[1], "base64"),
             },
           };
         }
