@@ -1,4 +1,4 @@
-name: "Label and close stale issues"
+name: "Label / close stale issues"
 on:
   push:
     branches:
