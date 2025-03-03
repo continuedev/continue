@@ -512,7 +512,11 @@ async function intermediateToFinalConfig(
         model: "rerank-2",
         ...params,
       };
-      return new rerankerClass(llmOptions);
+      return new rerankerClass(llmOptions, (url: string | URL, init: any) =>
+        fetchwithRequestOptions(url, init, {
+          ...params?.requestOptions,
+        }),
+      );
     }
     return null;
   }
@@ -991,5 +995,6 @@ export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadContinueConfigFromJson,
-  type BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig
 };
+
