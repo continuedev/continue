@@ -200,6 +200,7 @@ More information about usage/params for each context provider can be found [here
 **Properties:**
 
 - `provider` (**required**): The identifier or name of the context provider (e.g., `code`, `docs`, `web`).
+- `name`: Optional name for the provider
 - `params`: Optional parameters to configure the context provider's behavior.
 
 **Example:**
@@ -213,6 +214,10 @@ context:
       nFinal: 10
   - provider: docs
   - provider: diff
+  - provider: http
+    name: Context Server 1
+    params:
+      url: "https://api.example.com/server1"
   - provider: folder
   - provider: terminal
 ```
