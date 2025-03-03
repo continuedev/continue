@@ -16,6 +16,8 @@ jobs:
           stale-issue-message: "It looks like this issue hasn't been updated in 90 days. If there's still no activity after 120 days, it will be closed."
           days-before-stale: 90
           days-before-close: 120
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
           stale-issue-label: "stale"
           stale-pr-label: "stale"
           debug-only: true
