@@ -21,6 +21,7 @@ jobs:
           days-before-close: 10
           days-before-pr-stale: -1
           days-before-pr-close: -1
+          operations-per-run: 100
           stale-issue-label: "stale"
           stale-pr-label: "stale"
           exempt-issue-labels: "needs-triage,no-stale,high,highest"
