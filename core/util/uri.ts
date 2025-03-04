@@ -116,19 +116,23 @@ export function getLastNUriRelativePathParts(
 }
 
 export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
-  const components = URI.parse(uri);
+  let baseUri = uri;
+  if (baseUri.at(-1) !== "/") {
+    baseUri += "/";
+  }
   const segments = pathSegments.map((segment) => pathToUriPathSegment(segment));
-  components.path = `${components.path}/${segments.join("/")}`;
-  return URI.serialize(components);
+  return URI.resolve(baseUri, segments.join("/"));
 }
 
 export function joinEncodedUriPathSegmentToUri(
   uri: string,
   pathSegment: string,
 ) {
-  const components = URI.parse(uri);
-  components.path = `${components.path}/${pathSegment}`;
-  return URI.serialize(components);
+  let baseUri = uri;
+  if (baseUri.at(-1) !== "/") {
+    baseUri += "/";
+  }
+  return URI.resolve(baseUri, pathSegment);
 }
 
 export function getShortestUniqueRelativeUriPaths(
