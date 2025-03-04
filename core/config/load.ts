@@ -79,7 +79,7 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
-import { getModelByRole } from "./util";
+import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
 import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(

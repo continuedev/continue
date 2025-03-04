@@ -40,9 +40,14 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   }
 
   private async initLanceDb() {
-    this.lanceDbIndex = await LanceDbIndex.create(
-      this.options.config.selectedModelByRole.embed,
-      (uri) => this.options.ide.readFile(uri),
+    const embedModel = this.options.config.selectedModelByRole.embed;
+
+    if (!embedModel) {
+      return;
+    }
+
+    this.lanceDbIndex = await LanceDbIndex.create(embedModel, (uri) =>
+      this.options.ide.readFile(uri),
     );
   }
 
@@ -115,7 +120,8 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
         filepath,
         contents,
         maxChunkSize:
-          this.options.config.embeddingsProvider.maxEmbeddingChunkSize,
+          this.options.config.selectedModelByRole.embed
+            ?.maxEmbeddingChunkSize ?? DEFAULT_CHUNK_SIZE,
         digest: filepath,
       });
 

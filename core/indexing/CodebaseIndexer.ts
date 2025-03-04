@@ -85,7 +85,7 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes = [
+    const indexes: CodebaseIndex[] = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
