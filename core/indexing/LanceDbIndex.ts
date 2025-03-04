@@ -347,9 +347,8 @@ export class LanceDbIndex implements CodebaseIndex {
 
     for (const { path, cacheKey } of results.addTag) {
       const stmt = await sqliteDb.prepare(
-        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
+        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND artifact_id = ?",
         cacheKey,
-        path,
         this.artifactId,
       );
       const cachedItems = await stmt.all();
