@@ -138,7 +138,7 @@ class WatsonX extends BaseLLM {
     };
   }
 
-  protected async getOrFetchWatsonxToken() {
+  protected async updateWatsonxToken() {
         var now = new Date().getTime() / 1000;
         if (
           watsonxToken === undefined ||
@@ -194,7 +194,7 @@ class WatsonX extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    await this.getOrFetchWatsonxToken();
+    await this.updateWatsonxToken();
 
     const stopSequences =
       options.stop?.slice(0, 6) ??
@@ -272,7 +272,7 @@ class WatsonX extends BaseLLM {
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
-    await this.getOrFetchWatsonxToken();
+    await this.updateWatsonxToken();
 
     const payload: any = {
       inputs: chunks,
@@ -318,7 +318,15 @@ class WatsonX extends BaseLLM {
         throw new Error("Query and chunks must not be empty");
       }
       try {
-        await this.getOrFetchWatsonxToken();
+        await this.updateWatsonxToken();
+        
+        const headers = {
+          "Content-Type": "application/json",
+          Authorization: `${
+            watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+          } ${watsonxToken.token}`,
+        };
+    
         const payload: any = {
           inputs: chunks.map((chunk) => ({ text: chunk.content })),
           query: query,
@@ -331,20 +339,15 @@ class WatsonX extends BaseLLM {
           model_id: this.model,
           project_id: this.projectId,
         };
-        const headers = {
-          "Content-Type": "application/json",
-          Authorization: `${
-            watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-          } ${watsonxToken.token}`,
-        };
+
         const resp = await this.fetch(
           new URL(
             `${this.apiBase}/ml/v1/text/rerank?version=${this.apiVersion}`,
           ),
           {
             method: "POST",
-            body: JSON.stringify(payload),
             headers: headers,
+            body: JSON.stringify(payload),
           },
         );
 

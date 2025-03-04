@@ -244,3 +244,37 @@ To view the list of available embeddings models, visit [this page](https://datap
   ```
 	</TabItem>
 </Tabs>
+
+
+## Reranker
+
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Watsonx Reranker
+      provider: watsonx
+      model: cross-encoder/ms-marco-minilm-l-12-v2
+      apiBase: https://us-south.ml.cloud.ibm.com
+      projectId: PROJECT_ID
+      apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
+      apiVersion: 2024-03-14
+  ```
+	</TabItem>
+	<TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "watsonx",
+      "params": {
+        "model": "cross-encoder/ms-marco-minilm-l-12-v2",
+        "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+        "projectId": "PROJECT_ID",
+        "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+        "apiVersion": "2024-03-14"
+      }
+    }
+  }
+  ```
+	</TabItem>
+</Tabs>
