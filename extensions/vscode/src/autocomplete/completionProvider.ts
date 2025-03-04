@@ -21,8 +21,8 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import { startLocalOllama } from "core/util/ollamaHelper";
 import type { IDE } from "core";
+import { startLocalOllama } from "core/util/ollamaHelper";
 
 const Diff = require("diff");
 
@@ -44,15 +44,22 @@ export class ContinueCompletionProvider
 {
   private onError(e: any) {
     let options = ["Documentation"];
-    if (e.message.includes("Ollama may not be installed")) {
+    let message = e.message;
+    let modelName = undefined;
+    if (message.includes("Ollama may not be installed")) {
       options.push("Download Ollama");
-    } else if (e.message.includes("Ollama may not be running")) {
+    } else if (message.includes("Ollama may not be running")) {
       options = ["Start Ollama"]; // We want "Start" to be the only choice
+    } else if (message.includes("ollama run") && e.llm) {
+      //extract model name from error message matching the pattern "ollama run <model-name>"
+      modelName = message.match(/`ollama run (.*)`/)?.[1];
+      message = `Model "${modelName}" is not found in Ollama. You need to install it.`;
+      options = [`Install Model`];
     }
 
-    if (e.message.includes("Please sign in with GitHub")) {
+    if (message.includes("Please sign in with GitHub")) {
       showFreeTrialLoginMessage(
-        e.message,
+        message,
         this.configHandler.reloadConfig.bind(this.configHandler),
         () => {
           void this.webviewProtocol.request("openOnboardingCard", undefined);
@@ -60,7 +67,7 @@ export class ContinueCompletionProvider
       );
       return;
     }
-    vscode.window.showErrorMessage(e.message, ...options).then((val) => {
+    vscode.window.showErrorMessage(message, ...options).then((val) => {
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
@@ -71,6 +78,8 @@ export class ContinueCompletionProvider
         vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
       } else if (val === "Start Ollama") {
         startLocalOllama(this.ide);
+      } else if (val === "Install Model" && e.llm) {
+        vscode.commands.executeCommand("continue.installModel", modelName, e.llm);
       }
     });
   }
