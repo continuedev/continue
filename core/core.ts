@@ -950,15 +950,21 @@ export class Core {
     });
     //
 
-    on("didChangeSelectedProfile", (msg) => {
-      void this.configHandler.setSelectedProfile(msg.data.id);
-      void this.configHandler.reloadConfig();
+    on("didChangeSelectedProfile", async (msg) => {
+      await this.configHandler.setSelectedProfile(msg.data.id);
+      await this.configHandler.reloadConfig();
     });
 
-    on("didChangeSelectedOrg", (msg) => {
-      void this.configHandler.setSelectedOrgId(msg.data.id);
-      void this.configHandler.reloadConfig();
-      void this.configHandler.loadAssistantsForSelectedOrg();
+    on("didChangeSelectedOrg", async (msg) => {
+      await this.configHandler.setSelectedOrgId(msg.data.id);
+      await this.configHandler.loadAssistantsForSelectedOrg();
+      if (msg.data.profileId) {
+        this.invoke("didChangeSelectedProfile", {
+          id: msg.data.profileId,
+        });
+      } else {
+        await this.configHandler.reloadConfig();
+      }
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {

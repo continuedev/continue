@@ -155,10 +155,6 @@ export function TabBar() {
   );
   const tabs = useSelector((state: RootState) => state.tabs.tabs);
 
-  useEffect(() => {
-    console.log("session", currentSession);
-  }, [currentSession.id]);
-
   // Simple UUID generator for our needs
   const generateId = useCallback(() => {
     return Date.now().toString(36) + Math.random().toString(36).substring(2);
