@@ -5,10 +5,10 @@ import * as path from "path";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 
+import { DevEventName } from "@continuedev/config-yaml";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
-import { DevEventName } from "@continuedev/config-yaml";
 
 dotenv.config();
 
@@ -397,10 +397,6 @@ export function migrateV1DevDataFiles() {
       if (!fs.existsSync(newFilePath)) {
         fs.copyFileSync(oldFilePath, newFilePath);
         fs.unlinkSync(oldFilePath);
-      } else {
-        console.warn(
-          `V1 Dev data migration: ${newFilePath} already exists, skipping ${oldFileName}`,
-        );
       }
     }
   }
