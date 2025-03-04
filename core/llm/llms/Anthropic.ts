@@ -30,11 +30,15 @@ class Anthropic extends BaseLLM {
         description: tool.function.description,
         input_schema: tool.function.parameters,
       })),
+      thinking: options.reasoning ? {
+        type: "enabled",
+        budget_tokens: options.reasoningBudgetTokens,
+      } : undefined,
       tool_choice: options.toolChoice
         ? {
-            type: "tool",
-            name: options.toolChoice.function.name,
-          }
+          type: "tool",
+          name: options.toolChoice.function.name,
+        }
         : undefined,
     };
 
@@ -174,12 +178,12 @@ class Anthropic extends BaseLLM {
         messages: msgs,
         system: shouldCacheSystemMessage
           ? [
-              {
-                type: "text",
-                text: this.systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
+            {
+              type: "text",
+              text: this.systemMessage,
+              cache_control: { type: "ephemeral" },
+            },
+          ]
           : systemMessage,
       }),
       signal,
@@ -222,6 +226,9 @@ class Anthropic extends BaseLLM {
           switch (value.delta.type) {
             case "text_delta":
               yield { role: "assistant", content: value.delta.text };
+              break;
+            case "thinking_delta":
+              yield { role: "thinking", content: value.delta.thinking };
               break;
             case "input_json_delta":
               if (!lastToolUseId || !lastToolUseName) {

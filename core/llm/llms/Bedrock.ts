@@ -1,7 +1,7 @@
 import {
   BedrockRuntimeClient,
   ConverseStreamCommand,
-  InvokeModelCommand,
+  InvokeModelCommand
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
@@ -9,7 +9,7 @@ import {
   ChatMessage,
   Chunk,
   CompletionOptions,
-  LLMOptions,
+  LLMOptions
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -86,9 +86,9 @@ class Bedrock extends BaseLLM {
     });
 
     let config_headers =
-    this.requestOptions && this.requestOptions.headers
-      ? this.requestOptions.headers
-      : {};
+      this.requestOptions && this.requestOptions.headers
+        ? this.requestOptions.headers
+        : {};
     // AWS SigV4 requires strict canonicalization of headers.
     // DO NOT USE "_" in your header name. It will return an error like below.
     // "The request signature we calculated does not match the signature you provided."
@@ -131,6 +131,12 @@ class Bedrock extends BaseLLM {
           // Handle text content
           if (chunk.contentBlockDelta.delta.text) {
             yield { role: "assistant", content: chunk.contentBlockDelta.delta.text };
+            continue;
+          }
+
+          // Handle text content
+          if (chunk.contentBlockDelta.delta.reasoningContent?.text) {
+            yield { role: "thinking", content: chunk.contentBlockDelta.delta.reasoningContent.text };
             continue;
           }
 
@@ -186,6 +192,7 @@ class Bedrock extends BaseLLM {
       }
       throw new Error("Error processing Bedrock stream: Unknown error occurred");
     }
+
   }
 
   /**
@@ -201,20 +208,22 @@ class Bedrock extends BaseLLM {
     const convertedMessages = this._convertMessages(messages);
 
     const supportsTools = PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
+    const tools = (supportsTools && options.tools?.map(tool => ({
+      toolSpec: {
+        name: tool.function.name,
+        description: tool.function.description,
+        inputSchema: {
+          json: tool.function.parameters
+        }
+      }
+    }))) || null
+
     return {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
-      toolConfig: supportsTools && options.tools ? {
-        tools: options.tools.map(tool => ({
-          toolSpec: {
-            name: tool.function.name,
-            description: tool.function.description,
-            inputSchema: {
-              json: tool.function.parameters
-            }
-          }
-        }))
+      toolConfig: tools && tools.length ? {
+        tools
       } : undefined,
       inferenceConfig: {
         maxTokens: options.maxTokens,
@@ -232,6 +241,12 @@ class Bedrock extends BaseLLM {
           ?.filter((stop) => stop.trim() !== "")
           .slice(0, 4),
       },
+      additionalModelRequestFields: {
+        "thinking": options.reasoning ? {
+          "type": "enabled",
+          "budget_tokens": options.reasoningBudgetTokens
+        } : undefined,
+      }
     };
   }
 
@@ -265,11 +280,11 @@ class Bedrock extends BaseLLM {
       return {
         role: "assistant",
         content: message.toolCalls.map((toolCall) => ({
-            toolUse: {
-              toolUseId: toolCall.id,
-              name: toolCall.function?.name,
-              input: JSON.parse(toolCall.function?.arguments || "{}"),
-            }
+          toolUse: {
+            toolUseId: toolCall.id,
+            name: toolCall.function?.name,
+            input: JSON.parse(toolCall.function?.arguments || "{}"),
+          }
         }))
       };
     }

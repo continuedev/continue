@@ -1,12 +1,12 @@
 import { JSONSchema7, JSONSchema7Object } from "json-schema";
 
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import { ChatMessage, ChatMessageRole, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 type OllamaChatMessage = {
-  role: "tool" | "user" | "assistant" | "system";
+  role: ChatMessageRole;
   content: string;
   images?: string[] | null;
   tool_calls?: {
@@ -82,10 +82,10 @@ type OllamaBaseResponse = {
   model: string;
   created_at: string;
 } & (
-  | {
+    | {
       done: false;
     }
-  | {
+    | {
       done: true;
       done_reason: string;
       total_duration: number; // Time spent generating the response in nanoseconds
@@ -96,7 +96,7 @@ type OllamaBaseResponse = {
       eval_duration: number; // Time spent generating the response in nanoseconds
       context: number[]; // An encoding of the conversation used in this response; can be sent in the next request to keep conversational memory
     }
-);
+  );
 
 type OllamaErrorResponse = {
   error: string;
@@ -105,14 +105,14 @@ type OllamaErrorResponse = {
 type OllamaRawResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-      response: string; // the generated response
-    });
+    response: string; // the generated response
+  });
 
 type OllamaChatResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-      message: OllamaChatMessage;
-    });
+    message: OllamaChatMessage;
+  });
 
 interface OllamaTool {
   type: "function";
@@ -142,7 +142,7 @@ class Ollama extends BaseLLM {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-  
+
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
@@ -331,7 +331,7 @@ class Ollama extends BaseLLM {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-  
+
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
@@ -396,7 +396,7 @@ class Ollama extends BaseLLM {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-  
+
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
@@ -482,7 +482,7 @@ class Ollama extends BaseLLM {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-  
+
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
@@ -523,7 +523,7 @@ class Ollama extends BaseLLM {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-  
+
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
@@ -549,7 +549,7 @@ class Ollama extends BaseLLM {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
-  
+
     if (this.apiKey) {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
