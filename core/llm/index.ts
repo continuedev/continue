@@ -819,6 +819,7 @@ export abstract class BaseLLM implements ILLM {
 
             if (chunk.role === "thinking") {
               thinking += chunk.content;
+              yield chunk;
             }
           }
         }

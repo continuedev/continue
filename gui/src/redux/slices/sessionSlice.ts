@@ -294,6 +294,7 @@ export const sessionSlice = createSlice({
       state.streamAborter = new AbortController();
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
+
       if (state.history.length) {
         function toolCallDeltaToState(
           toolCallDelta: ToolCallDelta,
@@ -319,6 +320,22 @@ export const sessionSlice = createSlice({
         for (const message of action.payload) {
           const lastItem = state.history[state.history.length - 1];
           const lastMessage = lastItem.message;
+
+          if (message.role === "thinking" && message.redactedThinking) {
+            console.log("add redacted_thinking blocks");
+
+            state.history.push({
+              message: {
+                role: "thinking",
+                content: "internal reasoning is hidden due to safety reasons",
+                redactedThinking: message.redactedThinking,
+                id: uuidv4(),
+              },
+              contextItems: [],
+            })
+            continue;
+          }
+
           if (
             lastMessage.role !== message.role ||
             // This is for when a tool call comes immediately before/after tool call
@@ -381,6 +398,11 @@ export const sessionSlice = createSlice({
                 // Note this only works because new message above
                 // was already rendered from parts to string
                 lastMessage.content += messageContent;
+              }
+            } else if (message.role === "thinking" && message.signature) {
+              if (lastMessage.role === "thinking") {
+                console.log("add signature", message.signature);
+                lastMessage.signature = message.signature;
               }
             } else if (
               message.role === "assistant" &&

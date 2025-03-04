@@ -63,6 +63,23 @@ class Anthropic extends BaseLLM {
           input: JSON.parse(toolCall.function?.arguments || "{}"),
         })),
       };
+    } else if (message.role === "thinking" && !message.redactedThinking) {
+      return {
+        role: "assistant",
+        content: [{
+          type: "thinking",
+          thinking: message.content,
+          signature: message.signature
+        }]
+      };
+    } else if (message.role === "thinking" && message.redactedThinking) {
+      return {
+        role: "assistant",
+        content: [{
+          type: "redacted_thinking",
+          data: message.redactedThinking
+        }]
+      };
     }
 
     if (typeof message.content === "string") {
@@ -216,6 +233,11 @@ class Anthropic extends BaseLLM {
             lastToolUseId = value.content_block.id;
             lastToolUseName = value.content_block.name;
           }
+          // handle redacted thinking
+          if (value.content_block.type === "redacted_thinking") {
+            console.log("redacted thinking", value.content_block.data);
+            yield { role: "thinking", content: "", redactedThinking: value.content_block.data };
+          }
           break;
         case "content_block_delta":
           // https://docs.anthropic.com/en/api/messages-streaming#delta-types
@@ -225,6 +247,9 @@ class Anthropic extends BaseLLM {
               break;
             case "thinking_delta":
               yield { role: "thinking", content: value.delta.thinking };
+              break;
+            case "signature_delta":
+              yield { role: "thinking", content: "", signature: value.delta.signature };
               break;
             case "input_json_delta":
               if (!lastToolUseId || !lastToolUseName) {
