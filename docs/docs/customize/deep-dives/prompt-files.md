@@ -4,7 +4,7 @@ title: Prompt files
 
 Prompt files provide a convenient way to standardize common patterns and share a collection of LLM prompts with your team. They make it easy to build and use these prompts.
 
-On the [hub](../../hub/introduction.md), prompt files are stored within [prompt blocks](../../hub/blocks/block-types.md#prompts), which show up as [slash commands](../slash-commands.mdx) in Chat. Visit the hub to [explore prompts](https://hub.continue.dev/explore/prompts) or [create your own](https://hub.continue.dev/new?type=block&block=rules).
+On the [hub](../../hub/introduction.md), prompt files are stored within [prompt blocks](../../hub/blocks/block-types.md#prompts), which show up as [slash commands](../slash-commands.mdx) in Chat. Visit the hub to [explore prompts](https://hub.continue.dev/explore/prompts) or [create your own](https://hub.continue.dev/new?type=block&blockType=rules).
 
 Prompt files can also be stored within your project's root directory as `.prompt` files. See below.
 
