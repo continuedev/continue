@@ -30,9 +30,12 @@ describe.skip("ChunkCodebaseIndex", () => {
     if (!mockConfig) {
       throw new Error("Failed to load config");
     }
+    if (!mockConfig.selectedModelByRole.embed) {
+      throw new Error("No embeddings model selected");
+    }
 
     index = (await LanceDbIndex.create(
-      mockConfig.embeddingsProvider,
+      mockConfig.selectedModelByRole.embed,
       testIde.readFile.bind(testIde),
       testContinueServerClient,
     ))!;

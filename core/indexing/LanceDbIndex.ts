@@ -42,7 +42,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
   relativeExpectedTime: number = 13;
   get artifactId(): string {
-    return `vectordb::${this.embeddingsProvider.embeddingId}`;
+    return `vectordb::${this.embeddingsProvider?.embeddingId}`;
   }
 
   /**
@@ -177,6 +177,9 @@ export class LanceDbIndex implements CodebaseIndex {
     item: PathAndCacheKey,
     content: string,
   ): Promise<Chunk[]> {
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     const chunks: Chunk[] = [];
 
     const chunkParams = {
@@ -198,6 +201,9 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async getEmbeddings(chunks: Chunk[]): Promise<number[][]> {
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     try {
       return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
     } catch (err) {
@@ -461,6 +467,9 @@ export class LanceDbIndex implements CodebaseIndex {
     filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
     const lance = LanceDbIndex.lance!;
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     const [vector] = await this.embeddingsProvider.embed([query]);
     const db = await lance.connect(getLanceDbPath());
 

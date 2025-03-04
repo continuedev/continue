@@ -3,8 +3,8 @@ title: Gemini
 slug: ../gemini
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 :::info
 You can get an API key from the [Google AI Studio](https://aistudio.google.com/).
@@ -12,15 +12,15 @@ You can get an API key from the [Google AI Studio](https://aistudio.google.com/)
 
 ## Chat model
 
-We recommend configuring **Gemini 1.5 Pro** as your chat model.
+We recommend configuring **Gemini 2.0 Flash** as your chat model.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
   ```yaml title="config.yaml"
   models:
-    - name: Gemini 1.5 Pro
+    - name: Gemini 2.0 Flash
       provider: gemini
-      model: gemini-1.5-pro-latest
+      model: gemini-2.0-flash
       apiKey: <YOUR_GEMINI_API_KEY>
   ```
   </TabItem>
@@ -29,9 +29,9 @@ We recommend configuring **Gemini 1.5 Pro** as your chat model.
   {
     "models": [
       {
-        "title": "Gemini 1.5 Pro", 
+        "title": "Gemini 2.0 Flash", 
         "provider": "gemini",
-        "model": "gemini-1.5-pro-latest",
+        "model": "gemini-2.0-flash",
         "apiKey": "<YOUR_GEMINI_API_KEY>"
       }
     ]
@@ -44,7 +44,7 @@ We recommend configuring **Gemini 1.5 Pro** as your chat model.
 
 Gemini currently does not offer any autocomplete models.
 
-[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
 
 ## Embeddings model
 
@@ -79,4 +79,4 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 
 Gemini currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.

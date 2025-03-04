@@ -12,13 +12,12 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(
     args: RetrievalPipelineRunArguments,
   ): Promise<Chunk[]> {
-    const { input, nRetrieve, filterDirectory, includeEmbeddings } =
-      this.options;
+    const { input, nRetrieve, filterDirectory, config } = this.options;
 
     let retrievalResults: Chunk[] = [];
 
     const ftsChunks = await this.retrieveFts(args, nRetrieve);
-    const embeddingsChunks = includeEmbeddings
+    const embeddingsChunks = !!config.selectedModelByRole.embed
       ? await this.retrieveEmbeddings(input, nRetrieve)
       : [];
     const recentlyEditedFilesChunks =
@@ -42,7 +41,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
       retrievalResults = retrievalResults.filter(
-        (chunk) => !!findUriInDirs(chunk.filepath, [filterDirectory]),
+        (chunk) => !!findUriInDirs(chunk.filepath, [filterDirectory]).foundInDir,
       );
     }
 
@@ -53,17 +52,18 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   }
 
   private async _rerank(input: string, chunks: Chunk[]): Promise<Chunk[]> {
-    if (!this.options.config.reranker) {
-      throw new Error("No reranker provided");
+    if (!this.options.config.selectedModelByRole.rerank) {
+      throw new Error("No reranker set up");
     }
 
     // remove empty chunks -- some APIs fail on that
     chunks = chunks.filter((chunk) => chunk.content);
 
-    let scores: number[] = await this.options.config.reranker.rerank(
-      input,
-      chunks,
-    );
+    let scores: number[] =
+      await this.options.config.selectedModelByRole.rerank.rerank(
+        input,
+        chunks,
+      );
 
     // Filter out low-scoring results
     let results = chunks;

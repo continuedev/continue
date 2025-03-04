@@ -7,6 +7,8 @@ import { FullTextSearchCodebaseIndex } from "../../../indexing/FullTextSearchCod
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
 import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache";
 
+const DEFAULT_CHUNK_SIZE = 384;
+
 export interface RetrievalPipelineOptions {
   llm: ILLM;
   config: ContinueConfig;
@@ -16,13 +18,13 @@ export interface RetrievalPipelineOptions {
   nFinal: number;
   tags: BranchAndDir[];
   filterDirectory?: string;
-  includeEmbeddings?: boolean; // Used to handle JB w/o an embeddings model
 }
 
 export interface RetrievalPipelineRunArguments {
   query: string;
   tags: BranchAndDir[];
   filterDirectory?: string;
+  includeEmbeddings: boolean;
 }
 
 export interface IRetrievalPipeline {
@@ -39,7 +41,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
 
   private async initLanceDb() {
     this.lanceDbIndex = await LanceDbIndex.create(
-      this.options.config.embeddingsProvider,
+      this.options.config.selectedModelByRole.embed,
       (uri) => this.options.ide.readFile(uri),
     );
   }

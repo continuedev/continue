@@ -80,16 +80,21 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes: CodebaseIndex[] = [
+    const embeddingsModel = config.selectedModelByRole.embed;
+    if (!embeddingsModel) {
+      return [];
+    }
+
+    const indexes = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
-        config.embeddingsProvider.maxEmbeddingChunkSize,
+        embeddingsModel.maxEmbeddingChunkSize,
       ), // Chunking must come first
     ];
 
     const lanceDbIndex = await LanceDbIndex.create(
-      config.embeddingsProvider,
+      embeddingsModel,
       this.ide.readFile.bind(this.ide),
       this.continueServerClient,
     );
