@@ -124,10 +124,6 @@ export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
   return URI.resolve(baseUri, segments.join("/"));
 }
 
-// const components = URI.parse(uri);
-// return URI.serialize(components);
-// components.path = `${components.path}/${segments.join("/")}`;
-
 export function joinEncodedUriPathSegmentToUri(
   uri: string,
   pathSegment: string,
@@ -137,9 +133,6 @@ export function joinEncodedUriPathSegmentToUri(
     baseUri += "/";
   }
   return URI.resolve(baseUri, pathSegment);
-  // const components = URI.parse(uri);
-  // components.path = `${components.path}/${pathSegment}`;
-  // return URI.serialize(components);
 }
 
 export function getShortestUniqueRelativeUriPaths(
