@@ -1,9 +1,9 @@
-import _ from "lodash";
-import { getLocalStorage } from "./localStorage";
-import { KeyboardEvent } from "react";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
+import _ from "lodash";
+import { KeyboardEvent } from "react";
+import { getLocalStorage } from "./localStorage";
 
-type Platform = "mac" | "linux" | "windows" | "unknown";
+export type Platform = "mac" | "linux" | "windows" | "unknown";
 
 export function getPlatform(): Platform {
   const platform = window.navigator.platform.toUpperCase();
