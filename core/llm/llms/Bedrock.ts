@@ -1,8 +1,7 @@
 import {
   BedrockRuntimeClient,
   ConverseStreamCommand,
-  InvokeModelCommand,
-  InvokeModelWithResponseStreamCommand,
+  InvokeModelCommand
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
@@ -10,8 +9,7 @@ import {
   ChatMessage,
   Chunk,
   CompletionOptions,
-  LLMOptions,
-  MessageContent,
+  LLMOptions
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -108,121 +106,93 @@ class Bedrock extends BaseLLM {
       },
     );
 
-    if (options.reasoning && options.model.includes("anthropic.claude")) {
-      const input = this._generateInvokeInput(messages, options);
-      const command = new InvokeModelWithResponseStreamCommand(input);
-      try {
-        const response = await client.send(command, { abortSignal: signal });
-        if (response.body) {
-          for await (const chunk of response.body) {
-            if (chunk.chunk?.bytes) {
-              const chunkData = JSON.parse(new TextDecoder().decode(chunk.chunk.bytes));
-              if (chunkData?.delta?.text) {
-                yield {
-                  role: "assistant",
-                  content: chunkData.delta.text,
-                };
-              } else {
-                if (chunkData?.delta?.thinking) {
-                  yield {
-                    role: "thinking",
-                    content: chunkData.delta.thinking,
-                  };
-                }
-              }
-              //TODO: Handle tool use once the thinking blocks (with redacted_thinking) are properly added to the history
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Error while invoke Bedrock model");
-        console.error(e);
-        throw e;
-      }
+    const input = this._generateConverseInput(messages, { ...options, stream: true });
+    const command = new ConverseStreamCommand(input);
 
-    } else {
-
-      const input = this._generateConverseInput(messages, { ...options, stream: true });
-      const command = new ConverseStreamCommand(input);
-
-      let response;
-      try {
-        response = await client.send(command, { abortSignal: signal });
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Unknown error";
-        throw new Error(`Failed to communicate with Bedrock API: ${message}`);
-      }
-
-      if (!response?.stream) {
-        throw new Error("No stream received from Bedrock API");
-      }
-
-      try {
-        for await (const chunk of response.stream) {
-
-          console.log(chunk);
-
-          if (chunk.contentBlockDelta?.delta) {
-
-            // Handle text content
-            if (chunk.contentBlockDelta.delta.text) {
-              yield { role: "assistant", content: chunk.contentBlockDelta.delta.text };
-              continue;
-            }
-
-            if (chunk.contentBlockDelta.delta.toolUse?.input && this._currentToolResponse) {
-              // Append the new input to the existing string
-              if (this._currentToolResponse.input === undefined) {
-                this._currentToolResponse.input = "";
-              }
-              this._currentToolResponse.input += chunk.contentBlockDelta.delta.toolUse.input;
-              continue;
-            }
-          }
-
-          if (chunk.contentBlockStart?.start) {
-            const toolUse = chunk.contentBlockStart.start.toolUse;
-            if (toolUse?.toolUseId && toolUse?.name) {
-              this._currentToolResponse = {
-                toolUseId: toolUse.toolUseId,
-                name: toolUse.name,
-                input: ""
-              };
-            }
-            continue;
-          }
-
-          if (chunk.contentBlockStop) {
-            if (this._currentToolResponse) {
-              yield {
-                role: "assistant",
-                content: "",
-                toolCalls: [{
-                  id: this._currentToolResponse.toolUseId,
-                  type: "function",
-                  function: {
-                    name: this._currentToolResponse.name,
-                    arguments: this._currentToolResponse.input
-                  }
-                }],
-              };
-              this._currentToolResponse = null;
-            }
-            continue;
-          }
-        }
-      } catch (error: unknown) {
-        this._currentToolResponse = null;
-        if (error instanceof Error) {
-          if ("code" in error) {
-            // AWS SDK specific errors
-            throw new Error(`AWS Bedrock stream error (${(error as any).code}): ${error.message}`);
-          }
-          throw new Error(`Error processing Bedrock stream: ${error.message}`);
-        }
-        throw new Error("Error processing Bedrock stream: Unknown error occurred");
-      }
+    let response;
+    try {
+      response = await client.send(command, { abortSignal: signal });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Failed to communicate with Bedrock API: ${message}`);
     }
+
+    if (!response?.stream) {
+      throw new Error("No stream received from Bedrock API");
+    }
+
+    try {
+      for await (const chunk of response.stream) {
+
+        console.log(chunk);
+
+        if (chunk.contentBlockDelta?.delta) {
+
+          // Handle text content
+          if (chunk.contentBlockDelta.delta.text) {
+            yield { role: "assistant", content: chunk.contentBlockDelta.delta.text };
+            continue;
+          }
+
+          // Handle text content
+          if (chunk.contentBlockDelta.delta.reasoningContent?.text) {
+            yield { role: "thinking", content: chunk.contentBlockDelta.delta.reasoningContent.text };
+            continue;
+          }
+
+          if (chunk.contentBlockDelta.delta.toolUse?.input && this._currentToolResponse) {
+            // Append the new input to the existing string
+            if (this._currentToolResponse.input === undefined) {
+              this._currentToolResponse.input = "";
+            }
+            this._currentToolResponse.input += chunk.contentBlockDelta.delta.toolUse.input;
+            continue;
+          }
+        }
+
+        if (chunk.contentBlockStart?.start) {
+          const toolUse = chunk.contentBlockStart.start.toolUse;
+          if (toolUse?.toolUseId && toolUse?.name) {
+            this._currentToolResponse = {
+              toolUseId: toolUse.toolUseId,
+              name: toolUse.name,
+              input: ""
+            };
+          }
+          continue;
+        }
+
+        if (chunk.contentBlockStop) {
+          if (this._currentToolResponse) {
+            yield {
+              role: "assistant",
+              content: "",
+              toolCalls: [{
+                id: this._currentToolResponse.toolUseId,
+                type: "function",
+                function: {
+                  name: this._currentToolResponse.name,
+                  arguments: this._currentToolResponse.input
+                }
+              }],
+            };
+            this._currentToolResponse = null;
+          }
+          continue;
+        }
+      }
+    } catch (error: unknown) {
+      this._currentToolResponse = null;
+      if (error instanceof Error) {
+        if ("code" in error) {
+          // AWS SDK specific errors
+          throw new Error(`AWS Bedrock stream error (${(error as any).code}): ${error.message}`);
+        }
+        throw new Error(`Error processing Bedrock stream: ${error.message}`);
+      }
+      throw new Error("Error processing Bedrock stream: Unknown error occurred");
+    }
+
   }
 
   /**
@@ -238,20 +208,22 @@ class Bedrock extends BaseLLM {
     const convertedMessages = this._convertMessages(messages);
 
     const supportsTools = PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
+    const tools = (supportsTools && options.tools?.map(tool => ({
+      toolSpec: {
+        name: tool.function.name,
+        description: tool.function.description,
+        inputSchema: {
+          json: tool.function.parameters
+        }
+      }
+    }))) || null
+
     return {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
-      toolConfig: supportsTools && options.tools ? {
-        tools: options.tools.map(tool => ({
-          toolSpec: {
-            name: tool.function.name,
-            description: tool.function.description,
-            inputSchema: {
-              json: tool.function.parameters
-            }
-          }
-        }))
+      toolConfig: tools && tools.length ? {
+        tools
       } : undefined,
       inferenceConfig: {
         maxTokens: options.maxTokens,
@@ -269,6 +241,12 @@ class Bedrock extends BaseLLM {
           ?.filter((stop) => stop.trim() !== "")
           .slice(0, 4),
       },
+      additionalModelRequestFields: {
+        "thinking": options.reasoning ? {
+          "type": "enabled",
+          "budget_tokens": options.reasoningBudgetTokens
+        } : undefined,
+      }
     };
   }
 
@@ -359,67 +337,6 @@ class Bedrock extends BaseLLM {
           console.error(`Failed to convert message: ${error}`);
           return null;
         }
-      })
-      .filter(Boolean);
-  }
-
-  private _generateInvokeInput(
-    messages: ChatMessage[],
-    options: CompletionOptions,
-  ): any {
-    const convertedMessages = this._convertMessagesForInvoke(messages);
-
-    return {
-      modelId: options.model,
-      contentType: "application/json",
-      accept: "application/json",
-      body: JSON.stringify({
-        anthropic_version: "bedrock-2023-05-31",
-        temperature: options.temperature,
-        system: this.systemMessage,
-        max_tokens: options.maxTokens,
-        top_p: options.topP,
-        stop_sequences: options.stop
-          ?.filter((stop) => stop.trim() !== "")
-          .slice(0, 4),
-        thinking: options.reasoning ? {
-          type: "enabled",
-          budget_tokens: options.reasoningBudgetTokens || 1024
-        } : undefined,
-        messages: convertedMessages
-      })
-    }
-  }
-
-  private _convertMessagesForInvoke(messages: ChatMessage[]): any[] {
-    return messages
-      .filter((message) => message.role !== "system")
-      .map((message) => ({
-        role: message.role,
-        content: this._convertMessageContentForInvoke(message.content),
-      }));
-  }
-
-  private _convertMessageContentForInvoke(messageContent: MessageContent): any[] {
-    if (typeof messageContent === "string") {
-      return [{ type: "text", text: messageContent }];
-    }
-    return messageContent
-      .map((part) => {
-        if (part.type === "text") {
-          return { type: "text", text: part.text };
-        }
-        if (part.type === "imageUrl" && part.imageUrl) {
-          return {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: "image/jpeg",
-              data: Buffer.from(part.imageUrl.url.split(",")[1], "base64"),
-            },
-          };
-        }
-        return null;
       })
       .filter(Boolean);
   }
