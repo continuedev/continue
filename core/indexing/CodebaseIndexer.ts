@@ -85,24 +85,31 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes = [
+    const indexes: CodebaseIndex[] = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
         embeddingsModel.maxEmbeddingChunkSize,
       ), // Chunking must come first
-      new LanceDbIndex(
-        embeddingsModel,
-        this.ide.readFile.bind(this.ide),
-        this.continueServerClient,
-      ),
+    ];
+
+    const lanceDbIndex = await LanceDbIndex.create(
+      embeddingsModel,
+      this.ide.readFile.bind(this.ide),
+      this.continueServerClient,
+    );
+
+    if (lanceDbIndex) {
+      indexes.push(lanceDbIndex);
+    }
+
+    indexes.push(
       new FullTextSearchCodebaseIndex(),
       new CodeSnippetsCodebaseIndex(this.ide),
-    ];
+    );
 
     return indexes;
   }
-
   public async refreshFile(
     file: string,
     workspaceDirs: string[],
