@@ -30,19 +30,19 @@ We recommend configuring **grok-beta** as your chat model.
 
 xAI currently does not offer any autocomplete models.
 
-[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
 
 ## Embeddings model
 
 xAI currently does not offer any embeddings models.
 
-[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
+[Click here](../../model-roles/embeddings.md) to see a list of embeddings model providers.
 
 ## Reranking model
 
 xAI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-roles/reranking.md) to see a list of reranking model providers.
 
 ## Legacy Completions
 

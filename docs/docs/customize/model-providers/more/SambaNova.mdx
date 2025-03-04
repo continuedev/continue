@@ -1,17 +1,17 @@
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 # SambaNova Cloud
 
-The SambaNova Cloud is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can follow the instructions in [this blog post](https://sambanova.ai/blog/accelerating-coding-with-sambanova-cloud?ref=blog.continue.dev) to configure your setup.
+The SambaNova Cloud is a cloud platform for running large AI models with the world record open source models performance. You can follow the instructions in [this blog post](https://sambanova.ai/blog/accelerating-coding-with-sambanova-cloud?ref=blog.continue.dev) to configure your setup.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
-    - name: SambaNova Llama 3.1 405B
+    - name: SambaNova Qwen2.5 coder
       provider: sambanova
-      model: llama3.1-405b
+      model: qwen2.5-coder-32b
       apiKey: <YOUR_SAMBANOVA_API_KEY>
   ```
   </TabItem>
@@ -20,9 +20,9 @@ The SambaNova Cloud is a cloud platform for running large AI models with the wor
   {
     "models": [
       {
-        "title": "SambaNova Llama 3.1 405B",
+        "title": "SambaNova Qwen2.5 coder",
         "provider": "sambanova",
-        "model": "llama3.1-405b",
+        "model": "qwen2.5-coder-32b",
         "apiKey": "<YOUR_SAMBANOVA_API_KEY>"
       }
     ]

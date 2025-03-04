@@ -5,8 +5,8 @@ import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
-
 import { findUriInDirs, getUriPathBasename } from "../util/uri.js";
+
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
@@ -81,35 +81,50 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes = [
+    const embeddingsModel = config.selectedModelByRole.embed;
+    if (!embeddingsModel) {
+      return [];
+    }
+
+    const indexes: CodebaseIndex[] = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
-        config.embeddingsProvider.maxEmbeddingChunkSize,
+        embeddingsModel.maxEmbeddingChunkSize,
       ), // Chunking must come first
-      new LanceDbIndex(
-        config.embeddingsProvider,
-        this.ide.readFile.bind(this.ide),
-        this.continueServerClient,
-      ),
+    ];
+
+    const lanceDbIndex = await LanceDbIndex.create(
+      embeddingsModel,
+      this.ide.readFile.bind(this.ide),
+      this.continueServerClient,
+    );
+
+    if (lanceDbIndex) {
+      indexes.push(lanceDbIndex);
+    }
+
+    indexes.push(
       new FullTextSearchCodebaseIndex(),
       new CodeSnippetsCodebaseIndex(this.ide),
-    ];
+    );
 
     return indexes;
   }
 
   private totalIndexOps(results: RefreshIndexResults): number {
-    return results.compute.length +
+    return (
+      results.compute.length +
       results.del.length +
       results.addTag.length +
-      results.removeTag.length;
+      results.removeTag.length
+    );
   }
 
   private singleFileIndexOps(
     results: RefreshIndexResults,
     lastUpdated: PathAndCacheKey[],
-    filePath: string
+    filePath: string,
   ): [RefreshIndexResults, PathAndCacheKey[]] {
     const filterFn = (item: PathAndCacheKey) => item.path === filePath;
     const compute = results.compute.filter(filterFn);
@@ -117,9 +132,12 @@ export class CodebaseIndexer {
     const addTag = results.addTag.filter(filterFn);
     const removeTag = results.removeTag.filter(filterFn);
     const newResults = {
-      compute, del, addTag, removeTag
+      compute,
+      del,
+      addTag,
+      removeTag,
     };
-    const newLastUpdated = lastUpdated.filter(filterFn)
+    const newLastUpdated = lastUpdated.filter(filterFn);
     return [newResults, newLastUpdated];
   }
 
@@ -156,7 +174,10 @@ export class CodebaseIndexer {
         );
 
       const [results, lastUpdated] = this.singleFileIndexOps(
-        fullResults, fullLastUpdated, filePath);
+        fullResults,
+        fullLastUpdated,
+        filePath,
+      );
       // Don't update if nothing to update. Some of the indices might do unnecessary setup work
       if (this.totalIndexOps(results) + lastUpdated.length === 0) {
         continue;

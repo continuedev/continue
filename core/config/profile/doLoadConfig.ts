@@ -4,6 +4,7 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
+  ModelRole,
 } from "@continuedev/config-yaml";
 import {
   ContinueConfig,
@@ -24,6 +25,7 @@ import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
+import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -33,7 +35,7 @@ export default async function doLoadConfig(
   overrideConfigJson: SerializedContinueConfig | undefined,
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
-  workspaceId?: string,
+  profileId: string,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
@@ -59,7 +61,7 @@ export default async function doLoadConfig(
       ide,
       workspaceConfigs.map((c) => JSON.stringify(c)),
       ideSettings,
-      ideInfo.ideType,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,
@@ -75,7 +77,7 @@ export default async function doLoadConfig(
       ide,
       workspaceConfigs,
       ideSettings,
-      ideInfo.ideType,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,
@@ -84,6 +86,11 @@ export default async function doLoadConfig(
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
+  }
+
+  // Rectify model selections for each role
+  if (newConfig) {
+    newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
   }
 
   if (configLoadInterrupted || !newConfig) {
@@ -117,7 +124,7 @@ export default async function doLoadConfig(
     controlPlaneProxyUrl += "/";
   }
   const controlPlaneProxyInfo = {
-    workspaceId,
+    profileId,
     controlPlaneProxyUrl,
     workOsAccessToken,
   };
@@ -147,21 +154,26 @@ async function injectControlPlaneProxyInfo(
   config: ContinueConfig,
   info: ControlPlaneProxyInfo,
 ): Promise<ContinueConfig> {
-  [...config.models, ...(config.tabAutocompleteModels ?? [])].forEach(
-    async (model) => {
+  Object.keys(config.modelsByRole).forEach((key) => {
+    config.modelsByRole[key as ModelRole].forEach((model) => {
       if (model.providerName === "continue-proxy") {
         (model as ContinueProxy).controlPlaneProxyInfo = info;
       }
-    },
-  );
+    });
+  });
 
-  if (config.embeddingsProvider?.providerName === "continue-proxy") {
-    (config.embeddingsProvider as ContinueProxy).controlPlaneProxyInfo = info;
-  }
+  Object.keys(config.selectedModelByRole).forEach((key) => {
+    const model = config.selectedModelByRole[key as ModelRole];
+    if (model?.providerName === "continue-proxy") {
+      (model as ContinueProxy).controlPlaneProxyInfo = info;
+    }
+  });
 
-  if (config.reranker?.providerName === "continue-proxy") {
-    (config.reranker as ContinueProxy).controlPlaneProxyInfo = info;
-  }
+  config.models.forEach((model) => {
+    if (model.providerName === "continue-proxy") {
+      (model as ContinueProxy).controlPlaneProxyInfo = info;
+    }
+  });
 
   return config;
 }

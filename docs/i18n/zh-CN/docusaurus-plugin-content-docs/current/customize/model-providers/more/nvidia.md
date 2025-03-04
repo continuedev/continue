@@ -29,7 +29,7 @@ We recommend configuring **Nemotron-4-340B-Instruct** as your chat model.
 
 NVIDIA currently does not offer any autocomplete models.
 
-[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
 
 ## Embeddings model
 
@@ -49,4 +49,4 @@ We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings m
 
 NVIDIA currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
+[Click here](../../model-roles/reranking.md) to see a list of reranking model providers.

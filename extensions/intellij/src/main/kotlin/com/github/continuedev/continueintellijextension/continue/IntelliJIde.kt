@@ -92,49 +92,19 @@ class IntelliJIDE(
     }
 
     suspend fun enableHubContinueDev(): Boolean {
-        try {
-            val client = OkHttpClient()
-            val url = URL("https://api.continue.dev/features/hub")
-
-            val request = Request.Builder()
-                .url(url)
-                .get()
-                .header("Content-Type", "application/json")
-                .build()
-
-            val response = client.newCall(request).execute()
-
-            val responseBody = response.body?.string()
-            val gson = Gson()
-            val responseMap = gson.fromJson(responseBody, Map::class.java)
-
-            if (responseMap["enabled"] == true) {
-                return true
-            }
-        } catch (e: Exception) {
-            return false
-        }
-        return false
+        return true
     }
 
     override suspend fun getIdeSettings(): IdeSettings {
         val settings = service<ContinueExtensionSettings>()
 
 
-        var continueTestEnvironment = settings.continueState.continueTestEnvironment
-        if (continueTestEnvironment != "production") {
-            val enableHub = enableHubContinueDev()
-            if (enableHub) {
-                continueTestEnvironment = "production"
-            }
-        }
-
         return IdeSettings(
             remoteConfigServerUrl = settings.continueState.remoteConfigServerUrl,
             remoteConfigSyncPeriod = settings.continueState.remoteConfigSyncPeriod,
             userToken = settings.continueState.userToken ?: "",
             enableControlServerBeta = settings.continueState.enableContinueTeamsBeta,
-            continueTestEnvironment = continueTestEnvironment,
+            continueTestEnvironment = "production",
             pauseCodebaseIndexOnStart = false, // TODO: Needs to be implemented
         )
     }

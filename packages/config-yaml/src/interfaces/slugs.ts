@@ -26,6 +26,16 @@ export function encodeFullSlug(fullSlug: FullSlug): string {
   return `${fullSlug.ownerSlug}/${fullSlug.packageSlug}@${fullSlug.versionSlug}`;
 }
 
+export function packageSlugsEqual(
+  pkgSlug1: PackageSlug,
+  pkgSlug2: PackageSlug,
+): boolean {
+  return (
+    pkgSlug1.ownerSlug === pkgSlug2.ownerSlug &&
+    pkgSlug1.packageSlug === pkgSlug2.packageSlug
+  );
+}
+
 export function decodeFullSlug(fullSlug: string): FullSlug {
   const [ownerSlug, packageSlug, versionSlug] = fullSlug.split(/[/@]/);
   return {

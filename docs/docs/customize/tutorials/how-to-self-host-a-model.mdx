@@ -2,8 +2,8 @@
 title: How to self-host a model
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), [Lambda](https://lambdalabs.com/), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
 
@@ -25,7 +25,7 @@ Basic authentication can be done with any provider using the `apiKey` field:
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Ollama
       provider: ollama
@@ -55,7 +55,7 @@ If you need to send custom headers for authentication, you may use the `requestO
 
 <Tabs groupId="config-example">
     <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+    ```yaml title="config.yaml"
     models:
       - name: Ollama
         provider: ollama

@@ -137,7 +137,10 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         modelTitles.addAll(models.map { it["title"] as String })
     }
 
-    val maxWaitTime = 200
+    // This is a hacky way to not complicate getting model titles with coroutines
+    // 1500 feels like way upper limit of "would be weird if panel showed up after that long"
+    // And should always allow enough time to load config
+    val maxWaitTime = 1500
     val startTime = System.currentTimeMillis()
     while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
         Thread.sleep(20)
