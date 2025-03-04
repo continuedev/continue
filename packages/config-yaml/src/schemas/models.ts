@@ -31,6 +31,14 @@ export const modelRolesSchema = z.enum([
 ]);
 export type ModelRole = z.infer<typeof modelRolesSchema>;
 
+// TODO consider just using array of strings for model capabilities
+// To allow more dynamic string parsing
+export const modelCapabilitySchema = z.union([
+  z.literal("tool_use"),
+  z.literal("image_input"),
+]);
+export type ModelCapability = z.infer<typeof modelCapabilitySchema>;
+
 export const completionOptionsSchema = z.object({
   contextLength: z.number().optional(),
   maxTokens: z.number().optional(),
@@ -61,6 +69,7 @@ const baseModelFields = {
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
   roles: modelRolesSchema.array().optional(),
+  capabilities: modelCapabilitySchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
   embedOptions: embedOptionsSchema.optional(),
