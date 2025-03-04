@@ -1,0 +1,102 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+# Cohere
+
+Before using Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.
+
+## Chat model
+
+We recommend configuring **Command-R Plus** as your chat model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere
+      provider: cohere
+      model: command-r-plus
+      apiKey: <YOUR_COHERE_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Cohere",
+        "provider": "cohere",
+        "model": "command-r-plus",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Autocomplete model
+
+Cohere currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+We recommend configuring **embed-english-v3.0** as your embeddings model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere Embed
+      provider: cohere
+      model: embed-english-v3.0
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - embed
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "embeddingsProvider": {
+      "provider": "cohere",
+      "model": "embed-english-v3.0",
+      "apiKey": "<YOUR_COHERE_API_KEY>"
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Reranking model
+
+We recommend configuring **rerank-english-v3.0** as your reranking model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Cohere Reranker
+      provider: cohere
+      model: rerank-english-v3.0
+      apiKey: <YOUR_COHERE_API_KEY>
+      roles:
+        - rerank
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "cohere",
+      "params": {
+        "model": "rerank-english-v3.0",
+        "apiKey": "<YOUR_COHERE_API_KEY>"
+      }
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>

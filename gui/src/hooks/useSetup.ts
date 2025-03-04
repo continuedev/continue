@@ -11,9 +11,9 @@ import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
   addContextItemsAtIndex,
   setInactive,
-  setSelectedProfileId,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
@@ -36,7 +36,7 @@ function useSetup() {
       initial: boolean,
       result: {
         result: ConfigResult<BrowserSerializedContinueConfig>;
-        profileId: string;
+        profileId: string | null;
       },
     ) => {
       const { result: configResult, profileId } = result;
@@ -44,17 +44,8 @@ function useSetup() {
         return;
       }
       hasLoadedConfig.current = true;
-      // window.postMessage(
-      //   {
-      //     messageType: "refreshSubmenuItems",
-      //     data: {
-      //       providers: "all",
-      //     },
-      //   },
-      //   "*",
-      // );
       dispatch(setConfigResult(configResult));
-      dispatch(setSelectedProfileId(profileId));
+      dispatch(selectProfileThunk(profileId));
 
       // Perform any actions needed with the config
       if (configResult.config?.ui?.fontSize) {
@@ -124,7 +115,25 @@ function useSetup() {
     // Override persisted state
     dispatch(setInactive());
 
-    if (isJetBrains()) {
+    const jetbrains = isJetBrains();
+    for (const colorVar of VSC_THEME_COLOR_VARS) {
+      if (jetbrains) {
+        const cached = localStorage.getItem(colorVar);
+        if (cached) {
+          document.body.style.setProperty(colorVar, cached);
+        }
+      }
+
+      // Remove alpha channel from colors
+      const value = getComputedStyle(document.documentElement).getPropertyValue(
+        colorVar,
+      );
+      if (colorVar.startsWith("#") && value.length > 7) {
+        document.body.style.setProperty(colorVar, value.slice(0, 7));
+      }
+    }
+
+    if (jetbrains) {
       // Save theme colors to local storage for immediate loading in JetBrains
       ideMessenger.request("jetbrains/getColors", undefined).then((result) => {
         if (result.status === "success") {
@@ -159,6 +168,17 @@ function useSetup() {
       }
     }
   }, []);
+
+  useWebviewListener(
+    "jetbrains/setColors",
+    async (data) => {
+      Object.entries(data).forEach(([key, value]) => {
+        document.body.style.setProperty(key, value);
+        document.documentElement.style.setProperty(key, value);
+      });
+    },
+    [],
+  );
 
   useWebviewListener("docs/suggestions", async (data) => {
     dispatch(updateDocsSuggestions(data));

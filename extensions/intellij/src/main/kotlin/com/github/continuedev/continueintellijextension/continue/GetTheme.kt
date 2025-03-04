@@ -1,15 +1,12 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.intellij.codeInsight.template.impl.TemplateColors
-import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.EditorColorsManager
-import com.intellij.openapi.editor.colors.EditorColorsScheme
-import com.intellij.openapi.editor.colors.TextAttributesKey
 import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
-
+import com.intellij.ui.JBColor
+import com.intellij.ui.ColorUtil
 
 class GetTheme {
     fun getSecondaryDark(): Color {
@@ -42,53 +39,60 @@ class GetTheme {
     }
 
     fun getTheme(): Map<String, String> {
+        fun toHex(color: Color): String {
+            return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+        }
         try {
-            val globalScheme = EditorColorsManager.getInstance().globalScheme
-            val defaultBackground = globalScheme.defaultBackground
-            val defaultForeground = globalScheme.defaultForeground
-            val highlight = globalScheme.getColor(EditorColors.MODIFIED_TAB_ICON_COLOR) ?: defaultForeground
-            val defaultBackgroundHex =
-                String.format("#%02x%02x%02x", defaultBackground.red, defaultBackground.green, defaultBackground.blue)
-            val defaultForegroundHex =
-                String.format("#%02x%02x%02x", defaultForeground.red, defaultForeground.green, defaultForeground.blue)
-            val highlightHex = String.format("#%02x%02x%02x", highlight.red, highlight.green, highlight.blue)
+            val background = JBColor.background()
+            val foreground = JBColor.foreground()
 
-            val grayscale =
-                (defaultBackground.red * 0.3 + defaultBackground.green * 0.59 + defaultBackground.blue * 0.11).toInt()
+            val buttonBackground = JBColor.namedColor("Button.background", Color(230, 230, 230))
+            val buttonForeground = JBColor.namedColor("Button.foreground", Color(0, 0, 0))
 
-            val adjustedRed: Int
-            val adjustedGreen: Int
-            val adjustedBlue: Int
+            val badgeBackground = JBColor.namedColor("Badge.background", Color(150, 150, 150))
+            val badgeForeground = JBColor.namedColor("Badge.foreground", Color(0, 0, 0))
 
-            val tint: Int = 20
-            if (grayscale > 128) { // if closer to white
-                adjustedRed = max(0, defaultBackground.red - tint)
-                adjustedGreen = max(0, defaultBackground.green - tint)
-                adjustedBlue = max(0, defaultBackground.blue - tint)
-            } else { // if closer to black
-                adjustedRed = min(255, defaultBackground.red + tint)
-                adjustedGreen = min(255, defaultBackground.green + tint)
-                adjustedBlue = min(255, defaultBackground.blue + tint)
-            }
+            val inputBackground = JBColor.namedColor("TextField.background", Color(255, 255, 255))
 
-            val secondaryDarkHex = String.format("#%02x%02x%02x", adjustedRed, adjustedGreen, adjustedBlue)
+            val border = JBColor.border()
+            val focusBorder = JBColor.namedColor("Focus.borderColor", Color(100, 100, 255))
+            val editorScheme = EditorColorsManager.getInstance().globalScheme
 
-            return mapOf(
-                "--vscode-editor-foreground" to defaultForegroundHex,
-                "--vscode-sideBar-background" to defaultBackgroundHex,
-                "--vscode-input-background" to secondaryDarkHex,
-                "--vscode-editor-background" to defaultBackgroundHex,
-                "--vscode-button-background" to defaultBackgroundHex,
-                "--vscode-list-activeSelectionBackground" to defaultBackgroundHex,
-                "--vscode-focusBorder" to highlightHex,
-                "--vscode-quickInputList-focusForeground" to defaultForegroundHex,
-                "--vscode-quickInput-background" to secondaryDarkHex,
-                "--vscode-input-border" to "#80808080",
-                "--vscode-badge-background" to highlightHex,
-                "--vscode-badge-foreground" to defaultForegroundHex,
-                "--vscode-sideBar-border" to "#80808080"
+            val editorBackground = editorScheme.defaultBackground
+            val editorForeground = editorScheme.defaultForeground
+
+            val actionHoverBackground = JBColor.namedColor("ActionButton.hoverBackground", Color(220, 220, 220))
+
+            val findMatchBackground = editorScheme.getAttributes(EditorColors.SEARCH_RESULT_ATTRIBUTES)?.backgroundColor ?: Color(255, 221, 0)
+
+            val theme = mapOf(
+                "--vscode-editor-foreground" to toHex(editorForeground),
+                "--vscode-editor-background" to toHex(editorBackground),
+
+                "--vscode-button-background" to toHex(buttonBackground),
+                "--vscode-button-foreground" to toHex(buttonForeground),
+
+                "--vscode-list-activeSelectionBackground" to toHex(actionHoverBackground) + "50",
+
+                "--vscode-quickInputList-focusForeground" to toHex(foreground),
+                "--vscode-quickInput-background" to toHex(inputBackground),
+
+                "--vscode-badge-background" to toHex(badgeBackground),
+                "--vscode-badge-foreground" to toHex(badgeForeground),
+
+                "--vscode-input-background" to toHex(inputBackground),
+                "--vscode-input-border" to toHex(border),
+                "--vscode-sideBar-background" to toHex(background),
+                "--vscode-sideBar-border" to toHex(border),
+                "--vscode-focusBorder" to toHex(focusBorder),
+
+                "--vscode-commandCenter-activeBorder" to toHex(focusBorder),
+                "--vscode-commandCenter-inactiveBorder" to toHex(border),
+
+                "--vscode-editor-findMatchHighlightBackground" to toHex(findMatchBackground) + "40"
             )
 
+            return theme
         } catch (error: Error) {
             return mapOf()
         }

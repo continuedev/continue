@@ -49,11 +49,11 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   acceptDiff: [{ filepath: string; streamId?: string }, void];
   rejectDiff: [{ filepath: string; streamId?: string }, void];
   "edit/sendPrompt": [
-    { prompt: MessageContent; range: RangeInFileWithContents },
-    void,
-  ];
-  "edit/acceptReject": [
-    { accept: boolean; onlyFirst: boolean; filepath: string },
+    {
+      prompt: MessageContent;
+      range: RangeInFileWithContents;
+      selectedModelTitle: string;
+    },
     void,
   ];
   "edit/exit": [{ shouldFocusEditor: boolean }, void];
@@ -79,10 +79,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 
-  /**
-   * @deprecated Use navigateTo with a path instead.
-   */
-  viewHistory: [undefined, void];
   focusContinueSessionId: [{ sessionId: string | undefined }, void];
   newSession: [undefined, void];
   setTheme: [{ theme: any }, void];

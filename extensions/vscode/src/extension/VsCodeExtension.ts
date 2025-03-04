@@ -34,7 +34,6 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
-import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
 
 import { VsCodeMessenger } from "./VsCodeMessenger";
@@ -47,7 +46,6 @@ export class VsCodeExtension {
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
-  private tabAutocompleteModel: TabAutocompleteModel;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private editDecorationManager: EditDecorationManager;
@@ -143,7 +141,6 @@ export class VsCodeExtension {
       this.editDecorationManager,
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
-    this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
 
     setupRemoteConfigSync(
       this.configHandler.reloadConfig.bind(this.configHandler),
@@ -168,22 +165,12 @@ export class VsCodeExtension {
         } else if (newConfig) {
           setupStatusBar(undefined, undefined, false);
 
-          const result = await this.configHandler.getSerializedConfig();
-          this.sidebar.webviewProtocol?.request("configUpdate", {
-            result,
-            profileId: this.configHandler.currentProfile.profileDescription.id,
-          });
-
-          this.tabAutocompleteModel.clearLlm();
-
           registerAllCodeLensProviders(
             context,
             this.verticalDiffManager.fileUriToCodeLens,
             newConfig,
           );
         }
-
-        this.sidebar.webviewProtocol?.request("configError", errors);
       },
     );
 
@@ -201,7 +188,6 @@ export class VsCodeExtension {
         new ContinueCompletionProvider(
           this.configHandler,
           this.ide,
-          this.tabAutocompleteModel,
           this.sidebar.webviewProtocol,
         ),
       ),
@@ -275,6 +261,7 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidSaveTextDocument(async (event) => {
+      this.ide.updateLastFileSaveTimestamp();
       this.core.invoke("files/changed", {
         uris: [event.uri.toString()],
       });
@@ -375,24 +362,13 @@ export class VsCodeExtension {
       void this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
-    const enableContinueHub = vscode.workspace
-      .getConfiguration(EXTENSION_NAME)
-      .get<boolean>("enableContinueHub");
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
-        const settings = this.ide.getIdeSettingsSync();
+        const settings = await this.ide.getIdeSettings();
         const webviewProtocol = await this.webviewProtocolPromise;
         void webviewProtocol.request("didChangeIdeSettings", {
           settings,
         });
-
-        if (
-          enableContinueHub
-            ? settings.continueTestEnvironment !== "production"
-            : settings.continueTestEnvironment === "production"
-        ) {
-          await vscode.commands.executeCommand("workbench.action.reloadWindow");
-        }
       }
     });
   }

@@ -1,7 +1,6 @@
 import { XCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
 import { useAppSelector } from "../../../redux/hooks";
-import { isJetBrains } from "../../../util";
 
 export interface IndexingProgressErrorTextProps {
   update: IndexingProgressUpdate;
@@ -9,20 +8,16 @@ export interface IndexingProgressErrorTextProps {
 
 function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
   const embeddingsProvider = useAppSelector(
-    (state) => state.config.config.embeddingsProvider,
+    (state) => state.config.config.selectedModelByRole.embed,
   );
 
-  const showJbError =
-    (isJetBrains() && embeddingsProvider === "all-MiniLM-L6-v2") || true;
-
-  if (showJbError) {
+  if (!embeddingsProvider) {
     return (
       <div className="flex items-center gap-2 italic">
         <XCircleIcon className="h-4 w-4 min-w-[10%]" />
         <span className="leading-relaxed">
-          The <code>transformers.js</code> embeddingsProvider is currently
-          unsupported in JetBrains. To enable codebase indexing, you can use any
-          of the other providers described in the docs:{" "}
+          Add an Embeddings model to enable codebase indexing. See the docs for
+          examples:
           <a
             href="https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers"
             target="_blank"

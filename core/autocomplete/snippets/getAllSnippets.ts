@@ -11,6 +11,8 @@ import {
   AutocompleteSnippetType,
 } from "./types";
 
+const IDE_SNIPPETS_ENABLED = false; // ideSnippets is not used, so it's temporarily disabled
+
 export interface SnippetPayload {
   rootPathSnippets: AutocompleteCodeSnippet[];
   importDefinitionSnippets: AutocompleteCodeSnippet[];
@@ -28,6 +30,27 @@ function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
 
   return Promise.race([promise, timeoutPromise]);
 }
+
+class DiffSnippetsCache {
+  private cache: Map<number, any> = new Map();
+  private lastTimestamp: number = 0;
+
+  public set<T>(timestamp: number, value: T): T {
+    // Clear old cache entry if exists
+    if (this.lastTimestamp !== timestamp) {
+      this.cache.clear();
+    }
+    this.lastTimestamp = timestamp;
+    this.cache.set(timestamp, value);
+    return value;
+  }
+
+  public get(timestamp: number): any | undefined {
+    return this.cache.get(timestamp);
+  }
+}
+
+const diffSnippetsCache = new DiffSnippetsCache();
 
 // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
 // or they might separately track recently edited ranges)
@@ -90,14 +113,31 @@ const getClipboardSnippets = async (
 const getDiffSnippets = async (
   ide: IDE,
 ): Promise<AutocompleteDiffSnippet[]> => {
-  const diff = await ide.getDiff(true);
+  const currentTimestamp = ide.getLastFileSaveTimestamp ?
+    ide.getLastFileSaveTimestamp() :
+    Math.floor(Date.now() / 10000) * 10000; // Defaults to update once in every 10 seconds
 
-  return diff.map((item) => {
+  // Check cache first
+  const cached = diffSnippetsCache.get(currentTimestamp) as AutocompleteDiffSnippet[];
+
+  if (cached) {
+    return cached;
+  }
+
+  let diff: string[] = [];
+  try {
+    diff = await ide.getDiff(true);
+  } catch (e) {
+    console.error("Error getting diff for autocomplete", e);
+  }
+
+  return diffSnippetsCache.set(currentTimestamp, diff.map((item) => {
     return {
       content: item,
       type: AutocompleteSnippetType.Diff,
     };
-  });
+  }));
+
 };
 
 export const getAllSnippets = async ({
@@ -122,10 +162,8 @@ export const getAllSnippets = async ({
     clipboardSnippets,
   ] = await Promise.all([
     racePromise(contextRetrievalService.getRootPathSnippets(helper)),
-    racePromise(
-      contextRetrievalService.getSnippetsFromImportDefinitions(helper),
-    ),
-    racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)),
+    racePromise(contextRetrievalService.getSnippetsFromImportDefinitions(helper)),
+    IDE_SNIPPETS_ENABLED ? racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)) : [],
     racePromise(getDiffSnippets(ide)),
     racePromise(getClipboardSnippets(ide)),
   ]);

@@ -26,7 +26,9 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.lang.IllegalStateException
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 
 class IdeProtocolClient(
@@ -43,26 +45,11 @@ class IdeProtocolClient(
         )
     }
 
-    private fun send(messageType: String, data: Any?, messageId: String? = null) {
-        val id = messageId ?: uuid()
-        continuePluginService.sendToWebview(messageType, data, id)
-    }
-
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val message = Gson().fromJson(msg, Message::class.java)
             val messageType = message.messageType
             val dataElement = message.data
-
-            // A couple oddball messages respond directly to GUI, expect a different message format
-            // e.g. jetbrains/isOSREnabled
-            fun respondToWebview(content: Any) {
-                respond(mutableMapOf(
-                    "done" to true,
-                    "status" to "success",
-                    "content" to content
-                ))
-            }
 
             try {
                 when (messageType) {
@@ -77,12 +64,12 @@ class IdeProtocolClient(
                     "jetbrains/isOSREnabled" -> {
                         val isOSREnabled =
                             ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
-                        respondToWebview(isOSREnabled)
+                        respond(isOSREnabled)
                     }
 
                     "jetbrains/getColors" -> {
                         val colors = GetTheme().getTheme();
-                        respondToWebview(colors)
+                        respond(colors)
                     }
 
                     "jetbrains/onLoad" -> {
@@ -92,7 +79,7 @@ class IdeProtocolClient(
                             "vscMachineId" to getMachineUniqueID(),
                             "vscMediaUrl" to "http://continue",
                         )
-                        respondToWebview(jsonData)
+                        respond(jsonData)
                     }
 
                     "getIdeSettings" -> {
@@ -111,7 +98,7 @@ class IdeProtocolClient(
                             val sessionInfo = authService.loadControlPlaneSessionInfo()
                             respond(sessionInfo)
                         } else {
-                            authService.startAuthFlow(project)
+                            authService.startAuthFlow(project, params.useOnboarding)
                             respond(null)
                         }
                     }
@@ -121,6 +108,10 @@ class IdeProtocolClient(
                         authService.signOut()
                         ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                             .handleUpdatedSessionInfo(null)
+
+                        // Tell the webview that session info changed
+                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
+
                         respond(null)
                     }
 
@@ -439,12 +430,11 @@ class IdeProtocolClient(
 
                         if (editor.document.text.trim().isEmpty()) {
                             WriteCommandAction.runWriteCommandAction(project) {
-                                editor.document.insertString(0, msg)
+                                editor.document.insertString(0, params.text)
                             }
                             respond(null)
                             return@launch
                         }
-
 
                         val llm: Any = try {
                             suspendCancellableCoroutine { continuation ->
@@ -453,25 +443,31 @@ class IdeProtocolClient(
                                     null,
                                     null
                                 ) { response ->
-                                    val responseObject = response as Map<*, *>
-                                    val responseContent = responseObject["content"] as Map<*, *>
-                                    val result = responseContent["result"] as Map<*, *>
-                                    val config = result["config"] as Map<String, Any>
+                                    try {
+                                        val responseObject = response as Map<*, *>
+                                        val responseContent = responseObject["content"] as Map<*, *>
+                                        val result = responseContent["result"] as Map<*, *>
+                                        val config = result["config"] as Map<*, *>
 
-                                    val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
+                                        val selectedModels = config["selectedModelByRole"] as? Map<*, *>
+                                        val applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
 
-                                    if (applyCodeBlockModel != null) {
-                                        continuation.resume(applyCodeBlockModel)
-                                    }
+                                        if (applyCodeBlockModel != null) {
+                                            continuation.resume(applyCodeBlockModel)
+                                        } else {
+                                            val models =
+                                                config["models"] as List<Map<String, Any>>
+                                            val curSelectedModel =
+                                                models.find { it["title"] == params.curSelectedModelTitle }
 
-                                    val models =
-                                        config["models"] as List<Map<String, Any>>
-                                    val curSelectedModel = models.find { it["title"] == params.curSelectedModelTitle }
-
-                                    if (curSelectedModel == null) {
-                                        return@request
-                                    } else {
-                                        continuation.resume(curSelectedModel)
+                                            if (curSelectedModel == null) {
+                                                continuation.resumeWithException(IllegalStateException("Model '${params.curSelectedModelTitle}' not found in config."))
+                                            } else {
+                                                continuation.resume(curSelectedModel)
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        continuation.resumeWithException(e)
                                     }
                                 }
                             }
@@ -484,7 +480,6 @@ class IdeProtocolClient(
                             respond(null)
                             return@launch
                         }
-
 
                         val diffStreamService = project.service<DiffStreamService>()
                         // Clear all diff blocks before running the diff stream
@@ -593,25 +588,10 @@ class IdeProtocolClient(
 
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
-        send("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
+        continuePluginService.sendToWebview("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
     }
 
     fun deleteAtIndex(index: Int) {
-        send("deleteAtIndex", DeleteAtIndex(index), uuid())
-    }
-
-    private fun getModelByRole(
-        config: Any,
-        role: Any
-    ): Any? {
-        val experimental = (config as? Map<*, *>)?.get("experimental") as? Map<*, *>
-        val roleTitle = (experimental?.get("modelRoles") as? Map<*, *>)?.get(role) as? String ?: return null
-
-        val models = (config as? Map<*, *>)?.get("models") as? List<*>
-        val matchingModel = models?.find { model ->
-            (model as? Map<*, *>)?.get("title") == roleTitle
-        }
-
-        return matchingModel
+        continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
     }
 }

@@ -1,5 +1,8 @@
 import fs from "node:fs";
 
+import { ModelRole } from "@continuedev/config-yaml";
+
+import { SiteIndexingConfig } from "..";
 import {
   salvageSharedConfig,
   sharedConfigSchema,
@@ -8,10 +11,22 @@ import {
 
 import { getGlobalContextFilePath } from "./paths";
 
+export type GlobalContextModelSelections = Partial<
+  Record<ModelRole, string | null>
+>;
+
 export type GlobalContextType = {
   indexingPaused: boolean;
-  selectedTabAutocompleteModel: string;
-  lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
+  lastSelectedProfileForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
+  lastSelectedOrgIdForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
+  selectedModelsByProfileId: {
+    [profileId: string]: GlobalContextModelSelections;
+  };
+
   /**
    * This is needed to handle the case where a JetBrains user has created
    * docs embeddings using one provider, and then updates to a new provider.
@@ -21,8 +36,9 @@ export type GlobalContextType = {
   hasDismissedConfigTsNoticeJetBrains: boolean;
   hasAlreadyCreatedAPromptFile: boolean;
   showConfigUpdateToast: boolean;
-  isSupportedLanceDbCpuTarget: boolean;
+  isSupportedLanceDbCpuTargetForLinux: boolean;
   sharedConfig: SharedConfigSchema;
+  failedDocs: SiteIndexingConfig[];
 };
 
 /**
@@ -104,5 +120,24 @@ export class GlobalContext {
     };
     this.update("sharedConfig", updatedSharedConfig);
     return updatedSharedConfig;
+  }
+
+  updateSelectedModel(
+    profileId: string,
+    role: ModelRole,
+    title: string | null,
+  ): GlobalContextModelSelections {
+    const currentSelections = this.get("selectedModelsByProfileId") ?? {};
+    const forProfile = currentSelections[profileId] ?? {};
+    const newSelections = {
+      ...forProfile,
+      [role]: title,
+    };
+
+    this.update("selectedModelsByProfileId", {
+      ...currentSelections,
+      [profileId]: newSelections,
+    });
+    return newSelections;
   }
 }
