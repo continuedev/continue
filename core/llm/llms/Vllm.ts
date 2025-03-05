@@ -6,7 +6,10 @@ class Vllm extends OpenAI {
   static providerName = "vllm";
   constructor(options: LLMOptions) {
     super(options);
-    this._setupCompletionOptions();
+
+    if (options.model === "AUTODETECT") {
+      this._setupCompletionOptions();
+    }
   }
 
   private _setupCompletionOptions() {
@@ -22,7 +25,7 @@ class Vllm extends OpenAI {
         return;
       }
       const json = await response.json();
-      const data = json.data;
+      const data = json.data[0];
       this.model = data.id;
       this.contextLength = Number.parseInt(data.max_model_len);
     });
