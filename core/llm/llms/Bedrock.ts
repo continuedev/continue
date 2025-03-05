@@ -135,8 +135,8 @@ class Bedrock extends BaseLLM {
           }
 
           // Handle text content
-          if (chunk.contentBlockDelta.delta.reasoningContent?.text) {
-            yield { role: "thinking", content: chunk.contentBlockDelta.delta.reasoningContent.text };
+          if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
+            yield { role: "thinking", content: (chunk.contentBlockDelta.delta as any).reasoningContent.text };
             continue;
           }
 
