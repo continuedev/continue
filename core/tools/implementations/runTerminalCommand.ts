@@ -1,8 +1,8 @@
 import childProcess from "node:child_process";
 import util from "node:util";
 
-import { ToolImpl } from ".";
 import { fileURLToPath } from "node:url";
+import { ToolImpl } from ".";
 
 const asyncExec = util.promisify(childProcess.exec);
 
@@ -26,7 +26,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
         {
           name: "Terminal",
           description: "Terminal command output",
-          content: error.stderr ?? error.toString(),
+          content: error.stderr || error.stdout || error.toString(),
         },
       ];
     }
