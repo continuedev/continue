@@ -365,7 +365,7 @@ jobs:
         id: storage-cache
         with:
           path: extensions/vscode/e2e/storage
-          key: ${{ runner.os }}-vscode-storage-v2-${{ hashFiles('extensions/vscode/package-lock.json') }}
+          key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Download Dependencies
         if: steps.storage-cache.outputs.cache-hit != 'true'
