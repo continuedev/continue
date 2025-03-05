@@ -594,7 +594,7 @@
     "e2e:compile": "tsc -p ./tsconfig.e2e.json",
     "e2e:build": "npm --prefix ../../gui run build && npm run package",
     "e2e:create-storage": "mkdir -p ./e2e/storage",
-    "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage",
+    "e2e:get-chromedriver": "extest get-chromedriver --code_version 1.95.0 --storage ./e2e/storage",
     "e2e:get-vscode": "CODE_VERSION=\"1.95.0\" extest get-vscode --storage ./e2e/storage",
     "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
