@@ -50,5 +50,29 @@
   "sidebar.customizingSidebar.link.Reference": {
     "message": "参考",
     "description": "The label for link Reference in sidebar customizingSidebar, linking to /reference"
+  },
+  "sidebar.customizingSidebar.category.Model roles": {
+    "message": "模型角色",
+    "description": "The label for category Model roles in sidebar customizingSidebar"
+  },
+  "sidebar.customizingSidebar.link.YAML Reference": {
+    "message": "YAML 参考",
+    "description": "The label for link YAML Reference in sidebar customizingSidebar, linking to /yaml-reference"
+  },
+  "sidebar.hubSidebar.category.Assistants": {
+    "message": "助手",
+    "description": "The label for category Assistants in sidebar hubSidebar"
+  },
+  "sidebar.hubSidebar.category.Blocks": {
+    "message": "块",
+    "description": "The label for category Blocks in sidebar hubSidebar"
+  },
+  "sidebar.hubSidebar.category.Secrets": {
+    "message": "Secrets",
+    "description": "The label for category Secrets in sidebar hubSidebar"
+  },
+  "sidebar.hubSidebar.category.Governance": {
+    "message": "管理",
+    "description": "The label for category Governance in sidebar hubSidebar"
   }
 }

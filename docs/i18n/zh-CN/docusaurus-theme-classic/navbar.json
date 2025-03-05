@@ -30,5 +30,9 @@
   "item.label.Reference": {
     "message": "参考",
     "description": "Navbar item with label Reference"
+  },
+  "item.label.Hub": {
+    "message": "Hub",
+    "description": "Navbar item with label Hub"
   }
 }
