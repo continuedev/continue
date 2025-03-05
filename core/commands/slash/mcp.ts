@@ -70,12 +70,12 @@ function substituteContent(content: MessagePart[], input: string, prompt: Messag
  * @param prompt Replacement content to be inserted
  * @returns New array of messages with the substitution applied
  */
-function substituteLastUserMessage(messages: ChatMessage[], input: string, prompt: ChatMessage[]): ChatMessage[] {
+export function substituteLastUserMessage(messages: ChatMessage[], input: string, prompt: ChatMessage[]): ChatMessage[] {
   // Create a copy of the messages array
   const newMessages = [...messages];
   
   // Find the last user message
-  const lastUserMessageIndex = findLastIndex(newMessages,(msg) => msg.role === "user");
+  let lastUserMessageIndex = findLastIndex(newMessages,(msg) => msg.role === "user");
   
   if (lastUserMessageIndex === -1) {
     // No user message found
@@ -95,10 +95,11 @@ function substituteLastUserMessage(messages: ChatMessage[], input: string, promp
       // No user messages in prompt, insert them before the last user message
       newMessages.splice(lastUserMessageIndex, 0, ...prompt);
       promptContent = [];
-    } else {
+    } else  {
       // User messages in prompt, insert all but last user prompt before the last user message
       newMessages.splice(lastUserMessageIndex, 0, ...prompt.slice(0, lastUserPromptIndex ));
       promptContent = prompt[lastUserPromptIndex].content as MessagePart[];
+      lastUserMessageIndex += lastUserPromptIndex
     }
     // Get the last user message
     const userMessage = newMessages[lastUserMessageIndex];
@@ -112,7 +113,7 @@ function substituteLastUserMessage(messages: ChatMessage[], input: string, promp
       contentAsArray = userMessage.content as MessagePart[];
     }
     
-    // Apply substituteContent function
+    // replace command with prompt in content
     const newContent = substituteContent(contentAsArray, input, promptContent);
     
     // Create a new user message with the substituted content
