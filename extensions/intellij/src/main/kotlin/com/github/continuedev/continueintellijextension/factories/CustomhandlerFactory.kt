@@ -111,7 +111,10 @@ class OpenedConnection(private val connection: URLConnection?) :
     ) {
         try {
             if (connection != null) {
-                val url = connection.url.toString()
+                val fullUrl = connection.url.toString()
+                // Extract only the resource path after the JAR prefix to prevent incorrect mime type matching
+                // (e.g., if a user's home folder contains "js" in the path)
+                val url = fullUrl.substringAfterLast("jar!/", fullUrl)
                 when {
                     url.contains("css") -> cefResponse.mimeType = "text/css"
                     url.contains("js") -> cefResponse.mimeType = "text/javascript"
