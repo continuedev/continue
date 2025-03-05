@@ -1,4 +1,5 @@
 import { ChatMessage, CompletionOptions, CustomLLM } from "../../index.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 class CustomLLMClass extends BaseLLM {
@@ -18,7 +19,7 @@ class CustomLLMClass extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-  ) => AsyncGenerator<string>;
+  ) => AsyncGenerator<ChatMessage | string>;
 
   constructor(custom: CustomLLM) {
     super(custom.options || { model: "custom" });
@@ -38,7 +39,11 @@ class CustomLLMClass extends BaseLLM {
         options,
         (...args) => this.fetch(...args),
       )) {
-        yield { role: "assistant", content };
+        if (typeof content === "string") {
+          yield { role: "assistant", content };
+        } else {
+          yield content;
+        }
       }
     } else {
       for await (const update of super._streamChat(messages, signal, options)) {
@@ -68,7 +73,11 @@ class CustomLLMClass extends BaseLLM {
         options,
         (...args) => this.fetch(...args),
       )) {
-        yield content;
+        if (typeof content === "string") {
+          yield content;
+        } else {
+          yield renderChatMessage(content);
+        }
       }
     } else {
       throw new Error(

@@ -543,7 +543,7 @@ export interface CustomLLMWithOptionals {
     signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-  ) => AsyncGenerator<string>;
+  ) => AsyncGenerator<ChatMessage | string>;
   listModels?: (
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => Promise<string[]>;
