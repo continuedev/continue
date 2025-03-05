@@ -4,7 +4,7 @@ title: 提示词文件
 
 提示词文件提供一个方便的方式，来标准化通用模式，并与你的团队分享一批 LLM 提示词。它们让构建和使用这些提示词更简单。
 
-在 [hub](../../hub/introduction.md) 中，提示词文件保存在 [prompt blocks](../../hub/blocks/block-types.md#prompts) 中，像 [斜杠命令](../slash-commands.mdx) 一样在聊天中显示。访问 hub [查看提示词](https://hub.continue.dev/explore/prompts) 或者 [创建你自己的](https://hub.continue.dev/new?type=block&block=rules) 。
+在 [hub](../../hub/introduction.md) 中，提示词文件保存在 [prompt blocks](../../hub/blocks/block-types.md#提示词) 中，像 [斜杠命令](../slash-commands.mdx) 一样在聊天中显示。访问 hub [查看提示词](https://hub.continue.dev/explore/prompts) 或者 [创建你自己的](https://hub.continue.dev/new?type=block&block=rules) 。
 
 提示词文件可以以 `.prompt` 文件保存你的项目根目录。查看下面的。
 

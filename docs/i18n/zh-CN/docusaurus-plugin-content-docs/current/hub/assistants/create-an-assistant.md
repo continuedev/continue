@@ -32,7 +32,7 @@ keywords: [助手, 创建, 指南]
 
 创建助手最简单的方法是，点击 "Create assistant" 使用默认的配置，然后使用侧边栏 添加/删除 块。
 
-另外，你可以在点击 "Create assistant" 之前直接编辑助手 YAML 。查询助手示例在 [hub.continue.dev](https://hub.continue.dev/explore/assistants) ，访问 [YAML 参考](../../yaml-reference.md#complete-yaml-config-example) 文档获取更多详情。
+另外，你可以在点击 "Create assistant" 之前直接编辑助手 YAML 。查询助手示例在 [hub.continue.dev](https://hub.continue.dev/explore/assistants) ，访问 [YAML 参考](../../yaml-reference.md#完整的-yaml-配置示例) 文档获取更多详情。
 
 ![New assistant YAML](/img/hub/assistant-create-yaml.png)
 

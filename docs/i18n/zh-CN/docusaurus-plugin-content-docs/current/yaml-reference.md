@@ -250,22 +250,38 @@ mcpServers:
       - /Users/NAME/test.db
 ```
 
-<!-- ### `data`
+### `data`
 
-The `data` section specifies data providers used in your configuration. Data providers supply data or resources for use in various operations.
+[开发数据](./customize/deep-dives/development-data.md) 将要发送的目标。
 
-**Properties:**
+**属性：**
 
-- `provider` (**required**): The name of the data provider.
+- `name` (**必需的**): 数据目标的显示名称
+- `destination` (**必需的**): 接收数据的目标/端点。可以是：
+  - 一个 HTTP 端点，接收一个带有 JSON blob 的 POST 请求
+  - 一个文件 URL 到一个目录，事件会导出到 `.jsonl` 文件中
+- `schema` (**必需的**): 要发送的 JSON blobs 的 schema 版本
+- `events`: 要包含的事件名称的列表。如果没有指定，默认是所有的事件。
+- `level`: 一个预先定义的事件字段过滤器。选项包括 `all` 和 `noCode` ；后者排除数据，比如文件内容，提示词和补全。默认是 `all`
+- `apiKey`: 发送请求使用的 api key (Bearer header)
+- `requestOptions`: 事件 POST 请求的选项。和 [模型 requestOptions](#models) 一样的格式。.
 
-**Example:**
+  **示例：**
 
 ```yaml title="config.yaml"
 data:
-  - provider: embeddings
+  - name: Local Data Bank
+    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data
+    schema: 0.2.0
+    level: all
+  - name: My Private Company
+    destination: https://mycompany.com/ingest
+    schema: 0.2.0
+    level: noCode
+    events:
+      - autocomplete
+      - chatInteraction
 ```
-
---- -->
 
 ---
 

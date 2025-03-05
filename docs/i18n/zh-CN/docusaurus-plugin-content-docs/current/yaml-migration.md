@@ -37,9 +37,9 @@ version: 0.0.1
   - `inlineEdit` -> 例如 `roles: [chat, edit]`
   - `applyCodeBlock` -> 例如 `roles: [chat, apply]`
 
-模型级别的 `requestOptions` 保留，有微小的修改。查看 [YAML Continue 配置参考](/yaml-reference#requestoptions)
+模型级别的 `requestOptions` 保留，有微小的修改。查看 [YAML Continue 配置参考](/reference#requestoptions)
 
-模型级别的 `completionOptions` 被 `defaultCompletionOptions` 替代，有微小的修改。查看 [YAML Continue 配置参考](/yaml-reference#completionoptions)
+模型级别的 `completionOptions` 被 `defaultCompletionOptions` 替代，有微小的修改。查看 [YAML Continue 配置参考](/reference#completionoptions)
 
 <!-- TODO - API KEY -> apiKeySecret? -->
 <!-- TODO - ollama autodetect supported? -->
@@ -329,7 +329,7 @@ mcpServers:
 
 一些废弃的 `config.json` 设置不再保存在配置中，移动到 [用户设置页面](./customize/settings.md) 编辑（齿轮图标）。如果在 `config.json` 发现，它们会迁移到 [用户设置页面](./customize/settings.md) ，并从 `config.json` 中移除。
 
-查看 [JSON 配置参考](./reference#fully-deprecated-settings) 获取更多完全启用配置的信息。
+查看 [JSON 配置参考](./reference#完全弃用的设置) 获取更多完全启用配置的信息。
 
 以下在 `config.json` 中最高级别的字段在使用 `config.json` 时仍然可用，但是已经废弃，并且不在 YAML 有等效的字段：
 

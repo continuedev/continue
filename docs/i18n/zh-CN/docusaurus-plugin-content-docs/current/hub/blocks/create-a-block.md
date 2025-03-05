@@ -23,7 +23,7 @@ keywords: [块, 创建, 使用]
 
 ![New block button](/img/hub/block-new-button.png)
 
-在填写块的信息之后，你想要创建一个块，跟随 `config.yaml` [reference documentation](../../yaml-reference.md) 。查看 [hub.continue.dev](https://hub.continue.dev/explore/models) 上块的示例，访问 [YAML 参考](../../yaml-reference.md#complete-yaml-config-example) 文档获取更多详情。
+在填写块的信息之后，你想要创建一个块，跟随 `config.yaml` [reference documentation](../../yaml-reference.md) 。查看 [hub.continue.dev](https://hub.continue.dev/explore/models) 上块的示例，访问 [YAML 参考](../../yaml-reference.md#完整的-yaml-配置示例) 文档获取更多详情。
 
 ![New block page](/img/hub/block-new-page.png)
 

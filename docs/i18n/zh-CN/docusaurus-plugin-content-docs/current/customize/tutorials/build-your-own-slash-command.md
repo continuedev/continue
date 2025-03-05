@@ -4,7 +4,7 @@ title: 构建你自己的斜杠命令
 
 :::info
 
-斜杠命令当前值添加到 [`config.json`](../reference.md) 。 [`YAML Config Format`](../reference.md) 是新的和更推荐的格式。我们推荐查看 [Prompt Files](../customize/deep-dives/prompt-files.md) 获取相同的功能。
+斜杠命令当前值添加到 [`config.json`](../../reference.md) 。 [`YAML Config Format`](../../reference.md) 是新的和更推荐的格式。我们推荐查看 [Prompt Files](../deep-dives/prompt-files.md) 获取相同的功能。
 
 :::
 

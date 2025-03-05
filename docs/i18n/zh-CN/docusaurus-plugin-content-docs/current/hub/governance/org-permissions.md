@@ -13,6 +13,6 @@ keywords: [管理, 组织, 权限]
 
 **每个角色的用户权限取决于价格方案：**
 
-- [个人](./pricing.md#solo)
-- [团队](./pricing.md#teams)
-- [企业](./pricing.md#enterprise)
+- [个人](./pricing.md#个人)
+- [团队](./pricing.md#团队)
+- [企业](./pricing.md#企业)
