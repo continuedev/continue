@@ -18,7 +18,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       versionSlug: "",
     },
     iconUrl: "",
-    title: "Local Config",
+    title: "Local Assistant",
     errors: undefined,
   };
 

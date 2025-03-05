@@ -21,7 +21,7 @@ Most custom configuration is done by editing `config.yaml` (or the older `config
 - MacOS and Linux: `~/.continue/config.yaml`
 - Windows: `%USERPROFILE%\.continue\config.yaml`
 
-You can easily access config file from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the "gear" icon in header to open the Settings page. Then click the button labeled `Open configuration file`.
+You can easily access config file from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the "gear" icon in header to open the Settings page. Then click the button labeled `Open Assistant configuration`.
 
 ![configure-continue](/img/configure-continue.png)
 

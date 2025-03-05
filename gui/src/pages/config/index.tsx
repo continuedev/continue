@@ -220,10 +220,12 @@ function ConfigPage() {
             <h2 className="mb-1 mt-0">Configuration</h2>
             {hubEnabled ? (
               // Hub: show org selector
-              <div className="flex flex-col gap-1.5">
-                <span className="text-lightgray text-sm">{`Organization`}</span>
-                <ScopeSelect />
-              </div>
+              session && (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-lightgray text-sm">{`Organization`}</span>
+                  <ScopeSelect />
+                </div>
+              )
             ) : (
               // Continue for teams: show org text
               <div>You are using Continue for Teams</div>
@@ -307,11 +309,9 @@ function ConfigPage() {
                               onClick={handleOpenConfig}
                             >
                               <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                              {selectedProfile.id === "local"
-                                ? "View configuration"
-                                : hubEnabled
-                                  ? "View Assistant"
-                                  : "View Workspace"}
+                              {hubEnabled
+                                ? "Open Assistant configuration"
+                                : "View Workspace"}
                             </span>
                           </div>
                         )}

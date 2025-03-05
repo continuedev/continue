@@ -14,7 +14,7 @@ Which takes you to this page:
 
 ![User Settings Page](/img/settings-page.png)
 
-Click the `Open Config File` button to open your configuration file. See the [Configuration Reference](../reference.md) for more information.
+Click the `Open Assistant configuration` button to open your configuration file. See the [Configuration Reference](../reference.md) for more information.
 
 Below that, the following settings which are not part of a configuration file are available:
 
