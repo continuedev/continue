@@ -903,7 +903,7 @@ export class Core {
         if (e instanceof RangeError) {
           // do nothing, this can happen when editing a file outside the workspace such as `../extensions/.continue-debug/config.json`
         } else {
-          console.debug("unhandled ignores error", relativeFilePath, e);
+          console.debug("unhandled ignores error", relativePathOrBasename, e);
         }
       }
     });
