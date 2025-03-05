@@ -23,17 +23,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     private val iconLabel = JLabel()
     private var isLoading = false
     
-    private val animatedIcon = AnimatedIcon(
-        100,
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading1(RiderLight).svg", javaClass),
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading2(RiderLight).svg", javaClass),
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading3(RiderLight).svg", javaClass),
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading4(RiderLight).svg", javaClass),
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading5(RiderLight).svg", javaClass),
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading6(RiderLight).svg", javaClass),
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading7(RiderLight).svg", javaClass),
-        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading8(RiderLight).svg", javaClass),
-    )
+    private val animatedIcon = AnimatedIcon.Default()
 
     init {
         Disposer.register(ContinuePluginDisposable.getInstance(project), this)
@@ -47,10 +37,10 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     override fun dispose() {}
 
     override fun ID(): String {
-        return "AutocompleteSpinnerWidget"
+        return ID
     }
 
-    override fun getTooltipText(): String? {
+    override fun getTooltipText(): String {
         val enabled = service<ContinueExtensionSettings>().state.enableTabAutocomplete
         return if (enabled) "Continue autocomplete enabled" else "Continue autocomplete disabled"
     }
@@ -80,8 +70,12 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
         updateIcon()
     }
 
-    override fun getPresentation(): StatusBarWidget.WidgetPresentation? {
+    override fun getPresentation(): StatusBarWidget.WidgetPresentation {
         return this
+    }
+
+    companion object {
+        const val ID = "AutocompleteSpinnerWidget"
     }
 }
 
@@ -91,7 +85,7 @@ class AutocompleteSpinnerWidgetFactory : StatusBarWidgetFactory {
     }
 
     override fun getId(): String {
-        return "AutocompleteSpinnerWidget"
+        return AutocompleteSpinnerWidget.ID
     }
 
     override fun getDisplayName(): String {
@@ -103,7 +97,7 @@ class AutocompleteSpinnerWidgetFactory : StatusBarWidgetFactory {
     }
 
     override fun createWidget(project: Project): StatusBarWidget {
-        return AutocompleteSpinnerWidget(project)
+        return create(project)
     }
 
     override fun disposeWidget(p0: StatusBarWidget) {

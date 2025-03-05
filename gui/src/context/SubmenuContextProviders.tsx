@@ -274,10 +274,12 @@ export const SubmenuContextProvidersProvider = ({
               }
               const submenuItems = result.content;
               const providerTitle = description.title;
+              const renderInlineAs = description.renderInlineAs;
 
               const itemsWithProvider = submenuItems.map((item) => ({
                 ...item,
                 providerTitle,
+                renderInlineAs
               }));
 
               const minisearch = new MiniSearch<ContextSubmenuItemWithProvider>(
