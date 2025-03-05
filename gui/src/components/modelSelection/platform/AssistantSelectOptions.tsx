@@ -11,7 +11,6 @@ import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
-import { getProfileDisplayText } from "./utils";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -49,8 +48,8 @@ export function AssistantSelectOptions({
   }
 
   return (
-    <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
-      <div className={`max-h-[300px]`}>
+    <div className="border-lightgray flex w-full flex-col overflow-x-hidden pt-0">
+      <div className={`max-h-[300px] w-full`}>
         {profiles.map((profile, idx) => {
           return (
             <Option
@@ -69,7 +68,7 @@ export function AssistantSelectOptions({
                 onClose();
               }}
             >
-              <div className="flex min-w-0 items-center">
+              <div className="flex w-full items-center">
                 <div className="mr-2 h-4 w-4 flex-shrink-0">
                   <AssistantIcon assistant={profile} />
                 </div>
@@ -77,7 +76,7 @@ export function AssistantSelectOptions({
                   className="flex-1 truncate"
                   style={{ fontSize: getFontSize() - 2 }}
                 >
-                  {getProfileDisplayText(profile)}
+                  {profile.title}
                 </span>
               </div>
             </Option>
