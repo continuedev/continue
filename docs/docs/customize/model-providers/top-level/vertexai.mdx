@@ -1,0 +1,116 @@
+---
+title: Vertex AI
+slug: ../vertexai
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+:::info
+You need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).
+:::
+
+## Chat model
+
+We recommend configuring **Claude 3.5 Sonnet** as your chat model.
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Claude 3.5 Sonnet
+        provider: vertexai
+        model: claude-3-5-sonnet-20240620
+        env:
+          projectId: <PROJECT_ID>
+          region: us-east5
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "models": [
+        {
+          "title": "Claude 3.5 Sonnet",
+          "provider": "vertexai",
+          "model": "claude-3-5-sonnet-20240620",
+          "projectId": "[PROJECT_ID]",
+          "region": "us-east5"
+        }
+      ]
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **Codestral** or **code-gecko** as your autocomplete model.
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Codestral (Vertex AI)
+        provider: vertexai
+        model: codestral
+        roles:
+          - autocomplete
+        env:
+          projectId: <PROJECT_ID>
+          region: us-central1
+          
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "tabAutocompleteModel": {
+          "title": "Codestral (Vertex AI)",
+          "provider": "vertexai",
+          "model": "codestral",
+          "projectId": "[PROJECT_ID]",
+          "region": "us-central1"
+      }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+## Embeddings model
+
+We recommend configuring **text-embedding-004** as your embeddings model.
+
+<Tabs groupId="config-example">
+    <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: Text Embedding-004
+        provider: vertexai
+        model: text-embedding-004
+        env:
+          projectId: <PROJECT_ID>
+          region: us-central1
+        roles:
+          - embed
+    ```
+    </TabItem>
+    <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "embeddingsProvider": {
+        "provider": "vertexai",
+        "model": "text-embedding-004",
+        "projectId": "[PROJECT_ID]",
+        "region": "us-central1"
+      }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+## Reranking model
+
+Vertex AI currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.

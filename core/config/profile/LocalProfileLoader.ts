@@ -39,6 +39,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       undefined,
       undefined,
       undefined,
+      this.description.id,
     );
 
     this.description.errors = result.errors;

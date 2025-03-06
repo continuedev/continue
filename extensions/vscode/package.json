@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.262",
+  "version": "1.1.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -94,12 +94,7 @@
         "continue.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
-        },
-        "continue.enableContinueHub": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable Continue Hub (internal)"
+          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the gear icon to go to the settings page, and click Sign In."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -339,20 +334,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.signInToControlPlane",
-        "title": "Sign In",
-        "category": "Continue",
-        "group": "Continue",
-        "icon": "$(account)"
-      },
-      {
-        "command": "continue.openAccountDialog",
-        "title": "Account",
-        "category": "Continue",
-        "group": "Continue",
-        "icon": "$(account)"
-      },
-      {
         "command": "granite.writeContinueConfig",
         "title": "Write Continue Config",
         "category": "Granite.Code",
@@ -502,27 +483,27 @@
         {
           "command": "continue.writeCommentsForCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.writeDocstringForCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.fixCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.optimizeCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.fixGrammar",
           "group": "Continue",
-          "when": "editorHasSelection && editorLangId == 'markdown'"
+          "when": "editorHasSelection && editorLangId == 'markdown' && !editorReadonly"
         }
       ],
       "explorer/context": [
@@ -685,7 +666,7 @@
     "dbinfoz": "^0.14.0",
     "diff": "^7.0.0",
     "downshift": "^7.6.0",
-    "esbuild": "^0.17.19",
+    "esbuild": "0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
@@ -713,7 +694,7 @@
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
     "svg-builder": "^2.0.0",
-    "systeminformation": "^5.22.10",
+    "systeminformation": "^5.23.7",
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
     "uuid": "^9.0.1",

@@ -21,7 +21,6 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { startLocalOllama } from "core/util/ollamaHelper";
 import type { IDE } from "core";
 
@@ -83,13 +82,19 @@ export class ContinueCompletionProvider
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly tabAutocompleteModel: TabAutocompleteModel,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
   ) {
+    async function getAutocompleteModel() {
+      const { config } = await configHandler.loadConfig();
+      if (!config) {
+        return;
+      }
+      return config.selectedModelByRole.autocomplete ?? undefined;
+    }
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
-      this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
+      getAutocompleteModel,
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
@@ -304,7 +309,7 @@ export class ContinueCompletionProvider
           } else {
             // If the first part of the diff isn't an insertion, then the model is
             // probably rewriting other parts of the line
-            return undefined;
+            // return undefined; - Let's assume it's simply an insertion
           }
         }
       } else {

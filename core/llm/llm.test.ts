@@ -2,11 +2,13 @@ import * as dotenv from "dotenv";
 
 import { AssistantChatMessage, CompletionOptions } from "..";
 
-import { BaseLLM } from ".";
 import Anthropic from "./llms/Anthropic";
+import Azure from "./llms/Azure";
 import Gemini from "./llms/Gemini";
 import Mistral from "./llms/Mistral";
 import OpenAI from "./llms/OpenAI";
+
+import { BaseLLM } from ".";
 
 dotenv.config();
 
@@ -221,5 +223,26 @@ describe("LLM", () => {
       model: "codestral-latest",
     }),
     { testFim: true, skip: false },
+  );
+  testLLM(
+    new Azure({
+      apiKey: process.env.AZURE_OPENAI_API_KEY,
+      model: "gpt-4o",
+      apiVersion: "2024-05-01-preview",
+      apiBase: "https://continue-azure-openai-instance.openai.azure.com",
+      deployment: "azure-openai-deployment",
+      apiType: "azure-openai",
+    }),
+    { testFim: false, skip: false, timeout: 20000 },
+  );
+  testLLM(
+    new Azure({
+      apiKey: process.env.AZURE_FOUNDRY_API_KEY,
+      model: "codestral-latest",
+      apiBase:
+        "https://codestral-2501-continue-testing.eastus.models.ai.azure.com",
+      apiType: "azure-foundry",
+    }),
+    { testFim: false, skip: false, timeout: 20000 },
   );
 });

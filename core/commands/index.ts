@@ -10,7 +10,7 @@ export function slashFromCustomCommand(
   return {
     name: customCommand.name,
     description: customCommand.description ?? "",
-    run: async function* ({ input, llm, history, ide }) {
+    run: async function* ({ input, llm, history, ide, completionOptions }) {
       // Remove slash command prefix from input
       let userInput = input;
       if (userInput.startsWith(`/${customCommand.name}`)) {
@@ -20,11 +20,16 @@ export function slashFromCustomCommand(
       }
 
       // Render prompt template
-      const promptUserInput = await renderTemplatedString(
-        customCommand.prompt,
-        ide.readFile.bind(ide),
-        { input: userInput },
-      );
+      let promptUserInput: string;
+      if (customCommand.prompt.includes("{{{ input }}}")) {
+        promptUserInput = await renderTemplatedString(
+          customCommand.prompt,
+          ide.readFile.bind(ide),
+          { input: userInput },
+        );
+      } else {
+        promptUserInput = customCommand.prompt + "\n\n" + userInput;
+      }
 
       const messages = [...history];
       // Find the last chat message with this slash command and replace it with the user input
@@ -67,6 +72,7 @@ export function slashFromCustomCommand(
       for await (const chunk of llm.streamChat(
         messages,
         new AbortController().signal,
+        completionOptions,
       )) {
         yield renderChatMessage(chunk);
       }

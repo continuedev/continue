@@ -3,13 +3,13 @@ import {
   ChevronDownIcon,
   Cog6ToothIcon,
   CubeIcon,
-  PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
 import { useAppSelector } from "../../redux/hooks";
@@ -18,13 +18,8 @@ import {
   setDefaultModel,
 } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import {
-  getFontSize,
-  getMetaKeyLabel,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { getFontSize } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
-import { Divider } from "./platform/shared";
 
 interface ModelOptionProps {
   option: Option;
@@ -219,9 +214,7 @@ function ModelSelect() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
-  const selectedProfileId = useAppSelector(
-    (store) => store.session.selectedProfileId,
-  );
+  const { selectedProfile } = useAuth();
 
   // Sort so that options without an API key are at the end
   useEffect(() => {
@@ -235,13 +228,15 @@ function ModelSelect() {
 
   useEffect(() => {
     setOptions(
-      allModels.map((model) => {
-        return {
-          value: model.title,
-          title: modelSelectTitle(model),
-          apiKey: model.apiKey,
-        };
-      }),
+      allModels
+        .filter((m) => !m.roles || m.roles.includes("chat"))
+        .map((model) => {
+          return {
+            value: model.title,
+            title: modelSelectTitle(model),
+            apiKey: model.apiKey,
+          };
+        }),
     );
   }, [allModels]);
 

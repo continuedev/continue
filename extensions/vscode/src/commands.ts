@@ -4,13 +4,11 @@ import * as os from "node:os";
 import { ContextMenuConfig, RangeInFileWithContents } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { getModelByRole } from "core/config/util";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
-import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
@@ -32,12 +30,12 @@ import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import { showTutorial } from "./util/tutorial";
-import { VsCodeIde } from "./VsCodeIde";
 import { getMetaKeyLabel } from "./util/util";
+import { VsCodeIde } from "./VsCodeIde";
 
-import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { startLocalOllama } from "core/util/ollamaHelper";
-
+import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -351,7 +349,7 @@ const getCommandsMap: (
     );
 
     const modelTitle =
-      getModelByRole(config, "inlineEdit")?.title ?? defaultModelTitle;
+      config.selectedModelByRole.edit?.title ?? defaultModelTitle;
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
@@ -875,16 +873,12 @@ const getCommandsMap: (
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
-      const autocompleteModels =
-        (await configHandler.loadConfig()).config?.tabAutocompleteModels ?? [];
 
-      let selected = new GlobalContext().get("selectedTabAutocompleteModel");
-      if (
-        !selected ||
-        !autocompleteModels.some((model) => model.title === selected)
-      ) {
-        selected = autocompleteModels[0]?.title;
-      }
+      const { config: continueConfig } = await configHandler.loadConfig();
+      const autocompleteModels =
+        continueConfig?.modelsByRole.autocomplete ?? [];
+      const selected =
+        continueConfig?.selectedModelByRole?.autocomplete?.title ?? undefined;
 
       // Toggle between Disabled, Paused, and Enabled
       const pauseOnBattery =
@@ -919,13 +913,11 @@ const getCommandsMap: (
         },
         {
           label: "$(screen-full) Open full screen chat",
-          description: getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + M",
+          description:
+            getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + M",
         },
         {
           label: quickPickStatusText(targetStatus),
-        },
-        {
-          label: "$(gear) Configure autocomplete options",
         },
         {
           label: "$(feedback) Give feedback",
@@ -952,17 +944,16 @@ const getCommandsMap: (
             vscode.ConfigurationTarget.Global,
           );
         } else if (
-          selectedOption === "$(gear) Configure autocomplete options"
-        ) {
-          ide.openFile(vscode.Uri.file(getConfigJsonPath()).toString());
-        } else if (
           autocompleteModels.some((model) => model.title === selectedOption)
         ) {
-          new GlobalContext().update(
-            "selectedTabAutocompleteModel",
-            selectedOption,
-          );
-          configHandler.reloadConfig();
+          if (core.configHandler.currentProfile?.profileDescription.id) {
+            core.invoke("config/updateSelectedModel", {
+              profileId:
+                core.configHandler.currentProfile?.profileDescription.id,
+              role: "autocomplete",
+              title: selectedOption,
+            });
+          }
         } else if (selectedOption === "$(feedback) Give feedback") {
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
         } else if (selectedOption === "$(comment) Open chat (Cmd+L)") {
@@ -988,7 +979,10 @@ const getCommandsMap: (
       });
       if (feedback) {
         const client = await continueServerClientPromise;
-        const completionsPath = getDevDataFilePath("autocomplete");
+        const completionsPath = getDevDataFilePath(
+          "autocomplete",
+          LOCAL_DEV_DATA_VERSION,
+        );
 
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);
@@ -1000,12 +994,6 @@ const getCommandsMap: (
     "continue.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
       focusGUI();
-    },
-    "continue.signInToControlPlane": () => {
-      sidebar.webviewProtocol?.request("signInToControlPlane", undefined);
-    },
-    "continue.openAccountDialog": () => {
-      sidebar.webviewProtocol?.request("openDialogMessage", "account");
     },
     "continue.startLocalOllama": () => {
       startLocalOllama(ide);
@@ -1024,11 +1012,15 @@ const getCommandsMap: (
         });
     },
     "granite.setup": () => {
-      SetupGranitePage.render(extensionContext, configHandler, sidebar.webviewProtocol);
+      SetupGranitePage.render(
+        extensionContext,
+        configHandler,
+        sidebar.webviewProtocol,
+      );
     },
     "granite.showTutorial": () => {
       showTutorial(ide);
-    }
+    },
   };
 };
 

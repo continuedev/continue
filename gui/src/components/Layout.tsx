@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { AuthProvider } from "../context/Auth";
+import GraniteOnboardingCard from "../granite/GraniteOnboardingCard";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
@@ -13,18 +14,16 @@ import {
   setMode,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
-import AccountDialog from "./AccountDialog";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
-import GraniteOnboardingCard from "../granite/GraniteOnboardingCard";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -96,17 +95,6 @@ const Layout = () => {
     },
     [location.pathname],
     location.pathname === ROUTES.HOME,
-  );
-
-  useWebviewListener(
-    "openDialogMessage",
-    async (message) => {
-      if (message === "account") {
-        dispatch(setShowDialog(true));
-        dispatch(setDialogMessage(<AccountDialog />));
-      }
-    },
-    [],
   );
 
   useWebviewListener(
@@ -276,9 +264,7 @@ const Layout = () => {
                 onClick={() => navigate(ROUTES.CONFIG_ERROR)}
               >
                 <strong className="font-bold">Error!</strong>{" "}
-                <span className="block sm:inline">
-                  Could not load config.json
-                </span>
+                <span className="block sm:inline">Could not load config</span>
                 <div className="mt-2 underline">Learn More</div>
               </div>
             )}

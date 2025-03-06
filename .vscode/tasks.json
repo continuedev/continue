@@ -6,16 +6,14 @@
       "type": "npm",
       "script": "tsc:watch",
       "isBackground": true,
-      "problemMatcher": {
-        "base": "$tsc-watch",
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "Starting compilation in watch mode...",
-          "endsPattern": "Found 0 errors"
-        }
+      "problemMatcher": ["$tsc-watch"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
       },
       "presentation": {
-        "revealProblems": "onProblem"
+        "reveal": "always",
+        "panel": "new"
       }
     },
     // Compile and bundle the extension
@@ -73,7 +71,27 @@
         }
       ]
     },
-    // Build the React app. It gets bundled into the extension as a file resource and has a seprate build step
+    {
+      "label": "vscode-extension:package",
+      "dependsOn": ["vscode-extension:esbuild"],
+      "type": "npm",
+      "script": "package",
+      "path": "extensions/vscode",
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": "> (.*?):([0-9]+):([0-9]+): (warning|error): (.+)$",
+              "file": 1,
+              "line": 2,
+              "column": 3,
+              "severity": 4,
+              "message": 5
+            }
+          ]
+        }
+      ]
+    },
     {
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
@@ -185,6 +203,55 @@
       "type": "shell",
       "command": "node",
       "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "problemMatcher": []
+    },
+    {
+      "label": "refresh-dependencies:core",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/core"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:vscode",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/extensions/vscode"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:gui",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "${workspaceFolder}/gui"
+      },
+      "presentation": {
+        "close": true
+      }
+    },
+    {
+      "label": "refresh-dependencies:all",
+      "dependsOn": [
+        "refresh-dependencies:core",
+        "refresh-dependencies:gui",
+        "refresh-dependencies:vscode"
+      ],
+      "type": "shell",
       "problemMatcher": []
     }
   ]

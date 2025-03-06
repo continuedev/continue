@@ -394,6 +394,27 @@ export class VsCodeIdeUtils {
     }
   }
 
+  private _getRepositories(): Repository[] | undefined {
+    const extension =
+      vscode.extensions.getExtension<GitExtension>("vscode.git");
+    if (
+      typeof extension === "undefined" ||
+      !extension.isActive ||
+      typeof vscode.workspace.workspaceFolders === "undefined"
+    ) {
+      return undefined;
+    }
+
+    try {
+      const git = extension.exports.getAPI(1);
+      return git.repositories;
+    } catch (e) {
+      this._repoWasNone = true;
+      console.warn("Git not found: ", e);
+      return undefined;
+    }
+  }
+
   private _repoWasNone: boolean = false;
   private repoCache: Map<string, Repository> = new Map();
   private static secondsToWaitForGitToLoad =
@@ -475,20 +496,28 @@ export class VsCodeIdeUtils {
   async getDiff(includeUnstaged: boolean): Promise<string[]> {
     const diffs: string[] = [];
 
-    for (const dir of this.getWorkspaceDirectories()) {
-      const repo = await this.getRepo(dir);
-      if (!repo) {
-        continue;
+    const repos = this._getRepositories();
+
+    try {
+      if (repos) {
+        for (const repo of repos) {
+
+          const staged = await repo.diff(true);
+
+          diffs.push(staged);
+          if (includeUnstaged) {
+            const unstaged = await repo.diff(false);
+            diffs.push(unstaged);
+          }
+        }
       }
 
-      const staged = await repo.diff(true);
-      diffs.push(staged);
-      if (includeUnstaged) {
-        const unstaged = await repo.diff(false);
-        diffs.push(unstaged);
-      }
+      return diffs.flatMap((diff) => this.splitDiff(diff));
+
+    } catch (e) {
+      console.error(e);
+      return [];
     }
 
-    return diffs.flatMap((diff) => this.splitDiff(diff));
   }
 }

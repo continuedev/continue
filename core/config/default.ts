@@ -83,6 +83,7 @@ export const defaultConfig: SerializedContinueConfig = {
   models: [],
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
+  data: [],
 };
 
 export const defaultOverrideConfig: Partial<SerializedContinueConfig> = {};
@@ -91,6 +92,7 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
   models: [],
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
+  data: [],
 };
 
 const DEFAULT_CONTEXT_LENGTH = 16384;

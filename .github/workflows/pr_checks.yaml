@@ -5,24 +5,11 @@ on:
     branches:
       - granite/customization
       - granite/integration
-    paths:
-      - "extensions/intellij/**"
-      - "extensions/vscode/**"
-      - "core/**"
-      - "gui/**"
-      - ".github/workflows/**"
-      - "docs/**"
 
   push:
     branches:
       - granite/customization
       - granite/integration
-    paths:
-      # - "extensions/intellij/**"
-      - "extensions/vscode/**"
-      - "core/**"
-      - "gui/**"
-      - ".github/workflows/**"
 
 jobs:
   install-root:
@@ -295,6 +282,8 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+          AZURE_FOUNDRY_API_KEY: ${{ secrets.AZURE_FOUNDRY_API_KEY }}
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest

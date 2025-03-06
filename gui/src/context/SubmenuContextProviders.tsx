@@ -252,6 +252,7 @@ export const SubmenuContextProvidersProvider = ({
               abortControllers.get(description.title)?.abort();
               abortControllers.set(description.title, controller);
               providersLoading.add(description.title);
+
               const result = await ideMessenger.request(
                 "context/loadSubmenuItems",
                 {
@@ -273,10 +274,12 @@ export const SubmenuContextProvidersProvider = ({
               }
               const submenuItems = result.content;
               const providerTitle = description.title;
+              const renderInlineAs = description.renderInlineAs;
 
               const itemsWithProvider = submenuItems.map((item) => ({
                 ...item,
                 providerTitle,
+                renderInlineAs
               }));
 
               const minisearch = new MiniSearch<ContextSubmenuItemWithProvider>(
@@ -299,7 +302,7 @@ export const SubmenuContextProvidersProvider = ({
                 setFallbackResults((prev) => ({
                   ...prev,
                   file: deduplicateArray(
-                    [...lastOpenFilesRef.current, ...(prev.file ?? [])],
+                    [...lastOpenFilesRef.current, ...itemsWithProvider],
                     (a, b) => a.id === b.id,
                   ),
                 }));

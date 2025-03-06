@@ -25,10 +25,12 @@ import { SecretStorage } from "./SecretStorage";
 
 const AUTH_NAME = "Continue";
 
+const enableControlServerBeta = workspace
+  .getConfiguration(EXTENSION_NAME)
+  .get<boolean>("enableContinueForTeams", false);
 const controlPlaneEnv = getControlPlaneEnvSync(
-  workspace.getConfiguration(EXTENSION_NAME).get<boolean>("enableContinueHub")
-    ? "production"
-    : "none",
+  true ? "production" : "none",
+  enableControlServerBeta,
 );
 
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
