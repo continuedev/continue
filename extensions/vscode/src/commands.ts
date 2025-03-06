@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as os from "node:os";
 
-import { ContextMenuConfig, ILLM, ModelInstaller, RangeInFileWithContents } from "core";
+import {
+  ContextMenuConfig,
+  ILLM,
+  ModelInstaller,
+  RangeInFileWithContents,
+} from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
@@ -997,19 +1002,25 @@ const getCommandsMap: (
     "continue.startLocalOllama": () => {
       startLocalOllama(ide);
     },
-    "continue.installModel": async (modelName: string, llmProvider: ILLM | undefined) => {
+    "continue.installModel": async (
+      modelName: string,
+      llmProvider: ILLM | undefined,
+    ) => {
       try {
         if (!isModelInstaller(llmProvider)) {
-          const msg = llmProvider ? `LLM provider '${llmProvider.providerName}' does not support installing models` :
-          'Missing LLM Provider';
+          const msg = llmProvider
+            ? `LLM provider '${llmProvider.providerName}' does not support installing models`
+            : "Missing LLM Provider";
           throw new Error(msg);
         }
         await installModelWithProgress(modelName, llmProvider);
       } catch (e) {
         const message = e instanceof Error ? e.message : String(e);
-        vscode.window.showErrorMessage(`Failed to install '${modelName}': ${message}`);
+        vscode.window.showErrorMessage(
+          `Failed to install '${modelName}': ${message}`,
+        );
       }
-    }
+    },
   };
 };
 
@@ -1051,30 +1062,43 @@ const registerCopyBufferSpy = (
   context.subscriptions.push(typeDisposable);
 };
 
-async function installModelWithProgress(modelName: string, modelInstaller: ModelInstaller) {
-    return vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: `Installing model '${modelName}'`,
-        cancellable: true,
-      }, async (windowProgress, token) => {
-        let currentProgress: number = 0;
-        const progressWrapper = (details: string, worked?: number, total?: number) => {
-          let increment = 0;
-          if (worked && total) {
-            const progressValue = Math.round((worked / total) * 100);
-            increment = progressValue - currentProgress;
-            currentProgress = progressValue;
-          }
-          windowProgress.report({ message: details, increment });
+async function installModelWithProgress(
+  modelName: string,
+  modelInstaller: ModelInstaller,
+) {
+  return vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: `Installing model '${modelName}'`,
+      cancellable: true,
+    },
+    async (windowProgress, token) => {
+      let currentProgress: number = 0;
+      const progressWrapper = (
+        details: string,
+        worked?: number,
+        total?: number,
+      ) => {
+        let increment = 0;
+        if (worked && total) {
+          const progressValue = Math.round((worked / total) * 100);
+          increment = progressValue - currentProgress;
+          currentProgress = progressValue;
         }
-        const abortController = new AbortController();
-        token.onCancellationRequested(() => {
-          console.log(`Pulling ${modelName} model was cancelled`);
-          abortController.abort();
-        });
-        await modelInstaller.installModel(modelName, abortController.signal, progressWrapper);
+        windowProgress.report({ message: details, increment });
+      };
+      const abortController = new AbortController();
+      token.onCancellationRequested(() => {
+        console.log(`Pulling ${modelName} model was cancelled`);
+        abortController.abort();
       });
+      await modelInstaller.installModel(
+        modelName,
+        abortController.signal,
+        progressWrapper,
+      );
+    },
+  );
 }
 
 export function registerAllCommands(

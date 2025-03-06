@@ -22,7 +22,7 @@ import {
 } from "./statusBar";
 
 import type { IDE } from "core";
-import { startLocalOllama } from "core/util/ollamaHelper";
+import { handleLLMError } from "../util/errorHandling";
 
 const Diff = require("diff");
 
@@ -43,20 +43,10 @@ export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
 {
   private onError(e: any) {
-    let options = ["Documentation"];
-    let message = e.message;
-    let modelName = undefined;
-    if (message.includes("Ollama may not be installed")) {
-      options.push("Download Ollama");
-    } else if (message.includes("Ollama may not be running")) {
-      options = ["Start Ollama"]; // We want "Start" to be the only choice
-    } else if (message.includes("ollama run") && e.llm) {
-      //extract model name from error message matching the pattern "ollama run <model-name>"
-      modelName = message.match(/`ollama run (.*)`/)?.[1];
-      message = `Model "${modelName}" is not found in Ollama. You need to install it.`;
-      options = [`Install Model`];
+    if (handleLLMError(e)) {
+      return;
     }
-
+    let message = e.message;
     if (message.includes("Please sign in with GitHub")) {
       showFreeTrialLoginMessage(
         message,
@@ -67,19 +57,13 @@ export class ContinueCompletionProvider
       );
       return;
     }
-    vscode.window.showErrorMessage(message, ...options).then((val) => {
+    vscode.window.showErrorMessage(message, "Documentation").then((val) => {
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
             "https://docs.continue.dev/features/tab-autocomplete",
           ),
         );
-      } else if (val === "Download Ollama") {
-        vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
-      } else if (val === "Start Ollama") {
-        startLocalOllama(this.ide);
-      } else if (val === "Install Model" && e.llm) {
-        vscode.commands.executeCommand("continue.installModel", modelName, e.llm);
       }
     });
   }
