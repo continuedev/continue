@@ -12,32 +12,100 @@ import { modelSupportsTools } from "./autodetect";
 const TOOL_USE_RULES = `When using tools, follow the following guidelines:
 - Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
 
+const CODE_BLOCK_INSTRUCTIONS = "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'."
+
 function constructSystemPrompt(
   modelDescription: ModelDescription,
   useTools: boolean,
   continueConfig: BrowserSerializedContinueConfig
 ): string | null {
-  let systemMessage =
-    "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'.";
-  if (useTools && modelSupportsTools(modelDescription)) {
-    systemMessage += "\n\n" + TOOL_USE_RULES;
-  }
 
+  let systemMessage = ""
   // We we have no access to the LLM class, we final systemMessage have to be the same as in core/llm/index.ts
   const userSystemMessage = modelDescription.systemMessage ?? continueConfig.systemMessage;
 
-  // logic moved from core/llm/countTokens.ts
-  if (userSystemMessage && userSystemMessage.trim() !== "") {
-    const shouldAddNewLines = systemMessage !== "";
-    if (shouldAddNewLines) {
-      systemMessage += "\n\n";
-    }
-    systemMessage += userSystemMessage;
-  }
+  // Get templates from model description or use defaults
+  const codeBlockTemplate = modelDescription.promptTemplates?.codeBlockInstructions || CODE_BLOCK_INSTRUCTIONS;
 
-  if (userSystemMessage === "") {
-    // Used defined explicit empty system message will be forced
-    systemMessage = "";
+  const toolUseTemplate = modelDescription.promptTemplates?.toolUseRules || TOOL_USE_RULES;
+
+  // Determine which instructions to include
+  const codeBlockInstructions = codeBlockTemplate;
+  const toolUseInstructions = useTools && modelSupportsTools(modelDescription) ? toolUseTemplate : "";
+
+  switch ((continueConfig.experimental?.systemMessageComposition || "legacy")) {
+    case "prepend":
+      // Put user system message first, then default instructions
+      systemMessage = userSystemMessage || "";
+
+      if (systemMessage && codeBlockInstructions) {
+        systemMessage += "\n\n" + codeBlockInstructions;
+      } else if (codeBlockInstructions) {
+        systemMessage = codeBlockInstructions;
+      }
+
+      if (systemMessage && toolUseInstructions) {
+        systemMessage += "\n\n" + toolUseInstructions;
+      } else if (toolUseInstructions) {
+        systemMessage = toolUseInstructions;
+      }
+      break;
+
+    case "placeholders":
+      if (userSystemMessage) {
+        // Define placeholders
+        const allDefaultInstructions = [
+          codeBlockInstructions,
+          toolUseInstructions
+        ].filter(Boolean).join("\n\n");
+
+        // Replace placeholders in user system message
+        let processedMessage = userSystemMessage;
+
+        // Replace the all-in-one placeholder
+        if (processedMessage.includes("{DEFAULT_INSTRUCTIONS}")) {
+          processedMessage = processedMessage.replace("{DEFAULT_INSTRUCTIONS}", allDefaultInstructions);
+        }
+
+        // Replace individual placeholders
+        if (processedMessage.includes("{CODE_BLOCK_INSTRUCTIONS}")) {
+          processedMessage = processedMessage.replace("{CODE_BLOCK_INSTRUCTIONS}", codeBlockInstructions);
+        }
+
+        if (processedMessage.includes("{TOOL_USE_RULES}") && toolUseInstructions) {
+          processedMessage = processedMessage.replace("{TOOL_USE_RULES}", toolUseInstructions);
+        }
+
+        systemMessage = processedMessage;
+      } else {
+        // Fall back to legacy behavior if no user system message
+        systemMessage = codeBlockInstructions;
+        if (toolUseInstructions) {
+          systemMessage += "\n\n" + toolUseInstructions;
+        }
+      }
+      break;
+
+    case "legacy":
+    case "append":
+    default:
+      systemMessage = codeBlockInstructions;
+      if (useTools && modelSupportsTools(modelDescription)) {
+        systemMessage += "\n\n" + toolUseTemplate;
+      }
+      // logic moved from core/llm/countTokens.ts
+      if (userSystemMessage && userSystemMessage.trim() !== "") {
+        const shouldAddNewLines = systemMessage !== "";
+        if (shouldAddNewLines) {
+          systemMessage += "\n\n";
+        }
+        systemMessage += userSystemMessage;
+      }
+      if (userSystemMessage === "") {
+        // Used defined explicit empty system message will be forced
+        systemMessage = "";
+      }
+      break;
   }
 
   return systemMessage;

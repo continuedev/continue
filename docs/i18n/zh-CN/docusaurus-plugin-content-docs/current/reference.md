@@ -402,8 +402,6 @@ Several experimental config parameters are available, as described below:
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
-- `readResponseTTS`: If `true`, reads LLM responses aloud with TTS. Default is `true`.
-- `promptPath`: Change the path to custom prompt files from the default ".prompts"
 - `quickActions`: Array of custom quick actions
   - `title` (**required**): Display title for the quick action.
   - `prompt` (**required**): Prompt for quick action.
@@ -413,8 +411,17 @@ Several experimental config parameters are available, as described below:
   - `docstring`: Prompt for adding docstrings.
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
-  - `fixGrammar`: Prompt for fixing grammar or spelling.
-- `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
+- `systemMessageComposition`: Controls how the default system instructions and user-provided system message are combined:
+
+  - `legacy` or `append` (default): Default instructions are placed first, followed by user system message.
+  - `prepend`: User system message is placed first, followed by default instructions.
+  - `placeholders`: User system message can include special placeholders to control where default instructions appear:
+
+    - `{DEFAULT_INSTRUCTIONS}`: Includes both code block and tool use instructions.
+    - `{CODE_BLOCK_INSTRUCTIONS}`: Includes only the code block formatting instructions.
+    - `{TOOL_USE_RULES}`: Includes only the tool use rules (when applicable).
+
+    These placeholders correspond to templates that can be customized in a model's `promptTemplates` object using the keys `codeBlockInstructions` and `toolUseRules`.
 
 Example
 
@@ -424,7 +431,6 @@ Example
     "modelRoles": {
       "inlineEdit": "Edit Model"
     },
-    "promptPath": "custom/.prompts",
     "quickActions": [
       {
         "title": "Tags",
@@ -435,8 +441,16 @@ Example
     "contextMenuPrompts": {
       "fixGrammar": "Fix grammar in the above but allow for typos."
     },
-    "readResponseTTS": false,
-    "useChromiumForDocsCrawling": true
+    "modelContextProtocolServers": [
+      {
+        "transport": {
+          "type": "stdio",
+          "command": "uvx",
+          "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+        }
+      }
+    ],
+    "systemMessageComposition": "placeholders"
   }
 }
 ```

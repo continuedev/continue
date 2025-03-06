@@ -373,9 +373,23 @@
         },
         "promptTemplates": {
           "title": "Prompt Templates",
-          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
-          "x-intellij-html-description": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See <a href='https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt'>here</a> for an example.",
+          "markdownDescription": "A mapping of prompt template names to strings giving the prompt templates. See [here](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) for examples.",
+          "x-intellij-html-description": "A mapping of prompt template names to strings giving the prompt templates. See <a href='https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt'>here</a> for examples.",
           "type": "object",
+          "properties": {
+            "edit": {
+              "type": "string",
+              "description": "Template used for edit operations in Continue"
+            },
+            "codeBlockInstructions": {
+              "type": "string",
+              "description": "Custom instructions for code block formatting (used with system message placeholders)"
+            },
+            "toolUseRules": {
+              "type": "string",
+              "description": "Custom instructions for tool usage (used with system message placeholders)"
+            }
+          },
           "additionalProperties": {
             "type": "string"
           }
@@ -3355,6 +3369,12 @@
                 },
                 "required": ["transport"]
               }
+            },
+            "systemMessageComposition": {
+              "type": "string",
+              "enum": ["legacy", "append", "prepend", "placeholders"],
+              "default": "legacy",
+              "description": "Controls how the default system instructions and user-provided system message are combined. 'legacy' or 'append': Default instructions first, then user message. 'prepend': User message first, then default instructions. 'placeholders': User message can include special placeholders {DEFAULT_INSTRUCTIONS}, {CODE_BLOCK_INSTRUCTIONS}, and {TOOL_USE_RULES}."
             }
           }
         }
