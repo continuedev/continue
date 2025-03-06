@@ -14,20 +14,69 @@ const TOOL_USE_RULES = `When using tools, follow the following guidelines:
 
 const CODE_BLOCK_INSTRUCTIONS = "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'."
 
+// Helper function to strip whitespace
+function stripWhitespace(text: string, stripLeading = false, stripTrailing = false): string {
+  let result = text;
+  if (stripLeading) {
+    result = result.replace(/^[\s\n]+/, '');
+  }
+  if (stripTrailing) {
+    result = result.replace(/[\s\n]+$/, '');
+  }
+  return result;
+}
+
+// Helper function for placeholder replacement with whitespace handling
+function replacePlaceholder(
+  text: string,
+  placeholder: string,
+  replacement: string
+): string {
+  if (!text.includes(placeholder)) {
+    return text;
+  }
+
+  const placeholderIndex = text.indexOf(placeholder);
+  const placeholderLength = placeholder.length;
+
+  // Check surroundings to determine whitespace needs
+  const isAtBeginning = placeholderIndex === 0;
+  const isAtEnd = placeholderIndex + placeholderLength === text.length;
+
+  if (!replacement) {
+    // No replacement to add - just replace with empty string and clean up
+    let processed = text.replace(placeholder, "");
+    return stripWhitespace(processed, isAtBeginning, isAtEnd);
+  } else {
+    // Add replacement with appropriate whitespace
+    let formattedReplacement = replacement;
+
+    if (!isAtBeginning && !(/[\n\s]$/.test(text.substring(0, placeholderIndex)))) {
+      formattedReplacement = "\n\n" + formattedReplacement;
+    };
+
+    if (!isAtEnd && !(/^[\n\s]/.test(text.substring(placeholderIndex + placeholderLength)))) {
+      formattedReplacement = formattedReplacement + "\n\n";
+    };
+
+    return text.replace(placeholder, formattedReplacement);
+  }
+}
+
 function constructSystemPrompt(
   modelDescription: ModelDescription,
   useTools: boolean,
   continueConfig: BrowserSerializedContinueConfig
 ): string | null {
 
-  let systemMessage = ""
+  let systemMessage = "";
   // We we have no access to the LLM class, we final systemMessage have to be the same as in core/llm/index.ts
   const userSystemMessage = modelDescription.systemMessage ?? continueConfig.systemMessage;
 
   // Get templates from model description or use defaults
-  const codeBlockTemplate = modelDescription.promptTemplates?.codeBlockInstructions || CODE_BLOCK_INSTRUCTIONS;
+  const codeBlockTemplate = modelDescription.promptTemplates?.codeBlockInstructions ?? CODE_BLOCK_INSTRUCTIONS;
 
-  const toolUseTemplate = modelDescription.promptTemplates?.toolUseRules || TOOL_USE_RULES;
+  const toolUseTemplate = modelDescription.promptTemplates?.toolUseRules ?? TOOL_USE_RULES;
 
   // Determine which instructions to include
   const codeBlockInstructions = codeBlockTemplate;
@@ -52,6 +101,7 @@ function constructSystemPrompt(
       break;
 
     case "placeholders":
+    case "placeholders":
       if (userSystemMessage) {
         // Define placeholders
         const allDefaultInstructions = [
@@ -62,19 +112,24 @@ function constructSystemPrompt(
         // Replace placeholders in user system message
         let processedMessage = userSystemMessage;
 
-        // Replace the all-in-one placeholder
-        if (processedMessage.includes("{DEFAULT_INSTRUCTIONS}")) {
-          processedMessage = processedMessage.replace("{DEFAULT_INSTRUCTIONS}", allDefaultInstructions);
-        }
+        // Replace all placeholders using our helper function
+        processedMessage = replacePlaceholder(
+          processedMessage,
+          "{DEFAULT_INSTRUCTIONS}",
+          allDefaultInstructions
+        );
 
-        // Replace individual placeholders
-        if (processedMessage.includes("{CODE_BLOCK_INSTRUCTIONS}")) {
-          processedMessage = processedMessage.replace("{CODE_BLOCK_INSTRUCTIONS}", codeBlockInstructions);
-        }
+        processedMessage = replacePlaceholder(
+          processedMessage,
+          "{CODE_BLOCK_INSTRUCTIONS}",
+          codeBlockInstructions
+        );
 
-        if (processedMessage.includes("{TOOL_USE_RULES}") && toolUseInstructions) {
-          processedMessage = processedMessage.replace("{TOOL_USE_RULES}", toolUseInstructions);
-        }
+        processedMessage = replacePlaceholder(
+          processedMessage,
+          "{TOOL_USE_RULES}",
+          toolUseInstructions
+        );
 
         systemMessage = processedMessage;
       } else {
@@ -85,6 +140,7 @@ function constructSystemPrompt(
         }
       }
       break;
+
 
     case "legacy":
     case "append":
