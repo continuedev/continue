@@ -1,4 +1,5 @@
 import {
+  BrowserSerializedContinueConfig,
   ChatHistoryItem,
   ChatMessage,
   MessagePart,
@@ -14,12 +15,31 @@ const TOOL_USE_RULES = `When using tools, follow the following guidelines:
 function constructSystemPrompt(
   modelDescription: ModelDescription,
   useTools: boolean,
+  continueConfig: BrowserSerializedContinueConfig
 ): string | null {
   let systemMessage =
     "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'.";
   if (useTools && modelSupportsTools(modelDescription)) {
     systemMessage += "\n\n" + TOOL_USE_RULES;
   }
+
+  // We we have no access to the LLM class, we final systemMessage have to be the same as in core/llm/index.ts
+  const userSystemMessage = modelDescription.systemMessage ?? continueConfig.systemMessage;
+
+  // logic moved from core/llm/countTokens.ts
+  if (userSystemMessage && userSystemMessage.trim() !== "") {
+    const shouldAddNewLines = systemMessage !== "";
+    if (shouldAddNewLines) {
+      systemMessage += "\n\n";
+    }
+    systemMessage += userSystemMessage;
+  }
+
+  if (userSystemMessage === "") {
+    // Used defined explicit empty system message will be forced
+    systemMessage = "";
+  }
+
   return systemMessage;
 }
 
@@ -30,13 +50,14 @@ export function constructMessages(
   history: ChatHistoryItem[],
   modelDescription: ModelDescription,
   useTools: boolean,
+  continueConfig: BrowserSerializedContinueConfig,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
   const msgs: ChatMessage[] = [];
 
-  const systemMessage = constructSystemPrompt(modelDescription, useTools);
+  const systemMessage = constructSystemPrompt(modelDescription, useTools, continueConfig);
   if (systemMessage) {
     msgs.push({
       role: "system",

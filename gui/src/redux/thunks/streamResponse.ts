@@ -34,10 +34,10 @@ const getSlashCommandForInput = (
     typeof input === "string"
       ? input
       : (
-          input.filter((part) => part.type === "text").slice(-1)[0] as
-            | TextMessagePart
-            | undefined
-        )?.text || "";
+        input.filter((part) => part.type === "text").slice(-1)[0] as
+        | TextMessagePart
+        | undefined
+      )?.text || "";
 
   if (lastText.startsWith("/")) {
     slashCommandName = lastText.split(" ")[0].substring(1);
@@ -124,6 +124,7 @@ export const streamResponseThunk = createAsyncThunk<
           [...updatedHistory],
           defaultModel,
           useTools,
+          state.config.config
         );
 
         posthog.capture("step run", {
