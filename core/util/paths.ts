@@ -368,7 +368,7 @@ export function readAllGlobalPromptFiles(
     if (stats.isDirectory()) {
       const nestedPromptFiles = readAllGlobalPromptFiles(filepath);
       promptFiles.push(...nestedPromptFiles);
-    } else {
+    } else if (file.endsWith(".prompt")) {
       const content = fs.readFileSync(filepath, "utf8");
       promptFiles.push({ path: filepath, content });
     }
