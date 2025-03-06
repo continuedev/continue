@@ -57,9 +57,18 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
+    let modelName = "";
+    // Extract the model name after the last slash to support other registries
+    if(model.includes("/")) {
+      let parts = model.split('/');
+      modelName = parts[parts.length - 1];
+    } else {
+      modelName = model;
+    }
+    
     if (
       ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
-        (part) => model.toLowerCase().includes(part),
+        (part) => modelName.toLowerCase().includes(part),
       )
     ) {
       return false;
@@ -79,10 +88,11 @@ export const PROVIDER_TOOL_SUPPORT: Record<
         "nemotron",
         "llama3-groq",
         "granite3",
+        "granite-3",
         "aya-expanse",
         "firefunction-v2",
         "mistral",
-      ].some((part) => model.toLowerCase().startsWith(part))
+      ].some((part) => modelName.toLowerCase().includes(part))
     ) {
       return true;
     }
