@@ -57,7 +57,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleBlur}
-        className="text-vsc-foreground max-w-7 border-none bg-inherit pr-1.5 text-right outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
+        className="text-vsc-foreground max-w-9 border-none bg-inherit pr-1.5 text-right outline-none ring-0 focus:border-none focus:outline-none focus:ring-0"
         style={{
           appearance: "none",
           WebkitAppearance: "none",
