@@ -383,11 +383,13 @@
             },
             "codeBlockInstructions": {
               "type": "string",
-              "description": "Custom instructions for code block formatting (used with system message placeholders)"
+              "description": "Custom instructions for code block formatting (used with system message placeholders)",
+              "default": "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'."
             },
             "toolUseRules": {
               "type": "string",
-              "description": "Custom instructions for tool usage (used with system message placeholders)"
+              "description": "Custom instructions for tool usage (used with system message placeholders)",
+              "default": "When using tools, follow the following guidelines:\n- Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file."
             }
           },
           "additionalProperties": {
