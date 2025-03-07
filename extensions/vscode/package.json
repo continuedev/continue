@@ -52,6 +52,7 @@
     "llama"
   ],
   "activationEvents": [
+    "onUri",
     "onStartupFinished",
     "onView:continueGUIView"
   ],
