@@ -32,7 +32,6 @@ describe("shouldIgnore", () => {
   });
   test("should return true if a folder is ignored by .continueignore", async () => {
     addToTestDir([
-      "ignored-folder/",
       ["ignored-folder/file.txt", "content"],
       [".continueignore", "ignored-folder/"],
     ]);
@@ -77,9 +76,6 @@ describe("shouldIgnore", () => {
 
   test("should return true for deeply nested file ignored by ignore files at multiple levels", async () => {
     addToTestDir([
-      "level1/",
-      "level1/level2/",
-      "level1/level2/level3/",
       ["level1/level2/level3/ignored-file.txt", "content"],
       ["level1/.gitignore", "level2/"],
       ["level1/level2/.continueignore", "level3/"],
@@ -102,9 +98,6 @@ describe("shouldIgnore", () => {
 
   test("should handle multiple levels of directories with some files ignored", async () => {
     addToTestDir([
-      "nested/",
-      "nested/dir1/",
-      "nested/dir2/",
       ["nested/dir1/.gitignore", "ignored.txt"],
       ["nested/dir1/ignored.txt", "content"],
       ["nested/dir2/kept.txt", "content"],
@@ -122,5 +115,53 @@ describe("shouldIgnore", () => {
       [TEST_DIR],
     );
     expect(keptResult).toBe(false);
+  });
+
+  test("should respect default file and folder ignores top level", async () => {
+    addToTestDir([
+      [".env", "contents"],
+      ["go.sum", "contents"],
+      ".idea/",
+      [".idea/test.xml", "contents"],
+    ]);
+    let result = await shouldIgnore(TEST_DIR + "/.env", testIde, [TEST_DIR]);
+    expect(result).toBe(true);
+
+    result = await shouldIgnore(TEST_DIR + "/go.sum", testIde, [TEST_DIR]);
+    expect(result).toBe(true);
+
+    result = await shouldIgnore(TEST_DIR + "/.idea", testIde, [TEST_DIR]);
+    expect(result).toBe(true);
+
+    result = await shouldIgnore(TEST_DIR + "/.idea/test.xml", testIde, [
+      TEST_DIR,
+    ]);
+    expect(result).toBe(true);
+  });
+
+  test("should respect default file and folder ignores at nested level", async () => {
+    addToTestDir([
+      "nested/.idea/test.xml",
+      ["nested/.env", "contents"],
+      ["nested/go.sum", "contents"],
+    ]);
+
+    let result = await shouldIgnore(TEST_DIR + "/nested/.idea", testIde, [
+      TEST_DIR,
+    ]);
+    expect(result).toBe(true);
+
+    result = await shouldIgnore(TEST_DIR + "/nested/.idea/test.xml", testIde, [
+      TEST_DIR,
+    ]);
+    expect(result).toBe(true);
+
+    result = await shouldIgnore(TEST_DIR + "/nested/.env", testIde, [TEST_DIR]);
+    expect(result).toBe(true);
+
+    result = await shouldIgnore(TEST_DIR + "/nested/go.sum", testIde, [
+      TEST_DIR,
+    ]);
+    expect(result).toBe(true);
   });
 });

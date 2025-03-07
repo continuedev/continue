@@ -2,8 +2,7 @@ import ignore from "ignore";
 
 import type { FileType, IDE, SlashCommand } from "../..";
 import {
-  defaultIgnoreDir,
-  defaultIgnoreFile,
+  DEFAULT_IGNORE,
   getGlobalContinueIgArray,
   gitIgArrayFromFile,
 } from "../../indexing/ignore";
@@ -58,10 +57,7 @@ const OnboardSlashCommand: SlashCommand = {
 };
 
 async function getEntriesFilteredByIgnore(dir: string, ide: IDE) {
-  const ig = ignore()
-    .add(defaultIgnoreDir)
-    .add(defaultIgnoreFile)
-    .add(getGlobalContinueIgArray());
+  const ig = ignore().add(DEFAULT_IGNORE).add(getGlobalContinueIgArray());
   const entries = await ide.listDir(dir);
 
   const ignoreUri = joinPathsToUri(dir, ".gitignore");

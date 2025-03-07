@@ -26,7 +26,6 @@ import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
-import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -53,6 +52,7 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import { defaultIgnoreFile } from "./indexing/ignore";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
