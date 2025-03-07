@@ -998,7 +998,7 @@ export class Core {
         }
       } catch (e) {
         console.error(
-          `didChangeActiveTextEditor: failed to udpate recentlyEditedFiles cache for ${filepath}`,
+          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
         );
       }
     });
