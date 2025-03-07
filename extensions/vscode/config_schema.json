@@ -71,6 +71,38 @@
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
           "type": "integer"
+        },
+        "thinking": {
+          "title": "Thinking",
+          "description": "Enable extended thinking capabilities for models that support it (e.g., Claude 3.7 Sonnet). This allows the model to show its reasoning process.",
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["enabled", "disabled"],
+              "description": "Extended thinking enabled or disabled."
+            },
+            "budget_tokens": {
+              "type": "integer",
+              "description": "The maximum number of tokens to allocate for thinking. Must be less than maxTokens.",
+              "minimum": 1024
+            }
+          },
+          "required": ["type"],
+          "if": {
+            "properties": {
+              "type": { "const": "enabled" }
+            }
+          },
+          "then": {
+            "required": ["budget_tokens"]
+          }
+        },
+        "reasoning_effort": {
+          "title": "Reasoning Effort",
+          "description": "The reasoning effort to use for the model. For OpenAI o1 and o3-mini. Supports 'high', 'medium', and 'low'.",
+          "type": "string",
+          "enum": ["high", "medium", "low"]
         }
       }
     },
@@ -452,6 +484,10 @@
             "tools": {
               "type": "boolean",
               "description": "Indicates whether the model can use tools"
+            },
+            "thinking": {
+              "type": "boolean",
+              "description": "Indicates whether the model supports extended thinking capabilities"
             }
           }
         }

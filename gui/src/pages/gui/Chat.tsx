@@ -387,54 +387,60 @@ export function Chat() {
                   contextItems={item.contextItems}
                   toolCallId={item.message.toolCallId}
                 />
-              ) : item.message.role === "assistant" &&
-                item.message.toolCalls &&
-                item.toolCallState ? (
-                <div>
-                  {item.message.toolCalls?.map((toolCall, i) => {
-                    return (
-                      <div key={i}>
-                        <ToolCallDiv
-                          toolCallState={item.toolCallState!}
-                          toolCall={toolCall}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
               ) : (
-                <div className="thread-message">
-                  <TimelineItem
-                    item={item}
-                    iconElement={
-                      false ? (
-                        <CodeBracketSquareIcon width="16px" height="16px" />
-                      ) : false ? (
-                        <ExclamationTriangleIcon
-                          width="16px"
-                          height="16px"
-                          color="red"
+                <>
+                  {item.message.role === "assistant" && (
+                    <div className="thread-message">
+                      <TimelineItem
+                        item={item}
+                        iconElement={
+                          false ? (
+                            <CodeBracketSquareIcon width="16px" height="16px" />
+                          ) : false ? (
+                            <ExclamationTriangleIcon
+                              width="16px"
+                              height="16px"
+                              color="red"
+                            />
+                          ) : (
+                            <ChatBubbleOvalLeftIcon
+                              width="16px"
+                              height="16px"
+                            />
+                          )
+                        }
+                        open={
+                          typeof stepsOpen[index] === "undefined"
+                            ? false
+                              ? false
+                              : true
+                            : stepsOpen[index]!
+                        }
+                        onToggle={() => {}}
+                      >
+                        <StepContainer
+                          index={index}
+                          isLast={index === history.length - 1}
+                          item={item}
                         />
-                      ) : (
-                        <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                      )
-                    }
-                    open={
-                      typeof stepsOpen[index] === "undefined"
-                        ? false
-                          ? false
-                          : true
-                        : stepsOpen[index]!
-                    }
-                    onToggle={() => {}}
-                  >
-                    <StepContainer
-                      index={index}
-                      isLast={index === history.length - 1}
-                      item={item}
-                    />
-                  </TimelineItem>
-                </div>
+                      </TimelineItem>
+                    </div>
+                  )}
+                  {item.message.role === "assistant" &&
+                    item.message.toolCalls &&
+                    item.toolCallState && (
+                      <div>
+                        {item.message.toolCalls?.map((toolCall, i) => (
+                          <div key={i}>
+                            <ToolCallDiv
+                              toolCallState={item.toolCallState!}
+                              toolCall={toolCall}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                </>
               )}
             </ErrorBoundary>
           </div>

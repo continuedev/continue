@@ -22,6 +22,7 @@ import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
+import ModelSettingsInitializer from "./ModelSettingsInitializer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
@@ -284,6 +285,8 @@ const Layout = () => {
           />
 
           <GridDiv className="">
+            {/* Initialize model-specific settings when model changes */}
+            <ModelSettingsInitializer />
             <PostHogPageView />
             <Outlet />
 

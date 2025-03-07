@@ -155,6 +155,10 @@ The `models` section defines the language models used in your configuration. Mod
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
   - `n`: Number of completions to generate.
+  - `thinking`: Enable extended thinking capabilities for models that support it (e.g., Claude 3.7 Sonnet). This is an object with the following properties:
+    - `type`: The type of thinking to enable (currently only "enabled" is supported).
+    - `budget_tokens`: The maximum number of tokens to allocate for thinking. Must be less than maxTokens and at least 1024. Only required if `type` is "enabled".
+  - `reasoning_effort`: The reasoning effort to use for the model. For OpenAI o1 and o3-mini. Supports "high", "medium", and "low".
 
 - `requestOptions`: HTTP request options specific to the model.
 
@@ -391,6 +395,18 @@ models:
       temperature: 0.3
       stop:
         - "\n"
+        
+  - name: Claude 3.7 Sonnet
+    provider: anthropic
+    model: claude-3-7-sonnet-20250219
+    roles:
+      - chat
+      - edit
+    defaultCompletionOptions:
+      maxTokens: 8192
+      thinking:
+        type: enabled
+        budget_tokens: 4096
 
 rules:
   - Give concise responses

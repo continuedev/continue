@@ -17,12 +17,19 @@ export function stripImages(messageContent: MessageContent): string {
     .join("\n");
 }
 
+export function stripThinking(content: string): string {
+  if (typeof content === "string") {
+    return content.replace(/<think>[\s\S]*?<\/think>/g, "");
+  }
+  return content;
+}
+
 export function renderChatMessage(message: ChatMessage): string {
   switch (message.role) {
     case "user":
     case "assistant":
     case "system":
-      return stripImages(message.content);
+      return stripThinking(stripImages(message.content));
     case "tool":
       return message.content;
   }

@@ -90,8 +90,15 @@ async function countTokensAsync(
     const promises = content.map(async (part) => {
       if (part.type === "imageUrl") {
         return countImageTokens(part);
+      } else if (part.type === "thinking") {
+        return (await encoding.encode(part.thinking ?? "")).length;
+      } else if (part.type === "redacted_thinking") {
+        // For redacted thinking, don't count any tokens
+        return 0;
+      } else if (part.type === "text") {
+        return (await encoding.encode(part.text ?? "")).length;
       }
-      return (await encoding.encode(part.text ?? "")).length;
+      return 0;
     });
     return (await Promise.all(promises)).reduce((sum, val) => sum + val, 0);
   }
@@ -106,12 +113,17 @@ function countTokens(
   const encoding = encodingForModel(modelName);
   if (Array.isArray(content)) {
     return content.reduce((acc, part) => {
-      return (
-        acc +
-        (part.type === "text"
-          ? encoding.encode(part.text ?? "", "all", []).length
-          : countImageTokens(part))
-      );
+      if (part.type === "text") {
+        return acc + encoding.encode(part.text ?? "", "all", []).length;
+      } else if (part.type === "imageUrl") {
+        return acc + countImageTokens(part);
+      } else if (part.type === "thinking") {
+        return acc + encoding.encode(part.thinking ?? "", "all", []).length;
+      } else if (part.type === "redacted_thinking") {
+        // For redacted thinking, don't count any tokens
+        return acc;
+      }
+      return acc;
     }, 0);
   } else {
     return encoding.encode(content ?? "", "all", []).length;
@@ -469,5 +481,6 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop,
+  pruneStringFromTop
 };
+

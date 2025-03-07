@@ -324,7 +324,22 @@ export type ImageMessagePart = {
   imageUrl: { url: string };
 };
 
-export type MessagePart = TextMessagePart | ImageMessagePart;
+export type ThinkingMessagePart = {
+  type: "thinking";
+  thinking: string;
+  signature: string;
+};
+
+export type RedactedThinkingMessagePart = {
+  type: "redacted_thinking";
+  data: string;
+};
+
+export type MessagePart =
+  | TextMessagePart
+  | ImageMessagePart
+  | ThinkingMessagePart
+  | RedactedThinkingMessagePart;
 
 export type MessageContent = string | MessagePart[];
 
@@ -360,6 +375,7 @@ export interface UserChatMessage {
 export interface AssistantChatMessage {
   role: "assistant";
   content: MessageContent;
+  reasoning_content?: string;
   toolCalls?: ToolCallDelta[];
 }
 
@@ -921,11 +937,17 @@ export interface BaseCompletionOptions {
   prediction?: Prediction;
   tools?: Tool[];
   toolChoice?: ToolChoice;
+  thinking?: {
+    type: "enabled" | "disabled";
+    budget_tokens?: number;
+  };
+  reasoning_effort?: "high" | "medium" | "low";
 }
 
 export interface ModelCapability {
   uploadImage?: boolean;
   tools?: boolean;
+  thinking?: boolean;
 }
 
 export interface ModelDescription {

@@ -37,6 +37,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `capabilities`: Override auto-detected capabilities:
   - `uploadImage`: Boolean indicating if the model supports image uploads.
   - `tools`: Boolean indicating if the model supports tool calls.
+  - `thinking`: Boolean indicating if the model supports thinking capabilities.
 
 _(AWS Only)_
 
@@ -60,6 +61,19 @@ Example:
       "title": "GPT-4o",
       "provider": "openai",
       "apiKey": "<YOUR_OPENAI_API_KEY>"
+    },
+    {
+      "title": "Claude 3.7 Sonnet",
+      "provider": "anthropic",
+      "model": "claude-3-7-sonnet-20250219",
+      "apiKey": "<YOUR_ANTHROPIC_API_KEY>",
+      "completionOptions": {
+        "maxTokens": 8192,
+        "thinking": {
+          "type": "enabled",
+          "budget_tokens": 4096
+        }
+      }
     }
   ]
 }
@@ -157,6 +171,10 @@ Parameters that control the behavior of text generation and completion settings.
 - `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
 - `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
 - `useMmap`: For Ollama, this parameter allows the model to be mapped into memory. If disabled can enhance response time on low end devices but will slow down the stream.
+- `thinking`: Enable extended thinking capabilities for models that support it (e.g., Claude 3.7 Sonnet). This is an object with the following properties:
+  - `type`: The type of thinking to enable ("enabled" or "disabled").
+  - `budget_tokens`: The maximum number of tokens to allocate for thinking. Must be less than maxTokens and at least 1024. Only required if `type` is "enabled".
+- `reasoning_effort`: The reasoning effort to use for the model. For OpenAI o1 and o3-mini. Supports "high", "medium", and "low".
 
 Example
 

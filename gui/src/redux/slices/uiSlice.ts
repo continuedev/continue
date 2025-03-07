@@ -21,6 +21,16 @@ type UIState = {
   hasDismissedExploreDialog: boolean;
   shouldAddFileForEditing: boolean;
   useTools: boolean;
+  useThinking: boolean; // New toggle for thinking
+  thinkingSettings: {
+    // Settings for different providers
+    anthropic: {
+      budgetTokens: number; // Min 1024, max is below maxTokens
+    };
+    openai: {
+      reasoningEffort: "low" | "medium" | "high";
+    };
+  };
   toolSettings: { [toolName: string]: ToolSetting };
   ttsActive: boolean;
 };
@@ -41,6 +51,15 @@ export const uiSlice = createSlice({
     shouldAddFileForEditing: false,
     ttsActive: false,
     useTools: false,
+    useThinking: false,
+    thinkingSettings: {
+      anthropic: {
+        budgetTokens: 4096, // Default reasonable value (half of typical 8K max)
+      },
+      openai: {
+        reasoningEffort: "medium", // Default value
+      },
+    },
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
       [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
@@ -109,6 +128,21 @@ export const uiSlice = createSlice({
           break;
       }
     },
+    // Thinking Controls
+    toggleUseThinking: (state) => {
+      state.useThinking = !state.useThinking;
+    },
+    setAnthropicBudgetTokens: (state, action: PayloadAction<number>) => {
+      state.useThinking = true;
+      state.thinkingSettings.anthropic.budgetTokens = action.payload;
+    },
+    setOpenAIReasoningEffort: (
+      state,
+      action: PayloadAction<"low" | "medium" | "high">,
+    ) => {
+      state.useThinking = true;
+      state.thinkingSettings.openai.reasoningEffort = action.payload;
+    },
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
@@ -125,6 +159,9 @@ export const {
   toggleUseTools,
   toggleToolSetting,
   addTool,
+  toggleUseThinking,
+  setAnthropicBudgetTokens,
+  setOpenAIReasoningEffort,
   setTTSActive,
 } = uiSlice.actions;
 

@@ -1,5 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { ChatMessage, PromptLog } from "core";
+import { ChatMessage, LLMFullCompletionOptions } from "core";
+import { modelSupportsThinking, modelSupportsTools } from "core/llm/autodetect";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
 import {
@@ -10,7 +11,6 @@ import {
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
-import { modelSupportsTools } from "core/llm/autodetect";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -32,18 +32,53 @@ export const streamNormalInput = createAsyncThunk<
     modelSupportsTools(defaultModel) &&
     state.session.mode === "chat";
 
+  // Prepare options
+  const options: LLMFullCompletionOptions = {};
+
+  // Add tools if supported
+  if (includeTools) {
+    options.tools = state.config.config.tools.filter(
+      (tool) => toolSettings[tool.function.name] !== "disabled",
+    );
+  }
+
+  // Add thinking options based on UI settings
+  const useThinking = state.ui.useThinking;
+  const thinkingSettings = state.ui.thinkingSettings;
+
+  if (
+    useThinking &&
+    modelSupportsThinking(
+      defaultModel.provider,
+      defaultModel.model,
+      defaultModel.title,
+      defaultModel.capabilities,
+    )
+  ) {
+    // For Anthropic models
+    if (defaultModel.provider === "anthropic") {
+      options.thinking = {
+        type: "enabled",
+        budget_tokens: thinkingSettings.anthropic.budgetTokens,
+      };
+    }
+    // For OpenAI models
+    else if (defaultModel.provider === "openai") {
+      options.reasoning_effort = thinkingSettings.openai.reasoningEffort;
+    }
+  } else {
+    // Disable thinking if thinking capability is explicitly false
+    options.thinking = {
+      type: "disabled",
+    };
+  }
+
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(
     defaultModel.title,
     streamAborter.signal,
     messages,
-    includeTools
-      ? {
-          tools: state.config.config.tools.filter(
-            (tool) => toolSettings[tool.function.name] !== "disabled",
-          ),
-        }
-      : {},
+    options,
   );
 
   // Stream response
