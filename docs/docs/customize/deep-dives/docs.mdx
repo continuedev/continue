@@ -316,7 +316,11 @@ Here is the equivalent minimal example for Jetbrains, which requires setting up 
     ],
     "embeddingsProvider": {
       "provider": "lmstudio",
-      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF",
+      "embeddingPrefixes" : {
+        "chunk": "search_document: ",
+        "query": "search_query: "
+      }
     }
   }
   ```
@@ -400,7 +404,11 @@ The following configuration example includes:
     },
     "embeddingsProvider": {
       "provider": "lmstudio",
-      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF",
+      "embeddingPrefixes" : {
+        "chunk": "search_document: ",
+        "query": "search_query: "
+      },
     }
   }
   ```

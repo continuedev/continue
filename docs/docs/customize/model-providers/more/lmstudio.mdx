@@ -49,7 +49,11 @@ LMStudio supports embeddings endpoints, and comes with the `nomic-ai/nomic-embed
   {
     "embeddingsProvider": {
       "provider": "lmstudio",
-      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+      "model": "nomic-ai/nomic-embed-tefxt-v1.5-GGUF",
+      "embeddingPrefixes" : {
+        "chunk": "search_document: ",
+        "query": "search_query: "
+      }
     }
   }
   ```
@@ -77,6 +81,10 @@ To configure a remote instance of LM Studio, add the `"apiBase"` property to you
     "embeddingsProvider": {
       "provider": "lmstudio",
       "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+      "embeddingPrefixes" : {
+        "chunk": "search_document: ",
+        "query": "search_query: "
+      },
     }
   }
   ```

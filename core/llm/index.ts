@@ -15,6 +15,8 @@ import {
   ChatMessage,
   Chunk,
   CompletionOptions,
+  EmbeddingPrefixes,
+  EmbeddingTasks,
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
@@ -160,6 +162,7 @@ export abstract class BaseLLM implements ILLM {
   embeddingId: string;
   maxEmbeddingChunkSize: number;
   maxEmbeddingBatchSize: number;
+  embeddingPrefixes?: EmbeddingPrefixes;
 
   private _llmOptions: LLMOptions;
 
@@ -252,9 +255,13 @@ export abstract class BaseLLM implements ILLM {
       options.maxEmbeddingBatchSize ?? DEFAULT_MAX_BATCH_SIZE;
     this.maxEmbeddingChunkSize =
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
-    this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
+    if (options?.embeddingPrefixes) {
+      this.embeddingPrefixes = options.embeddingPrefixes;
+    }
+    // The id is affected only by the chunking prefix because this is what used to embed the chunks.
+    const prefix = this?.embeddingPrefixes?.chunk ? "::" + this?.embeddingPrefixes?.chunk : undefined;
+    this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}${prefix ?? ""}`;
   }
-
   protected createOpenAiAdapter() {
     return constructLlmApi({
       provider: this.providerName as any,
@@ -900,16 +907,20 @@ export abstract class BaseLLM implements ILLM {
     return batchedChunks;
   }
 
-  async embed(chunks: string[]): Promise<number[][]> {
+  async embed(chunks: string[], embedding_task : EmbeddingTasks): Promise<number[][]> {
     const batches = this.getBatchedChunks(chunks);
-
     return (
       await Promise.all(
         batches.map(async (batch) => {
           if (batch.length === 0) {
             return [];
           }
-
+          if ((this?.embeddingPrefixes) && (this.embeddingPrefixes[embedding_task])) {
+            const prefix = this.embeddingPrefixes[embedding_task];
+            batch = batch.map((chunk) => {
+              return (prefix ?? "") + chunk;
+            });
+          }
           const embeddings = await withExponentialBackoff<number[][]>(
             async () => {
               if (this.shouldUseOpenAIAdapter("embed") && this.openaiAdapter) {

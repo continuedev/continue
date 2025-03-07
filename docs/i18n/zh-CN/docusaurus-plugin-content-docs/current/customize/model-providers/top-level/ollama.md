@@ -41,7 +41,11 @@ slug: ../ollama
 {
   "embeddingsProvider": {
     "provider": "ollama",
-    "model": "nomic-embed-text"
+    "model": "nomic-embed-text",
+    "embeddingPrefixes" : {
+      "chunk": "search_document: ",
+      "query": "search_query: "
+    }
   }
 }
 ```
