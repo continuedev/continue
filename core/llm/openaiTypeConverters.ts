@@ -1,21 +1,32 @@
 import { FimCreateParamsStreaming } from "@continuedev/openai-adapters/dist/apis/base";
 import {
-  Chat,
   ChatCompletion,
   ChatCompletionAssistantMessageParam,
   ChatCompletionChunk,
   ChatCompletionCreateParams,
   ChatCompletionMessageParam,
-  ChatCompletionUserMessageParam,
   CompletionCreateParams,
 } from "openai/resources/index";
 
-import {
-  ChatMessage,
-  CompletionOptions,
-  MessageContent,
-  TextMessagePart,
-} from "..";
+import { ChatMessage, CompletionOptions, TextMessagePart } from "..";
+
+// Extend OpenAI API types to support DeepSeek reasoning_content field
+interface DeepSeekDelta {
+  reasoning_content?: string;
+  content?: string;
+  role?: string;
+  tool_calls?: any[];
+}
+
+interface DeepSeekChatCompletionChunk
+  extends Omit<ChatCompletionChunk, "choices"> {
+  choices?: Array<{
+    delta: DeepSeekDelta;
+    index: number;
+    finish_reason: string | null;
+    logprobs?: object | null;
+  }>;
+}
 
 export function toChatMessage(
   message: ChatMessage,
@@ -83,7 +94,7 @@ export function toChatMessage(
                 },
               };
             }
-            return part;
+            return part as TextMessagePart;
           }),
     };
   }
@@ -176,11 +187,18 @@ export function fromChatResponse(response: ChatCompletion): ChatMessage {
 }
 
 export function fromChatCompletionChunk(
-  chunk: ChatCompletionChunk,
+  chunk: ChatCompletionChunk | DeepSeekChatCompletionChunk,
 ): ChatMessage | undefined {
-  const delta = chunk.choices?.[0]?.delta;
+  const delta = chunk.choices?.[0]?.delta as DeepSeekDelta;
 
-  if (delta?.content) {
+  // Handle reasoning_content (for DeepSeek and compatible models)
+  if (delta?.reasoning_content) {
+    return {
+      role: "assistant",
+      content: "",
+      reasoning_content: delta.reasoning_content,
+    };
+  } else if (delta?.content) {
     return {
       role: "assistant",
       content: delta.content,
