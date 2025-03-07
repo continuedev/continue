@@ -158,187 +158,217 @@
         "command": "continue.applyCodeFromChat",
         "category": "Continue",
         "title": "Apply code from chat",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.acceptDiff",
         "category": "Continue",
         "title": "Accept Diff",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.rejectDiff",
         "category": "Continue",
         "title": "Reject Diff",
         "group": "Continue",
-        "icon": "$(stop)"
+        "icon": "$(stop)",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
         "category": "Continue",
         "title": "Accept Vertical Diff Block",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.rejectVerticalDiffBlock",
         "category": "Continue",
         "title": "Reject Vertical Diff Block",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.focusEdit",
         "category": "Continue",
         "title": "Generate Code",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
         "title": "Add Highlighted Code to Context and Clear Chat",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
         "category": "Continue",
         "title": "Add Highlighted Code to Context",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
         "title": "Debug Terminal",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.exitEditMode",
         "category": "Continue",
         "title": "Exit Edit Mode",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
         "title": "Open in new window",
         "icon": "$(link-external)",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.openConfigPage",
         "category": "Continue",
         "title": "Open Settings",
         "icon": "$(gear)",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.toggleTabAutocompleteEnabled",
         "category": "Continue",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
         "title": "Select Files as Context",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.newSession",
         "category": "Continue",
         "title": "New Session",
         "icon": "$(add)",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.viewHistory",
         "category": "Continue",
         "title": "View History",
         "icon": "$(history)",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.viewLogs",
         "category": "Continue",
         "title": "View History",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.navigateTo",
         "category": "Continue",
         "title": "Navigate to a path",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.openMorePage",
         "category": "Continue",
         "title": "More",
         "icon": "$(ellipsis)",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
         "title": "Write Comments for this Code",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.writeDocstringForCode",
         "category": "Continue",
         "title": "Write a Docstring for this Code",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.fixCode",
         "category": "Continue",
         "title": "Fix this Code",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.optimizeCode",
         "category": "Continue",
         "title": "Optimize this Code",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.fixGrammar",
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.codebaseForceReIndex",
         "category": "Continue",
         "title": "Codebase Force Re-Index",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.rebuildCodebaseIndex",
         "category": "Continue",
         "title": "Rebuild codebase index",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.docsIndex",
         "category": "Continue",
         "title": "Docs Index",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.docsReIndex",
         "category": "Continue",
         "title": "Docs Force Re-Index",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "continue.focusContinueSessionId",
         "category": "Continue",
         "title": "Focus Continue Chat",
-        "group": "Continue"
+        "group": "Continue",
+        "enablement": "granite.initialized"
       },
       {
         "command": "granite.writeContinueConfig",
         "title": "Write Continue Config",
         "category": "Granite.Code",
-        "group": "Granite.Code"
+        "group": "Granite.Code",
+        "enablement": "granite.initialized"
       },
       {
         "command": "granite.setup",

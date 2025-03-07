@@ -1,5 +1,7 @@
-import { isTestMode } from "core/granite/commons/constants";
-import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
+import {
+  isTestMode,
+  SHOW_GRANITE_ONBOARDING_CARD_KEY,
+} from "core/granite/commons/constants";
 import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -38,6 +40,11 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   const showOnboarding = context.globalState.get(
     SHOW_GRANITE_ONBOARDING_CARD_KEY,
     true,
+  );
+  vscode.commands.executeCommand(
+    "setContext",
+    "granite.initialized",
+    !showOnboarding || isTestMode,
   );
   if (showOnboarding && !isTestMode) {
     await vscode.commands.executeCommand("granite.setup");

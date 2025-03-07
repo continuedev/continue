@@ -22,14 +22,14 @@ import {
   workspace,
 } from "vscode";
 
+import { LocalModelSize } from "core";
+import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
+import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 import { OllamaServer } from "../ollama/ollamaServer";
+import { CancellationController } from "../utils/cancellationController";
 import { getNonce } from "../utils/getNonce";
 import { getUri } from "../utils/getUri";
 import { getSystemInfo } from "../utils/sysUtils";
-import { LocalModelSize } from "core";
-import { CancellationController } from "../utils/cancellationController";
-import { VsCodeWebviewProtocol } from "../../webviewProtocol";
-import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
 
 /**
  * This class manages the state and behavior of HelloWorld webview panels.
@@ -420,6 +420,7 @@ export class SetupGranitePage {
 
   private hideGraniteOnboardingCard() {
     this.context.globalState.update(SHOW_GRANITE_ONBOARDING_CARD_KEY, false);
+    commands.executeCommand("setContext", "granite.initialized", true);
     this.chatWebViewProtocol.send("setShowGraniteOnboardingCard", false);
   }
 
