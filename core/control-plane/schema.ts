@@ -13,6 +13,7 @@ const modelDescriptionSchema = z.object({
     "gemini",
     "mistral",
     "bedrock",
+    "bedrock-anthropic",
     "sagemaker",
     "cloudflare",
     "azure",
@@ -85,6 +86,7 @@ const embeddingsProviderSchema = z.object({
     "cohere",
     "free-trial",
     "gemini",
+    "bedrock",
     "nebius",
     "siliconflow",
     "scaleway",
@@ -109,7 +111,7 @@ const embeddingsProviderSchema = z.object({
 });
 
 const rerankerSchema = z.object({
-  name: z.enum(["cohere", "voyage", "llm"]),
+  name: z.enum(["cohere", "voyage", "llm", "bedrock"]),
   params: z.record(z.any()).optional(),
 });
 

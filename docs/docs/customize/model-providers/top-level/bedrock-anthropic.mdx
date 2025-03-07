@@ -1,0 +1,118 @@
+---
+title: Amazon Bedrock Anthropic
+slug: ../bedrock-anthropic
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+Amazon Bedrock Anthropic provides access to Anthropic's Claude models through AWS Bedrock, combining the power of Claude with the security and infrastructure of AWS.
+
+## Chat model
+
+We recommend configuring **Claude 3.5 Sonnet** as your chat model.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: bedrock-anthropic
+      model: anthropic.claude-3-5-sonnet-20240620-v1:0
+      env:
+        region: us-east-1
+        profile: bedrock
+      roles:
+        - chat
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Claude 3.5 Sonnet", 
+        "provider": "bedrock-anthropic",
+        "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        "region": "us-east-1",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Autocomplete model
+
+Bedrock Anthropic currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+Bedrock Anthropic does not offer embeddings models directly. We recommend using Bedrock's native embeddings models.
+
+[Click here](../bedrock.mdx#embeddings-model) to see recommended Bedrock embeddings models.
+
+## Reranking model
+
+Bedrock Anthropic does not offer reranking models directly. We recommend using Bedrock's native reranking models.
+
+[Click here](../bedrock.mdx#reranking-model) to see recommended Bedrock reranking models.
+
+## Authentication
+
+Authentication will be through temporary or long-term credentials in
+`~/.aws/credentials` under a configured profile (e.g. "bedrock").
+
+```title="~/.aws/credentials"
+[bedrock]
+aws_access_key_id = abcdefg
+aws_secret_access_key = hijklmno
+aws_session_token = pqrstuvwxyz # Optional: means short term creds.
+```
+
+## Prompt caching
+
+Bedrock Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching).
+
+To enable caching of the system message and the turn-by-turn conversation, update your model configuration as following:
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: bedrock-anthropic
+      model: anthropic.claude-3-5-sonnet-20240620-v1:0
+      env:
+        region: us-east-1
+        profile: bedrock
+      roles:
+        - chat
+      cacheBehavior:
+        cacheSystemMessage: true
+        cacheConversation: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "cacheBehavior": {
+          "cacheSystemMessage": true,
+          "cacheConversation": true
+        },
+        "title": "Claude 3.5 Sonnet",
+        "provider": "bedrock-anthropic",
+        "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
+        "region": "us-east-1",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>

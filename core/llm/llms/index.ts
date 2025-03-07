@@ -12,6 +12,7 @@ import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
+import BedrockAnthropic from "./BedrockAnthropic";
 import BedrockImport from "./BedrockImport";
 import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
@@ -19,7 +20,6 @@ import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Fireworks from "./Fireworks";
-import NCompass from "./NCompass";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import FunctionNetwork from "./FunctionNetwork";
@@ -35,7 +35,9 @@ import Mistral from "./Mistral";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
+import NCompass from "./NCompass";
 import Nebius from "./Nebius";
+import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -49,7 +51,6 @@ import ContinueProxy from "./stubs/ContinueProxy";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
-import Novita from "./Novita";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
@@ -57,6 +58,7 @@ import xAI from "./xAI";
 
 export const LLMClasses = [
   Anthropic,
+  BedrockAnthropic,
   Cohere,
   FreeTrial,
   FunctionNetwork,
