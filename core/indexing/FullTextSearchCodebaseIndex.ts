@@ -97,13 +97,15 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
+      await db.run(`
+        DELETE FROM fts WHERE rowid IN (
+          SELECT id FROM fts_metadata WHERE path = ? AND cacheKey = ?
+        )
+      `,[item.path, item.cacheKey]);
       await db.run("DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?", [
         item.path,
         item.cacheKey,
       ]);
-
-      await db.run("DELETE FROM fts WHERE path = ?", [item.path]);
-
       await markComplete([item], IndexResultType.Delete);
     }
   }

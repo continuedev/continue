@@ -26,6 +26,7 @@ import {
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import { Divider } from "./platform/shared";
+import Shortcut from '../gui/Shortcut';
 
 interface ModelOptionProps {
   option: Option;
@@ -368,7 +369,7 @@ function ModelSelect() {
             <Divider className="!my-0" />
 
             <span className="block px-3 py-3" style={{ color: lightGray }}>
-              <code>{getMetaKeyLabel()} + '</code> to toggle
+              <Shortcut>meta '</Shortcut> to toggle model
             </span>
           </div>
         </StyledListboxOptions>
