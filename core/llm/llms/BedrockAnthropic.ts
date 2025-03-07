@@ -189,7 +189,7 @@ class BedrockAnthropic extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     // For testing purposes, we'll use a mock implementation
     // In a real implementation, we would use the AnthropicBedrock client
-    if (process.env.NODE_ENV === 'test') {
+    if (process.env.NODE_ENV === "test") {
       yield { role: "assistant", content: "Hello" };
       yield { role: "assistant", content: " world" };
       return;
@@ -242,9 +242,9 @@ class BedrockAnthropic extends BaseLLM {
         const response: any = await client.messages.create(createParams, { signal });
         
         // Handle non-streaming response
-        if ('content' in response && Array.isArray(response.content) && response.content.length > 0) {
+        if ("content" in response && Array.isArray(response.content) && response.content.length > 0) {
           const firstContent = response.content[0];
-          if ('text' in firstContent) {
+          if ("text" in firstContent) {
             yield { role: "assistant", content: firstContent.text };
           }
         }
