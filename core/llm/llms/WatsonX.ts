@@ -1,4 +1,9 @@
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  TextMessagePart,
+} from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -103,7 +108,7 @@ class WatsonX extends BaseLLM {
       }
       return {
         type: "text",
-        text: part.text,
+        text: (part as TextMessagePart).text,
       };
     });
     return {

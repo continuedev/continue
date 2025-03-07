@@ -174,7 +174,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("pplx") ||
     lower.includes("gemini") ||
     lower.includes("grok") ||
-    lower.includes("moonshot")
+    lower.includes("moonshot") ||
+    lower.includes("deepseek-reasoner")
   ) {
     return undefined;
   }
@@ -373,11 +374,45 @@ function autodetectPromptTemplates(
   return templates;
 }
 
+const PROVIDER_SUPPORTS_THINKING: string[] = ["anthropic", "openai", "deepseek"];
+
+const MODEL_SUPPORTS_THINKING: string[] = [
+  "claude-3-7-sonnet-20250219",
+  "claude-3-7-sonnet-latest",
+  "o3-mini",
+  "o3-mini-2025-01-31",
+  "o1",
+  "o1-2024-12-17",
+  "deepseek-reasoner",
+];
+
+function modelSupportsThinking(
+  provider: string,
+  model: string,
+  title: string | undefined,
+  capabilities: ModelCapability | undefined,
+): boolean {
+  if (capabilities?.thinking !== undefined) {
+    return capabilities.thinking;
+  }
+
+  if (!PROVIDER_SUPPORTS_THINKING.includes(provider)) {
+    return false;
+  }
+
+  const lower = model.toLowerCase();
+  return MODEL_SUPPORTS_THINKING.some(
+    (modelName) => lower.includes(modelName) || title?.includes(modelName),
+  );
+}
+
 export {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
-  modelSupportsTools,
+  modelSupportsThinking,
+  modelSupportsTools
 };
+
