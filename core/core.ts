@@ -829,6 +829,10 @@ export class Core {
 
     // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (config?.disableIndexing) {
+        return; // TODO silent in case of commands?
+      }
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
         await codebaseIndexer.clearIndexes();
