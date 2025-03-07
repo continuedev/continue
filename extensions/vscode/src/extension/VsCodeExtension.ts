@@ -371,7 +371,8 @@ export class VsCodeExtension {
         });
       }
       if (event.affectsConfiguration("continue.localModelSize")) {
-        this.configHandler.updateIdeSettings(this.ide.getIdeSettingsSync());
+        const settings = await this.ide.getIdeSettings();
+        this.configHandler.updateIdeSettings(settings);
       }
     });
   }
