@@ -1,7 +1,4 @@
-import path from "path";
-
 import { fetchwithRequestOptions } from "@continuedev/fetch";
-import ignore from "ignore";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -52,7 +49,6 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import { defaultIgnoreFile } from "./indexing/ignore";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -995,19 +991,15 @@ export class Core {
     });
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      const ignoreInstance = ignore().add(defaultIgnoreFile);
-      let rootDirectory = await this.ide.getWorkspaceDirs();
-      const relativeFilePath = path.relative(rootDirectory[0], filepath);
       try {
-        if (!ignoreInstance.ignores(relativeFilePath)) {
+        const ignore = shouldIgnore(filepath, this.ide);
+        if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
       } catch (e) {
-        if (e instanceof RangeError) {
-          // do nothing, this can happen when editing a file outside the workspace such as `../extensions/.continue-debug/config.json`
-        } else {
-          console.debug("unhandled ignores error", relativeFilePath, e);
-        }
+        console.error(
+          `didChangeActiveTextEditor: failed to udpate recentlyEditedFiles cache for ${filepath}`,
+        );
       }
     });
 
