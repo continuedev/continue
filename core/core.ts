@@ -53,6 +53,7 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import { shouldIgnore } from "./indexing/shouldIgnore";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -890,30 +891,45 @@ export class Core {
             uri.endsWith(".gitignore")
           ) {
             // Reindex the workspaces
-            this.invoke("index/forceReIndex", undefined);
+            this.invoke("index/forceReIndex", {
+              shouldClearIndexes: true,
+            });
           } else {
             // Reindex the file
-            await this.refreshCodebaseIndexFiles([uri]);
+            const ignore = await shouldIgnore(uri, this.ide);
+            if (!ignore) {
+              await this.refreshCodebaseIndexFiles([uri]);
+            }
           }
         }
       }
     });
 
-    on("files/created", async ({ data }) => {
-      if (data?.uris?.length) {
+    const refreshIfNotIgnored = async (uris: string[]) => {
+      const toRefresh: string[] = [];
+      for (const uri of uris) {
+        const ignore = await shouldIgnore(uri, ide);
+        if (!ignore) {
+          toRefresh.push(uri);
+        }
+      }
+      if (toRefresh.length > 0) {
         this.messenger.send("refreshSubmenuItems", {
           providers: ["file"],
         });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        await this.refreshCodebaseIndexFiles(toRefresh);
+      }
+    };
+
+    on("files/created", async ({ data }) => {
+      if (data?.uris?.length) {
+        void refreshIfNotIgnored(data.uris);
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: ["file"],
-        });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        void refreshIfNotIgnored(data.uris);
       }
     });
     on("files/opened", async ({ data }) => {

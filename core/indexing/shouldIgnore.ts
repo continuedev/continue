@@ -1,80 +1,86 @@
 import ignore from "ignore";
-import { FileType, IDE } from "../index";
-import { getUriPathBasename } from "../util/uri";
-import { getGlobalContinueIgArray, gitIgArrayFromFile } from "./ignore";
+import type { FileType, IDE } from "../";
+import { findUriInDirs } from "../util/uri";
+import {
+  DEFAULT_IGNORE,
+  getGlobalContinueIgArray,
+  gitIgArrayFromFile,
+} from "./ignore";
 
-interface IgnoreContext {
-  ignore: ReturnType<typeof ignore>;
-  dirname: string;
-}
+/*
+    Process:
+    1. Check global/default ignores
+    2. Walk UP tree from file, checking ignores at each level
 
+    TODO there might be issues with symlinks here
+*/
 export async function shouldIgnore(
   fileUri: string,
-  rootDirUri: string,
   ide: IDE,
-  ignoreFiles: string[] = [".gitignore", ".continueignore"],
+  rootDirCandidates?: string[],
 ): Promise<boolean> {
-  let currentDir = fileUri;
+  const rootDirUris = rootDirCandidates ?? (await ide.getWorkspaceDirs());
+  const {
+    foundInDir: rootDir,
+    uri,
+    relativePathOrBasename,
+  } = findUriInDirs(fileUri, rootDirUris);
+  if (!rootDir) {
+    throw new Error("Should ignore: file uri not found in root dirs");
+  }
 
-  while (currentDir !== rootDirUri && currentDir.startsWith(rootDirUri)) {
+  // Global/default ignores
+  const globalPatterns = getGlobalContinueIgArray();
+  const rootIgnoreContext = ignore().add(globalPatterns).add(DEFAULT_IGNORE);
+  if (rootIgnoreContext.ignores(relativePathOrBasename)) {
+    return true;
+  }
+
+  let currentDir = uri;
+  while (currentDir !== rootDir) {
+    // Go to parent dir of file
+    const splitUri = currentDir.split("/");
+    splitUri.pop();
+    currentDir = splitUri.join("/");
+
+    // Get all files in the dir
     const dirEntries = await ide.listDir(currentDir);
-    const dirs = dirEntries
-      .filter(([_, uriType]) => uriType === FileType.File)
-      .map(([uri, _]) => uri);
+    const dirFiles = dirEntries
+      .filter(([_, entryType]) => entryType === (1 as FileType.File))
+      .map(([name, _]) => name);
 
-    const ignoreContexts = await getIgnoreContextsInDir(
-      currentDir,
-      dirs,
-      ignoreFiles,
-      ide,
+    // Find ignore files and get ignore arrays from their contexts
+    const gitIgnoreFile = dirFiles.find((name) => name === ".gitignore");
+    const continueIgnoreFile = dirFiles.find(
+      (name) => name === ".continueignore",
     );
 
-    const relativePath = fileUri.substring(currentDir.length + 1);
-
-    for (const context of ignoreContexts) {
-      if (context.ignore.ignores(relativePath)) {
-        return true;
+    const getGitIgnorePatterns = async () => {
+      if (gitIgnoreFile) {
+        const contents = await ide.readFile(`${currentDir}/.gitignore`);
+        return gitIgArrayFromFile(contents);
       }
-    }
+      return [];
+    };
+    const getContinueIgnorePatterns = async () => {
+      if (continueIgnoreFile) {
+        const contents = await ide.readFile(`${currentDir}/.continueignore`);
+        return gitIgArrayFromFile(contents);
+      }
+      return [];
+    };
 
-    currentDir = getParentDir(currentDir);
+    const ignoreArrays = await Promise.all([
+      getGitIgnorePatterns(),
+      getContinueIgnorePatterns(),
+    ]);
+    const ignoreContext = ignore().add(ignoreArrays[0]).add(ignoreArrays[1]);
+
+    const relativePath = uri.substring(currentDir.length + 1);
+    if (ignoreContext.ignores(relativePath)) {
+      return true;
+    }
   }
 
   return false;
-}
-
-async function getIgnoreContextsInDir(
-  dirUri: string,
-  entries: string[],
-  ignoreFiles: string[],
-  ide: IDE,
-): Promise<IgnoreContext[]> {
-  const ignoreEntries = entries.filter((entryUri) =>
-    ignoreFiles.includes(getUriPathBasename(entryUri)),
-  );
-  const patterns = await Promise.all(
-    ignoreEntries.map(async (entryUri) => {
-      const fileContent = await ide.readFile(entryUri);
-      return gitIgArrayFromFile(fileContent);
-    }),
-  );
-
-  const globalPatterns = getGlobalContinueIgArray();
-
-  return [
-    ...patterns.map((patterns) => ({
-      ignore: ignore().add(patterns),
-      dirname: dirUri,
-    })),
-    {
-      ignore: ignore().add(globalPatterns),
-      dirname: "/",
-    },
-  ];
-}
-
-function getParentDir(uri: string): string {
-  const splitUri = uri.split("/");
-  splitUri.pop();
-  return splitUri.join("/");
 }
