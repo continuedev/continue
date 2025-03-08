@@ -27,6 +27,7 @@ export default class LocalProfileLoader implements IProfileLoader {
     private ideSettingsPromise: Promise<IdeSettings>,
     private controlPlaneClient: ControlPlaneClient,
     private writeLog: (message: string) => Promise<void>,
+    private overrideConfigYamlByPath?: string | undefined,
   ) {}
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
@@ -39,6 +40,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       undefined,
       undefined,
       this.description.id,
+      this.overrideConfigYamlByPath,
     );
 
     this.description.errors = result.errors;

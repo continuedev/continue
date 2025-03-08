@@ -353,6 +353,10 @@ export function getGlobalPromptsPath(): string {
   return path.join(getContinueGlobalPath(), "prompts");
 }
 
+export function getGlobalAssistantsPath(): string {
+  return path.join(getContinueGlobalPath(), "assistants");
+}
+
 export function readAllGlobalPromptFiles(
   folderPath: string = getGlobalPromptsPath(),
 ): { path: string; content: string }[] {

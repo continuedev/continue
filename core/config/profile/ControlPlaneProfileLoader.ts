@@ -68,6 +68,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       undefined,
       undefined,
       this.workspaceId,
+      undefined,
     );
 
     return {

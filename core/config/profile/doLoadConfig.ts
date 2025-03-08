@@ -36,6 +36,7 @@ export default async function doLoadConfig(
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   profileId: string,
+  overrideConfigYamlByPath: string | undefined
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
@@ -50,7 +51,7 @@ export default async function doLoadConfig(
     migrateJsonSharedConfig(configJsonPath, ide);
   }
 
-  const configYamlPath = getConfigYamlPath(ideInfo.ideType);
+  const configYamlPath = overrideConfigYamlByPath || getConfigYamlPath(ideInfo.ideType);
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
