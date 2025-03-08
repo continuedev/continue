@@ -1,4 +1,0 @@
-project: extensions/intellij
-kind: Fixed
-body: OSR-related fixes for non-Mac users
-time: 2024-11-08T11:43:22.623155-08:00

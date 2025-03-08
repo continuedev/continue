@@ -94,7 +94,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     });
   }
 
-  private async getRemoteBranchName(
+  private async getRemoteBranchInfo(
     extras: ContextProviderExtras,
   ): Promise<RemoteBranchInfo> {
     const subprocess = await getSubprocess(extras);
@@ -121,9 +121,16 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
 
     const remoteUrl = await subprocess(`git remote get-url ${branchRemote}`);
 
-    const urlMatches = /:(?<project>.*).git/.exec(remoteUrl);
+    let urlMatches: RegExpExecArray | null;
+    if (/https?.*/.test(remoteUrl)) {
+      const pathname = new URL(remoteUrl).pathname;
+      urlMatches = /\/(?<projectPath>.*?)(?:(?=\.git)|$)/.exec(pathname)
+    } else {
+      // ssh
+      urlMatches = /:(?<projectPath>.*).git/.exec(remoteUrl)
+    }
 
-    const project = urlMatches?.groups?.project ?? null;
+    const project = urlMatches?.groups?.projectPath ?? null;
 
     return {
       branch: remoteBranch,
@@ -135,7 +142,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const { branch, project } = await this.getRemoteBranchName(extras);
+    const { branch, project } = await this.getRemoteBranchInfo(extras);
 
     const api = await this.getApi();
 

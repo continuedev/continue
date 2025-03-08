@@ -27,6 +27,24 @@ const initialState: ConfigState = {
     models: [],
     tools: [],
     usePlatform: true,
+    modelsByRole: {
+      chat: [],
+      apply: [],
+      edit: [],
+      summarize: [],
+      autocomplete: [],
+      rerank: [],
+      embed: [],
+    },
+    selectedModelByRole: {
+      chat: null,
+      apply: null,
+      edit: null,
+      summarize: null,
+      autocomplete: null,
+      rerank: null,
+      embed: null,
+    },
   },
 };
 
