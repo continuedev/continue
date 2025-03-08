@@ -1,18 +1,18 @@
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { useCallback, useEffect, useState } from "react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+import { useCallback, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius } from "..";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../redux/store";
-import { loadSession, saveCurrentSession } from "../../redux/thunks/session";
 import { newSession } from "../../redux/slices/sessionSlice";
 import {
   addTab,
+  handleSessionChange,
   removeTab,
   setActiveTab,
   setTabs,
-  handleSessionChange,
 } from "../../redux/slices/tabsSlice";
+import { AppDispatch, RootState } from "../../redux/store";
+import { loadSession, saveCurrentSession } from "../../redux/thunks/session";
 
 const TabBarContainer = styled.div`
   display: flex;
@@ -22,7 +22,7 @@ const TabBarContainer = styled.div`
   background-color: var(--vscode-tab-inactiveBackground);
   border-bottom: none;
   position: relative;
-  margin-top: 7px;
+  margin-top: 2px;
 
   /* Hide scrollbar but keep functionality */
   scrollbar-width: none;
@@ -154,10 +154,6 @@ export function TabBar() {
     (state: RootState) => state.session.history.length > 0,
   );
   const tabs = useSelector((state: RootState) => state.tabs.tabs);
-
-  useEffect(() => {
-    console.log("session", currentSession);
-  }, [currentSession.id]);
 
   // Simple UUID generator for our needs
   const generateId = useCallback(() => {

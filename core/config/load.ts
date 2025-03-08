@@ -3,6 +3,11 @@ import * as fs from "fs";
 import os from "os";
 import path from "path";
 
+import {
+  ConfigResult,
+  ConfigValidationError,
+  ModelRole,
+} from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as JSONC from "comment-json";
 import * as tar from "tar";
@@ -31,14 +36,16 @@ import {
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
-} from "../commands/index.js";
+} from "../commands/index";
 import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
 import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
+import { useHub } from "../control-plane/env";
 import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
@@ -62,14 +69,8 @@ import {
   getContinueDotEnv,
   getEsbuildBinaryPath,
 } from "../util/paths";
-
-import {
-  ConfigResult,
-  ConfigValidationError,
-  ModelRole,
-} from "@continuedev/config-yaml";
-import { useHub } from "../control-plane/env";
 import { localPathToUri } from "../util/pathToUri";
+
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -78,7 +79,7 @@ import {
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
-import { getModelByRole } from "./util";
+import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
 import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
@@ -172,10 +173,9 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  // Temporarily disabling this check until we can verify the commands are accuarate
-  // if (!isSupportedLanceDbCpuTarget(ide)) {
-  //   config.disableIndexing = true;
-  // }
+  if (os.platform() === "linux" && !isSupportedLanceDbCpuTargetForLinux(ide)) {
+    config.disableIndexing = true;
+  }
 
   return { config, errors, configLoadInterrupted: false };
 }
@@ -231,13 +231,6 @@ export function isContextProviderWithParams(
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
-
-const getCodebaseProvider = async (params: any) => {
-  const { default: CodebaseContextProvider } = await import(
-    "../context/providers/CodebaseContextProvider"
-  );
-  return new CodebaseContextProvider(params);
-};
 
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
@@ -405,7 +398,7 @@ async function intermediateToFinalConfig(
     new FileContextProvider({}),
     // Add codebase provider if indexing is enabled
     ...(!config.disableIndexing
-      ? [await getCodebaseProvider(codebaseContextParams)]
+      ? [new CodebaseContextProvider(codebaseContextParams)]
       : []),
     // Add prompt files provider if enabled
     ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
