@@ -45,7 +45,6 @@ function useSetup() {
       }
       hasLoadedConfig.current = true;
       dispatch(setConfigResult(configResult));
-      console.log("selecting 1", profileId);
       dispatch(selectProfileThunk(profileId));
 
       // Perform any actions needed with the config
@@ -95,7 +94,6 @@ function useSetup() {
   useWebviewListener(
     "configUpdate",
     async (update) => {
-      console.log("CONFIG UPDATE: ", update);
       if (!update) {
         return;
       }

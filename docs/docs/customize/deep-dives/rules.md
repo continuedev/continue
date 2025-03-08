@@ -3,11 +3,19 @@ description: Learn how to customize the system prompt with a `.continuerules` fi
 keywords: [rules, .continuerules, system, prompt, message]
 ---
 
-# `.continuerules`
+# Rules
 
-You can create a project-specific system message by adding a `.continuerules` file to the root of your project. This file is raw text and its contents will be inserted into the system message for all chat requests. Rules are not used for autocomplete.
+Rules are used to provide instructions to **chat** models. They are inserted into the system message for all chat requests. Rules are _only_ used during Chat, they are not used for autocomplete or other roles.
 
-## Simple Examples
+## Hub `rules` blocks
+
+Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
+
+## `.continuerules`
+
+You can create a project-specific system message by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
+
+### Simple Examples
 
 - If you want concise answers:
 

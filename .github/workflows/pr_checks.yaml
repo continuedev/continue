@@ -4,10 +4,12 @@ on:
   pull_request:
     branches:
       - main
+      - staging
 
   push:
     branches:
       - main
+      - staging
 
 jobs:
   install-root:
@@ -273,7 +275,7 @@ jobs:
           cd core
           npm test
         env:
-          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork }}
+          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true && github.actor == 'dependabot[bot]' }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -407,6 +409,14 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
+      # We don't want to cache the Continue extension, so it is deleted at the end of the job
+      - uses: actions/cache@v4
+        id: test-extensions-cache
+        with:
+          path: extensions/vscode/e2e/.test-extensions
+          # package.json used as the key because that's where the download script is defined
+          key: vscode-test-extensions-${{ hashFiles('extensions/vscode/package.json') }}
+
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
@@ -434,7 +444,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
           echo -e "Host ssh-test-container\n\tHostName $SSH_HOST\n\tUser ec2-user\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
-        if: ${{ github.event.pull_request.head.repo.fork == false }}
+        if: ${{ github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' }}
 
       - name: Set up Xvfb
         run: |
@@ -444,9 +454,14 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
+          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
+
+      - name: Delete continue from test extensions
+        run: |
+          cd extensions/vscode
+          rm -rf e2e/.test-extensions/continue*
 
       - name: Upload e2e test screenshots
         if: failure()

@@ -4,13 +4,13 @@ title: Prompt files
 
 Prompt files provide a convenient way to standardize common patterns and share a collection of LLM prompts with your team. They make it easy to build and use these prompts.
 
+On the [hub](../../hub/introduction.md), prompt files are stored within [prompt blocks](../../hub/blocks/block-types.md#prompts), which show up as [slash commands](../slash-commands.mdx) in Chat. Visit the hub to [explore prompts](https://hub.continue.dev/explore/prompts) or [create your own](https://hub.continue.dev/new?type=block&blockType=rules).
+
+Prompt files can also be stored within your project's root directory as `.prompt` files. See below.
+
 ## Quick start
 
-<!-- :::tip[Prompt library]
-To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-examples). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
-::: -->
-
-Below is a quick example of setting up a prompt file to de
+Below is a quick example of setting up a prompt file:
 
 1. Create a folder called `.continue/prompts` at the top level of your workspace (or you can use the button in the UI by typing @, selecting "Prompt Files", and selecting "New Prompt File").
 2. Add a file called `rails.prompt` to this folder.

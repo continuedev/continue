@@ -23,7 +23,7 @@ class DocsContextProvider extends BaseContextProvider {
     // Todo: consider a different renderInline so that when multiple docs are referenced in one message,
     // Or the doc has an odd name unrelated to the content
     // The name of the doc itself doesn't skew the embedding results
-    // renderInlineAs: "<docs-context-provider>",
+    renderInlineAs: "",
   };
 
   constructor(options: any) {

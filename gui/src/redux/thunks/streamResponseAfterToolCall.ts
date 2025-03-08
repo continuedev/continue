@@ -43,7 +43,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           content: renderContextItems(toolOutput),
           toolCallId,
         };
-
         dispatch(streamUpdate([newMessage]));
         dispatch(
           addContextItemsAtIndex({

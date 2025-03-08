@@ -139,12 +139,17 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+  
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
+
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: headers,
       body: JSON.stringify({ name: this._getModel() }),
     })
       .then(async (response) => {
@@ -324,12 +329,16 @@ class Ollama extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+  
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers,
       body: JSON.stringify(this._getGenerateOptions(options, prompt)),
       signal,
     });
@@ -385,13 +394,16 @@ class Ollama extends BaseLLM {
       }));
       chatOptions.stream = false; // Cannot set stream = true for tools calls
     }
-
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+  
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers,
       body: JSON.stringify(chatOptions),
       signal,
     });
@@ -468,12 +480,16 @@ class Ollama extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+  
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers,
       body: JSON.stringify(this._getGenerateOptions(options, prefix, suffix)),
       signal,
     });
@@ -505,11 +521,19 @@ class Ollama extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+  
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(
       // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
       this.getEndpoint("api/tags"),
       {
         method: "GET",
+        headers: headers,
       },
     );
     const data = await response.json();
@@ -523,16 +547,20 @@ class Ollama extends BaseLLM {
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+  
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const resp = await this.fetch(new URL("api/embed", this.apiBase), {
       method: "POST",
       body: JSON.stringify({
         model: this.model,
         input: chunks,
       }),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers
     });
 
     if (!resp.ok) {
