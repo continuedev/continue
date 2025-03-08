@@ -63,6 +63,13 @@ class AutocompleteService(private val project: Project) {
     // we need to keep track of whether the last change was a partial accept
     var lastChangeWasPartialAccept = false
 
+    init {
+        val statusBar = WindowManager.getInstance().getStatusBar(project)
+        if (statusBar != null) {
+            widget = statusBar.getWidget("AutocompleteSpinnerWidget") as? AutocompleteSpinnerWidget
+        }    
+    }
+
     fun triggerCompletion(editor: Editor) {
         val settings =
             ServiceManager.getService(ContinueExtensionSettings::class.java)
