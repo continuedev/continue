@@ -1,6 +1,5 @@
 package com.github.continuedev.continueintellijextension.activities
 
-import IntelliJIDE
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.auth.ControlPlaneSessionInfo
@@ -30,13 +29,13 @@ import java.nio.file.Paths
 import javax.swing.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.ide.ui.LafManagerListener
 
 fun showTutorial(project: Project) {
@@ -48,7 +47,7 @@ fun showTutorial(project: Project) {
                 throw IOException("Resource not found: $tutorialFileName")
             }
             var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
-            
+
             // All jetbrains will use J instead of L
             content = content.replace("[Cmd + L]", "[Cmd + J]")
             content = content.replace("[Cmd + Shift + L]", "[Cmd + Shift + J]")
@@ -175,7 +174,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Send "files/deleted" message if there are any deletions
                     if (deletedURIs.isNotEmpty()) {
-                        val data = mapOf("files" to deletedURIs)
+                        val data = mapOf("uris" to deletedURIs)
                         continuePluginService.coreMessenger?.request("files/deleted", data, null) { _ -> }
                     }
 
@@ -185,9 +184,18 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Notify core of content changes
                     if (changedURIs.isNotEmpty()) {
-                        val data = mapOf("files" to changedURIs)
+                        val data = mapOf("uris" to changedURIs)
                         continuePluginService.coreMessenger?.request("files/changed", data, null) { _ -> }
                     }
+
+                    events.filterIsInstance<VFileCreateEvent>()
+                        .mapNotNull { event -> event.file?.toUriOrNull() }
+                        .takeIf { it.isNotEmpty() }?.let {
+                            val data = mapOf("uris" to it)
+                            continuePluginService.coreMessenger?.request("files/created", data, null) { _ -> }
+                        }
+
+                    // TODO: Missing handling of copying files, renaming files, etc.
                 }
             })
 
@@ -199,7 +207,7 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                     colors
                 )
             })
-            
+
             // Listen for clicking settings button to start the auth flow
             val authService = service<ContinueAuthService>()
             val initialSessionInfo = authService.loadControlPlaneSessionInfo()

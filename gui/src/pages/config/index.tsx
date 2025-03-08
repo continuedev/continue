@@ -114,6 +114,7 @@ function ConfigPage() {
   }
 
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
+  const showSessionTabs = config.ui?.showSessionTabs ?? false;
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
   const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
@@ -380,6 +381,15 @@ function ConfigPage() {
                 </div>
 
                 <div className="flex flex-col gap-4">
+                  <ToggleSwitch
+                    isToggled={showSessionTabs}
+                    onToggle={() =>
+                      handleUpdate({
+                        showSessionTabs: !showSessionTabs,
+                      })
+                    }
+                    text="Show Session Tabs"
+                  />
                   <ToggleSwitch
                     isToggled={codeWrap}
                     onToggle={() =>

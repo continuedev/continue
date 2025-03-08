@@ -1033,6 +1033,7 @@ export interface ContinueUIConfig {
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
+  showSessionTabs?: boolean;
 }
 
 export interface ContextMenuConfig {
