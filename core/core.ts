@@ -1,7 +1,4 @@
-import path from "path";
-
 import { fetchwithRequestOptions } from "@continuedev/fetch";
-import ignore from "ignore";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -26,7 +23,6 @@ import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
-import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -53,6 +49,7 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import { shouldIgnore } from "./indexing/shouldIgnore";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -829,6 +826,10 @@ export class Core {
 
     // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config || config.disableIndexing) {
+        return; // TODO silent in case of commands?
+      }
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
         await codebaseIndexer.clearIndexes();
@@ -886,30 +887,51 @@ export class Core {
             uri.endsWith(".gitignore")
           ) {
             // Reindex the workspaces
-            this.invoke("index/forceReIndex", undefined);
+            this.invoke("index/forceReIndex", {
+              shouldClearIndexes: true,
+            });
           } else {
-            // Reindex the file
-            await this.refreshCodebaseIndexFiles([uri]);
+            const { config } = await this.configHandler.loadConfig();
+            if (config && !config.disableIndexing) {
+              // Reindex the file
+              const ignore = await shouldIgnore(uri, this.ide);
+              if (!ignore) {
+                await this.refreshCodebaseIndexFiles([uri]);
+              }
+            }
           }
         }
       }
     });
 
-    on("files/created", async ({ data }) => {
-      if (data?.uris?.length) {
+    const refreshIfNotIgnored = async (uris: string[]) => {
+      const toRefresh: string[] = [];
+      for (const uri of uris) {
+        const ignore = await shouldIgnore(uri, ide);
+        if (!ignore) {
+          toRefresh.push(uri);
+        }
+      }
+      if (toRefresh.length > 0) {
         this.messenger.send("refreshSubmenuItems", {
           providers: ["file"],
         });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        const { config } = await this.configHandler.loadConfig();
+        if (config && !config.disableIndexing) {
+          await this.refreshCodebaseIndexFiles(toRefresh);
+        }
+      }
+    };
+
+    on("files/created", async ({ data }) => {
+      if (data?.uris?.length) {
+        void refreshIfNotIgnored(data.uris);
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: ["file"],
-        });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        void refreshIfNotIgnored(data.uris);
       }
     });
     on("files/opened", async ({ data }) => {
@@ -950,15 +972,21 @@ export class Core {
     });
     //
 
-    on("didChangeSelectedProfile", (msg) => {
-      void this.configHandler.setSelectedProfile(msg.data.id);
-      void this.configHandler.reloadConfig();
+    on("didChangeSelectedProfile", async (msg) => {
+      await this.configHandler.setSelectedProfile(msg.data.id);
+      await this.configHandler.reloadConfig();
     });
 
-    on("didChangeSelectedOrg", (msg) => {
-      void this.configHandler.setSelectedOrgId(msg.data.id);
-      void this.configHandler.reloadConfig();
-      void this.configHandler.loadAssistantsForSelectedOrg();
+    on("didChangeSelectedOrg", async (msg) => {
+      await this.configHandler.setSelectedOrgId(msg.data.id);
+      await this.configHandler.loadAssistantsForSelectedOrg();
+      if (msg.data.profileId) {
+        this.invoke("didChangeSelectedProfile", {
+          id: msg.data.profileId,
+        });
+      } else {
+        await this.configHandler.reloadConfig();
+      }
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
@@ -975,19 +1003,15 @@ export class Core {
     });
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      const ignoreInstance = ignore().add(defaultIgnoreFile);
-      let rootDirectory = await this.ide.getWorkspaceDirs();
-      const relativeFilePath = path.relative(rootDirectory[0], filepath);
       try {
-        if (!ignoreInstance.ignores(relativeFilePath)) {
+        const ignore = shouldIgnore(filepath, this.ide);
+        if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
       } catch (e) {
-        if (e instanceof RangeError) {
-          // do nothing, this can happen when editing a file outside the workspace such as `../extensions/.continue-debug/config.json`
-        } else {
-          console.debug("unhandled ignores error", relativeFilePath, e);
-        }
+        console.error(
+          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
+        );
       }
     });
 
@@ -1108,6 +1132,7 @@ export class Core {
     this.messenger.send("refreshSubmenuItems", {
       providers: "dependsOnIndexing",
     });
+    this.indexingCancellationController = undefined;
   }
 
   // private
