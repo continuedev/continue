@@ -192,12 +192,7 @@ describe("walkDir functions", () => {
     it("should skip symlinks", async () => {
       const filePath = path.join(TEST_DIR_PATH, "real.ts");
       addToTestDir([["real.ts", "content"]]);
-      fs.symlink(
-        filePath,
-        path.join(TEST_DIR_PATH, "symlink.ts"),
-        "file",
-        () => {},
-      );
+      fs.symlinkSync(filePath, path.join(TEST_DIR_PATH, "symlink.ts"), "file");
 
       const files = await walkDirs(testIde);
 
