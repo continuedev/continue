@@ -71,7 +71,6 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { capitalizeFirstLetter } from "../util/text";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -273,7 +272,7 @@ async function intermediateToFinalConfig(
                 {
                   ...desc,
                   model: modelName,
-                  title: `${modelName} - ${llm.title?.toUpperCase() === "AUTODETECT" ? capitalizeFirstLetter(llm.providerName) : llm.title} (Autodetect)`,
+                  title: modelName,
                 },
                 ide.readFile.bind(ide),
                 uniqueId,

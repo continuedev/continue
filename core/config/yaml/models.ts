@@ -3,7 +3,6 @@ import { ModelConfig } from "@continuedev/config-yaml";
 import { IDE, IdeSettings, LLMOptions } from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";
-import { capitalizeFirstLetter } from "../../util/text";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 
 const AUTODETECT = "AUTODETECT";
@@ -128,7 +127,7 @@ async function autodetectModels(
           {
             ...model,
             model: modelName,
-            name: `${modelName} - ${llm.title?.toUpperCase() === "AUTODETECT" ? capitalizeFirstLetter(llm.providerName) : llm.title} (Autodetect)`,
+            name: modelName,
           },
           uniqueId,
           ideSettings,
