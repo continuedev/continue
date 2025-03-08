@@ -230,7 +230,7 @@ export class VerticalDiffManager {
     );
 
     if (!diffHandler) {
-      console.warn("Issue occured while creating new vertical diff handler");
+      console.warn("Issue occurred while creating new vertical diff handler");
       return;
     }
 
@@ -353,7 +353,7 @@ export class VerticalDiffManager {
     );
 
     if (!diffHandler) {
-      console.warn("Issue occured while creating new vertical diff handler");
+      console.warn("Issue occurred while creating new vertical diff handler");
       return undefined;
     }
 
