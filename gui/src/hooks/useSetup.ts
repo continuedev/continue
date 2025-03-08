@@ -13,13 +13,13 @@ import {
   setInactive,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
-import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 
 function useSetup() {
   const dispatch = useAppDispatch();

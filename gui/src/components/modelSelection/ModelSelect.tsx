@@ -10,6 +10,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
 import { useAppSelector } from "../../redux/hooks";
@@ -25,6 +26,7 @@ import {
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import { Divider } from "./platform/shared";
+import Shortcut from '../gui/Shortcut';
 
 interface ModelOptionProps {
   option: Option;
@@ -219,9 +221,7 @@ function ModelSelect() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
-  const selectedProfileId = useAppSelector(
-    (store) => store.session.selectedProfileId,
-  );
+  const { selectedProfile } = useAuth();
 
   // Sort so that options without an API key are at the end
   useEffect(() => {
@@ -351,7 +351,7 @@ function ModelSelect() {
           <div className="mt-auto">
             <Divider className="!my-0" />
 
-            {selectedProfileId === "local" && (
+            {selectedProfile?.id === "local" && (
               <>
                 <StyledListboxOption
                   key={options.length}
@@ -369,7 +369,7 @@ function ModelSelect() {
             <Divider className="!my-0" />
 
             <span className="block px-3 py-3" style={{ color: lightGray }}>
-              <code>{getMetaKeyLabel()} + '</code> to toggle
+              <Shortcut>meta '</Shortcut> to toggle model
             </span>
           </div>
         </StyledListboxOptions>

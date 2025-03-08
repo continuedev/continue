@@ -1,0 +1,34 @@
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+# SambaNova Cloud
+
+The SambaNova Cloud is a cloud platform for running large AI models with the world record open source models performance. You can follow the instructions in [this blog post](https://sambanova.ai/blog/accelerating-coding-with-sambanova-cloud?ref=blog.continue.dev) to configure your setup.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: SambaNova Qwen2.5 coder
+      provider: sambanova
+      model: qwen2.5-coder-32b
+      apiKey: <YOUR_SAMBANOVA_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "SambaNova Qwen2.5 coder",
+        "provider": "sambanova",
+        "model": "qwen2.5-coder-32b",
+        "apiKey": "<YOUR_SAMBANOVA_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/SambaNova.ts)

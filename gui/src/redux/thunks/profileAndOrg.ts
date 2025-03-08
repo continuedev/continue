@@ -1,14 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { ProfileDescription } from "core/config/ConfigHandler";
+import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import {
   setAvailableProfiles,
   setOrganizations,
   setSelectedOrganizationId,
-  setSelectedProfileId,
+  setSelectedProfile,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { ProfileDescription } from "core/config/ConfigHandler";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
-import { isLocalProfile } from "../../util";
 
 export const selectProfileThunk = createAsyncThunk<
   void,
@@ -16,7 +15,13 @@ export const selectProfileThunk = createAsyncThunk<
   ThunkApiType
 >("profiles/select", async (id, { dispatch, extra, getState }) => {
   const state = getState();
-  const initialId = state.session.selectedProfileId;
+
+  if (state.session.availableProfiles === null) {
+    // Currently in loading state
+    return;
+  }
+
+  const initialId = state.session.selectedProfile?.id;
 
   let newId = id;
 
@@ -32,19 +37,18 @@ export const selectProfileThunk = createAsyncThunk<
     }
     if (!newId) {
       // At this point if null ID and there ARE profiles,
-      // Fallback to a profile, prioritizing local
-      const localProfile = state.session.availableProfiles.find(isLocalProfile);
-      if (localProfile) {
-        newId = localProfile.id;
-      } else {
-        newId = state.session.availableProfiles[0].id;
-      }
+      // Fallback to a profile, prioritizing the first in the list
+      newId = state.session.availableProfiles[0].id;
     }
   }
 
   // Only update if there's a change
-  if (newId !== initialId) {
-    dispatch(setSelectedProfileId(newId));
+  if ((newId ?? null) !== (initialId ?? null)) {
+    dispatch(
+      setSelectedProfile(
+        state.session.availableProfiles.find((p) => p.id === newId) ?? null,
+      ),
+    );
     extra.ideMessenger.post("didChangeSelectedProfile", {
       id: newId,
     });
@@ -55,6 +59,11 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
   "profiles/cycle",
   async (_, { dispatch, getState }) => {
     const state = getState();
+
+    if (state.session.availableProfiles === null) {
+      return;
+    }
+
     const profileIds = state.session.availableProfiles.map(
       (profile) => profile.id,
     );
@@ -63,8 +72,8 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
     let nextId = profileIds[0];
-    if (state.session.selectedProfileId) {
-      const curIndex = profileIds.indexOf(state.session.selectedProfileId);
+    if (state.session.selectedProfile) {
+      const curIndex = profileIds.indexOf(state.session.selectedProfile?.id);
       const nextIndex = (curIndex + 1) % profileIds.length;
       nextId = profileIds[nextIndex];
     }
@@ -74,14 +83,15 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
 
 export const updateProfilesThunk = createAsyncThunk<
   void,
-  ProfileDescription[],
+  { profiles: ProfileDescription[] | null; selectedProfileId: string | null },
   ThunkApiType
->("profiles/update", async (profiles, { dispatch, extra, getState }) => {
-  const state = getState();
+>("profiles/update", async (data, { dispatch, extra, getState }) => {
+  const { profiles, selectedProfileId } = data;
+
   dispatch(setAvailableProfiles(profiles));
 
   // This will trigger reselection if needed
-  dispatch(selectProfileThunk(state.session.selectedProfileId));
+  dispatch(selectProfileThunk(selectedProfileId));
 });
 
 export const selectOrgThunk = createAsyncThunk<
@@ -106,7 +116,7 @@ export const selectOrgThunk = createAsyncThunk<
   // Fallback to Personal (org = null)
 
   if (initialId !== newId) {
-    dispatch(setAvailableProfiles([]));
+    dispatch(setAvailableProfiles(null));
     dispatch(setSelectedOrganizationId(newId));
     extra.ideMessenger.post("didChangeSelectedOrg", {
       id: newId,

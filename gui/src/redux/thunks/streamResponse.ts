@@ -41,8 +41,8 @@ const getSlashCommandForInput = (
 
   if (lastText.startsWith("/")) {
     slashCommandName = lastText.split(" ")[0].substring(1);
-    slashCommand = slashCommands.find(
-      (command) => command.name === slashCommandName,
+    slashCommand = slashCommands.find((command) =>
+      lastText.startsWith(`/${command.name} `),
     );
   }
   if (!slashCommand || !slashCommandName) {

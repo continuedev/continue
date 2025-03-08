@@ -8,6 +8,7 @@ import Gemini from "../llm/llms/Gemini.js";
 import HuggingFaceTEIEmbeddingsProvider from "../llm/llms/HuggingFaceTEI.js";
 import LMStudio from "../llm/llms/LMStudio.js";
 import Mistral from "../llm/llms/Mistral.js";
+import NCompass from "../llm/llms/NCompass.js";
 import Nebius from "../llm/llms/Nebius.js";
 import Nvidia from "../llm/llms/Nvidia.js";
 import Ollama from "../llm/llms/Ollama.js";
@@ -39,6 +40,7 @@ export const allEmbeddingsProviders: Record<
   gemini: Gemini,
   "continue-proxy": ContinueProxy,
   deepinfra: DeepInfra,
+  ncompass: NCompass,
   nvidia: Nvidia,
   voyage: Voyage,
   mistral: Mistral,

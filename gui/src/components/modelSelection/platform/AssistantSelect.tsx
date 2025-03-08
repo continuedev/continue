@@ -1,5 +1,6 @@
 import { Popover } from "@headlessui/react";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -11,10 +12,24 @@ import AssistantIcon from "./AssistantIcon";
 import { AssistantSelectOptions } from "./AssistantSelectOptions";
 import { getProfileDisplayText } from "./utils";
 
+function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
+  return (
+    <div className="flex max-w-[50vw] items-center gap-0.5">
+      <div className="mr-1 h-4 w-4 flex-shrink-0">
+        <AssistantIcon assistant={props.selectedProfile} />
+      </div>
+      <span className="truncate">
+        {getProfileDisplayText(props.selectedProfile)}
+      </span>
+      <ChevronDownIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+    </div>
+  );
+}
+
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, selectedOrganization } = useAuth();
+  const { selectedProfile, selectedOrganization, profiles } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
   useEffect(() => {
@@ -68,18 +83,7 @@ export default function AssistantSelect() {
           className="text-lightgray cursor-pointer border-none bg-transparent hover:brightness-125"
           style={{ fontSize: `${getFontSize() - 2}px` }}
         >
-          <div className="flex max-w-[50vw] items-center gap-0.5">
-            <div className="mr-1 h-4 w-4 flex-shrink-0">
-              <AssistantIcon assistant={selectedProfile} />
-            </div>
-            <span className="truncate">
-              {getProfileDisplayText(selectedProfile)}
-            </span>
-            <ChevronDownIcon
-              className="h-3 w-3 flex-shrink-0"
-              aria-hidden="true"
-            />
-          </div>
+          <AssistantSelectButton selectedProfile={selectedProfile} />
         </Popover.Button>
 
         <PopoverTransition>

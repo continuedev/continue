@@ -1,0 +1,62 @@
+---
+title: xAI
+slug: ../xai
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+:::info
+You can get an API key from the [xAI console](https://console.x.ai/)
+:::
+
+## Chat model
+
+We recommend configuring **grok-2-latest** as your chat model. For information on other available models, visit [xAI Documentation](https://docs.x.ai/docs/models).
+
+<Tabs groupId="hub-config-example">
+	<TabItem value="hub" label="Config">
+  Add the [xAI Grok 2 model block](https://hub.continue.dev/xai/grok-2) on the hub.
+  </TabItem>
+	<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Grok 2
+      provider: xAI
+      model: grok-2-latest
+      apiKey: <YOUR_XAI_API_KEY>
+  ```
+  </TabItem>
+	<TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Grok 2",
+        "provider": "xAI",
+        "model": "grok-2-latest",
+        "apiKey": "<YOUR_XAI_API_KEY>"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+## Autocomplete model
+
+xAI currently does not offer any autocomplete models.
+
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+xAI currently does not offer any embeddings models.
+
+[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
+
+## Reranking model
+
+xAI currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.

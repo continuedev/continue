@@ -1,17 +1,17 @@
 import { BuildingOfficeIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
+import { selectProfileThunk } from "../../../redux/thunks/profileAndOrg";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
 import { getProfileDisplayText } from "./utils";
-import { ProfileDescription } from "core/config/ConfigHandler";
-import { selectProfileThunk } from "../../../redux/thunks/profileAndOrg";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -21,7 +21,8 @@ export function AssistantSelectOptions({
   onClose,
 }: AssistantSelectOptionsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { profiles, selectedProfile, selectedOrganization } = useAuth();
+  const { profiles, selectedProfile, selectedOrganization, session, login } =
+    useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -41,6 +42,10 @@ export function AssistantSelectOptions({
   function handleClickError(profileId: string) {
     ideMessenger.post("config/openProfile", { profileId });
     onClose();
+  }
+
+  if (!profiles) {
+    return null;
   }
 
   return (
@@ -73,8 +78,6 @@ export function AssistantSelectOptions({
                   style={{ fontSize: getFontSize() - 2 }}
                 >
                   {getProfileDisplayText(profile)}
-                  {profile.fullSlug.versionSlug &&
-                    ` (${profile.fullSlug.versionSlug})`}
                 </span>
               </div>
             </Option>
@@ -83,7 +86,10 @@ export function AssistantSelectOptions({
       </div>
 
       <div className="mt-auto w-full">
-        <OptionDiv key={profiles.length} onClick={onNewAssistant}>
+        <OptionDiv
+          key={"new-assistant"}
+          onClick={session ? onNewAssistant : () => login(false)}
+        >
           <div
             className="flex items-center py-0.5"
             style={{ fontSize: getFontSize() - 2 }}
@@ -107,7 +113,10 @@ export function AssistantSelectOptions({
             onClick={() => navigate(ROUTES.CONFIG)}
           >
             {selectedOrganization?.iconUrl ? (
-              <img src={selectedOrganization.iconUrl} className="h-4 w-4" />
+              <img
+                src={selectedOrganization.iconUrl}
+                className="h-4 w-4 rounded-full"
+              />
             ) : (
               <BuildingOfficeIcon className="h-4 w-4" />
             )}

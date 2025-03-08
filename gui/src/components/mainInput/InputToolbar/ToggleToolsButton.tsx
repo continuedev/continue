@@ -14,6 +14,7 @@ import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
 import PopoverTransition from "./PopoverTransition";
 import ToolDropdownItem from "./ToolDropdownItem";
+import { selectIsInEditMode } from "../../../redux/slices/sessionSlice";
 
 interface ToolDropdownProps {
   disabled: boolean;
@@ -28,6 +29,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
   const useTools = useAppSelector((state) => state.ui.useTools);
   const availableTools = useAppSelector((state) => state.config.config.tools);
   const [showAbove, setShowAbove] = useState(false);
+  const isInEditMode = useAppSelector(selectIsInEditMode);
 
   const ToolsIcon = useTools
     ? WrenchScrewdriverIconSolid
@@ -48,33 +50,37 @@ export default function ToolDropdown(props: ToolDropdownProps) {
     }
   }, [isDropdownOpen]);
 
+  const isDisabled = props.disabled || isInEditMode;
+
   return (
-    <HoverItem onClick={() => !props.disabled && dispatch(toggleUseTools())}>
+    <HoverItem onClick={() => !isDisabled && dispatch(toggleUseTools())}>
       <div
         data-tooltip-id="tools-tooltip"
         className={`-ml-1 -mt-1 flex flex-row items-center gap-1.5 rounded-md px-1 py-0.5 text-xs ${
-          (useTools || isHovered) && !props.disabled ? "bg-lightgray/30" : ""
-        } ${props.disabled ? "cursor-not-allowed opacity-50" : ""}`}
+          (useTools || isHovered) && !isDisabled ? "bg-lightgray/30" : ""
+        } ${isDisabled ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <ToolsIcon
           className={`h-4 w-4 text-gray-400 ${
-            props.disabled ? "cursor-not-allowed" : ""
+            isDisabled ? "cursor-not-allowed" : ""
           }`}
-          onMouseEnter={() => !props.disabled && setIsHovered(true)}
-          onMouseLeave={() => !props.disabled && setIsHovered(false)}
+          onMouseEnter={() => !isDisabled && setIsHovered(true)}
+          onMouseLeave={() => !isDisabled && setIsHovered(false)}
         />
-        {props.disabled && (
+        {isDisabled && (
           <ToolTip id="tools-tooltip" place="top-middle">
-            This model does not support tool use
+            {isInEditMode
+              ? "Tool use not supported in edit mode"
+              : "This model does not support tool use"}
           </ToolTip>
         )}
-        {!useTools && !props.disabled && (
+        {!useTools && !isDisabled && (
           <ToolTip id="tools-tooltip" place="top-middle">
             Enable tool usage
           </ToolTip>
         )}
 
-        {useTools && !props.disabled && (
+        {useTools && !isDisabled && (
           <>
             <span className="hidden align-top sm:flex">Tools</span>
 
@@ -84,7 +90,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                 onChange={() => {}}
                 as="div"
                 onClick={(e) => e.stopPropagation()}
-                disabled={props.disabled}
+                disabled={isDisabled}
               >
                 {({ open }) => (
                   <>
@@ -95,7 +101,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                         setDropdownOpen(!isDropdownOpen);
                       }}
                       className="text-lightgray flex cursor-pointer items-center border-none bg-transparent px-0 outline-none"
-                      aria-disabled={props.disabled}
+                      aria-disabled={isDisabled}
                     >
                       <EllipsisHorizontalIcon className="h-3 w-3 cursor-pointer hover:brightness-125" />
                     </Listbox.Button>
@@ -147,7 +153,7 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                             />
                           </div>
                         </div>
-                        <div className="max-h-48 overflow-y-auto overflow-x-hidden">
+                        <div className="max-h-48 overflow-y-auto overflow-x-hidden pr-2">
                           {availableTools.map((tool: any) => (
                             <Listbox.Option
                               key={tool.function.name}
