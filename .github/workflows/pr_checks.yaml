@@ -409,6 +409,14 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
+      # We don't want to cache the Continue extension, so it is deleted at the end of the job
+      - uses: actions/cache@v4
+        id: test-extensions-cache
+        with:
+          path: extensions/vscode/e2e/.test-extensions
+          # package.json used as the key because that's where the download script is defined
+          key: vscode-test-extensions-${{ hashFiles('extensions/vscode/package.json') }}
+
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
@@ -449,6 +457,11 @@ jobs:
           IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
+
+      - name: Delete continue from test extensions
+        run: |
+          cd extensions/vscode
+          rm -rf e2e/.test-extensions/continue*
 
       - name: Upload e2e test screenshots
         if: failure()
