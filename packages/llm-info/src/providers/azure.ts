@@ -1,21 +1,9 @@
 import { ModelProvider } from "../types.js";
+import { OpenAi } from "./openai.js";  
 
 export const Azure: ModelProvider = {
+  ...OpenAi,  // inherit models from OpenAI
   id: "azure",
   displayName: "Azure",
   extraParameters: [],
-  models: [
-    {
-      model: "gpt-4o",
-      displayName: "GPT-4o",
-      contextLength: 128_000,
-      recommendedFor: ["chat"],
-    },
-    {
-      model: "gpt-4o-mini",
-      displayName: "GPT-4o Mini",
-      contextLength: 128_000,
-      recommendedFor: ["chat"],
-    },
-  ],
 };
