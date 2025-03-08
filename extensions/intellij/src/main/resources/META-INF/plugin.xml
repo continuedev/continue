@@ -140,14 +140,6 @@
             <override-text place="GoToAction" text="Continue Config"/>
         </action>
 
-        <action id="continue.openAccountDialog"
-                class="com.github.continuedev.continueintellijextension.actions.OpenAccountDialogAction"
-                icon="AllIcons.CodeWithMe.CwmAccess"
-                text="Account"
-                description="Account">
-            <override-text place="GoToAction" text="Account"/>
-        </action>
-
         <action id="continue.openMorePage"
                 class="com.github.continuedev.continueintellijextension.actions.OpenMorePageAction"
                 icon="AllIcons.Actions.MoreHorizontal"
@@ -160,7 +152,6 @@
             <reference ref="continue.newContinueSession"/>
             <reference ref="continue.viewHistory"/>
             <reference ref="continue.openConfigPage"/>
-            <reference ref="continue.openAccountDialog"/>
             <reference ref="continue.openMorePage"/>
         </group>
 

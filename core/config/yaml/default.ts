@@ -1,4 +1,4 @@
-import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas";
+import { AssistantUnrolled } from "@continuedev/config-yaml";
 
 // TODO
 export const defaultConfigYaml: AssistantUnrolled = {

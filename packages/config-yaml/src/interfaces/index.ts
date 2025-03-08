@@ -1,5 +1,5 @@
 import { SecretLocation, SecretResult, SecretType } from "./SecretResult.js";
-import { FQSN, FullSlug } from "./slugs.js";
+import { FQSN, FullSlug, PackageSlug, packageSlugsEqual } from "./slugs.js";
 
 /**
  * A registry stores the content of packages
@@ -27,34 +27,144 @@ export interface PlatformSecretStore {
   ): Promise<string | undefined>;
 }
 
+export function getLocationsToLook(
+  assistantSlug: PackageSlug,
+  blockSlug: PackageSlug | undefined,
+  currentUserSlug: string,
+  secretName: string,
+): SecretLocation[] {
+  const locationsToLook: SecretLocation[] = [
+    ...(blockSlug
+      ? [
+          // Models Add-On
+          {
+            secretType: SecretType.ModelsAddOn as const,
+            secretName,
+            blockSlug,
+          },
+          // Block
+          {
+            secretType: SecretType.Package as const,
+            packageSlug: blockSlug,
+            secretName,
+          },
+        ]
+      : []),
+    // Assistant
+    {
+      secretType: SecretType.Package as const,
+      packageSlug: assistantSlug,
+      secretName,
+    },
+    // Organization that owns assistant (org secrets can only be used in assistants owned by that org)
+    {
+      secretType: SecretType.Organization as const,
+      orgSlug: assistantSlug.ownerSlug,
+      secretName,
+    },
+    // User
+    {
+      secretType: SecretType.User as const,
+      userSlug: currentUserSlug,
+      secretName,
+    },
+    // Free Trial (must be using a eligible block)
+    ...(blockSlug
+      ? [
+          {
+            secretType: SecretType.FreeTrial as const,
+            secretName,
+            blockSlug,
+          },
+        ]
+      : []),
+  ];
+  return locationsToLook;
+}
+
+export function listAvailableSecrets(
+  userSecretNames: string[],
+  orgSecretNames: string[],
+  assistantSecretNames: string[],
+  blockSecretNames: string[],
+  assistantSlug: PackageSlug,
+  blockSlug: PackageSlug | undefined,
+  currentUserSlug: string,
+): SecretLocation[] {
+  // Create a set of all secret names
+  const allSecretNames = new Set([
+    ...userSecretNames,
+    ...orgSecretNames,
+    ...assistantSecretNames,
+    ...blockSecretNames,
+  ]);
+
+  // Use the resolution order to get a single SecretLocation for each secret name
+  const secretLocations: SecretLocation[] = [];
+  for (const secretName of allSecretNames) {
+    // Get the order of places to look
+    const locationsToLook = getLocationsToLook(
+      assistantSlug,
+      blockSlug,
+      currentUserSlug,
+      secretName,
+    );
+
+    // Go through the locations one by one
+    for (const secretLocation of locationsToLook) {
+      // "Looking in a location" in this case means looking through one of the lists of secret names
+      // First we get that list of secret names
+      let secretNamesList: string[] = [];
+      switch (secretLocation.secretType) {
+        case SecretType.User:
+          secretNamesList = userSecretNames;
+          break;
+        case SecretType.Organization:
+          secretNamesList = orgSecretNames;
+          break;
+        case SecretType.Package:
+          if (packageSlugsEqual(secretLocation.packageSlug, assistantSlug)) {
+            secretNamesList = assistantSecretNames;
+          } else if (
+            blockSlug &&
+            packageSlugsEqual(secretLocation.packageSlug, blockSlug)
+          ) {
+            secretNamesList = blockSecretNames;
+          }
+          break;
+      }
+
+      // Then we look through that list for the matching secret name
+      if (secretNamesList) {
+        const matchingSecretName = secretNamesList.find(
+          (secretName) => secretName === secretLocation.secretName,
+        );
+        if (matchingSecretName) {
+          // If we find a matching secret name, we add the location to the list
+          secretLocations.push(secretLocation);
+          break;
+        }
+      }
+    }
+  }
+
+  return secretLocations;
+}
+
 export async function resolveFQSN(
   currentUserSlug: string,
   fqsn: FQSN,
   platformSecretStore: PlatformSecretStore,
 ): Promise<SecretResult> {
   // First create the list of secret locations to try in order
-  const reversedSlugs = [...fqsn.packageSlugs].reverse();
-
-  const locationsToLook: SecretLocation[] = [
-    // Organization first
-    ...reversedSlugs.map((slug) => ({
-      secretType: SecretType.Organization as const,
-      orgSlug: slug.ownerSlug,
-      secretName: fqsn.secretName,
-    })),
-    // Then packages
-    ...reversedSlugs.map((slug) => ({
-      secretType: SecretType.Package as const,
-      packageSlug: slug,
-      secretName: fqsn.secretName,
-    })),
-    // Then user
-    {
-      secretType: SecretType.User as const,
-      userSlug: currentUserSlug,
-      secretName: fqsn.secretName,
-    },
-  ];
+  const assistantSlug = fqsn.packageSlugs[0];
+  const blockSlug = fqsn.packageSlugs[1];
+  const locationsToLook = getLocationsToLook(
+    assistantSlug,
+    blockSlug,
+    currentUserSlug,
+    fqsn.secretName,
+  );
 
   // Then try to get the secret from each location
   for (const secretLocation of locationsToLook) {

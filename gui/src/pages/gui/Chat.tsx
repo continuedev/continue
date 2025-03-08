@@ -38,11 +38,12 @@ import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
+import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUsePlatform } from "../../redux/selectors";
+import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
@@ -111,7 +112,7 @@ const StepsDiv = styled.div`
   }
 
   .thread-message {
-    margin: 0px 4px 0 4px;
+    margin: 0px 0px 0px 1px;
   }
 `;
 
@@ -196,6 +197,9 @@ export function Chat() {
   const selectedModelTitle = useAppSelector(
     (store) => store.config.defaultModelTitle,
   );
+  const showSessionTabs = useAppSelector(
+    (store) => store.config.config.ui?.showSessionTabs,
+  );
   const defaultModel = useAppSelector(selectDefaultModel);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
@@ -222,7 +226,7 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const usePlatform = useAppSelector(selectUsePlatform);
+  const useHub = useAppSelector(selectUseHub);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -338,6 +342,7 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
+      selectedModelTitle,
     });
 
     dispatch(submitEdit(prompt));
@@ -365,7 +370,7 @@ export function Chat() {
 
   useAutoScroll(stepsDivRef, history);
 
-  const showPageHeader = isInEditMode || usePlatform;
+  const showPageHeader = isInEditMode || useHub;
 
   return (
     <>
@@ -382,11 +387,13 @@ export function Chat() {
                 }
               : undefined
           }
-          rightContent={usePlatform && <AssistantSelect />}
+          rightContent={useHub && <AssistantSelect />}
         />
       )}
 
       {widget}
+
+      {!!showSessionTabs && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
@@ -567,7 +574,7 @@ export function Chat() {
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
-                  {usePlatform ? (
+                  {useHub ? (
                     <PlatformOnboardingCard isDialog={false} />
                   ) : (
                     <OnboardingCard isDialog={false} />

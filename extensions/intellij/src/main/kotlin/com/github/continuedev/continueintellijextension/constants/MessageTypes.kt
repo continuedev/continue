@@ -41,7 +41,18 @@ class MessageTypes {
             "logoutOfControlPlane",
             "getTerminalContents",
             "showToast",
-            "openUrl"
+            "openUrl",
+            
+            // These only come from the GUI for now but should be here to prevent confusion
+            "toggleDevTools",
+            "showTutorial",
+            
+            // These are jetbrains only and only come from the GUI for now
+            // But again including for consistency
+            "copyText",
+            "jetbrains/isOSREnabled",
+            "jetbrains/getColors",
+            "jetbrains/onLoad"
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -59,8 +70,6 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
-            "signInToControlPlane",
-            "openDialogMessage",
             "docs/suggestions",
         )
 
@@ -80,8 +89,10 @@ class MessageTypes {
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/listProfiles",
+            "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
+            "config/updateSelectedModel",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -112,10 +123,10 @@ class MessageTypes {
             "indexing/setPaused",
             "docs/getSuggestedDocs",
             "docs/initStatuses",
+            "docs/getDetails",
             //
             "completeOnboarding",
             "addAutocompleteModel",
-            "profiles/switch",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",

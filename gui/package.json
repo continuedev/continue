@@ -15,7 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@continuedev/config-yaml": "^1.0.28",
+    "@continuedev/config-yaml": "^1.0.52",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@reduxjs/toolkit": "^2.3.0",
@@ -40,7 +40,6 @@
     "lodash": "^4.17.21",
     "minisearch": "^7.0.2",
     "mustache": "^4.2.0",
-    "onigasm": "^2.2.5",
     "posthog-js": "^1.130.1",
     "prismjs": "^1.29.0",
     "react": "^18.2.0",

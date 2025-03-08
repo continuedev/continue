@@ -1,5 +1,4 @@
-import { ModelConfig } from "@continuedev/config-yaml";
-import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas";
+import { ModelConfig, AssistantUnrolled } from "@continuedev/config-yaml";
 
 import { SerializedContinueConfig } from "../..";
 
@@ -16,10 +15,11 @@ export function convertConfigJsonToConfigYaml(
           name: model.title,
           // defaultCompletionOptions: model.completionOptions,
           provider: model.provider,
-          roles: ["chat"],
+          roles: ["chat", "edit", "apply", "summarize"],
         }),
       ),
-      //   ... tabAutocompleteModels
+      // TODO
+      // tabAutocompleteModels
       // embeddingsModels
       // rerankModels
     ],

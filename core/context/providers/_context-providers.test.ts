@@ -7,7 +7,6 @@ import {
   IContextProvider,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
-import { ControlPlaneClient } from "../../control-plane/client";
 import { TEST_DIR } from "../../test/testDir";
 import FileSystemIde from "../../util/filesystem";
 
@@ -31,8 +30,9 @@ async function getContextProviderExtras(
     ide,
     ideSettingsPromise,
     async (text) => {},
-    new ControlPlaneClient(Promise.resolve(undefined), ideSettingsPromise),
+    Promise.resolve(undefined),
   );
+  await configHandler.initializedPromise;
   const { config } = await configHandler.loadConfig();
   if (!config) {
     throw new Error("Config not found");
@@ -42,10 +42,10 @@ async function getContextProviderExtras(
     fullInput,
     ide,
     config,
-    embeddingsProvider: config.embeddingsProvider,
+    embeddingsProvider: config.selectedModelByRole.embed,
     fetch: fetch,
     llm: config.models[0],
-    reranker: config.reranker,
+    reranker: config.selectedModelByRole.rerank,
     selectedCode: [],
   };
 }

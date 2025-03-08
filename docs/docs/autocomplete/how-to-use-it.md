@@ -2,7 +2,7 @@
 title: Autocomplete
 description: Autocomplete \- how to use it
 sidebar_label: How to use it
-keywords: [how]
+keywords: [autocomplete]
 sidebar_position: 1
 ---
 
