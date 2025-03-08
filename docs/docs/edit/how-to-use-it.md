@@ -35,10 +35,3 @@ You can navigate through each proposed change, accepting or rejecting them using
 You can also accept or reject all changes at once using <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>enter</kbd> (to accept) or <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>delete/backspace</kbd> (to reject).
 
 If you want to request a new suggestion for the same highlighted code section, you can use <kbd>cmd/ctrl</kbd> + <kbd>i</kbd> to re-prompt the model.
-
-## Instant Diff Apply
-
-If you have large files (exeeding the output token of your model) the edit apply will delete all lines that exceed the model window. To mitigate you can instead of applying the changes directly, ask the chat LLM to "generate a unified diff".
-The resulting diff (if the LLM has not made a mistake) can be instantly applied, changing only the lines that need to change.
-
-Explainer Video: https://youtu.be/b7Xxsot4gyw
