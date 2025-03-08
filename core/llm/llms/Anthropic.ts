@@ -145,6 +145,12 @@ class Anthropic extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    if (!this.apiKey || this.apiKey === "") {
+      throw new Error(
+        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
+      );
+    }
+
     const shouldCacheSystemMessage =
       !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const systemMessage: string = stripImages(

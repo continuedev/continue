@@ -21,7 +21,8 @@ export function AssistantSelectOptions({
   onClose,
 }: AssistantSelectOptionsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { profiles, selectedProfile, selectedOrganization } = useAuth();
+  const { profiles, selectedProfile, selectedOrganization, session, login } =
+    useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -85,7 +86,10 @@ export function AssistantSelectOptions({
       </div>
 
       <div className="mt-auto w-full">
-        <OptionDiv key={profiles.length} onClick={onNewAssistant}>
+        <OptionDiv
+          key={"new-assistant"}
+          onClick={session ? onNewAssistant : () => login(false)}
+        >
           <div
             className="flex items-center py-0.5"
             style={{ fontSize: getFontSize() - 2 }}

@@ -5,7 +5,7 @@ keywords: [定制]
 sidebar_position: 5
 ---
 
-Continue 在 [`config.json`](../json-reference.md) 提供少量的参数，对于你的特定需求和硬件能力，可以调整找到建议质量和系统性能之间的最佳平衡：
+Continue 在 [`config.json`](../reference.md) 提供少量的参数，对于你的特定需求和硬件能力，可以调整找到建议质量和系统性能之间的最佳平衡：
 
 ```json title="config.json"
  "tabAutocompleteOptions": {

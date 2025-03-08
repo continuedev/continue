@@ -49,4 +49,4 @@ Codestral 的 API key 和通常的 Mistral API 是不同的。如果你使用 Co
 
 ## 其他体验
 
-有很多更多的模型或提供者可以用来补全。在 [这里](../customize/model-types/autocomplete.md) 查看它们。
+有很多更多的模型或提供者可以用来补全。在 [这里](../customize/model-roles/autocomplete.md) 查看它们。

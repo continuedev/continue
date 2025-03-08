@@ -3,6 +3,11 @@ import * as fs from "fs";
 import os from "os";
 import path from "path";
 
+import {
+  ConfigResult,
+  ConfigValidationError,
+  ModelRole,
+} from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as JSONC from "comment-json";
 import * as tar from "tar";
@@ -18,6 +23,7 @@ import {
   EmbeddingsProviderDescription,
   IContextProvider,
   IDE,
+  IdeInfo,
   IdeSettings,
   IdeType,
   ILLM,
@@ -30,14 +36,16 @@ import {
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
-} from "../commands/index.js";
+} from "../commands/index";
 import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
 import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
+import { useHub } from "../control-plane/env";
 import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
@@ -61,10 +69,8 @@ import {
   getContinueDotEnv,
   getEsbuildBinaryPath,
 } from "../util/paths";
-
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
-import { useHub } from "../control-plane/env";
 import { localPathToUri } from "../util/pathToUri";
+
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -72,7 +78,8 @@ import {
   defaultSlashCommandsVscode,
 } from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
-import { modifyContinueConfigWithSharedConfig } from "./sharedConfig";
+import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
+import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
 import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
@@ -166,10 +173,9 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  // Temporarily disabling this check until we can verify the commands are accuarate
-  // if (!isSupportedLanceDbCpuTarget(ide)) {
-  //   config.disableIndexing = true;
-  // }
+  if (os.platform() === "linux" && !isSupportedLanceDbCpuTargetForLinux(ide)) {
+    config.disableIndexing = true;
+  }
 
   return { config, errors, configLoadInterrupted: false };
 }
@@ -226,18 +232,12 @@ export function isContextProviderWithParams(
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
 
-const getCodebaseProvider = async (params: any) => {
-  const { default: CodebaseContextProvider } = await import(
-    "../context/providers/CodebaseContextProvider"
-  );
-  return new CodebaseContextProvider(params);
-};
-
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
   config: Config,
   ide: IDE,
   ideSettings: IdeSettings,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -326,7 +326,7 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
-    model.roles = model.roles ?? ["chat"]; // Default to chat role if not specified
+    model.roles = model.roles ?? ["chat", "apply", "edit", "summarize"]; // Default to chat role if not specified
   }
 
   if (allowFreeTrial) {
@@ -398,7 +398,7 @@ async function intermediateToFinalConfig(
     new FileContextProvider({}),
     // Add codebase provider if indexing is enabled
     ...(!config.disableIndexing
-      ? [await getCodebaseProvider(codebaseContextParams)]
+      ? [new CodebaseContextProvider(codebaseContextParams)]
       : []),
     // Add prompt files provider if enabled
     ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
@@ -436,23 +436,28 @@ async function intermediateToFinalConfig(
   }
 
   // Embeddings Provider
-  const embeddingsProviderDescription = config.embeddingsProvider as
-    | EmbeddingsProviderDescription
-    | undefined;
-  if (embeddingsProviderDescription?.provider) {
-    const { provider, ...options } = embeddingsProviderDescription;
+  function getEmbeddingsILLM(
+    embedConfig: EmbeddingsProviderDescription | ILLM | undefined,
+  ): ILLM | null {
+    if (!embedConfig) {
+      return null;
+    }
+    if ("providerName" in embedConfig) {
+      return embedConfig;
+    }
+    const { provider, ...options } = embedConfig;
     const embeddingsProviderClass = allEmbeddingsProviders[provider];
     if (embeddingsProviderClass) {
       if (
         embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
       ) {
-        config.embeddingsProvider = new embeddingsProviderClass();
+        return new embeddingsProviderClass();
       } else {
         const llmOptions: LLMOptions = {
           model: options.model ?? "UNSPECIFIED",
           ...options,
         };
-        config.embeddingsProvider = new embeddingsProviderClass(
+        return new embeddingsProviderClass(
           llmOptions,
           (url: string | URL, init: any) =>
             fetchwithRequestOptions(url, init, {
@@ -461,42 +466,74 @@ async function intermediateToFinalConfig(
             }),
         );
       }
+    } else {
+      errors.push({
+        fatal: false,
+        message: `Embeddings provider ${provider} not found. Using default`,
+      });
     }
+    return null;
   }
-
-  if (!config.embeddingsProvider) {
-    config.embeddingsProvider = new TransformersJsEmbeddingsProvider();
-  }
+  const newEmbedder = getEmbeddingsILLM(config.embeddingsProvider);
 
   // Reranker
-  if (config.reranker && !(config.reranker as ILLM | undefined)?.rerank) {
+  function getRerankingILLM(
+    rerankingConfig: ILLM | RerankerDescription | undefined,
+  ): ILLM | null {
+    if (!rerankingConfig) {
+      return null;
+    }
+    if ("providerName" in rerankingConfig) {
+      return rerankingConfig;
+    }
     const { name, params } = config.reranker as RerankerDescription;
     const rerankerClass = AllRerankers[name];
 
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
       if (!llm) {
-        console.warn(`Unknown model ${params?.modelTitle}`);
+        errors.push({
+          fatal: false,
+          message: `Unknown reranking model ${params?.modelTitle}`,
+        });
+        return null;
       } else {
-        config.reranker = new LLMReranker(llm);
+        return new LLMReranker(llm);
       }
     } else if (rerankerClass) {
       const llmOptions: LLMOptions = {
         model: "rerank-2",
         ...params,
       };
-      config.reranker = new rerankerClass(llmOptions);
+      return new rerankerClass(llmOptions);
     }
+    return null;
   }
+  const newReranker = getRerankingILLM(config.reranker);
 
-  let continueConfig: ContinueConfig = {
+  const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
     models,
-    embeddingsProvider: config.embeddingsProvider as any,
-    tabAutocompleteModels,
-    reranker: config.reranker as any,
     tools: allTools,
+    modelsByRole: {
+      chat: models,
+      edit: models,
+      apply: models,
+      summarize: models,
+      autocomplete: [...tabAutocompleteModels],
+      embed: newEmbedder ? [newEmbedder] : [],
+      rerank: newReranker ? [newReranker] : [],
+    },
+    selectedModelByRole: {
+      chat: null, // Not implemented (uses GUI defaultModel)
+      edit: null,
+      apply: null,
+      embed: newEmbedder ?? null,
+      autocomplete: null,
+      rerank: newReranker ?? null,
+      summarize: null, // Not implemented
+    },
   };
 
   // Apply MCP if specified
@@ -538,7 +575,73 @@ async function intermediateToFinalConfig(
     );
   }
 
+  // Handle experimental modelRole config values for apply and edit
+  const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;
+  if (inlineEditModel) {
+    const match = continueConfig.models.find(
+      (m) => m.title === inlineEditModel,
+    );
+    if (match) {
+      continueConfig.selectedModelByRole.edit = match;
+      continueConfig.modelsByRole.edit = [match]; // The only option if inlineEdit role is set
+    } else {
+      errors.push({
+        fatal: false,
+        message: `experimental.modelRoles.inlineEdit model title ${inlineEditModel} not found in models array`,
+      });
+    }
+  }
+
+  const applyBlockModel = getModelByRole(
+    continueConfig,
+    "applyCodeBlock",
+  )?.title;
+  if (applyBlockModel) {
+    const match = continueConfig.models.find(
+      (m) => m.title === applyBlockModel,
+    );
+    if (match) {
+      continueConfig.selectedModelByRole.apply = match;
+      continueConfig.modelsByRole.apply = [match]; // The only option if applyCodeBlock role is set
+    } else {
+      errors.push({
+        fatal: false,
+        message: `experimental.modelRoles.applyCodeBlock model title ${inlineEditModel} not found in models array`,
+      });
+    }
+  }
+
+  // Add transformers JS to the embed models list if not already added
+  if (
+    ideInfo.ideType === "vscode" &&
+    !continueConfig.modelsByRole.embed.find(
+      (m) => m.providerName === "transformers.js",
+    )
+  ) {
+    continueConfig.modelsByRole.embed.push(
+      new TransformersJsEmbeddingsProvider(),
+    );
+  }
+
   return { config: continueConfig, errors };
+}
+
+function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
+  return {
+    provider: llm.providerName,
+    model: llm.model,
+    title: llm.title ?? llm.model,
+    apiKey: llm.apiKey,
+    apiBase: llm.apiBase,
+    contextLength: llm.contextLength,
+    template: llm.template,
+    completionOptions: llm.completionOptions,
+    systemMessage: llm.systemMessage,
+    requestOptions: llm.requestOptions,
+    promptTemplates: llm.promptTemplates as any,
+    capabilities: llm.capabilities,
+    roles: llm.roles,
+  };
 }
 
 async function finalToBrowserConfig(
@@ -547,39 +650,37 @@ async function finalToBrowserConfig(
 ): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
-    models: final.models.map((m) => ({
-      provider: m.providerName,
-      model: m.model,
-      title: m.title ?? m.model,
-      apiKey: m.apiKey,
-      apiBase: m.apiBase,
-      contextLength: m.contextLength,
-      template: m.template,
-      completionOptions: m.completionOptions,
-      systemMessage: m.systemMessage,
-      requestOptions: m.requestOptions,
-      promptTemplates: m.promptTemplates as any,
-      capabilities: m.capabilities,
-      roles: m.roles,
-    })),
+    models: final.models.map(llmToSerializedModelDescription),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
     slashCommands: final.slashCommands?.map((s) => ({
       name: s.name,
       description: s.description,
-      params: s.params, //PZTODO: is this why params aren't referenced properly by slash commands?
+      params: s.params, // TODO: is this why params aren't referenced properly by slash commands?
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,
     userToken: final.userToken,
-    embeddingsProvider: final.embeddingsProvider?.embeddingId,
     ui: final.ui,
     experimental: final.experimental,
     docs: final.docs,
     tools: final.tools,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
     usePlatform: await useHub(ide.getIdeSettings()),
+    modelsByRole: Object.fromEntries(
+      Object.entries(final.modelsByRole).map(([k, v]) => [
+        k,
+        v.map(llmToSerializedModelDescription),
+      ]),
+    ) as Record<ModelRole, ModelDescription[]>, // TODO better types here
+    selectedModelByRole: Object.fromEntries(
+      Object.entries(final.selectedModelByRole).map(([k, v]) => [
+        k,
+        v ? llmToSerializedModelDescription(v) : null,
+      ]),
+    ) as Record<ModelRole, ModelDescription | null>, // TODO better types here
+    // data not included here because client doesn't need
   };
 }
 
@@ -767,7 +868,7 @@ async function loadContinueConfigFromJson(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
-  ideType: IdeType,
+  ideInfo: IdeInfo,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
@@ -781,7 +882,7 @@ async function loadContinueConfigFromJson(
   } = loadSerializedConfig(
     workspaceConfigs,
     ideSettings,
-    ideType,
+    ideInfo.ideType,
     overrideConfigJson,
     ide,
   );
@@ -798,16 +899,16 @@ async function loadContinueConfigFromJson(
   // Apply shared config
   // TODO: override several of these values with user/org shared config
   const sharedConfig = new GlobalContext().getSharedConfig();
-  const withShared = modifyContinueConfigWithSharedConfig(
-    serialized,
-    sharedConfig,
-  );
+  const withShared = modifyAnyConfigWithSharedConfig(serialized, sharedConfig);
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(withShared, ide);
 
   // Apply config.ts to modify intermediate config
-  const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
+  const configJsContents = await buildConfigTsandReadConfigJs(
+    ide,
+    ideInfo.ideType,
+  );
   if (configJsContents) {
     try {
       // Try config.ts first
@@ -867,6 +968,7 @@ async function loadContinueConfigFromJson(
       intermediate,
       ide,
       ideSettings,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,
