@@ -43,4 +43,4 @@ You can include all of the changes you've made to your current branch by typing 
 
 ## Other context
 
-You can see a full list of built-in context providers [here](../customize/context-providers.mdx) and how to create your own custom context provider [here](../customize/tutorials/build-your-own-context-provider.md).
+You can see a full list of built-in context providers [here](../customize/context-providers.mdx) and how to create your own custom context provider [here](../customize/tutorials/build-your-own-context-provider.mdx).

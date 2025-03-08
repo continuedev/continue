@@ -1,5 +1,6 @@
 import { ContextItem, Tool, ToolExtras } from "..";
 import { MCPManagerSingleton } from "../context/mcp";
+import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
 import { createNewFileImpl } from "./implementations/createNewFile";
@@ -55,9 +56,8 @@ async function callToolFromUri(
   args: any,
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
-  // @ts-ignore
-  const canParse = URL.canParse(uri);
-  if (!canParse) {
+  const parseable = canParseUrl(uri);
+  if (!parseable) {
     throw new Error(`Invalid URI: ${uri}`);
   }
   const parsedUri = new URL(uri);

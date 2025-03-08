@@ -1,5 +1,5 @@
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 # Cloudflare Workers AI
 
@@ -11,7 +11,6 @@ Cloudflare Workers AI can be used for both chat and tab autocompletion in Contin
   models:
     - name: Llama 3 8B
       provider: cloudflare
-      accountId: YOUR CLOUDFLARE ACCOUNT ID
       apiKey: <YOUR_CLOUDFARE_API_KEY>
       model: "@cf/meta/llama-3-8b-instruct"
       contextLength: 2400
@@ -19,9 +18,10 @@ Cloudflare Workers AI can be used for both chat and tab autocompletion in Contin
         maxTokens: 500
       roles:
         - chat
+      env:
+        accountId: YOUR CLOUDFLARE ACCOUNT ID 
     - name: DeepSeek Coder 6.7b Instruct
       provider: cloudflare
-      accountId: YOUR CLOUDFLARE ACCOUNT ID
       apiKey: <YOUR_CLOUDFARE_API_KEY>
       model: "@hf/thebloke/deepseek-coder-6.7b-instruct-awq"
       contextLength: 2400
@@ -29,13 +29,16 @@ Cloudflare Workers AI can be used for both chat and tab autocompletion in Contin
         maxTokens: 500
       roles:
         - chat
+      env:
+        accountId: YOUR CLOUDFLARE ACCOUNT ID
     - name: DeepSeek 7b
       provider: cloudflare
-      accountId: YOUR CLOUDFLARE ACCOUNT ID
       apiKey: <YOUR_CLOUDFARE_API_KEY>
       model: "@hf/thebloke/deepseek-coder-6.7b-base-awq"
       roles:
         - autocomplete
+      env:
+        accountId: YOUR CLOUDFLARE ACCOUNT ID
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
