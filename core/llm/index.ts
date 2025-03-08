@@ -19,6 +19,7 @@ import {
   LLMFullCompletionOptions,
   LLMOptions,
   ModelCapability,
+  ModelInstaller,
   PromptLog,
   PromptTemplate,
   RequestOptions,
@@ -57,6 +58,17 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
+
+
+export class LLMError extends Error {
+  constructor(message: string, public llm: ILLM) {
+    super(message);
+  }
+}
+
+export function isModelInstaller(provider: any): provider is ModelInstaller {
+  return provider && typeof provider.installModel === 'function';
+}
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -380,9 +392,11 @@ export abstract class BaseLLM implements ILLM {
         if (!resp.ok) {
           let text = await resp.text();
           if (resp.status === 404 && !resp.url.includes("/v1")) {
-            if (text.includes("try pulling it first")) {
-              const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
+            const error = JSON.parse(text)?.error?.replace(/"/g, "'");
+            let model = error?.match(/model '(.*)' not found/)?.[1];
+            if (model && resp.url.match("127.0.0.1:11434")) {
               text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+              throw new LLMError(text, this);// No need to add HTTP status details
             } else if (text.includes("/api/chat")) {
               text =
                 "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
@@ -441,6 +455,10 @@ export abstract class BaseLLM implements ILLM {
               : "Unable to connect to local Ollama instance. Ollama may not be installed or may not running.";
             throw new Error(message);
           }
+        }
+        //if e instance of LLMError, rethrow
+        if (e instanceof LLMError) {
+          throw e;
         }
         throw new Error(e.message);
       }
@@ -763,6 +781,7 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
+    let citations: null | string[] = null
 
     try {
       if (this.templateMessages) {
@@ -790,6 +809,8 @@ export abstract class BaseLLM implements ILLM {
             completion = renderChatMessage(msg);
           } else {
             // Stream true
+            console.log("Streaming");
+
             const stream = this.openaiAdapter.chatCompletionStream(
               {
                 ...body,
@@ -801,6 +822,9 @@ export abstract class BaseLLM implements ILLM {
               const result = fromChatCompletionChunk(chunk);
               if (result) {
                 yield result;
+              }
+              if (!citations && (chunk as any).citations && Array.isArray((chunk as any).citations)) {
+                citations = (chunk as any).citations;
               }
             }
           }
@@ -824,6 +848,10 @@ export abstract class BaseLLM implements ILLM {
 
     if (logEnabled && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
+
+      if (citations) {
+        await this.writeLog(`Citations:\n${citations.map((c, i) => `${i + 1}: ${c}`).join("\n")}\n\n`);
+      }
     }
 
     return {
