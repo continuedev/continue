@@ -1,4 +1,3 @@
-import { r } from "tar";
 import {
   AssistantChatMessage,
   ChatMessage,
@@ -7,6 +6,7 @@ import {
   MessagePart,
   ToolCallDelta,
 } from "../../index.js";
+import { findLast } from "../../util/findLast.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -17,7 +17,6 @@ import {
   GeminiGenerationConfig,
   GeminiToolFunctionDeclaration,
 } from "./gemini-types.js";
-import { findLast } from "../../util/findLast.js";
 
 class Gemini extends BaseLLM {
   static providerName = "gemini";
@@ -253,7 +252,7 @@ class Gemini extends BaseLLM {
               }
               // Helper function to recursively clean JSON Schema objects
               const cleanJsonSchema = (schema: any): any => {
-                if (!schema || typeof schema !== 'object') return schema;
+                if (!schema || typeof schema !== "object") return schema;
 
                 if (Array.isArray(schema)) {
                   return schema.map(cleanJsonSchema);
@@ -273,7 +272,7 @@ class Gemini extends BaseLLM {
                       ...acc,
                       [key]: cleanJsonSchema(value),
                     }),
-                    {}
+                    {},
                   );
                 }
 
@@ -349,8 +348,8 @@ class Gemini extends BaseLLM {
 
           // Process all parts first to maintain order
           const processedParts: Array<{
-            type: 'content' | 'tool' | 'toolCall',
-            data: any
+            type: "content" | "tool" | "toolCall";
+            data: any;
           }> = [];
 
           for (const part of content.parts) {
@@ -366,7 +365,7 @@ class Gemini extends BaseLLM {
             } else if ("functionCall" in part) {
               // Queue function call
               processedParts.push({
-                type: 'toolCall',
+                type: "toolCall",
                 data: {
                   type: "function",
                   id: "", // Not supported by gemini
@@ -377,17 +376,17 @@ class Gemini extends BaseLLM {
                         ? part.functionCall.args
                         : JSON.stringify(part.functionCall.args),
                   },
-                }
+                },
               });
             } else if ("functionResponse" in part) {
               // Queue function response
               processedParts.push({
-                type: 'tool',
+                type: "tool",
                 data: {
                   role: "tool",
                   content: part.functionResponse.response.output as string,
                   toolCallId: part.functionResponse.name,
-                }
+                },
               });
             } else {
               console.warn("Unsupported gemini part type received", part);
@@ -404,13 +403,13 @@ class Gemini extends BaseLLM {
 
           // Then process tool calls and responses in order
           for (const part of processedParts) {
-            if (part.type === 'toolCall') {
+            if (part.type === "toolCall") {
               yield {
                 role: "assistant",
                 content: "",
                 toolCalls: [part.data],
               };
-            } else if (part.type === 'tool') {
+            } else if (part.type === "tool") {
               yield part.data;
             }
           }

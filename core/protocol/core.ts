@@ -1,10 +1,11 @@
-import { ConfigResult } from "@continuedev/config-yaml";
+import { ConfigResult, ModelRole } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 
+import { DevDataLogEvent } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -14,11 +15,11 @@ import type {
   ContextSubmenuItem,
   DiffLine,
   DocsIndexingDetails,
+  ExperimentalModelRoles,
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
   ModelDescription,
-  ModelRoles,
   PromptLog,
   RangeInFile,
   SerializedContinueConfig,
@@ -27,13 +28,9 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
+import { GlobalContextModelSelections } from "../util/GlobalContext";
 
-export type OnboardingModes =
-  | "Local"
-  | "Best"
-  | "Custom"
-  | "Quickstart"
-  | "LocalAfterFreeTrial";
+export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -41,8 +38,6 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  "update/selectTabAutocompleteModel": [string, void];
-
   // Special
   ping: [string, string];
   abort: [undefined, void];
@@ -52,12 +47,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
-  "devdata/log": [{ tableName: string; data: any }, void];
+  "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
     {
       model: SerializedContinueConfig["models"][number];
-      role?: keyof ModelRoles;
+      role?: keyof ExperimentalModelRoles;
     },
     void,
   ];
@@ -67,15 +62,24 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
-      profileId: string;
+      profileId: string | null;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
   "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/listProfiles": [undefined, ProfileDescription[]];
+  "config/listProfiles": [undefined, ProfileDescription[] | null];
+  "config/refreshProfiles": [undefined, void];
   "config/openProfile": [{ profileId: string | undefined }, void];
-  "config/updateSharedConfig": [SharedConfigSchema, void];
+  "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
+  "config/updateSelectedModel": [
+    {
+      profileId: string;
+      role: ModelRole;
+      title: string | null;
+    },
+    GlobalContextModelSelections,
+  ];
   "context/getContextItems": [
     {
       name: string;
@@ -104,6 +108,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       params: any;
       historyIndex: number;
       selectedCode: RangeInFile[];
+      completionOptions?: LLMFullCompletionOptions;
     },
     AsyncGenerator<string>,
   ];
@@ -189,14 +194,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
-  "profiles/switch": [{ id: string }, undefined];
-
-  "auth/getAuthUrl": [undefined, { url: string }];
+  "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall; selectedModelTitle: string },
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];
-  "controlPlane/openUrl": [{ path: string }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
   "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
 };

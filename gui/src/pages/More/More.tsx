@@ -5,25 +5,24 @@ import {
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import KeyboardShortcuts from "./KeyboardShortcuts";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { setOnboardingCard } from "../../redux/slices/uiSlice";
-import MoreHelpRow from "./MoreHelpRow";
-import IndexingProgress from "./IndexingProgress";
 import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses";
 import PageHeader from "../../components/PageHeader";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { setOnboardingCard } from "../../redux/slices/uiSlice";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import IndexingProgress from "./IndexingProgress";
+import KeyboardShortcuts from "./KeyboardShortcuts";
+import MoreHelpRow from "./MoreHelpRow";
 
 function MorePage() {
   useNavigationListener();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const disableIndexing = useAppSelector(
-    (state) => state.config.config.disableIndexing,
-  );
+  const config = useAppSelector((store) => store.config.config);
+  const { disableIndexing } = config;
 
   return (
     <div className="overflow-y-scroll">
@@ -38,8 +37,14 @@ function MorePage() {
             </span>
           </div>
           {disableIndexing ? (
-            <div className="pb-2 pt-5 text-center font-semibold">
-              Indexing is disabled
+            <div className="pb-2 pt-5">
+              <p className="py-1 text-center font-semibold">
+                Indexing is disabled
+              </p>
+              <p className="text-lightgray cursor-pointer text-center text-xs">
+                Open settings and toggle <code>Disable Indexing</code> to
+                re-enable
+              </p>
             </div>
           ) : (
             <IndexingProgress />
@@ -100,6 +105,7 @@ function MorePage() {
                 await dispatch(
                   saveCurrentSession({
                     openNewSession: true,
+                    generateTitle: true,
                   }),
                 );
                 dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));

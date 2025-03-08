@@ -5,18 +5,6 @@ keywords: [customize]
 sidebar_position: 5
 ---
 
-Continue offers a handful of parameters in [`config.json`](../reference.md) that can be tuned to find the perfect balance between suggestion quality and system performance for your specific needs and hardware capabilities:
+Continue offers a handful of settings to customize autocomplete behavior. For the most part, these options can be found in the [User Settings Page](../customize/settings.md).
 
-```json title="config.json"
- "tabAutocompleteOptions": {
-   "maxPromptTokens": 400,
-   "prefixPercentage": 0.5,
-   "multilineCompletions": "always"
- }
-```
-
-- `maxPromptTokens`: Sets the maximum number of tokens for the prompt, balancing context and speed.
-- `prefixPercentage`: Defines the proportion of the prompt dedicated to the code before the cursor.
-- `multilineCompletions`: Controls whether suggestions can span multiple lines ("always", "never", or "auto").
-
-For a comprehensive guide on all configuration options and their impacts, see the [Autocomplete deep dive](../customize/deep-dives/autocomplete.md).
+For a comprehensive guide on all configuration options and their impacts, see the [Autocomplete deep dive](../customize/deep-dives/autocomplete.mdx).

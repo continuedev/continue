@@ -54,7 +54,8 @@ export async function* streamDiffLines(
   llm: ILLM,
   input: string,
   language: string | undefined,
-  onlyOneInsertion?: boolean,
+  onlyOneInsertion: boolean,
+  overridePrompt: ChatMessage[] | undefined,
 ): AsyncGenerator<DiffLine> {
   void Telemetry.capture(
     "inlineEdit",
@@ -80,14 +81,9 @@ export async function* streamDiffLines(
   // Trim end of oldLines, otherwise we have trailing \r on every line for CRLF files
   oldLines = oldLines.map((line) => line.trimEnd());
 
-  const prompt = constructPrompt(
-    prefix,
-    highlighted,
-    suffix,
-    llm,
-    input,
-    language,
-  );
+  const prompt =
+    overridePrompt ??
+    constructPrompt(prefix, highlighted, suffix, llm, input, language);
   const inept = modelIsInept(llm.model);
 
   const prediction: Prediction = {

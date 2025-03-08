@@ -53,7 +53,7 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
               isDialog={isDialog}
             />
           ) : (
-            <div className="mt-4">
+            <div className="mt-4 flex flex-col">
               <Alert type="info">
                 By choosing this option, Continue will be configured by a local{" "}
                 <code>config.yaml</code> file. If you're just looking to use

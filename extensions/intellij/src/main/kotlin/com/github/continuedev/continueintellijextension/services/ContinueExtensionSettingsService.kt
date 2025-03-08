@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
+import com.intellij.execution.target.value.constant
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.*
@@ -98,7 +99,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var enableOSR: Boolean = shouldRenderOffScreen()
         var displayEditorTooltip: Boolean = true
         var showIDECompletionSideBySide: Boolean = false
-        var continueTestEnvironment: String = "none"
+        var continueTestEnvironment: String = "production"
     }
 
     var continueState: ContinueState = ContinueState()

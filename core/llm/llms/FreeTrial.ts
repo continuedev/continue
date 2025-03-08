@@ -215,7 +215,7 @@ class FreeTrial extends BaseLLM {
       "llama3.1-70b",
       "gpt-4o",
       "gpt-3.5-turbo",
-      "claude-3-haiku-20240307",
+      "claude-3-5-haiku-latest",
       "gemini-1.5-pro-latest",
     ];
   }

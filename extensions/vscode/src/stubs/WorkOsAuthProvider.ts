@@ -15,29 +15,26 @@ import {
   ExtensionContext,
   ProgressLocation,
   Uri,
-  UriHandler,
   window,
   workspace,
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
+import { UriEventHandler } from "./uriHandler";
 
 const AUTH_NAME = "Continue";
 
+const enableControlServerBeta = workspace
+  .getConfiguration(EXTENSION_NAME)
+  .get<boolean>("enableContinueForTeams", false);
 const controlPlaneEnv = getControlPlaneEnvSync(
-  workspace.getConfiguration(EXTENSION_NAME).get<boolean>("enableContinueHub")
-    ? "production"
-    : "none",
+  true ? "production" : "none",
+  enableControlServerBeta,
 );
 
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
 
-class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
-  public handleUri(uri: Uri) {
-    this.fire(uri);
-  }
-}
 // Function to generate a random string of specified length
 function generateRandomString(length: number): string {
   const possibleCharacters =
@@ -81,13 +78,15 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     string,
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
-  private _uriHandler = new UriEventHandler();
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
 
   private secretStorage: SecretStorage;
 
-  constructor(private readonly context: ExtensionContext) {
+  constructor(
+    private readonly context: ExtensionContext,
+    private readonly _uriHandler: UriEventHandler,
+  ) {
     this._disposable = Disposable.from(
       authentication.registerAuthenticationProvider(
         controlPlaneEnv.AUTH_TYPE,

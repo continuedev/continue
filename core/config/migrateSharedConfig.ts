@@ -1,13 +1,9 @@
-import * as fs from "fs";
-
-import * as JSONC from "comment-json";
-
-import { IDE, SerializedContinueConfig } from "..";
-import { SharedConfigSchema } from "./sharedConfig";
+import { IDE } from "..";
+import { deduplicateArray } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
 import { resolveSerializedConfig } from "./load";
-import { deduplicateArray } from "../util";
+import { SharedConfigSchema } from "./sharedConfig";
 
 /*
   This migration function eliminates deprecated values from the json file
@@ -201,10 +197,10 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
     if (effected) {
       new GlobalContext().updateSharedConfig(shareConfigUpdates);
       editConfigJson(() => config);
-      void ide.showToast(
-        "warning",
-        "Migrated deprecated Continue JSON settings. Edit in the Settings Page",
-      );
+      // void ide.showToast(
+      //   "warning",
+      //   "Migrated deprecated Continue JSON settings. Edit in the Settings Page",
+      // );
     }
   } catch (e) {
     throw new Error(`Migration: Failed to parse config.json: ${e}`);

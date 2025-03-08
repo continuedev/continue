@@ -5,27 +5,34 @@ keywords: [config, settings, customize]
 
 # Configuration
 
-Continue can be deeply customized. User-level configuration is stored and can be edited in your home directory in [`config.json`](#configjson):
+## YAML Config
 
-- `~/.continue/config.json` (MacOS / Linux)
-- `%USERPROFILE%\.continue\config.json` (Windows)
+Continue can be deeply customized. Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
 
-To open `config.json`, you can click the "gear" icon in the header of the Continue Chat sidebar to open the settings page, and then click `Open [your config location]` to open the file. When editing this file, you can see the available options suggested as you type, or check the reference below.
+To open `config.yaml`, you can click the "gear" icon in the header of the Continue Chat sidebar to open the settings page, and then click `Open Config File` to open the file. When editing this file, you can see the available options suggested as you type, or check the reference below.
 
-When you save `config.json`, Continue will automatically refresh to take into account your changes. `config.json` is automatically created the first time you use Continue. `config.json` is automatically generated if it doesn't exist.
+- `~/.continue/config.yaml` (MacOS / Linux)
+- `%USERPROFILE%\.continue\config.yaml` (Windows)
 
-In the vast majority of cases, you will only need to edit `config.json`. However, Continue offers two additional ways to customize configuration:
+To open your configuration file, you can click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can see the available options suggested as you type, or check the reference below.
 
-- [`.continuerc.json`](#continuercjson) - Workspace-level configuration. If you'd like to scope certain settings to a particular workspace, you can add a `.continuerc.json` to the root of your project. This can be set to merge with _or_ override the user-level `config.json`
+When you save a config file from the IDE, Continue will automatically refresh to take into account your changes. A config file is automatically created the first time you use Continue, and always automatically generated with default values if it doesn't exist.
+
+See the full reference for `config.yaml` [here](../../yaml-reference.md).
+
+## Deprecated configuration methods
+
+:::info
+View the `config.json` migration guide [here](../../yaml-migration.md)
+:::
+
+- [`config.json`](../../reference.md) - The original configuration format which is stored in a file at the same location as `config.yaml`
+- [`.continuerc.json`](#continuercjson) - Workspace-level configuration
 - [`config.ts`](#configts) - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
   - `~/.continue/config.ts` (MacOS / Linux)
   - `%USERPROFILE%\.continue\config.ts` (Windows)
 
-## `config.json`
-
-See the full reference for `config.json` [here](../../reference.md).
-
-## `.continuerc.json`
+### `.continuerc.json`
 
 The format of `.continuerc.json` is the same as `config.json`, plus one _additional_ property `mergeBehavior`, which can be set to either "merge" or "overwrite". If set to "merge" (the default), `.continuerc.json` will be applied on top of `config.json` (arrays and objects are merged). If set to "overwrite", then every top-level property of `.continuerc.json` will overwrite that property from `config.json`.
 
@@ -40,7 +47,7 @@ Example
 }
 ```
 
-## `config.ts`
+### `config.ts`
 
 To programatically extend `config.json`, you can place a `config.ts` script in same directory as `config.json` and export a `modifyConfig` function, like:
 

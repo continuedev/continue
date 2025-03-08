@@ -1,4 +1,4 @@
-import { execSync } from "child_process";
+import fs from "fs";
 import os from "os";
 
 import {
@@ -7,10 +7,12 @@ import {
   IDE,
   ILLM,
   ModelDescription,
-  ModelRoles,
+  ExperimentalModelRoles,
 } from "../";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigJson } from "../util/paths";
+
+import { ConfigHandler } from "./ConfigHandler";
 
 function stringify(obj: any, indentation?: number): string {
   return JSON.stringify(
@@ -22,19 +24,30 @@ function stringify(obj: any, indentation?: number): string {
   );
 }
 
-export function addContextProvider(provider: ContextProviderWithParams) {
+export function addContextProvider(provider: ContextProviderWithParams, configHandler?: ConfigHandler) {
+  let isAdded = false;
   editConfigJson((config) => {
+
     if (!config.contextProviders) {
-      config.contextProviders = [provider];
-    } else {
+      config.contextProviders = [];
+    }
+    if (!config.contextProviders.some((p) => p.name === provider.name)) {
       config.contextProviders.push(provider);
+      isAdded = true;
     }
 
     return config;
   });
+
+  if (isAdded && configHandler) {
+    void configHandler.reloadConfig();
+  }
 }
 
-export function addModel(model: ModelDescription, role?: keyof ModelRoles) {
+export function addModel(
+  model: ModelDescription,
+  role?: keyof ExperimentalModelRoles,
+) {
   editConfigJson((config) => {
     if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
       return config;
@@ -85,7 +98,7 @@ export function deleteModel(title: string) {
   });
 }
 
-export function getModelByRole<T extends keyof ModelRoles>(
+export function getModelByRole<T extends keyof ExperimentalModelRoles>(
   config: ContinueConfig,
   role: T,
 ): ILLM | undefined {
@@ -108,11 +121,13 @@ export function getModelByRole<T extends keyof ModelRoles>(
  *
  * See here for details: https://github.com/continuedev/continue/issues/940
  */
-export function isSupportedLanceDbCpuTarget(ide: IDE) {
+export function isSupportedLanceDbCpuTargetForLinux(ide?: IDE) {
   const CPU_FEATURES_TO_CHECK = ["avx2", "fma"] as const;
 
   const globalContext = new GlobalContext();
-  const globalContextVal = globalContext.get("isSupportedLanceDbCpuTarget");
+  const globalContextVal = globalContext.get(
+    "isSupportedLanceDbCpuTargetForLinux",
+  );
 
   // If we've already checked the CPU target, return the cached value
   if (globalContextVal !== undefined) {
@@ -120,51 +135,35 @@ export function isSupportedLanceDbCpuTarget(ide: IDE) {
   }
 
   const arch = os.arch();
-  const platform = os.platform();
 
   // This check only applies to x64
   //https://github.com/lancedb/lance/issues/2195#issuecomment-2057841311
   if (arch !== "x64") {
-    globalContext.update("isSupportedLanceDbCpuTarget", true);
+    globalContext.update("isSupportedLanceDbCpuTargetForLinux", true);
     return true;
   }
 
   try {
-    const cpuFlags = (() => {
-      switch (platform) {
-        case "darwin":
-          return execSync("sysctl -n machdep.cpu.features")
-            .toString()
-            .toLowerCase();
-        case "linux":
-          return execSync("cat /proc/cpuinfo").toString().toLowerCase();
-        case "win32":
-          return execSync("wmic cpu get caption /format:list")
-            .toString()
-            .toLowerCase();
-        default:
-          return "";
-      }
-    })();
+    const cpuFlags = fs.readFileSync("/proc/cpuinfo", "utf-8").toLowerCase();
 
-    const isSupportedLanceDbCpuTarget = cpuFlags
+    const isSupportedLanceDbCpuTargetForLinux = cpuFlags
       ? CPU_FEATURES_TO_CHECK.every((feature) => cpuFlags.includes(feature))
       : true;
 
     // If it's not a supported CPU target, and it's the first time we are checking,
     // show a toast to inform the user that we are going to disable indexing.
-    if (!isSupportedLanceDbCpuTarget) {
+    if (!isSupportedLanceDbCpuTargetForLinux && ide) {
       // We offload our async toast to `showUnsupportedCpuToast` to prevent making
-      // our config loading async upstream of `isSupportedLanceDbCpuTarget`
+      // our config loading async upstream of `isSupportedLanceDbCpuTargetForLinux`
       void showUnsupportedCpuToast(ide);
     }
 
     globalContext.update(
-      "isSupportedLanceDbCpuTarget",
-      isSupportedLanceDbCpuTarget,
+      "isSupportedLanceDbCpuTargetForLinux",
+      isSupportedLanceDbCpuTargetForLinux,
     );
 
-    return isSupportedLanceDbCpuTarget;
+    return isSupportedLanceDbCpuTargetForLinux;
   } catch (error) {
     // If we can't determine CPU features, default to true
     return true;
@@ -174,11 +173,13 @@ export function isSupportedLanceDbCpuTarget(ide: IDE) {
 async function showUnsupportedCpuToast(ide: IDE) {
   const shouldOpenLink = await ide.showToast(
     "warning",
-    "Codebase indexing is disabled due to CPU incompatibility",
+    "Codebase indexing disabled - Your Linux system lacks required CPU features (AVX2, FMA)",
     "Learn more",
   );
 
   if (shouldOpenLink) {
-    void ide.openUrl("https://github.com/continuedev/continue/pull/3551");
+    void ide.openUrl(
+      "https://docs.continue.dev/troubleshooting#i-received-a-codebase-indexing-disabled---your-linux-system-lacks-required-cpu-features-avx2-fma-notification",
+    );
   }
 }

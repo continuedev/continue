@@ -1,10 +1,6 @@
 import * as z from "zod";
+import { dataSchema } from "./data/index.js";
 import { modelSchema, partialModelSchema } from "./models.js";
-
-export const dataSchema = z.object({
-  destination: z.string(),
-  levels: z.string().optional(),
-});
 
 export const contextSchema = z.object({
   provider: z.string(),
@@ -21,6 +17,7 @@ const toolSchema = z.object({
 const mcpServerSchema = z.object({
   name: z.string(),
   command: z.string(),
+  faviconUrl: z.string().optional(),
   args: z.array(z.string()).optional(),
   env: z.record(z.string()).optional(),
 });
@@ -48,9 +45,13 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
 export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.union([schema, blockItemWrapperSchema(schema)]);
 
-export const configYamlSchema = z.object({
+export const baseConfigYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
+  schema: z.string().optional(),
+});
+
+export const configYamlSchema = baseConfigYamlSchema.extend({
   models: z
     .array(
       z.union([
@@ -84,9 +85,7 @@ export const configYamlSchema = z.object({
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
 
-export const assistantUnrolledSchema = z.object({
-  name: z.string(),
-  version: z.string(),
+export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
   models: z.array(modelSchema).optional(),
   context: z.array(contextSchema).optional(),
   data: z.array(dataSchema).optional(),
@@ -99,22 +98,17 @@ export const assistantUnrolledSchema = z.object({
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
 
-export const blockSchema = z
-  .object({
-    name: z.string(),
-    version: z.string(),
-  })
-  .and(
-    z.union([
-      z.object({ models: z.array(modelSchema).length(1) }),
-      z.object({ context: z.array(contextSchema).length(1) }),
-      z.object({ data: z.array(dataSchema).length(1) }),
-      z.object({ tools: z.array(toolSchema).length(1) }),
-      z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
-      z.object({ rules: z.array(z.string()).length(1) }),
-      z.object({ prompts: z.array(promptSchema).length(1) }),
-      z.object({ docs: z.array(docSchema).length(1) }),
-    ]),
-  );
+export const blockSchema = baseConfigYamlSchema.and(
+  z.union([
+    z.object({ models: z.array(modelSchema).length(1) }),
+    z.object({ context: z.array(contextSchema).length(1) }),
+    z.object({ data: z.array(dataSchema).length(1) }),
+    z.object({ tools: z.array(toolSchema).length(1) }),
+    z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
+    z.object({ rules: z.array(z.string()).length(1) }),
+    z.object({ prompts: z.array(promptSchema).length(1) }),
+    z.object({ docs: z.array(docSchema).length(1) }),
+  ]),
+);
 
 export type Block = z.infer<typeof blockSchema>;

@@ -20,7 +20,7 @@ jobs:
       - id: check
         working-directory: .
         run: |
-          if [[ "${{ github.event.release.tag_name }}" == v0.8.*-vscode ]]; then
+          if [[ "${{ github.event.release.tag_name }}" == v1.0.*-vscode ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
@@ -208,7 +208,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
-    if: github.event.inputs.publish_build == 'true'
+    if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
     permissions:
       contents: write
     steps:

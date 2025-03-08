@@ -4,24 +4,19 @@ import {
   ChevronUpDownIcon,
   CubeIcon,
 } from "@heroicons/react/24/outline";
-import { Dispatch, Fragment, SetStateAction } from "react";
+import { Fragment } from "react";
 import { Listbox } from "@headlessui/react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-  vscButtonBackground,
   vscForeground,
   vscInputBackground,
   vscListActiveBackground,
   vscListActiveForeground,
 } from "..";
-import {
-  DisplayInfo,
-  ModelPackage,
-} from "../../pages/AddNewModel/configs/models";
-import { ProviderInfo } from "../../pages/AddNewModel/configs/providers";
+import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
 
 export const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};

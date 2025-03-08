@@ -52,16 +52,14 @@ export const models: { [key: string]: ModelPackage } = {
         name: "Parameter Count",
         description: "The number of parameters in the model",
         options: {
-          "r1": {
+          r1: {
             model: "deepseek/deepseek_v3",
             title: "deepseek_v3",
-          }
+          },
         },
       },
     ],
-    providerOptions: [
-      "novita"
-    ],
+    providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
   deepseekR1Chat: {
@@ -79,16 +77,14 @@ export const models: { [key: string]: ModelPackage } = {
         name: "Parameter Count",
         description: "The number of parameters in the model",
         options: {
-          "r1": {
+          r1: {
             model: "deepseek/deepseek-r1",
             title: "deepseek-r1",
-          }
+          },
         },
       },
     ],
-    providerOptions: [
-      "novita"
-    ],
+    providerOptions: ["novita", "nebius"],
     isOpenSource: true,
   },
   llama318BChat: {
@@ -109,13 +105,11 @@ export const models: { [key: string]: ModelPackage } = {
           "8b": {
             model: "meta-llama/llama-3.1-8b-instruct",
             title: "Llama3.1-8b",
-          }
+          },
         },
       },
     ],
-    providerOptions: [
-      "novita"
-    ],
+    providerOptions: ["novita"],
     isOpenSource: true,
   },
   mistralChat: {
@@ -140,9 +134,7 @@ export const models: { [key: string]: ModelPackage } = {
       },
     ],
     icon: "mistral.png",
-    providerOptions: [
-      "novita",
-    ],
+    providerOptions: ["novita"],
     isOpenSource: true,
   },
   llama31Chat: {
@@ -181,7 +173,6 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
-      "sambanova",
       "cerebras",
       "nebius",
       "scaleway",
@@ -507,7 +498,20 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway"],
+    providerOptions: ["groq", "scaleway", "nebius"],
+    isOpenSource: false,
+  },
+  llama3370bChat: {
+    title: "Llama3.3 70b Chat",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.3-70b",
+      model: "llama3.3-70b",
+      contextLength: 65536,
+    },
+    icon: "meta.png",
+    providerOptions: [],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -520,7 +524,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway"],
+    providerOptions: ["groq", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama31405bChat: {
@@ -533,7 +537,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "nebius"],
     isOpenSource: false,
   },
   llama3170bNemotron: {
@@ -559,7 +563,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "nebius"],
     isOpenSource: false,
   },
   llama323bChat: {
@@ -869,6 +873,20 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
+  gemini20Flash: {
+    title: "Gemini 2.0 Flash",
+    description:
+      "Google's powerful workhorse model with low latency and enhanced performance.",
+    params: {
+      title: "Gemini 2.0 Flash",
+      model: "gemini-2.0-flash",
+      contextLength: 1_000_000,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
   commandR: {
     title: "Command R",
     description:
@@ -995,14 +1013,14 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
-  claude3Haiku: {
-    title: "Claude 3 Haiku",
+  claude35Haiku: {
+    title: "Claude 3.5 Haiku",
     description:
-      "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
+      "The fastest model in the Claude 3.5 series: a compact model for near-instant responsiveness",
     params: {
-      model: "claude-3-haiku-20240307",
+      model: "claude-3-5-haiku-latest",
       contextLength: 200_000,
-      title: "Claude 3 Haiku",
+      title: "Claude 3.5 Haiku",
       apiKey: "",
     },
     providerOptions: ["anthropic", "free-trial"],
@@ -1369,7 +1387,7 @@ export const models: { [key: string]: ModelPackage } = {
         },
       },
     ],
-    providerOptions: ["nebius"],
+    providerOptions: ["nebius", "ncompass"],
     isOpenSource: true,
   },
   Qwen25Coder32b: {
@@ -1379,10 +1397,10 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Qwen 2.5 Coder 32b",
       model: "qwen2.5-coder-32b",
-      contextLength: 128_000,
+      contextLength: 32_000,
     },
     icon: "qwen.png",
-    providerOptions: ["scaleway"],
+    providerOptions: ["scaleway", "nebius", "ncompass"],
     isOpenSource: true,
   },
   grokBeta: {
@@ -1503,6 +1521,187 @@ export const models: { [key: string]: ModelPackage } = {
     },
     icon: "nvidia.png",
     providerOptions: ["siliconflow"],
+    isOpenSource: true,
+  },
+  llama3370BInstruct: {
+    title: "Llama 3.3 70B Instruct",
+    description: "A model from Meta, fine-tuned for chat",
+    params: {
+      title: "Llama 3.3 70B instruct",
+      model: "Meta-Llama-3.3-70B-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama318BInstruct: {
+    title: "Llama3.1 8B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama 3.1 8B Instruct",
+      model: "Meta-Llama-3.1-8B-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama3170BInstruct: {
+    title: "Llama3.1 70B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama 3.1 70B Instruct",
+      model: "Meta-Llama-3.1-70B-Instruct",
+      contextLength: 128_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama31405BInstruct: {
+    title: "Llama3.1 405B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama 3.1 405B Instruct",
+      model: "Meta-Llama-3.1-405B-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama31Tulu3405B: {
+    title: "Llama3.1 Tulu 3405B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama 3.1 Tulu 3 405B",
+      model: "Llama-3.1-Tulu-3-405B",
+      contextLength: 16_000,
+    },
+    icon: "allenai.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama321BInstruct: {
+    title: "Llama3.2 1B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama 3.2 1B Instruct",
+      model: "Meta-Llama-3.2-1B-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama323BInstruct: {
+    title: "Llama3.2 3B",
+    description: "A model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama 3.2 3B Instruct",
+      model: "Meta-Llama-3.2-3B-Instruct",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama3211BInstruct: {
+    title: "Llama3.2 11B",
+    description: "A model from Meta, fine-tuned for multimodal chat with images",
+    refUrl: "",
+    params: {
+      title: "Llama 3.2 11B Vision Instruct",
+      model: "Llama-3.2-11B-Vision-Instruct",
+      contextLength: 4096,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  llama3290BInstruct: {
+    title: "Llama3.2 90B",
+    description: "A model from Meta, fine-tuned for multimodal chat with images",
+    refUrl: "",
+    params: {
+      title: "Llama 3.2 90B Vision Instruct",
+      model: "Llama-3.2-90B-Vision-Instruct",
+      contextLength: 4096,
+    },
+    icon: "meta.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  qwen25Coder32BInstruct: {
+    title: "Qwen 2.5 Coder 32B",
+    description:
+      "Qwen 2.5 coder is an auto-regressive language model that uses an optimized transformer architecture, fine-tuned for coding tasks.",
+    params: {
+      title: "Qwen2.5 Coder 32B Instruct",
+      model: "Qwen2.5-Coder-32B-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "qwen.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  qwen2572BInstruct: {
+    title: "Qwen 2.5 72B",
+    description:
+      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Qwen2.5 72B Instruct",
+      model: "Qwen2.5-72B-Instruct",
+      contextLength: 16_000,
+    },
+    icon: "qwen.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  qwq32BPreview: {
+    title: "QwQ 32B Preview",
+    description:
+      "QwQ-32B-Preview is Qwen's latest experimental research model, focusing on improving AI reasoning capabilities.",
+    params: {
+      title: "QwQ 32B Preview",
+      model: "QwQ-32B-Preview",
+      contextLength: 16_000,
+    },
+    icon: "qwen.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  deepseekR1DistillLlama70B: {
+    title: "DeepSeek R1 Distill Llama 70B",
+    description:
+      "A llama 3.1 70 model distilled from deekseek R1",
+    params: {
+      title: "DeepSeek R1 Distill Llama 70B",
+      model: "DeepSeek-R1-Distill-Llama-70B",
+      contextLength: 32_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["sambanova"],
+    isOpenSource: true,
+  },
+  deepseekR1: {
+    title: "DeepSeek R1",
+    description:
+      "DeekSeek R1 reasoning model from DeepSeek",
+    params: {
+      title: "DeepSeek R1",
+      model: "DeepSeek-R1",
+      contextLength: 8192,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["sambanova"],
     isOpenSource: true,
   },
   AUTODETECT: {

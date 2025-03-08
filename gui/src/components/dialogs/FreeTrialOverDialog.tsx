@@ -1,15 +1,15 @@
-import { useDispatch } from "react-redux";
-import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { useAppSelector } from "../../redux/hooks";
 import { useEffect } from "react";
-import { selectUsePlatform } from "../../redux/selectors";
-import { PlatformOnboardingCard } from "../OnboardingCard/platform/PlatformOnboardingCard";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "../../redux/hooks";
+import { selectUseHub } from "../../redux/selectors";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { OnboardingCard } from "../OnboardingCard";
+import { PlatformOnboardingCard } from "../OnboardingCard/platform/PlatformOnboardingCard";
 
 function FreeTrialOverDialog() {
   const dispatch = useDispatch();
   const history = useAppSelector((store) => store.session.history);
-  const usePlatform = useAppSelector(selectUsePlatform);
+  const usePlatform = useAppSelector(selectUseHub);
 
   useEffect(() => {
     if (history.length === 0) {

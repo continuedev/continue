@@ -1,10 +1,16 @@
+import { z } from "zod";
 import { PlatformClient, SecretStore } from "../interfaces/index.js";
 import {
   decodeSecretLocation,
   encodeSecretLocation,
   SecretLocation,
 } from "../interfaces/SecretResult.js";
-import { decodeFQSN, encodeFQSN, FQSN } from "../interfaces/slugs.js";
+import {
+  decodeFQSN,
+  encodeFQSN,
+  FQSN,
+  PackageSlug,
+} from "../interfaces/slugs.js";
 import { AssistantUnrolled } from "../schemas/index.js";
 import {
   fillTemplateVariables,
@@ -12,9 +18,12 @@ import {
   parseAssistantUnrolled,
 } from "./unroll.js";
 
-export async function clientRender(
+export async function renderSecrets(
+  packageSlug: PackageSlug,
   unrolledConfigContent: string,
-  secretStore: SecretStore,
+  clientSecretStore: SecretStore,
+  orgScopeId: string | null, // The "scope" that the user is logged in with
+  onPremProxyUrl: string | null,
   platformClient?: PlatformClient,
 ): Promise<AssistantUnrolled> {
   // 1. First we need to get a list of all the FQSNs that are required to render the config
@@ -23,16 +32,9 @@ export async function clientRender(
   // 2. Then, we will check which of the secrets are found in the local personal secret store. Here we’re checking for anything that matches the last part of the FQSN, not worrying about the owner/package/owner/package slugs
   const secretsTemplateData: Record<string, string> = {};
 
-  const unresolvedFQSNs: FQSN[] = [];
-  for (const secret of secrets) {
-    const fqsn = decodeFQSN(secret.replace("secrets.", ""));
-    const secretValue = await secretStore.get(fqsn.secretName);
-    if (secretValue) {
-      secretsTemplateData[secret] = secretValue;
-    } else {
-      unresolvedFQSNs.push(fqsn);
-    }
-  }
+  const unresolvedFQSNs: FQSN[] = secrets.map((secret) => {
+    return decodeFQSN(secret.replace("secrets.", ""));
+  });
 
   // Don't use platform client in local mode
   if (platformClient) {
@@ -46,7 +48,9 @@ export async function clientRender(
       }
 
       if ("value" in secretResult) {
-        secretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // clientSecretStore.set(secretResult.fqsn.secretName, secretResult.value);
+        // const secretValue = await clientSecretStore.get(fqsn.secretName);
+        secretsTemplateData[encodeFQSN(secretResult.fqsn)] = secretResult.value;
       }
 
       secretsTemplateData["secrets." + encodeFQSN(secretResult.fqsn)] =
@@ -66,11 +70,16 @@ export async function clientRender(
   const parsedYaml = parseAssistantUnrolled(renderedYaml);
 
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
-  const finalConfig = useProxyForUnrenderedSecrets(parsedYaml);
+  const finalConfig = useProxyForUnrenderedSecrets(
+    parsedYaml,
+    packageSlug,
+    orgScopeId,
+    onPremProxyUrl,
+  );
   return finalConfig;
 }
 
-function getUnrenderedSecretLocation(
+export function getUnrenderedSecretLocation(
   value: string | undefined,
 ): SecretLocation | undefined {
   if (!value) return undefined;
@@ -94,8 +103,19 @@ function getUnrenderedSecretLocation(
   return undefined;
 }
 
-function useProxyForUnrenderedSecrets(
+function getContinueProxyModelName(
+  packageSlug: PackageSlug,
+  provider: string,
+  model: string,
+): string {
+  return `${packageSlug.ownerSlug}/${packageSlug.packageSlug}/${provider}/${model}`;
+}
+
+export function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
+  packageSlug: PackageSlug,
+  orgScopeId: string | null,
+  onPremProxyUrl: string | null,
 ): AssistantUnrolled {
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
@@ -106,7 +126,14 @@ function useProxyForUnrenderedSecrets(
         config.models[i] = {
           ...config.models[i],
           provider: "continue-proxy",
+          model: getContinueProxyModelName(
+            packageSlug,
+            config.models[i].provider,
+            config.models[i].model,
+          ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
+          orgScopeId,
+          onPremProxyUrl,
           apiKey: undefined,
         };
       }
@@ -115,3 +142,12 @@ function useProxyForUnrenderedSecrets(
 
   return config;
 }
+
+/** The additional properties that are added to the otherwise OpenAI-compatible body when requesting a Continue proxy */
+export const continuePropertiesSchema = z.object({
+  apiKeyLocation: z.string().optional(),
+  apiBase: z.string().optional(),
+  orgScopeId: z.string().nullable(),
+});
+
+export type ContinueProperties = z.infer<typeof continuePropertiesSchema>;

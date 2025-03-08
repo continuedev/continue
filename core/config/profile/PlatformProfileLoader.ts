@@ -1,8 +1,8 @@
-import { ConfigResult } from "@continuedev/config-yaml";
-import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas/index.js";
+import { AssistantUnrolled, ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
+
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
 import doLoadConfig from "./doLoadConfig.js";
@@ -43,7 +43,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
         packageSlug,
         versionSlug,
       },
-      title: `${ownerSlug}/${packageSlug}@${versionSlug}`,
+      title: configResult.config?.name ?? `${ownerSlug}/${packageSlug}`,
       errors: configResult.errors,
       iconUrl: this.iconUrl,
     };
@@ -69,6 +69,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
         ownerSlug: this.ownerSlug,
         packageSlug: this.packageSlug,
       },
+      this.description.id,
     );
 
     return {

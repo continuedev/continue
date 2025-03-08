@@ -62,4 +62,4 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 
 <!-- Vertex AI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers. -->
+[Click here](../../model-roles/reranking.md) to see a list of reranking model providers. -->

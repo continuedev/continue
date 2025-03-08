@@ -33,7 +33,7 @@ function gotoInputKey(input: GotoInput) {
   return `${input.name}${input.uri.toString()}${input.line}${input.character}`;
 }
 
-const MAX_CACHE_SIZE = 50;
+const MAX_CACHE_SIZE = 500;
 const gotoCache = new Map<string, RangeInFile[]>();
 
 export async function executeGotoProvider(
@@ -151,28 +151,32 @@ async function crawlTypes(
   identifierNodes.forEach((node) => searchedLabels.add(node.text));
 
   // Use LSP to get the definitions of those types
-  const definitions = await Promise.all(
-    identifierNodes.map(async (node) => {
-      const [typeDef] = await executeGotoProvider({
-        uri: vscode.Uri.parse(rif.filepath),
-        // TODO: tree-sitter is zero-indexed, but there seems to be an off-by-one
-        // error at least with the .ts parser sometimes
-        line:
-          rif.range.start.line +
-          Math.min(node.startPosition.row, astLineCount - 1),
-        character: rif.range.start.character + node.startPosition.column,
-        name: "vscode.executeDefinitionProvider",
-      });
+  const definitions = [];
 
-      if (!typeDef) {
-        return undefined;
-      }
-      return {
-        ...typeDef,
-        contents: await ide.readRangeInFile(typeDef.filepath, typeDef.range),
-      };
-    }),
-  );
+  for (const node of identifierNodes) {
+    const [typeDef] = await executeGotoProvider({
+      uri: vscode.Uri.parse(rif.filepath),
+      // TODO: tree-sitter is zero-indexed, but there seems to be an off-by-one
+      // error at least with the .ts parser sometimes
+      line:
+        rif.range.start.line +
+        Math.min(node.startPosition.row, astLineCount - 1),
+      character: rif.range.start.character + node.startPosition.column,
+      name: "vscode.executeDefinitionProvider",
+    });
+
+    if (!typeDef) {
+      definitions.push(undefined);
+      continue;
+    }
+
+    const contents = await ide.readRangeInFile(typeDef.filepath, typeDef.range);
+
+    definitions.push({
+      ...typeDef,
+      contents,
+    });
+  }
 
   // TODO: Filter out if not in our code?
 

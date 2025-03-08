@@ -127,25 +127,36 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
                             </span>
                           </td>
                         </tr>
-                        <Tooltip
-                          id={urlToolTipId}
-                          place="top"
-                          className="max-w-full"
-                        >
-                          {chunk.filepath}
-                        </Tooltip>
-                        <Tooltip
-                          id={contentToolTipId}
-                          place="top"
-                          className="max-h-[300px] max-w-[170px] overflow-y-auto"
-                        >
-                          {chunk.content}
-                        </Tooltip>
                       </>
                     );
                   })}
                 </tbody>
               </table>
+              {/* Rending tooltips here because div can't be child of tbody apparently */}
+              {data.chunks.map((chunk, i) => {
+                const contentToolTipId = `docs-content-peek-${i}`;
+                const urlToolTipId = `docs-url-peek-${i}`;
+                return (
+                  <>
+                    <Tooltip
+                      key={urlToolTipId}
+                      id={urlToolTipId}
+                      place="top"
+                      className="max-w-full"
+                    >
+                      {chunk.filepath}
+                    </Tooltip>
+                    <Tooltip
+                      key={contentToolTipId}
+                      id={contentToolTipId}
+                      place="top"
+                      className="max-h-[300px] max-w-[170px] overflow-y-auto"
+                    >
+                      {chunk.content}
+                    </Tooltip>
+                  </>
+                );
+              })}
             </div>
           )}
         </div>

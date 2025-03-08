@@ -2,7 +2,6 @@
  * @jest-environment jsdom
  */
 import { ConfigHandler } from "../../config/ConfigHandler.js";
-import { ControlPlaneClient } from "../../control-plane/client.js";
 import { SiteIndexingConfig } from "../../index.js";
 import FileSystemIde from "../../util/filesystem.js";
 import { editConfigJson } from "../../util/paths.js";
@@ -50,16 +49,7 @@ describe.skip("DocsService Integration Tests", () => {
       ide,
       ideSettingsPromise,
       async () => {},
-      new ControlPlaneClient(
-        Promise.resolve({
-          accessToken: "",
-          account: {
-            id: "",
-            label: "",
-          },
-        }),
-        ideSettingsPromise,
-      ),
+      Promise.resolve(undefined),
     );
 
     docsService = DocsService.createSingleton(configHandler, ide);
