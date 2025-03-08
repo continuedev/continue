@@ -827,7 +827,7 @@ export class Core {
     // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
       const { config } = await this.configHandler.loadConfig();
-      if (config?.disableIndexing) {
+      if (!config || config.disableIndexing) {
         return; // TODO silent in case of commands?
       }
       if (data?.shouldClearIndexes) {
@@ -891,10 +891,13 @@ export class Core {
               shouldClearIndexes: true,
             });
           } else {
-            // Reindex the file
-            const ignore = await shouldIgnore(uri, this.ide);
-            if (!ignore) {
-              await this.refreshCodebaseIndexFiles([uri]);
+            const { config } = await this.configHandler.loadConfig();
+            if (config && !config.disableIndexing) {
+              // Reindex the file
+              const ignore = await shouldIgnore(uri, this.ide);
+              if (!ignore) {
+                await this.refreshCodebaseIndexFiles([uri]);
+              }
             }
           }
         }
@@ -913,7 +916,10 @@ export class Core {
         this.messenger.send("refreshSubmenuItems", {
           providers: ["file"],
         });
-        await this.refreshCodebaseIndexFiles(toRefresh);
+        const { config } = await this.configHandler.loadConfig();
+        if (config && !config.disableIndexing) {
+          await this.refreshCodebaseIndexFiles(toRefresh);
+        }
       }
     };
 
