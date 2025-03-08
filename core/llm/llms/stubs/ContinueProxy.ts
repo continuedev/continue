@@ -1,3 +1,5 @@
+import { ContinueProperties } from "@continuedev/config-yaml";
+
 import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
@@ -7,7 +9,12 @@ import type { Chunk, LLMOptions } from "../../../index.js";
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
     this.apiKey = value.workOsAccessToken;
-    this.apiBase = new URL("openai/v1/", value.controlPlaneProxyUrl).toString();
+    if (!this.onPremProxyUrl) {
+      this.apiBase = new URL(
+        "openai/v1/",
+        value.controlPlaneProxyUrl,
+      ).toString();
+    }
   }
 
   // The apiKey and apiBase are set to the values for the proxy,
@@ -19,6 +26,11 @@ class ContinueProxy extends OpenAI {
     super(options);
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
+    this.orgScopeId = options.orgScopeId;
+    this.onPremProxyUrl = options.onPremProxyUrl;
+    if (this.onPremProxyUrl) {
+      this.apiBase = new URL("openai/v1/", this.onPremProxyUrl).toString();
+    }
   }
 
   static providerName = "continue-proxy";
@@ -27,11 +39,13 @@ class ContinueProxy extends OpenAI {
   };
 
   protected extraBodyProperties(): Record<string, any> {
+    const continueProperties: ContinueProperties = {
+      apiKeyLocation: this.apiKeyLocation,
+      apiBase: this.actualApiBase,
+      orgScopeId: this.orgScopeId ?? null,
+    };
     return {
-      continueProperties: {
-        apiKeyLocation: this.apiKeyLocation,
-        apiBase: this.actualApiBase,
-      },
+      continueProperties,
     };
   }
 

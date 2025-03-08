@@ -3,6 +3,15 @@ import { AllMediaTypes, ModelProvider } from "../types.js";
 export const Gemini: ModelProvider = {
   models: [
     {
+      model: "gemini-2.0-flash",
+      displayName: "Gemini 2.0 Flash",
+      contextLength: 1048576,
+      maxCompletionTokens: 8192,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.0-flash/i,
+      recommendedFor: ["chat"]
+    },
+    {
       model: "gemini-1.5-flash",
       displayName: "Gemini 1.5 Flash",
       contextLength: 1048576,

@@ -3,13 +3,28 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   (model: string) => boolean | undefined
 > = {
   "continue-proxy": (model) => {
-    return ["claude-3-5", "claude-3.5", "gpt-4", "o3", "gemini"].some((part) =>
-      model.toLowerCase().startsWith(part),
-    );
+    // see getContinueProxyModelName
+    const provider = model.split("/")[2];
+    const _model = model.split("/")[3];
+    if (provider && _model && provider !== "continue-proxy") {
+      const fn = PROVIDER_TOOL_SUPPORT[provider];
+      if (fn) {
+        return fn(_model);
+      }
+    }
+    return [
+      "claude-3-5",
+      "claude-3.5",
+      "claude-3-7",
+      "claude-3.7",
+      "gpt-4",
+      "o3",
+      "gemini",
+    ].some((part) => model.toLowerCase().startsWith(part));
   },
   anthropic: (model) => {
     if (
-      ["claude-3-5", "claude-3.5"].some((part) =>
+      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7"].some((part) =>
         model.toLowerCase().startsWith(part),
       )
     ) {
@@ -28,6 +43,17 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   gemini: (model) => {
     // All gemini models support function calling
     return model.toLowerCase().includes("gemini");
+  },
+  bedrock: (model) => {
+    // For Bedrock, only support Claude Sonnet models with versions 3.5/3-5 and 3.7/3-7
+    if (
+      model.toLowerCase().includes("sonnet") &&
+      ["claude-3-5", "claude-3.5", "claude-3-7", "claude-3.7"].some((part) =>
+        model.toLowerCase().includes(part),
+      )
+    ) {
+      return true;
+    }
   },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
@@ -57,6 +83,14 @@ export const PROVIDER_TOOL_SUPPORT: Record<
         "firefunction-v2",
         "mistral",
       ].some((part) => model.toLowerCase().startsWith(part))
+    ) {
+      return true;
+    }
+  },
+  sambanova: (model) => {
+    // https://docs.sambanova.ai/cloud/docs/capabilities/function-calling
+    if (
+      model.toLowerCase().startsWith("meta-llama-3")
     ) {
       return true;
     }

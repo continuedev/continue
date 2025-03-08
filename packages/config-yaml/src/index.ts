@@ -7,6 +7,7 @@ export * from "./load/getBlockType.js";
 export * from "./load/merge.js";
 export * from "./load/proxySecretResolution.js";
 export * from "./load/unroll.js";
+export * from "./schemas/data/index.js";
 export * from "./schemas/index.js";
-export type { ModelConfig, ModelRole } from "./schemas/models.js";
+export * from "./schemas/models.js";
 export * from "./validation.js";

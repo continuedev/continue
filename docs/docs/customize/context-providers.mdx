@@ -4,14 +4,18 @@ description: Type '@' to select content to the LLM as context
 keywords: [context, "@", provider, LLM]
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider.
 
 As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
 
 ![Context Items](/img/context-provider-example.png)
+
+## Context blocks
+
+You can add context providers to assistants using [`context` blocks](../hub/blocks/block-types.md#context). Explore available context blocks in [the hub](https://hub.continue.dev/explore/context).
 
 ## Built-in Context Providers
 
@@ -23,7 +27,7 @@ Reference any file in your current workspace.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: file
   ```
@@ -47,7 +51,7 @@ Reference specific functions or classes from throughout your project.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: code
   ```
@@ -71,7 +75,7 @@ Reference all of the changes you've made to your current branch. This is useful 
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: diff
   ```
@@ -95,7 +99,7 @@ Reference the currently open file.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: currentFile
   ```
@@ -119,7 +123,7 @@ Reference the last command you ran in your IDE's terminal and its output.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: terminal
   ```
@@ -143,7 +147,7 @@ Reference the contents from any documentation site.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: docs
   ```
@@ -171,7 +175,7 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: open
       params:
@@ -202,7 +206,7 @@ Optionally, set `n` to limit the number of results returned (default 6).
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: web
       params:
@@ -231,7 +235,7 @@ Reference the most relevant snippets from your codebase.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml" 
+  ```yaml title="config.yaml" 
   context:
     - provider: codebase
   ```
@@ -257,7 +261,7 @@ Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: folder
   ```
@@ -281,7 +285,7 @@ Reference the results of codebase search, just like the results you would get fr
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: search
   ```
@@ -307,7 +311,7 @@ Reference the markdown converted contents of a given URL.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml" 
+  ```yaml title="config.yaml" 
   context:
     - provider: url
   ```
@@ -331,7 +335,7 @@ Reference recent clipboard items
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: clipboard
   ```
@@ -355,7 +359,7 @@ Reference the structure of your current workspace.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: tree
   ```
@@ -379,7 +383,7 @@ Get Problems from the current file.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: problems
   ```
@@ -403,7 +407,7 @@ Reference the contents of the local variables in the debugger. Currently only av
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: debugger
       params:
@@ -436,7 +440,7 @@ Reference the outline of your codebase. By default, signatures are included alon
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: repo-map
       params:
@@ -471,7 +475,7 @@ Reference the architecture and platform of your current operating system.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: os
   ```
@@ -495,7 +499,7 @@ The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a 
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   mcpServers:
     - name: My MCP Server
       command: uvx
@@ -536,7 +540,7 @@ Reference the conversation in a GitHub issue.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: issue
       params:
@@ -576,7 +580,7 @@ Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: database
       params:
@@ -661,7 +665,7 @@ Reference the schema of a table, and some sample rows
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: postgres
       params:
@@ -708,7 +712,7 @@ Reference the results of a Google search.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: google
       params:
@@ -741,7 +745,7 @@ Reference an open MR for this branch on GitLab.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: gitlab-mr
       params:
@@ -772,7 +776,7 @@ You can specify the domain to communicate with by setting the `domain` parameter
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: gitlab-mr
       params:
@@ -807,7 +811,7 @@ Reference the conversation in a Jira issue.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: jira
       params:
@@ -842,7 +846,7 @@ to set the API Version to 2 using the `apiVersion` property.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: jira
       params:
@@ -881,7 +885,7 @@ Reference the messages in a Discord channel.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: discord
       params:
@@ -929,7 +933,7 @@ The HttpContextProvider makes a POST request to the url passed in the configurat
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: http
       params:
@@ -986,7 +990,7 @@ Reference specific git commit metadata and diff or all of the recent commits.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: commit
       params:
@@ -1020,7 +1024,7 @@ Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   context:
     - provider: greptile 
       params:

@@ -3,8 +3,8 @@ title: Anthropic
 slug: ../anthropic
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 :::info
 You can get an API key from the [Anthropic console](https://console.anthropic.com/account/keys).
@@ -44,19 +44,19 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
 Anthropic currently does not offer any autocomplete models.
 
-[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
 
 ## Embeddings model
 
 Anthropic currently does not offer any embeddings models.
 
-[Click here](../../model-types/embeddings.mdx) to see a list of embeddings model providers.
+[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
 
 ## Reranking model
 
 Anthropic currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
 
 ## Prompt caching
 
@@ -66,7 +66,7 @@ To enable caching of the system message and the turn-by-turn conversation, updat
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Anthropic
       provider: anthropic

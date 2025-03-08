@@ -13,6 +13,7 @@ module.exports = {
       "2xs": "170px", // Smallest width for Primary Sidebar in VS Code
       xs: "250px", // Avg default sidebar width in VS Code
       sm: "330px",
+      int: "380px",
       md: "460px",
       lg: "590px",
       xl: "720px",
