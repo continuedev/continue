@@ -1,0 +1,11 @@
+name: Gemini
+version: 0.0.1
+
+models:
+  - name: gemini
+    provider: gemini
+    model: gemini
+    apiKey: ${{ secrets.GEMINI_API_KEY }}
+    defaultCompletionOptions:
+      temperature: 0.7
+    contextLength: 1000000

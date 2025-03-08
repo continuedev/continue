@@ -26,7 +26,9 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.lang.IllegalStateException
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 
 class IdeProtocolClient(
@@ -43,11 +45,6 @@ class IdeProtocolClient(
         )
     }
 
-    private fun send(messageType: String, data: Any?, messageId: String? = null) {
-        val id = messageId ?: uuid()
-        continuePluginService.sendToWebview(messageType, data, id)
-    }
-
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val message = Gson().fromJson(msg, Message::class.java)
@@ -56,6 +53,10 @@ class IdeProtocolClient(
 
             try {
                 when (messageType) {
+                    "toggleDevTools" -> {
+                        continuePluginService.continuePluginWindow?.browser?.browser?.openDevtools()
+                    }
+
                     "showTutorial" -> {
                         showTutorial(project)
                     }
@@ -97,7 +98,7 @@ class IdeProtocolClient(
                             val sessionInfo = authService.loadControlPlaneSessionInfo()
                             respond(sessionInfo)
                         } else {
-                            authService.startAuthFlow(project)
+                            authService.startAuthFlow(project, params.useOnboarding)
                             respond(null)
                         }
                     }
@@ -107,6 +108,10 @@ class IdeProtocolClient(
                         authService.signOut()
                         ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                             .handleUpdatedSessionInfo(null)
+
+                        // Tell the webview that session info changed
+                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
+
                         respond(null)
                     }
 
@@ -425,12 +430,11 @@ class IdeProtocolClient(
 
                         if (editor.document.text.trim().isEmpty()) {
                             WriteCommandAction.runWriteCommandAction(project) {
-                                editor.document.insertString(0, msg)
+                                editor.document.insertString(0, params.text)
                             }
                             respond(null)
                             return@launch
                         }
-
 
                         val llm: Any = try {
                             suspendCancellableCoroutine { continuation ->
@@ -439,22 +443,31 @@ class IdeProtocolClient(
                                     null,
                                     null
                                 ) { response ->
-                                    val config = (response as Map<String, Any>)["config"] as Map<String, Any>
-                                    val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
+                                    try {
+                                        val responseObject = response as Map<*, *>
+                                        val responseContent = responseObject["content"] as Map<*, *>
+                                        val result = responseContent["result"] as Map<*, *>
+                                        val config = result["config"] as Map<*, *>
 
-                                    if (applyCodeBlockModel != null) {
-                                        continuation.resume(applyCodeBlockModel)
-                                    }
+                                        val selectedModels = config["selectedModelByRole"] as? Map<*, *>
+                                        val applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
 
-                                    val models =
-                                        config["models"] as List<Map<String, Any>>
-                                    val curSelectedModel = models.find { it["title"] == params.curSelectedModelTitle }
+                                        if (applyCodeBlockModel != null) {
+                                            continuation.resume(applyCodeBlockModel)
+                                        } else {
+                                            val models =
+                                                config["models"] as List<Map<String, Any>>
+                                            val curSelectedModel =
+                                                models.find { it["title"] == params.curSelectedModelTitle }
 
-//                                    continuation.resume(curSelectedModel)
-                                    if (curSelectedModel == null) {
-                                        return@request
-                                    } else {
-                                        continuation.resume(curSelectedModel)
+                                            if (curSelectedModel == null) {
+                                                continuation.resumeWithException(IllegalStateException("Model '${params.curSelectedModelTitle}' not found in config."))
+                                            } else {
+                                                continuation.resume(curSelectedModel)
+                                            }
+                                        }
+                                    } catch (e: Exception) {
+                                        continuation.resumeWithException(e)
                                     }
                                 }
                             }
@@ -467,7 +480,6 @@ class IdeProtocolClient(
                             respond(null)
                             return@launch
                         }
-
 
                         val diffStreamService = project.service<DiffStreamService>()
                         // Clear all diff blocks before running the diff stream
@@ -576,25 +588,10 @@ class IdeProtocolClient(
 
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
-        send("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
+        continuePluginService.sendToWebview("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
     }
 
     fun deleteAtIndex(index: Int) {
-        send("deleteAtIndex", DeleteAtIndex(index), uuid())
-    }
-
-    private fun getModelByRole(
-        config: Any,
-        role: Any
-    ): Any? {
-        val experimental = (config as? Map<*, *>)?.get("experimental") as? Map<*, *>
-        val roleTitle = (experimental?.get("modelRoles") as? Map<*, *>)?.get(role) as? String ?: return null
-
-        val models = (config as? Map<*, *>)?.get("models") as? List<*>
-        val matchingModel = models?.find { model ->
-            (model as? Map<*, *>)?.get("title") == roleTitle
-        }
-
-        return matchingModel
+        continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
     }
 }

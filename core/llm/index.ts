@@ -1,3 +1,4 @@
+import { ModelRole } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -7,6 +8,8 @@ import {
 } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
+import { DevDataSqliteDb } from "../data/devdataSqlite.js";
+import { DataLogger } from "../data/log.js";
 import {
   CacheBehavior,
   ChatMessage,
@@ -16,13 +19,12 @@ import {
   LLMFullCompletionOptions,
   LLMOptions,
   ModelCapability,
+  ModelInstaller,
   PromptLog,
   PromptTemplate,
   RequestOptions,
   TemplateType,
 } from "../index.js";
-import { logDevData } from "../util/devdata.js";
-import { DevDataSqliteDb } from "../util/devdataSqlite.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { isOllamaInstalled } from "../util/ollamaHelper.js";
@@ -56,6 +58,17 @@ import {
   toCompleteBody,
   toFimBody,
 } from "./openaiTypeConverters.js";
+
+
+export class LLMError extends Error {
+  constructor(message: string, public llm: ILLM) {
+    super(message);
+  }
+}
+
+export function isModelInstaller(provider: any): provider is ModelInstaller {
+  return provider && typeof provider.installModel === 'function';
+}
 
 export abstract class BaseLLM implements ILLM {
   static providerName: string;
@@ -117,9 +130,17 @@ export abstract class BaseLLM implements ILLM {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+
+  // continueProperties
+  apiKeyLocation?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   deployment?: string;
   apiVersion?: string;
@@ -190,12 +211,20 @@ export abstract class BaseLLM implements ILLM {
         options.model,
         this.providerName,
         options.template,
-      );
+      ) ??
+      undefined;
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
-    this.aiGatewaySlug = options.aiGatewaySlug;
+
+    // continueProperties
+    this.apiKeyLocation = options.apiKeyLocation;
+    this.orgScopeId = options.orgScopeId;
     this.apiBase = options.apiBase;
+
+    this.onPremProxyUrl = options.onPremProxyUrl;
+
+    this.aiGatewaySlug = options.aiGatewaySlug;
     this.cacheBehavior = options.cacheBehavior;
 
     // watsonx deploymentId
@@ -206,6 +235,7 @@ export abstract class BaseLLM implements ILLM {
     }
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
+    this.roles = options.roles;
 
     this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
@@ -282,7 +312,7 @@ export abstract class BaseLLM implements ILLM {
     return this.templateMessages(msgs);
   }
 
-  private _compileLogMessage(
+  private _compilePromptForLog(
     prompt: string,
     completionOptions: CompletionOptions,
   ): string {
@@ -337,11 +367,14 @@ export abstract class BaseLLM implements ILLM {
       generatedTokens,
     );
 
-    logDevData("tokens_generated", {
-      model: model,
-      provider: this.providerName,
-      promptTokens: promptTokens,
-      generatedTokens: generatedTokens,
+    void DataLogger.getInstance().logDevData({
+      name: "tokensGenerated",
+      data: {
+        model: model,
+        provider: this.providerName,
+        promptTokens: promptTokens,
+        generatedTokens: generatedTokens,
+      },
     });
   }
 
@@ -359,9 +392,11 @@ export abstract class BaseLLM implements ILLM {
         if (!resp.ok) {
           let text = await resp.text();
           if (resp.status === 404 && !resp.url.includes("/v1")) {
-            if (text.includes("try pulling it first")) {
-              const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
+            const error = JSON.parse(text)?.error?.replace(/"/g, "'");
+            let model = error?.match(/model '(.*)' not found/)?.[1];
+            if (model && resp.url.match("127.0.0.1:11434")) {
               text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+              throw new LLMError(text, this);// No need to add HTTP status details
             } else if (text.includes("/api/chat")) {
               text =
                 "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
@@ -421,6 +456,10 @@ export abstract class BaseLLM implements ILLM {
             throw new Error(message);
           }
         }
+        //if e instance of LLMError, rethrow
+        if (e instanceof LLMError) {
+          throw e;
+        }
         throw new Error(e.message);
       }
     };
@@ -441,7 +480,7 @@ export abstract class BaseLLM implements ILLM {
       options,
     );
 
-    return { completionOptions, log, raw };
+    return { completionOptions, logEnabled: log, raw };
   }
 
   private _formatChatMessages(messages: ChatMessage[]): string {
@@ -458,9 +497,11 @@ export abstract class BaseLLM implements ILLM {
               `${toolCall.function?.name}(${toolCall.function?.arguments})`,
           )
           .join("\n");
-      } else if ("content" in msg && Array.isArray(msg.content)) {
-        const content = renderChatMessage(msg);
-        msg.content = content;
+      } else if ("content" in msg) {
+        if (Array.isArray(msg.content)) {
+          msg.content = renderChatMessage(msg);
+        }
+        contentToShow = msg.content;
       }
 
       formatted += `<${msg.role}>\n${contentToShow}\n\n`;
@@ -492,12 +533,15 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string> {
-    const { completionOptions, log } = this._parseCompletionOptions(options);
+    const { completionOptions, logEnabled } =
+      this._parseCompletionOptions(options);
 
     const fimLog = `Prefix: ${prefix}\nSuffix: ${suffix}`;
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(fimLog, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(fimLog, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, fimLog);
@@ -533,7 +577,7 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, fimLog, completion);
 
-    if (log && this.writeLog) {
+    if (logEnabled && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
@@ -549,7 +593,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ) {
-    const { completionOptions, log, raw } =
+    const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
 
     let prompt = pruneRawPromptFromTop(
@@ -563,9 +607,11 @@ export abstract class BaseLLM implements ILLM {
       prompt = this._templatePromptLikeMessages(prompt);
     }
 
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(prompt, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -610,7 +656,7 @@ export abstract class BaseLLM implements ILLM {
     } finally {
       this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-      if (log && this.writeLog) {
+      if (logEnabled && this.writeLog) {
         await this.writeLog(`Completion:\n${completion}\n\n`);
       }
     }
@@ -628,7 +674,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ) {
-    const { completionOptions, log, raw } =
+    const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
 
     let prompt = pruneRawPromptFromTop(
@@ -642,9 +688,11 @@ export abstract class BaseLLM implements ILLM {
       prompt = this._templatePromptLikeMessages(prompt);
     }
 
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(prompt, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -667,7 +715,7 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-    if (log && this.writeLog) {
+    if (logEnabled && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
@@ -711,7 +759,8 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
-    let { completionOptions, log } = this._parseCompletionOptions(options);
+    let { completionOptions, logEnabled } =
+      this._parseCompletionOptions(options);
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
@@ -720,9 +769,11 @@ export abstract class BaseLLM implements ILLM {
     const prompt = this.templateMessages
       ? this.templateMessages(messages)
       : this._formatChatMessages(messages);
-    if (log) {
+    if (logEnabled) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          this._compilePromptForLog(prompt, completionOptions),
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -730,6 +781,7 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
+    let citations: null | string[] = null
 
     try {
       if (this.templateMessages) {
@@ -757,6 +809,8 @@ export abstract class BaseLLM implements ILLM {
             completion = renderChatMessage(msg);
           } else {
             // Stream true
+            console.log("Streaming");
+
             const stream = this.openaiAdapter.chatCompletionStream(
               {
                 ...body,
@@ -768,6 +822,9 @@ export abstract class BaseLLM implements ILLM {
               const result = fromChatCompletionChunk(chunk);
               if (result) {
                 yield result;
+              }
+              if (!citations && (chunk as any).citations && Array.isArray((chunk as any).citations)) {
+                citations = (chunk as any).citations;
               }
             }
           }
@@ -789,8 +846,12 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-    if (log && this.writeLog) {
+    if (logEnabled && this.writeLog) {
       await this.writeLog(`Completion:\n${completion}\n\n`);
+
+      if (citations) {
+        await this.writeLog(`Citations:\n${citations.map((c, i) => `${i + 1}: ${c}`).join("\n")}\n\n`);
+      }
     }
 
     return {
@@ -953,7 +1014,9 @@ export abstract class BaseLLM implements ILLM {
         this.providerName,
         autodetectTemplateType(this.model),
       );
-      return templateMessages(rendered);
+      if (templateMessages) {
+        return templateMessages(rendered);
+      }
     }
     return rendered;
   }

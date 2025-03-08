@@ -9,6 +9,8 @@ class Novita extends OpenAI {
   };
 
   private static MODEL_IDS: { [name: string]: string } = {
+    "deepseek-r1": "deepseek/deepseek-r1",
+    "deepseek_v3": "deepseek/deepseek_v3",
     "llama3-8b": "meta-llama/llama-3-8b-instruct",
     "llama3-70b": "meta-llama/llama-3-70b-instruct",
     "llama3.1-8b": "meta-llama/llama-3.1-8b-instruct",

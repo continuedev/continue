@@ -1,7 +1,5 @@
 import os from "node:os";
 
-import { Analytics } from "@continuedev/config-types";
-
 import ContinueProxyAnalyticsProvider from "./analytics/ContinueProxyAnalyticsProvider.js";
 import {
   ControlPlaneProxyInfo,
@@ -10,9 +8,10 @@ import {
 import LogStashAnalyticsProvider from "./analytics/LogStashAnalyticsProvider.js";
 import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider.js";
 import { ControlPlaneClient } from "./client.js";
+import { AnalyticsConfig } from "../index.js";
 
 function createAnalyticsProvider(
-  config: Analytics,
+  config: AnalyticsConfig,
 ): IAnalyticsProvider | undefined {
   // @ts-ignore
   switch (config.provider) {
@@ -42,7 +41,7 @@ export class TeamAnalytics {
   }
 
   static async setup(
-    config: Analytics,
+    config: AnalyticsConfig,
     uniqueId: string,
     extensionVersion: string,
     controlPlaneClient: ControlPlaneClient,
@@ -52,22 +51,27 @@ export class TeamAnalytics {
     TeamAnalytics.os = os.platform();
     TeamAnalytics.extensionVersion = extensionVersion;
 
-    if (!config) {
-      await TeamAnalytics.provider?.shutdown();
-      TeamAnalytics.provider = undefined;
-    } else {
-      TeamAnalytics.provider = createAnalyticsProvider(config);
-      await TeamAnalytics.provider?.setup(
-        config,
-        uniqueId,
-        controlPlaneProxyInfo,
-      );
+    TeamAnalytics.provider = createAnalyticsProvider(config);
+    await TeamAnalytics.provider?.setup(
+      config,
+      uniqueId,
+      controlPlaneProxyInfo,
+    );
 
-      if (config.provider === "continue-proxy") {
-        (
-          TeamAnalytics.provider as ContinueProxyAnalyticsProvider
-        ).controlPlaneClient = controlPlaneClient;
-      }
+    if (config.provider === "continue-proxy") {
+      (
+        TeamAnalytics.provider as ContinueProxyAnalyticsProvider
+      ).controlPlaneClient = controlPlaneClient;
+    }
+  }
+
+  static async shutdown() {
+    if (TeamAnalytics.provider) {
+      await TeamAnalytics.provider.shutdown();
+      TeamAnalytics.provider = undefined;
+      TeamAnalytics.os = undefined;
+      TeamAnalytics.extensionVersion = undefined;
+      TeamAnalytics.uniqueId = "NOT_UNIQUE";
     }
   }
 }

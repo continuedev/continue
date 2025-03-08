@@ -15,7 +15,7 @@ export const searchWebTool: Tool = {
       type: "object",
       required: ["query"],
       properties: {
-        repo_url: {
+        query: {
           type: "string",
           description: "The natural language search query",
         },

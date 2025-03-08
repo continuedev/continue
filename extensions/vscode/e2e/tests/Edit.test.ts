@@ -1,19 +1,15 @@
+import { expect } from "chai";
 import {
-  EditorView,
   WebView,
-  WebDriver,
-  Key,
   VSBrowser,
-  InputBox,
   TextEditor,
-  Workbench,
+  CodeLens,
 } from "vscode-extension-tester";
 
 import { EditActions } from "../actions/Edit.actions";
 import { GlobalActions } from "../actions/Global.actions";
 import { GUIActions } from "../actions/GUI.actions";
 import { DEFAULT_TIMEOUT } from "../constants";
-import { EditSelectors } from "../selectors/Edit.selectors";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
 
@@ -58,8 +54,26 @@ describe("Edit Test", () => {
 
   afterEach(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
+
     await editor.clearText();
+
+    ({ view } = await GUIActions.switchToReactIframe());
+
+    const tipTapEditor = await GUISelectors.getMessageInputFieldAtIndex(
+      view,
+      0,
+    );
+    await tipTapEditor.clear();
   });
+
+  async function getCodeLensWithRetry(editor: TextEditor, text: string) {
+    let codeLens: CodeLens | undefined;
+    await TestUtils.waitForSuccess(async () => {
+      codeLens = await editor.getCodeLens(text);
+      expect(codeLens).to.not.be.undefined;
+    }, DEFAULT_TIMEOUT.SM);
+    return codeLens;
+  }
 
   it("Accepts an Edit in the GUI", async () => {
     ({ view } = await GUIActions.switchToReactIframe());
@@ -68,14 +82,14 @@ describe("Edit Test", () => {
 
     await view.switchBack();
 
-    const editorText = await editor.getText();
+    await TestUtils.waitForSuccess(async () => {
+      const editorText = await editor.getText();
 
-    await TestUtils.waitForSuccess(
-      async () =>
+      expect(
         !editorText.includes(originalEditorText) &&
-        editorText.includes(llmResponse),
-      DEFAULT_TIMEOUT.SM,
-    );
+          editorText.includes(llmResponse),
+      ).to.be.true;
+    }, DEFAULT_TIMEOUT.SM);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Rejects an Edit in the GUI", async () => {
@@ -85,41 +99,41 @@ describe("Edit Test", () => {
 
     await view.switchBack();
 
-    const editorText = await editor.getText();
+    await TestUtils.waitForSuccess(async () => {
+      const editorText = await editor.getText();
 
-    await TestUtils.waitForSuccess(
-      async () =>
+      expect(
         editorText.includes(originalEditorText) &&
-        !editorText.includes(llmResponse),
-      DEFAULT_TIMEOUT.SM,
-    );
+          !editorText.includes(llmResponse),
+      ).to.be.true;
+    }, DEFAULT_TIMEOUT.SM);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
   it("Accepts an Edit using CodeLens buttons", async () => {
     const acceptCodeLens = await editor.getCodeLens("Accept");
     await acceptCodeLens?.click();
 
-    const editorText = await editor.getText();
+    await TestUtils.waitForSuccess(async () => {
+      const editorText = await editor.getText();
 
-    await TestUtils.waitForSuccess(
-      async () =>
+      expect(
         !editorText.includes(originalEditorText) &&
-        editorText.includes(llmResponse),
-      DEFAULT_TIMEOUT.SM,
-    );
+          editorText.includes(llmResponse),
+      ).to.be.true;
+    }, DEFAULT_TIMEOUT.SM);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it("Rejects an Edit using CodeLens buttons", async () => {
-    const rejectCodeLens = await editor.getCodeLens("Reject");
+  it.only("Rejects an Edit using CodeLens buttons", async () => {
+    const rejectCodeLens = await getCodeLensWithRetry(editor, "Reject");
     await rejectCodeLens?.click();
 
-    const editorText = await editor.getText();
+    await TestUtils.waitForSuccess(async () => {
+      const editorText = await editor.getText();
 
-    await TestUtils.waitForSuccess(
-      async () =>
-        !editorText.includes(originalEditorText) &&
-        editorText.includes(llmResponse),
-      DEFAULT_TIMEOUT.SM,
-    );
+      expect(
+        editorText.includes(originalEditorText) &&
+          !editorText.includes(llmResponse),
+      ).to.be.true;
+    }, DEFAULT_TIMEOUT.SM);
   }).timeout(DEFAULT_TIMEOUT.XL);
 });

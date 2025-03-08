@@ -6,6 +6,7 @@ import {
   ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
+  EyeIcon,
   PauseCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
@@ -13,6 +14,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import DocsDetailsDialog from "./DocsDetailsDialog";
 
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
@@ -89,7 +91,6 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
 
   return (
     <div className="mt-2 flex w-full flex-col">
-      {/* {`${status.type} - ${status.id} - ${status.status} - ${status.progress} - ${status.description} - ${status.icon}`} */}
       <div
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
@@ -175,10 +176,40 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
                 pending: "",
               }[status?.status]}
         </span>
-
-        <span className="lines lines-1 text-right text-xs text-stone-500">
-          {status?.description}
-        </span>
+        <div className="flex flex-row items-center gap-1">
+          {status?.description === "Github rate limit exceeded" ? (
+            <span
+              className="lines lines-1 cursor-pointer text-right text-xs text-stone-500 underline"
+              onClick={() =>
+                ideMessenger.post(
+                  "openUrl",
+                  "https://docs.continue.dev/customize/deep-dives/docs#github",
+                )
+              }
+            >
+              {status.description}
+            </span>
+          ) : (
+            <span className="lines lines-1 text-right text-xs text-stone-500">
+              {status?.description}
+            </span>
+          )}
+          {status?.status === "complete" ? (
+            <EyeIcon
+              className="h-4 w-4 cursor-pointer text-stone-500"
+              onClick={() => {
+                dispatch(setShowDialog(true));
+                dispatch(
+                  setDialogMessage(
+                    <DocsDetailsDialog startUrl={docConfig.startUrl} />,
+                  ),
+                );
+              }}
+            >
+              Add Docs
+            </EyeIcon>
+          ) : null}
+        </div>
       </div>
     </div>
   );

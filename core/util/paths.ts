@@ -5,6 +5,7 @@ import * as path from "path";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 
+import { DevEventName } from "@continuedev/config-yaml";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
@@ -72,6 +73,10 @@ export function getIndexFolderPath(): string {
 
 export function getGlobalContextFilePath(): string {
   return path.join(getIndexFolderPath(), "globalContext.json");
+}
+
+export function getSharedConfigFilePath(): string {
+  return path.join(getContinueGlobalPath(), "sharedConfig.json");
 }
 
 export function getSessionFilePath(sessionId: string): string {
@@ -198,7 +203,7 @@ export function getContinueRcPath(): string {
   return continuercPath;
 }
 
-export function devDataPath(): string {
+function getDevDataPath(): string {
   const sPath = path.join(getContinueGlobalPath(), "dev_data");
   if (!fs.existsSync(sPath)) {
     fs.mkdirSync(sPath);
@@ -207,11 +212,18 @@ export function devDataPath(): string {
 }
 
 export function getDevDataSqlitePath(): string {
-  return path.join(devDataPath(), "devdata.sqlite");
+  return path.join(getDevDataPath(), "devdata.sqlite");
 }
 
-export function getDevDataFilePath(fileName: string): string {
-  return path.join(devDataPath(), `${fileName}.jsonl`);
+export function getDevDataFilePath(
+  eventName: DevEventName,
+  schema: string,
+): string {
+  const versionPath = path.join(getDevDataPath(), schema);
+  if (!fs.existsSync(versionPath)) {
+    fs.mkdirSync(versionPath);
+  }
+  return path.join(versionPath, `${String(eventName)}.jsonl`);
 }
 
 export function editConfigJson(
@@ -301,11 +313,6 @@ export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
   return dir;
 }
 
-export function internalBetaPathExists(): boolean {
-  const sPath = path.join(getContinueGlobalPath(), ".internal_beta");
-  return fs.existsSync(sPath);
-}
-
 export function getConfigJsonPathForRemote(
   remoteConfigServerUrl: string,
 ): string {
@@ -361,7 +368,7 @@ export function readAllGlobalPromptFiles(
     if (stats.isDirectory()) {
       const nestedPromptFiles = readAllGlobalPromptFiles(filepath);
       promptFiles.push(...nestedPromptFiles);
-    } else {
+    } else if (file.endsWith(".prompt")) {
       const content = fs.readFileSync(filepath, "utf8");
       promptFiles.push({ path: filepath, content });
     }
@@ -378,19 +385,29 @@ export function getEsbuildBinaryPath(): string {
   return path.join(getContinueUtilsPath(), "esbuild");
 }
 
-export function setupInitialDotContinueDirectory() {
-  const devDataTypes = [
-    "chat",
-    "autocomplete",
-    "quickEdit",
-    "tokens_generated",
-  ];
-  devDataTypes.forEach((p) => {
-    const devDataPath = getDevDataFilePath(p);
-    if (!fs.existsSync(devDataPath)) {
-      fs.writeFileSync(devDataPath, "");
+export function migrateV1DevDataFiles() {
+  const devDataPath = getDevDataPath();
+  function moveToV1FolderIfExists(
+    oldFileName: string,
+    newFileName: DevEventName,
+  ) {
+    const oldFilePath = path.join(devDataPath, `${oldFileName}.jsonl`);
+    if (fs.existsSync(oldFilePath)) {
+      const newFilePath = getDevDataFilePath(newFileName, "0.1.0");
+      if (!fs.existsSync(newFilePath)) {
+        fs.copyFileSync(oldFilePath, newFilePath);
+        fs.unlinkSync(oldFilePath);
+      }
     }
-  });
+  }
+  moveToV1FolderIfExists("tokens_generated", "tokensGenerated");
+  moveToV1FolderIfExists("chat", "chatFeedback");
+  moveToV1FolderIfExists("quickEdit", "quickEdit");
+  moveToV1FolderIfExists("autocomplete", "autocomplete");
+}
+
+export function getStagingEnvironmentDotFilePath(): string {
+  return path.join(getContinueGlobalPath(), ".staging");
 }
 
 export function getDiffsDirectoryPath(): string {

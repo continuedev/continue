@@ -21,9 +21,8 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
-import { startLocalOllama } from "core/util/ollamaHelper";
 import type { IDE } from "core";
+import { handleLLMError } from "../util/errorHandling";
 
 const Diff = require("diff");
 
@@ -44,16 +43,13 @@ export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
 {
   private onError(e: any) {
-    const options = ["Documentation"];
-    if (e.message.includes("Ollama may not be installed")) {
-      options.push("Download Ollama");
-    } else if (e.message.includes("Ollama may not be running")) {
-      options.unshift("Start Ollama"); // We want "Start" to be the default choice
+    if (handleLLMError(e)) {
+      return;
     }
-
-    if (e.message.includes("Please sign in with GitHub")) {
+    let message = e.message;
+    if (message.includes("Please sign in with GitHub")) {
       showFreeTrialLoginMessage(
-        e.message,
+        message,
         this.configHandler.reloadConfig.bind(this.configHandler),
         () => {
           void this.webviewProtocol.request("openOnboardingCard", undefined);
@@ -61,17 +57,13 @@ export class ContinueCompletionProvider
       );
       return;
     }
-    vscode.window.showErrorMessage(e.message, ...options).then((val) => {
+    vscode.window.showErrorMessage(message, "Documentation").then((val) => {
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
             "https://docs.continue.dev/features/tab-autocomplete",
           ),
         );
-      } else if (val === "Download Ollama") {
-        vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
-      } else if (val == "Start Ollama") {
-        startLocalOllama(this.ide);
       }
     });
   }
@@ -83,13 +75,19 @@ export class ContinueCompletionProvider
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly tabAutocompleteModel: TabAutocompleteModel,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
   ) {
+    async function getAutocompleteModel() {
+      const { config } = await configHandler.loadConfig();
+      if (!config) {
+        return;
+      }
+      return config.selectedModelByRole.autocomplete ?? undefined;
+    }
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
-      this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
+      getAutocompleteModel,
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
@@ -304,7 +302,7 @@ export class ContinueCompletionProvider
           } else {
             // If the first part of the diff isn't an insertion, then the model is
             // probably rewriting other parts of the line
-            return undefined;
+            // return undefined; - Let's assume it's simply an insertion
           }
         }
       } else {

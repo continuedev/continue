@@ -5,13 +5,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
-import {
-  AnyExtension,
-  Editor,
-  EditorContent,
-  JSONContent,
-  useEditor,
-} from "@tiptap/react";
+import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
@@ -30,9 +24,10 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBadgeBackground,
+  vscCommandCenterActiveBorder,
+  vscCommandCenterInactiveBorder,
   vscForeground,
   vscInputBackground,
-  vscInputBorder,
   vscInputBorderFocus,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -50,6 +45,7 @@ import {
   selectHasCodeToEdit,
   selectIsInEditMode,
   setMainEditorContentTrigger,
+  setNewestCodeblocksForInput,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
 import {
@@ -65,6 +61,7 @@ import {
 import { AddCodeToEdit } from "./AddCodeToEditExtension";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
+import { MockExtension } from "./FillerExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
 import { Mention } from "./MentionExtension";
 import "./TipTapEditor.css";
@@ -77,9 +74,8 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import { MockExtension } from "./FillerExtension";
 
-const InputBoxDiv = styled.div<{ border?: string }>`
+const InputBoxDiv = styled.div<{}>`
   resize: none;
   padding-bottom: 4px;
   font-family: inherit;
@@ -89,8 +85,13 @@ const InputBoxDiv = styled.div<{ border?: string }>`
   width: 100%;
   background-color: ${vscInputBackground};
   color: ${vscForeground};
-  border: ${(props) =>
-    props.border ? props.border : `0.5px solid ${vscInputBorder}`};
+
+  border: 1px solid ${vscCommandCenterInactiveBorder};
+  transition: border-color 0.15s ease-in-out;
+  &:focus-within {
+    border: 1px solid ${vscCommandCenterActiveBorder};
+  }
+
   outline: none;
   font-size: ${getFontSize()}px;
 
@@ -106,11 +107,6 @@ const InputBoxDiv = styled.div<{ border?: string }>`
 
   display: flex;
   flex-direction: column;
-`;
-
-const PaddingDiv = styled.div`
-  padding: 8px 12px;
-  padding-bottom: 4px;
 `;
 
 const HoverDiv = styled.div`
@@ -177,9 +173,9 @@ interface TipTapEditorProps {
   ) => void;
   editorState?: JSONContent;
   toolbarOptions?: ToolbarOptions;
-  border?: string;
   placeholder?: string;
   historyKey: string;
+  inputId: string;
 }
 
 export const TIPPY_DIV_ID = "tippy-js-div";
@@ -303,7 +299,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         "Images need to be in jpg or png format and less than 10MB in size.",
       ]);
     }
-    return undefined;
   }
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
@@ -351,7 +346,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }).configure({
         HTMLAttributes: {
-          class: "editor-image bg-black object-contain max-h-[250px] w-full",
+          class: "object-contain max-h-[210px] max-w-full mx-1",
         },
       }),
       Placeholder.configure({
@@ -596,11 +591,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   useEffect(() => {
     if (editor) {
       const handleFocus = () => {
-        debouncedShouldHideToolbar(false);
+        setShouldHideToolbar(false);
       };
 
       const handleBlur = () => {
-        debouncedShouldHideToolbar(true);
+        // TODO - make toolbar auto-hiding work without breaking tool dropdown focus
+        // debouncedShouldHideToolbar(true);
       };
 
       editor.on("focus", handleFocus);
@@ -734,6 +730,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         await dispatch(
           saveCurrentSession({
             openNewSession: false,
+            generateTitle: true,
           }),
         );
       }
@@ -767,6 +764,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
+          generateTitle: true,
         }),
       );
       setTimeout(() => {
@@ -783,26 +781,10 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      // const rif: RangeInFile & { contents: string } =
-      //   data.rangeInFileWithContents;
-      // const basename = getBasename(rif.filepath);
-      // const relativePath = getRelativePath(
-      //   rif.filepath,
-      //   await ideMessenger.ide.getWorkspaceDirs(),
-      // const rangeStr = `(${rif.range.start.line + 1}-${
-      //   rif.range.end.line + 1
-      // })`;
-
-      // const itemName = `${basename} ${rangeStr}`;
-      // const item: ContextItemWithId = {
-      //   content: rif.contents,
-      //   name: itemName
-      // }
-
       const contextItem = rifWithContentsToContextItem(
         data.rangeInFileWithContents,
       );
-      console.log(contextItem);
+
       let index = 0;
       for (const el of editor.getJSON()?.content ?? []) {
         if (el.attrs?.item?.name === contextItem.name) {
@@ -820,10 +802,16 @@ function TipTapEditor(props: TipTapEditorProps) {
           type: "codeBlock",
           attrs: {
             item: contextItem,
+            inputId: props.inputId,
           },
         })
         .run();
-
+      dispatch(
+        setNewestCodeblocksForInput({
+          inputId: props.inputId,
+          contextItemId: contextItem.id.itemId,
+        }),
+      );
       if (data.prompt) {
         editor.commands.focus("end");
         editor.commands.insertContent(data.prompt);
@@ -939,7 +927,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   return (
     <InputBoxDiv
-      border={props.border}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       className="cursor-text"
@@ -991,8 +978,9 @@ function TipTapEditor(props: TipTapEditorProps) {
         event.preventDefault();
       }}
     >
-      <PaddingDiv>
+      <div className="px-2.5 pb-1 pt-2">
         <EditorContent
+          className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[70vh]" : ""}`}
           spellCheck={false}
           editor={editor}
           onClick={(event) => {
@@ -1024,7 +1012,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           }}
           disabled={isStreaming}
         />
-      </PaddingDiv>
+      </div>
 
       {showDragOverMsg &&
         modelSupportsImages(

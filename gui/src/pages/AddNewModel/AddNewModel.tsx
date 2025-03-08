@@ -13,10 +13,10 @@ import ModelCard from "../../components/modelSelection/ModelCard";
 import Toggle from "../../components/modelSelection/Toggle";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
+import { setDefaultModel } from "../../redux/slices/configSlice";
 import { ModelPackage, models } from "./configs/models";
 import { providers } from "./configs/providers";
 import { CustomModelButton } from "./ConfigureProvider";
-import { setDefaultModel } from "../../redux/slices/configSlice";
 
 const IntroDiv = styled.div`
   padding: 8px 12px;
@@ -39,7 +39,7 @@ const GridDiv = styled.div`
  */
 const modelsByProvider: Record<string, ModelPackage[]> = {
   "Open AI": [models.gpt4turbo, models.gpt4o, models.gpt35turbo],
-  Anthropic: [models.claude3Opus, models.claude3Sonnet, models.claude3Haiku],
+  Anthropic: [models.claude3Opus, models.claude3Sonnet, models.claude35Haiku],
   Mistral: [
     models.codestral,
     models.mistral7b,
@@ -49,7 +49,11 @@ const modelsByProvider: Record<string, ModelPackage[]> = {
     models.mistralLarge,
   ],
   Cohere: [models.commandR, models.commandRPlus],
-  DeepSeek: [models.deepseekCoderApi, models.deepseekChatApi],
+  DeepSeek: [
+    models.deepseekCoderApi,
+    models.deepseekChatApi,
+    models.deepseekReasonerApi,
+  ],
   Gemini: [models.geminiPro, models.gemini15Pro, models.gemini15Flash],
   "Open Source": [models.llama3Chat, models.mistralOs, models.deepseek],
 };

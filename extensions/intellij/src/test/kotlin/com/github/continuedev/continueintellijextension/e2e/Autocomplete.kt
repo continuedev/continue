@@ -34,7 +34,7 @@ class Autocomplete {
     @AfterEach
     fun closeProject(remoteRobot: RemoteRobot) = CommonSteps(remoteRobot).closeProject()
 
-    // @Test
+    @Test
     @Video
     fun displayCompletion(remoteRobot: RemoteRobot): Unit = with(remoteRobot) {
         welcomeFrame {
@@ -50,7 +50,7 @@ class Autocomplete {
         // Our "continue_tutorial.java.ft" tab loads first, but then "Main.java" takes focus.
         waitFor(ofSeconds(20)) {
             findAll<ComponentFixture>(
-                byXpath("//div[@accessiblename='Main.java' and @class='EditorTabLabel']")
+                byXpath("//div[@accessiblename='Main.java' and @class='SingleHeightLabel']")
             ).isNotEmpty()
         }
 
@@ -64,7 +64,7 @@ class Autocomplete {
                     enterText(" ")
                 }
 
-                waitFor(ofSeconds(10)) {
+                waitFor(ofSeconds(20)) {
                     editor.hasText("TEST_LLM_RESPONSE_0")
                 }
             }

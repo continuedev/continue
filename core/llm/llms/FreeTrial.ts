@@ -113,10 +113,18 @@ class FreeTrial extends BaseLLM {
     }
 
     const parts = message.content.map((part) => {
+      if (part.type === "imageUrl") {
+        return {
+          type: "image_url",
+          image_url: {
+            url: part.imageUrl.url,
+            detail: "low",
+          },
+        };
+      }
       return {
-        type: part.type,
+        type: "text",
         text: part.text,
-        image_url: { ...part.imageUrl, detail: "low" },
       };
     });
     return {
@@ -207,7 +215,7 @@ class FreeTrial extends BaseLLM {
       "llama3.1-70b",
       "gpt-4o",
       "gpt-3.5-turbo",
-      "claude-3-haiku-20240307",
+      "claude-3-5-haiku-latest",
       "gemini-1.5-pro-latest",
     ];
   }

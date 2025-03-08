@@ -15,7 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@continuedev/config-yaml": "^1.0.0",
+    "@continuedev/config-yaml": "^1.0.52",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@reduxjs/toolkit": "^2.3.0",
@@ -40,7 +40,6 @@
     "lodash": "^4.17.21",
     "minisearch": "^7.0.2",
     "mustache": "^4.2.0",
-    "onigasm": "^2.2.5",
     "posthog-js": "^1.130.1",
     "prismjs": "^1.29.0",
     "react": "^18.2.0",
@@ -59,7 +58,7 @@
     "redux-persist-transform-filter": "^0.0.22",
     "redux-thunk": "^3.1.0",
     "rehype-highlight": "^7.0.0",
-    "rehype-katex": "^7.0.0",
+    "rehype-katex": "^7.0.1",
     "rehype-wrap-all": "^1.1.0",
     "remark-math": "^6.0.0",
     "reselect": "^5.1.1",

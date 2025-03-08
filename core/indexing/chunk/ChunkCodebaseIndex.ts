@@ -80,9 +80,9 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         `
         INSERT INTO chunk_tags (chunkId, tag)
         SELECT id, ? FROM chunks
-        WHERE cacheKey = ? AND path = ?
+        WHERE cacheKey = ?
       `,
-        [tagString, item.cacheKey, item.path],
+        [tagString, item.cacheKey],
       );
       await markComplete([item], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 4;
@@ -158,7 +158,8 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         tag TEXT NOT NULL,
         chunkId INTEGER NOT NULL,
-        FOREIGN KEY (chunkId) REFERENCES chunks (id)
+        FOREIGN KEY (chunkId) REFERENCES chunks (id),
+        UNIQUE (tag, chunkId)
     )`);
   }
 

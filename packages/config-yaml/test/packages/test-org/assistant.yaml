@@ -1,0 +1,28 @@
+name: Assistant
+version: 0.0.1
+
+docs:
+  - uses: test-org/docs
+    with:
+      version: 3.13.1
+
+rules:
+  - uses: test-org/rules
+  - Use KaTeX for math
+
+models:
+  - name: gpt-5
+    provider: openai
+    model: gpt-5
+    apiKey: ${{ secrets.OPENAI_API_KEY }}
+
+  - uses: test-org/gemini
+    override:
+      contextLength: 500000
+      defaultCompletionOptions:
+        topP: 1.0
+      apiBase: https://example.com
+
+  - uses: test-org/claude35sonnet
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

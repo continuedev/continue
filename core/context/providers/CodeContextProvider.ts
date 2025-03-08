@@ -24,8 +24,12 @@ class CodeContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     // Assume the query is the id as returned by loadSubmenuItems
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
     return [
-      await CodeSnippetsCodebaseIndex.getForId(Number.parseInt(query, 10)),
+      await CodeSnippetsCodebaseIndex.getForId(
+        Number.parseInt(query, 10),
+        workspaceDirs,
+      ),
     ];
   }
 

@@ -76,7 +76,6 @@ export class StreamTransformPipeline {
     const timeoutValue = await Telemetry.getValueForFeatureFlag(
       PosthogFeatureFlag.AutocompleteTimeout,
     );
-    // helper.options.showWhateverWeHaveAtXMs ?? DEFAULT_AUTOCOMPLETE_OPTS.showWhateverWeHaveAtXMs
 
     lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, timeoutValue!);
 

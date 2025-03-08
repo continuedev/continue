@@ -1,11 +1,32 @@
 import fs from "node:fs";
 
+import { ModelRole } from "@continuedev/config-yaml";
+
+import { SiteIndexingConfig } from "..";
+import {
+  salvageSharedConfig,
+  sharedConfigSchema,
+  SharedConfigSchema,
+} from "../config/sharedConfig";
+
 import { getGlobalContextFilePath } from "./paths";
+
+export type GlobalContextModelSelections = Partial<
+  Record<ModelRole, string | null>
+>;
 
 export type GlobalContextType = {
   indexingPaused: boolean;
-  selectedTabAutocompleteModel: string;
-  lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
+  lastSelectedProfileForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
+  lastSelectedOrgIdForWorkspace: {
+    [workspaceIdentifier: string]: string | null;
+  };
+  selectedModelsByProfileId: {
+    [profileId: string]: GlobalContextModelSelections;
+  };
+
   /**
    * This is needed to handle the case where a JetBrains user has created
    * docs embeddings using one provider, and then updates to a new provider.
@@ -15,7 +36,9 @@ export type GlobalContextType = {
   hasDismissedConfigTsNoticeJetBrains: boolean;
   hasAlreadyCreatedAPromptFile: boolean;
   showConfigUpdateToast: boolean;
-  isSupportedLanceDbCpuTarget: boolean;
+  isSupportedLanceDbCpuTargetForLinux: boolean;
+  sharedConfig: SharedConfigSchema;
+  failedDocs: SiteIndexingConfig[];
 };
 
 /**
@@ -26,9 +49,10 @@ export class GlobalContext {
     key: T,
     value: GlobalContextType[T],
   ) {
-    if (!fs.existsSync(getGlobalContextFilePath())) {
+    const filepath = getGlobalContextFilePath();
+    if (!fs.existsSync(filepath)) {
       fs.writeFileSync(
-        getGlobalContextFilePath(),
+        filepath,
         JSON.stringify(
           {
             [key]: value,
@@ -38,7 +62,7 @@ export class GlobalContext {
         ),
       );
     } else {
-      const data = fs.readFileSync(getGlobalContextFilePath(), "utf-8");
+      const data = fs.readFileSync(filepath, "utf-8");
 
       let parsed;
       try {
@@ -49,21 +73,19 @@ export class GlobalContext {
       }
 
       parsed[key] = value;
-      fs.writeFileSync(
-        getGlobalContextFilePath(),
-        JSON.stringify(parsed, null, 2),
-      );
+      fs.writeFileSync(filepath, JSON.stringify(parsed, null, 2));
     }
   }
 
   get<T extends keyof GlobalContextType>(
     key: T,
   ): GlobalContextType[T] | undefined {
-    if (!fs.existsSync(getGlobalContextFilePath())) {
+    const filepath = getGlobalContextFilePath();
+    if (!fs.existsSync(filepath)) {
       return undefined;
     }
 
-    const data = fs.readFileSync(getGlobalContextFilePath(), "utf-8");
+    const data = fs.readFileSync(filepath, "utf-8");
     try {
       const parsed = JSON.parse(data);
       return parsed[key];
@@ -71,5 +93,51 @@ export class GlobalContext {
       console.warn(`Error parsing global context: ${e}`);
       return undefined;
     }
+  }
+
+  getSharedConfig(): SharedConfigSchema {
+    const sharedConfig = this.get("sharedConfig") ?? {};
+    const result = sharedConfigSchema.safeParse(sharedConfig);
+    if (result.success) {
+      return result.data;
+    } else {
+      // in case of damaged shared config, repair it
+      // Attempt to salvage any values that are security concerns
+      console.error("Failed to load shared config, salvaging...", result.error);
+      const salvagedConfig = salvageSharedConfig(sharedConfig);
+      this.update("sharedConfig", salvagedConfig);
+      return salvagedConfig;
+    }
+  }
+
+  updateSharedConfig(
+    newValues: Partial<SharedConfigSchema>,
+  ): SharedConfigSchema {
+    const currentSharedConfig = this.getSharedConfig();
+    const updatedSharedConfig = {
+      ...currentSharedConfig,
+      ...newValues,
+    };
+    this.update("sharedConfig", updatedSharedConfig);
+    return updatedSharedConfig;
+  }
+
+  updateSelectedModel(
+    profileId: string,
+    role: ModelRole,
+    title: string | null,
+  ): GlobalContextModelSelections {
+    const currentSelections = this.get("selectedModelsByProfileId") ?? {};
+    const forProfile = currentSelections[profileId] ?? {};
+    const newSelections = {
+      ...forProfile,
+      [role]: title,
+    };
+
+    this.update("selectedModelsByProfileId", {
+      ...currentSelections,
+      [profileId]: newSelections,
+    });
+    return newSelections;
   }
 }

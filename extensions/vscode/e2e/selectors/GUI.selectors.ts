@@ -1,9 +1,10 @@
 import { By, WebDriver, WebView } from "vscode-extension-tester";
+
 import { SelectorUtils } from "./SelectorUtils";
 
 export class GUISelectors {
   public static getDescription(view: WebView) {
-    return view.findWebElement(By.xpath("//*[contains(text(), 'Quickly')]"));
+    return view.findWebElement(By.xpath("//*[contains(text(), 'quickly')]"));
   }
 
   public static getMessageInputFields(view: WebView) {
@@ -41,6 +42,24 @@ export class GUISelectors {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
   }
 
+  public static getFirstContextProviderDropdownItem(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "context-provider-dropdown-item",
+    );
+  }
+
+  public static getContextItemsPeek(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "context-items-peek");
+  }
+
+  public static getFirstContextItemsPeekItem(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "context-items-peek-item",
+    );
+  }
+
   public static getNthHistoryTableRow(view: WebView, index: number) {
     return SelectorUtils.getElementByDataTestId(view, `history-row-${index}`);
   }
@@ -58,6 +77,31 @@ export class GUISelectors {
     return view.findWebElement(
       By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
     );
+  }
+
+  public static getOnboardingTabButton(view: WebView, title: string) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `onboarding-tab-${title}`,
+    );
+  }
+
+  public static getBestChatApiKeyInput(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "best-chat-api-key-input",
+    );
+  }
+
+  public static getBestAutocompleteApiKeyInput(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "best-autocomplete-api-key-input",
+    );
+  }
+
+  public static getTutorialCard(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(view, "tutorial-card");
   }
 
   public static getThreadMessageByText(view: WebView, text: string) {

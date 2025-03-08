@@ -2,7 +2,7 @@ package com.github.continuedev.continueintellijextension.protocol
 
 import com.github.continuedev.continueintellijextension.*
 
-data class GetControlPlaneSessionInfoParams(val silent: Boolean)
+data class GetControlPlaneSessionInfoParams(val silent: Boolean, val useOnboarding: Boolean)
 
 data class WriteFileParams(
     val path: String,

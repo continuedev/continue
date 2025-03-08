@@ -1,7 +1,11 @@
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { TabTitle } from "../components/OnboardingCardTabs";
-import { setOnboardingCard } from "../../../redux/slices/uiSlice";
+import {
+  setDialogMessage,
+  setOnboardingCard,
+  setShowDialog,
+} from "../../../redux/slices/uiSlice";
 import { OnboardingCardState } from "..";
 import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
@@ -12,7 +16,7 @@ export interface UseOnboardingCard {
   activeTab: OnboardingCardState["activeTab"];
   setActiveTab: (tab: TabTitle) => void;
   open: (tab: TabTitle) => void;
-  close: () => void;
+  close: (isDialog?: boolean) => void;
 }
 
 export function useOnboardingCard(): UseOnboardingCard {
@@ -38,20 +42,16 @@ export function useOnboardingCard(): UseOnboardingCard {
 
   async function open(tab: TabTitle) {
     navigate("/");
-
-    // Used to clear the chat panel before showing onboarding card
-    dispatch(
-      saveCurrentSession({
-        openNewSession: true,
-      }),
-    );
-
     dispatch(setOnboardingCard({ show: true, activeTab: tab }));
   }
 
-  function close() {
+  function close(isDialog = false) {
     setLocalStorage("hasDismissedOnboardingCard", true);
     dispatch(setOnboardingCard({ show: false }));
+    if (isDialog) {
+      dispatch(setDialogMessage(undefined));
+      dispatch(setShowDialog(false));
+    }
   }
 
   function setActiveTab(tab: TabTitle) {

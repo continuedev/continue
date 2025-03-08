@@ -1,3 +1,7 @@
+import crypto from "crypto";
+
+import { ControlPlaneSessionInfo } from "core/control-plane/client";
+import { EXTENSION_NAME, getControlPlaneEnvSync } from "core/control-plane/env";
 import fetch from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -11,28 +15,25 @@ import {
   ExtensionContext,
   ProgressLocation,
   Uri,
-  UriHandler,
   window,
+  workspace,
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
+import { SecretStorage } from "./SecretStorage";
+import { UriEventHandler } from "./uriHandler";
 
 const AUTH_NAME = "Continue";
 
+const enableControlServerBeta = workspace
+  .getConfiguration(EXTENSION_NAME)
+  .get<boolean>("enableContinueForTeams", false);
+const controlPlaneEnv = getControlPlaneEnvSync(
+  true ? "production" : "none",
+  enableControlServerBeta,
+);
+
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
-
-class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
-  public handleUri(uri: Uri) {
-    this.fire(uri);
-  }
-}
-
-import { ControlPlaneSessionInfo } from "core/control-plane/client";
-import { controlPlaneEnv } from "core/control-plane/env";
-
-import crypto from "crypto";
-
-import { SecretStorage } from "./SecretStorage";
 
 // Function to generate a random string of specified length
 function generateRandomString(length: number): string {
@@ -77,13 +78,15 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     string,
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
-  private _uriHandler = new UriEventHandler();
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
 
   private secretStorage: SecretStorage;
 
-  constructor(private readonly context: ExtensionContext) {
+  constructor(
+    private readonly context: ExtensionContext,
+    private readonly _uriHandler: UriEventHandler,
+  ) {
     this._disposable = Disposable.from(
       authentication.registerAuthenticationProvider(
         controlPlaneEnv.AUTH_TYPE,
@@ -163,12 +166,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   get ideRedirectUri() {
-    const publisher = this.context.extension.packageJSON.publisher;
-    const name = this.context.extension.packageJSON.name;
-    return `${env.uriScheme}://${publisher}.${name}`;
-  }
-
-  get redirectUri() {
     if (
       env.uriScheme === "vscode-insiders" ||
       env.uriScheme === "vscode" ||
@@ -177,6 +174,18 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       // We redirect to a page that says "you can close this page", and that page finishes the redirect
       const url = new URL(controlPlaneEnv.APP_URL);
       url.pathname = `/auth/${env.uriScheme}-redirect`;
+      return url.toString();
+    }
+    const publisher = this.context.extension.packageJSON.publisher;
+    const name = this.context.extension.packageJSON.name;
+    return `${env.uriScheme}://${publisher}.${name}`;
+  }
+
+  public static useOnboardingUri: boolean = false;
+  get redirectUri() {
+    if (WorkOsAuthProvider.useOnboardingUri) {
+      const url = new URL(controlPlaneEnv.APP_URL);
+      url.pathname = `/onboarding/redirect/${env.uriScheme}`;
       return url.toString();
     }
     return this.ideRedirectUri;
@@ -407,8 +416,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         try {
           return await Promise.race([
             codeExchangePromise.promise,
-            new Promise<string>((_, reject) =>
-              setTimeout(() => reject("Cancelled"), 15 * 60 * 1_000),
+            new Promise<string>(
+              (_, reject) =>
+                setTimeout(() => reject("Cancelled"), 60 * 60 * 1_000), // 60min timeout
             ),
             promiseFromEvent<any, any>(
               token.onCancellationRequested,
@@ -488,20 +498,29 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
 export async function getControlPlaneSessionInfo(
   silent: boolean,
+  useOnboarding: boolean,
 ): Promise<ControlPlaneSessionInfo | undefined> {
-  const session = await authentication.getSession(
-    controlPlaneEnv.AUTH_TYPE,
-    [],
-    silent ? { silent: true } : { createIfNone: true },
-  );
-  if (!session) {
-    return undefined;
+  try {
+    if (useOnboarding) {
+      WorkOsAuthProvider.useOnboardingUri = true;
+    }
+
+    const session = await authentication.getSession(
+      controlPlaneEnv.AUTH_TYPE,
+      [],
+      silent ? { silent: true } : { createIfNone: true },
+    );
+    if (!session) {
+      return undefined;
+    }
+    return {
+      accessToken: session.accessToken,
+      account: {
+        id: session.account.id,
+        label: session.account.label,
+      },
+    };
+  } finally {
+    WorkOsAuthProvider.useOnboardingUri = false;
   }
-  return {
-    accessToken: session.accessToken,
-    account: {
-      id: session.account.id,
-      label: session.account.label,
-    },
-  };
 }

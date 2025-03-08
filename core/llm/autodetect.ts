@@ -1,4 +1,9 @@
-import { ModelCapability, TemplateType } from "../index.js";
+import {
+  ChatMessage,
+  ModelCapability,
+  ModelDescription,
+  TemplateType,
+} from "../index.js";
 
 import {
   anthropicTemplateMessages,
@@ -52,6 +57,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "sambanova",
   "vertexai",
   "watsonx",
+  "nebius",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: string[] = [
@@ -65,9 +71,11 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "sagemaker",
   "continue-proxy",
   "openrouter",
+  "sambanova",
   "vertexai",
   "azure",
   "scaleway",
+  "nebius",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -85,14 +93,18 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "haiku",
   "pixtral",
   "llama3.2",
+  "llama-3.2",
 ];
 
-function modelSupportsTools(modelName: string, provider: string) {
-  const providerSupport = PROVIDER_TOOL_SUPPORT[provider];
+function modelSupportsTools(modelDescription: ModelDescription) {
+  if (modelDescription.capabilities?.tools !== undefined) {
+    return modelDescription.capabilities.tools;
+  }
+  const providerSupport = PROVIDER_TOOL_SUPPORT[modelDescription.provider];
   if (!providerSupport) {
     return false;
   }
-  return providerSupport(modelName) ?? false;
+  return providerSupport(modelDescription.model) ?? false;
 }
 
 function modelSupportsImages(
@@ -257,7 +269,10 @@ function autodetectTemplateFunction(
   const templateType = explicitTemplate ?? autodetectTemplateType(model);
 
   if (templateType) {
-    const mapping: Record<TemplateType, any> = {
+    const mapping: Record<
+      TemplateType,
+      null | ((msg: ChatMessage[]) => string)
+    > = {
       llama2: llama2TemplateMessages,
       alpaca: templateAlpacaMessages,
       phi2: phi2TemplateMessages,

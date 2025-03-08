@@ -44,8 +44,29 @@
           ]
         }
       }
+    },
+    {
+      "provider": "mock",
+      "title": "SYSTEM MESSAGE MOCK LLM",
+      "model": "claude-3-5-sonnet-latest",
+      "requestOptions": {
+        "extraBodyProperties": {
+          "chatStream": [["REPEAT_SYSTEM_MSG"]]
+        }
+      }
+    },
+    {
+      "provider": "mock",
+      "title": "LAST MESSAGE MOCK LLM",
+      "model": "claude-3-5-sonnet-latest",
+      "requestOptions": {
+        "extraBodyProperties": {
+          "chatStream": [["REPEAT_LAST_MSG"]]
+        }
+      }
     }
   ],
+  "systemMessage": "TEST_SYS_MSG",
   "analytics": {
     "provider": "continue-proxy"
   },
@@ -69,6 +90,9 @@
     },
     {
       "name": "folder"
+    },
+    {
+      "name": "terminal"
     }
   ],
   "docs": []

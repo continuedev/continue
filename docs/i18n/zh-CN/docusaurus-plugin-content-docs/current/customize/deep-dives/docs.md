@@ -58,7 +58,6 @@ toc_max_heading_level: 5
     {
     "title": "Continue",
     "startUrl": "https://docs.continue.dev/intro",
-    "rootUrl": "https://docs.continue.dev",
     "faviconUrl": "https://docs.continue.dev/favicon.ico",
   }
 ]
@@ -66,7 +65,7 @@ toc_max_heading_level: 5
 
 - `title`: 文档网站的名称，用来在 UI 中进行识别。
 - `startUrl`: 索引进程开始的 URL 。
-- `rootUrl`: 文档网站的基本 URL ，用来确定哪个页面索引。
+<!-- - `rootUrl`: 文档网站的基本 URL ，用来确定哪个页面索引。 -->
 - `faviconUrl`: 网站 favicon 的 URL ，用来在 UI 中进行视觉识别。
 
 ## 使用 `useChromiumForDocsCrawling` 爬取动态生成的网站

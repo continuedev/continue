@@ -220,16 +220,8 @@ declare global {
   export interface SiteIndexingConfig {
     title: string;
     startUrl: string;
-    rootUrl?: string;
     maxDepth?: number;
     faviconUrl?: string;
-  }
-  
-  export interface SiteIndexingConfig {
-    startUrl: string;
-    rootUrl?: string;
-    title: string;
-    maxDepth?: number;
   }
   
   export interface IContextProvider {
@@ -580,7 +572,6 @@ declare global {
     userToken: string;
     enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
-    enableDebugLogs: boolean;
   }
   
   export interface IDE {
@@ -910,7 +901,6 @@ declare global {
   
   export interface TabAutocompleteOptions {
     disable: boolean;
-    useFileSuffix: boolean;
     maxPromptTokens: number;
     debounceDelay: number;
     maxSuffixPercentage: number;
@@ -955,7 +945,6 @@ declare global {
     fontSize?: number;
     displayRawMarkdown?: boolean;
     showChatScrollbar?: boolean;
-    getChatTitles?: boolean;
     codeWrap?: boolean;
   }
   
@@ -967,7 +956,7 @@ declare global {
     fixGrammar?: string;
   }
   
-  interface ModelRoles {
+  interface ExperimentalModelRoles {
     inlineEdit?: string;
     applyCodeBlock?: string;
     repoMapFileSelection?: string;
@@ -1035,7 +1024,7 @@ declare global {
   
   interface ExperimentalConfig {
     contextMenuPrompts?: ContextMenuConfig;
-    modelRoles?: ModelRoles;
+    modelRoles?: ExperimentalModelRoles;
     defaultContext?: DefaultContextProvider[];
     promptPath?: string;
   

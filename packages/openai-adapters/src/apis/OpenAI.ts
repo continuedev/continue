@@ -4,6 +4,7 @@ import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
+  ChatCompletionCreateParams,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
   Completion,
@@ -34,22 +35,46 @@ export class OpenAIApi implements BaseLlmApi {
     });
   }
 
+  modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
+    // o-series models
+    if (body.model.startsWith("o")) {
+      // a) use max_completion_tokens instead of max_tokens
+      body.max_completion_tokens = body.max_tokens;
+      body.max_tokens = undefined;
+
+      // b) use "developer" message role rather than "system"
+      body.messages = body.messages.map((message) => {
+        if (message.role === "system") {
+          return { ...message, role: "developer" } as any;
+        }
+        return message;
+      });
+    }
+    return body;
+  }
+
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    const response = await this.openai.chat.completions.create(body, {
-      signal,
-    });
+    const response = await this.openai.chat.completions.create(
+      this.modifyChatBody(body),
+      {
+        signal,
+      },
+    );
     return response;
   }
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const response = await this.openai.chat.completions.create(body, {
-      signal,
-    });
+    const response = await this.openai.chat.completions.create(
+      this.modifyChatBody(body),
+      {
+        signal,
+      },
+    );
     for await (const result of response) {
       yield result;
     }

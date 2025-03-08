@@ -30,6 +30,12 @@ class Anthropic extends BaseLLM {
         description: tool.function.description,
         input_schema: tool.function.parameters,
       })),
+      tool_choice: options.toolChoice
+        ? {
+            type: "tool",
+            name: options.toolChoice.function.name,
+          }
+        : undefined,
     };
 
     return finalOptions;
@@ -139,6 +145,12 @@ class Anthropic extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    if (!this.apiKey || this.apiKey === "") {
+      throw new Error(
+        "Request not sent. You have an Anthropic model configured in your config.json, but the API key is not set.",
+      );
+    }
+
     const shouldCacheSystemMessage =
       !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const systemMessage: string = stripImages(

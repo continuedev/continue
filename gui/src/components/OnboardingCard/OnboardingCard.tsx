@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { CloseButton, defaultBorderRadius, vscInputBackground } from "../";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { useOnboardingCard } from "./hooks/useOnboardingCard";
+import { useAppSelector } from "../../redux/hooks";
 
 const StyledCard = styled.div`
   margin: auto;
@@ -20,8 +21,13 @@ export interface OnboardingCardState {
   activeTab?: TabTitle;
 }
 
-export function OnboardingCard() {
+interface OnboardingCardProps {
+  isDialog?: boolean;
+}
+
+export function OnboardingCard({ isDialog }: OnboardingCardProps) {
   const onboardingCard = useOnboardingCard();
+  const config = useAppSelector((store) => store.config.config);
 
   function renderTabContent() {
     switch (onboardingCard.activeTab) {
@@ -49,9 +55,11 @@ export function OnboardingCard() {
         activeTab={onboardingCard.activeTab || "Best"}
         onTabClick={onboardingCard.setActiveTab}
       />
-      <CloseButton onClick={onboardingCard.close}>
-        <XMarkIcon className="mt-1.5 hidden h-5 w-5 hover:brightness-125 sm:flex" />
-      </CloseButton>
+      {!isDialog && !!config.models.length && (
+        <CloseButton onClick={() => onboardingCard.close()}>
+          <XMarkIcon className="mt-1.5 hidden h-5 w-5 hover:brightness-125 sm:flex" />
+        </CloseButton>
+      )}
       <div className="content py-4">{renderTabContent()}</div>
     </StyledCard>
   );

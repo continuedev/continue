@@ -27,13 +27,13 @@ function OllamaModelDownload({
 
   return (
     <div className="flex flex-col">
-      <p className="mb-2 text-lg font-bold leading-tight">{title}</p>
+      <p className="mb-1 mt-4 text-base font-semibold sm:text-lg">{title}</p>
       {hasDownloaded ? (
         <OllamaCompletedStep text={command} />
       ) : (
         <>
           <StyledActionButton data-tooltip-id={id} onClick={onClick}>
-            <p className="truncate font-mono text-xs">{command}</p>
+            <p className="lines m-0 px-0 py-2 font-mono text-xs">{command}</p>
             <CommandLineIcon width={24} height={24} />
           </StyledActionButton>
 

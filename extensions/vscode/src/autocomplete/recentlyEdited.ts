@@ -46,6 +46,11 @@ export class RecentlyEditedTracker {
   private async insertRange(
     editedRange: Omit<VsCodeRecentlyEditedRange, "lines" | "symbols">,
   ): Promise<void> {
+
+    if (editedRange.uri.scheme !== "file") {
+      return;
+    }
+
     // Check for overlap with any existing ranges
     for (let i = 0; i < this.recentlyEditedRanges.length; i++) {
       let range = this.recentlyEditedRanges[i];

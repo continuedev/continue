@@ -1,9 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import StreamErrorDialog from "../../pages/gui/StreamError";
 import { clearLastEmptyResponse, setInactive } from "../slices/sessionSlice";
+import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
 import { ThunkApiType } from "../store";
 import { saveCurrentSession } from "./session";
-import { setDialogMessage, setShowDialog } from "../slices/uiSlice";
-import StreamErrorDialog from "../../pages/gui/StreamError";
 
 export const streamThunkWrapper = createAsyncThunk<
   void,
@@ -23,6 +23,7 @@ export const streamThunkWrapper = createAsyncThunk<
       await dispatch(
         saveCurrentSession({
           openNewSession: false,
+          generateTitle: true,
         }),
       );
     }

@@ -54,16 +54,14 @@ fun Editor.addInlayElement(
 class AutocompleteService(private val project: Project) {
     var pendingCompletion: PendingCompletion? = null
     private val autocompleteLookupListener = project.service<AutocompleteLookupListener>()
-    private var widget: AutocompleteSpinnerWidget? = null
+    private val widget: AutocompleteSpinnerWidget? by lazy {
+        WindowManager.getInstance().getStatusBar(project)
+            ?.getWidget(AutocompleteSpinnerWidget.ID) as? AutocompleteSpinnerWidget
+    }
 
     // To avoid triggering another completion on partial acceptance,
     // we need to keep track of whether the last change was a partial accept
     var lastChangeWasPartialAccept = false
-
-    init {
-        val statusBar = WindowManager.getInstance().getStatusBar(project)
-        widget = statusBar.getWidget("AutocompleteSpinnerWidget") as? AutocompleteSpinnerWidget
-    }
 
     fun triggerCompletion(editor: Editor) {
         val settings =
@@ -80,12 +78,13 @@ class AutocompleteService(private val project: Project) {
         val completionId = uuid()
         val offset = editor.caretModel.primaryCaret.offset
         pendingCompletion = PendingCompletion(editor, offset, completionId, null)
-        widget?.setLoading(true)
 
         // Request a completion from the core
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
 
         val uri = virtualFile?.toUriOrNull() ?: return
+
+        widget?.setLoading(true)
 
         val line = editor.caretModel.primaryCaret.logicalPosition.line
         val column = editor.caretModel.primaryCaret.logicalPosition.column
@@ -106,9 +105,13 @@ class AutocompleteService(private val project: Project) {
             input,
             null,
             ({ response ->
-                widget?.setLoading(false)
+                if (pendingCompletion == null || pendingCompletion?.completionId == completionId) {
+                    widget?.setLoading(false)
+                }
 
-                val completions = response as List<*>
+                val responseObject = response as Map<*, *>
+                val completions = responseObject["content"] as List<*>
+
                 if (completions.isNotEmpty()) {
                     val completion = completions[0].toString()
                     val finalTextToInsert = deduplicateCompletion(editor, offset, completion)
@@ -297,12 +300,9 @@ class AutocompleteService(private val project: Project) {
     }
 
     private fun isInjectedFile(editor: Editor): Boolean {
-        val psiFile = runReadAction { PsiDocumentManager.getInstance(project).getPsiFile(editor.document) }
-        if (psiFile == null) {
-            return false
+        return runReadAction {
+            PsiDocumentManager.getInstance(project).getPsiFile(editor.document)?.isInjectedText() ?: false
         }
-        val response = runReadAction { psiFile.isInjectedText() }
-        return response
     }
 
     fun hideCompletions(editor: Editor) {

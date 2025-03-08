@@ -16,6 +16,14 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["*", "Content-Type", "Authorization"],
+      credentials: true,
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",

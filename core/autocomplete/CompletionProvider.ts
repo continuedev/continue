@@ -134,6 +134,13 @@ export class CompletionProvider {
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
+      // Create abort signal if not given
+      if (!token) {
+        const controller = this.loggingService.createAbortController(
+          input.completionId,
+        );
+        token = controller.signal;
+      }
       const startTime = Date.now();
       const options = await this._getAutocompleteOptions();
 
@@ -156,14 +163,6 @@ export class CompletionProvider {
 
       if (await shouldPrefilter(helper, this.ide)) {
         return undefined;
-      }
-
-      // Create abort signal if not given
-      if (!token) {
-        const controller = this.loggingService.createAbortController(
-          input.completionId,
-        );
-        token = controller.signal;
       }
 
       const [snippetPayload, workspaceDirs] = await Promise.all([
@@ -246,6 +245,7 @@ export class CompletionProvider {
         completionOptions,
         cacheHit,
         filepath: helper.filepath,
+        numLines: completion.split("\n").length,
         completionId: helper.input.completionId,
         gitRepo: await this.ide.getRepoName(helper.filepath),
         uniqueId: await this.ide.getUniqueId(),

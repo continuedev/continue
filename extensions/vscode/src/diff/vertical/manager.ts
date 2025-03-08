@@ -1,4 +1,4 @@
-import { DiffLine } from "core";
+import { ChatMessage, DiffLine } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
@@ -9,6 +9,7 @@ import * as vscode from "vscode";
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
+import { handleLLMError } from "../../util/errorHandling";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -230,7 +231,7 @@ export class VerticalDiffManager {
     );
 
     if (!diffHandler) {
-      console.warn("Issue occured while creating new vertical diff handler");
+      console.warn("Issue occurred while creating new vertical diff handler");
       return;
     }
 
@@ -255,7 +256,9 @@ export class VerticalDiffManager {
       this.enableDocumentChangeListener();
     } catch (e) {
       this.disableDocumentChangeListener();
-      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      if (!handleLLMError(e)) {
+        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      }
     } finally {
       vscode.commands.executeCommand(
         "setContext",
@@ -272,6 +275,7 @@ export class VerticalDiffManager {
     onlyOneInsertion?: boolean,
     quickEdit?: string,
     range?: vscode.Range,
+    newCode?: string,
   ): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
@@ -352,7 +356,7 @@ export class VerticalDiffManager {
     );
 
     if (!diffHandler) {
-      console.warn("Issue occured while creating new vertical diff handler");
+      console.warn("Issue occurred while creating new vertical diff handler");
       return undefined;
     }
 
@@ -386,6 +390,18 @@ export class VerticalDiffManager {
       llm.model,
     );
 
+    let overridePrompt: ChatMessage[] | undefined;
+    if (llm.promptTemplates?.apply) {
+      const rendered = llm.renderPromptTemplate(llm.promptTemplates.apply, [], {
+        original_code: rangeContent,
+        new_code: newCode ?? "",
+      });
+      overridePrompt =
+        typeof rendered === "string"
+          ? [{ role: "user", content: rendered }]
+          : rendered;
+    }
+
     if (editor.selection) {
       // Unselect the range
       editor.selection = new vscode.Selection(
@@ -413,7 +429,8 @@ export class VerticalDiffManager {
           llm,
           input,
           getMarkdownLanguageTagForFile(fileUri),
-          onlyOneInsertion,
+          !!onlyOneInsertion,
+          overridePrompt,
         );
 
         for await (const line of stream) {
@@ -432,7 +449,9 @@ export class VerticalDiffManager {
       return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {
       this.disableDocumentChangeListener();
-      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      if (!handleLLMError(e)) {
+        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      }
       return undefined;
     } finally {
       vscode.commands.executeCommand(

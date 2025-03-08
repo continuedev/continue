@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, PromptLog } from "core";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
@@ -28,7 +28,9 @@ export const streamNormalInput = createAsyncThunk<
   }
 
   const includeTools =
-    useTools && modelSupportsTools(defaultModel.model, defaultModel.provider);
+    useTools &&
+    modelSupportsTools(defaultModel) &&
+    state.session.mode === "chat";
 
   // Send request
   const gen = extra.ideMessenger.llmStreamChat(
@@ -52,14 +54,41 @@ export const streamNormalInput = createAsyncThunk<
       break;
     }
 
-    const updates = next.value;
-    dispatch(streamUpdate(updates));
+    dispatch(streamUpdate(next.value));
     next = await gen.next();
   }
 
   // Attach prompt log
-  if (next.done) {
+  if (next.done && next.value) {
     dispatch(addPromptCompletionPair([next.value]));
+
+    try {
+      if (state.session.mode === "chat") {
+        extra.ideMessenger.post("devdata/log", {
+          name: "chatInteraction",
+          data: {
+            prompt: next.value.prompt,
+            completion: next.value.completion,
+            modelProvider: defaultModel.provider,
+            modelTitle: defaultModel.title,
+            sessionId: state.session.id,
+          },
+        });
+      }
+      // else if (state.session.mode === "edit") {
+      //   extra.ideMessenger.post("devdata/log", {
+      //     name: "editInteraction",
+      //     data: {
+      //       prompt: next.value.prompt,
+      //       completion: next.value.completion,
+      //       modelProvider: defaultModel.provider,
+      //       modelTitle: defaultModel.title,
+      //     },
+      //   });
+      // }
+    } catch (e) {
+      console.error("Failed to send dev data interaction log", e);
+    }
   }
 
   // If it's a tool call that is automatically accepted, we should call it
@@ -71,7 +100,8 @@ export const streamNormalInput = createAsyncThunk<
       toolSettings[toolCallState.toolCall.function.name] ===
       "allowedWithoutPermission"
     ) {
-      await dispatch(callTool());
+      const response = await dispatch(callTool());
+      unwrapResult(response);
     }
   }
 });

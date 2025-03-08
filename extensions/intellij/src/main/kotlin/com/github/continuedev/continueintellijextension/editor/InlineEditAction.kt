@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
+import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -28,7 +29,6 @@ import java.awt.geom.AffineTransform
 import java.awt.geom.Path2D
 import java.awt.geom.RoundRectangle2D
 import javax.swing.*
-import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.event.ListDataListener
@@ -72,8 +72,8 @@ fun makePanel(
     onReject: () -> Unit
 ): JPanel {
     val topPanel =
-        ShadowPanel(MigLayout("wrap 1, insets 2 ${leftInset} 2 2, gap 0!")).apply {
-            background = JBColor(0x20888888.toInt(), 0x20888888.toInt())
+        ShadowPanel(MigLayout("wrap 1, insets 2 $leftInset 2 2, gap 0!")).apply {
+            background = JBColor(0x20888888, 0x20888888)
             isOpaque = false
         }
 
@@ -128,12 +128,19 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     // Get list of model titles
     val continuePluginService = project.service<ContinuePluginService>()
     val modelTitles = mutableListOf<String>()
+
     continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-        val config = response as Map<String, Any>
-        val models = (config["config"] as Map<String, Any>)["models"] as List<Map<String, Any>>
+        val content = (response as Map<String, Any>)["content"] as Map<String, Any>
+        val result = content["result"] as Map<String, Any>
+        val config = result["config"] as Map<String, Any>
+        val models = config["models"] as List<Map<String, Any>>
         modelTitles.addAll(models.map { it["title"] as String })
     }
-    val maxWaitTime = 200
+
+    // This is a hacky way to not complicate getting model titles with coroutines
+    // 1500 feels like way upper limit of "would be weird if panel showed up after that long"
+    // And should always allow enough time to load config
+    val maxWaitTime = 1500
     val startTime = System.currentTimeMillis()
     while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
         Thread.sleep(20)
@@ -163,13 +170,13 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val prefix = editor.document.getText(TextRange(0, startOffset))
     val highlighted = editor.document.getText(TextRange(startOffset, endOffset))
     val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
-    val lineNumber = max(0, startLineNumber - 1)
+    val lineNumber = if (startLineNumber == 0) 0 else max(0, startLineNumber - 1)
 
     // Un-highlight the selected text
     selectionModel.removeSelection()
 
     // Get indentation width in pixels
-    val indentationLineNum = lineNumber + 1
+    val indentationLineNum = if (startLineNumber == 0) 0 else lineNumber + 1
     val lineStart = editor.document.getLineStartOffset(indentationLineNum)
     val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
     val text = editor.document.getText(TextRange(lineStart, lineEnd))
@@ -369,7 +376,7 @@ class CustomPanel(
         val closeIcon = IconLoader.getIcon("/icons/close.svg", javaClass)
         return JLabel(closeIcon).apply {
             background = Color(0, 0, 0, 0)
-            border = EmptyBorder(2, 6, 2, 0)
+            border = JBUI.Borders.empty(2, 6, 2, 0)
             toolTipText = "`esc` to cancel"
             isOpaque = false
             addMouseListener(
@@ -401,7 +408,7 @@ class CustomPanel(
                     background = defaultBackground
                     foreground = Color(128, 128, 128, 200)
                     font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 12)
-                    border = EmptyBorder(8, 8, 8, 8)
+                    border = JBUI.Borders.empty(8)
                     isOpaque = false
                     isEditable = false
                     cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
@@ -418,7 +425,7 @@ class CustomPanel(
                             val component =
                                 super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
                             if (component is JLabel) {
-                                component.border = EmptyBorder(4, 6, 4, 6)
+                                component.border = JBUI.Borders.empty(4, 6)
                             }
                             return component
                         }
@@ -427,7 +434,7 @@ class CustomPanel(
                     }
 
                     selectedIndex =
-                        if(itemCount == 0) -1 else continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
+                        if (itemCount == 0) -1 else continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
                             if (modelTitles.isEmpty()) -1
                             else {
                                 val index = modelTitles.indexOf(it)
@@ -446,9 +453,9 @@ class CustomPanel(
             val rightButton =
                 CustomButton("⏎  Enter") { onEnter() }
                     .apply {
-                        background = JBColor(0x999998.toInt(), 0x999998.toInt())
-                        foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
-                        border = EmptyBorder(2, 6, 2, 6)
+                        background = globalScheme.defaultForeground
+                        foreground = globalScheme.defaultBackground
+                        border = JBUI.Borders.empty(2, 6)
                     }
 
             val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -456,7 +463,7 @@ class CustomPanel(
                 add(rightButton, "align right")
             }
 
-            border = EmptyBorder(0, 0, 16, 12)
+            border = JBUI.Borders.empty(0, 0, 16, 12)
             isOpaque = false
 
             add(dropdown, "align left")
@@ -472,7 +479,7 @@ class CustomPanel(
             val progressBar = JProgressBar().apply { isIndeterminate = true }
 
             add(progressBar, BorderLayout.CENTER)
-            border = BorderFactory.createEmptyBorder(0, 0, 16, 12)
+            border = JBUI.Borders.empty(0, 0, 16, 12)
         }
 
     private val subPanelC: JPanel =
@@ -481,21 +488,19 @@ class CustomPanel(
                 JLabel("Type to re-prompt").apply {
                     foreground = Color(156, 163, 175) // text-gray-400
                     font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
-                    border = EmptyBorder(0, 4, 0, 0)
+                    border = JBUI.Borders.emptyLeft(4)
                 }
 
             val leftButton =
-                CustomButton("Reject All (${getMetaKeyLabel()}⇧⌫)") { onReject() }
+                CustomButton("Reject All (${getMetaKeyLabel()}${getShiftKeyLabel()}⌫)") { onReject() }
                     .apply {
-                        background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
-                        foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
+                        background = JBColor(0x30FF0000, 0x30FF0000)
                     }
 
             val rightButton =
-                CustomButton("Accept All (${getMetaKeyLabel()}⇧⏎)") { onAccept() }
+                CustomButton("Accept All (${getMetaKeyLabel()}${getShiftKeyLabel()}⏎)") { onAccept() }
                     .apply {
-                        background = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
-                        foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
+                        background = JBColor(0x3000FF00, 0x3000FF00)
                     }
 
             val rightPanel =
@@ -503,12 +508,12 @@ class CustomPanel(
                     isOpaque = false
                     add(leftButton, "align right")
                     add(rightButton, "align right")
-                    border = EmptyBorder(0, 0, 0, 0)
+                    border = JBUI.Borders.empty()
                 }
 
             add(leftLabel, "align left")
             add(rightPanel, "align right")
-            border = BorderFactory.createEmptyBorder(0, 0, 16, 12)
+            border = JBUI.Borders.empty(0, 0, 16, 12)
             isOpaque = false
         }
 
@@ -620,7 +625,7 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
             })
 
         font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
-        border = EmptyBorder(2, 6, 2, 6)
+        border = JBUI.Borders.empty(2, 6)
     }
 
     override fun paintComponent(g: Graphics) {
@@ -689,7 +694,7 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
         }
 
     override fun getInsets(): Insets {
-        return JBUI.insets(0, 6, 0, 0)
+        return JBUI.insetsLeft(6)
     }
 
     override fun installUI(c: JComponent?) {

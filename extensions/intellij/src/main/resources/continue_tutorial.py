@@ -7,11 +7,18 @@
                                  Chat, Edit, and Autocomplete tutorial
 """
 
+# ————————————————————————————————————————————————     Setup      ————————————————————————————————————————————————- 
 
-# —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— #
+# First, open the Continue sidebar by pressing [Cmd + L] or clicking the Continue icon.
+
+# See an example at https://docs.continue.dev/getting-started/install
+
+# Follow the instructions in the sidebar to set up a Chat/Edit modela and an Autocomplete model.
+
+# —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— 
 
 ## Highlight the code below
-## Press [Cmd/Ctrl + J] to add to Chat
+## Press [Cmd + L] to add to Chat
 ## Try asking Continue "what sorting algorithm is this?"
 def sorting_algorithm(x):
     for i in range(len(x)):
@@ -20,11 +27,13 @@ def sorting_algorithm(x):
                 x[j], x[j + 1] = x[j + 1], x[j]
     return x
 
+# [Cmd + L] always starts a new chat. Now, try the same thing using [Cmd + Shift + L].
+# This will add the code into the current chat
 
-# —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— #
+# —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— 
 
 ## Highlight the code below
-## Press [Cmd/Ctrl + I] to Edit
+## Press [Cmd + I] to Edit
 ## Try asking Continue to "make this more readable"
 def sorting_algorithm(x):
     for i in range(len(x)):
@@ -33,12 +42,16 @@ def sorting_algorithm(x):
                 x[j], x[j + 1] = x[j + 1], x[j]
     return x
 
-# —————————————————————————————————————————————     Autocomplete     —————————————————————————————————————————————— #
+# —————————————————————————————————————————————     Autocomplete     —————————————————————————————————————————————— 
 
-## Place cursor after `sorting_algorithm...` below and press [Enter]
+## Place cursor after `sorting_algorithm:` below and press [Enter]
 ## Press [Tab] to accept the Autocomplete suggestion
 
-# Basic assertion for sorting_algorithm...
+# Basic assertion for sorting_algorithm:
 
 
-# ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ——————————————————— #
+
+
+# —————————————————————————————————————————————-     Learn More     -—————————————————————————————————————————————— 
+
+# Visit the Continue Docs at https://docs.continue.dev/getting-started/overview

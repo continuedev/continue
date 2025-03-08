@@ -207,7 +207,7 @@ World
 
   it("should handle strings with only whitespace", () => {
     const result = dedent`
-    
+
     `;
     expect(result).toBe("");
   });
@@ -249,9 +249,9 @@ World
 
   it("should handle a string with only one non-empty line", () => {
     const result = dedent`
-      
+
       Hello World!
-      
+
     `;
     expect(result).toBe("Hello World!");
   });
@@ -373,9 +373,14 @@ describe("getMarkdownLanguageTagForFile", () => {
     expect(getMarkdownLanguageTagForFile("test.py")).toBe("python");
     expect(getMarkdownLanguageTagForFile("test.tsx")).toBe("tsx");
     expect(getMarkdownLanguageTagForFile("test.java")).toBe("java");
+    expect(getMarkdownLanguageTagForFile("test.class")).toBe("java");
     expect(getMarkdownLanguageTagForFile("test.md")).toBe("markdown");
     expect(getMarkdownLanguageTagForFile("test.sh")).toBe("shell");
     expect(getMarkdownLanguageTagForFile("test.sql")).toBe("sql");
+  });
+
+  it("should sanitize ranges from the extension", () => {
+    expect(getMarkdownLanguageTagForFile("test.java (1-5)")).toBe("java");
   });
 
   it("should return the extension if not in the known list", () => {

@@ -10,11 +10,11 @@ import { defaultConfig } from "./default";
 describe.skip("Test the ConfigHandler and E2E config loading", () => {
   test("should show only local profile", () => {
     const profiles = testConfigHandler.listProfiles();
-    expect(profiles.length).toBe(1);
-    expect(profiles[0].id).toBe("local");
+    expect(profiles?.length).toBe(1);
+    expect(profiles?.[0].id).toBe("local");
 
     const currentProfile = testConfigHandler.currentProfile;
-    expect(currentProfile.profileId).toBe("local");
+    expect(currentProfile?.profileDescription.id).toBe("local");
   });
 
   test("should load the default config successfully", async () => {

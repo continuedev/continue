@@ -30,6 +30,7 @@ const AdvancedPage = () => {
           <p className="text-xl">
             Counter: <span className="font-bold">{counter}</span>
           </p>
+
           <button
             className="mt-2 rounded bg-green-500 px-4 py-2 text-white"
             onClick={() => setCounter(counter + 1)}

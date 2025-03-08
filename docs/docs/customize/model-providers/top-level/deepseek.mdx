@@ -1,0 +1,83 @@
+---
+title: DeepSeek
+slug: ../deepseek
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+:::info
+You can get an API key from the [DeepSeek console](https://www.deepseek.com/).
+:::
+
+## Chat model
+
+We recommend configuring **DeepSeek Chat** as your chat model.
+
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="config.yaml"
+   models:
+     - name: DeepSeek Chat
+       provider: deepseek
+       model: deepseek-chat
+       apiKey: <YOUR_DEEPSEEK_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+   ```json title="config.json"
+   {
+     "models": [
+       {
+         "title": "DeepSeek Chat",
+         "provider": "deepseek",
+         "model": "deepseek-chat",
+         "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+       }
+     ]
+   }
+   ```
+   </TabItem>
+</Tabs>
+
+## Autocomplete model
+
+We recommend configuring **DeepSeek Coder** as your autocomplete model.
+
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+    ```yaml title="config.yaml"
+    models:
+      - name: DeepSeek Coder
+        provider: deepseek
+        model: deepseek-coder
+        apiKey: <YOUR_DEEPSEEK_API_KEY>
+        roles:
+          - autocomplete
+    ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+    ```json title="config.json"
+    {
+      "tabAutocompleteModel": {
+        "title": "DeepSeek Coder",
+        "provider": "deepseek",
+        "model": "deepseek-coder",
+        "apiKey": "<YOUR_DEEPSEEK_API_KEY>"
+      }
+    }
+    ```
+   </TabItem>
+</Tabs>
+
+## Embeddings model
+
+DeepSeek currently does not offer any embeddings models.
+
+[Click here](../../model-roles/embeddings.mdx) to see a list of embeddings model providers.
+
+## Reranking model
+
+DeepSeek currently does not offer any reranking models.
+
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.

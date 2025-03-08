@@ -116,19 +116,23 @@ export function getLastNUriRelativePathParts(
 }
 
 export function joinPathsToUri(uri: string, ...pathSegments: string[]) {
-  const components = URI.parse(uri);
+  let baseUri = uri;
+  if (baseUri.at(-1) !== "/") {
+    baseUri += "/";
+  }
   const segments = pathSegments.map((segment) => pathToUriPathSegment(segment));
-  components.path = `${components.path}/${segments.join("/")}`;
-  return URI.serialize(components);
+  return URI.resolve(baseUri, segments.join("/"));
 }
 
 export function joinEncodedUriPathSegmentToUri(
   uri: string,
   pathSegment: string,
 ) {
-  const components = URI.parse(uri);
-  components.path = `${components.path}/${pathSegment}`;
-  return URI.serialize(components);
+  let baseUri = uri;
+  if (baseUri.at(-1) !== "/") {
+    baseUri += "/";
+  }
+  return URI.resolve(baseUri, pathSegment);
 }
 
 export function getShortestUniqueRelativeUriPaths(
@@ -176,4 +180,20 @@ export function getLastNPathParts(filepath: string, n: number): string {
     return "";
   }
   return filepath.split(/[\\/]/).slice(-n).join("/");
+}
+
+export function getUriDescription(uri: string, dirUriCandidates: string[]) {
+  const { relativePathOrBasename, foundInDir } = findUriInDirs(
+    uri,
+    dirUriCandidates,
+  );
+  const baseName = getUriPathBasename(uri);
+  const last2Parts = getLastNUriRelativePathParts(dirUriCandidates, uri, 2);
+  return {
+    uri,
+    relativePathOrBasename,
+    foundInDir,
+    last2Parts,
+    baseName,
+  };
 }

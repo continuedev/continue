@@ -7,6 +7,12 @@ name: JetBrains Release
 on:
   release:
     types: [prereleased]
+  workflow_dispatch:
+    inputs:
+      publish_build:
+        description: "Whether or not to publish the built extension to the JetBrains marketplace"
+        required: true
+        default: false
 
 defaults:
   run:
@@ -25,7 +31,7 @@ jobs:
       - id: check
         working-directory: .
         run: |
-          if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
+          if [[ "${{ github.event.release.tag_name }}" == v1.0.*-jetbrains ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
@@ -34,7 +40,7 @@ jobs:
   # Prepare and publish the plugin to JetBrains Marketplace repository
   build:
     needs: check_release_name
-    if: needs.check_release_name.outputs.should_run == 'true'
+    if: needs.check_release_name.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
     name: Build Plugin
     runs-on: macos-latest
     permissions:
@@ -175,6 +181,7 @@ jobs:
 
       # Publish the plugin to JetBrains Marketplace
       - name: Publish EAP Plugin
+        if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -184,6 +191,7 @@ jobs:
         run: ./gradlew publishPlugin
 
       - name: Publish Stable Plugin
+        if: github.event_name == 'release' || github.event.inputs.publish_build == 'true'
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
@@ -232,6 +240,12 @@ jobs:
         with:
           name: continue-binary-win32-x64
           path: ./binary/bin/win32-x64/
+
+      - name: Upload artifact (win32-arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-win32-arm64
+          path: ./binary/bin/win32-arm64/
 
       - name: Upload artifact (linux-arm64)
         uses: actions/upload-artifact@v4

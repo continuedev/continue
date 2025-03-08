@@ -13,6 +13,9 @@
       "args": ["-l"]
     }
   },
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "search.exclude": {
     "**/package-lock.json": true,
@@ -42,5 +45,6 @@
     "extensions/.continue-debug": true
     // "sync/**": true
   },
-  "eslint.workingDirectories": ["./core"]
+  "eslint.workingDirectories": ["./core"],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

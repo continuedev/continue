@@ -4,9 +4,9 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
+import { ConfigValidationError } from "@continuedev/config-yaml";
 import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
-import { ConfigValidationError } from "../../config/validation";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import MCPContextProvider from "../providers/MCPContextProvider";
 
@@ -69,10 +69,14 @@ class MCPConnection {
   private constructTransport(options: MCPOptions): Transport {
     switch (options.transport.type) {
       case "stdio":
+        const env: Record<string, string> = options.transport.env || {};
+        if (process.env.PATH !== undefined) {
+          env.PATH = process.env.PATH;
+        }
         return new StdioClientTransport({
           command: options.transport.command,
           args: options.transport.args,
-          env: options.transport.env,
+          env,
         });
       case "websocket":
         return new WebSocketClientTransport(new URL(options.transport.url));
@@ -117,6 +121,8 @@ class MCPConnection {
     config: ContinueConfig,
     mcpId: string,
     signal: AbortSignal,
+    name: string,
+    faviconUrl: string | undefined,
   ): Promise<ConfigValidationError | undefined> {
     try {
       await Promise.race([
@@ -148,6 +154,7 @@ class MCPConnection {
         title: resource.name,
         description: resource.description,
         id: resource.uri,
+        icon: faviconUrl,
       }));
 
       if (!config.contextProviders) {
@@ -157,6 +164,7 @@ class MCPConnection {
       config.contextProviders.push(
         new MCPContextProvider({
           submenuItems,
+          mcpId,
         }),
       );
     }
@@ -165,19 +173,20 @@ class MCPConnection {
     if (capabilities?.tools) {
       const { tools } = await this.client.listTools({}, { signal });
       const continueTools: Tool[] = tools.map((tool: any) => ({
-        displayTitle: tool.name,
+        displayTitle: name + " " + tool.name,
         function: {
           description: tool.description,
           name: tool.name,
           parameters: tool.inputSchema,
         },
+        faviconUrl,
         readonly: false,
         type: "function",
-        wouldLikeTo: `use the ${tool.name} tool`,
+        wouldLikeTo: `use the ${name} ${tool.name} tool`,
         uri: encodeMCPToolUri(mcpId, tool.name),
       }));
 
-      config.tools = [...config.tools, ...continueTools];
+      config.tools = [...continueTools, ...config.tools];
     }
 
     // Prompts <—> Slash commands

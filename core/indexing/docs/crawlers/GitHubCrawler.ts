@@ -2,13 +2,19 @@ import { URL } from "node:url";
 
 import { Octokit } from "@octokit/rest";
 
-import { PageData } from "../DocsCrawler";
+import { PageData } from "./DocsCrawler";
 
 class GitHubCrawler {
   private readonly markdownRegex = new RegExp(/\.(md|mdx)$/);
-  private octokit = new Octokit({ auth: undefined });
+  private octokit: Octokit;
+  private FILES_TO_SKIP = [/TEMPLATE\.md$/, /template\.md$/];
 
-  constructor(private readonly startUrl: URL) {}
+  constructor(
+    private readonly startUrl: URL,
+    private readonly githubToken: string | undefined,
+  ) {
+    this.octokit = new Octokit({ auth: this.githubToken });
+  }
 
   async *crawl(): AsyncGenerator<PageData> {
     console.debug(
@@ -16,14 +22,20 @@ class GitHubCrawler {
         (this.constructor as any).name
       }] Crawling GitHub repo: ${this.startUrl.toString()}`,
     );
-    const urlStr = this.startUrl.toString();
     const [_, owner, repo] = this.startUrl.pathname.split("/");
     const branch = await this.getGithubRepoDefaultBranch(owner, repo);
+
     const paths = await this.getGitHubRepoPaths(owner, repo, branch);
 
     for await (const path of paths) {
+      if (this.FILES_TO_SKIP.some((skip) => skip.test(path))) {
+        continue;
+      }
       const content = await this.getGithubRepoFileContent(path, owner, repo);
-      yield { path, url: urlStr, content: content ?? "" };
+
+      const fullUrl = new URL(this.startUrl.toString());
+      fullUrl.pathname += `/tree/${branch}/${path}`;
+      yield { path, url: fullUrl.toString(), content: content ?? "" };
     }
   }
 

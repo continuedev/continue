@@ -87,13 +87,9 @@ class CoreMessenger(
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)
-            if (MessageTypes.generatorTypes.contains(messageType)) {
-                val done = (data as Map<String, Boolean?>)["done"]
-                if (done == true) {
-                    responseListeners.remove(messageId)
-                } else {
-                }
-            } else {
+            val done = (data as Map<String, Boolean>)["done"]
+
+            if (done == true) {
                 responseListeners.remove(messageId)
             }
         }

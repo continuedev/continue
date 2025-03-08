@@ -1,0 +1,76 @@
+name: Test Config
+version: 0.0.1
+
+rules:
+  - TEST_SYS_MSG
+
+models:
+  - name: TEST LLM
+    provider: test
+    model: this field is not used
+    roles:
+      - chat
+      - edit
+      - apply
+      - autocomplete
+
+  - name: Mock
+    provider: mock
+    model: this field is not used
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: TOOL MOCK LLM
+    provider: mock
+    model: claude-3-5-sonnet-latest
+    requestOptions:
+      extraBodyProperties:
+        chatStream:
+          - - role: assistant
+              content: "I'm going to call a tool:"
+            - role: assistant
+              content: ""
+              toolCalls:
+                - id: test_id
+                  type: function
+                  function:
+                    name: builtin_exact_search
+                    arguments: '{"query": "test query"}'
+          - REPEAT_LAST_MSG
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: SYSTEM MESSAGE MOCK LLM
+    provider: mock
+    model: claude-3-5-sonnet-latest
+    requestOptions:
+      extraBodyProperties:
+        chatStream:
+          - - REPEAT_SYSTEM_MSG
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: LAST MESSAGE MOCK LLM
+    provider: mock
+    model: claude-3-5-sonnet-latest
+    requestOptions:
+      extraBodyProperties:
+        chatStream:
+          - - REPEAT_LAST_MSG
+    roles:
+      - chat
+      - edit
+      - apply
+
+context:
+  - provider: docs
+  - provider: diff
+  - provider: url
+  - provider: folder
+  - provider: terminal

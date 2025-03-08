@@ -22,7 +22,7 @@ export interface IContinueServerClient {
   connected: boolean;
   url: URL | undefined;
   getUserToken(): string | undefined;
-  getConfig(): Promise<{ configJson: string; configJs: string }>;
+  getConfig(): Promise<{ configJson: string }>;
   getFromIndexCache<T extends ArtifactType>(
     keys: string[],
     artifactId: T,

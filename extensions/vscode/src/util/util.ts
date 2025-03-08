@@ -99,9 +99,9 @@ export function getMetaKeyLabel() {
       return "⌘";
     case "linux":
     case "windows":
-      return "^";
+      return "Ctrl";
     default:
-      return "^";
+      return "Ctrl";
   }
 }
 

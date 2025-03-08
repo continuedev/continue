@@ -78,7 +78,7 @@ const TextDialog = (props: TextDialogProps) => {
       >
         <Dialog>
           <CloseButton onClick={props.onClose}>
-            <XMarkIcon className="h-5 w-5 hover:brightness-125" />
+            <XMarkIcon className="z-50 h-5 w-5 hover:brightness-125" />
           </CloseButton>
 
           {typeof props.message === "string" ? (

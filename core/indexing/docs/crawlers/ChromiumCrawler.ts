@@ -13,7 +13,7 @@ import {
   getChromiumPath,
   getContinueUtilsPath,
 } from "../../../util/paths";
-import { PageData } from "../DocsCrawler";
+import { PageData } from "./DocsCrawler";
 
 export class ChromiumCrawler {
   private readonly LINK_GROUP_SIZE = 2;
@@ -22,6 +22,7 @@ export class ChromiumCrawler {
   constructor(
     private readonly startUrl: URL,
     private readonly maxRequestsPerCrawl: number,
+    private readonly maxDepth: number,
   ) {}
 
   static setUseChromiumForDocsCrawling(useChromiumForDocsCrawling: boolean) {
@@ -49,7 +50,7 @@ export class ChromiumCrawler {
     const page = await browser.newPage();
 
     try {
-      yield* this.crawlSitePages(page, this.startUrl);
+      yield* this.crawlSitePages(page, this.startUrl, 0);
     } catch (e) {
       console.debug("Error getting links: ", e);
       console.debug(
@@ -97,6 +98,7 @@ export class ChromiumCrawler {
   private async *crawlSitePages(
     page: Page,
     curUrl: URL,
+    depth: number,
     visitedLinks: Set<string> = new Set(),
   ): AsyncGenerator<PageData> {
     const urlStr = curUrl.toString();
@@ -124,9 +126,17 @@ export class ChromiumCrawler {
 
       for (const link of linkGroup) {
         enqueuedLinkCount++;
-        console.log({ enqueuedLinkCount, url: this.startUrl.toString() });
-        if (enqueuedLinkCount <= this.maxRequestsPerCrawl) {
-          yield* this.crawlSitePages(page, new URL(link), visitedLinks);
+        // console.log({ enqueuedLinkCount, url: this.startUrl.toString() });
+        if (
+          enqueuedLinkCount <= this.maxRequestsPerCrawl &&
+          depth <= this.maxDepth
+        ) {
+          yield* this.crawlSitePages(
+            page,
+            new URL(link),
+            depth + 1,
+            visitedLinks,
+          );
         }
       }
     }

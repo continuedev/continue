@@ -34,10 +34,11 @@ export async function resolveRelativePathInDir(
   If no meaninful path match just concatenates to first dir's uri
 */
 export async function inferResolvedUriFromRelativePath(
-  relativePath: string,
+  _relativePath: string,
   ide: IDE,
   dirCandidates?: string[],
 ): Promise<string> {
+  const relativePath = _relativePath.trim().replaceAll("\\", "/");
   const dirs = dirCandidates ?? (await ide.getWorkspaceDirs());
 
   if (dirs.length === 0) {
@@ -51,7 +52,7 @@ export async function inferResolvedUriFromRelativePath(
     suffixes.push(segments.slice(i).join("/"));
   }
 
-  // For each suffix, try to find a unique matching directory
+  // For each suffix, try to find a unique matching dir/file
   for (const suffix of suffixes) {
     const uris = dirs.map((dir) => ({
       dir,
@@ -76,6 +77,13 @@ export async function inferResolvedUriFromRelativePath(
         segments.join("/"),
       );
     }
+  }
+
+  // Sometimes the model will decide to only output the base name or small number of path parts
+  // in which case we shouldn't create a new file if it matches the current file
+  const activeFile = await ide.getCurrentFile();
+  if (activeFile && activeFile.path.endsWith(relativePath)) {
+    return activeFile.path;
   }
 
   // If no unique match found, use the first directory

@@ -1,11 +1,11 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Start Core Dev Server (CE)" type="ShConfigurationType">
-    <option name="SCRIPT_TEXT" value="export CONTINUE_DEVELOPMENT=true &amp;&amp; export CONTINUE_GLOBAL_DIR=$PROJECT_DIR$/../.continue-debug &amp;&amp; node out/index.js" />
+    <option name="SCRIPT_TEXT" value="cross-env 'PROJECT_DIR=&quot;$PROJECT_DIR$&quot;' node core-dev-server.js" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
     <option name="SCRIPT_PATH" value="" />
     <option name="SCRIPT_OPTIONS" value="" />
     <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
-    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$/../../binary" />
+    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$/binary" />
     <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
     <option name="INTERPRETER_PATH" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />

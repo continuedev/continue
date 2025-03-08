@@ -9,11 +9,15 @@ import { useSubmitOnboarding } from "../hooks";
 import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
 import { setDefaultModel } from "../../../redux/slices/configSlice";
 
-function QuickstartSubmitButton() {
+interface QuickstartSubmitButtonProps {
+  isDialog?: boolean;
+}
+
+function QuickstartSubmitButton({ isDialog }: QuickstartSubmitButtonProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
-  const { submitOnboarding } = useSubmitOnboarding("Quickstart");
+  const { submitOnboarding } = useSubmitOnboarding("Quickstart", isDialog);
 
   function onComplete() {
     submitOnboarding();

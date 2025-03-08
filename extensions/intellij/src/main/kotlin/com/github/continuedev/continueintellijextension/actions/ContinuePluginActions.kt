@@ -79,7 +79,7 @@ fun getContinuePluginService(project: Project?): ContinuePluginService? {
 fun focusContinueInput(project: Project?) {
     val continuePluginService = getContinuePluginService(project) ?: return
     continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-    continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
+    continuePluginService.sendToWebview("focusContinueInputWithoutClear", null)
 
     continuePluginService.ideProtocolClient?.sendHighlightedCode()
 }
@@ -113,15 +113,17 @@ class NewContinueSessionAction : AnAction() {
 class ViewHistoryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.sendToWebview("viewHistory", null)
+        val params = mapOf("path" to "/history", "toggle" to true)
+        continuePluginService.sendToWebview("navigateTo", params)
     }
 }
 
 class OpenConfigAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
-        val params = mapOf("profileId" to null)
-        continuePluginService.coreMessenger?.request("config/openProfile", params, null) { _ -> }
+        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
+        val params = mapOf("path" to "/config", "toggle" to true)
+        continuePluginService.sendToWebview("navigateTo", params)
     }
 }
 
@@ -131,12 +133,5 @@ class OpenMorePageAction : AnAction() {
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         val params = mapOf("path" to "/more", "toggle" to true)
         continuePluginService.sendToWebview("navigateTo", params)
-    }
-}
-
-class OpenAccountDialogAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.sendToWebview("openDialogMessage", "account")
     }
 }

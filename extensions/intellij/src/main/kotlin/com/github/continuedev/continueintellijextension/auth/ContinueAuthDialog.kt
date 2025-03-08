@@ -7,7 +7,8 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 import java.awt.BorderLayout
 
-class ContinueAuthDialog(private val onTokenEntered: (String) -> Unit) : DialogWrapper(true) {
+class ContinueAuthDialog(private val useOnboarding: Boolean, private val onTokenEntered: (String) -> Unit) :
+    DialogWrapper(true) {
     private val tokenField = JBTextField()
 
     init {
@@ -17,7 +18,9 @@ class ContinueAuthDialog(private val onTokenEntered: (String) -> Unit) : DialogW
 
     override fun createCenterPanel(): JComponent {
         val panel = JPanel(BorderLayout())
-        panel.add(JBLabel("Please enter your Continue authentication token:"), BorderLayout.NORTH)
+        val message =
+            if (useOnboarding) "After onboarding you will be shown an authentication token. Please enter it here:" else "Please enter your Continue authentication token:"
+        panel.add(JBLabel(message), BorderLayout.NORTH)
         panel.add(tokenField, BorderLayout.CENTER)
         return panel
     }

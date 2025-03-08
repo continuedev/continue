@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import {
   acceptToolCall,
@@ -23,8 +23,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     }
 
     if (!state.config.defaultModelTitle) {
-      console.error("Cannot call tools, no model selected");
-      return;
+      throw new Error("No model selected");
     }
 
     dispatch(setCalling());
@@ -40,11 +39,16 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       dispatch(acceptToolCall());
 
       // Send to the LLM to continue the conversation
-      dispatch(
+      const response = await dispatch(
         streamResponseAfterToolCall({
           toolCallId: toolCallState.toolCall.id,
           toolOutput: contextItems,
         }),
+      );
+      unwrapResult(response);
+    } else {
+      throw new Error(
+        `Failed to call tool ${toolCallState.toolCall.function.name}: ${result.error}`,
       );
     }
   },

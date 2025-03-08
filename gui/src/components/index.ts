@@ -1,53 +1,45 @@
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { getFontSize, isJetBrains } from "../util";
 
 export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
 export const VSC_FOREGROUND_VAR = "--vscode-editor-foreground";
-export const VSC_FOREGROUND_MUTED_VAR = "--vscode-foreground-muted";
-export const VSC_DESCRIPTION_FOREGROUND = "--vscode-descriptionForeground";
-export const VSC_INPUT_PLACEHOLDER_FOREGROUND =
-  "--vscode-input-placeholderForeground";
 export const VSC_BUTTON_BACKGROUND_VAR = "--vscode-button-background";
 export const VSC_BUTTON_FOREGROUND_VAR = "--vscode-button-foreground";
 export const VSC_EDITOR_BACKGROUND_VAR = "--vscode-editor-background";
 export const VSC_LIST_SELECTION_BACKGROUND_VAR =
   "--vscode-list-activeSelectionBackground";
-export const VSC_FOCUS_BORDER = "--vscode-focus-border";
+export const VSC_FOCUS_BORDER_VAR = "--vscode-focusBorder";
 export const VSC_LIST_ACTIVE_FOREGROUND_VAR =
   "--vscode-quickInputList-focusForeground";
 export const VSC_QUICK_INPUT_BACKGROUND_VAR = "--vscode-quickInput-background";
 export const VSC_INPUT_BORDER_VAR = "--vscode-input-border";
-export const VSC_INPUT_BORDER_FOCUS_VAR = "--vscode-focusBorder";
 export const VSC_BADGE_BACKGROUND_VAR = "--vscode-badge-background";
 export const VSC_BADGE_FOREGROUND_VAR = "--vscode-badge-foreground";
-export const VSC_SIDEBAR_BORDER_VAR = "--vscode-sideBar-border";
-export const VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR =
-  "--vscode-diffEditor-removedLineBackground";
-export const VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR =
-  "--vscode-diffEditor-insertedLineBackground";
+export const VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR =
+  "--vscode-commandCenter-activeBorder";
+export const VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR =
+  "--vscode-commandCenter-inactiveBorder";
+export const VSC_FIND_MATCH_SELECTED_VAR =
+  "--vscode-editor-findMatchHighlightBackground";
 
 export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
   VSC_BACKGROUND_VAR,
   VSC_FOREGROUND_VAR,
-  VSC_FOREGROUND_MUTED_VAR,
-  VSC_DESCRIPTION_FOREGROUND,
-  VSC_INPUT_PLACEHOLDER_FOREGROUND,
   VSC_BUTTON_BACKGROUND_VAR,
   VSC_BUTTON_FOREGROUND_VAR,
   VSC_EDITOR_BACKGROUND_VAR,
   VSC_LIST_SELECTION_BACKGROUND_VAR,
-  VSC_FOCUS_BORDER,
+  VSC_FOCUS_BORDER_VAR,
   VSC_LIST_ACTIVE_FOREGROUND_VAR,
   VSC_QUICK_INPUT_BACKGROUND_VAR,
   VSC_INPUT_BORDER_VAR,
-  VSC_INPUT_BORDER_FOCUS_VAR,
   VSC_BADGE_BACKGROUND_VAR,
-  VSC_SIDEBAR_BORDER_VAR,
   VSC_BADGE_FOREGROUND_VAR,
-  VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
-  VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
+  VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR,
+  VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR,
+  VSC_FIND_MATCH_SELECTED_VAR,
 ];
 
 export const defaultBorderRadius = "5px";
@@ -62,30 +54,14 @@ export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
 export const vscButtonForeground = `var(${VSC_BUTTON_FOREGROUND_VAR}, #ffffff)`;
 export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 export const vscListActiveBackground = `var(${VSC_LIST_SELECTION_BACKGROUND_VAR}, #1bbe84)`;
-export const vscFocusBorder = `var(${VSC_FOCUS_BORDER}, #1bbe84)`;
+export const vscFocusBorder = `var(${VSC_FOCUS_BORDER_VAR}, #1bbe84)`;
 export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, ${VSC_FOREGROUND_VAR})`;
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
-export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGray})`;
+export const vscInputBorderFocus = `var(${VSC_FOCUS_BORDER_VAR}, ${lightGray})`;
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
-
-if (typeof document !== "undefined") {
-  for (const colorVar of VSC_THEME_COLOR_VARS) {
-    if (isJetBrains()) {
-      const cached = localStorage.getItem(colorVar);
-      if (cached) {
-        document.body.style.setProperty(colorVar, cached);
-      }
-    }
-
-    // Remove alpha channel from colors
-    const value = getComputedStyle(document.documentElement).getPropertyValue(
-      colorVar,
-    );
-    if (colorVar.startsWith("#") && value.length > 7) {
-      document.body.style.setProperty(colorVar, value.slice(0, 7));
-    }
-  }
-}
+export const vscCommandCenterActiveBorder = `var(${VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR}, #1bbe84)`;
+export const vscCommandCenterInactiveBorder = `var(${VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR}, #1bbe84)`;
+export const vscFindMatchSelected = `var(${VSC_FIND_MATCH_SELECTED_VAR}, rgba(255, 223, 0))`;
 
 export function parseHexColor(hexColor: string): {
   r: number;
@@ -134,7 +110,7 @@ export function parseColorForHex(colorVar: string): string {
 }
 
 export const Button = styled.button`
-  padding: 10px 12px;
+  padding: 6px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
@@ -155,13 +131,13 @@ export const Button = styled.button`
 `;
 
 export const SecondaryButton = styled.button`
-  padding: 10px 12px;
+  padding: 6px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscForeground};
+  border: 1px solid ${vscInputBorder};
   color: ${vscForeground};
-  background-color: inherit;
+  background-color: ${vscInputBackground};
 
   &:disabled {
     color: gray;
@@ -250,17 +226,6 @@ export const Input = styled.input`
   }
 `;
 
-export const Select = styled.select`
-  padding: 8px 12px;
-  margin: 8px 0;
-  box-sizing: border-box;
-  border-radius: ${defaultBorderRadius};
-  outline: 1px solid ${lightGray};
-  border: none;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
-`;
-
 export const Label = styled.label<{ fontSize?: number }>`
   font-size: ${(props) => props.fontSize || getFontSize()}px;
 `;
@@ -296,11 +261,6 @@ export const HeaderButton = styled.button<{
   justify-content: center;
   gap: 4px;
   padding: 2px;
-`;
-
-export const Divider = styled.div`
-  height: 1px;
-  background-color: ${lightGray};
 `;
 
 export const StyledActionButton = styled.div`

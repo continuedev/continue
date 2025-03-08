@@ -1,6 +1,11 @@
+import { ConfigResult, ModelRole } from "@continuedev/config-yaml";
+
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
+import { OrganizationDescription } from "../config/ProfileLifecycleManager";
+import { SharedConfigSchema } from "../config/sharedConfig";
 
+import { DevDataLogEvent } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -9,11 +14,13 @@ import type {
   ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
+  DocsIndexingDetails,
+  ExperimentalModelRoles,
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
   ModelDescription,
-  ModelRoles,
+  PromptLog,
   RangeInFile,
   SerializedContinueConfig,
   Session,
@@ -21,35 +28,9 @@ import type {
   SiteIndexingConfig,
   ToolCall,
 } from "../";
-import { ConfigResult } from "../config/load";
+import { GlobalContextModelSelections } from "../util/GlobalContext";
 
-export type ProtocolGeneratorYield<T> = {
-  done?: boolean;
-  content: T;
-};
-export type ProtocolGeneratorType<Y> = AsyncGenerator<
-  ProtocolGeneratorYield<Y>
->;
-
-export type AsyncGeneratorYieldType<T> =
-  T extends AsyncGenerator<infer Y, any, any>
-    ? Y extends ProtocolGeneratorYield<infer PR>
-      ? PR
-      : never
-    : never;
-// export type AsyncGeneratorReturnType<T> =
-//   T extends AsyncGenerator<any, infer R, any>
-//     ? R extends ProtocolGeneratorYield<infer PR>
-//       ? PR
-//       : never
-//     : never;
-
-export type OnboardingModes =
-  | "Local"
-  | "Best"
-  | "Custom"
-  | "Quickstart"
-  | "LocalAfterFreeTrial";
+export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -57,8 +38,6 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  "update/selectTabAutocompleteModel": [string, void];
-
   // Special
   ping: [string, string];
   abort: [undefined, void];
@@ -68,12 +47,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
-  "devdata/log": [{ tableName: string; data: any }, void];
+  "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
     {
       model: SerializedContinueConfig["models"][number];
-      role?: keyof ModelRoles;
+      role?: keyof ExperimentalModelRoles;
     },
     void,
   ];
@@ -83,14 +62,24 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
-      profileId: string;
+      profileId: string | null;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
   "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/listProfiles": [undefined, ProfileDescription[]];
+  "config/listProfiles": [undefined, ProfileDescription[] | null];
+  "config/refreshProfiles": [undefined, void];
   "config/openProfile": [{ profileId: string | undefined }, void];
+  "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
+  "config/updateSelectedModel": [
+    {
+      profileId: string;
+      role: ModelRole;
+      title: string | null;
+    },
+    GlobalContextModelSelections,
+  ];
   "context/getContextItems": [
     {
       name: string;
@@ -119,8 +108,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       params: any;
       historyIndex: number;
       selectedCode: RangeInFile[];
+      completionOptions?: LLMFullCompletionOptions;
     },
-    ProtocolGeneratorType<string>,
+    AsyncGenerator<string>,
   ];
   "llm/complete": [
     {
@@ -137,7 +127,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    ProtocolGeneratorType<string>,
+    AsyncGenerator<string>,
   ];
   "llm/streamChat": [
     {
@@ -145,7 +135,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    ProtocolGeneratorType<ChatMessage>,
+    AsyncGenerator<ChatMessage, PromptLog>,
   ];
   streamDiffLines: [
     {
@@ -156,7 +146,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       language: string | undefined;
       modelTitle: string | undefined;
     },
-    ProtocolGeneratorType<DiffLine>,
+    AsyncGenerator<DiffLine>,
   ];
   "chatDescriber/describe": [
     {
@@ -201,15 +191,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
   "docs/getSuggestedDocs": [undefined, void];
   "docs/initStatuses": [undefined, void];
-
+  "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
-  "profiles/switch": [{ id: string }, undefined];
-
-  "auth/getAuthUrl": [undefined, { url: string }];
+  "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
     { toolCall: ToolCall; selectedModelTitle: string },
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];
+  "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
+  "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
 };

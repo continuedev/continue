@@ -30,7 +30,7 @@ export class ContinueServerClient implements IContinueServerClient {
     return this.url !== undefined && this.userToken !== undefined;
   }
 
-  public async getConfig(): Promise<{ configJson: string; configJs: string }> {
+  public async getConfig(): Promise<{ configJson: string }> {
     const userToken = await this.userToken;
     const response = await fetch(new URL("sync", this.url).href, {
       method: "GET",

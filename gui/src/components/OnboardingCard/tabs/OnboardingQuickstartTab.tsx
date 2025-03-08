@@ -1,7 +1,11 @@
 import ContinueLogo from "../../gui/ContinueLogo";
 import QuickStartSubmitButton from "../components/QuickStartSubmitButton";
 
-function OnboardingQuickstartTab() {
+interface OnboardingQuickstartTabProps {
+  isDialog?: boolean;
+}
+
+function OnboardingQuickstartTab({ isDialog }: OnboardingQuickstartTabProps) {
   return (
     <div className="flex h-full w-full items-center justify-center">
       <div className="xs:px-0 flex w-full max-w-full flex-col items-center justify-center px-4 text-center">
@@ -18,7 +22,7 @@ function OnboardingQuickstartTab() {
           To prevent abuse, we'll ask you to sign in to GitHub.
         </p>
 
-        <QuickStartSubmitButton />
+        <QuickStartSubmitButton isDialog={isDialog} />
       </div>
     </div>
   );

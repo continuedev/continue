@@ -21,14 +21,16 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import { ProfileDescription } from "core/config/ConfigHandler";
+import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
+import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
-import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -43,11 +45,14 @@ type SessionState = {
   isStreaming: boolean;
   title: string;
   id: string;
-  selectedProfileId: string;
+  /** null indicates loading state */
+  availableProfiles: ProfileDescription[] | null;
+  selectedProfile: ProfileDescription | null;
+  organizations: OrganizationDescription[];
+  selectedOrganizationId: string | null;
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
-  currentMainEditorContent?: JSONContent;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
@@ -55,6 +60,7 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
+  newestCodeblockForInput: Record<string, string>;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -82,7 +88,10 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfileId: "local",
+  selectedProfile: null,
+  availableProfiles: null,
+  organizations: [],
+  selectedOrganizationId: "",
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   codeToEdit: [],
@@ -93,6 +102,7 @@ const initialState: SessionState = {
     curIndex: 0,
   },
   lastSessionId: undefined,
+  newestCodeblockForInput: {},
 };
 
 export const sessionSlice = createSlice({
@@ -168,13 +178,13 @@ export const sessionSlice = createSlice({
       {
         payload,
       }: PayloadAction<{
-        index?: number;
+        index: number;
         editorState: JSONContent;
       }>,
     ) => {
       const { index, editorState } = payload;
 
-      if (typeof index === "number" && index < state.history.length) {
+      if (state.history.length && index < state.history.length) {
         // Resubmission - update input message, truncate history after resubmit with new empty response message
         if (index % 2 === 1) {
           console.warn(
@@ -185,6 +195,7 @@ export const sessionSlice = createSlice({
 
         historyItem.message.content = ""; // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
         historyItem.editorState = payload.editorState;
+        historyItem.contextItems = [];
 
         state.history = state.history.slice(0, index + 1).concat({
           message: {
@@ -237,7 +248,7 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       const { index, updates } = payload;
-      if (!state.history[index]) {
+      if (index !== 0 && !state.history[index]) {
         console.error(
           `attempting to update history item at nonexistent index ${index}`,
           updates,
@@ -317,19 +328,19 @@ export const sessionSlice = createSlice({
               !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
               // And there's a difference in tool call presence
               (lastMessage.toolCalls?.length ?? 0) !==
-                (message.toolCalls?.length ?? 0))
+              (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
               message: {
                 ...message,
+                content: renderChatMessage(message),
                 id: uuidv4(),
               },
               contextItems: [],
             };
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
-
               if (
                 toolCallDelta.id &&
                 toolCallDelta.function?.arguments &&
@@ -347,7 +358,30 @@ export const sessionSlice = createSlice({
           } else {
             // Add to the existing message
             if (message.content) {
-              lastMessage.content += renderChatMessage(message);
+              const messageContent = renderChatMessage(message);
+              if (messageContent.includes("<think>")) {
+                lastItem.reasoning = {
+                  startAt: Date.now(),
+                  active: true,
+                  text: messageContent.replace("<think>", "").trim(),
+                };
+              } else if (
+                lastItem.reasoning?.active &&
+                messageContent.includes("</think>")
+              ) {
+                const [reasoningEnd, answerStart] =
+                  messageContent.split("</think>");
+                lastItem.reasoning.text += reasoningEnd.trimEnd();
+                lastItem.reasoning.active = false;
+                lastItem.reasoning.endAt = Date.now();
+                lastMessage.content += answerStart.trimStart();
+              } else if (lastItem.reasoning?.active) {
+                lastItem.reasoning.text += messageContent;
+              } else {
+                // Note this only works because new message above
+                // was already rendered from parts to string
+                lastMessage.content += messageContent;
+              }
             } else if (
               message.role === "assistant" &&
               message.toolCalls?.[0] &&
@@ -439,9 +473,9 @@ export const sessionSlice = createSlice({
       state.allSessionMetadata = state.allSessionMetadata.map((session) =>
         session.sessionId === payload.sessionId
           ? {
-              ...session,
-              ...payload,
-            }
+            ...session,
+            ...payload,
+          }
           : session,
       );
       if (payload.title && payload.sessionId === state.id) {
@@ -476,9 +510,8 @@ export const sessionSlice = createSlice({
         payload.rangeInFileWithContents.filepath,
       );
 
-      const lineNums = `(${
-        payload.rangeInFileWithContents.range.start.line + 1
-      }-${payload.rangeInFileWithContents.range.end.line + 1})`;
+      const lineNums = `(${payload.rangeInFileWithContents.range.start.line + 1
+        }-${payload.rangeInFileWithContents.range.end.line + 1})`;
 
       contextItems.push({
         name: `${fileName} ${lineNums}`,
@@ -498,15 +531,34 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
-      return {
-        ...state,
-        selectedProfileId: payload,
-      };
+    // Important: these reducers don't handle selected profile/organization fallback logic
+    // That is done in thunks
+    setSelectedProfile: (
+      state,
+      { payload }: PayloadAction<ProfileDescription | null>,
+    ) => {
+      state.selectedProfile = payload;
     },
-    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
-      state.curCheckpointIndex = payload;
+    setAvailableProfiles: (
+      state,
+      { payload }: PayloadAction<ProfileDescription[] | null>,
+    ) => {
+      state.availableProfiles = payload;
     },
+    setOrganizations: (
+      state,
+      { payload }: PayloadAction<OrganizationDescription[]>,
+    ) => {
+      state.organizations = payload;
+    },
+    setSelectedOrganizationId: (
+      state,
+      { payload }: PayloadAction<string | null>,
+    ) => {
+      state.selectedOrganizationId = payload;
+    },
+    ///////////////
+
     updateCurCheckpoint: (
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
@@ -515,6 +567,9 @@ export const sessionSlice = createSlice({
       if (checkpoint) {
         checkpoint[payload.filepath] = payload.content;
       }
+    },
+    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
+      state.curCheckpointIndex = payload;
     },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const applyState = state.codeBlockApplyStates.states.find(
@@ -595,6 +650,17 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    setNewestCodeblocksForInput: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        inputId: string;
+        contextItemId: string;
+      }>,
+    ) => {
+      state.newestCodeblockForInput[payload.inputId] = payload.contextItemId;
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -630,9 +696,9 @@ function addPassthroughCases(
 ) {
   thunks.forEach((thunk) => {
     builder
-      .addCase(thunk.fulfilled, (state, action) => {})
-      .addCase(thunk.rejected, (state, action) => {})
-      .addCase(thunk.pending, (state, action) => {});
+      .addCase(thunk.fulfilled, (state, action) => { })
+      .addCase(thunk.rejected, (state, action) => { })
+      .addCase(thunk.pending, (state, action) => { });
   });
 }
 
@@ -668,7 +734,6 @@ export const {
   updateHistoryItemAtIndex,
   clearLastEmptyResponse,
   setMainEditorContentTrigger,
-  setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,
   updateCurCheckpoint,
@@ -689,6 +754,12 @@ export const {
   addSessionMetadata,
   updateSessionMetadata,
   deleteSessionMetadata,
+  setNewestCodeblocksForInput,
+
+  setAvailableProfiles,
+  setSelectedProfile,
+  setOrganizations,
+  setSelectedOrganizationId,
 } = sessionSlice.actions;
 
 export const {

@@ -6,7 +6,7 @@ import { OnboardingModes } from "core/protocol/core";
 import { useTutorialCard } from "../../../hooks/useTutorialCard";
 import { useOnboardingCard } from "./useOnboardingCard";
 
-export function useSubmitOnboarding(mode: OnboardingModes) {
+export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
   const posthog = usePostHog();
   const ideMessenger = useContext(IdeMessengerContext);
   const { openTutorialCard } = useTutorialCard();
@@ -16,7 +16,7 @@ export function useSubmitOnboarding(mode: OnboardingModes) {
     const onboardingStatus = getLocalStorage("onboardingStatus");
 
     // Always close the onboarding card and update config.json
-    closeOnboardingCard();
+    closeOnboardingCard(isDialog);
     ideMessenger.post("completeOnboarding", {
       mode,
     });

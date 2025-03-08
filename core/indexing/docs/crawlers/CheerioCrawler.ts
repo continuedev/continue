@@ -2,7 +2,7 @@ import { URL } from "node:url";
 
 import * as cheerio from "cheerio";
 
-import { PageData } from "../DocsCrawler";
+import { PageData } from "./DocsCrawler";
 
 export default class CheerioCrawler {
   private readonly IGNORE_PATHS_ENDING_IN = [
@@ -21,23 +21,18 @@ export default class CheerioCrawler {
   constructor(
     private readonly startUrl: URL,
     private readonly maxRequestsPerCrawl: number,
+    private readonly maxDepth: number,
   ) {}
 
   async *crawl(): AsyncGenerator<PageData> {
-    yield* this.crawlPage(this.startUrl);
-  }
-
-  private async *crawlPage(
-    url: URL,
-    maxDepth: number = 3,
-  ): AsyncGenerator<PageData> {
+    let currentPageCount = 0;
     console.log(
       `[${
         (this.constructor as any).name
-      }] Starting crawl from: ${url} - Max Depth: ${maxDepth}`,
+      }] Starting crawl from: ${this.startUrl} - Max Depth: ${this.maxDepth}`,
     );
 
-    const { baseUrl, basePath } = this.splitUrl(url);
+    const { baseUrl, basePath } = this.splitUrl(this.startUrl);
 
     let paths: { path: string; depth: number }[] = [
       { path: basePath, depth: 0 },
@@ -63,11 +58,16 @@ export default class CheerioCrawler {
           path,
           depth,
         } of results) {
-          if (html !== "" && depth <= maxDepth) {
-            yield { url: url.toString(), path, content: html };
+          if (html !== "" && depth <= this.maxDepth) {
+            yield { url: this.startUrl.toString(), path, content: html };
+            currentPageCount++;
+            if (currentPageCount >= this.maxRequestsPerCrawl) {
+              console.log("Crawl completed - max requests reached");
+              return;
+            }
           }
 
-          if (depth < maxDepth) {
+          if (depth < this.maxDepth) {
             for (let link of linksArray) {
               if (!paths.some((p) => p.path === link)) {
                 paths.push({ path: link, depth: depth + 1 });

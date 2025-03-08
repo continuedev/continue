@@ -11,13 +11,14 @@ export const ideSettingsPromise = testIde.getIdeSettings();
 
 export const testControlPlaneClient = new ControlPlaneClient(
   Promise.resolve(undefined),
+  ideSettingsPromise,
 );
 
 export const testConfigHandler = new ConfigHandler(
   testIde,
   ideSettingsPromise,
   async (text) => {},
-  testControlPlaneClient,
+  Promise.resolve(undefined),
 );
 
 export const testLLM = new Mock({

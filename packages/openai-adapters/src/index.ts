@@ -7,6 +7,7 @@ import { CohereApi } from "./apis/Cohere.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { JinaApi } from "./apis/Jina.js";
+import { MockApi } from "./apis/Mock.js";
 import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 import { LLMConfig, OpenAIConfigSchema } from "./types.js";
@@ -73,6 +74,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("https://api.fireworks.ai/inference/v1/", config);
     case "together":
       return openAICompatible("https://api.together.xyz/v1/", config);
+    case "ncompass":
+      return openAICompatible("https://api.ncompass.tech/v1", config);
     case "novita":
       return openAICompatible("https://api.novita.ai/v3/openai", config);
     case "nebius":
@@ -84,6 +87,8 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
       return openAICompatible("http://localhost:8000/", config);
     case "lmstudio":
       return openAICompatible("http://localhost:1234/", config);
+    case "mock":
+      return new MockApi();
     default:
       return undefined;
   }
@@ -103,3 +108,4 @@ export {
 
 // export
 export type { BaseLlmApi } from "./apis/base.js";
+export type { LLMConfig } from "./types.js";

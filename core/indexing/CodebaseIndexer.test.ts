@@ -14,12 +14,12 @@ import {
 } from "../test/testDir.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 
-import { pathToFileURL } from "node:url";
 import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
 import { walkDir } from "./walkDir.js";
+import { localPathToUri } from "../util/pathToUri.js";
 
 jest.useFakeTimers();
 
@@ -159,7 +159,7 @@ describe("CodebaseIndexer", () => {
 
   test("should have created index folder with all necessary files", async () => {
     const exists = await testIde.fileExists(
-      pathToFileURL(getIndexSqlitePath()).toString(),
+      localPathToUri(getIndexSqlitePath()),
     );
     expect(exists).toBe(true);
   });

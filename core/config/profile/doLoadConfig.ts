@@ -1,6 +1,12 @@
 import fs from "fs";
 
 import {
+  AssistantUnrolled,
+  ConfigResult,
+  ConfigValidationError,
+  ModelRole,
+} from "@continuedev/config-yaml";
+import {
   ContinueConfig,
   ContinueRcJson,
   IDE,
@@ -9,15 +15,17 @@ import {
 } from "../../";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import { controlPlaneEnv } from "../../control-plane/env.js";
+import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
-import { getConfigYamlPath } from "../../util/paths";
+import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
-import { ConfigResult, loadFullConfigNode } from "../load";
-import { ConfigValidationError } from "../validation";
+import { loadContinueConfigFromJson } from "../load";
+import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
+import { PlatformConfigMetadata } from "./PlatformProfileLoader";
+import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -25,7 +33,9 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
-  workspaceId?: string,
+  overrideConfigYaml: AssistantUnrolled | undefined,
+  platformConfigMetadata: PlatformConfigMetadata | undefined,
+  profileId: string,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
@@ -33,33 +43,41 @@ export default async function doLoadConfig(
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
+  // Migrations for old config files
+  // Removes
+  const configJsonPath = getConfigJsonPath(ideInfo.ideType);
+  if (fs.existsSync(configJsonPath)) {
+    migrateJsonSharedConfig(configJsonPath, ide);
+  }
+
   const configYamlPath = getConfigYamlPath(ideInfo.ideType);
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
   let configLoadInterrupted = false;
 
-  if (fs.existsSync(configYamlPath)) {
+  if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
     const result = await loadContinueConfigFromYaml(
       ide,
       workspaceConfigs.map((c) => JSON.stringify(c)),
       ideSettings,
-      ideInfo.ideType,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,
-      undefined,
-      // overrideConfigYaml, TODO
+      overrideConfigYaml,
+      platformConfigMetadata,
+      controlPlaneClient,
     );
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
   } else {
-    const result = await loadFullConfigNode(
+    const result = await loadContinueConfigFromJson(
       ide,
       workspaceConfigs,
       ideSettings,
-      ideInfo.ideType,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,
@@ -68,6 +86,11 @@ export default async function doLoadConfig(
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
+  }
+
+  // Rectify model selections for each role
+  if (newConfig) {
+    newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
   }
 
   if (configLoadInterrupted || !newConfig) {
@@ -91,27 +114,31 @@ export default async function doLoadConfig(
   const controlPlane = (newConfig as any).controlPlane;
   const useOnPremProxy =
     controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
+
+  const env = await getControlPlaneEnv(ideSettingsPromise);
   let controlPlaneProxyUrl: string = useOnPremProxy
     ? controlPlane?.proxyUrl
-    : controlPlaneEnv.DEFAULT_CONTROL_PLANE_PROXY_URL;
+    : env.DEFAULT_CONTROL_PLANE_PROXY_URL;
 
   if (!controlPlaneProxyUrl.endsWith("/")) {
     controlPlaneProxyUrl += "/";
   }
   const controlPlaneProxyInfo = {
-    workspaceId,
+    profileId,
     controlPlaneProxyUrl,
     workOsAccessToken,
   };
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
-      newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
+      newConfig.analytics,
       uniqueId,
       ideInfo.extensionVersion,
       controlPlaneClient,
       controlPlaneProxyInfo,
     );
+  } else {
+    await TeamAnalytics.shutdown();
   }
 
   newConfig = await injectControlPlaneProxyInfo(
@@ -127,21 +154,26 @@ async function injectControlPlaneProxyInfo(
   config: ContinueConfig,
   info: ControlPlaneProxyInfo,
 ): Promise<ContinueConfig> {
-  [...config.models, ...(config.tabAutocompleteModels ?? [])].forEach(
-    async (model) => {
+  Object.keys(config.modelsByRole).forEach((key) => {
+    config.modelsByRole[key as ModelRole].forEach((model) => {
       if (model.providerName === "continue-proxy") {
         (model as ContinueProxy).controlPlaneProxyInfo = info;
       }
-    },
-  );
+    });
+  });
 
-  if (config.embeddingsProvider?.providerName === "continue-proxy") {
-    (config.embeddingsProvider as ContinueProxy).controlPlaneProxyInfo = info;
-  }
+  Object.keys(config.selectedModelByRole).forEach((key) => {
+    const model = config.selectedModelByRole[key as ModelRole];
+    if (model?.providerName === "continue-proxy") {
+      (model as ContinueProxy).controlPlaneProxyInfo = info;
+    }
+  });
 
-  if (config.reranker?.providerName === "continue-proxy") {
-    (config.reranker as ContinueProxy).controlPlaneProxyInfo = info;
-  }
+  config.models.forEach((model) => {
+    if (model.providerName === "continue-proxy") {
+      (model as ContinueProxy).controlPlaneProxyInfo = info;
+    }
+  });
 
   return config;
 }
