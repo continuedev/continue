@@ -1,5 +1,6 @@
 name: Claude 3.5 sonnet latest
 version: 0.0.1
+schema: v1
 
 models:
   - name: claude-3-5-sonnet-latest
