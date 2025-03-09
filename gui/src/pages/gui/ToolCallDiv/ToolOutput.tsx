@@ -7,7 +7,8 @@ interface ToolOutputProps {
 }
 
 function ToolOutput(props: ToolOutputProps) {
-  if (props.contextItems.length === 0) {
+  // Terminal has dedicated UI to show the output
+  if (props.contextItems.some((ci) => ci.name === "Terminal")) {
     return null;
   }
 
