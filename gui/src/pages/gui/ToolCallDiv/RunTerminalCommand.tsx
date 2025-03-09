@@ -56,20 +56,15 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
     <Fragment>
       <StyledMarkdownPreview
         isRenderingInStepContainer={true}
-        source={`\`\`\`bash .sh\n${props.command ?? ""}\n\`\`\``}
+        source={`\`\`\`bash .sh\n$ ${props.command ?? ""}${(hasOutput || isRunning) ? 
+          `\n${terminalOutput || "Waiting for output..."}` 
+          : ""}\n\`\`\``}
       />
       
-      {(hasOutput || isRunning) && (
-        <OutputContainer>
-          <OutputTitle>
-            {isRunning ? "Output (running)" : "Output"}
-            {isRunning && <RunningDot />}
-          </OutputTitle>
-          <StyledMarkdownPreview
-            isRenderingInStepContainer={true}
-            source={`\`\`\`ansi\n${terminalOutput || "Waiting for output..."}\n\`\`\``}
-          />
-        </OutputContainer>
+      {isRunning && (
+        <OutputTitle style={{ marginTop: '8px' }}>
+          Running <RunningDot />
+        </OutputTitle>
       )}
     </Fragment>
   );
