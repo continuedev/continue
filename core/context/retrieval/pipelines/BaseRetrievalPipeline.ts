@@ -80,24 +80,19 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     args: RetrievalPipelineRunArguments,
     n: number,
   ): Promise<Chunk[]> {
-    try {
-      if (args.query.trim() === "") {
-        return [];
-      }
-
-      const tokensRaw = this.getCleanedTrigrams(args.query).join(" OR ");
-      const tokens = this.escapeFtsQueryString(tokensRaw);
-
-      return await this.ftsIndex.retrieve({
-        n,
-        text: tokens,
-        tags: args.tags,
-        directory: args.filterDirectory,
-      });
-    } catch (e) {
-      console.warn("Error retrieving from FTS:", e);
+    if (args.query.trim() === "") {
       return [];
     }
+
+    const tokensRaw = this.getCleanedTrigrams(args.query).join(" OR ");
+    const tokens = this.escapeFtsQueryString(tokensRaw);
+
+    return await this.ftsIndex.retrieve({
+      n,
+      text: tokens,
+      tags: args.tags,
+      directory: args.filterDirectory,
+    });
   }
 
   protected async retrieveAndChunkRecentlyEditedFiles(
