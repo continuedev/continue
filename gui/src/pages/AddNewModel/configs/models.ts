@@ -873,6 +873,20 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["gemini"],
     isOpenSource: false,
   },
+  gemini20Flash: {
+    title: "Gemini 2.0 Flash",
+    description:
+      "Google's powerful workhorse model with low latency and enhanced performance.",
+    params: {
+      title: "Gemini 2.0 Flash",
+      model: "gemini-2.0-flash",
+      contextLength: 1_000_000,
+      apiKey: "<API_KEY>",
+    },
+    icon: "gemini.png",
+    providerOptions: ["gemini"],
+    isOpenSource: false,
+  },
   commandR: {
     title: "Command R",
     description:

@@ -300,12 +300,9 @@ class AutocompleteService(private val project: Project) {
     }
 
     private fun isInjectedFile(editor: Editor): Boolean {
-        val psiFile = runReadAction { PsiDocumentManager.getInstance(project).getPsiFile(editor.document) }
-        if (psiFile == null) {
-            return false
+        return runReadAction {
+            PsiDocumentManager.getInstance(project).getPsiFile(editor.document)?.isInjectedText() ?: false
         }
-        val response = runReadAction { psiFile.isInjectedText() }
-        return response
     }
 
     fun hideCompletions(editor: Editor) {
