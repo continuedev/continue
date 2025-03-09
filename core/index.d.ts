@@ -964,6 +964,8 @@ export interface ToolExtras {
   llm: ILLM;
   fetch: FetchFunction;
   tool: Tool;
+  toolCallId?: string;
+  onPartialOutput?: (params: { toolCallId: string, contextItems: ContextItem[] }) => void;
 }
 
 export interface Tool {

@@ -637,6 +637,23 @@ export const sessionSlice = createSlice({
 
       toolCallState.output = action.payload;
     },
+    updateToolCallOutput: (
+      state,
+      action: PayloadAction<{ toolCallId: string; contextItems: ContextItem[] }>,
+    ) => {
+      // Find the tool call with the given ID and update its output
+      const { toolCallId, contextItems } = action.payload;
+      
+      // Find the history item containing the tool call
+      const historyItem = state.history.find(
+        (item) => 
+          item.toolCallState?.toolCallId === toolCallId
+      );
+      
+      if (historyItem && historyItem.toolCallState) {
+        historyItem.toolCallState.output = contextItems;
+      }
+    },
     cancelToolCall: (state) => {
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
@@ -773,6 +790,7 @@ export const {
   acceptToolCall,
   setToolGenerated,
   setToolCallOutput,
+  updateToolCallOutput,
   setMode,
   setAllSessionMetadata,
   addSessionMetadata,
