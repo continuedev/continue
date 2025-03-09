@@ -13,6 +13,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
+import kotlin.math.max
 import kotlin.math.min
 
 
@@ -179,7 +180,7 @@ class DiffStreamHandler(
         // Update the highlighter to show the current line
         curLine.highlighter?.let { editor.markupModel.removeHighlighter(it) }
         curLine.highlighter = editor.markupModel.addLineHighlighter(
-            curLineKey, min(curLine.index, editor.document.lineCount - 1), HighlighterLayer.LAST
+            curLineKey, min(curLine.index, max(0, editor.document.lineCount - 1)), HighlighterLayer.LAST
         )
 
         // Remove the unfinished lines highlighter
