@@ -71,6 +71,32 @@ export class AnthropicApi implements BaseLlmApi {
     msgs: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
   ): any[] {
     const messages = msgs.map((message) => {
+      if (message.role === "tool") {
+        return {
+          role: "user",
+          content: [
+            {
+              type: "tool_result",
+              tool_use_id: message.tool_call_id,
+              content:
+                typeof message.content === "string"
+                  ? message.content
+                  : message.content.map((part) => part.text).join(""),
+            },
+          ],
+        };
+      } else if (message.role === "assistant" && message.tool_calls) {
+        return {
+          role: "assistant",
+          content: message.tool_calls.map((toolCall) => ({
+            type: "tool_use",
+            id: toolCall.id,
+            name: toolCall.function?.name,
+            input: JSON.parse(toolCall.function?.arguments || "{}"),
+          })),
+        };
+      }
+
       if (!Array.isArray(message.content)) {
         return message;
       }
