@@ -164,6 +164,10 @@ export interface ILLM extends LLMOptions {
   ): string | ChatMessage[];
 }
 
+export interface ModelInstaller {
+  installModel(modelName: string, signal: AbortSignal, progressReporter?: (task: string, increment: number, total: number) => void): Promise<any>;
+}
+
 export type ContextProviderType = "normal" | "query" | "submenu";
 
 export interface ContextProviderDescription {
@@ -544,7 +548,7 @@ export interface CustomLLMWithOptionals {
     signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-  ) => AsyncGenerator<string>;
+  ) => AsyncGenerator<ChatMessage | string>;
   listModels?: (
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => Promise<string[]>;

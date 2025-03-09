@@ -51,7 +51,7 @@ We recommend configuring **GPT-4o** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **Codestral** as your autocomplete model.
+We recommend configuring **Codestral** as your autocomplete model. If you use Azure AI Foundry to deploy Codestral:
 
 <Tabs groupId="config-example">
 	<TabItem value="yaml" label="YAML">
@@ -60,6 +60,8 @@ We recommend configuring **Codestral** as your autocomplete model.
     - name: Codestral
       provider: mistral
       model: codestral-latest
+      apiBase: https://<YOUR_MODEL_NAME>.<YOUR_REGION>.models.ai.azure.com/v1
+      apiKey: <YOUR_AZURE_API_KEY>
       roles:
         - autocomplete
   ```
@@ -70,7 +72,9 @@ We recommend configuring **Codestral** as your autocomplete model.
     "tabAutocompleteModel": {
       "title": "Codestral",
       "provider": "mistral",
-      "model": "codestral-latest"
+      "model": "codestral-latest", 
+      "apiBase": "https://<YOUR_MODEL_NAME>.<YOUR_REGION>.models.ai.azure.com/v1",
+      "apiKey": "<YOUR_AZURE_API_KEY>"
     }
   }
   ```

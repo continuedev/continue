@@ -12,7 +12,7 @@ See also
 
 - [Intro to YAML](https://yaml.org/)
 - [JSON Continue Config Reference](/json-reference)
-- [YAML Continue Config Reference](/reference)
+- [YAML Continue Config Reference](/yaml-reference)
 
 ## Create YAML file
 
@@ -37,9 +37,9 @@ Add all model configurations in `config.json`, including models in `models`, `ta
   - `inlineEdit` -> e.g. `roles: [chat, edit]`
   - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
 
-Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/reference#requestoptions)
+Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/yaml-reference#requestoptions)
 
-Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/reference#completionoptions)
+Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/yaml-reference#completionoptions)
 
 <!-- TODO - ollama autodetect supported? -->
 

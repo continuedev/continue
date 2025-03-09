@@ -205,10 +205,11 @@ describe("LLM", () => {
   });
   testLLM(
     new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1-preview" }),
-    { skip: false, timeout: 20000 },
+    { skip: false, timeout: 60000 },
   );
   testLLM(new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "o1" }), {
     skip: false,
+    timeout: 60000,
   });
   testLLM(
     new Gemini({

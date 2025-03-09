@@ -323,7 +323,7 @@ async function intermediateToFinalConfig(
                 {
                   ...desc,
                   model: modelName,
-                  title: `${llm.title} - ${modelName}`,
+                  title: modelName,
                 },
                 ide.readFile.bind(ide),
                 uniqueId,
