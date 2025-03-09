@@ -9,6 +9,7 @@ import * as vscode from "vscode";
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
+import { handleLLMError } from "../../util/errorHandling";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -255,7 +256,9 @@ export class VerticalDiffManager {
       this.enableDocumentChangeListener();
     } catch (e) {
       this.disableDocumentChangeListener();
-      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      if (!handleLLMError(e)) {
+        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      }
     } finally {
       vscode.commands.executeCommand(
         "setContext",
@@ -446,7 +449,9 @@ export class VerticalDiffManager {
       return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {
       this.disableDocumentChangeListener();
-      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      if (!handleLLMError(e)) {
+        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      }
       return undefined;
     } finally {
       vscode.commands.executeCommand(
