@@ -954,11 +954,11 @@ const getCommandsMap: (
           }
         } else if (selectedOption === "$(feedback) Give feedback") {
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
-        } else if (selectedOption === "$(comment) Open chat (Cmd+L)") {
+        } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (
           selectedOption ===
-          "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
+          "$(screen-full) Open full screen chat"
         ) {
           vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(question) Open help center") {
