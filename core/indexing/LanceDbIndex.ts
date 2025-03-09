@@ -205,7 +205,7 @@ export class LanceDbIndex implements CodebaseIndex {
       return [];
     }
     try {
-      return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
+      return await this.embeddingsProvider.embed(chunks.map((c) => c.content), "chunk");
     } catch (err) {
       throw new Error(
         `Failed to generate embeddings for ${chunks.length} chunks with provider: ${this.embeddingsProvider.embeddingId}: ${err}`,
@@ -469,7 +469,7 @@ export class LanceDbIndex implements CodebaseIndex {
     if (!this.embeddingsProvider) {
       return [];
     }
-    const [vector] = await this.embeddingsProvider.embed([query]);
+    const [vector] = await this.embeddingsProvider.embed([query], "query");
     const db = await lance.connect(getLanceDbPath());
 
     let allResults = [];
