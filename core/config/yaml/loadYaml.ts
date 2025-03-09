@@ -366,10 +366,14 @@ export async function loadContinueConfigFromYaml(
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
+  configYamlPath: string | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(getConfigYamlPath(ideInfo.ideType), "utf-8")
+      ? fs.readFileSync(
+          configYamlPath ?? getConfigYamlPath(ideInfo.ideType),
+          "utf-8",
+        )
       : "";
 
   const configYamlResult = await loadConfigYaml(

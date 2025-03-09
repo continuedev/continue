@@ -169,3 +169,4 @@ extensions/.continue-debug/
 *.vsix
 
 .continuerules
+.continue/

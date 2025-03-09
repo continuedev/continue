@@ -5,6 +5,7 @@ import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
 
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
+import { getControlPlaneEnv } from "../../control-plane/env.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -21,21 +22,35 @@ export interface PlatformConfigMetadata {
 export default class PlatformProfileLoader implements IProfileLoader {
   static RELOAD_INTERVAL = 1000 * 5; // 5 seconds
 
-  description: ProfileDescription;
-
-  constructor(
+  private constructor(
     private configResult: ConfigResult<AssistantUnrolled>,
     private readonly ownerSlug: string,
     private readonly packageSlug: string,
     private readonly iconUrl: string,
-    versionSlug: string,
+    private readonly versionSlug: string,
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private writeLog: (message: string) => Promise<void>,
     private readonly onReload: () => void,
-  ) {
-    this.description = {
+    readonly description: ProfileDescription,
+  ) {}
+
+  static async create(
+    configResult: ConfigResult<AssistantUnrolled>,
+    ownerSlug: string,
+    packageSlug: string,
+    iconUrl: string,
+    versionSlug: string,
+    controlPlaneClient: ControlPlaneClient,
+    ide: IDE,
+    ideSettingsPromise: Promise<IdeSettings>,
+    writeLog: (message: string) => Promise<void>,
+    onReload: () => void,
+  ): Promise<PlatformProfileLoader> {
+    const controlPlaneEnv = await getControlPlaneEnv(ideSettingsPromise);
+
+    const description: ProfileDescription = {
       id: `${ownerSlug}/${packageSlug}`,
       profileType: "platform",
       fullSlug: {
@@ -45,8 +60,23 @@ export default class PlatformProfileLoader implements IProfileLoader {
       },
       title: configResult.config?.name ?? `${ownerSlug}/${packageSlug}`,
       errors: configResult.errors,
-      iconUrl: this.iconUrl,
+      iconUrl: iconUrl,
+      uri: `${controlPlaneEnv}${ownerSlug}/${packageSlug}`,
     };
+
+    return new PlatformProfileLoader(
+      configResult,
+      ownerSlug,
+      packageSlug,
+      iconUrl,
+      versionSlug,
+      controlPlaneClient,
+      ide,
+      ideSettingsPromise,
+      writeLog,
+      onReload,
+      description,
+    );
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
@@ -70,6 +100,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
         packageSlug: this.packageSlug,
       },
       this.description.id,
+      undefined,
     );
 
     return {

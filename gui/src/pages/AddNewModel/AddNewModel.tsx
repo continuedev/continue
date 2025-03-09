@@ -221,7 +221,7 @@ function AddNewModel() {
           disabled={false}
           onClick={(e) => {
             ideMessenger.post("config/openProfile", {
-              profileId: "local",
+              profileId: undefined,
             });
           }}
         >
