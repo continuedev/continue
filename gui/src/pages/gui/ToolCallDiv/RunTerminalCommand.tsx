@@ -72,6 +72,41 @@ function parseTerminalOutput(output: string): {
   };
 }
 
+const OutputContainer = styled.div`
+  margin-top: 8px;
+  border-top: 1px solid rgba(128, 128, 128, 0.2);
+  padding-top: 8px;
+`;
+
+const OutputTitle = styled.div`
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+`;
+
+const RunningDot = styled.div`
+  width: 8px;
+  height: 8px;
+  background-color: #4caf50;
+  border-radius: 50%;
+  margin-left: 6px;
+  animation: pulse 1.5s infinite;
+  
+  @keyframes pulse {
+    0% {
+      opacity: 0.4;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.4;
+    }
+  }
+`;
+
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
   
