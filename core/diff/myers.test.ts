@@ -29,4 +29,16 @@ describe("Test myers diff function", () => {
       { type: "same", line: "E" },
     ]);
   });
+
+  test("should ignore newline differences at end", () => {
+    const linesA = "A\nB\nC\n";
+    const linesB = "A\nB\nC";
+
+    const diffLines = myersDiff(linesA, linesB);
+    expect(diffLines).toEqual([
+      { type: "same", line: "A" },
+      { type: "same", line: "B" },
+      { type: "same", line: "C" },
+    ]);
+  });
 });
