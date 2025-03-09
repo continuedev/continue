@@ -1015,7 +1015,7 @@ export class Core {
       }
     });
 
-    on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
+    on("tools/call", async ({ data: { toolCall, selectedModelTitle }, messageId }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
         throw new Error("Config not loaded");
@@ -1031,6 +1031,14 @@ export class Core {
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
+      // Define a callback for streaming output updates
+      const onPartialOutput = (params: { 
+        toolCallId: string, 
+        contextItems: any[]
+      }) => {
+        this.messenger.send("toolCallPartialOutput", params);
+      };
+
       const contextItems = await callTool(
         tool,
         JSON.parse(toolCall.function.arguments || "{}"),
@@ -1040,6 +1048,8 @@ export class Core {
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
           tool,
+          toolCallId: toolCall.id,
+          onPartialOutput,
         },
       );
 

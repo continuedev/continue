@@ -15,4 +15,8 @@ export type ToWebviewFromCoreProtocol = ToWebviewFromIdeOrCoreProtocol & {
     { profiles: ProfileDescription[]; selectedProfileId: string | null },
     void,
   ];
+  toolCallPartialOutput: [
+    { toolCallId: string; contextItems: any[] },
+    void,
+  ];
 };
