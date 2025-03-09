@@ -108,5 +108,5 @@ export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
 }
 
 export function isLocalProfile(profile: ProfileDescription): boolean {
-  return profile.id === "local";
+  return profile.profileType === "local";
 }

@@ -1,5 +1,3 @@
-import * as fs from "node:fs";
-
 import { ConfigResult, FullSlug } from "@continuedev/config-yaml";
 
 import {
@@ -17,8 +15,6 @@ import {
 } from "../index.js";
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
-import { getConfigJsonPath, getConfigYamlPath } from "../util/paths.js";
-import { localPathToUri } from "../util/pathToUri.js";
 
 import { getAllAssistantFiles } from "./getSystemPromptDotFile.js";
 import {
@@ -98,7 +94,7 @@ export class ConfigHandler {
         this.ideSettingsPromise,
         this.controlPlaneClient,
         this.writeLog,
-        assistant.path,
+        assistant,
       );
     });
     return profiles.map(
@@ -162,14 +158,12 @@ export class ConfigHandler {
 
   async openConfigProfile(profileId?: string) {
     let openProfileId = profileId || this.selectedProfileId;
-    if (openProfileId === "local") {
+    const profile = this.profiles?.find(
+      (p) => p.profileDescription.id === openProfileId,
+    );
+    if (profile?.profileDescription.profileType === "local") {
       const ideInfo = await this.ide.getIdeInfo();
-      const configYamlPath = getConfigYamlPath(ideInfo.ideType);
-      if (fs.existsSync(configYamlPath)) {
-        await this.ide.openFile(localPathToUri(configYamlPath));
-      } else {
-        await this.ide.openFile(localPathToUri(getConfigJsonPath()));
-      }
+      await this.ide.openFile(profile.profileDescription.uri);
     } else {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
@@ -194,25 +188,27 @@ export class ConfigHandler {
       const assistants =
         await this.controlPlaneClient.listAssistants(selectedOrgId);
 
-      const hubProfiles = assistants.map((assistant) => {
-        const profileLoader = new PlatformProfileLoader(
-          {
-            ...assistant.configResult,
-            config: assistant.configResult.config,
-          },
-          assistant.ownerSlug,
-          assistant.packageSlug,
-          assistant.iconUrl,
-          assistant.configResult.config?.version ?? "latest",
-          this.controlPlaneClient,
-          this.ide,
-          this.ideSettingsPromise,
-          this.writeLog,
-          this.reloadConfig.bind(this),
-        );
+      const hubProfiles = await Promise.all(
+        assistants.map(async (assistant) => {
+          const profileLoader = await PlatformProfileLoader.create(
+            {
+              ...assistant.configResult,
+              config: assistant.configResult.config,
+            },
+            assistant.ownerSlug,
+            assistant.packageSlug,
+            assistant.iconUrl,
+            assistant.configResult.config?.version ?? "latest",
+            this.controlPlaneClient,
+            this.ide,
+            this.ideSettingsPromise,
+            this.writeLog,
+            this.reloadConfig.bind(this),
+          );
 
-        return new ProfileLifecycleManager(profileLoader, this.ide);
-      });
+          return new ProfileLifecycleManager(profileLoader, this.ide);
+        }),
+      );
 
       if (selectedOrgId === null) {
         // Personal

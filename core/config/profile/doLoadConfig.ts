@@ -19,13 +19,14 @@ import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
+import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
+import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
-import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -36,7 +37,7 @@ export default async function doLoadConfig(
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   profileId: string,
-  overrideConfigYamlByPath: string | undefined
+  overrideConfigYamlByPath: string | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
@@ -51,7 +52,9 @@ export default async function doLoadConfig(
     migrateJsonSharedConfig(configJsonPath, ide);
   }
 
-  const configYamlPath = overrideConfigYamlByPath || getConfigYamlPath(ideInfo.ideType);
+  const configYamlPath = localPathOrUriToPath(
+    overrideConfigYamlByPath || getConfigYamlPath(ideInfo.ideType),
+  );
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
@@ -69,6 +72,7 @@ export default async function doLoadConfig(
       overrideConfigYaml,
       platformConfigMetadata,
       controlPlaneClient,
+      configYamlPath,
     );
     newConfig = result.config;
     errors = result.errors;

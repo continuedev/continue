@@ -10,6 +10,7 @@ import {
 } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
+import { PRODUCTION_ENV } from "../../control-plane/env.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -40,6 +41,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       },
       title: workspaceTitle,
       errors: undefined,
+      uri: `${PRODUCTION_ENV.APP_URL}workspaces/${workspaceId}`,
     };
 
     setInterval(async () => {
