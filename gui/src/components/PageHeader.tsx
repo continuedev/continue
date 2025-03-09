@@ -4,15 +4,23 @@ export interface PageHeaderProps {
   onTitleClick?: () => void;
   title?: string;
   rightContent?: React.ReactNode;
+  showBorder?: boolean; // Added this prop
 }
 
 export default function PageHeader({
   onTitleClick,
   title,
   rightContent,
+  showBorder,
 }: PageHeaderProps) {
   return (
-    <div className="bg-vsc-background sticky top-0 z-20 m-0 flex items-center justify-between border-b-zinc-700 bg-inherit py-0.5">
+    <div
+      className={`bg-vsc-background sticky top-0 z-20 m-0 flex items-center justify-between bg-inherit py-0.5 ${
+        showBorder
+          ? "border-0 border-b-[1px] border-solid border-b-zinc-700"
+          : ""
+      }`}
+    >
       <div className="flex items-center">
         {title && (
           <div
