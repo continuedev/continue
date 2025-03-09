@@ -172,7 +172,11 @@ class Bedrock extends BaseLLM {
 
           const toolUse = chunk.contentBlockStart.start.toolUse;
           if (toolUse?.toolUseId && toolUse?.name) {
-            // [existing code]
+            this._currentToolResponse = {
+              toolUseId: toolUse.toolUseId,
+              name: toolUse.name,
+              input: ""
+            };
           }
           continue;
         }
@@ -223,22 +227,20 @@ class Bedrock extends BaseLLM {
     const convertedMessages = this._convertMessages(messages);
 
     const supportsTools = PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
-    const tools = (supportsTools && options.tools?.map(tool => ({
-      toolSpec: {
-        name: tool.function.name,
-        description: tool.function.description,
-        inputSchema: {
-          json: tool.function.parameters
-        }
-      }
-    }))) || null
-
     return {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
-      toolConfig: tools && tools.length ? {
-        tools
+      toolConfig: supportsTools && options.tools ? {
+        tools: options.tools.map(tool => ({
+          toolSpec: {
+            name: tool.function.name,
+            description: tool.function.description,
+            inputSchema: {
+              json: tool.function.parameters
+            }
+          }
+        }))
       } : undefined,
       inferenceConfig: {
         maxTokens: options.maxTokens,
