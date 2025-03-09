@@ -113,6 +113,7 @@ class Bedrock extends BaseLLM {
     try {
       response = await client.send(command, { abortSignal: signal });
     } catch (error: unknown) {
+      console.error(error);
       const message = error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to communicate with Bedrock API: ${message}`);
     }
@@ -124,9 +125,9 @@ class Bedrock extends BaseLLM {
     try {
       for await (const chunk of response.stream) {
 
-        console.log(chunk);
-
         if (chunk.contentBlockDelta?.delta) {
+
+          const delta: any = chunk.contentBlockDelta.delta
 
           // Handle text content
           if (chunk.contentBlockDelta.delta.text) {
@@ -137,6 +138,18 @@ class Bedrock extends BaseLLM {
           // Handle text content
           if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
             yield { role: "thinking", content: (chunk.contentBlockDelta.delta as any).reasoningContent.text };
+            continue;
+          }
+
+          // Handle signature for thinking
+          if (delta.reasoningContent?.signature) {
+            yield { role: "thinking", content: "", signature: delta.reasoningContent.signature };
+            continue;
+          }
+
+          // Handle redacted thinking
+          if (delta.redactedReasoning?.data) {
+            yield { role: "thinking", content: "", redactedThinking: delta.redactedReasoning.data };
             continue;
           }
 
@@ -151,13 +164,15 @@ class Bedrock extends BaseLLM {
         }
 
         if (chunk.contentBlockStart?.start) {
+          const start: any = chunk.contentBlockStart.start
+          if (start.redactedReasoning) {
+            yield { role: "thinking", content: "", redactedThinking: start.redactedReasoning.data };
+            continue;
+          }
+
           const toolUse = chunk.contentBlockStart.start.toolUse;
           if (toolUse?.toolUseId && toolUse?.name) {
-            this._currentToolResponse = {
-              toolUseId: toolUse.toolUseId,
-              name: toolUse.name,
-              input: ""
-            };
+            // [existing code]
           }
           continue;
         }
@@ -287,6 +302,29 @@ class Bedrock extends BaseLLM {
           }
         }))
       };
+    }
+
+    if (message.role === "thinking") {
+      if (message.redactedThinking) {
+        return {
+          role: "assistant",
+          content: [{
+            redactedReasoning: {
+              data: message.redactedThinking
+            }
+          }]
+        };
+      } else {
+        return {
+          role: "assistant",
+          content: [{
+            reasoningContent: {
+              text: message.content,
+              signature: message.signature
+            }
+          }]
+        };
+      }
     }
 
     // Standard text message
