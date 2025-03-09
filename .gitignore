@@ -173,4 +173,4 @@ extensions/.continue-debug/
 *.vsix
 
 .continuerules
-**/.continue/assistants/
+CLAUDE.md
