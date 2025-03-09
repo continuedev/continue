@@ -42,9 +42,9 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.620.1",
-    "@aws-sdk/client-sagemaker-runtime": "^3.621.0",
-    "@aws-sdk/credential-providers": "^3.620.1",
+    "@aws-sdk/client-bedrock-runtime": "^3.758.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.758.0",
+    "@aws-sdk/credential-providers": "^3.758.0",
     "@continuedev/config-types": "^1.0.13",
     "@continuedev/config-yaml": "^1.0.52",
     "@continuedev/fetch": "^1.0.4",

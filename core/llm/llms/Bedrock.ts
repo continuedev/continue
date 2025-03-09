@@ -1,7 +1,9 @@
 import {
   BedrockRuntimeClient,
+  ContentBlock,
   ConverseStreamCommand,
-  InvokeModelCommand
+  InvokeModelCommand,
+  Message
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
@@ -267,10 +269,10 @@ class Bedrock extends BaseLLM {
     };
   }
 
-  private _convertMessage(message: ChatMessage): any {
+  private _convertMessage(message: ChatMessage): Message | null {
     // Handle system messages explicitly
     if (message.role === "system") {
-      return;
+      return null;
     }
 
     // Tool response handling
@@ -308,23 +310,28 @@ class Bedrock extends BaseLLM {
 
     if (message.role === "thinking") {
       if (message.redactedThinking) {
+        const content: ContentBlock.ReasoningContentMember = {
+          reasoningContent: {
+            redactedContent: new Uint8Array(Buffer.from(message.redactedThinking))
+          }
+        };
         return {
           role: "assistant",
-          content: [{
-            redactedReasoning: {
-              data: message.redactedThinking
-            }
-          }]
+          content: [content]
         };
       } else {
-        return {
-          role: "assistant",
-          content: [{
-            reasoningContent: {
-              text: message.content,
+        const content: ContentBlock.ReasoningContentMember = {
+          reasoningContent: {
+            reasoningText: {
+              text: (message.content as string) || "",
               signature: message.signature
             }
-          }]
+
+          }
+        };
+        return {
+          role: "assistant",
+          content: [content]
         };
       }
     }
@@ -364,12 +371,14 @@ class Bedrock extends BaseLLM {
           }
           return null;
         }).filter(Boolean)
-      };
+      } as Message;
     }
+    return null;
   }
 
   private _convertMessages(messages: ChatMessage[]): any[] {
-    return messages
+
+    const converted = messages
       .map((message) => {
         try {
           return this._convertMessage(message);
@@ -379,6 +388,8 @@ class Bedrock extends BaseLLM {
         }
       })
       .filter(Boolean);
+    return converted;
+
   }
 
   private async _getCredentials() {
