@@ -129,9 +129,20 @@ function getRangeInFileWithContents(
       return null;
     }
 
-    // adjust starting position to include indentation
-    const start = new vscode.Position(selection.start.line, 0);
-    const selectionRange = new vscode.Range(start, selection.end);
+    let selectionRange = new vscode.Range(selection.start, selection.end);
+    const document = editor.document;
+    // Select the context from the beginning of the selection start line to the selection start position
+    const beginningOfSelectionStartLine = selection.start.with(undefined, 0);
+    const textBeforeSelectionStart = document.getText(
+      new vscode.Range(beginningOfSelectionStartLine, selection.start),
+    );
+    // If there are only whitespace before the start of the selection, include the indentation
+    if (textBeforeSelectionStart.trim().length === 0) {
+      selectionRange = selectionRange.with({
+        start: beginningOfSelectionStartLine,
+      });
+    }
+
     const contents = editor.document.getText(selectionRange);
 
     return {
