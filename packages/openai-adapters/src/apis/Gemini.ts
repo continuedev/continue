@@ -86,11 +86,50 @@ export class GeminiApi implements BaseLlmApi {
     }
 
     const isV1API = url.includes("/v1/");
+
+    const toolCallIdToNameMap = new Map<string, string>();
     const contents = oaiBody.messages
       .map((msg) => {
         if (msg.role === "system" && !isV1API) {
           return null; // Don't include system message in contents
         }
+
+        if (msg.role == "assistant" && msg.tool_calls?.length) {
+          for (const toolCall of msg.tool_calls) {
+            toolCallIdToNameMap.set(toolCall.id, toolCall.function.name);
+          }
+
+          return {
+            role: "model",
+            parts: msg.tool_calls.map((toolCall) => ({
+              functionCall: {
+                name: toolCall.function.name,
+                args: JSON.parse(toolCall.function.arguments || "{}"),
+              },
+            })),
+          };
+        }
+
+        if (msg.role === "tool") {
+          return {
+            role: "user",
+            parts: [
+              {
+                functionResponse: {
+                  name: msg.tool_call_id,
+                  response: {
+                    name: toolCallIdToNameMap.get(msg.tool_call_id),
+                    content:
+                      typeof msg.content === "string"
+                        ? msg.content
+                        : msg.content.map((part) => part.text).join(""),
+                  },
+                },
+              },
+            ],
+          };
+        }
+
         if (!msg.content) {
           return null;
         }
@@ -246,9 +285,10 @@ export class GeminiApi implements BaseLlmApi {
       `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
       this.apiBase,
     ).toString();
+    const convertedBody = this._convertBody(body, apiURL);
     const resp = await customFetch(this.config.requestOptions)(apiURL, {
       method: "POST",
-      body: JSON.stringify(this._convertBody(body, apiURL)),
+      body: JSON.stringify(convertedBody),
       signal,
     });
 

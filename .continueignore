@@ -6,3 +6,4 @@ docs/docs/languages
 .archive/
 **/*.scm
 **/*.diff
+.continue/
