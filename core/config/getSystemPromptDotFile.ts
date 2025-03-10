@@ -35,7 +35,7 @@ export async function getAssistantFilesFromDir(
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
   try {
-    const exists = await ide.fileExists(localPathToUri(dir));
+    const exists = await ide.fileExists(dir);
 
     if (!exists) {
       return [];
@@ -67,7 +67,7 @@ export async function getAllAssistantFiles(
     .map((dir) => dirsToCheck.map((d) => joinPathsToUri(dir, d)))
     .flat();
 
-  fullDirs.push(getGlobalAssistantsPath());
+  fullDirs.push(localPathToUri(getGlobalAssistantsPath()));
 
   assistantFiles = (
     await Promise.all(fullDirs.map((dir) => getAssistantFilesFromDir(ide, dir)))
