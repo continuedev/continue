@@ -405,6 +405,16 @@ Several experimental config parameters are available, as described below:
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
 - `modelContextProtocolServers`: See [Model Context Protocol](/customize/context-providers#model-context-protocol)
+- `systemMessageComposition`: Controls how the default system instructions and user-provided system message are combined:
+  - `legacy` or `append` (default): Default instructions are placed first, followed by user system message.
+  - `prepend`: User system message is placed first, followed by default instructions.
+  - `placeholders`: User system message can include special placeholders to control where default instructions appear:
+
+    - `{DEFAULT_INSTRUCTIONS}`: Includes both code block and tool use instructions.
+    - `{CODE_BLOCK_INSTRUCTIONS}`: Includes only the code block formatting instructions.
+    - `{TOOL_USE_RULES}`: Includes only the tool use rules (when applicable).
+
+    These placeholders correspond to templates that can be customized in a model's `promptTemplates` object using the keys `codeBlockInstructions` and `toolUseRules`.
 
 Example
 
@@ -432,7 +442,8 @@ Example
           "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
         }
       }
-    ]
+    ],
+    "systemMessageComposition": "placeholders"
   }
 }
 ```

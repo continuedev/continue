@@ -1047,6 +1047,7 @@ declare global {
     useChromiumForDocsCrawling?: boolean;
     useTools?: boolean;
     modelContextProtocolServers?: MCPOptions[];
+    systemMessageComposition?: "legacy" | "append" | "prepend" | "placeholders";
   }
   
   interface AnalyticsConfig {
