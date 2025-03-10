@@ -36,6 +36,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `engine`: Engine for Azure OpenAI requests.
 - `capabilities`: Override auto-detected capabilities:
   - `uploadImage`: Boolean indicating if the model supports image uploads.
+  - `tools`: Boolean indicating if the model supports tool calls.
 
 _(AWS Only)_
 
