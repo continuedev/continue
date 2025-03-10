@@ -320,7 +320,7 @@
         "group": "Continue"
       },
       {
-        "command": "continue.focusContinueSessionId",
+        "command": "continue.focusContinueInput",
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
