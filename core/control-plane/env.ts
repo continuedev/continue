@@ -18,7 +18,7 @@ const WORKOS_CLIENT_ID_STAGING = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ";
 const WORKOS_ENV_ID_PRODUCTION = "continue";
 const WORKOS_ENV_ID_STAGING = "continue-staging";
 
-const PRODUCTION_ENV: ControlPlaneEnv = {
+export const PRODUCTION_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL:
     "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/",
   CONTROL_PLANE_URL:
