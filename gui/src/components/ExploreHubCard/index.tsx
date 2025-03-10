@@ -2,6 +2,7 @@ import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { Button, ButtonSubtext } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setIsExploreDialogOpen } from "../../redux/slices/uiSlice";
+import { setLocalStorage } from "../../util/localStorage";
 import { ReusableCard } from "../ReusableCard";
 
 export function ExploreHubCard() {
@@ -13,7 +14,10 @@ export function ExploreHubCard() {
   return (
     <ReusableCard
       showCloseButton={true}
-      onClose={() => dispatch(setIsExploreDialogOpen(false))}
+      onClose={() => {
+        setLocalStorage("isExploreDialogOpen", false);
+        return dispatch(setIsExploreDialogOpen(false));
+      }}
     >
       <div className="flex flex-col items-center gap-1 p-4 text-center">
         <h2 className="text-2xl font-semibold">Create Your Own Assistant</h2>

@@ -5,6 +5,7 @@ import {
   defaultOnboardingCardState,
   OnboardingCardState,
 } from "../../components/OnboardingCard";
+import { getLocalStorage } from "../../util/localStorage";
 
 type ToolSetting =
   | "allowedWithPermission"
@@ -32,7 +33,7 @@ export const uiSlice = createSlice({
     dialogMessage: "",
     dialogEntryOn: false,
     onboardingCard: defaultOnboardingCardState,
-    isExploreDialogOpen: false,
+    isExploreDialogOpen: getLocalStorage("isExploreDialogOpen"),
     shouldAddFileForEditing: false,
     ttsActive: false,
     useTools: false,

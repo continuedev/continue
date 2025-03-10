@@ -2,6 +2,7 @@ import { JSONContent } from "@tiptap/react";
 import { OnboardingStatus } from "../components/OnboardingCard";
 
 type LocalStorageTypes = {
+  isExploreDialogOpen: boolean;
   onboardingStatus?: OnboardingStatus;
   hasDismissedOnboardingCard: boolean;
   mainTextEntryCounter: number;
