@@ -19,12 +19,9 @@ import {
   setDefaultModel,
 } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import {
-  getFontSize,
-  getMetaKeyLabel,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { getFontSize, isMetaEquivalentKeyPressed } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import Shortcut from "../gui/Shortcut";
 import { Divider } from "./platform/shared";
 
 interface ModelOptionProps {
@@ -165,9 +162,7 @@ function ModelOption({
     e.stopPropagation();
     e.preventDefault();
 
-    ideMessenger.post("config/openProfile", {
-      profileId: "local",
-    });
+    ideMessenger.post("config/openProfile", { profileId: undefined });
   }
 
   function handleOptionClick(e: any) {
@@ -350,7 +345,7 @@ function ModelSelect() {
           <div className="mt-auto">
             <Divider className="!my-0" />
 
-            {selectedProfile?.id === "local" && (
+            {selectedProfile?.profileType === "local" && (
               <>
                 <StyledListboxOption
                   key={options.length}
@@ -368,7 +363,7 @@ function ModelSelect() {
             <Divider className="!my-0" />
 
             <span className="block px-3 py-3" style={{ color: lightGray }}>
-              <code>{getMetaKeyLabel()} + '</code> to toggle
+              <Shortcut>meta '</Shortcut> to toggle model
             </span>
           </div>
         </StyledListboxOptions>

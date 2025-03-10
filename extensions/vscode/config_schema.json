@@ -246,6 +246,7 @@
             "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
+            "### SambaNova\n SambaNova provides fast inference of open-source language models with zero data retention. To get started, obtain an API key in [SambaNova Cloud](https://cloud.sambanova.ai/apis).",
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
@@ -945,7 +946,10 @@
                   "gemini-1.5-flash",
                   "gemini-1.5-flash-8b",
                   "gemini-2.0-flash-exp",
-                  "gemini-2.0-flash"
+                  "gemini-2.0-flash",
+                  "gemini-2.0-flash-thinking-exp-01-21",
+                  "gemini-2.0-pro-exp-02-05",
+                  "gemini-2.0-flash-lite-preview-02-05"
                 ]
               }
             }
@@ -1626,7 +1630,22 @@
               "model": {
                 "anyOf": [
                   {
-                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
+                    "enum": [
+                      "Qwen2.5-Coder-32B-Instruct",
+                      "Meta-Llama-3.3-70B-Instruct",
+                      "Meta-Llama-3.1-8B-Instruct",
+                      "Meta-Llama-3.1-70B-Instruct",
+                      "Meta-Llama-3.1-405B-Instruct",
+                      "Llama-3.1-Tulu-3-405B",
+                      "Meta-Llama-3.2-1B-Instruct",
+                      "Meta-Llama-3.2-3B-Instruct",
+                      "Llama-3.2-11B-Vision-Instruct",
+                      "Llama-3.2-90B-Vision-Instruct",
+                      "Qwen2.5-72B-Instruct",
+                      "QwQ-32B-Preview",
+                      "DeepSeek-R1-Distill-Llama-70B",
+                      "DeepSeek-R1"
+                    ]
                   },
                   {
                     "type": "string"

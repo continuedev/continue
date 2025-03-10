@@ -21,8 +21,8 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import { startLocalOllama } from "core/util/ollamaHelper";
 import type { IDE } from "core";
+import { handleLLMError } from "../util/errorHandling";
 
 const Diff = require("diff");
 
@@ -43,16 +43,13 @@ export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
 {
   private onError(e: any) {
-    let options = ["Documentation"];
-    if (e.message.includes("Ollama may not be installed")) {
-      options.push("Download Ollama");
-    } else if (e.message.includes("Ollama may not be running")) {
-      options = ["Start Ollama"]; // We want "Start" to be the only choice
+    if (handleLLMError(e)) {
+      return;
     }
-
-    if (e.message.includes("Please sign in with GitHub")) {
+    let message = e.message;
+    if (message.includes("Please sign in with GitHub")) {
       showFreeTrialLoginMessage(
-        e.message,
+        message,
         this.configHandler.reloadConfig.bind(this.configHandler),
         () => {
           void this.webviewProtocol.request("openOnboardingCard", undefined);
@@ -60,17 +57,13 @@ export class ContinueCompletionProvider
       );
       return;
     }
-    vscode.window.showErrorMessage(e.message, ...options).then((val) => {
+    vscode.window.showErrorMessage(message, "Documentation").then((val) => {
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
             "https://docs.continue.dev/features/tab-autocomplete",
           ),
         );
-      } else if (val === "Download Ollama") {
-        vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
-      } else if (val === "Start Ollama") {
-        startLocalOllama(this.ide);
       }
     });
   }

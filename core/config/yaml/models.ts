@@ -145,7 +145,7 @@ async function autodetectModels(
           {
             ...model,
             model: modelName,
-            name: `${llm.title} - ${modelName}`,
+            name: modelName,
           },
           uniqueId,
           ideSettings,

@@ -297,7 +297,7 @@ function ConfigPage() {
                 </div>
                 {selectedProfile && (
                   <SecondaryButton onClick={handleOpenConfig}>
-                    {selectedProfile.id === "local"
+                    {selectedProfile.profileType === "local"
                       ? "Open Config File"
                       : hubEnabled
                         ? "Open Assistant"
