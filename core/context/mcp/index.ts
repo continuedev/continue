@@ -5,11 +5,30 @@ import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/webso
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { ConfigValidationError } from "@continuedev/config-yaml";
-import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
+import { ContinueConfig, IDE, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import MCPContextProvider from "../providers/MCPContextProvider";
+import { ListRootsRequestSchema, RootSchema } from "@modelcontextprotocol/sdk/types.js";
 
+/**
+ * Converts a file path root response.
+ * @param filePath The full file path to convert
+ * @returns root object with name as file, uri as properly formatted file URL
+ */
+function filePathToRoot(filePath: string): { name: string; uri: string } {
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  
+  const pathPrefix = normalizedPath.startsWith('/') ? 'file://' : 'file:///';
+  const name = normalizedPath.split('/').pop() || '';
+  try {
+    const url = new URL(normalizedPath, pathPrefix);
+    return { name, uri: url.href };
+  } catch (error) {
+    // For simple cases, fall back to manual construction
+    return { name, uri:  `${pathPrefix}${encodeURI(normalizedPath)}`};
+  }
+}
 export class MCPManagerSingleton {
   private static instance: MCPManagerSingleton;
 
@@ -24,10 +43,18 @@ export class MCPManagerSingleton {
     return MCPManagerSingleton.instance;
   }
 
-  createConnection(id: string, options: MCPOptions): MCPConnection | undefined {
+  createConnection(id: string, options: MCPOptions, ide: IDE): MCPConnection | undefined {
     if (!this.connections.has(id)) {
       const connection = new MCPConnection(options);
       this.connections.set(id, connection);
+      // handle listRoots request
+      connection.client.setRequestHandler(ListRootsRequestSchema,  async (request,extra ) =>  {
+        const roots = (await ide.getWorkspaceDirs()).map((root) => filePathToRoot(root));
+        return {
+          roots
+        };
+      });
+
       return connection;
     } else {
       return this.connections.get(id);
@@ -61,7 +88,11 @@ class MCPConnection {
         version: "1.0.0",
       },
       {
-        capabilities: {},
+        capabilities: {
+          roots: {
+            listChanged: true,
+          },
+        },
       },
     );
   }
