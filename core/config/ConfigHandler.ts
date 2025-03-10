@@ -182,7 +182,8 @@ export class ConfigHandler {
     let profiles: ProfileLifecycleManager[] | null = null;
     if (!userId) {
       // Not logged in
-      profiles = [this.localProfileManager];
+      const allLocalProfiles = await this.getAllLocalProfiles();
+      profiles = [...allLocalProfiles];
     } else {
       // Logged in
       const assistants =
