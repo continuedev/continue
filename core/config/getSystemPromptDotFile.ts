@@ -1,6 +1,7 @@
 import { IDE } from "..";
 import { walkDir } from "../indexing/walkDir";
 import { getGlobalAssistantsPath } from "../util/paths";
+import { localPathToUri } from "../util/pathToUri";
 import { joinPathsToUri } from "../util/uri";
 export const SYSTEM_PROMPT_DOT_FILE = ".continuerules";
 
@@ -34,7 +35,7 @@ export async function getAssistantFilesFromDir(
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
   try {
-    const exists = await ide.fileExists(dir);
+    const exists = await ide.fileExists(localPathToUri(dir));
 
     if (!exists) {
       return [];
