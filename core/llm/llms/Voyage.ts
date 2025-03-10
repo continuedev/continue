@@ -14,7 +14,7 @@ class Voyage extends OpenAI {
       return [];
     }
     const url = new URL("rerank", this.apiBase);
-    const resp = await fetch(url, {
+    const resp = await this.fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
