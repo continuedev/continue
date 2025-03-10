@@ -16,6 +16,7 @@ type UIState = {
   dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
   onboardingCard: OnboardingCardState;
+  isExploreDialogOpen: boolean;
   shouldAddFileForEditing: boolean;
   useTools: boolean;
   toolSettings: { [toolName: string]: ToolSetting };
@@ -31,6 +32,7 @@ export const uiSlice = createSlice({
     dialogMessage: "",
     dialogEntryOn: false,
     onboardingCard: defaultOnboardingCardState,
+    isExploreDialogOpen: false,
     shouldAddFileForEditing: false,
     ttsActive: false,
     useTools: false,
@@ -66,6 +68,12 @@ export const uiSlice = createSlice({
     },
     setShowDialog: (state, action: PayloadAction<UIState["showDialog"]>) => {
       state.showDialog = action.payload;
+    },
+    setIsExploreDialogOpen: (
+      state,
+      action: PayloadAction<UIState["isExploreDialogOpen"]>,
+    ) => {
+      state.isExploreDialogOpen = action.payload;
     },
     // Tools
     toggleUseTools: (state) => {
@@ -105,6 +113,7 @@ export const {
   setDialogMessage,
   setDialogEntryOn,
   setShowDialog,
+  setIsExploreDialogOpen,
   toggleUseTools,
   toggleToolSetting,
   addTool,
