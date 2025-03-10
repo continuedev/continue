@@ -107,8 +107,11 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       results = results.slice(-this.options.nFinal);
       return results;
     } catch (e) {
-      console.warn(`Failed to rerank codebase retrieval results ${e}`);
-      return chunks;
+      void this.options.ide.showToast(
+        "warning",
+        `Failed to rerank retrieval results\n${e}`,
+      );
+      return chunks.slice(-this.options.nFinal);
     }
   }
 
