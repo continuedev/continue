@@ -91,7 +91,11 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
      "embeddingsProvider": {
        "provider": "vllm",
        "model": "nomic-ai/nomic-embed-text-v1",
-       "apiBase": "http://<vllm embed endpoint>/v1"
+       "apiBase": "http://<vllm embed endpoint>/v1",
+       "embeddingPrefixes" : {
+          "chunk": "search_document: ",
+          "query": "search_query: "
+        }
      }
    }
    ```
