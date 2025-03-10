@@ -1,4 +1,5 @@
-import { Button } from "..";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
+import { Button, ButtonSubtext } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setIsExploreDialogOpen } from "../../redux/slices/uiSlice";
 import { ReusableCard } from "../ReusableCard";
@@ -14,7 +15,7 @@ export function ExploreHubCard() {
       showCloseButton={true}
       onClose={() => dispatch(setIsExploreDialogOpen(false))}
     >
-      <div className="flex flex-col items-center gap-4 p-4 text-center">
+      <div className="flex flex-col items-center gap-1 p-4 text-center">
         <h2 className="text-2xl font-semibold">
           Discover Custom AI Assistants
         </h2>
@@ -31,8 +32,15 @@ export function ExploreHubCard() {
           // target="_blank"
           // rel="noopener noreferrer"
         >
-          Explore Assistants Hub
+          Explore Assistants
         </Button>
+
+        <ButtonSubtext onClick={() => console.log("button subtext")}>
+          <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
+            <span>Or, create your own assistant</span>
+            <ChevronRightIcon className="h-3 w-3" />
+          </div>
+        </ButtonSubtext>
       </div>
     </ReusableCard>
   );
