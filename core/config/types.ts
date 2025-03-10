@@ -843,6 +843,7 @@ declare global {
     numThreads?: number;
     useMmap?: boolean;
     keepAlive?: number;
+    numGpu?: number;
     raw?: boolean;
     stream?: boolean;
     prediction?: Prediction;
