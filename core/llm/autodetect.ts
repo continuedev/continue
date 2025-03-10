@@ -51,6 +51,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "bedrock-anthropic",
   "sagemaker",
   "continue-proxy",
   "mistral",
@@ -68,6 +69,7 @@ const PROVIDER_SUPPORTS_IMAGES: string[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "bedrock-anthropic",
   "sagemaker",
   "continue-proxy",
   "openrouter",
@@ -134,6 +136,7 @@ function modelSupportsImages(
 const PARALLEL_PROVIDERS: string[] = [
   "anthropic",
   "bedrock",
+  "bedrock-anthropic",
   "sagemaker",
   "deepinfra",
   "gemini",
@@ -379,5 +382,5 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
-  modelSupportsTools,
+  modelSupportsTools
 };
