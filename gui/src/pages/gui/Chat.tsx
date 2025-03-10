@@ -22,6 +22,7 @@ import {
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
+import { ExploreHubCard } from "../../components/ExploreHubCard";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
@@ -585,6 +586,12 @@ export function Chat() {
               {showTutorialCard !== false && !onboardingCard.show && (
                 <div className="flex w-full justify-center">
                   <TutorialCard onClose={closeTutorialCard} />
+                </div>
+              )}
+
+              {!onboardingCard.show && showTutorialCard === false && (
+                <div className="mx-2 mt-10">
+                  <ExploreHubCard />
                 </div>
               )}
             </>
