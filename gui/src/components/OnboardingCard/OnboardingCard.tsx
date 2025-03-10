@@ -1,7 +1,7 @@
 import { useAppSelector } from "../../redux/hooks";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { ReusableCard } from "../ReusableCard";
 import { OnboardingCardTabs, TabTitle } from "./components/OnboardingCardTabs";
-import { ReusableCard } from "./components/ReusableCard";
 import { useOnboardingCard } from "./hooks/useOnboardingCard";
 import * as Tabs from "./tabs";
 
