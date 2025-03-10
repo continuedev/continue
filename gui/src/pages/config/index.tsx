@@ -130,6 +130,10 @@ function ConfigPage() {
   const codeBlockToolbarPosition = config.ui?.codeBlockToolbarPosition ?? "top";
   const useAutocompleteMultilineCompletions =
     config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
+  const modelTimeout = 
+    config.tabAutocompleteOptions?.modelTimeout ?? 150;
+  const debounceDelay = 
+    config.tabAutocompleteOptions?.debounceDelay ?? 250;
   const fontSize = getFontSize();
 
   // Disable autocomplete
@@ -513,7 +517,32 @@ function ConfigPage() {
                       <option value="never">Never</option>
                     </Select>
                   </label>
-
+                  <label className="flex items-center justify-between gap-3">
+                    <span className="text-left">Model Timeout (ms)</span>
+                    <NumberInput
+                      value={modelTimeout}
+                      onChange={(val) =>
+                        handleUpdate({
+                          modelTimeout: val,
+                        })
+                      }
+                      min={100}
+                      max={5000}
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-3">
+                    <span className="text-left">Model Debounce (ms)</span>
+                    <NumberInput
+                      value={debounceDelay}
+                      onChange={(val) =>
+                        handleUpdate({
+                          debounceDelay: val,
+                        })
+                      }
+                      min={0}
+                      max={2500}
+                    />
+                  </label>
                   <label className="flex items-center justify-between gap-3">
                     <span className="text-left">Font Size</span>
                     <NumberInput
