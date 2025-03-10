@@ -157,6 +157,17 @@ const defaultOptions: WalkerOptions = {
   returnRelativeUrisPaths: false,
 };
 
+export async function* walkDirAsync(
+  path: string,
+  ide: IDE,
+  _optionOverrides?: WalkerOptions,
+): AsyncGenerator<string> {
+  const start = Date.now();
+  const options = { ...defaultOptions, ..._optionOverrides };
+  yield* new DFSWalker(path, ide, options).walk();
+  console.log(`walkDir took ${Date.now() - start}ms`);
+}
+
 export async function walkDir(
   uri: string,
   ide: IDE,
@@ -167,15 +178,6 @@ export async function walkDir(
     urisOrRelativePaths.push(p);
   }
   return urisOrRelativePaths;
-}
-
-export async function* walkDirAsync(
-  path: string,
-  ide: IDE,
-  _optionOverrides?: WalkerOptions,
-): AsyncGenerator<string> {
-  const options = { ...defaultOptions, ..._optionOverrides };
-  yield* new DFSWalker(path, ide, options).walk();
 }
 
 export async function walkDirs(
