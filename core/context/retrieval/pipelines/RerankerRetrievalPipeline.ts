@@ -82,29 +82,37 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     // remove empty chunks -- some APIs fail on that
     chunks = chunks.filter((chunk) => chunk.content);
 
-    let scores: number[] =
-      await this.options.config.selectedModelByRole.rerank.rerank(
-        input,
-        chunks,
+    try {
+      let scores: number[] =
+        await this.options.config.selectedModelByRole.rerank.rerank(
+          input,
+          chunks,
+        );
+
+      // Filter out low-scoring results
+      let results = chunks;
+      // let results = chunks.filter(
+      //   (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
+      // );
+      // scores = scores.filter(
+      //   (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
+      // );
+
+      const chunkIndexMap = new Map<Chunk, number>();
+      chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
+
+      results.sort(
+        (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
       );
-
-    // Filter out low-scoring results
-    let results = chunks;
-    // let results = chunks.filter(
-    //   (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
-    // );
-    // scores = scores.filter(
-    //   (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
-    // );
-
-    const chunkIndexMap = new Map<Chunk, number>();
-    chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
-
-    results.sort(
-      (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
-    );
-    results = results.slice(-this.options.nFinal);
-    return results;
+      results = results.slice(-this.options.nFinal);
+      return results;
+    } catch (e) {
+      void this.options.ide.showToast(
+        "warning",
+        `Failed to rerank retrieval results\n${e}`,
+      );
+      return chunks.slice(-this.options.nFinal);
+    }
   }
 
   private async _expandWithEmbeddings(chunks: Chunk[]): Promise<Chunk[]> {

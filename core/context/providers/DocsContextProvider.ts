@@ -5,6 +5,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
+  IDE,
   LoadSubmenuItemsArgs,
 } from "../..";
 import DocsService from "../../indexing/docs/DocsService";
@@ -36,6 +37,7 @@ class DocsContextProvider extends BaseContextProvider {
     chunks: Chunk[],
     reranker: NonNullable<ContextProviderExtras["reranker"]>,
     fullInput: ContextProviderExtras["fullInput"],
+    ide: IDE,
   ) {
     let chunksCopy = [...chunks];
 
@@ -51,7 +53,7 @@ class DocsContextProvider extends BaseContextProvider {
         this.options?.nFinal ?? DocsContextProvider.nFinal,
       );
     } catch (e) {
-      console.warn(`Failed to rerank docs results: ${e}`);
+      void ide.showToast("warning", `Failed to rerank retrieval results\n${e}`);
 
       chunksCopy = chunksCopy.splice(
         0,
@@ -116,6 +118,7 @@ class DocsContextProvider extends BaseContextProvider {
         chunks,
         extras.reranker,
         extras.fullInput,
+        extras.ide,
       );
     }
 
