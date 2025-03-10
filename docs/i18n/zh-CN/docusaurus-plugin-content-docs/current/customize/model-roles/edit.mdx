@@ -1,0 +1,48 @@
+---
+title: 编辑角色
+description: 编辑模型角色
+keywords: [编辑, 模型, 角色]
+sidebar_position: 3
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+通常选择一个与响应聊天提示词不同的模型响应编辑提示词是有用的，因为编辑通常更加代码特定，可能需要更少的可读对话。
+
+在 Continue 中，你可以添加 `edit` 到一个模型角色，指定它可以用来编辑请求。如果没有编辑模型被指定，选择的 `聊天` 模型将被使用。
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  Use model roles.
+  ```yaml title="config.yaml"
+  models:
+    - name: Claude 3.5 Sonnet
+      provider: anthropic
+      model: claude-3-5-sonnet-latest
+      apiKey: <YOUR_ANTHROPIC_API_KEY>
+      roles:
+        - edit
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  Set the `experimental.modelRoles.inlineEdit` property in `config.json`.
+  ```json title="config.json"
+  {
+      "models": {
+          "name": "Claude 3.5 Sonnet",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-latest",
+      "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
+    },
+    "experimental": {
+        "modelRoles": {
+            "inlineEdit": "Claude 3.5 Sonnet",
+      }
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+在 [hub](https://hub.continue.dev/explore/models?roles=edit) 中查看编辑模型。通常，我们对编辑的推荐和对聊天的推荐是重叠的。

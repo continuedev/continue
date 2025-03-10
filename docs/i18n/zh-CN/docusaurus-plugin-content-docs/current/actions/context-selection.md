@@ -7,11 +7,7 @@ sidebar_position: 3
 
 ## 斜杠命令
 
-斜杠命令可以与更多的指令结合，包括 [上下文提供者](chat/context-selection.md) 或 [高亮代码](chat/context-selection.md) 。
-
-例如，使用 "/edit" 斜杠命令，你应该描述你想要 LLM 执行的编辑。
-
-一些斜杠命令不会理会你的输入，例如， "/share" 斜杠命令只是创建一个当前交谈的 markdown 副本，忽略任何你请求它做的。
+斜杠命令可以与更多的指令结合，包括 [上下文提供者](../customize/context-providers.mdx) 或 [高亮代码](../edit/context-selection#高亮代码) 。
 
 ## 快速 action
 
