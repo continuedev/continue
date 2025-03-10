@@ -193,11 +193,11 @@ export abstract class BaseLLM implements ILLM {
         options.completionOptions?.maxTokens ??
         (llmInfo?.maxCompletionTokens
           ? Math.min(
-              llmInfo.maxCompletionTokens,
-              // Even if the model has a large maxTokens, we don't want to use that every time,
-              // because it takes away from the context length
-              this.contextLength / 4,
-            )
+            llmInfo.maxCompletionTokens,
+            // Even if the model has a large maxTokens, we don't want to use that every time,
+            // because it takes away from the context length
+            this.contextLength / 4,
+          )
           : DEFAULT_MAX_TOKENS),
     };
     this.requestOptions = options.requestOptions;
@@ -780,6 +780,7 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
+    let thinking = "";
     let completion = "";
     let citations: null | string[] = null
 
@@ -834,8 +835,16 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-            completion += chunk.content;
-            yield chunk;
+
+            if (chunk.role === "assistant") {
+              completion += chunk.content;
+              yield chunk;
+            }
+
+            if (chunk.role === "thinking") {
+              thinking += chunk.content;
+              yield chunk;
+            }
           }
         }
       }
@@ -847,6 +856,18 @@ export abstract class BaseLLM implements ILLM {
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
     if (logEnabled && this.writeLog) {
+      if (thinking) {
+        await this.writeLog(`Thinking:\n${thinking}\n\n`);
+      }
+      /*
+      TODO: According to: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
+      During tool use, you must pass thinking and redacted_thinking blocks back to the API,
+      and you must include the complete unmodified block back to the API. This is critical
+      for maintaining the model's reasoning flow and conversation integrity.
+      
+      On the other hand, adding thinking and redacted_thinking blocks are ignored on subsequent
+      requests when not using tools, so it's the simplest option to always add to history.
+      */
       await this.writeLog(`Completion:\n${completion}\n\n`);
 
       if (citations) {
@@ -920,7 +941,7 @@ export abstract class BaseLLM implements ILLM {
     );
   }
 
-  protected async *_streamComplete(
+  protected async * _streamComplete(
     prompt: string,
     signal: AbortSignal,
     options: CompletionOptions,
@@ -928,7 +949,7 @@ export abstract class BaseLLM implements ILLM {
     throw new Error("Not implemented");
   }
 
-  protected async *_streamChat(
+  protected async * _streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,
