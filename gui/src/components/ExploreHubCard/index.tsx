@@ -16,14 +16,10 @@ export function ExploreHubCard() {
       onClose={() => dispatch(setIsExploreDialogOpen(false))}
     >
       <div className="flex flex-col items-center gap-1 p-4 text-center">
-        <h2 className="text-2xl font-semibold">
-          Discover Custom AI Assistants
-        </h2>
+        <h2 className="text-2xl font-semibold">Create Your Own Assistant</h2>
 
         <p className="max-w-lg text-base leading-relaxed">
-          Explore specialized AI assistants designed to enhance your development
-          workflow. Find the perfect assistant for code review, documentation,
-          and more.
+          Discover and remix popular assistants, or create your own from scratch
         </p>
 
         <Button
@@ -37,7 +33,7 @@ export function ExploreHubCard() {
 
         <ButtonSubtext onClick={() => console.log("button subtext")}>
           <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
-            <span>Or, create your own assistant</span>
+            <span>Or, create your own assistant from scratch</span>
             <ChevronRightIcon className="h-3 w-3" />
           </div>
         </ButtonSubtext>
