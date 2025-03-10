@@ -26,7 +26,7 @@ function MorePage() {
 
   return (
     <div className="overflow-y-scroll">
-      <PageHeader onTitleClick={() => navigate("/")} title="Chat" />
+      <PageHeader showBorder onTitleClick={() => navigate("/")} title="Chat" />
 
       <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="py-5">
