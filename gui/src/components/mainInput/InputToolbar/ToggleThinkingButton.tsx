@@ -92,7 +92,7 @@ export default function ToggleThinkingButton(props: ThinkingButtonProps) {
 
   // Get OpenAI icon color based on reasoning effort
   const getIconColor = () => {
-    if (provider === "openai" && useThinking) {
+    if (provider === "openai" && useThinking && !props.disabled) {
       const effort = thinkingSettings.openai.reasoningEffort;
       if (effort === "low") return "text-red-400";
       if (effort === "medium") return "text-yellow-400";

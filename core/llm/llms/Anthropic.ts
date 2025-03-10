@@ -39,9 +39,9 @@ class Anthropic extends BaseLLM {
       })),
       tool_choice: options.toolChoice
         ? {
-            type: "tool",
-            name: options.toolChoice.function.name,
-          }
+          type: "tool",
+          name: options.toolChoice.function.name,
+        }
         : undefined,
       thinking: options.thinking,
     };
@@ -133,28 +133,16 @@ class Anthropic extends BaseLLM {
       return chatMessage;
     }
 
-    // Filter out empty thinking blocks before mapping
-    const filteredContent = Array.isArray(message.content)
-      ? message.content.filter(
-          (part) =>
-            !(
-              part.type === "thinking" &&
-              (!part.thinking || part.thinking.trim() === "") &&
-              (!part.signature || part.signature.trim() === "")
-            ),
-        )
-      : message.content;
-
     const convertedContent = (
-      Array.isArray(filteredContent) ? filteredContent : [filteredContent]
+      Array.isArray(message.content) ? message.content : [message.content]
     ).map((part, contentIdx) => {
       if (part.type === "text") {
         const newpart = {
           ...part,
           // If multiple text parts, only add cache_control to the last one
           ...(addCaching &&
-          contentIdx ==
-            (Array.isArray(filteredContent) ? filteredContent.length : 1) - 1
+            contentIdx ==
+            (Array.isArray(message.content) ? message.content.length : 1) - 1
             ? { cache_control: { type: "ephemeral" } }
             : {}),
         };
@@ -270,12 +258,12 @@ class Anthropic extends BaseLLM {
       messages: msgs,
       system: shouldCacheSystemMessage
         ? [
-            {
-              type: "text",
-              text: this.systemMessage,
-              cache_control: { type: "ephemeral" },
-            },
-          ]
+          {
+            type: "text",
+            text: this.systemMessage,
+            cache_control: { type: "ephemeral" },
+          },
+        ]
         : systemMessage,
     };
 
