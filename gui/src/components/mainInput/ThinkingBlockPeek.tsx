@@ -47,7 +47,7 @@ function ThinkingBlockPeek({
           onClick={() => setOpen((prev) => !prev)}
           data-testid="thinking-block-peek"
         >
-          <div className="relative mr-1 h-4 w-4">
+          <div className="relative mr-1.5 h-4 w-4">
             <ChevronRightIcon
               className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
                 open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
@@ -59,7 +59,7 @@ function ThinkingBlockPeek({
               }`}
             />
           </div>
-          <LightBulbIcon className="mr-2 h-4 w-4 text-gray-400" />
+          <LightBulbIcon className="mr-0 h-4 w-4 text-gray-400" />
           <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
             {redactedThinking ? "Redacted Thinking" : "AI Reasoning"}
           </span>
