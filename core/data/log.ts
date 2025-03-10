@@ -47,7 +47,7 @@ export class DataLogger {
       newBody.eventName = eventName;
     }
     if ("timestamp" in zodSchema.shape) {
-      newBody.timestamp = new Date().toISOString();
+      newBody.timestamp = Date.now();
     }
     if ("schema" in zodSchema.shape) {
       newBody.schema = schema;
