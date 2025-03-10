@@ -26,9 +26,10 @@ export function ExploreHubCard() {
         </p>
 
         <Button
-        // href="https://hub.continue.dev/explore/trending-assistants"
-        // target="_blank"
-        // rel="noopener noreferrer"
+          className="w-full"
+          // href="https://hub.continue.dev/explore/trending-assistants"
+          // target="_blank"
+          // rel="noopener noreferrer"
         >
           Explore Assistants Hub
         </Button>
