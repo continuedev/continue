@@ -84,4 +84,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "getWebviewHistoryLength",
     "getCurrentSessionId",
     "docs/suggestions",
+    "didChangeActiveTextEditor",
   ];

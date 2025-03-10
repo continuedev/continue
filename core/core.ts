@@ -1002,18 +1002,26 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      try {
-        const ignore = shouldIgnore(filepath, this.ide);
-        if (!ignore) {
-          recentlyEditedFilesCache.set(filepath, filepath);
+    on(
+      "didChangeActiveTextEditor",
+      async ({ data: { filepath, filename } }) => {
+        this.messenger.send("didChangeActiveTextEditor", {
+          filepath,
+          filename,
+        });
+
+        try {
+          const ignore = shouldIgnore(filepath, this.ide);
+          if (!ignore) {
+            recentlyEditedFilesCache.set(filepath, filepath);
+          }
+        } catch (e) {
+          console.error(
+            `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
+          );
         }
-      } catch (e) {
-        console.error(
-          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
-        );
-      }
-    });
+      },
+    );
 
     on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
       const { config } = await this.configHandler.loadConfig();
