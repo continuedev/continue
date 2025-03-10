@@ -9,7 +9,7 @@ Rules are used to provide instructions to **chat** models. They are inserted int
 
 ## Hub `rules` blocks
 
-Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&block=rules) in the Hub.
+Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
 
 ## `.continuerules`
 

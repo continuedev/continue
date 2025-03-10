@@ -12,7 +12,9 @@ class NCompass extends OpenAI {
 
   private static modelConversion: { [key: string]: string } = {
     "qwen2.5-coder-7b": "Qwen/Qwen2.5-Coder-7B-Instruct",
+    "qwen2.5-coder:7b": "Qwen/Qwen2.5-Coder-7B-Instruct",
     "qwen2.5-coder-32b": "Qwen/Qwen2.5-Coder-32B-Instruct",
+    "qwen2.5-coder:32b": "Qwen/Qwen2.5-Coder-32B-Instruct",
   };
   protected _convertModelName(model: string): string {
     return NCompass.modelConversion[model] ?? model;
