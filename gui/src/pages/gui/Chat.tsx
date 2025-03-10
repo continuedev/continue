@@ -58,6 +58,7 @@ import {
 import {
   setDialogEntryOn,
   setDialogMessage,
+  setIsExploreDialogOpen,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
@@ -189,6 +190,24 @@ const useAutoScroll = (
   }, [ref, history.length, userHasScrolled]);
 };
 
+const useTutorialListener = (onTutorialClosed: () => void) => {
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  console.log("IS TUTORIAL OPEN", isTutorialOpen);
+
+  useWebviewListener("didChangeActiveTextEditor", async (data) => {
+    console.log("DATA", data.filepath);
+    const isTutorial =
+      data?.filepath?.toLowerCase().endsWith("continue_tutorial.py") ?? false;
+
+    if (isTutorialOpen && !isTutorial) {
+      onTutorialClosed();
+      console.log("Tutorial was closed!");
+    }
+
+    setIsTutorialOpen(isTutorial);
+  });
+};
+
 export function Chat() {
   const posthog = usePostHog();
   const dispatch = useAppDispatch();
@@ -228,6 +247,11 @@ export function Chat() {
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const useHub = useAppSelector(selectUseHub);
+
+  useTutorialListener(() => {
+    setLocalStorage("isExploreDialogOpen", true);
+    dispatch(setIsExploreDialogOpen(true));
+  });
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
