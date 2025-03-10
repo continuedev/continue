@@ -10,13 +10,13 @@ export interface ModelRequirements {
 }
 
 export const MODEL_REQUIREMENTS: Record<string, ModelRequirements> = {
-  "granite3.1-dense:2b": {
+  "granite3.2:2b": {
     minMemoryBytes: 4 * GB,
     recommendedMemoryBytes: 8 * GB,
     gpuRecommended: false,
     sizeBytes: Math.ceil(1.5 * GB),
   },
-  "granite3.1-dense:8b": {
+  "granite3.2:8b": {
     minMemoryBytes: 12 * GB,
     recommendedMemoryBytes: 16 * GB,
     gpuRecommended: true,

@@ -1,6 +1,5 @@
 import {
   ContextProviderWithParams,
-  ContinueRcJson,
   ModelDescription,
   SerializedContinueConfig,
   SlashCommandDescription,
@@ -115,16 +114,16 @@ You are helpful and harmless and you follow ethical guidelines and promote posit
 };
 
 export const DEFAULT_MODEL_GRANITE_SMALL: ModelDescription = {
-  title: "granite3.1-dense:2b",
+  title: "granite3.2:2b",
   provider: "ollama",
-  model: "granite3.1-dense:2b",
+  model: "granite3.2:2b",
   ...BASE_GRANITE_CONFIG,
 };
 
 export const DEFAULT_MODEL_GRANITE_LARGE: ModelDescription = {
-  title: "granite3.1-dense:8b",
+  title: "granite3.2:8b",
   provider: "ollama",
-  model: "granite3.1-dense:8b",
+  model: "granite3.2:8b",
   ...BASE_GRANITE_CONFIG,
 };
 
