@@ -275,7 +275,7 @@ jobs:
           cd core
           npm test
         env:
-          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true && github.actor == 'dependabot[bot]' }}
+          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -303,7 +303,13 @@ jobs:
           cd extensions/vscode
           npm ci
           npm run e2e:compile
-          FILES=$(ls -1 e2e/_output/tests/*.test.js | jq -R . | jq -s .)
+          if [[ "${{ github.event.pull_request.head.repo.fork }}" == "true" || "${{ github.actor }}" == "dependabot[bot]" ]]; then
+            # Exclude SSH tests for forks
+            FILES=$(ls -1 e2e/_output/tests/*.test.js | grep -v "SSH" | jq -R . | jq -s .)
+          else
+            # Include all tests for non-forks
+            FILES=$(ls -1 e2e/_output/tests/*.test.js | jq -R . | jq -s .)
+          fi
           echo "test_file_matrix<<EOF" >> $GITHUB_OUTPUT
           echo "$FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -454,7 +460,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
+          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 

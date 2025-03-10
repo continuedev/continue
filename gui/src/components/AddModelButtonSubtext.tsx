@@ -12,7 +12,7 @@ function AddModelButtonSubtext() {
         className="cursor-pointer underline"
         onClick={() =>
           ideMessenger.post("config/openProfile", {
-            profileId: "local",
+            profileId: undefined,
           })
         }
       >
