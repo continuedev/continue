@@ -2,6 +2,7 @@ import {
   AssistantChatMessage,
   ChatMessage,
   CompletionOptions,
+  ImageMessagePart,
   LLMOptions,
   MessagePart,
   ToolCallDelta,
@@ -129,7 +130,7 @@ class Gemini extends BaseLLM {
       : {
           inlineData: {
             mimeType: "image/jpeg",
-            data: part.imageUrl?.url.split(",")[1],
+            data: (part as ImageMessagePart).imageUrl?.url.split(",")[1],
           },
         };
   }
