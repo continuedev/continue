@@ -934,6 +934,11 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
       }
     });
+
+    on("files/closed", async ({ data }) => {
+      this.messenger.send("didCloseFiles", data);
+    });
+
     on("files/opened", async ({ data }) => {
       if (data?.uris?.length) {
         // Do something on files opened
@@ -1003,10 +1008,6 @@ export class Core {
     });
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      this.messenger.send("didChangeActiveTextEditor", {
-        filepath,
-      });
-
       try {
         const ignore = shouldIgnore(filepath, this.ide);
         if (!ignore) {

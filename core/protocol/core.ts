@@ -184,6 +184,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "files/opened": [{ uris?: string[] }, void];
   "files/created": [{ uris?: string[] }, void];
   "files/deleted": [{ uris?: string[] }, void];
+  "files/closed": [{ uris?: string[] }, void];
 
   // Docs etc. Indexing. TODO move codebase to this
   "indexing/reindex": [{ type: string; id: string }, void];
