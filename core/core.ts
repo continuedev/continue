@@ -936,7 +936,11 @@ export class Core {
     });
 
     on("files/closed", async ({ data }) => {
-      this.messenger.send("didCloseFiles", data);
+      if (data.uris) {
+        this.messenger.send("didCloseFiles", {
+          uris: data.uris,
+        });
+      }
     });
 
     on("files/opened", async ({ data }) => {
