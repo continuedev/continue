@@ -444,22 +444,22 @@ export class SetupGranitePage {
     return { serverStatus, timeout };
   }
 
-  async getModelStatuses(): Promise<Map<string, ModelStatus>> {
-    const modelStatuses: Map<string, ModelStatus> = new Map();
+  async getStatusByModel(): Promise<Map<string, ModelStatus>> {
+    const statusByModel: Map<string, ModelStatus> = new Map();
     await Promise.all(
       DOWNLOADABLE_MODELS.map(async (id) => {
         const status = await this.server.getModelStatus(id);
-        modelStatuses.set(id, status);
+        statusByModel.set(id, status);
       }),
     );
-    return modelStatuses;
+    return statusByModel;
   }
 
   async publishStatus(webview: Webview) {
     // console.log("Received fetchStatus msg " + debounceStatus);
     const serverStatus = await this.server.getStatus();
-    const modelStatuses = await this.getModelStatuses();
-    const modelStatusesObject = Object.fromEntries(modelStatuses); // Convert Map to Object
+    const statusByModel = await this.getStatusByModel();
+    const statusByModelObject = Object.fromEntries(statusByModel); // Convert Map to Object
     this.wizardState.stepStatuses[OLLAMA_STEP] =
       serverStatus === ServerStatus.started ||
       serverStatus === ServerStatus.stopped;
@@ -467,7 +467,7 @@ export class SetupGranitePage {
       command: "status",
       data: {
         serverStatus,
-        modelStatuses: modelStatusesObject,
+        statusByModel: statusByModelObject,
         wizardState: this.wizardState,
       },
     });

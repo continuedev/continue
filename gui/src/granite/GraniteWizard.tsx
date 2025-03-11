@@ -6,7 +6,7 @@ import {
 } from "core/config/default";
 import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
 import { ProgressData } from "core/granite/commons/progressData";
-import { ServerStatus } from "core/granite/commons/statuses";
+import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
 import { isHighEndMachine, SystemInfo } from "core/granite/commons/sysInfo";
 import { formatSize } from "core/granite/commons/textUtils";
 import {
@@ -26,7 +26,7 @@ import React, {
 import { VSCodeButton } from "../components/VSCodeButton";
 import { DiagnosticMessage } from "./DiagnosticMessage";
 import { ProgressBlock } from "./ProgressBlock";
-import { StatusCheck, StatusValue } from "./StatusCheck";
+import { StatusCheck } from "./StatusCheck";
 import { vscode } from "./utils/vscode";
 
 interface InstallationMode {
@@ -61,8 +61,10 @@ interface WizardContextProps {
   setRecommendedModel: React.Dispatch<React.SetStateAction<LocalModelSize>>;
   selectedModel: LocalModelSize;
   setSelectedModel: React.Dispatch<React.SetStateAction<LocalModelSize>>;
-  modelStatus: StatusValue;
-  setModelStatus: React.Dispatch<React.SetStateAction<StatusValue>>;
+  statusByModel: Map<string, ModelStatus>;
+  setStatusByModel: React.Dispatch<
+    React.SetStateAction<Map<string, ModelStatus>>
+  >;
   modelInstallationProgress: number;
   setModelInstallationProgress: React.Dispatch<React.SetStateAction<number>>;
   modelInstallationError: string | undefined;
@@ -110,7 +112,9 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
   const [serverStatus, setServerStatus] = useState<ServerStatus>(
     ServerStatus.unknown,
   );
-  const [modelStatus, setModelStatus] = useState<StatusValue>("missing");
+  const [statusByModel, setStatusByModel] = useState<Map<string, ModelStatus>>(
+    new Map(),
+  );
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [installationModes, setInstallationModes] = useState<
     InstallationMode[]
@@ -153,8 +157,8 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
         setRecommendedModel,
         selectedModel,
         setSelectedModel,
-        modelStatus,
-        setModelStatus,
+        statusByModel,
+        setStatusByModel,
         modelInstallationProgress,
         setModelInstallationProgress,
         modelInstallationStatus,
@@ -379,6 +383,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     modelInstallationError,
     setModelInstallationError,
     systemInfo,
+    statusByModel,
   } = useWizardContext();
   const [systemError, setSystemError] = useState<string | undefined>();
 
@@ -424,7 +429,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
   useEffect(() => {
     if (systemInfo && systemInfo.diskSpace) {
       const { freeDiskSpace } = systemInfo.diskSpace;
-      const requiredDiskSpace = getRequiredSpace(selectedModel);
+      const requiredDiskSpace = getRequiredSpace(selectedModel, statusByModel);
       if (freeDiskSpace < requiredDiskSpace) {
         setSystemError(
           `Insufficient disk space available: ${formatSize(freeDiskSpace)} free, ${formatSize(requiredDiskSpace)} required.`,
@@ -433,7 +438,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
         setSystemError(undefined);
       }
     }
-  }, [systemInfo, selectedModel]);
+  }, [systemInfo, selectedModel, statusByModel]);
 
   const modelOptions: ModelOption[] = [
     {
@@ -621,6 +626,7 @@ const WizardContent: React.FC = () => {
     setIsOffline,
     setOllamaInstallationProgress,
     setOllamaInstallationError,
+    setStatusByModel,
   } = useWizardContext();
   const currentStatusRef = useRef(currentStatus);
 
@@ -689,6 +695,8 @@ const WizardContent: React.FC = () => {
             }
             return newStepStatuses;
           });
+          const modelStatusMap = new Map(Object.entries(data.statusByModel));
+          setStatusByModel(modelStatusMap as Map<string, ModelStatus>);
           if (
             (newStepStatuses[OLLAMA_STEP] &&
               currStatus === WizardStatus.downloadingOllama) ||
@@ -818,15 +826,19 @@ const WizardContent: React.FC = () => {
   );
 };
 
-function getRequiredSpace(selectedModel: LocalModelSize): number {
-  //FIXME check if model is already downloaded
+function getRequiredSpace(
+  selectedModel: LocalModelSize,
+  statusByModel: Map<string, ModelStatus>,
+): number {
   const graniteModel =
     selectedModel === "large"
       ? DEFAULT_MODEL_GRANITE_LARGE
       : DEFAULT_MODEL_GRANITE_SMALL;
   const models: string[] = [graniteModel.model, "nomic-embed-text:latest"];
-  return models.reduce((sum, model) => {
-    const modelInfo = DEFAULT_MODEL_INFO.get(model); //FIXME get from registry
-    return sum + (modelInfo ? modelInfo.size : 0);
-  }, 0);
+  return models
+    .filter((model) => statusByModel.get(model) === ModelStatus.missing)
+    .reduce((sum, model) => {
+      const modelInfo = DEFAULT_MODEL_INFO.get(model); //FIXME get from registry
+      return sum + (modelInfo ? modelInfo.size : 0);
+    }, 0);
 }
