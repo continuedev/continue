@@ -1,14 +1,70 @@
 // src/components/ThinkingBlockPeek.tsx
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  LightBulbIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import { ChevronUpIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { lightGray, vscBackground } from "..";
+import { defaultBorderRadius, lightGray, vscBackground } from "..";
+import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+
+const SpoilerButton = styled.div`
+  background-color: ${vscBackground};
+  width: fit-content;
+  margin: 8px 6px 0px 2px;
+  font-size: ${getFontSize() - 2}px;
+  border: 0.5px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+  padding: 4px 8px;
+  color: ${lightGray};
+  cursor: pointer;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow:
+      0 6px 8px rgba(0, 0, 0, 0.15),
+      0 3px 6px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+const ButtonContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+export const ThinkingText = styled.span`
+  position: relative;
+  padding-right: 12px;
+
+  &:after {
+    content: "...";
+    position: absolute;
+    animation: ellipsis 1s steps(4, end) infinite;
+    width: 0px;
+    display: inline-block;
+    overflow: hidden;
+  }
+
+  @keyframes ellipsis {
+    0%,
+    100% {
+      width: 0px;
+    }
+    33% {
+      width: 8px;
+    }
+    66% {
+      width: 16px;
+    }
+    90% {
+      width: 24px;
+    }
+  }
+`;
 
 const MarkdownWrapper = styled.div`
   & > div > *:first-child {
@@ -21,7 +77,9 @@ interface ThinkingBlockPeekProps {
   redactedThinking?: string;
   index: number;
   prevItem: ChatHistoryItem | null;
+  inProgress?: boolean;
   signature?: string;
+  tokens?: number;
 }
 
 function ThinkingBlockPeek({
@@ -29,9 +87,13 @@ function ThinkingBlockPeek({
   redactedThinking,
   index,
   prevItem,
+  inProgress,
   signature,
+  tokens,
 }: ThinkingBlockPeekProps) {
   const [open, setOpen] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState<string>("");
 
   const duplicateRedactedThinkingBlock =
     prevItem &&
@@ -39,30 +101,45 @@ function ThinkingBlockPeek({
     redactedThinking &&
     prevItem.message.redactedThinking;
 
+  useEffect(() => {
+    if (inProgress) {
+      setStartTime(Date.now());
+      setElapsedTime("");
+    } else if (startTime) {
+      const endTime = Date.now();
+      const diff = endTime - startTime;
+      const diffString = `${(diff / 1000).toFixed(1)}s`;
+      setElapsedTime(diffString);
+    }
+  }, [inProgress]);
+
   return duplicateRedactedThinkingBlock ? null : (
     <div className="thread-message">
       <div className="" style={{ backgroundColor: vscBackground }}>
         <div
-          className="flex cursor-pointer items-center justify-start pl-2 text-xs text-gray-300"
-          onClick={() => setOpen((prev) => !prev)}
+          className="flex items-center justify-start pl-2 text-xs text-gray-300"
           data-testid="thinking-block-peek"
         >
-          <div className="relative mr-1.5 h-4 w-4">
-            <ChevronRightIcon
-              className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-                open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
-              }`}
-            />
-            <ChevronDownIcon
-              className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-                open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
-              }`}
-            />
-          </div>
-          <LightBulbIcon className="mr-0 h-4 w-4 text-gray-400" />
-          <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
-            {redactedThinking ? "Redacted Thinking" : "AI Reasoning"}
-          </span>
+          <SpoilerButton onClick={() => setOpen((prev) => !prev)}>
+            <ButtonContent>
+              {inProgress ? (
+                <ThinkingText>
+                  {redactedThinking ? "Redacted Thinking" : "Thinking"}
+                </ThinkingText>
+              ) : redactedThinking ? (
+                "Redacted Thinking"
+              ) : (
+                "Thought" +
+                (elapsedTime ? ` for ${elapsedTime}` : "") +
+                (tokens ? ` (${tokens} tokens)` : "")
+              )}
+              {open ? (
+                <ChevronUpIcon className="h-3 w-3" />
+              ) : (
+                <ChevronDownIcon className="h-3 w-3" />
+              )}
+            </ButtonContent>
+          </SpoilerButton>
         </div>
 
         <div
