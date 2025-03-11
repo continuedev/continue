@@ -59,3 +59,8 @@ data class GetGitRootPathParams(val dir: String)
 data class ListDirParams(val dir: String)
 
 data class GetFileStatsParams(val files: List<String>)
+
+data class SubprocessParams(
+    val command: String,
+    val pwd: String
+)

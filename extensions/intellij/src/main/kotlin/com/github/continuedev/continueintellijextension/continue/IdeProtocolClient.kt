@@ -526,6 +526,16 @@ class IdeProtocolClient(
                         respond(null)
                     }
 
+                    "subprocess" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            SubprocessParams::class.java
+                        )
+
+                        val output = ide.subprocess(params.command, params.pwd)
+                        respond(output)
+                    }
+
                     else -> {
                         println("Unknown message type: $messageType")
                     }
