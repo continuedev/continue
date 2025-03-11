@@ -2,7 +2,11 @@ import { useRef } from "react";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch } from "../../redux/hooks";
 import { setIsExploreDialogOpen } from "../../redux/slices/uiSlice";
-import { LocalStorageKey, setLocalStorage } from "../../util/localStorage";
+import {
+  getLocalStorage,
+  LocalStorageKey,
+  setLocalStorage,
+} from "../../util/localStorage";
 
 const useTutorialListener = (onTutorialClosed: () => void) => {
   const isTutorialOpenRef = useRef(false);
@@ -24,7 +28,10 @@ export const ExploreDialogWatcher = () => {
 
   useTutorialListener(() => {
     setLocalStorage(LocalStorageKey.IsExploreDialogOpen, true);
-    dispatch(setIsExploreDialogOpen(true));
+
+    if (!getLocalStorage(LocalStorageKey.HasDismissedExploreDialog)) {
+      dispatch(setIsExploreDialogOpen(true));
+    }
   });
   return null;
 };
