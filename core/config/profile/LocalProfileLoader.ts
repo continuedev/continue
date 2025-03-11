@@ -30,7 +30,7 @@ export default class LocalProfileLoader implements IProfileLoader {
         versionSlug: "",
       },
       iconUrl: "",
-      title: overrideAssistantFile?.path ?? "Local Config",
+      title: overrideAssistantFile?.path ?? "Local Assistant",
       errors: undefined,
       uri:
         overrideAssistantFile?.path ??
