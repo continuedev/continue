@@ -70,15 +70,7 @@ class WalkDirCache {
   //   this.dirListCache.delete(uri);
   // }
 }
-export const walkDirCache = new WalkDirCache(); // todo - singleton approach better?
-
-// class ListDirCache {
-//   private cache: Map<string, >();
-//   getCacheKey(options: WalkerOptions) {
-//     return `${options.returnRelativeUrisPaths ? "relative" : "absolute"}-${options.onlyDirs ? "dirs" : "files"}`;
-//   }
-
-// }
+export const walkDirCache = new WalkDirCache(); // TODO - singleton approach better?
 
 class DFSWalker {
   constructor(
@@ -249,10 +241,9 @@ class DFSWalker {
         }
       }
     }
-    // console.log(walkDirCache.listDirCache.values().toArray().slice(0, 30));
-    console.log(
-      `Walk Dir Result:\nSource: ${this.options.source ?? "unknown"}\nDir: ${this.uri}\nDuration: ${Date.now() - start}ms:\n\tList dir: ${listDirTime}ms (${listDirCacheHits}/${dirs} cache hits)\n\tIgnore files: ${ignoreFileTime}ms (${ignoreCacheHits}/${dirs} cache hits)\n\tIgnoring: ${ignoreTime}ms`,
-    );
+    // console.log(
+    //   `Walk Dir Result:\nSource: ${this.options.source ?? "unknown"}\nDir: ${this.uri}\nDuration: ${Date.now() - start}ms:\n\tList dir: ${listDirTime}ms (${listDirCacheHits}/${dirs} cache hits)\n\tIgnore files: ${ignoreFileTime}ms (${ignoreCacheHits}/${dirs} cache hits)\n\tIgnoring: ${ignoreTime}ms`,
+    // );
   }
 
   private entryIsDirectory(entry: Entry) {
