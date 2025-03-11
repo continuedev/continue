@@ -153,7 +153,6 @@ class ContinueAuthService {
         ) { response ->
             val authUrl = ((response as? Map<*, *>)?.get("content") as? Map<*, *>)?.get("url") as? String
             if (authUrl != null) {
-                // Open the auth URL in the browser
                 Desktop.browse(java.net.URI(authUrl))
             }
         }
