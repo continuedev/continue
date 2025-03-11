@@ -16,7 +16,7 @@ import {
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
-import { getAllAssistantFiles } from "./getSystemPromptDotFile.js";
+import { getAllAssistantFiles } from "./loadLocalAssistants.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   LOCAL_ONBOARDING_PROVIDER_TITLE,

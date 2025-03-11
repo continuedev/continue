@@ -44,6 +44,7 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -926,6 +927,13 @@ export class Core {
     on("files/created", async ({ data }) => {
       if (data?.uris?.length) {
         void refreshIfNotIgnored(data.uris);
+
+        // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
+        for (const uri of data.uris) {
+          if (isLocalAssistantFile(uri)) {
+            await this.configHandler.loadAssistantsForSelectedOrg();
+          }
+        }
       }
     });
 
