@@ -418,6 +418,10 @@ export function migrateV1DevDataFiles() {
   moveToV1FolderIfExists("autocomplete", "autocomplete");
 }
 
+export function getLocalEnvironmentDotFilePath(): string {
+  return path.join(getContinueGlobalPath(), ".local");
+}
+
 export function getStagingEnvironmentDotFilePath(): string {
   return path.join(getContinueGlobalPath(), ".staging");
 }
