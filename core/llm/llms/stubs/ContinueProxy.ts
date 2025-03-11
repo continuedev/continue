@@ -75,6 +75,7 @@ class ContinueProxy extends OpenAI {
         query,
         documents: chunks.map((chunk) => chunk.content),
         model: this.model,
+        ...this.extraBodyProperties(),
       }),
     });
     const data: any = await resp.json();
