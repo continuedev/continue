@@ -20,8 +20,6 @@ const useTutorialListener = (onTutorialClosed: () => void) => {
       );
     });
 
-    console.log("IS TUTORIAL", isTutorial, uris);
-
     if (isTutorial) {
       onTutorialClosed();
     }
