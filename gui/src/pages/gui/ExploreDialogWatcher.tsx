@@ -12,8 +12,11 @@ const useTutorialListener = (onTutorialClosed: () => void) => {
   const isTutorialOpenRef = useRef(false);
 
   useWebviewListener("didChangeActiveTextEditor", async (data) => {
+    const filepath = data?.filepath?.toLowerCase() ?? "";
     const isTutorial =
-      data?.filepath?.toLowerCase().endsWith("continue_tutorial.py") ?? false;
+      filepath.endsWith("continue_tutorial.py") ||
+      filepath.endsWith("continue_tutorial.java") ||
+      filepath.endsWith("continue_tutorial.ts");
 
     if (isTutorialOpenRef.current && !isTutorial) {
       onTutorialClosed();
