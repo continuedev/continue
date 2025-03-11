@@ -208,7 +208,15 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         continuePluginService.coreMessenger?.request("files/closed", data, null) { _ -> }
                     }
                 }
+                override fun fileOpened(source: FileEditorManager, file: VirtualFile) {
+                    file.toUriOrNull()?.let { uri ->
+                        val data = mapOf("uris" to listOf(uri))
+                        continuePluginService.coreMessenger?.request("files/opened", data, null) { _ -> }
+                    }
+                }
             })
+
+
 
             // Listen for theme changes
             connection.subscribe(LafManagerListener.TOPIC, LafManagerListener {
