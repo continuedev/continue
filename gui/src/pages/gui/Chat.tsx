@@ -455,6 +455,7 @@ export function Chat() {
                   redactedThinking={item.message.redactedThinking}
                   index={index}
                   prevItem={index > 0 ? history[index - 1] : null}
+                  inProgress={index === history.length - 1}
                   signature={item.message.signature}
                 />
               ) : (
