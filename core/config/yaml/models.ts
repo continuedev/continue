@@ -37,6 +37,7 @@ async function modelConfigToBaseLLM(
 
   let options: LLMOptions = {
     ...model,
+    contextLength: model.defaultCompletionOptions?.contextLength ?? undefined,
     completionOptions: {
       ...(model.defaultCompletionOptions ?? {}),
       model: model.model,
