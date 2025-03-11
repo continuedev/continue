@@ -4,7 +4,7 @@ import { Button, ButtonSubtext } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setIsExploreDialogOpen } from "../../redux/slices/uiSlice";
-import { setLocalStorage } from "../../util/localStorage";
+import { LocalStorageKey, setLocalStorage } from "../../util/localStorage";
 import { ReusableCard } from "../ReusableCard";
 
 export function ExploreHubCard() {
@@ -18,7 +18,8 @@ export function ExploreHubCard() {
     <ReusableCard
       showCloseButton={true}
       onClose={() => {
-        setLocalStorage("isExploreDialogOpen", false);
+        setLocalStorage(LocalStorageKey.IsExploreDialogOpen, false);
+        setLocalStorage(LocalStorageKey.HasDismissedExploreDialog, true);
         return dispatch(setIsExploreDialogOpen(false));
       }}
     >

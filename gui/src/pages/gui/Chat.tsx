@@ -58,7 +58,6 @@ import {
 import {
   setDialogEntryOn,
   setDialogMessage,
-  setIsExploreDialogOpen,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
@@ -78,6 +77,7 @@ import {
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
+import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
@@ -190,21 +190,6 @@ const useAutoScroll = (
   }, [ref, history.length, userHasScrolled]);
 };
 
-const useTutorialListener = (onTutorialClosed: () => void) => {
-  const isTutorialOpenRef = useRef(false);
-
-  useWebviewListener("didChangeActiveTextEditor", async (data) => {
-    const isTutorial =
-      data?.filepath?.toLowerCase().endsWith("continue_tutorial.py") ?? false;
-
-    if (isTutorialOpenRef.current && !isTutorial) {
-      onTutorialClosed();
-    }
-
-    isTutorialOpenRef.current = isTutorial;
-  });
-};
-
 export function Chat() {
   const posthog = usePostHog();
   const dispatch = useAppDispatch();
@@ -244,11 +229,9 @@ export function Chat() {
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
   const useHub = useAppSelector(selectUseHub);
-
-  useTutorialListener(() => {
-    setLocalStorage("isExploreDialogOpen", true);
-    dispatch(setIsExploreDialogOpen(true));
-  });
+  const hasDismissedExploreDialog = useAppSelector(
+    (state) => state.ui.hasDismissedExploreDialog,
+  );
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -591,6 +574,8 @@ export function Chat() {
               }}
             />
           )}
+
+          {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
 
           {history.length === 0 && (
             <>
