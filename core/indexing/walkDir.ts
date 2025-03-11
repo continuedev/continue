@@ -17,7 +17,8 @@ export interface WalkerOptions {
 
 type Entry = [string, FileType];
 
-const WALK_DIR_CACHE_TIME = 30_000; // 30 seconds
+const LIST_DIR_CACHE_TIME = 30_000; // 30 seconds
+const IGNORE_FILE_CACHE_TIME = 30_000; // 30 seconds
 
 // helper struct used for the DFS walk
 type WalkableEntry = {
@@ -40,20 +41,35 @@ type IgnoreContext = {
 };
 
 class WalkDirCache {
-  cache: Map<
+  dirListCache: Map<
     string,
     {
       time: number;
       entries: Promise<[string, FileType][]>;
+    }
+  > = new Map();
+  dirIgnoreCache: Map<
+    string,
+    {
+      time: number;
       ignore: Promise<Ignore>;
     }
   > = new Map();
-
+  // The super safe approach for now
   invalidate() {
-    this.cache.clear();
+    this.dirListCache.clear();
+    this.dirIgnoreCache.clear();
   }
+  // invalidateIgnore(uri: string) {
+  //   this.dirIgnoreCache.delete(uri);
+  // }
+  // invalidateParent(uri: string) {
+  //   const splitUri = fileUri.split("/");
+  //   splitUri.pop();
+  //   const parent = splitUri.join("/");
+  //   this.dirListCache.delete(uri);
+  // }
 }
-
 export const walkDirCache = new WalkDirCache(); // TODO - singleton approach better?
 
 class DFSWalker {
@@ -66,16 +82,18 @@ class DFSWalker {
   // walk is a depth-first search implementation
   public async *walk(): AsyncGenerator<string> {
     const start = Date.now();
-    let fileProcessingTime = 0;
+    let ignoreFileTime = 0;
     let ignoreTime = 0;
+    let listDirTime = 0;
     let dirs = 0;
-    let cacheHits = 0;
+    let listDirCacheHits = 0;
+    let ignoreCacheHits = 0;
 
     let section = Date.now();
     const defaultAndGlobalIgnores = ignore()
       .add(defaultIgnoreFileAndDir)
       .add(getGlobalContinueIgArray());
-    fileProcessingTime += Date.now() - section;
+    ignoreFileTime += Date.now() - section;
 
     const rootContext: WalkContext = {
       walkableEntry: {
@@ -91,42 +109,60 @@ class DFSWalker {
 
     for (let cur = stack.pop(); cur; cur = stack.pop()) {
       // Previous no caching approach:
-      // const entriesPromise = this.ide.listDir(cur.walkableEntry.uri);
+      // const entries = await this.ide.listDir(cur.walkableEntry.uri);
       // const newIgnore = await getIgnoreContext(
       //   cur.walkableEntry.uri,
-      //   entriesPromise,
+      //   entries,
       //   this.ide,
       //   defaultAndGlobalIgnores,
       // );
-      // const entries = await entriesPromise;
 
       // Only directories will be added to the stack
       dirs++;
 
       section = Date.now();
-      let entries: [string, FileType][];
-      let newIgnore: Ignore;
-
-      const cachedDir = walkDirCache.cache.get(cur.walkableEntry.uri);
-      if (cachedDir && cachedDir.time > Date.now() - WALK_DIR_CACHE_TIME) {
-        cacheHits++;
-        newIgnore = await cachedDir.ignore;
-        entries = await cachedDir.entries;
+      let entries: [string, FileType][] = [];
+      const cachedListdir = walkDirCache.dirListCache.get(
+        cur.walkableEntry.uri,
+      );
+      if (
+        cachedListdir &&
+        cachedListdir.time > Date.now() - LIST_DIR_CACHE_TIME
+      ) {
+        entries = await cachedListdir.entries;
+        listDirCacheHits++;
       } else {
-        const entriesPromise = this.ide.listDir(cur.walkableEntry.uri);
+        const promise = this.ide.listDir(cur.walkableEntry.uri);
+        walkDirCache.dirListCache.set(cur.walkableEntry.uri, {
+          time: Date.now(),
+          entries: promise,
+        });
+        entries = await promise;
+      }
+      listDirTime += Date.now() - section;
+
+      section = Date.now();
+      let newIgnore: Ignore;
+      const cachedIgnore = walkDirCache.dirIgnoreCache.get(
+        cur.walkableEntry.uri,
+      );
+      if (
+        cachedIgnore &&
+        cachedIgnore.time > Date.now() - IGNORE_FILE_CACHE_TIME
+      ) {
+        newIgnore = await cachedIgnore.ignore;
+        ignoreCacheHits++;
+      } else {
         const ignorePromise = getIgnoreContext(
           cur.walkableEntry.uri,
-          entriesPromise,
+          entries,
           this.ide,
           defaultAndGlobalIgnores,
         );
-        const cacheVal = {
+        walkDirCache.dirIgnoreCache.set(cur.walkableEntry.uri, {
           time: Date.now(),
-          entries: entriesPromise,
           ignore: ignorePromise,
-        };
-        walkDirCache.cache.set(cur.walkableEntry.uri, cacheVal);
-        entries = await entriesPromise;
+        });
         newIgnore = await ignorePromise;
       }
 
@@ -137,7 +173,7 @@ class DFSWalker {
           dirname: cur.walkableEntry.relativeUriPath,
         },
       ];
-      fileProcessingTime += Date.now() - section;
+      ignoreFileTime += Date.now() - section;
 
       for (const entry of entries) {
         if (this.entryIsSymlink(entry)) {
@@ -205,9 +241,9 @@ class DFSWalker {
         }
       }
     }
-    console.log(
-      `Walk Dir Result:\nSource: ${this.options.source ?? "unknown"}\nDir: ${this.uri}\nDuration: ${Date.now() - start}ms:\n\tList dir/get ignores: ${fileProcessingTime}ms (${cacheHits}/${dirs} cache hits)\n\tIgnoring: ${ignoreTime}ms`,
-    );
+    // console.log(
+    //   `Walk Dir Result:\nSource: ${this.options.source ?? "unknown"}\nDir: ${this.uri}\nDuration: ${Date.now() - start}ms:\n\tList dir: ${listDirTime}ms (${listDirCacheHits}/${dirs} cache hits)\n\tIgnore files: ${ignoreFileTime}ms (${ignoreCacheHits}/${dirs} cache hits)\n\tIgnoring: ${ignoreTime}ms`,
+    // );
   }
 
   private entryIsDirectory(entry: Entry) {
@@ -259,11 +295,10 @@ export async function walkDirs(
 
 export async function getIgnoreContext(
   currentDir: string,
-  currentDirEntriesPromise: Promise<Entry[]>,
+  currentDirEntries: Entry[],
   ide: IDE,
   defaultAndGlobalIgnores: Ignore,
 ) {
-  const currentDirEntries = await currentDirEntriesPromise;
   const dirFiles = currentDirEntries
     .filter(([_, entryType]) => entryType === (1 as FileType.File))
     .map(([name, _]) => name);
