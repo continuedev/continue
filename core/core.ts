@@ -1003,6 +1003,10 @@ export class Core {
     });
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
+      this.messenger.send("didChangeActiveTextEditor", {
+        filepath,
+      });
+
       try {
         const ignore = shouldIgnore(filepath, this.ide);
         if (!ignore) {
