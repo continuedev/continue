@@ -1,5 +1,5 @@
 package com.github.continuedev.continueintellijextension.activities
-
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.auth.ControlPlaneSessionInfo
@@ -37,6 +37,7 @@ import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
 import com.intellij.openapi.vfs.newvfs.events.VFileCreateEvent
 import com.intellij.ide.ui.LafManagerListener
+import com.intellij.openapi.vfs.VirtualFile
 
 fun showTutorial(project: Project) {
     val tutorialFileName = getTutorialFileName()
@@ -196,6 +197,16 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         }
 
                     // TODO: Missing handling of copying files, renaming files, etc.
+                }
+            })
+
+
+            connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, object : FileEditorManagerListener {
+                override fun fileClosed(source: FileEditorManager, file: VirtualFile) {
+                    file.toUriOrNull()?.let { uri ->
+                        val data = mapOf("uris" to listOf(uri))
+                        continuePluginService.coreMessenger?.request("files/closed", data, null) { _ -> }
+                    }
                 }
             })
 
