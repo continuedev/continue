@@ -692,6 +692,7 @@
     "@vscode/ripgrep": "^1.15.9",
     "@vscode/test-electron": "^2.3.9",
     "axios": "^1.2.5",
+    "check-disk-space": "^3.4.0",
     "core": "file:../../core",
     "cors": "^2.8.5",
     "dbinfoz": "^0.14.0",

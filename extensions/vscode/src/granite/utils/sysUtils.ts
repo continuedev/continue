@@ -1,3 +1,4 @@
+import checkDiskSpace from "check-disk-space";
 import { DiskSpace, SystemInfo } from "core/granite/commons/sysInfo";
 import * as os from "os";
 import * as si from "systeminformation";
@@ -16,20 +17,12 @@ export function getSystemCPUs() {
 
 export async function getSystemDiskSpace(): Promise<DiskSpace> {
   try {
-    const fsSize = await si.fsSize();
-    const mainVolume = fsSize.find((drive) =>
-      process.platform === "win32"
-        ? drive.mount.toLowerCase().includes("c:")
-        : drive.mount === "/",
-    );
-    if (mainVolume) {
-      return {
-        mount: mainVolume.mount,
-        totalDiskSpace: mainVolume.size,
-        freeDiskSpace: mainVolume.available,
-      };
-    }
-    console.error("Main volume not found");
+    const ds = await checkDiskSpace(os.homedir());
+    return {
+      mount: ds.diskPath,
+      totalDiskSpace: ds.size,
+      freeDiskSpace: ds.free,
+    };
   } catch (error) {
     console.error("Error getting disk space:", error);
   }
