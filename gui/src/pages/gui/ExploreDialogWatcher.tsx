@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch } from "../../redux/hooks";
 import { setIsExploreDialogOpen } from "../../redux/slices/uiSlice";
@@ -9,20 +8,23 @@ import {
 } from "../../util/localStorage";
 
 const useTutorialListener = (onTutorialClosed: () => void) => {
-  const isTutorialOpenRef = useRef(false);
+  useWebviewListener("didCloseFiles", async (data) => {
+    const uris = data?.uris ?? [];
 
-  useWebviewListener("didChangeActiveTextEditor", async (data) => {
-    const filepath = data?.filepath?.toLowerCase() ?? "";
-    const isTutorial =
-      filepath.endsWith("continue_tutorial.py") ||
-      filepath.endsWith("continue_tutorial.java") ||
-      filepath.endsWith("continue_tutorial.ts");
+    const isTutorial = uris.some((uri) => {
+      const lowercaseUri = uri.toLowerCase();
+      return (
+        lowercaseUri.endsWith("continue_tutorial.py") ||
+        lowercaseUri.endsWith("continue_tutorial.java") ||
+        lowercaseUri.endsWith("continue_tutorial.ts")
+      );
+    });
 
-    if (isTutorialOpenRef.current && !isTutorial) {
+    console.log("IS TUTORIAL", isTutorial, uris);
+
+    if (isTutorial) {
       onTutorialClosed();
     }
-
-    isTutorialOpenRef.current = isTutorial;
   });
 };
 
