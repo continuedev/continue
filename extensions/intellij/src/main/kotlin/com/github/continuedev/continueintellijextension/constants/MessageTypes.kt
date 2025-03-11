@@ -71,6 +71,7 @@ class MessageTypes {
             "getWebviewHistoryLength",
             "getCurrentSessionId",
             "docs/suggestions",
+            "didCloseFiles",
         )
 
         // Note: If updating these values, make a corresponding update in
