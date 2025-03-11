@@ -9,7 +9,6 @@ import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 import {
   mockPathAndCacheKey,
   mockTag,
-  testContinueServerClient,
   updateIndexAndAwaitGenerator,
 } from "./test/indexing";
 import { IndexResultType } from "./types";
@@ -37,7 +36,6 @@ describe.skip("ChunkCodebaseIndex", () => {
     index = (await LanceDbIndex.create(
       mockConfig.selectedModelByRole.embed,
       testIde.readFile.bind(testIde),
-      testContinueServerClient,
     ))!;
 
     sqliteDb = await SqliteDb.get();
