@@ -6,6 +6,7 @@ import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
 import { getPrimaryConfigFilePath } from "../../util/paths.js";
 import { localPathToUri } from "../../util/pathToUri.js";
+import { getUriPathBasename } from "../../util/uri.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -30,7 +31,9 @@ export default class LocalProfileLoader implements IProfileLoader {
         versionSlug: "",
       },
       iconUrl: "",
-      title: overrideAssistantFile?.path ?? "Local Assistant",
+      title: overrideAssistantFile?.path
+        ? getUriPathBasename(overrideAssistantFile.path)
+        : "Local Assistant",
       errors: undefined,
       uri:
         overrideAssistantFile?.path ??
