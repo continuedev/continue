@@ -108,7 +108,7 @@ class DFSWalker {
     const stack = [rootContext];
 
     for (let cur = stack.pop(); cur; cur = stack.pop()) {
-      // No caching approach:
+      // Previous no caching approach:
       // const entries = await this.ide.listDir(cur.walkableEntry.uri);
       // const newIgnore = await getIgnoreContext(
       //   cur.walkableEntry.uri,
