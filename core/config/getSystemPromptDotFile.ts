@@ -1,4 +1,9 @@
+import ignore from "ignore";
 import { IDE } from "..";
+import {
+  DEFAULT_IGNORE_DIRS,
+  DEFAULT_IGNORE_FILETYPES,
+} from "../indexing/ignore";
 import { walkDir } from "../indexing/walkDir";
 import { getGlobalAssistantsPath } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
@@ -41,7 +46,11 @@ export async function getAssistantFilesFromDir(
       return [];
     }
 
-    const uris = await walkDir(dir, ide);
+    const overrideIgnore = ignore()
+      .add(DEFAULT_IGNORE_FILETYPES.filter((t) => t !== "config.yaml"))
+      .add(DEFAULT_IGNORE_DIRS);
+
+    const uris = await walkDir(dir, ide, { overrideIgnore });
     const assistantFilePaths = uris.filter(
       (p) => p.endsWith(".yaml") || p.endsWith(".yml"),
     );
