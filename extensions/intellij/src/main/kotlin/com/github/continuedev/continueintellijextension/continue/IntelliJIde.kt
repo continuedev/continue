@@ -239,7 +239,7 @@ class IntelliJIDE(
 
     override suspend fun openUrl(url: String) {
         withContext(Dispatchers.IO) {
-            Desktop.browse(java.net.URI(URI(url))
+            Desktop.browse(java.net.URI(url))
         }
     }
 
