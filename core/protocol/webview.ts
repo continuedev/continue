@@ -26,7 +26,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
-  didChangeActiveTextEditor: [{ filepath: string; filename: string }, void];
+  didChangeActiveTextEditor: [{ filepath: string }, void];
   isContinueInputFocused: [undefined, boolean];
   addContextItem: [
     {
