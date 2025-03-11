@@ -6,6 +6,7 @@ export * from "./load/clientRender.js";
 export * from "./load/getBlockType.js";
 export * from "./load/merge.js";
 export * from "./load/proxySecretResolution.js";
+export * from "./load/typeGuards.js";
 export * from "./load/unroll.js";
 export * from "./schemas/data/index.js";
 export * from "./schemas/index.js";
