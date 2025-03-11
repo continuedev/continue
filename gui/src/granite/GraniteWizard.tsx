@@ -1,38 +1,33 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  createContext,
-  useContext,
-  ReactNode,
-} from "react";
 import { RadioGroup } from "@headlessui/react";
-import {
-  ExclamationCircleIcon,
-  ExclamationTriangleIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/24/outline";
-import { StatusCheck, StatusValue } from "./StatusCheck";
-import { ServerStatus } from "core/granite/commons/statuses";
-import { VSCodeButton } from "../components/VSCodeButton";
-import { isHighEndMachine, SystemInfo } from "core/granite/commons/sysInfo";
-import {
-  OLLAMA_STEP,
-  MODELS_STEP,
-  FINAL_STEP,
-  WizardState,
-} from "core/granite/commons/wizardState";
-import { vscode } from "./utils/vscode";
-import { ProgressData } from "core/granite/commons/progressData";
-import { formatSize } from "core/granite/commons/textUtils";
-import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
+import { LocalModelSize } from "core";
 import {
   DEFAULT_MODEL_GRANITE_LARGE,
   DEFAULT_MODEL_GRANITE_SMALL,
 } from "core/config/default";
-import { LocalModelSize } from "core";
-import { ProgressBlock } from "./ProgressBlock";
+import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
+import { ProgressData } from "core/granite/commons/progressData";
+import { ServerStatus } from "core/granite/commons/statuses";
+import { isHighEndMachine, SystemInfo } from "core/granite/commons/sysInfo";
+import { formatSize } from "core/granite/commons/textUtils";
+import {
+  FINAL_STEP,
+  MODELS_STEP,
+  OLLAMA_STEP,
+  WizardState,
+} from "core/granite/commons/wizardState";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { VSCodeButton } from "../components/VSCodeButton";
 import { DiagnosticMessage } from "./DiagnosticMessage";
+import { ProgressBlock } from "./ProgressBlock";
+import { StatusCheck, StatusValue } from "./StatusCheck";
+import { vscode } from "./utils/vscode";
 
 interface InstallationMode {
   id: string;
@@ -449,8 +444,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     {
       key: "small",
       name: "Small",
-      description:
-        "For machines with less than 32GB of memory and a slow GPU",
+      description: "For machines with less than 32GB of memory and a slow GPU",
     },
   ];
 

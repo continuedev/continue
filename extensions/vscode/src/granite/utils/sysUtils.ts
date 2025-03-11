@@ -1,6 +1,6 @@
+import { DiskSpace, SystemInfo } from "core/granite/commons/sysInfo";
 import * as os from "os";
 import * as si from "systeminformation";
-import { DiskSpace, SystemInfo } from "core/granite/commons/sysInfo";
 
 // Returns the system's total and available memory
 export function getSystemMemory() {
