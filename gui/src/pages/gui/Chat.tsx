@@ -191,20 +191,17 @@ const useAutoScroll = (
 };
 
 const useTutorialListener = (onTutorialClosed: () => void) => {
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-  console.log("IS TUTORIAL OPEN", isTutorialOpen);
+  const isTutorialOpenRef = useRef(false);
 
   useWebviewListener("didChangeActiveTextEditor", async (data) => {
-    console.log("DATA", data.filepath);
     const isTutorial =
       data?.filepath?.toLowerCase().endsWith("continue_tutorial.py") ?? false;
 
-    if (isTutorialOpen && !isTutorial) {
+    if (isTutorialOpenRef.current && !isTutorial) {
       onTutorialClosed();
-      console.log("Tutorial was closed!");
     }
 
-    setIsTutorialOpen(isTutorial);
+    isTutorialOpenRef.current = isTutorial;
   });
 };
 
