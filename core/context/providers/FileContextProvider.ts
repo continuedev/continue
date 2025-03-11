@@ -8,9 +8,9 @@ import {
 } from "../../";
 import { walkDirs } from "../../indexing/walkDir";
 import {
-  getUriPathBasename,
   getShortestUniqueRelativeUriPaths,
   getUriDescription,
+  getUriPathBasename,
 } from "../../util/uri";
 
 const MAX_SUBMENU_ITEMS = 10_000;
@@ -53,7 +53,13 @@ class FileContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const workspaceDirs = await args.ide.getWorkspaceDirs();
-    const results = await walkDirs(args.ide, undefined, workspaceDirs);
+    const results = await walkDirs(
+      args.ide,
+      {
+        source: "load submenu items - file",
+      },
+      workspaceDirs,
+    );
     const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
     const withUniquePaths = getShortestUniqueRelativeUriPaths(
       files,

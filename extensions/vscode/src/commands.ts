@@ -819,7 +819,9 @@ const getCommandsMap: (
           .stat(uri)
           ?.then((stat) => stat.type === vscode.FileType.Directory);
         if (isDirectory) {
-          for await (const fileUri of walkDirAsync(uri.toString(), ide)) {
+          for await (const fileUri of walkDirAsync(uri.toString(), ide, {
+            source: "vscode continue.selectFilesAsContext command",
+          })) {
             addEntireFileToContext(
               vscode.Uri.parse(fileUri),
               sidebar.webviewProtocol,
@@ -962,10 +964,7 @@ const getCommandsMap: (
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
         } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
-        } else if (
-          selectedOption ===
-          "$(screen-full) Open full screen chat"
-        ) {
+        } else if (selectedOption === "$(screen-full) Open full screen chat") {
           vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(question) Open help center") {
           focusGUI();

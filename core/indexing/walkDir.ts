@@ -12,9 +12,13 @@ import {
 export interface WalkerOptions {
   onlyDirs?: boolean;
   returnRelativeUrisPaths?: boolean;
+  source?: string;
 }
 
 type Entry = [string, FileType];
+
+const LIST_DIR_CACHE_TIME = 30_000; // 30 seconds
+const IGNORE_FILE_CACHE_TIME = 30_000; // 30 seconds
 
 // helper struct used for the DFS walk
 type WalkableEntry = {
@@ -36,6 +40,32 @@ type IgnoreContext = {
   dirname: string;
 };
 
+class WalkDirCache {
+  dirListCache: Map<
+    string,
+    {
+      time: number;
+      entries: Promise<[string, FileType][]>;
+    }
+  > = new Map();
+  dirIgnoreCache: Map<
+    string,
+    {
+      time: number;
+      ignore: Promise<Ignore>;
+    }
+  > = new Map();
+}
+export const walkDirCache = new WalkDirCache(); // todo - singleton approach better?
+
+// class ListDirCache {
+//   private cache: Map<string, >();
+//   getCacheKey(options: WalkerOptions) {
+//     return `${options.returnRelativeUrisPaths ? "relative" : "absolute"}-${options.onlyDirs ? "dirs" : "files"}`;
+//   }
+
+// }
+
 class DFSWalker {
   constructor(
     private readonly uri: string,
@@ -45,9 +75,19 @@ class DFSWalker {
 
   // walk is a depth-first search implementation
   public async *walk(): AsyncGenerator<string> {
+    const start = Date.now();
+    let ignoreFileTime = 0;
+    let ignoreTime = 0;
+    let listDirTime = 0;
+    let dirs = 0;
+    let listDirCacheHits = 0;
+    let ignoreCacheHits = 0;
+
+    let section = Date.now();
     const defaultAndGlobalIgnores = ignore()
       .add(defaultIgnoreFileAndDir)
       .add(getGlobalContinueIgArray());
+    ignoreFileTime += Date.now() - section;
 
     const rootContext: WalkContext = {
       walkableEntry: {
@@ -62,15 +102,62 @@ class DFSWalker {
     const stack = [rootContext];
 
     for (let cur = stack.pop(); cur; cur = stack.pop()) {
-      // Only directories will be added to the stack
-      const entries = await this.ide.listDir(cur.walkableEntry.uri);
+      // const entries = await this.ide.listDir(cur.walkableEntry.uri);
+      // const newIgnore = await getIgnoreContext(
+      //   cur.walkableEntry.uri,
+      //   entries,
+      //   this.ide,
+      //   defaultAndGlobalIgnores,
+      // );
 
-      const newIgnore = await getIgnoreContext(
+      // Only directories will be added to the stack
+      dirs++;
+
+      section = Date.now();
+      let entries: [string, FileType][] = [];
+      const cachedListdir = walkDirCache.dirListCache.get(
         cur.walkableEntry.uri,
-        entries,
-        this.ide,
-        defaultAndGlobalIgnores,
       );
+      if (
+        cachedListdir &&
+        cachedListdir.time > Date.now() - LIST_DIR_CACHE_TIME
+      ) {
+        entries = await cachedListdir.entries;
+        listDirCacheHits++;
+      } else {
+        const promise = this.ide.listDir(cur.walkableEntry.uri);
+        walkDirCache.dirListCache.set(cur.walkableEntry.uri, {
+          time: Date.now(),
+          entries: promise,
+        });
+        entries = await promise;
+      }
+      listDirTime += Date.now() - section;
+
+      section = Date.now();
+      let newIgnore: Ignore;
+      const cachedIgnore = walkDirCache.dirIgnoreCache.get(
+        cur.walkableEntry.uri,
+      );
+      if (
+        cachedIgnore &&
+        cachedIgnore.time > Date.now() - IGNORE_FILE_CACHE_TIME
+      ) {
+        newIgnore = await cachedIgnore.ignore;
+        ignoreCacheHits++;
+      } else {
+        const ignorePromise = getIgnoreContext(
+          cur.walkableEntry.uri,
+          entries,
+          this.ide,
+          defaultAndGlobalIgnores,
+        );
+        walkDirCache.dirIgnoreCache.set(cur.walkableEntry.uri, {
+          time: Date.now(),
+          ignore: ignorePromise,
+        });
+        newIgnore = await ignorePromise;
+      }
 
       const ignoreContexts = [
         ...cur.ignoreContexts,
@@ -79,6 +166,7 @@ class DFSWalker {
           dirname: cur.walkableEntry.relativeUriPath,
         },
       ];
+      ignoreFileTime += Date.now() - section;
 
       for (const entry of entries) {
         if (this.entryIsSymlink(entry)) {
@@ -103,19 +191,24 @@ class DFSWalker {
             continue;
           }
         }
-        let shouldInclude = true;
+        let shouldIgnore = false;
         for (const ig of ignoreContexts) {
+          if (shouldIgnore) {
+            continue;
+          }
           // remove the directory name and path separator from the match path, unless this an ignore file
           // in the root directory
           const prefixLength =
             ig.dirname.length === 0 ? 0 : ig.dirname.length + 1;
           // The ignore library expects a path relative to the ignore file location
           const matchPath = relPath.substring(prefixLength);
+          section = Date.now();
           if (ig.ignore.ignores(matchPath)) {
-            shouldInclude = false;
+            shouldIgnore = true;
           }
+          ignoreTime += Date.now() - section;
         }
-        if (!shouldInclude) {
+        if (shouldIgnore) {
           continue;
         }
 
@@ -141,6 +234,10 @@ class DFSWalker {
         }
       }
     }
+    // console.log(walkDirCache.listDirCache.values().toArray().slice(0, 30));
+    console.log(
+      `Walk Dir Result:\nSource: ${this.options.source ?? "unknown"}\nDir: ${this.uri}\nDuration: ${Date.now() - start}ms:\n\tList dir: ${listDirTime}ms (${listDirCacheHits}/${dirs} cache hits)\n\tIgnore files: ${ignoreFileTime}ms (${ignoreCacheHits}/${dirs} cache hits)\n\tIgnoring: ${ignoreTime}ms`,
+    );
   }
 
   private entryIsDirectory(entry: Entry) {
@@ -162,10 +259,8 @@ export async function* walkDirAsync(
   ide: IDE,
   _optionOverrides?: WalkerOptions,
 ): AsyncGenerator<string> {
-  const start = Date.now();
   const options = { ...defaultOptions, ..._optionOverrides };
   yield* new DFSWalker(path, ide, options).walk();
-  console.log(`walkDir took ${Date.now() - start}ms`);
 }
 
 export async function walkDir(
@@ -228,6 +323,10 @@ export async function getIgnoreContext(
     getGitIgnorePatterns(),
     getContinueIgnorePatterns(),
   ]);
+
+  if (ignoreArrays[0].length === 0 && ignoreArrays[1].length === 0) {
+    return defaultAndGlobalIgnores;
+  }
 
   // Note precedence here!
   const ignoreContext = ignore()

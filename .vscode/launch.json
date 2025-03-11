@@ -12,8 +12,8 @@
       "cwd": "${workspaceFolder}/extensions/vscode",
       "args": [
         // Pass a directory to manually test in
-        "${workspaceFolder}/manual-testing-sandbox",
-        "${workspaceFolder}/manual-testing-sandbox/test.js",
+        "/Users/dallin/Documents/code/continuedev/continue-extras/react",
+        "/Users/dallin/Documents/code/continuedev/continue-extras/react/README.md",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
       "pauseForSourceMap": false,

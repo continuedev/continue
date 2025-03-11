@@ -41,7 +41,9 @@ export async function getAssistantFilesFromDir(
       return [];
     }
 
-    const uris = await walkDir(dir, ide);
+    const uris = await walkDir(dir, ide, {
+      source: "get dir assistant files",
+    });
     const assistantFilePaths = uris.filter(
       (p) => p.endsWith(".yaml") || p.endsWith(".yml"),
     );

@@ -887,6 +887,7 @@ export class Core {
             uri.endsWith(".gitignore")
           ) {
             // Reindex the workspaces
+            // walkDirCache.invalidate();
             this.invoke("index/forceReIndex", {
               shouldClearIndexes: true,
             });
