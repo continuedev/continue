@@ -37,7 +37,8 @@ export async function shouldIgnore(
     currentDir = splitUri.join("/");
 
     // Get all files in the dir
-    const dirEntries = await ide.listDir(currentDir);
+    const dirEntriesPromise = ide.listDir(currentDir);
+    const dirEntries = await dirEntriesPromise;
 
     // Check if the file is a symbolic link, ignore if so
     if (directParent) {
@@ -54,7 +55,7 @@ export async function shouldIgnore(
 
     const ignoreContext = await getIgnoreContext(
       currentDir,
-      dirEntries,
+      dirEntriesPromise,
       ide,
       defaultAndGlobalIgnores,
     );
