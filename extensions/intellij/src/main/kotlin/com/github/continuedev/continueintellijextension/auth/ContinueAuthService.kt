@@ -2,7 +2,7 @@ package com.github.continuedev.continueintellijextension.auth
 
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.
+import com.github.continuedev.continueintellijextension.utils.Desktop
 import com.google.gson.Gson
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe

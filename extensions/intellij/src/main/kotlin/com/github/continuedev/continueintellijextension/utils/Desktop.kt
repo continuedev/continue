@@ -13,249 +13,202 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.github.continuedev.continueintellijextension.utils
 
-//CHECKSTYLE:OFF
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.lang3.SystemUtils
+import org.slf4j.LoggerFactory
+import java.io.File
+import java.io.IOException
+import java.net.URI
 
-import org.apache.commons.lang3.SystemUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+object Desktop {
+    private val LOG = LoggerFactory.getLogger(Desktop::class.java)
 
-/**
- * 
- * @author jjYBdx4IL
- */
-public class Desktop {
-
-    private static final Logger LOG = LoggerFactory.getLogger(Desktop.class);
-
-    public static boolean browse(URI uri) {
-
+    fun browse(uri: URI): Boolean {
         if (browseDESKTOP(uri)) {
-            return true;
+            return true
         }
 
         if (openSystemSpecific(uri.toString())) {
-            return true;
+            return true
         }
 
-        LOG.warn(String.format("failed to browse %s", uri));
-
-        return false;
+        LOG.warn("failed to browse {}", uri)
+        return false
     }
 
-
-    public static boolean open(File file) {
-
+    fun open(file: File): Boolean {
         if (openDESKTOP(file)) {
-            return true;
+            return true
         }
 
-        if (openSystemSpecific(file.getPath())) {
-            return true;
+        if (openSystemSpecific(file.path)) {
+            return true
         }
 
-        LOG.warn(String.format("failed to open %s", file.getAbsolutePath()));
-
-        return false;
+        LOG.warn("failed to open {}", file.absolutePath)
+        return false
     }
 
-
-    public static boolean edit(File file) {
-
+    fun edit(file: File): Boolean {
         if (editDESKTOP(file)) {
-            return true;
+            return true
         }
 
-        if (openSystemSpecific(file.getPath())) {
-            return true;
+        if (openSystemSpecific(file.path)) {
+            return true
         }
 
-        LOG.warn(String.format("failed to edit %s", file.getAbsolutePath()));
-
-        return false;
+        LOG.warn("failed to edit {}", file.absolutePath)
+        return false
     }
 
-
-    private static boolean openSystemSpecific(String what) {
-
+    private fun openSystemSpecific(what: String): Boolean {
         if (SystemUtils.IS_OS_LINUX) {
-            if (isXDG()) {
-                if (runCommand("xdg-open", "%s", what)) {
-                    return true;
-                }
+            if (isXDG() && runCommand("xdg-open", "%s", what)) {
+                return true
             }
-            if (isKDE()) {
-                if (runCommand("kde-open", "%s", what)) {
-                    return true;
-                }
+            if (isKDE() && runCommand("kde-open", "%s", what)) {
+                return true
             }
-            if (isGNOME()) {
-                if (runCommand("gnome-open", "%s", what)) {
-                    return true;
-                }
+            if (isGNOME() && runCommand("gnome-open", "%s", what)) {
+                return true
             }
             if (runCommand("kde-open", "%s", what)) {
-                return true;
+                return true
             }
             if (runCommand("gnome-open", "%s", what)) {
-                return true;
+                return true
             }
         }
 
-        if (SystemUtils.IS_OS_MAC) {
-            if (runCommand("open", "%s", what)) {
-                return true;
-            }
+        if (SystemUtils.IS_OS_MAC && runCommand("open", "%s", what)) {
+            return true
         }
 
-        if (SystemUtils.IS_OS_WINDOWS) {
-            if (runCommand("explorer", "%s", what)) {
-                return true;
-            }
+        if (SystemUtils.IS_OS_WINDOWS && runCommand("explorer", "%s", what)) {
+            return true
         }
 
-        return false;
+        return false
     }
 
-
-    private static boolean browseDESKTOP(URI uri) {
-
-        try {
+    private fun browseDESKTOP(uri: URI): Boolean {
+        return try {
             if (!java.awt.Desktop.isDesktopSupported()) {
-                LOG.debug("Platform is not supported.");
-                return false;
+                LOG.debug("Platform is not supported.")
+                return false
             }
 
             if (!java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.BROWSE)) {
-                LOG.debug("BROWSE is not supported.");
-                return false;
+                LOG.debug("BROWSE is not supported.")
+                return false
             }
 
-            LOG.info("Trying to use Desktop.getDesktop().browse() with " + uri.toString());
-            java.awt.Desktop.getDesktop().browse(uri);
-
-            return true;
-        } catch (Throwable t) {
-            LOG.error("Error using desktop browse.", t);
-            return false;
+            LOG.info("Trying to use Desktop.getDesktop().browse() with {}", uri.toString())
+            java.awt.Desktop.getDesktop().browse(uri)
+            true
+        } catch (t: Throwable) {
+            LOG.error("Error using desktop browse.", t)
+            false
         }
     }
 
-
-    private static boolean openDESKTOP(File file) {
-        try {
+    private fun openDESKTOP(file: File): Boolean {
+        return try {
             if (!java.awt.Desktop.isDesktopSupported()) {
-                LOG.debug("Platform is not supported.");
-                return false;
+                LOG.debug("Platform is not supported.")
+                return false
             }
 
             if (!java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.OPEN)) {
-                LOG.debug("OPEN is not supported.");
-                return false;
+                LOG.debug("OPEN is not supported.")
+                return false
             }
 
-            LOG.info("Trying to use Desktop.getDesktop().open() with " + file.toString());
-            java.awt.Desktop.getDesktop().open(file);
-
-            return true;
-        } catch (Throwable t) {
-            LOG.error("Error using desktop open.", t);
-            return false;
+            LOG.info("Trying to use Desktop.getDesktop().open() with {}", file.toString())
+            java.awt.Desktop.getDesktop().open(file)
+            true
+        } catch (t: Throwable) {
+            LOG.error("Error using desktop open.", t)
+            false
         }
     }
 
-
-    private static boolean editDESKTOP(File file) {
-        try {
+    private fun editDESKTOP(file: File): Boolean {
+        return try {
             if (!java.awt.Desktop.isDesktopSupported()) {
-                LOG.debug("Platform is not supported.");
-                return false;
+                LOG.debug("Platform is not supported.")
+                return false
             }
 
             if (!java.awt.Desktop.getDesktop().isSupported(java.awt.Desktop.Action.EDIT)) {
-                LOG.debug("EDIT is not supported.");
-                return false;
+                LOG.debug("EDIT is not supported.")
+                return false
             }
 
-            LOG.info("Trying to use Desktop.getDesktop().edit() with " + file);
-            java.awt.Desktop.getDesktop().edit(file);
-
-            return true;
-        } catch (Throwable t) {
-            LOG.error("Error using desktop edit.", t);
-            return false;
+            LOG.info("Trying to use Desktop.getDesktop().edit() with {}", file)
+            java.awt.Desktop.getDesktop().edit(file)
+            true
+        } catch (t: Throwable) {
+            LOG.error("Error using desktop edit.", t)
+            false
         }
     }
 
+    private fun runCommand(command: String, args: String, file: String): Boolean {
+        LOG.info("Trying to exec:\n   cmd = {}\n   args = {}\n   %s = {}", command, args, file)
 
-    private static boolean runCommand(String command, String args, String file) {
+        val parts = prepareCommand(command, args, file)
 
-        LOG.info("Trying to exec:\n   cmd = " + command + "\n   args = " + args + "\n   %s = " + file);
-
-        String[] parts = prepareCommand(command, args, file);
-
-        try {
-            Process p = Runtime.getRuntime().exec(parts);
+        return try {
+            val p = Runtime.getRuntime().exec(parts)
             if (p == null) {
-                return false;
-            }
-
-            try {
-                int retval = p.exitValue();
-                if (retval == 0) {
-                    LOG.error("Process ended immediately.");
-                    return false;
-                } else {
-                    LOG.error("Process crashed.");
-                    return false;
+                false
+            } else {
+                try {
+                    val retval = p.exitValue()
+                    if (retval == 0) {
+                        LOG.error("Process ended immediately.")
+                        false
+                    } else {
+                        LOG.error("Process crashed.")
+                        false
+                    }
+                } catch (itse: IllegalThreadStateException) {
+                    LOG.error("Process is running.")
+                    true
                 }
-            } catch (IllegalThreadStateException itse) {
-                LOG.error("Process is running.");
-                return true;
             }
-        } catch (IOException e) {
-            LOG.error("Error running command.", e);
-            return false;
+        } catch (e: IOException) {
+            LOG.error("Error running command.", e)
+            false
         }
     }
 
+    private fun prepareCommand(command: String, args: String?, file: String): Array<String> {
+        val parts = mutableListOf<String>()
+        parts.add(command)
 
-    private static String[] prepareCommand(String command, String args, String file) {
-
-        List<String> parts = new ArrayList<>();
-        parts.add(command);
-
-        if (args != null) {
-            for (String s : args.split(" ")) {
-                s = String.format(s, file); // put in the filename thing
-
-                parts.add(s.trim());
-            }
+        args?.split(" ")?.forEach { s ->
+            parts.add(String.format(s, file).trim())
         }
 
-        return parts.toArray(new String[parts.size()]);
+        return parts.toTypedArray()
     }
 
-    private static boolean isXDG() {
-        String xdgSessionId = System.getenv("XDG_SESSION_ID");
-        return xdgSessionId != null && !xdgSessionId.isEmpty();
+    private fun isXDG(): Boolean {
+        val xdgSessionId = System.getenv("XDG_SESSION_ID")
+        return !xdgSessionId.isNullOrEmpty()
     }
 
-    private static boolean isGNOME() {
-        String gdmSession = System.getenv("GDMSESSION");
-        return gdmSession != null && gdmSession.toLowerCase().contains("gnome");
+    private fun isGNOME(): Boolean {
+        val gdmSession = System.getenv("GDMSESSION")
+        return gdmSession?.lowercase()?.contains("gnome") == true
     }
 
-    private static boolean isKDE() {
-        String gdmSession = System.getenv("GDMSESSION");
-        return gdmSession != null && gdmSession.toLowerCase().contains("kde");
-    }
-
-    private Desktop() {
+    private fun isKDE(): Boolean {
+        val gdmSession = System.getenv("GDMSESSION")
+        return gdmSession?.lowercase()?.contains("kde") == true
     }
 }
