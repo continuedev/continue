@@ -55,6 +55,20 @@ class WalkDirCache {
       ignore: Promise<Ignore>;
     }
   > = new Map();
+  // The super safe approach for now
+  invalidate() {
+    this.dirListCache.clear();
+    this.dirIgnoreCache.clear();
+  }
+  // invalidateIgnore(uri: string) {
+  //   this.dirIgnoreCache.delete(uri);
+  // }
+  // invalidateParent(uri: string) {
+  //   const splitUri = fileUri.split("/");
+  //   splitUri.pop();
+  //   const parent = splitUri.join("/");
+  //   this.dirListCache.delete(uri);
+  // }
 }
 export const walkDirCache = new WalkDirCache(); // todo - singleton approach better?
 
@@ -102,6 +116,7 @@ class DFSWalker {
     const stack = [rootContext];
 
     for (let cur = stack.pop(); cur; cur = stack.pop()) {
+      // No caching approach:
       // const entries = await this.ide.listDir(cur.walkableEntry.uri);
       // const newIgnore = await getIgnoreContext(
       //   cur.walkableEntry.uri,
