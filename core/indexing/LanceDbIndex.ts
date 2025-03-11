@@ -24,7 +24,6 @@ import {
 } from "./types";
 
 import type * as LanceType from "vectordb";
-import { localPathToUri } from "../util/pathToUri";
 
 interface LanceDbRow {
   uuid: string;
@@ -499,7 +498,7 @@ export class LanceDbIndex implements CodebaseIndex {
     return data.map((d) => {
       return {
         digest: d.cacheKey,
-        filepath: localPathToUri(d.path),
+        filepath: d.path,
         startLine: d.startLine,
         endLine: d.endLine,
         index: 0,

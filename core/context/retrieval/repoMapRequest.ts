@@ -2,6 +2,7 @@ import { Chunk, ContinueConfig, IDE, ILLM } from "../..";
 import { getModelByRole } from "../../config/util";
 import generateRepoMap from "../../util/generateRepoMap";
 import { renderChatMessage } from "../../util/messageContent";
+import { localPathToUri } from "../../util/pathToUri";
 
 const SUPPORTED_MODEL_TITLE_FAMILIES = [
   "claude-3",
@@ -72,7 +73,7 @@ This is the question that you should select relevant files for: "${input}"`;
       return [];
     }
 
-    const fileUris = content
+    const filepaths = content
       .split("<results>")[1]
       ?.split("</results>")[0]
       ?.split("\n")
@@ -80,8 +81,9 @@ This is the question that you should select relevant files for: "${input}"`;
       .map((uri) => uri.trim());
 
     const chunks = await Promise.all(
-      fileUris.map(async (uri) => {
-        const content = await ide.readFile(uri);
+      filepaths.map(async (filepath) => {
+        const uri = localPathToUri(filepath);
+        const content = await ide.readFile(filepath);
         const lineCount = content.split("\n").length;
         const chunk: Chunk = {
           digest: uri,
