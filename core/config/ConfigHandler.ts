@@ -115,12 +115,6 @@ export class ConfigHandler {
 
   private async init() {
     try {
-      await this.loadLocalProfilesOnly();
-    } catch (e) {
-      console.error("Failed to load local assistants: ", e);
-    }
-
-    try {
       await this.fetchControlPlaneProfiles();
     } catch (e) {
       // If this fails, make sure at least local profile is loaded
@@ -357,6 +351,9 @@ export class ConfigHandler {
   }
 
   async setSelectedProfile(profileId: string | null) {
+    console.log(
+      `Changing selected profile from ${this.selectedProfileId} to ${profileId}`,
+    );
     this.selectedProfileId = profileId;
     const result = await this.loadConfig();
     this.notifyConfigListeners(result);
