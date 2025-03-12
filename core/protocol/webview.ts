@@ -26,6 +26,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
+  didCloseFiles: [{ uris: string[] }, void];
   isContinueInputFocused: [undefined, boolean];
   addContextItem: [
     {

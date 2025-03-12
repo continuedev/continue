@@ -49,6 +49,10 @@ async function modelConfigToBaseLLM(
     title: model.name,
     systemMessage,
     promptTemplates: model.promptTemplates,
+    capabilities: {
+      tools: model.capabilities?.includes("tool_use"),
+      uploadImage: model.capabilities?.includes("image_input"),
+    },
   };
 
   if (model.embedOptions?.maxBatchSize) {
@@ -127,7 +131,7 @@ async function autodetectModels(
           {
             ...model,
             model: modelName,
-            name: `${llm.title} - ${modelName}`,
+            name: modelName,
           },
           uniqueId,
           ideSettings,

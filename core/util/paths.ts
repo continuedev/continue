@@ -103,7 +103,7 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
   return p;
 }
 
-export function getConfigYamlPath(ideType: IdeType): string {
+export function getConfigYamlPath(ideType?: IdeType): string {
   const p = path.join(getContinueGlobalPath(), "config.yaml");
   // if (!fs.existsSync(p)) {
   //   if (ideType === "jetbrains") {
@@ -113,6 +113,14 @@ export function getConfigYamlPath(ideType: IdeType): string {
   //   }
   // }
   return p;
+}
+
+export function getPrimaryConfigFilePath(): string {
+  const configYamlPath = getConfigYamlPath();
+  if (fs.existsSync(configYamlPath)) {
+    return configYamlPath;
+  }
+  return getConfigJsonPath();
 }
 
 export function getConfigTsPath(): string {
@@ -353,6 +361,10 @@ export function getGlobalPromptsPath(): string {
   return path.join(getContinueGlobalPath(), "prompts");
 }
 
+export function getGlobalAssistantsPath(): string {
+  return path.join(getContinueGlobalPath(), "assistants");
+}
+
 export function readAllGlobalPromptFiles(
   folderPath: string = getGlobalPromptsPath(),
 ): { path: string; content: string }[] {
@@ -368,7 +380,7 @@ export function readAllGlobalPromptFiles(
     if (stats.isDirectory()) {
       const nestedPromptFiles = readAllGlobalPromptFiles(filepath);
       promptFiles.push(...nestedPromptFiles);
-    } else {
+    } else if (file.endsWith(".prompt")) {
       const content = fs.readFileSync(filepath, "utf8");
       promptFiles.push({ path: filepath, content });
     }
@@ -404,6 +416,10 @@ export function migrateV1DevDataFiles() {
   moveToV1FolderIfExists("chat", "chatFeedback");
   moveToV1FolderIfExists("quickEdit", "quickEdit");
   moveToV1FolderIfExists("autocomplete", "autocomplete");
+}
+
+export function getLocalEnvironmentDotFilePath(): string {
+  return path.join(getContinueGlobalPath(), ".local");
 }
 
 export function getStagingEnvironmentDotFilePath(): string {

@@ -54,6 +54,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("vllm"),
     z.literal("x-ai"),
     z.literal("scaleway"),
+    z.literal("ncompass"),
   ]),
 });
 export type OpenAIConfig = z.infer<typeof OpenAIConfigSchema>;
