@@ -104,6 +104,7 @@ Example
     "disableInFiles": ["*.md"]
   }
 }
+````
 
 ### `embeddingsProvider`
 
@@ -117,7 +118,10 @@ Embeddings model settings - the model used for @Codebase and @docs.
 - `apiBase`: Base URL for API requests.
 - `requestOptions`: Additional HTTP request settings specific to the embeddings provider.
 - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
-- `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+- `maxBatchSize`: Maximunumber of chunks per request. Minimum is 1 chunk.
+- `embeddingPrefixes` - the prefixes for embedding chunks.
+    - `chunk` - the prefix string for chunk embeddings
+    - `query` - the prefix for query embeddings 
 
 (AWS ONLY)
 

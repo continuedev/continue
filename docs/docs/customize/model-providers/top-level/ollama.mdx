@@ -84,7 +84,11 @@ We recommend configuring **Nomic Embed Text** as your embeddings model.
     {
       "embeddingsProvider": {
         "provider": "ollama",
-        "model": "nomic-embed-text"
+        "model": "nomic-embed-text",
+        "embeddingPrefixes" : {
+          "chunk": "search_document: ",
+          "query": "search_query: "
+        }
       }
     }
     ```
