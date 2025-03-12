@@ -88,9 +88,8 @@ export const uiSlice = createSlice({
       state.useTools = !state.useTools;
     },
     addTool: (state, action: PayloadAction<Tool>) => {
-      state.toolSettings[action.payload.function.name] = action.payload.readonly
-        ? "allowedWithoutPermission"
-        : "allowedWithPermission";
+      state.toolSettings[action.payload.function.name] =
+        "allowedWithPermission";
     },
     toggleToolSetting: (state, action: PayloadAction<string>) => {
       const setting = state.toolSettings[action.payload];

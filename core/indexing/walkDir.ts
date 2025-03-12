@@ -12,6 +12,7 @@ import {
 export interface WalkerOptions {
   onlyDirs?: boolean;
   returnRelativeUrisPaths?: boolean;
+  overrideIgnore?: Ignore;
 }
 
 type Entry = [string, FileType];
@@ -46,7 +47,7 @@ class DFSWalker {
   // walk is a depth-first search implementation
   public async *walk(): AsyncGenerator<string> {
     const defaultAndGlobalIgnores = ignore()
-      .add(defaultIgnoreFileAndDir)
+      .add(this.options.overrideIgnore ?? defaultIgnoreFileAndDir)
       .add(getGlobalContinueIgArray());
 
     const rootContext: WalkContext = {
