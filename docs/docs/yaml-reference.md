@@ -31,6 +31,10 @@ Hub blocks and assistants are identified with a slug in the format `owner-slug/b
 
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
 
+:::info
+Note that `uses` blocks cannot be used with a local `config.yaml`
+:::
+
 For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
 
 ```yaml title="Assistant models section"
