@@ -107,6 +107,11 @@ export class Core {
       ideSettingsPromise,
       this.onWrite,
       sessionInfoPromise,
+      (orgId: string | null) => {
+        void messenger.request("didSelectOrganization", {
+          orgId,
+        });
+      },
     );
 
     this.docsService = DocsService.createSingleton(

@@ -15,4 +15,5 @@ export type ToWebviewFromCoreProtocol = ToWebviewFromIdeOrCoreProtocol & {
     { profiles: ProfileDescription[]; selectedProfileId: string | null },
     void,
   ];
+  didSelectOrganization: [{ orgId: string | null }, void];
 };
