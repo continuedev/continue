@@ -295,8 +295,11 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
-    on("config/listProfiles", (msg) => {
-      return this.configHandler.listProfiles();
+    on("config/listProfiles", async (msg) => {
+      const profiles = this.configHandler.listProfiles();
+      const selectedProfileId =
+        this.configHandler.currentProfile?.profileDescription.id ?? null;
+      return { profiles, selectedProfileId };
     });
 
     on("config/refreshProfiles", async (msg) => {
