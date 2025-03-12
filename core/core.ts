@@ -30,12 +30,7 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  migrateV1DevDataFiles,
-} from "./util/paths";
-import { localPathToUri } from "./util/pathToUri";
+import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -860,7 +855,10 @@ export class Core {
         for (const uri of data.uris) {
           // Listen for file changes in the workspace
           // URI TODO is this equality statement valid?
-          if (URI.equal(uri, localPathToUri(getConfigJsonPath()))) {
+          const currentProfileUri =
+            this.configHandler.currentProfile?.profileDescription.uri ?? "";
+
+          if (URI.equal(uri, currentProfileUri)) {
             // Trigger a toast notification to provide UI feedback that config has been updated
             const showToast =
               this.globalContext.get("showConfigUpdateToast") ?? true;
@@ -874,6 +872,8 @@ export class Core {
                 this.globalContext.update("showConfigUpdateToast", false);
               }
             }
+            await this.configHandler.reloadConfig();
+            continue;
           }
 
           if (
@@ -934,6 +934,15 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
       }
     });
+
+    on("files/closed", async ({ data }) => {
+      if (data.uris) {
+        this.messenger.send("didCloseFiles", {
+          uris: data.uris,
+        });
+      }
+    });
+
     on("files/opened", async ({ data }) => {
       if (data?.uris?.length) {
         // Do something on files opened

@@ -117,7 +117,7 @@ class Cohere extends BaseLLM {
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    const resp = await fetch(new URL("rerank", this.apiBase), {
+    const resp = await this.fetch(new URL("rerank", this.apiBase), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,

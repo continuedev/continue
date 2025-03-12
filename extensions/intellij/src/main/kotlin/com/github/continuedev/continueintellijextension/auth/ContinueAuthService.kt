@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.auth
 
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.Desktop
 import com.google.gson.Gson
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
@@ -12,7 +13,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.remoteServer.util.CloudConfigurationUtil.createCredentialAttributes
 import kotlinx.coroutines.CoroutineScope
-import java.awt.Desktop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -153,8 +153,7 @@ class ContinueAuthService {
         ) { response ->
             val authUrl = ((response as? Map<*, *>)?.get("content") as? Map<*, *>)?.get("url") as? String
             if (authUrl != null) {
-                // Open the auth URL in the browser
-                Desktop.getDesktop().browse(java.net.URI(authUrl))
+                Desktop.browse(java.net.URI(authUrl))
             }
         }
     }

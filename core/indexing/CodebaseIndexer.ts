@@ -97,7 +97,6 @@ export class CodebaseIndexer {
     const lanceDbIndex = await LanceDbIndex.create(
       embeddingsModel,
       this.ide.readFile.bind(this.ide),
-      this.continueServerClient,
     );
 
     if (lanceDbIndex) {
