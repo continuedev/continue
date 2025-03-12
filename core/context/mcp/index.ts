@@ -9,6 +9,7 @@ import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { encodeMCPToolUri } from "../../tools/callTool";
 import MCPContextProvider from "../providers/MCPContextProvider";
+import { createMCPTemplateContextProviderClass } from "../providers/MCPTemplateContextProvider";
 
 export class MCPManagerSingleton {
   private static instance: MCPManagerSingleton;
@@ -167,6 +168,42 @@ class MCPConnection {
           mcpId,
         }),
       );
+
+      const templates = await this.client.listResourceTemplates({}, { signal });
+      const templateContextProviders = templates.resourceTemplates.map(
+        (resource: any) => {
+          const matches = resource.uriTemplate.matchAll(
+            /{([^}]+)}/g,
+          ) as IterableIterator<RegExpMatchArray>;
+          const params = Array.from(matches, (m) => m[1]);
+          if (params.length === 0) {
+            throw new Error(
+              `No parameters found in resource template ${resource.name}`,
+            );
+          }
+
+          if (params.length > 1) {
+            throw new Error(
+              `Cant use resource template ${resource.name} with more than one parameter. This is a limitation of the current implementation.`,
+            );
+          }
+
+          const parameter = params[0];
+          /// create temporary context provider for each mcp resource template
+          /// For now this is necessary as we dont have an option to get from a submenu to a query input
+          const Provider = createMCPTemplateContextProviderClass({
+            // combine the MCP server name and resource name into a unique display name
+            name: `${mcpId}.${resource.name}`,
+            description: resource.description,
+          });
+          return new Provider({
+            mcpId,
+            parameter,
+            uri: resource.uriTemplate,
+          });
+        },
+      );
+      config.contextProviders.push(...templateContextProviders);
     }
 
     // Tools <—> Tools
