@@ -27,9 +27,9 @@ class LlamaEncoding implements Encoding {
 }
 
 class NonWorkerAsyncEncoder implements AsyncEncoder {
-  constructor(private readonly encoding: Encoding) {}
+  constructor(private readonly encoding: Encoding) { }
 
-  async close(): Promise<void> {}
+  async close(): Promise<void> { }
 
   async encode(text: string): Promise<number[]> {
     return this.encoding.encode(text);
@@ -383,8 +383,8 @@ function compileChatMessages(
 ): ChatMessage[] {
   let msgsCopy = msgs
     ? msgs
-        .map((msg) => ({ ...msg }))
-        .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
+      .map((msg) => ({ ...msg }))
+      .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
@@ -397,6 +397,7 @@ function compileChatMessages(
     msgsCopy.push(promptMsg);
   }
 
+  /* Original logic, moved to core/llm/constructMessages.ts
   if (
     (systemMessage && systemMessage.trim() !== "") ||
     msgs?.[0]?.role === "system"
@@ -418,6 +419,29 @@ function compileChatMessages(
     };
     // Insert as second to last
     // Later moved to top, but want second-priority to last user message
+    msgsCopy.splice(-1, 0, systemChatMsg);
+  }*/
+
+  if (
+    msgs?.[0]?.role === "system"
+  ) {
+    let content = "";
+
+    content = renderChatMessage(msgs?.[0]);
+
+    const systemChatMsg: ChatMessage = {
+      role: "system",
+      content,
+    };
+    // Insert as second to last
+    // Later moved to top, but want second-priority to last user message
+    msgsCopy.splice(-1, 0, systemChatMsg);
+  } else if (systemMessage && systemMessage.trim() !== "") {
+    // In case core/llm/constructMessages.ts constructSystemPrompt() is not called
+    const systemChatMsg: ChatMessage = {
+      role: "system",
+      content: systemMessage,
+    };
     msgsCopy.splice(-1, 0, systemChatMsg);
   }
 
@@ -469,5 +493,6 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop,
+  pruneStringFromTop
 };
+
