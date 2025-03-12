@@ -4,8 +4,12 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
+  FQSN,
   ModelRole,
-  parseAssistantUnrolled,
+  PlatformClient,
+  RegistryClient,
+  SecretResult,
+  unrollAssistantFromContent,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
@@ -41,6 +45,14 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { llmsFromModelConfig } from "./models";
 
+export class LocalPlatformClient implements PlatformClient {
+  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+    return fqsns.map((fqsn) => {
+      return undefined;
+    });
+  }
+}
+
 async function loadConfigYaml(
   workspaceConfigs: string[],
   rawYaml: string,
@@ -48,14 +60,25 @@ async function loadConfigYaml(
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<AssistantUnrolled>> {
-  // const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
-    // (ideSettings.continueTestEnvironment === "production"
-    // ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
-    // :
-    parseAssistantUnrolled(rawYaml);
-  // );
+    // This is how we allow use of blocks locally
+    (await unrollAssistantFromContent(
+      {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
+      rawYaml,
+      new RegistryClient(),
+      {
+        currentUserSlug: "",
+        onPremProxyUrl: null,
+        orgScopeId: null,
+        platformClient: new LocalPlatformClient(),
+        renderSecrets: true,
+      },
+    ));
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
