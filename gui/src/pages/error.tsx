@@ -2,12 +2,11 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useRouteError } from "react-router-dom";
 import { newSession } from "../redux/slices/sessionSlice";
 import { GithubIcon } from "../components/svg/GithubIcon";
-import { DiscordIcon } from "../components/svg/DiscordIcon";
 import { useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { Button, SecondaryButton } from "../components";
 import { ArrowPathIcon, FlagIcon } from "@heroicons/react/24/outline";
-import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
+import { GITHUB_LINK } from "core/util/constants";
 
 const ErrorPage: React.FC = () => {
   const error: any = useRouteError();
@@ -58,7 +57,7 @@ const ErrorPage: React.FC = () => {
       </Button>
 
       <p className="mb-0 mt-6 text-lg">
-        Report the issue on GitHub or Discord:
+        Report the issue on GitHub :
       </p>
 
       <div className="flex space-x-4">
@@ -67,12 +66,6 @@ const ErrorPage: React.FC = () => {
           className="flex w-full items-center justify-center space-x-2 rounded-lg px-4 py-2 text-base text-white"
         >
           <GithubIcon size={20} /> <span className="ml-2">GitHub</span>
-        </SecondaryButton>
-        <SecondaryButton
-          onClick={() => openUrl(DISCORD_LINK)}
-          className="flex w-full items-center justify-center rounded-lg text-base"
-        >
-          <DiscordIcon size={20} /> <span className="ml-2">Discord</span>
         </SecondaryButton>
       </div>
     </div>

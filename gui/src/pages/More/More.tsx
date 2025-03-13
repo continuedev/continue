@@ -98,15 +98,6 @@ function MorePage() {
             />
 
             <MoreHelpRow
-              title="Join the community!"
-              description="Join us on Discord to stay up-to-date on the latest developments"
-              Icon={ArrowTopRightOnSquareIcon}
-              onClick={() =>
-                ideMessenger.post("openUrl", "https://discord.gg/vapESyrFmJ")
-              }
-            />
-
-            <MoreHelpRow
               title="Token usage"
               description="Daily token usage across models"
               Icon={TableCellsIcon}
