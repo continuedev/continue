@@ -175,6 +175,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -187,9 +188,11 @@
             "llama.cpp",
             "replicate",
             "gemini",
+            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
+            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
@@ -251,6 +254,8 @@
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
             "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
+            "### Nebius\nNebius AI platform is a cloud service for machine learning model inference and training. To get started, obtain an API key from the [Nebius console](https://console.nebius.ai/).",
+            "### Vertex AI\nVertex AI provides access to Google's foundation models and ML tools. To get started, enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
@@ -946,7 +951,10 @@
                   "gemini-1.5-flash",
                   "gemini-1.5-flash-8b",
                   "gemini-2.0-flash-exp",
-                  "gemini-2.0-flash"
+                  "gemini-2.0-flash",
+                  "gemini-2.0-flash-thinking-exp-01-21",
+                  "gemini-2.0-pro-exp-02-05",
+                  "gemini-2.0-flash-lite-preview-02-05"
                 ]
               }
             }
@@ -1319,7 +1327,17 @@
                   "nvidia/Llama-3.1-Nemotron-70B-Instruct",
                   "Qwen/Qwen2-VL-72B-Instruct",
                   "TeleAI/TeleMM",
-                  "deepseek-ai/DeepSeek-V2.5"
+                  "deepseek-ai/DeepSeek-V2.5",
+                  "deepseek-ai/deepseek-vl2",
+                  "deepseek-ai/Janus-Pro-7B",
+                  "deepseek-ai/DeepSeek-V3",
+                  "deepseek-ai/DeepSeek-R1",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
                 ]
               }
             }

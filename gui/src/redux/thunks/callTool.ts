@@ -2,6 +2,7 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import {
   acceptToolCall,
+  cancelToolCall,
   setCalling,
   setToolCallOutput,
 } from "../slices/sessionSlice";
@@ -47,9 +48,22 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       );
       unwrapResult(response);
     } else {
-      throw new Error(
-        `Failed to call tool ${toolCallState.toolCall.function.name}: ${result.error}`,
+      dispatch(cancelToolCall());
+
+      const output = await dispatch(
+        streamResponseAfterToolCall({
+          toolCallId: toolCallState.toolCallId,
+          toolOutput: [
+            {
+              name: "Tool Call Failed",
+              description: "Tool Call Failed",
+              content: `The tool call failed with the message:\n\n${result.error}\n\nPlease try something else or request further instructions.`,
+              hidden: true,
+            },
+          ],
+        }),
       );
+      unwrapResult(output);
     }
   },
 );

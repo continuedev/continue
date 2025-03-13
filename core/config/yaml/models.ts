@@ -35,8 +35,10 @@ async function modelConfigToBaseLLM(
     return undefined;
   }
 
+  const { capabilities, ...rest } = model;
+
   let options: LLMOptions = {
-    ...model,
+    ...rest,
     contextLength: model.defaultCompletionOptions?.contextLength ?? undefined,
     completionOptions: {
       ...(model.defaultCompletionOptions ?? {}),
@@ -50,7 +52,27 @@ async function modelConfigToBaseLLM(
     title: model.name,
     systemMessage,
     promptTemplates: model.promptTemplates,
+    capabilities: {
+      tools: model.capabilities?.includes("tool_use"),
+      uploadImage: model.capabilities?.includes("image_input"),
+    },
   };
+
+  // Model capabilities - need to be undefined if not found
+  // To fallback to our autodetection
+  if (capabilities?.find((c) => c === "tool_use")) {
+    options.capabilities = {
+      ...options.capabilities,
+      tools: true,
+    };
+  }
+
+  if (capabilities?.find((c) => c === "image_input")) {
+    options.capabilities = {
+      ...options.capabilities,
+      uploadImage: true,
+    };
+  }
 
   if (model.embedOptions?.maxBatchSize) {
     options.maxEmbeddingBatchSize = model.embedOptions.maxBatchSize;
@@ -128,7 +150,7 @@ async function autodetectModels(
           {
             ...model,
             model: modelName,
-            name: `${llm.title} - ${modelName}`,
+            name: modelName,
           },
           uniqueId,
           ideSettings,
