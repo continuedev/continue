@@ -555,6 +555,11 @@
           "when": "view == continue.continueGUIView"
         },
         {
+          "command": "continue.openConfigPage",
+          "group": "navigation@4",
+          "when": "view == continue.continueGUIView"
+        },
+        {
           "command": "continue.openMorePage",
           "group": "navigation@6",
           "when": "view == continue.continueGUIView"
