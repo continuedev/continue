@@ -331,27 +331,27 @@ async function configYamlToContinueConfig(
 
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
-  await Promise.all(
+  await Promise.allSettled(
     config.mcpServers?.map(async (server) => {
-      const mcpId = server.name;
-      const mcpConnection = mcpManager.createConnection(mcpId, {
-        transport: {
-          type: "stdio",
-          args: [],
-          ...server,
-        },
-      });
-      if (!mcpConnection) {
-        return;
-      }
-
       const abortController = new AbortController();
       const mcpConnectionTimeout = setTimeout(
         () => abortController.abort(),
-        5000,
+        4000,
       );
 
       try {
+        const mcpId = server.name;
+        const mcpConnection = mcpManager.createConnection(mcpId, {
+          transport: {
+            type: "stdio",
+            args: [],
+            ...server,
+          },
+        });
+        if (!mcpConnection) {
+          return;
+        }
+
         const mcpError = await mcpConnection.modifyConfig(
           continueConfig,
           mcpId,
@@ -362,16 +362,22 @@ async function configYamlToContinueConfig(
         if (mcpError) {
           errors.push(mcpError);
         }
-      } catch (e: any) {
+      } catch (e) {
+        let errorMessage = `Failed to load MCP server ${server.name}`;
+        if (e instanceof Error) {
+          if (e.name === "AbortError") {
+            errorMessage += ": connection timed out";
+          } else {
+            errorMessage += ": " + e.message;
+          }
+        }
         errors.push({
           fatal: false,
-          message: `Failed to load MCP server: ${e.message}`,
+          message: errorMessage,
         });
-        if (e.name !== "AbortError") {
-          throw e;
-        }
+      } finally {
+        clearTimeout(mcpConnectionTimeout);
       }
-      clearTimeout(mcpConnectionTimeout);
     }) ?? [],
   );
 
