@@ -164,7 +164,11 @@ export interface ILLM extends LLMOptions {
 }
 
 export interface ModelInstaller {
-  installModel(modelName: string, signal: AbortSignal, progressReporter?: (task: string, increment: number, total: number) => void): Promise<any>;
+  installModel(
+    modelName: string,
+    signal: AbortSignal,
+    progressReporter?: (task: string, increment: number, total: number) => void,
+  ): Promise<any>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -240,7 +244,6 @@ export interface DocsIndexingDetails {
   config: SiteIndexingConfig;
   indexingStatus: IndexingStatus | undefined;
   chunks: Chunk[];
-  isPreIndexedDoc: boolean;
 }
 
 export interface IContextProvider {

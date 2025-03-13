@@ -54,12 +54,6 @@ The `@Docs` context provider works by
 3. Storing the embeddings locally on your machine
 4. Embedding chat input to include similar documentation chunks as context
 
-## Pre-indexed Documentation Sites
-
-In VS Code, Continue offers a selection of pre-indexed documentation sites for popular frameworks and libraries. You can view the list of [available pre-indexed sites and request additions here](https://github.com/continuedev/continue/blob/main/core/indexing/docs/preIndexedDocs.ts).
-
-Pre-indexed docs are only available in VS Code because the VS Code extension ships with the Transformers.js embedder built in, while Jetbrains currently does not. You can override a pre-indexed doc to index it with your own embeddings provider by adding it to your config (unique by `startUrl`). Otherwise, it will always use Transformers.js for queries.
-
 ## Indexing Your Own Documentation
 
 ### Hub `docs` Blocks

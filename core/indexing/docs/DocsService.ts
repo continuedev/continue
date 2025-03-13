@@ -39,11 +39,10 @@ import DocsCrawler, { DocsCrawlerType, PageData } from "./crawlers/DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {
   downloadFromS3,
-  getS3Filename,
+  getS3CacheKey,
   S3Buckets,
   SiteIndexingResults,
-} from "./preIndexed";
-import preIndexedDocs from "./preIndexedDocs";
+} from "./docsCache";
 
 import type * as LanceType from "vectordb";
 
@@ -89,7 +88,7 @@ export default class DocsService {
   static lanceTableName = "docs";
   static sqlitebTableName = "docs";
 
-  static preIndexedDocsEmbeddingsProvider =
+  static defaultEmbeddingsProvider =
     new TransformersJsEmbeddingsProvider();
 
   public isInitialized: Promise<void>;
@@ -250,12 +249,8 @@ export default class DocsService {
     return false;
   }
 
-  /*
-   * Currently, we generate and host embeddings for pre-indexed docs using transformers.
-   * However, we don't ship transformers with the JetBrains extension.
-   * So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.
-   */
-  async canUsePreindexedDocs() {
+  // Determine if transformers.js embeddings are supported in this environment
+  async canUseTransformersEmbeddings() {
     const ideInfo = await this.ideInfoPromise;
     if (ideInfo.ideType === "jetbrains") {
       return false;
@@ -263,28 +258,26 @@ export default class DocsService {
     return true;
   }
 
-  // Determines if using preIndexed and returns proper embeddings provider
-  async getEmbeddingsProvider(startUrl: string) {
-    // Conditions for using a pre-indexed doc
-
-    // Must be in pre indexed docs file
-    const preIndexedDoc = preIndexedDocs[startUrl];
-    if (preIndexedDoc) {
-      // Most not be overriden by config
-      if (!this.config?.docs?.find((doc) => doc.startUrl === startUrl)) {
-        // Must be supported
-        const canUsePreindexedDocs = await this.canUsePreindexedDocs();
-        if (canUsePreindexedDocs) {
-          return {
-            provider: DocsService.preIndexedDocsEmbeddingsProvider,
-            isPreindexed: true,
-          };
-        }
-      }
+  // Get the appropriate embeddings provider
+  async getEmbeddingsProvider() {
+    // First check if there's a config selected embeddings provider
+    if (this.config.selectedModelByRole.embed) {
+      return {
+        provider: this.config.selectedModelByRole.embed,
+      };
     }
+    
+    // Fall back to transformers if supported
+    const canUseTransformers = await this.canUseTransformersEmbeddings();
+    if (canUseTransformers) {
+      return {
+        provider: DocsService.defaultEmbeddingsProvider,
+      };
+    }
+    
+    // No provider available
     return {
-      provider: this.config.selectedModelByRole.embed,
-      isPreindexed: false,
+      provider: undefined,
     };
   }
 
@@ -392,15 +385,38 @@ export default class DocsService {
       return;
     }
 
-    const { isPreindexed, provider } =
-      await this.getEmbeddingsProvider(startUrl);
-    if (isPreindexed) {
-      console.warn("Attempted to indexAndAdd pre-indexed doc");
-      return;
-    }
+    const { provider } = await this.getEmbeddingsProvider();
     if (!provider) {
       console.warn("@docs indexAndAdd: no embeddings provider found");
       return;
+    }
+    
+    // Try to fetch from cache first before crawling
+    if (!forceReindex) {
+      try {
+        const cacheHit = await this.tryFetchFromCache(startUrl, provider.embeddingId);
+        if (cacheHit) {
+          console.log(`Successfully loaded cached embeddings for ${startUrl}`);
+          // Update status to complete
+          this.handleStatusUpdate({
+            type: "docs",
+            id: startUrl,
+            embeddingsProviderId: provider.embeddingId,
+            isReindexing: false,
+            title: siteIndexingConfig.title,
+            debugInfo: "Loaded from cache",
+            icon: siteIndexingConfig.faviconUrl,
+            url: startUrl,
+            progress: 1,
+            description: "Complete",
+            status: "complete",
+          });
+          return;
+        }
+      } catch (e) {
+        console.log(`Error trying to fetch from cache: ${e}`);
+        // Continue with regular indexing
+      }
     }
 
     const startedWithEmbedder = provider.embeddingId;
@@ -705,36 +721,49 @@ export default class DocsService {
     }
   }
 
-  // When user requests a pre-indexed doc for the first time
-  // And pre-indexed embeddings are supported
-  // Fetch pre-indexed embeddings from S3, add to Lance, and then search those
-  private async fetchAndAddPreIndexedDocEmbeddings(title: string) {
-    const data = await downloadFromS3(
-      S3Buckets.continueIndexedDocs,
-      getS3Filename(
-        DocsService.preIndexedDocsEmbeddingsProvider.embeddingId,
-        title,
-      ),
-    );
+  /**
+   * Try to fetch embeddings from the S3 cache for any document URL
+   * @param startUrl The URL of the documentation site
+   * @param embeddingsProviderId The ID of the embeddings provider
+   * @returns True if cache hit and successfully loaded, false otherwise
+   */
+  private async tryFetchFromCache(
+    startUrl: string,
+    embeddingsProviderId: string
+  ): Promise<boolean> {
+    try {
+      // Generate a cache key for this URL and embeddings provider
+      const cacheKey = getS3CacheKey(embeddingsProviderId, startUrl);
+      
+      // Attempt to download from S3 cache
+      const data = await downloadFromS3(
+        S3Buckets.docsEmbeddingsCache,
+        cacheKey
+      );
 
-    const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
-    const startUrl = new URL(siteEmbeddings.url).toString();
+      // Parse the cached data
+      const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
+      
+      // Try to get a favicon for the site
+      const favicon = await fetchFavicon(new URL(startUrl));
 
-    const faviconUrl = preIndexedDocs[startUrl].faviconUrl;
-    const favicon =
-      typeof faviconUrl === "string"
-        ? await getFaviconBase64(faviconUrl)
-        : undefined;
+      // Add the cached embeddings to our database
+      await this.add({
+        favicon,
+        siteIndexingConfig: {
+          startUrl,
+          title: siteEmbeddings.title || new URL(startUrl).hostname,
+        },
+        chunks: siteEmbeddings.chunks,
+        embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
+      });
 
-    await this.add({
-      favicon,
-      siteIndexingConfig: {
-        startUrl,
-        title: siteEmbeddings.title,
-      },
-      chunks: siteEmbeddings.chunks,
-      embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
-    });
+      return true;
+    } catch (e) {
+      // Cache miss or error - silently fail
+      console.log(`Cache miss for ${startUrl} with provider ${embeddingsProviderId}`);
+      return false;
+    }
   }
 
   // Retrieve docs embeds based on user input
@@ -743,8 +772,7 @@ export default class DocsService {
     startUrl: string,
     nRetrieve: number,
   ) {
-    const { isPreindexed, provider } =
-      await this.getEmbeddingsProvider(startUrl);
+    const { provider } = await this.getEmbeddingsProvider();
 
     if (!provider) {
       void this.ide.showToast(
@@ -755,15 +783,11 @@ export default class DocsService {
       return [];
     }
 
-    if (isPreindexed) {
-      void Telemetry.capture("docs_pre_indexed_doc_used", {
-        doc: preIndexedDocs[startUrl]!["title"],
-      });
-    }
-
+    // Try to get embeddings for the query
     const [vector] = await provider.embed([query]);
-
-    return await this.retrieveChunks(startUrl, vector, nRetrieve, isPreindexed);
+    
+    // Retrieve chunks using the query vector
+    return await this.retrieveChunks(startUrl, vector, nRetrieve);
   }
 
   private lanceDBRowToChunk(row: LanceDbDocsRow): Chunk {
@@ -783,8 +807,7 @@ export default class DocsService {
     const db = await this.getOrCreateSqliteDb();
 
     try {
-      const { isPreindexed, provider } =
-        await this.getEmbeddingsProvider(startUrl);
+      const { provider } = await this.getEmbeddingsProvider();
 
       if (!provider) {
         throw new Error("No embeddings model set");
@@ -819,22 +842,26 @@ export default class DocsService {
         config: siteIndexingConfig,
         indexingStatus: this.statuses.get(startUrl),
         chunks: rows.map(this.lanceDBRowToChunk),
-        isPreIndexedDoc: isPreindexed,
       };
     } catch (e) {
       console.warn("Error getting details", e);
       throw e;
     }
   }
-  // This is split into its own function so that it can be recursive
-  // in the case of fetching preindexed docs from s3
+  // This function attempts to retrieve chunks by vector similarity
+  // It will also attempt to fetch from cache if no results are found
   async retrieveChunks(
     startUrl: string,
     vector: number[],
     nRetrieve: number,
-    isPreindexed: boolean,
     isRetry: boolean = false,
   ): Promise<Chunk[]> {
+    // Get the appropriate embeddings provider
+    const { provider } = await this.getEmbeddingsProvider();
+    if (!provider) {
+      return [];
+    }
+
     // Lance doesn't have an embeddingsprovider column, instead it includes it in the table name
     const table = await this.getOrCreateLanceTable({
       initializationVector: vector,
@@ -852,15 +879,19 @@ export default class DocsService {
       console.warn("Error retrieving chunks from LanceDB", e);
     }
 
-    // No docs are found for preindexed? try fetching once
-    if (docs.length === 0 && isPreindexed) {
-      if (isRetry) {
-        return [];
+    // If no docs are found and this isn't a retry, try fetching from S3 cache
+    if (docs.length === 0 && !isRetry) {
+      try {
+        // Try to fetch the document from the S3 cache
+        const cacheHit = await this.tryFetchFromCache(startUrl, provider.embeddingId);
+        
+        if (cacheHit) {
+          // If cache hit, retry the search once
+          return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
+        }
+      } catch (e) {
+        console.warn("Error trying to fetch from cache:", e);
       }
-      await this.fetchAndAddPreIndexedDocEmbeddings(
-        preIndexedDocs[startUrl]!["title"],
-      );
-      return await this.retrieveChunks(startUrl, vector, nRetrieve, true, true);
     }
 
     return docs.map(this.lanceDBRowToChunk);
@@ -933,11 +964,9 @@ export default class DocsService {
       const currentlyIndexedDocs = await this.listMetadata();
       const currentStartUrls = currentlyIndexedDocs.map((doc) => doc.startUrl);
 
-      // Anything found in sqlite but not in new config should be deleted if not preindexed
+      // Anything found in sqlite but not in new config should be deleted
       const deletedDocs = currentlyIndexedDocs.filter(
-        (doc) =>
-          !preIndexedDocs[doc.startUrl] &&
-          !newConfigStartUrls.includes(doc.startUrl),
+        (doc) => !newConfigStartUrls.includes(doc.startUrl),
       );
 
       // Anything found in old config, new config, AND sqlite that doesn't match should be reindexed
@@ -1063,7 +1092,7 @@ export default class DocsService {
 
     const conn = await lance.connect(getLanceDbPath());
     const tableNames = await conn.tableNames();
-    const { provider } = await this.getEmbeddingsProvider(startUrl);
+    const { provider } = await this.getEmbeddingsProvider();
 
     if (!provider) {
       throw new Error(

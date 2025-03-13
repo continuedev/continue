@@ -1,37 +1,12 @@
-import {
-  CheckIcon,
-  InformationCircleIcon,
-  PencilIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
-import {
-  DocsIndexingDetails,
-  IndexingStatus,
-  PackageDocsResult,
-  SiteIndexingConfig,
-} from "core";
-import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
+import { DocsIndexingDetails } from "core";
 import { usePostHog } from "posthog-js/react";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Input, SecondaryButton } from "..";
+import { Tooltip } from "react-tooltip";
+import { SecondaryButton } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppSelector } from "../../redux/hooks";
-import { updateConfig } from "../../redux/slices/configSlice";
-import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import FileIcon from "../FileIcon";
-import { ToolTip } from "../gui/Tooltip";
-import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
-import { Tooltip } from "react-tooltip";
 
 interface DocsDetailsDialogProps {
   startUrl: string;
@@ -89,7 +64,6 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
       comp = (
         <div className="flex flex-col gap-0.5">
           <p className="m-0 mt-2 p-0 text-stone-500">{`Title: ${data.config.title}`}</p>
-          <p className="m-0 p-0 text-stone-500">{`Pre-indexed doc: ${data.isPreIndexedDoc}`}</p>
           {!data.chunks?.length ? (
             <div>No article chunks</div>
           ) : (

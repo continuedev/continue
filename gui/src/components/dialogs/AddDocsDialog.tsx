@@ -157,14 +157,9 @@ function AddDocsDialog() {
       {docsIndexingStatuses.length > 0 && (
         <>
           <DocsIndexingPeeks statuses={docsIndexingStatuses} />
-          <div className="flex flex-row items-end justify-between pb-3">
-            <div>
-              <InformationCircleIcon className="h-3 w-3" />
-              <p className="mt-2 flex flex-row items-center gap-1 p-0 px-1 text-xs text-stone-500">
-                Closing this dialog will not affect indexing progress
-              </p>
-            </div>
-          </div>
+          <p className="mt-2 flex flex-row items-center gap-1 p-0 px-1 text-center text-xs text-stone-500">
+            Closing this dialog will not affect indexing progress
+          </p>
         </>
       )}
     </div>
