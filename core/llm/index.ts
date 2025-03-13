@@ -821,6 +821,7 @@ export abstract class BaseLLM implements ILLM {
             for await (const chunk of stream) {
               const result = fromChatCompletionChunk(chunk);
               if (result) {
+                completion += result.content;
                 yield result;
               }
               if (!citations && (chunk as any).citations && Array.isArray((chunk as any).citations)) {
