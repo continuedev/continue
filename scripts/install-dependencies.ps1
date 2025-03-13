@@ -25,6 +25,31 @@ if ($null -eq $node) {
     & node --version
 }
 
+# Node.js version check
+if (Test-Path ".nvmrc") {
+    $requiredNodeVersion = Get-Content ".nvmrc"
+    $currentNodeVersion = node -v
+
+    # Remove 'v' prefix from versions for comparison
+    $requiredVersion = $requiredNodeVersion.TrimStart('v')
+    $currentVersion = $currentNodeVersion.TrimStart('v')
+
+    if ($requiredVersion -ne $currentVersion) {
+        Write-Host "`n⚠️  Warning: Your Node.js version ($currentNodeVersion) does not match the required version ($requiredNodeVersion)" -ForegroundColor Yellow
+        Write-Host "Please consider switching to the correct version using: nvm use" -ForegroundColor Yellow
+        
+        # Check if running in interactive mode
+        if ([Environment]::UserInteractive -and [Environment]::GetCommandLineArgs().Count -eq 0) {
+            Write-Host "Press Enter to continue with installation anyway..." -NoNewline -ForegroundColor Yellow
+            $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+            Write-Host "`n" # Add newline after key press
+        } else {
+            Write-Host "Continuing with installation anyway...`n" -ForegroundColor Yellow
+        }
+    }
+}
+
+
 # if ($null -eq $cargo) {
 #     Write-Host "`n...`n"
 #     Write-Host "Cargo`n" -ForegroundColor  White
