@@ -396,7 +396,7 @@ export class SetupGranitePage {
       if (result) {
         await this.saveSettings(modelSize);
         this.hideGraniteOnboardingCard();
-
+        commands.executeCommand("continue.continueGUIView.focus");
         if (!panel.visible) {
           const selection = await window.showInformationMessage(
             "Granite.Code is ready to be used.",
