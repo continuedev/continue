@@ -2,7 +2,7 @@ import { IDE } from "core";
 import { getExtensionUri } from "./vscode";
 import * as vscode from "vscode";
 
-const TUTORIAL_FILE_NAME = "continue_tutorial.py";
+const TUTORIAL_FILE_NAME = "granitecode_tutorial.py";
 export function getTutorialUri(): vscode.Uri {
   return vscode.Uri.joinPath(getExtensionUri(), TUTORIAL_FILE_NAME);
 }

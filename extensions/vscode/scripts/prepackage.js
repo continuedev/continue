@@ -486,7 +486,7 @@ const isMacTarget = target?.startsWith("darwin");
 
     // Tutorial
     "media/move-chat-panel-right.md",
-    "continue_tutorial.py",
+    "granitecode_tutorial.py",
     "config_schema.json",
 
     // Embeddings model
