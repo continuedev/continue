@@ -17,7 +17,12 @@ if [ -f .nvmrc ]; then
     if [ "$required_version" != "$current_version" ]; then
         echo "⚠️  Warning: Your Node.js version ($current_node_version) does not match the required version ($required_node_version)"
         echo "Please consider switching to the correct version using: nvm use"
-        echo "Continuing with installation anyway..."
+        
+        if [ -t 0 ]; then
+            read -p "Press Enter to continue with installation anyway..."
+        else
+            echo "Continuing with installation anyway..."
+        fi
         echo
     fi
 fi
