@@ -129,18 +129,19 @@ export const uiSlice = createSlice({
       }
     },
     // Thinking Controls
+    setUseThinking: (state, action: PayloadAction<boolean>) => {
+      state.useThinking = action.payload;
+    },
     toggleUseThinking: (state) => {
       state.useThinking = !state.useThinking;
     },
     setAnthropicBudgetTokens: (state, action: PayloadAction<number>) => {
-      state.useThinking = true;
       state.thinkingSettings.anthropic.budgetTokens = action.payload;
     },
     setOpenAIReasoningEffort: (
       state,
       action: PayloadAction<"low" | "medium" | "high">,
     ) => {
-      state.useThinking = true;
       state.thinkingSettings.openai.reasoningEffort = action.payload;
     },
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
@@ -160,6 +161,7 @@ export const {
   toggleToolSetting,
   addTool,
   toggleUseThinking,
+  setUseThinking,
   setAnthropicBudgetTokens,
   setOpenAIReasoningEffort,
   setTTSActive,
