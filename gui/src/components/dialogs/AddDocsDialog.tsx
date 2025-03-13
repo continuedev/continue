@@ -1,4 +1,4 @@
-import { CheckIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus, SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -159,9 +159,9 @@ function AddDocsDialog() {
           <DocsIndexingPeeks statuses={docsIndexingStatuses} />
           <div className="flex flex-row items-end justify-between pb-3">
             <div>
+              <InformationCircleIcon className="h-3 w-3" />
               <p className="mt-2 flex flex-row items-center gap-1 p-0 px-1 text-xs text-stone-500">
-                <CheckIcon className="h-3 w-3" />
-                It is safe to close this form while indexing
+                Closing this dialog will not affect indexing progress
               </p>
             </div>
           </div>

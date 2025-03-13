@@ -56,9 +56,6 @@ interface DocsIndexingPeeksProps {
 function DocsIndexingPeekList({ statuses }: DocsIndexingPeeksProps) {
   return (
     <div className="border-vsc-input-border mt-2 flex flex-col border-0 border-t border-solid pt-2">
-      <p className="mx-0 my-1.5 p-0 px-1 font-semibold text-stone-500">
-        Currently indexing
-      </p>
       <div className="max-h-[100px] overflow-y-auto pr-2">
         {statuses.map((status) => {
           return <DocsIndexingPeek key={status.id} status={status} />;
