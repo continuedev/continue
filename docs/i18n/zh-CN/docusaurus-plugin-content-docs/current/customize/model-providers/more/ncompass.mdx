@@ -1,0 +1,34 @@
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+# nCompass
+
+nCompass Technologies API 提供一个开源语言模型的极快的推理引擎。你可以 [在这里](https://app.ncompass.tech/api-settings) 注册，复制你的 API key 在最初的欢迎界面，然后点击 play 按钮，在 [nCompass 模型列表](https://console.ncompass.tech/models) 的任何模型上面。修改 `~/.continue/config.json` 看起来像这样：
+
+<Tabs groupId="config-example">
+   <TabItem value="yaml" label="YAML">
+   ```yaml title="Package or config.yaml"
+   models:
+     - name: Ncompass Qwen2.5 Coder
+       provider: ncompass
+       model: Qwen/Qwen2.5-Coder-32B-Instruct
+       apiKey: <YOUR_NCOMPASS_API_KEY>
+   ```
+   </TabItem>
+   <TabItem value="json" label="JSON">
+	```json title="config.json"
+	{
+      "models": [
+        {
+          "title": "Ncompass Qwen2.5 Coder",
+          "provider": "ncompass",
+          "model": "Qwen/Qwen2.5-Coder-32B-Instruct",
+          "apiKey": "<YOUR_NCOMPASS_API_KEY>"
+        }
+      ]
+	}
+    ```
+   </TabItem>
+</Tabs>
+
+[查看代码](https://github.com/continuedev/continue/blob/main/core/llm/llms/NCompass.ts)
