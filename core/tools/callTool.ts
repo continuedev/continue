@@ -53,7 +53,7 @@ export function decodeMCPToolUri(uri: string): [string, string] | null {
 
 async function callToolFromUri(
   uri: string,
-  args: any,
+  uriArgs: any,
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
   const parseable = canParseUrl(uri);
@@ -65,7 +65,7 @@ async function callToolFromUri(
   switch (parsedUri?.protocol) {
     case "http:":
     case "https:":
-      return callHttpTool(uri, args, extras);
+      return callHttpTool(uri, uriArgs, extras);
     case "mcp:":
       const decoded = decodeMCPToolUri(uri);
       if (!decoded) {
@@ -79,7 +79,7 @@ async function callToolFromUri(
       }
       const response = await client.client.callTool({
         name: toolName,
-        arguments: args,
+        arguments: uriArgs,
       });
 
       if (response.isError === true) {
@@ -107,31 +107,31 @@ async function callToolFromUri(
 
 export async function callTool(
   tool: Tool,
-  args: any,
+  tollArgs: any,
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
   const uri = tool.uri ?? tool.function.name;
 
   switch (uri) {
     case BuiltInToolNames.ReadFile:
-      return await readFileImpl(args, extras);
+      return await readFileImpl(tollArgs, extras);
     case BuiltInToolNames.CreateNewFile:
-      return await createNewFileImpl(args, extras);
+      return await createNewFileImpl(tollArgs, extras);
     case BuiltInToolNames.ExactSearch:
-      return await exactSearchImpl(args, extras);
+      return await exactSearchImpl(tollArgs, extras);
     case BuiltInToolNames.RunTerminalCommand:
-      return await runTerminalCommandImpl(args, extras);
+      return await runTerminalCommandImpl(tollArgs, extras);
     case BuiltInToolNames.SearchWeb:
-      return await searchWebImpl(args, extras);
+      return await searchWebImpl(tollArgs, extras);
     case BuiltInToolNames.ViewDiff:
-      return await viewDiffImpl(args, extras);
+      return await viewDiffImpl(tollArgs, extras);
     case BuiltInToolNames.ViewRepoMap:
-      return await viewRepoMapImpl(args, extras);
+      return await viewRepoMapImpl(tollArgs, extras);
     case BuiltInToolNames.ViewSubdirectory:
-      return await viewSubdirectoryImpl(args, extras);
+      return await viewSubdirectoryImpl(tollArgs, extras);
     case BuiltInToolNames.ReadCurrentlyOpenFile:
-      return await readCurrentlyOpenFileImpl(args, extras);
+      return await readCurrentlyOpenFileImpl(tollArgs, extras);
     default:
-      return await callToolFromUri(uri, args, extras);
+      return await callToolFromUri(uri, tollArgs, extras);
   }
 }
