@@ -39,6 +39,19 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     ) {
       return true;
     }
+    // firworks-ai https://docs.fireworks.ai/guides/function-calling
+    if (model.startsWith("accounts/fireworks/models/")) {
+      switch (model.substring(26)) {
+        case "llama-v3p1-405b-instruct":
+        case "llama-v3p1-70b-instruct":
+        case "qwen2p5-72b-instruct":
+        case "firefunction-v1":
+        case "firefunction-v2":
+          return true;
+        default:
+          return false;
+      }
+    }
   },
   gemini: (model) => {
     // All gemini models support function calling
