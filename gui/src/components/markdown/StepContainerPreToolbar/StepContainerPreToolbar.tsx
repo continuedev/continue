@@ -3,7 +3,6 @@ import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { v4 as uuidv4 } from "uuid";
 import { lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
@@ -48,6 +47,7 @@ export interface StepContainerPreToolbarProps {
   relativeFilepath: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
+  codeBlockStreamId: string;
   range?: string;
   children: any;
   expanded?: boolean;
@@ -58,32 +58,22 @@ export interface StepContainerPreToolbarProps {
 export default function StepContainerPreToolbar(
   props: StepContainerPreToolbarProps,
 ) {
+  const { isGeneratingCodeBlock, codeBlockStreamId } = props;
   const ideMessenger = useContext(IdeMessengerContext);
-  const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const [isExpanded, setIsExpanded] = useState(
     props.expanded ?? (isInEditMode ? false : true),
   );
   const [codeBlockContent, setCodeBlockContent] = useState("");
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
   );
 
   const applyState = useAppSelector((state) =>
-    selectApplyStateByStreamId(state, streamIdRef.current),
+    selectApplyStateByStreamId(state, codeBlockStreamId),
   );
-
-  // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
-  // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
-  // we are done generating based on whether the next node in the tree is not a codeblock.
-  // The tree parsing logic for Remark is defined on page load, so we can't access state
-  // during the actual tree parsing.
-  const isGeneratingCodeBlock = !isStreaming
-    ? false
-    : props.isGeneratingCodeBlock;
 
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
@@ -101,7 +91,7 @@ export default function StepContainerPreToolbar(
     );
 
     ideMessenger.post("applyToFile", {
-      streamId: streamIdRef.current,
+      streamId: codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
       curSelectedModelTitle: defaultModel.title,
@@ -133,11 +123,21 @@ export default function StepContainerPreToolbar(
   }, [props.children, codeBlockContent]);
 
   useEffect(() => {
+    console.log("first render", codeBlockStreamId);
+  }, []);
+
+  useEffect(() => {
     const hasCompletedGenerating =
       wasGeneratingRef.current && !isGeneratingCodeBlock;
-    wasGeneratingRef.current = isGeneratingCodeBlock;
+    console.log(
+      wasGeneratingRef.current,
+      isGeneratingCodeBlock,
+      props.autoApply,
+    );
 
+    wasGeneratingRef.current = isGeneratingCodeBlock;
     if (hasCompletedGenerating) {
+      console.log("Completed generating", props.autoApply);
       if (props.autoApply) {
         onClickApply();
       }
@@ -145,7 +145,7 @@ export default function StepContainerPreToolbar(
       //   onClickApply();
       // }
     }
-  }, [wasGeneratingRef, isGeneratingCodeBlock, props.autoApply, isInEditMode]);
+  }, [wasGeneratingRef, isGeneratingCodeBlock, props.autoApply]);
 
   async function onClickAcceptApply() {
     const fileUri = await inferResolvedUriFromRelativePath(
@@ -154,7 +154,7 @@ export default function StepContainerPreToolbar(
     );
     ideMessenger.post("acceptDiff", {
       filepath: fileUri,
-      streamId: streamIdRef.current,
+      streamId: codeBlockStreamId,
     });
   }
 
@@ -165,7 +165,7 @@ export default function StepContainerPreToolbar(
     );
     ideMessenger.post("rejectDiff", {
       filepath: fileUri,
-      streamId: streamIdRef.current,
+      streamId: codeBlockStreamId,
     });
   }
 

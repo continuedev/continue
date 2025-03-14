@@ -116,7 +116,7 @@ export async function callTool(
   switch (uri) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
-    case BuiltInToolNames.EditFile:
+    case BuiltInToolNames.EditExistingFile:
       return await editFileImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);

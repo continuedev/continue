@@ -1,6 +1,6 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { EDIT_TOOL_CONTEXT_ITEM_NAME } from "core/tools/implementations/editFile";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -178,12 +178,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     if (!props.itemIndex || props.itemIndex < 2) {
       return false;
     }
-    console.log(history);
     const prevHistoryItem = history[props.itemIndex - 1];
-    return !!prevHistoryItem.contextItems.find(
-      (item) => item.name === EDIT_TOOL_CONTEXT_ITEM_NAME,
-    );
-  }, [props.itemIndex]);
+    const editToolResponseFound =
+      prevHistoryItem.message.role === "tool" &&
+      !!prevHistoryItem.contextItems.find(
+        (item) => item.name === EDIT_TOOL_CONTEXT_ITEM_NAME,
+      );
+    return editToolResponseFound;
+  }, [props.itemIndex, history]);
   const isEditToolResponseRef = useUpdatingRef(isEditToolResponse);
 
   const pastFileInfo = useMemo(() => {
@@ -209,6 +211,15 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     };
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
+
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const isStreamingRef = useUpdatingRef(isStreaming);
+
+  const codeblockIds = useRef<string[]>([]);
+
+  useEffect(() => {
+    console.log("first mount", props.itemIndex);
+  }, []);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -296,8 +307,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           const { className, range } = preChildProps;
           const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
-          const isGeneratingCodeBlock =
-            preChildProps["data-isgeneratingcodeblock"];
 
           if (!props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;
@@ -321,11 +330,21 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             );
           }
 
+          const isGeneratingCodeBlock =
+            isStreamingRef.current &&
+            preChildProps["data-isgeneratingcodeblock"];
+
+          if (codeblockIds.current[codeBlockIndex] === undefined) {
+            codeblockIds.current[codeBlockIndex] = uuidv4();
+          }
+          const codeblockStreamId = codeblockIds.current[codeBlockIndex];
+
           // We use a custom toolbar for codeblocks in the step container
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
               codeBlockIndex={codeBlockIndex}
+              codeBlockStreamId={codeblockStreamId}
               language={language}
               relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}

@@ -7,9 +7,9 @@ export const editFileTool: Tool = {
   wouldLikeTo: "edit {{{ filepath }}}",
   readonly: false,
   function: {
-    name: BuiltInToolNames.EditFile,
+    name: BuiltInToolNames.EditExistingFile,
     description:
-      "To edit an existing file, call this tool and follow the returned instructions.",
+      "To edit an existing file, call this tool and follow the returned instructions. If you don't have the contents of the file, read it first.",
     parameters: {
       type: "object",
       required: ["filepath"],
