@@ -1,4 +1,5 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { EDIT_TOOL_CONTEXT_ITEM_NAME } from "core/tools/implementations/editFile";
 import { memo, useEffect, useMemo } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
@@ -16,7 +17,7 @@ import {
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
+import { getFileContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 import { getFontSize, isJetBrains } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
@@ -172,6 +173,19 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // 2. Toolbar Codeblocks found in past messages
   const history = useAppSelector((state) => state.session.history);
   const allSymbols = useAppSelector((state) => state.session.symbols);
+
+  const isEditToolResponse = useMemo(() => {
+    if (!props.itemIndex || props.itemIndex < 2) {
+      return false;
+    }
+    console.log(history);
+    const prevHistoryItem = history[props.itemIndex - 1];
+    return !!prevHistoryItem.contextItems.find(
+      (item) => item.name === EDIT_TOOL_CONTEXT_ITEM_NAME,
+    );
+  }, [props.itemIndex]);
+  const isEditToolResponseRef = useUpdatingRef(isEditToolResponse);
+
   const pastFileInfo = useMemo(() => {
     const index = props.itemIndex;
     if (index === undefined) {
@@ -180,7 +194,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         rifs: [],
       };
     }
-    const pastContextItems = getContextItemsFromHistory(history, index);
+    const pastContextItems = getFileContextItemsFromHistory(history, index);
     const rifs = pastContextItems.map((item) =>
       ctxItemToRifWithContents(item, true),
     );
@@ -316,6 +330,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
+              autoApply={isEditToolResponseRef.current}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>

@@ -9,19 +9,15 @@ export const editFileTool: Tool = {
   function: {
     name: BuiltInToolNames.EditFile,
     description:
-      "Use this tool whenever you need to edit the contents of an existing file",
+      "To edit an existing file, call this tool and follow the returned instructions.",
     parameters: {
       type: "object",
-      required: ["filepath", "new_contents"],
+      required: ["filepath"],
       properties: {
         filepath: {
           type: "string",
           description:
-            "The path of the file to read, relative to the root of the workspace.",
-        },
-        new_contents: {
-          type: "string",
-          description: "The new contents of the file",
+            "The path of the file to edit, relative to the root of the workspace.",
         },
       },
     },

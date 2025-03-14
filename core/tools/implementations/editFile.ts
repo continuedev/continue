@@ -1,7 +1,7 @@
-import { resolveRelativePathInDir } from "../../util/ideUtils";
-import { getUriPathBasename } from "../../util/uri";
-
 import { ToolImpl } from ".";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
+
+export const EDIT_TOOL_CONTEXT_ITEM_NAME = "Edit Tool Instructions";
 
 export const editFileImpl: ToolImpl = async (args, extras) => {
   const firstUriMatch = await resolveRelativePathInDir(
@@ -9,18 +9,19 @@ export const editFileImpl: ToolImpl = async (args, extras) => {
     extras.ide,
   );
   if (!firstUriMatch) {
-    throw new Error(`Could not find file ${args.filepath}`);
+    throw new Error(`File ${args.filepath} does not exist.`);
   }
-  const content = await extras.ide.readFile(firstUriMatch);
+  // const content = await extras.ide.readFile(firstUriMatch);
   return [
     {
-      name: getUriPathBasename(args.filepath),
-      description: args.filepath,
-      content,
-      uri: {
-        type: "file",
-        value: firstUriMatch,
-      },
+      name: EDIT_TOOL_CONTEXT_ITEM_NAME, // getUriPathBasename(args.filepath),
+      description: "Instructions for editing the file", //args.filepath,
+      content:
+        "Edit Instructions: return the full new file contents in a codeblock. The codeblock header should be of the format '```language filepath'",
+      // uri: {
+      //   type: "file",
+      //   value: firstUriMatch,
+      // },
     },
   ];
 };
