@@ -9,6 +9,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedProfile } from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { isLocalProfile } from "../../util";
 import { providers } from "../AddNewModel/configs/providers";
@@ -21,9 +22,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedModel = useAppSelector(selectDefaultModel);
   const hubEnabled = useAppSelector(selectUseHub);
-  const selectedProfile = useAppSelector(
-    (store) => store.session.selectedProfile,
-  );
+  const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
 
   const handleRefreshProfiles = () => {

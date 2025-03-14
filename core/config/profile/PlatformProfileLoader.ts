@@ -62,6 +62,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       errors: configResult.errors,
       iconUrl: iconUrl,
       uri: `${controlPlaneEnv}${ownerSlug}/${packageSlug}`,
+      unrolledAssistant: configResult.config,
     };
 
     return new PlatformProfileLoader(

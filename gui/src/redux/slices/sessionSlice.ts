@@ -47,7 +47,7 @@ type SessionState = {
   id: string;
   /** null indicates loading state */
   availableProfiles: ProfileDescription[] | null;
-  selectedProfile: ProfileDescription | null;
+  selectedProfileId: string | null;
   organizations: OrganizationDescription[];
   selectedOrganizationId: string | null;
   streamAborter: AbortController;
@@ -88,7 +88,7 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfile: null,
+  selectedProfileId: null,
   availableProfiles: null,
   organizations: [],
   selectedOrganizationId: "",
@@ -328,7 +328,7 @@ export const sessionSlice = createSlice({
               !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
               // And there's a difference in tool call presence
               (lastMessage.toolCalls?.length ?? 0) !==
-              (message.toolCalls?.length ?? 0))
+                (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -473,9 +473,9 @@ export const sessionSlice = createSlice({
       state.allSessionMetadata = state.allSessionMetadata.map((session) =>
         session.sessionId === payload.sessionId
           ? {
-            ...session,
-            ...payload,
-          }
+              ...session,
+              ...payload,
+            }
           : session,
       );
       if (payload.title && payload.sessionId === state.id) {
@@ -510,8 +510,9 @@ export const sessionSlice = createSlice({
         payload.rangeInFileWithContents.filepath,
       );
 
-      const lineNums = `(${payload.rangeInFileWithContents.range.start.line + 1
-        }-${payload.rangeInFileWithContents.range.end.line + 1})`;
+      const lineNums = `(${
+        payload.rangeInFileWithContents.range.start.line + 1
+      }-${payload.rangeInFileWithContents.range.end.line + 1})`;
 
       contextItems.push({
         name: `${fileName} ${lineNums}`,
@@ -533,11 +534,8 @@ export const sessionSlice = createSlice({
     },
     // Important: these reducers don't handle selected profile/organization fallback logic
     // That is done in thunks
-    setSelectedProfile: (
-      state,
-      { payload }: PayloadAction<ProfileDescription | null>,
-    ) => {
-      state.selectedProfile = payload;
+    setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
+      state.selectedProfileId = payload;
     },
     setAvailableProfiles: (
       state,
@@ -670,6 +668,15 @@ export const sessionSlice = createSlice({
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
     },
+    selectSelectedProfile: (state) => {
+      // state.session.availableProfiles.find((p) => p.id === newId) ?? null,
+
+      return (
+        state.availableProfiles?.find(
+          (profile) => profile.id === state.selectedProfileId,
+        ) ?? null
+      );
+    },
     selectIsSingleRangeEditOrInsertion: (state) => {
       if (state.mode !== "edit") {
         return false;
@@ -696,9 +703,9 @@ function addPassthroughCases(
 ) {
   thunks.forEach((thunk) => {
     builder
-      .addCase(thunk.fulfilled, (state, action) => { })
-      .addCase(thunk.rejected, (state, action) => { })
-      .addCase(thunk.pending, (state, action) => { });
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
   });
 }
 
@@ -765,6 +772,7 @@ export const {
 export const {
   selectIsGatheringContext,
   selectIsInEditMode,
+  selectSelectedProfile,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
 } = sessionSlice.selectors;
