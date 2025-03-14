@@ -46,6 +46,7 @@ import {
 
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import { shouldIgnore } from "./indexing/shouldIgnore";
+import { walkDirCache } from "./indexing/walkDir";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -834,6 +835,7 @@ export class Core {
       if (!config || config.disableIndexing) {
         return; // TODO silent in case of commands?
       }
+      walkDirCache.invalidate();
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
         await codebaseIndexer.clearIndexes();
@@ -861,9 +863,8 @@ export class Core {
     // TODO - remove remaining logic for these from IDEs where possible
     on("files/changed", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
         for (const uri of data.uris) {
-          // Listen for file changes in the workspace
-          // URI TODO is this equality statement valid?
           const currentProfileUri =
             this.configHandler.currentProfile?.profileDescription.uri ?? "";
 
@@ -934,6 +935,7 @@ export class Core {
 
     on("files/created", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
 
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
@@ -947,6 +949,7 @@ export class Core {
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
       }
     });

@@ -31,11 +31,14 @@ export async function getAssistantFilesFromDir(
       return [];
     }
 
-    const overrideIgnore = ignore()
+    const overrideDefaultIgnores = ignore()
       .add(DEFAULT_IGNORE_FILETYPES.filter((t) => t !== "config.yaml"))
       .add(DEFAULT_IGNORE_DIRS);
 
-    const uris = await walkDir(dir, ide, { overrideIgnore });
+    const uris = await walkDir(dir, ide, {
+      overrideDefaultIgnores,
+      source: "get assistant files",
+    });
     const assistantFilePaths = uris.filter(
       (p) => p.endsWith(".yaml") || p.endsWith(".yml"),
     );

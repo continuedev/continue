@@ -51,7 +51,13 @@ class RepoMapGenerator {
 
   async generate(): Promise<string> {
     this.dirs = this.options.dirUris ?? (await this.ide.getWorkspaceDirs());
-    this.allUris = await walkDirs(this.ide, undefined, this.dirs);
+    this.allUris = await walkDirs(
+      this.ide,
+      {
+        source: "generate repo map",
+      },
+      this.dirs,
+    );
 
     // Initialize
     await this.writeToStream(this.PREAMBLE);
