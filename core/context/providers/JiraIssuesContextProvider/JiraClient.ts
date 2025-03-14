@@ -148,7 +148,7 @@ export class JiraClient {
           `/search?fields=summary&jql=${
             this.options.issueQuery ??
             "assignee = currentUser() AND resolution = Unresolved order by updated DESC"
-          }&maxResults=${this.options.maxResults}`,
+          }&maxResults=${this.options.maxResults ?? "50"}`,
       ),
       {
         method: "GET",
