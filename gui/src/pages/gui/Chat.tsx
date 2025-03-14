@@ -43,7 +43,6 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
@@ -226,7 +225,7 @@ export function Chat() {
     selectIsSingleRangeEditOrInsertion,
   );
   const lastSessionId = useAppSelector((state) => state.session.lastSessionId);
-  const useHub = useAppSelector(selectUseHub);
+  const useHub = false;//useAppSelector(selectUseHub);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
