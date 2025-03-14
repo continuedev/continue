@@ -688,7 +688,12 @@ export default class DocsService {
         progress: 1,
       });
 
-      void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
+      // Only show notificaitons if the user manually re-indexed, otherwise
+      // they are too noisy, especially when switching embeddings providers
+      // and we automatically re-index all docs
+      if (forceReindex) {
+        void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
+      }
 
       this.messenger?.send("refreshSubmenuItems", {
         providers: ["docs"],
