@@ -58,7 +58,7 @@ export interface StepContainerPreToolbarProps {
 export default function StepContainerPreToolbar(
   props: StepContainerPreToolbarProps,
 ) {
-  const { isGeneratingCodeBlock, codeBlockStreamId } = props;
+  const { codeBlockStreamId } = props;
   const ideMessenger = useContext(IdeMessengerContext);
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const isInEditMode = useAppSelector(selectIsInEditMode);
@@ -66,7 +66,9 @@ export default function StepContainerPreToolbar(
     props.expanded ?? (isInEditMode ? false : true),
   );
   const [codeBlockContent, setCodeBlockContent] = useState("");
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
+  const isGeneratingCodeBlock = isStreaming && props.isGeneratingCodeBlock;
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
   );
@@ -121,10 +123,6 @@ export default function StepContainerPreToolbar(
       };
     }
   }, [props.children, codeBlockContent]);
-
-  useEffect(() => {
-    console.log("first render", codeBlockStreamId);
-  }, []);
 
   useEffect(() => {
     const hasCompletedGenerating =

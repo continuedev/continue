@@ -179,6 +179,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       return false;
     }
     const prevHistoryItem = history[props.itemIndex - 1];
+    // TODO auto apply for all tool responses to support MCP edit tools?
     const editToolResponseFound =
       prevHistoryItem.message.role === "tool" &&
       !!prevHistoryItem.contextItems.find(
@@ -212,14 +213,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
-  const isStreamingRef = useUpdatingRef(isStreaming);
-
-  const codeblockIds = useRef<string[]>([]);
-
-  useEffect(() => {
-    console.log("first mount", props.itemIndex);
-  }, []);
+  const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
+    [],
+  );
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -331,13 +327,16 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           }
 
           const isGeneratingCodeBlock =
-            isStreamingRef.current &&
             preChildProps["data-isgeneratingcodeblock"];
 
-          if (codeblockIds.current[codeBlockIndex] === undefined) {
-            codeblockIds.current[codeBlockIndex] = uuidv4();
+          if (codeblockState.current[codeBlockIndex] === undefined) {
+            codeblockState.current[codeBlockIndex] = {
+              streamId: uuidv4(),
+              isGenerating: isGeneratingCodeBlock,
+            };
           }
-          const codeblockStreamId = codeblockIds.current[codeBlockIndex];
+          const codeblockStreamId =
+            codeblockState.current[codeBlockIndex].streamId;
 
           // We use a custom toolbar for codeblocks in the step container
           return (
