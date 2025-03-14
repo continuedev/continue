@@ -1,6 +1,9 @@
 import * as fs from "node:fs";
 import { IdeSettings } from "..";
-import { getStagingEnvironmentDotFilePath } from "../util/paths";
+import {
+  getLocalEnvironmentDotFilePath,
+  getStagingEnvironmentDotFilePath,
+} from "../util/paths";
 
 export interface ControlPlaneEnv {
   DEFAULT_CONTROL_PLANE_PROXY_URL: string;
@@ -78,6 +81,11 @@ export function getControlPlaneEnvSync(
   ideTestEnvironment: IdeSettings["continueTestEnvironment"],
   enableControlServerBeta: IdeSettings["enableControlServerBeta"],
 ): ControlPlaneEnv {
+  // Note .local overrides .staging
+  if (fs.existsSync(getLocalEnvironmentDotFilePath())) {
+    return LOCAL_ENV;
+  }
+
   if (fs.existsSync(getStagingEnvironmentDotFilePath())) {
     return STAGING_ENV;
   }

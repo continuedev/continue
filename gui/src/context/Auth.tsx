@@ -168,8 +168,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (result.status === "success") {
         dispatch(
           updateProfilesThunk({
-            profiles: result.content,
-            selectedProfileId: null,
+            profiles: result.content.profiles,
+            selectedProfileId: result.content.selectedProfileId,
           }),
         );
       }

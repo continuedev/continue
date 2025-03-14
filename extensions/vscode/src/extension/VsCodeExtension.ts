@@ -310,6 +310,12 @@ export class VsCodeExtension {
       });
     });
 
+    vscode.workspace.onDidCloseTextDocument(async (event) => {
+      this.core.invoke("files/closed", {
+        uris: [event.uri.toString()],
+      });
+    });
+
     vscode.workspace.onDidCreateFiles(async (event) => {
       this.core.invoke("files/created", {
         uris: event.files.map((uri) => uri.toString()),

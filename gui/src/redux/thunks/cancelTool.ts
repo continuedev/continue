@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { cancelToolCall } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -20,7 +20,7 @@ export const cancelTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     dispatch(cancelToolCall());
 
-    dispatch(
+    const output = await dispatch(
       streamResponseAfterToolCall({
         toolCallId: toolCallState.toolCallId,
         toolOutput: [
@@ -34,5 +34,6 @@ export const cancelTool = createAsyncThunk<void, undefined, ThunkApiType>(
         ],
       }),
     );
+    unwrapResult(output);
   },
 );

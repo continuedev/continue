@@ -8,15 +8,18 @@ import { normalizeToMessageParts } from "../util/messageContent";
 
 import { modelSupportsTools } from "./autodetect";
 
-const TOOL_USE_RULES = `When using tools, follow the following guidelines:
-- Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
+const TOOL_USE_RULES = `<tool_use_rules>
+  When using tools, follow the following guidelines:
+  - Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.
+</tool_use_rules>`;
 
 function constructSystemPrompt(
   modelDescription: ModelDescription,
   useTools: boolean,
 ): string | null {
-  let systemMessage =
-    "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'.";
+  let systemMessage = `<important_rules>
+  Always include the language and file name in the info string when you write code blocks. If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'.
+</important_rules>`;
   if (useTools && modelSupportsTools(modelDescription)) {
     systemMessage += "\n\n" + TOOL_USE_RULES;
   }

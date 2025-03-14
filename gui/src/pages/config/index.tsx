@@ -1,9 +1,11 @@
 import { ModelRole } from "@continuedev/config-yaml";
 import { Listbox, Transition } from "@headlessui/react";
 import {
+  ArrowTopRightOnSquareIcon,
   CheckIcon,
   ChevronUpDownIcon,
   PlusCircleIcon,
+  UserCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
@@ -177,12 +179,12 @@ function ConfigPage() {
 
   return (
     <div className="overflow-y-scroll">
-      <PageHeader onTitleClick={() => navigate("/")} title="Chat" />
+      <PageHeader showBorder onTitleClick={() => navigate("/")} title="Chat" />
 
-      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
+      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4 pt-4">
         {(session || hubEnabled || controlServerBetaEnabled) && (
           <div className="flex flex-col">
-            <div className="flex max-w-[400px] flex-col gap-4 py-4">
+            <div className="flex max-w-[400px] flex-col gap-4 pb-4">
               <h2 className="mb-1 mt-0">Account</h2>
               {!session ? (
                 <div className="flex flex-col gap-2">
@@ -193,26 +195,19 @@ function ConfigPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {hubEnabled ? (
-                    // Hub: show org selector
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-lightgray">{`Organization`}</span>
-                      <ScopeSelect />
-                    </div>
-                  ) : (
-                    // Continue for teams: show org text
-                    <div>You are using Continue for Teams</div>
-                  )}
                   <div className="flex flex-row items-center gap-2">
-                    <span className="text-lightgray">
+                    <UserCircleIcon className="h-6 w-6" />
+                    <span>
                       {session.account.label === ""
                         ? "Signed in"
-                        : `Signed in as ${session.account.label}`}
+                        : session.account.label}
                     </span>
                     <span
                       onClick={logout}
                       className="text-lightgray cursor-pointer underline"
-                    >{`Sign out`}</span>
+                    >
+                      (Sign out)
+                    </span>
                   </div>
                 </div>
               )}
@@ -223,10 +218,25 @@ function ConfigPage() {
         <div className="flex flex-col">
           <div className="flex max-w-[400px] flex-col gap-4 py-6">
             <h2 className="mb-1 mt-0">Configuration</h2>
+            {hubEnabled ? (
+              // Hub: show org selector
+              session && (
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-lightgray text-sm">{`Organization`}</span>
+                  <ScopeSelect />
+                </div>
+              )
+            ) : (
+              // Continue for teams: show org text
+              <div>You are using Continue for Teams</div>
+            )}
+
             {profiles ? (
               <>
                 <div className="flex flex-col gap-1.5">
-                  <span className="text-lightgray">{`${hubEnabled ? "Assistant" : "Profile"}`}</span>
+                  <div className="flex items-center justify-between gap-1.5 text-sm">
+                    <span className="text-lightgray">{`${hubEnabled ? "Assistant" : "Profile"}`}</span>
+                  </div>
                   <Listbox
                     value={selectedProfile?.id}
                     onChange={changeProfileId}
@@ -291,87 +301,89 @@ function ConfigPage() {
                             )}
                           </Listbox.Options>
                         </Transition>
+
+                        {selectedProfile && (
+                          <div className="mt-3 flex w-full justify-center">
+                            <span
+                              className="text-lightgray flex cursor-pointer items-center gap-1 hover:underline"
+                              onClick={handleOpenConfig}
+                            >
+                              <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                              {hubEnabled
+                                ? "Open Assistant configuration"
+                                : "View Workspace"}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </Listbox>
                 </div>
-                {selectedProfile && (
-                  <SecondaryButton onClick={handleOpenConfig}>
-                    {selectedProfile.profileType === "local"
-                      ? "Open Config File"
-                      : hubEnabled
-                        ? "Open Assistant"
-                        : "Open Workspace"}
-                  </SecondaryButton>
-                )}
-                {/* {hubEnabled && session && (
-                  <div className="flex flex-col gap-1">
-                    <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
-                    <SecondaryButton onClick={refreshProfiles}>
-                      Refresh assistants
-                    </SecondaryButton>
-                  </div>
-                )} */}
               </>
             ) : (
               <div>Loading...</div>
             )}
-            <div>
-              <h2 className="m-0 mb-3 p-0 text-center text-sm">Model Roles</h2>
-              <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-[auto_1fr]">
+          </div>
+        </div>
+
+        {/* Model Roles as a separate section */}
+        <div className="flex flex-col">
+          <div className="flex max-w-[400px] flex-col gap-4 py-6">
+            <h2 className="mb-1 mt-0">Model Roles</h2>
+            <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-[auto_1fr]">
+              <ModelRoleSelector
+                displayName="Chat"
+                description="Used in the chat interface"
+                models={config.modelsByRole.chat}
+                selectedModel={{
+                  title: selectedChatModel,
+                  provider: "mock",
+                  model: "mock",
+                }}
+                onSelect={(model) => handleChatModelSelection(model)}
+              />
+              <ModelRoleSelector
+                displayName="Autocomplete"
+                description="Used to generate code completion suggestions"
+                models={config.modelsByRole.autocomplete}
+                selectedModel={config.selectedModelByRole.autocomplete}
+                onSelect={(model) => handleRoleUpdate("autocomplete", model)}
+              />
+              {/* Jetbrains has a model selector inline */}
+              {!jetbrains && (
                 <ModelRoleSelector
-                  displayName="Chat"
-                  description="Used in the chat interface"
-                  models={config.modelsByRole.chat}
-                  selectedModel={{
-                    title: selectedChatModel,
-                    provider: "mock",
-                    model: "mock",
-                  }}
-                  onSelect={(model) => handleChatModelSelection(model)}
+                  displayName="Edit"
+                  description="Used for inline edits"
+                  models={config.modelsByRole.edit}
+                  selectedModel={config.selectedModelByRole.edit}
+                  onSelect={(model) => handleRoleUpdate("edit", model)}
                 />
-                <ModelRoleSelector
-                  displayName="Autocomplete"
-                  description="Used to generate code completion suggestions"
-                  models={config.modelsByRole.autocomplete}
-                  selectedModel={config.selectedModelByRole.autocomplete}
-                  onSelect={(model) => handleRoleUpdate("autocomplete", model)}
-                />
-                {/* Jetbrains has a model selector inline */}
-                {!jetbrains && (
-                  <ModelRoleSelector
-                    displayName="Edit"
-                    description="Used for inline edits"
-                    models={config.modelsByRole.edit}
-                    selectedModel={config.selectedModelByRole.edit}
-                    onSelect={(model) => handleRoleUpdate("edit", model)}
-                  />
-                )}
-                <ModelRoleSelector
-                  displayName="Apply"
-                  description="Used to apply generated codeblocks to files"
-                  models={config.modelsByRole.apply}
-                  selectedModel={config.selectedModelByRole.apply}
-                  onSelect={(model) => handleRoleUpdate("apply", model)}
-                />
-                <ModelRoleSelector
-                  displayName="Embed"
-                  description="Used to generate and query embeddings for the @codebase and @docs context providers"
-                  models={config.modelsByRole.embed}
-                  selectedModel={config.selectedModelByRole.embed}
-                  onSelect={(model) => handleRoleUpdate("embed", model)}
-                />
-                <ModelRoleSelector
-                  displayName="Rerank"
-                  description="Used for reranking results from the @codebase and @docs context providers"
-                  models={config.modelsByRole.rerank}
-                  selectedModel={config.selectedModelByRole.rerank}
-                  onSelect={(model) => handleRoleUpdate("rerank", model)}
-                />
-              </div>
+              )}
+              <ModelRoleSelector
+                displayName="Apply"
+                description="Used to apply generated codeblocks to files"
+                models={config.modelsByRole.apply}
+                selectedModel={config.selectedModelByRole.apply}
+                onSelect={(model) => handleRoleUpdate("apply", model)}
+              />
+              <ModelRoleSelector
+                displayName="Embed"
+                description="Used to generate and query embeddings for the @codebase and @docs context providers"
+                models={config.modelsByRole.embed}
+                selectedModel={config.selectedModelByRole.embed}
+                onSelect={(model) => handleRoleUpdate("embed", model)}
+              />
+              <ModelRoleSelector
+                displayName="Rerank"
+                description="Used for reranking results from the @codebase and @docs context providers"
+                models={config.modelsByRole.rerank}
+                selectedModel={config.selectedModelByRole.rerank}
+                onSelect={(model) => handleRoleUpdate("rerank", model)}
+              />
             </div>
           </div>
         </div>
+
         {!controlServerBetaEnabled || hubEnabled ? (
           <div className="flex flex-col">
             <div className="flex max-w-[400px] flex-col">

@@ -13,6 +13,7 @@ export interface WalkerOptions {
   onlyDirs?: boolean;
   returnRelativeUrisPaths?: boolean;
   source?: string;
+  overrideDefaultIgnores?: Ignore;
 }
 
 type Entry = [string, FileType];
@@ -91,7 +92,7 @@ class DFSWalker {
 
     let section = Date.now();
     const defaultAndGlobalIgnores = ignore()
-      .add(defaultIgnoreFileAndDir)
+      .add(this.options.overrideDefaultIgnores ?? defaultIgnoreFileAndDir)
       .add(getGlobalContinueIgArray());
     ignoreFileTime += Date.now() - section;
 

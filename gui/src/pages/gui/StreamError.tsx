@@ -100,7 +100,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div>
         <Cog8ToothIcon className="h-4 w-4" />
       </div>
-      <span>Open config</span>
+      <span>Open Assistant configuration</span>
     </SecondaryButton>
   );
 
