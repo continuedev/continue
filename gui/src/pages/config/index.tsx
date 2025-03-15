@@ -512,25 +512,6 @@ function ConfigPage() {
 
                   <label className="flex items-center justify-between gap-3">
                     <span className="lines lines-1 text-left">
-                      Codeblock Actions Position
-                    </span>
-                    <Select
-                      value={codeBlockToolbarPosition}
-                      onChange={(e) =>
-                        handleUpdate({
-                          codeBlockToolbarPosition: e.target.value as
-                            | "top"
-                            | "bottom",
-                        })
-                      }
-                    >
-                      <option value="top">Top</option>
-                      <option value="bottom">Bottom</option>
-                    </Select>
-                  </label>
-
-                  <label className="flex items-center justify-between gap-3">
-                    <span className="lines lines-1 text-left">
                       Multiline Autocompletions
                     </span>
                     <Select
@@ -562,48 +543,6 @@ function ConfigPage() {
                     />
                   </label>
 
-                  <form
-                    className="flex flex-col gap-1"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSubmitPromptPath();
-                    }}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>Workspace prompts path</span>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={formPromptPath}
-                          className="max-w-[100px]"
-                          onChange={(e) => {
-                            setFormPromptPath(e.target.value);
-                          }}
-                        />
-                        <div className="flex h-full flex-col">
-                          {formPromptPath !== promptPath ? (
-                            <>
-                              <div
-                                onClick={handleSubmitPromptPath}
-                                className="cursor-pointer"
-                              >
-                                <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
-                              </div>
-                              <div
-                                onClick={cancelChangePromptPath}
-                                className="cursor-pointer"
-                              >
-                                <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
-                              </div>
-                            </>
-                          ) : (
-                            <div>
-                              <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </form>
                   <form
                     className="flex flex-col gap-1"
                     onSubmit={(e) => {
