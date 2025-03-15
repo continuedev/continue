@@ -362,7 +362,7 @@ async function intermediateToFinalConfig(
               ideSettings,
               writeLog,
               config.completionOptions,
-              config.systemMessage,
+              config.systemMessage
             );
 
             if (llm?.providerName === "free-trial") {
@@ -390,8 +390,8 @@ async function intermediateToFinalConfig(
       (config.contextProviders || [])
         .filter(isContextProviderWithParams)
         .find((cp) => cp.name === "codebase") as
-        | ContextProviderWithParams
-        | undefined
+      | ContextProviderWithParams
+      | undefined
     )?.params || {};
 
   const DEFAULT_CONTEXT_PROVIDERS = [
@@ -994,5 +994,6 @@ export {
   finalToBrowserConfig,
   intermediateToFinalConfig,
   loadContinueConfigFromJson,
-  type BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig
 };
+

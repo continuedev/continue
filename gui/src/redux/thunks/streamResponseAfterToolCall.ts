@@ -64,6 +64,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           [...updatedHistory],
           defaultModel,
           useTools,
+          state.config.config
         );
         const output = await dispatch(streamNormalInput(messages));
         unwrapResult(output);
