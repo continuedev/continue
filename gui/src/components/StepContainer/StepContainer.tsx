@@ -9,9 +9,9 @@ import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
-import Reasoning from "./Reasoning";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -36,7 +36,9 @@ export default function StepContainer(props: StepContainerProps) {
   );
   const uiConfig = useAppSelector(selectUIConfig);
 
-  const hideActionSpace = historyItemAfterThis?.message.role === "assistant";
+  const hideActionSpace =
+    historyItemAfterThis?.message.role === "assistant" ||
+    historyItemAfterThis?.message.role === "thinking";
   const hideActions = hideActionSpace || (isStreaming && props.isLast);
 
   // const isStepAheadOfCurCheckpoint =
@@ -92,7 +94,7 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            <Reasoning {...props}/>
+            <Reasoning {...props} />
 
             <StyledMarkdownPreview
               isRenderingInStepContainer
