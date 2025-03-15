@@ -1,5 +1,5 @@
 import { BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
-import { fromIni } from "@aws-sdk/credential-providers";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 import Bedrock from "./Bedrock.js";
 import { ChatMessage, Chunk, CompletionOptions, UserChatMessage } from "../../index.js";
 
@@ -15,7 +15,7 @@ jest.mock("@aws-sdk/client-bedrock-runtime", () => ({
 
 // Mock credential provider
 jest.mock("@aws-sdk/credential-providers", () => ({
-  fromIni: jest.fn().mockImplementation(() => async () => ({
+  fromNodeProviderChain: jest.fn().mockImplementation(() => async () => ({
     accessKeyId: "test-access-key",
     secretAccessKey: "test-secret-key",
     sessionToken: "test-session-token",
