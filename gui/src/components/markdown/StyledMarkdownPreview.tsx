@@ -1,5 +1,4 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { EDIT_TOOL_CONTEXT_ITEM_NAME } from "core/tools/implementations/editFile";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
@@ -131,6 +130,7 @@ interface StyledMarkdownPreviewProps {
   scrollLocked?: boolean;
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
+  isEditToolResponse?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -174,20 +174,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const history = useAppSelector((state) => state.session.history);
   const allSymbols = useAppSelector((state) => state.session.symbols);
 
-  const isEditToolResponse = useMemo(() => {
-    if (!props.itemIndex || props.itemIndex < 2) {
-      return false;
-    }
-    const prevHistoryItem = history[props.itemIndex - 1];
-    // TODO auto apply for all tool responses to support MCP edit tools?
-    const editToolResponseFound =
-      prevHistoryItem.message.role === "tool" &&
-      !!prevHistoryItem.contextItems.find(
-        (item) => item.name === EDIT_TOOL_CONTEXT_ITEM_NAME,
-      );
-    return editToolResponseFound;
-  }, [props.itemIndex, history]);
-  const isEditToolResponseRef = useUpdatingRef(isEditToolResponse);
+  const isEditToolResponseRef = useUpdatingRef(props.isEditToolResponse);
 
   const pastFileInfo = useMemo(() => {
     const index = props.itemIndex;

@@ -1,6 +1,7 @@
 import { ChatHistoryItem } from "core";
+import { EDIT_TOOL_CONTEXT_ITEM_NAME } from "core/tools/implementations/editFile";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
@@ -9,9 +10,9 @@ import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
-import Reasoning from "./Reasoning";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -31,6 +32,7 @@ export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const history = useAppSelector((state) => state.session.history);
   const historyItemAfterThis = useAppSelector(
     (state) => state.session.history[props.index + 1],
   );
@@ -62,6 +64,20 @@ export default function StepContainer(props: StepContainerProps) {
     }
   }, [props.item.message.content, isStreaming]);
 
+  const isEditToolResponse = useMemo(() => {
+    if (!props.index || props.index < 2) {
+      return false;
+    }
+    const prevHistoryItem = history[props.index - 1];
+    // TODO auto apply for all tool responses to support MCP edit tools?
+    const editToolResponseFound =
+      prevHistoryItem.message.role === "tool" &&
+      !!prevHistoryItem.contextItems.find(
+        (item) => item.name === EDIT_TOOL_CONTEXT_ITEM_NAME,
+      );
+    return editToolResponseFound;
+  }, [props.index, history]);
+
   function onDelete() {
     dispatch(deleteMessage(props.index));
   }
@@ -92,12 +108,13 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            <Reasoning {...props}/>
+            <Reasoning {...props} />
 
             <StyledMarkdownPreview
               isRenderingInStepContainer
               source={stripImages(props.item.message.content)}
               itemIndex={props.index}
+              isEditToolResponse={isEditToolResponse}
             />
           </>
         )}

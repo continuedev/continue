@@ -60,7 +60,7 @@ export default function StepContainerPreToolbar(
 ) {
   const { codeBlockStreamId } = props;
   const ideMessenger = useContext(IdeMessengerContext);
-  const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
+  const wasGeneratingRef = useRef(true);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const [isExpanded, setIsExpanded] = useState(
     props.expanded ?? (isInEditMode ? false : true),
@@ -132,7 +132,6 @@ export default function StepContainerPreToolbar(
       isGeneratingCodeBlock,
       props.autoApply,
     );
-
     wasGeneratingRef.current = isGeneratingCodeBlock;
     if (hasCompletedGenerating) {
       console.log("Completed generating", props.autoApply);
