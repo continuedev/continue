@@ -6,7 +6,6 @@ import {
   ChevronUpDownIcon,
   PlusCircleIcon,
   SparklesIcon,
-  UserCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
@@ -16,7 +15,7 @@ import {
 } from "core/config/sharedConfig";
 import { Fragment, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input, SecondaryButton } from "../../components";
+import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
@@ -182,40 +181,7 @@ function ConfigPage() {
     <div className="overflow-y-scroll">
       <PageHeader showBorder onTitleClick={() => navigate("/")} title="Chat" />
 
-      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4 pt-4">
-        {(session || hubEnabled || controlServerBetaEnabled) && (
-          <div className="flex flex-col">
-            <div className="flex max-w-[400px] flex-col gap-4 pb-4">
-              <h2 className="mb-1 mt-0">Account</h2>
-              {!session ? (
-                <div className="flex flex-col gap-2">
-                  <span>You are not signed in.</span>
-                  <SecondaryButton onClick={() => login(false)}>
-                    Sign in
-                  </SecondaryButton>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-row items-center gap-2">
-                    <UserCircleIcon className="h-6 w-6" />
-                    <span>
-                      {session.account.label === ""
-                        ? "Signed in"
-                        : session.account.label}
-                    </span>
-                    <span
-                      onClick={logout}
-                      className="text-lightgray cursor-pointer underline"
-                    >
-                      (Sign out)
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
+      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="flex flex-col">
           <div className="flex max-w-[400px] flex-col gap-4 py-6">
             <h2 className="mb-1 mt-0">Configuration</h2>
