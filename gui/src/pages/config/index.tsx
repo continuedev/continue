@@ -5,7 +5,6 @@ import {
   CheckIcon,
   ChevronUpDownIcon,
   PlusCircleIcon,
-  SparklesIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
@@ -19,6 +18,7 @@ import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
+import AssistantIcon from "../../components/modelSelection/platform/AssistantIcon";
 import PageHeader from "../../components/PageHeader";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -212,14 +212,8 @@ function ConfigPage() {
                       <div className="relative w-full">
                         <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
                           <div className="flex items-center gap-2">
-                            {selectedProfile?.iconUrl ? (
-                              <img
-                                src={selectedProfile.iconUrl}
-                                alt=""
-                                className="h-5 w-5"
-                              />
-                            ) : (
-                              <SparklesIcon className="h-5 w-5" />
+                            {selectedProfile && (
+                              <AssistantIcon assistant={selectedProfile} />
                             )}
                             <span className="lines lines-1">
                               {selectedProfile?.title ??
@@ -251,15 +245,7 @@ function ConfigPage() {
                                 value={option.id}
                                 className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === option.id ? "bg-list-active" : "bg-vsc-input-background"}`}
                               >
-                                {option?.iconUrl ? (
-                                  <img
-                                    src={option.iconUrl}
-                                    alt=""
-                                    className="h-5 w-5"
-                                  />
-                                ) : (
-                                  <SparklesIcon className="h-5 w-5" />
-                                )}
+                                <AssistantIcon assistant={option} />
                                 <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
                                   {option.title}
                                 </span>
