@@ -5,7 +5,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setConfigError, setConfigResult } from "../redux/slices/configSlice";
+import { setConfigResult } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
@@ -207,10 +207,6 @@ function useSetup() {
 
   useWebviewListener("setTTSActive", async (status) => {
     dispatch(setTTSActive(status));
-  });
-
-  useWebviewListener("configError", async (error) => {
-    dispatch(setConfigError(error));
   });
 
   // TODO - remove?

@@ -145,9 +145,6 @@ export function Chat() {
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const selectedModelTitle = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
@@ -276,6 +273,10 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
+    if (!defaultModel) {
+      console.error("No selected chat model");
+      return;
+    }
     const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
       modifiers: {
@@ -285,7 +286,7 @@ export function Chat() {
       ideMessenger,
       defaultContextProviders: [],
       dispatch,
-      selectedModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     const prompt = [
@@ -296,7 +297,7 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
-      selectedModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     dispatch(submitEdit(prompt));

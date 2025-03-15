@@ -1,5 +1,6 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
+import { selectDefaultModel } from "../slices/configSlice";
 import {
   acceptToolCall,
   cancelToolCall,
@@ -23,7 +24,8 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
 
-    if (!state.config.defaultModelTitle) {
+    const defaultModel = selectDefaultModel(state);
+    if (!defaultModel) {
       throw new Error("No model selected");
     }
 
@@ -31,7 +33,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     const result = await extra.ideMessenger.request("tools/call", {
       toolCall: toolCallState.toolCall,
-      selectedModelTitle: state.config.defaultModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     if (result.status === "success") {
