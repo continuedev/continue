@@ -1,5 +1,5 @@
 import { ChatHistoryItem } from "core";
-import { renderChatMessage, stripImages } from "core/util/messageContent";
+import { renderChatMessage } from "core/util/messageContent";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
@@ -9,9 +9,9 @@ import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
 import ThinkingIndicator from "./ThinkingIndicator";
-import Reasoning from "./Reasoning";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -92,11 +92,11 @@ export default function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <>
-            <Reasoning {...props}/>
+            <Reasoning {...props} />
 
             <StyledMarkdownPreview
               isRenderingInStepContainer
-              source={stripImages(props.item.message.content)}
+              source={renderChatMessage(props.item.message)}
               itemIndex={props.index}
             />
           </>

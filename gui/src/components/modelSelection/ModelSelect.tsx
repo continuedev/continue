@@ -49,6 +49,8 @@ const StyledListboxButton = styled(Listbox.Button)`
   font-size: ${getFontSize() - 2}px;
   background: transparent;
   color: ${lightGray};
+  width: 100%;
+  overflow: hidden;
   &:focus {
     outline: none;
   }
@@ -306,7 +308,7 @@ function ModelSelect() {
         dispatch(setDefaultModel({ title: val }));
       }}
     >
-      <div className="relative">
+      <div className="relative min-w-0 flex-1">
         <StyledListboxButton
           data-testid="model-select-button"
           ref={buttonRef}
@@ -314,8 +316,8 @@ function ModelSelect() {
           style={{ padding: 0 }}
           onClick={calculatePosition}
         >
-          <div className="flex max-w-[33vw] items-center gap-0.5 text-gray-400 transition-colors duration-200">
-            <span className="truncate">
+          <div className="flex w-fit min-w-0 items-center gap-0.5 text-gray-400 transition-colors duration-200">
+            <span className="min-w-0 flex-1 truncate">
               {modelSelectTitle(defaultModel) || "Select model"}{" "}
             </span>
             <ChevronDownIcon
