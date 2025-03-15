@@ -70,7 +70,6 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
-            "docs/suggestions",
             "didCloseFiles",
             "didSelectOrganization"
         )
@@ -123,7 +122,6 @@ class MessageTypes {
             "indexing/reindex",
             "indexing/abort",
             "indexing/setPaused",
-            "docs/getSuggestedDocs",
             "docs/initStatuses",
             "docs/getDetails",
             //

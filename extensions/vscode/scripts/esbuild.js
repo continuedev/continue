@@ -1,5 +1,6 @@
-const esbuild = require("esbuild");
 const fs = require("fs");
+
+const esbuild = require("esbuild");
 
 const flags = process.argv.slice(2);
 
@@ -59,9 +60,9 @@ const esbuildConfig = {
     // The watcher automatically notices changes to source files
     // so the only thing it needs to be notified about is if the
     // output file gets removed.
-    if (fs.existsSync (outFile)) {
-        console.log("VS Code Extension esbuild up to date");
-        return;
+    if (fs.existsSync(outFile)) {
+      console.log("VS Code Extension esbuild up to date");
+      return;
     }
 
     fs.watchFile(outFile, (current, previous) => {
