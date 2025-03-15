@@ -4,13 +4,21 @@ import { isLocalProfile } from "../../../util";
 
 export interface AssistantIconProps {
   assistant: ProfileDescription;
+  size?: number;
 }
 
-export default function AssistantIcon({ assistant }: AssistantIconProps) {
+export default function AssistantIcon({ assistant, size }: AssistantIconProps) {
+  const sizeTw = size ?? 4;
   if (isLocalProfile(assistant)) {
-    return <ComputerDesktopIcon />;
+    return <ComputerDesktopIcon className={`h-${sizeTw} w-${sizeTw}`} />;
   } else if (assistant.iconUrl) {
-    return <img src={assistant.iconUrl} className="h-4 w-4 rounded-full" />;
+    return (
+      <img
+        src={assistant.iconUrl}
+        className={`h-${sizeTw} w-${sizeTw} rounded-full`}
+        alt=""
+      />
+    );
   } else {
     return <SparklesIcon />;
   }
