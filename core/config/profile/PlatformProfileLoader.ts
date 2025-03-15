@@ -103,10 +103,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       undefined,
     );
 
-    return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
-    };
+    return results;
   }
 
   setIsActive(isActive: boolean): void {}
