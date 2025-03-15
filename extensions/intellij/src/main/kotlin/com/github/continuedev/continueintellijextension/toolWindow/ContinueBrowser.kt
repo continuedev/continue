@@ -14,6 +14,7 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.*
+import com.intellij.ui.jcef.JBCefClient.Properties
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
@@ -32,10 +33,16 @@ class ContinueBrowser(val project: Project, url: String) {
     init {
         val isOSREnabled = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
 
-        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build()
+        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build().apply {
+            // To avoid using System.setProperty to affect other plugins,
+            // we should configure JS_QUERY_POOL_SIZE after JBCefClient is instantiated,
+            // and eliminate the 'Uncaught TypeError: window.cefQuery_xxx is not a function' error
+            // in the JS debug console, which is caused by ContinueBrowser lazy loading.
+            jbCefClient.setProperty(Properties.JS_QUERY_POOL_SIZE, JS_QUERY_POOL_SIZE)
+        }
 
         registerAppSchemeHandler()
-        browser.loadURL(url);
+        browser.loadURL(url)
         Disposer.register(ContinuePluginDisposable.getInstance(project), browser)
 
         // Listen for events sent from browser
