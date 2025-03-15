@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/core",
-  "version": "1.0.13",
+  "version": "1.1.0",
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
