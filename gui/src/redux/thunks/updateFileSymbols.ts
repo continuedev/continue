@@ -1,9 +1,9 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { ThunkApiType } from "../store";
-import { updateFileSymbols } from "../slices/sessionSlice";
 import { ChatHistoryItem, ContextItemWithId } from "core";
+import { updateFileSymbols } from "../slices/sessionSlice";
+import { ThunkApiType } from "../store";
 
-export function getContextItemsFromHistory(
+export function getFileContextItemsFromHistory(
   historyItems: ChatHistoryItem[],
   priorToIndex?: number,
 ) {
@@ -79,7 +79,7 @@ export const updateFileSymbolsFromHistory = createAsyncThunk<
     const state = getState();
 
     // Get unique context item file uris from all history
-    const contextItems = getContextItemsFromHistory(state.session.history);
+    const contextItems = getFileContextItemsFromHistory(state.session.history);
 
     const uniqueUris = new Set(
       contextItems

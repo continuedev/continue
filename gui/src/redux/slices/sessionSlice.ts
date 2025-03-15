@@ -328,7 +328,7 @@ export const sessionSlice = createSlice({
               !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
               // And there's a difference in tool call presence
               (lastMessage.toolCalls?.length ?? 0) !==
-              (message.toolCalls?.length ?? 0))
+                (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -473,9 +473,9 @@ export const sessionSlice = createSlice({
       state.allSessionMetadata = state.allSessionMetadata.map((session) =>
         session.sessionId === payload.sessionId
           ? {
-            ...session,
-            ...payload,
-          }
+              ...session,
+              ...payload,
+            }
           : session,
       );
       if (payload.title && payload.sessionId === state.id) {
@@ -510,8 +510,9 @@ export const sessionSlice = createSlice({
         payload.rangeInFileWithContents.filepath,
       );
 
-      const lineNums = `(${payload.rangeInFileWithContents.range.start.line + 1
-        }-${payload.rangeInFileWithContents.range.end.line + 1})`;
+      const lineNums = `(${
+        payload.rangeInFileWithContents.range.start.line + 1
+      }-${payload.rangeInFileWithContents.range.end.line + 1})`;
 
       contextItems.push({
         name: `${fileName} ${lineNums}`,
@@ -696,9 +697,9 @@ function addPassthroughCases(
 ) {
   thunks.forEach((thunk) => {
     builder
-      .addCase(thunk.fulfilled, (state, action) => { })
-      .addCase(thunk.rejected, (state, action) => { })
-      .addCase(thunk.pending, (state, action) => { });
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
   });
 }
 

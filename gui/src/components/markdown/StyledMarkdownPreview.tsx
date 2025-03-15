@@ -1,5 +1,5 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -16,7 +16,7 @@ import {
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
-import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
+import { getFileContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
 import { getFontSize, isJetBrains } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
@@ -130,6 +130,7 @@ interface StyledMarkdownPreviewProps {
   scrollLocked?: boolean;
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
+  isEditToolResponse?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -172,6 +173,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // 2. Toolbar Codeblocks found in past messages
   const history = useAppSelector((state) => state.session.history);
   const allSymbols = useAppSelector((state) => state.session.symbols);
+
+  const isEditToolResponseRef = useUpdatingRef(props.isEditToolResponse);
+
   const pastFileInfo = useMemo(() => {
     const index = props.itemIndex;
     if (index === undefined) {
@@ -180,7 +184,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         rifs: [],
       };
     }
-    const pastContextItems = getContextItemsFromHistory(history, index);
+    const pastContextItems = getFileContextItemsFromHistory(history, index);
     const rifs = pastContextItems.map((item) =>
       ctxItemToRifWithContents(item, true),
     );
@@ -195,6 +199,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     };
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
+
+  const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
+    [],
+  );
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
@@ -282,8 +290,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           const { className, range } = preChildProps;
           const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
-          const isGeneratingCodeBlock =
-            preChildProps["data-isgeneratingcodeblock"];
 
           if (!props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;
@@ -307,15 +313,29 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             );
           }
 
+          const isGeneratingCodeBlock =
+            preChildProps["data-isgeneratingcodeblock"];
+
+          if (codeblockState.current[codeBlockIndex] === undefined) {
+            codeblockState.current[codeBlockIndex] = {
+              streamId: uuidv4(),
+              isGenerating: isGeneratingCodeBlock,
+            };
+          }
+          const codeblockStreamId =
+            codeblockState.current[codeBlockIndex].streamId;
+
           // We use a custom toolbar for codeblocks in the step container
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
               codeBlockIndex={codeBlockIndex}
+              codeBlockStreamId={codeblockStreamId}
               language={language}
               relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
+              autoApply={isEditToolResponseRef.current}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>
