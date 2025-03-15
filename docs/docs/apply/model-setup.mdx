@@ -1,0 +1,62 @@
+---
+title: Model Setup
+sidebar_position: 5
+description: Setting up models for Apply
+keywords: [apply, model, setup]
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+To use the Apply feature, you need to configure a model with the `apply` role. If no apply models are specified, the selected `chat` model is used.
+
+## Configuring Morph Fast Apply
+
+[Morph](https://morphllm.com) is a specialized model designed for fast and accurate code application. It's optimized to take original code and generated code, then create a precise diff that can be applied to your file.
+
+To configure Morph Fast Apply, add the following to your `config.yaml`:
+
+```yaml title="config.yaml"
+models:
+  - name: Morph Fast Apply
+    provider: openai
+    model: morph-v0
+    apiKey: YOUR_MORPH_API_KEY
+    apiBase: https://api.morphllm.com/v1/
+    roles:
+      - apply
+    promptTemplates:
+      apply: "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
+```
+
+You can sign up for a free Morph API key at [https://morphllm.com/dashboard](https://morphllm.com/dashboard).
+
+## Using Other Models for Apply
+
+You can also use other models for the Apply role by adding `apply` to their roles list:
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: openai
+      model: gpt-4o
+      apiKey: YOUR_OPENAI_API_KEY
+      roles:
+        - chat
+        - edit
+        - apply
+  ```
+  </TabItem>
+</Tabs>
+
+## Selecting an Apply Model
+
+You can select which model to use for Apply in the Continue settings:
+
+1. Open the Continue settings
+2. Go to the "Active Models" section
+3. Select your preferred model from the "Apply" dropdown
+
+If no Apply model is selected, Continue will use the selected Chat model for Apply operations. 
