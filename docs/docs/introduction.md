@@ -23,3 +23,4 @@ keywords:
 - [Autocomplete](autocomplete/how-to-use-it) to receive inline code suggestions as you type
 - [Edit](edit/how-to-use-it) to modify code without leaving your current file
 - [Actions](actions/how-to-use-it) to establish shortcuts for common use cases
+- [Apply](apply/how-to-use-it) to apply code changes to your file
