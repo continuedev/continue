@@ -466,6 +466,10 @@ const config = {
             from: "/actions",
           },
           {
+            to: "/apply/how-to-use-it",
+            from: "/apply",
+          },
+          {
             to: "/autocomplete/how-to-use-it",
             from: "/autocomplete",
           },
