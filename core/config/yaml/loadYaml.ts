@@ -4,8 +4,12 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
+  FQSN,
   ModelRole,
-  parseAssistantUnrolled,
+  PlatformClient,
+  RegistryClient,
+  SecretResult,
+  unrollAssistantFromContent,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
@@ -41,6 +45,14 @@ import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { llmsFromModelConfig } from "./models";
 
+export class LocalPlatformClient implements PlatformClient {
+  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+    return fqsns.map((fqsn) => {
+      return undefined;
+    });
+  }
+}
+
 async function loadConfigYaml(
   workspaceConfigs: string[],
   rawYaml: string,
@@ -48,14 +60,25 @@ async function loadConfigYaml(
   ide: IDE,
   controlPlaneClient: ControlPlaneClient,
 ): Promise<ConfigResult<AssistantUnrolled>> {
-  // const ideSettings = await ide.getIdeSettings();
   let config =
     overrideConfigYaml ??
-    // (ideSettings.continueTestEnvironment === "production"
-    // ? await clientRenderHelper(rawYaml, ide, controlPlaneClient)
-    // :
-    parseAssistantUnrolled(rawYaml);
-  // );
+    // This is how we allow use of blocks locally
+    (await unrollAssistantFromContent(
+      {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
+      rawYaml,
+      new RegistryClient(),
+      {
+        currentUserSlug: "",
+        onPremProxyUrl: null,
+        orgScopeId: null,
+        platformClient: new LocalPlatformClient(),
+        renderSecrets: true,
+      },
+    ));
   const errors = validateConfigYaml(config);
 
   if (errors?.some((error) => error.fatal)) {
@@ -308,27 +331,27 @@ async function configYamlToContinueConfig(
 
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
-  await Promise.all(
+  await Promise.allSettled(
     config.mcpServers?.map(async (server) => {
-      const mcpId = server.name;
-      const mcpConnection = mcpManager.createConnection(mcpId, {
-        transport: {
-          type: "stdio",
-          args: [],
-          ...server,
-        },
-      });
-      if (!mcpConnection) {
-        return;
-      }
-
       const abortController = new AbortController();
       const mcpConnectionTimeout = setTimeout(
         () => abortController.abort(),
-        5000,
+        4000,
       );
 
       try {
+        const mcpId = server.name;
+        const mcpConnection = mcpManager.createConnection(mcpId, {
+          transport: {
+            type: "stdio",
+            args: [],
+            ...server,
+          },
+        });
+        if (!mcpConnection) {
+          return;
+        }
+
         const mcpError = await mcpConnection.modifyConfig(
           continueConfig,
           mcpId,
@@ -339,16 +362,22 @@ async function configYamlToContinueConfig(
         if (mcpError) {
           errors.push(mcpError);
         }
-      } catch (e: any) {
+      } catch (e) {
+        let errorMessage = `Failed to load MCP server ${server.name}`;
+        if (e instanceof Error) {
+          if (e.name === "AbortError") {
+            errorMessage += ": connection timed out";
+          } else {
+            errorMessage += ": " + e.message;
+          }
+        }
         errors.push({
           fatal: false,
-          message: `Failed to load MCP server: ${e.message}`,
+          message: errorMessage,
         });
-        if (e.name !== "AbortError") {
-          throw e;
-        }
+      } finally {
+        clearTimeout(mcpConnectionTimeout);
       }
-      clearTimeout(mcpConnectionTimeout);
     }) ?? [],
   );
 
@@ -366,10 +395,14 @@ export async function loadContinueConfigFromYaml(
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
+  configYamlPath: string | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
-      ? fs.readFileSync(getConfigYamlPath(ideInfo.ideType), "utf-8")
+      ? fs.readFileSync(
+          configYamlPath ?? getConfigYamlPath(ideInfo.ideType),
+          "utf-8",
+        )
       : "";
 
   const configYamlResult = await loadConfigYaml(

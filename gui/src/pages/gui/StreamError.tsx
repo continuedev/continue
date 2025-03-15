@@ -66,11 +66,13 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   ) {
     message = error["message"];
     const parts = message?.split(" ") ?? [];
-    const status = parts[0] === "HTTP" ? parts[1] : parts[0];
-    if (status) {
-      const code = Number(status);
-      if (!Number.isNaN(statusCode)) {
-        statusCode = code;
+    if (parts.length > 1) {
+      const status = parts[0] === "HTTP" ? parts[1] : parts[0];
+      if (status) {
+        const code = Number(status);
+        if (!Number.isNaN(code)) {
+          statusCode = code;
+        }
       }
     }
   }
@@ -98,7 +100,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div>
         <Cog8ToothIcon className="h-4 w-4" />
       </div>
-      <span>Open config</span>
+      <span>Open Assistant configuration</span>
     </SecondaryButton>
   );
 
