@@ -347,7 +347,7 @@ async function configYamlToContinueConfig(
             args: [],
             ...server,
           },
-        });
+        },ide);
         if (!mcpConnection) {
           return;
         }
