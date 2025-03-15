@@ -5,6 +5,7 @@ import {
   CheckIcon,
   ChevronUpDownIcon,
   PlusCircleIcon,
+  SparklesIcon,
   UserCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -244,9 +245,21 @@ function ConfigPage() {
                     {({ open }) => (
                       <div className="relative w-full">
                         <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
-                          <span className="lines lines-1">
-                            {selectedProfile?.title ?? "No Assistant Selected"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {selectedProfile?.iconUrl ? (
+                              <img
+                                src={selectedProfile.iconUrl}
+                                alt=""
+                                className="h-5 w-5"
+                              />
+                            ) : (
+                              <SparklesIcon className="h-5 w-5" />
+                            )}
+                            <span className="lines lines-1">
+                              {selectedProfile?.title ??
+                                "No Assistant Selected"}
+                            </span>
+                          </div>
                           <div className="pointer-events-none flex items-center">
                             <ChevronUpDownIcon
                               className="h-5 w-5"
@@ -272,6 +285,15 @@ function ConfigPage() {
                                 value={option.id}
                                 className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === option.id ? "bg-list-active" : "bg-vsc-input-background"}`}
                               >
+                                {option?.iconUrl ? (
+                                  <img
+                                    src={option.iconUrl}
+                                    alt=""
+                                    className="h-5 w-5"
+                                  />
+                                ) : (
+                                  <SparklesIcon className="h-5 w-5" />
+                                )}
                                 <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
                                   {option.title}
                                 </span>
