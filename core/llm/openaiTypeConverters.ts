@@ -1,20 +1,17 @@
 import { FimCreateParamsStreaming } from "@continuedev/openai-adapters/dist/apis/base";
 import {
-  Chat,
   ChatCompletion,
   ChatCompletionAssistantMessageParam,
   ChatCompletionChunk,
   ChatCompletionCreateParams,
   ChatCompletionMessageParam,
-  ChatCompletionUserMessageParam,
-  CompletionCreateParams,
+  CompletionCreateParams
 } from "openai/resources/index";
 
 import {
   ChatMessage,
   CompletionOptions,
-  MessageContent,
-  TextMessagePart,
+  TextMessagePart
 } from "..";
 
 export function toChatMessage(
@@ -179,11 +176,19 @@ export function fromChatCompletionChunk(
   chunk: ChatCompletionChunk,
 ): ChatMessage | undefined {
   const delta = chunk.choices?.[0]?.delta;
+  const delta_any = delta as any;
 
   if (delta?.content) {
     return {
       role: "assistant",
       content: delta.content,
+      reasoning: delta_any.reasoning
+    };
+  } else if (delta_any?.reasoning) {
+    return {
+      role: "assistant",
+      content: "",
+      reasoning: delta_any.reasoning
     };
   } else if (delta?.tool_calls) {
     return {

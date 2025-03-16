@@ -356,6 +356,24 @@ export const sessionSlice = createSlice({
             }
             state.history.push(historyItem);
           } else {
+            if (message.role == "assistant" && message.reasoning) {
+              if (lastItem.reasoning?.active) {
+                lastItem.reasoning.text += message.reasoning;
+              } else {
+                lastItem.reasoning = {
+                  startAt: Date.now(),
+                  active: true,
+                  text: message.reasoning,
+                };
+              }
+            } else if (message.role == "assistant") {
+              if (lastItem.reasoning?.active) {
+                lastItem.reasoning.text += message.reasoning;
+                lastItem.reasoning.active = false;
+                lastItem.reasoning.endAt = Date.now();
+              }
+            }
+
             // Add to the existing message
             if (message.content) {
               const messageContent = renderChatMessage(message);
