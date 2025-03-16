@@ -111,8 +111,7 @@ export async function llmFromDescription(
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
-  systemMessage?: string,
-  isAutocomplete = false
+  systemMessage?: string
 ): Promise<BaseLLM | undefined> {
   const cls = LLMClasses.find((llm) => llm.providerName === desc.provider);
 
