@@ -989,6 +989,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           }}
         />
         <InputToolbar
+          isMainInput={props.isMainInput}
           toolbarOptions={props.toolbarOptions}
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}
