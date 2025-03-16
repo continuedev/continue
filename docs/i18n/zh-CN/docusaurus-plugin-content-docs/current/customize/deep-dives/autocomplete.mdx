@@ -1,0 +1,155 @@
+---
+title: 自动补全
+keywords: [自动补全]
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+### 设置 Codestral (推荐)
+
+如果你想要有最好的自动补全体验，我们推荐使用 Codestral ，它可以通过 [Mistral API](https://console.mistral.ai/) 使用。要做这个，获取一个 API key 并把它添加到你的配置中：
+
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [Mistral Codestral model block](https://hub.continue.dev/mistral/codestral)
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Codestral
+      provider: mistral
+      model: codestral-latest
+      apiKey: <YOUR_CODESTRAL_API_KEY>
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Codestral",
+      "provider": "mistral", 
+      "model": "codestral-latest",
+      "apiKey": "<YOUR_CODESTRAL_API_KEY>"
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+:::tip[Codestral API Key]
+Codestral 和通用 Mistral API 的 API key 是不同的。如果你使用 Codestral ，你可能想要一个 Codestral API key ，但是如果你分享 key 给团队，或者想要使用 `api.mistral.ai` ，那么确保设置 `"apiBase": "https://api.mistral.ai/v1"` 在你的 `tabAutocompleteModel` 。
+:::
+
+### 设置 Ollama (默认)
+
+如果你想要本地运行自己的自动补全模型，我们推荐使用 Ollama 。要做这个，首先从 [这里](https://ollama.ai) 下载最新版的 Ollama 。然后，运行下面的命令下载我们推荐的模型：
+
+```bash
+ollama run qwen2.5-coder:1.5b
+```
+
+然后，添加模型到你的配置中：
+
+<Tabs groupId="hub-config-example">
+  <TabItem value="hub" label="Hub">
+  [Ollama Qwen 2.5 Coder 1.5B model block](https://hub.continue.dev/ollama/qwen2.5-coder-1.5b)
+  </TabItem>
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Qwen 1.5b Autocomplete Model
+      provider: ollama
+      model: qwen2.5-coder:1.5b
+      roles:
+        - autocomplete
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "tabAutocompleteModel": {
+      "title": "Qwen 1.5b Autocomplete Model",
+      "provider": "ollama", 
+      "model": "qwen2.5-coder:1.5b",
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+一旦模型下载完成，你应该可以在 VS Code 中看到补全。
+
+## 配置选项
+
+### Hub 自动补全模型
+
+在 [hub](https://hub.continue.dev/explore/models?roles=autocomplete) 中查看自动补全模型配置。
+
+### 自动补全用户设置
+
+以为设置可以在 IDE 扩展[用户设置页面](../settings.md) 中为自动补全配置：
+
+- `Use autocomplete cache`: 如果打开，缓存补全
+- `Multiline Autocompletions`: 控制自动补全的多行补全。可以设置为 `always`, `never` 或 `auto` 。默认情况下是 `auto`
+- `Disable autocomplete in files`: 逗号分隔的 glob 模式，禁用匹配文件中的自动补全。例如， "\_/.md, \*/.txt"
+
+### `config.json` 配置
+
+`config.json` 配置格式（废弃）通过 `tabAutocompleteOptions` 提供更多的配置选项。查看 [JSON Reference](../../reference.md#tabautocompleteoptions) 获取更多详情。
+
+## 常见问题
+
+### 我想要更好的补全，是否应该使用 GPT-4 ？
+
+可能出乎意料，答案是否定的。我们推荐的自动补全模型是通过高度特定提示词格式训练的，这运行它们响应请求来补全代码(在 [这里](https://github.com/continuedev/continue/blob/main/core/autocomplete/templating/AutocompleteTemplate.ts) 查看这些提示词的示例)。一些最好的商业化模型，比如 GPT-4 或 Claude 不是通过这种提示词格式训练的，这意味着它们不能生成有用的补全。幸运地，好的自动补全不需要很大的模型。大多数先进的自动补全模型不大于 10b 参数，增加超过这个没有明显地提高性能。
+
+### 我没有看到任何补全
+
+查看下面的步骤，确认所有东西设置正确：
+
+1. 确保你有 "Enable Tab Autocomplete" 设置勾选，（在 VS Code 中，你可以切换，通过点击状态栏中的 "Continue" 按钮，在 JetBrains 中，通过 Settings -> Tools -> Continue ）。
+2. 确保你下载了 Ollama 。
+3. 运行 `ollama run qwen2.5-coder:1.5b-base` 确认模型下载完成。
+4. 确保任何其他补全提供者被禁用（例如 Copilot ），它们可能会干扰。
+5. 检查输出的日志，查找可能得错误 <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd> -> "Toggle Developer Tools" -> "Console" tab 在 VS Code 中，~/.continue/logs/core.log 在 JetBrains 中。
+6. 检查 VS Code 设置，确保 `"editor.inlineSuggest.enabled"` 设置为 `true` （使用 <kbd>cmd/ctrl</kbd> + <kbd>,</kbd> 然后搜索这个并勾选方框）
+7. 如果你仍然有问题，请在我们的 [Discord](https://discord.gg/vapESyrFmJ) 让我们知道，我们将会尽快提供帮助。
+
+### 补全总是单行的
+
+为了确保你能收到多行补全，你可以设置 `"multilineCompletions": "always"` 再 `tabAutocompleteOptions` 中。默认情况下，它是 `"auto"` 。如果你仍然发现你只能看到单行补全，这可能是因为一些模型偏向产生短的补全，当在文件中开始时。你可以尝试临时移动光标下的文本到激活文件外，或者切换到一个更大的模型。
+
+### 我是否可以配置自动补全 "触发键" ？
+
+是的，在 VS Code 中，如果你不想要自动显示建议，你可以：
+
+1. 设置 `"editor.inlineSuggest.enabled": false` 在 VS Code 设置中，禁止自动建议
+2. 打开 "快捷键" (cmd/ctrl+k, cmd/ctrl+s) 并查找 `editor.action.inlineSuggest.trigger`
+3. 点击 "+" 图标添加一个新的键绑定
+4. 按下你想要触发建议的键组合（例如 <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>）
+5. 现在，无论何时你想要查看建议，按下键绑定（例如，<kbd>cmd/ctrl</kbd> + <kbd>space</kbd>）来手动触发建议
+
+### 是否有快捷键一次接受一行？
+
+这是 VS Code 的一个内置特性，但是比较隐藏。查看这个很好的 [StackOverflow 回答](https://stackoverflow.com/questions/72228174/accept-line-by-line-from-autocompletion/78001122#78001122) 获取更多信息。
+
+### 如何关闭自动补全
+
+#### VS Code
+
+点击屏幕右下角状态栏中的 "Continue" 按钮。选择标志会变成 "cancel" 符号，你将不会再看到补全。你可以再次点击它，重新打开补全。
+
+另外，打开 VS Code 设置，搜索 "Continue" 并取消勾选 "Enable Tab Autocomplete" 方框。
+
+你还可以使用默认的快捷方式来禁用自动补全，使用一个组合键：按下并保持 <kbd>ctrl/cmd</kbd> + <kbd>K</kbd> (继续保持 <kbd>ctrl/cmd</kbd>) 并按下 <kbd>ctrl/cmd</kbd> + <kbd>A</kbd> 。这将关闭自动补全而不需要导航到设置。
+
+#### JetBrains
+
+打开 Settings -> Tools -> Continue 并取消勾选 "Enable Tab Autocomplete" 方框。
+
+#### 反馈
+
+如果你关闭自动补全，我们想要知道如何提高！请让我们知道，在我们的 [Discord](https://discord.gg/vapESyrFmJ) 或者在 GitHub 提交一个 issue 。
