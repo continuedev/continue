@@ -52,12 +52,12 @@ export default function ConfigErrorPage() {
                     ) : (
                       <ExclamationTriangleIcon className="mr-2 h-5 w-5" />
                     )}
-                    <pre className="m-0">
+                    <p className="m-0 whitespace-pre-wrap">
                       <strong>
                         {error.fatal ? "Fatal Error:" : "Warning:"}
                       </strong>{" "}
                       {error.message}
-                    </pre>
+                    </p>
                   </li>
                 ))}
               </ul>
