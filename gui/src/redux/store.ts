@@ -1,5 +1,4 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import miscReducer from "./slices/miscSlice";
 import {
   createMigrate,
   MigrationManifest,
@@ -10,10 +9,12 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
-import editModeStateReducer from "./slices/editModeState";
 import configReducer from "./slices/configSlice";
+import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
+import miscReducer from "./slices/miscSlice";
 import sessionReducer from "./slices/sessionSlice";
+import tabsReducer from "./slices/tabsSlice";
 import uiReducer from "./slices/uiSlice";
 
 export interface ChatMessage {
@@ -28,20 +29,37 @@ const rootReducer = combineReducers({
   editModeState: editModeStateReducer,
   config: configReducer,
   indexing: indexingReducer,
+  tabs: tabsReducer,
 });
 
 const saveSubsetFilters = [
   createFilter("session", [
     "history",
-    "sessionId",
     "selectedOrganizationId",
-    "selectedProfileId",
+    "selectedProfile",
+    "id",
+    "lastSessionId",
+    "title",
+
+    // Persist edit mode in case closes in middle
+    "mode",
+    "codeToEdit",
+
+    // TODO consider removing persisted profiles/orgs
+    "availableProfiles",
+    "organizations",
+
+    // higher risk to persist
+    // codeBlockApplyStates
+    // symbols
+    // curCheckpointIndex
   ]),
   // Don't persist any of the edit state for now
   createFilter("editModeState", []),
   createFilter("config", ["defaultModelTitle"]),
   createFilter("ui", ["toolSettings", "useTools"]),
   createFilter("indexing", []),
+  createFilter("tabs", ["tabs"]),
 ];
 
 const migrations: MigrationManifest = {
@@ -50,11 +68,21 @@ const migrations: MigrationManifest = {
 
     return {
       config: {
-        defaultModelTitle: oldState?.state?.defaultModelTitle ?? "GPT-4",
+        defaultModelTitle: oldState?.state?.defaultModelTitle ?? undefined,
       },
       session: {
         history: oldState?.state?.history ?? [],
         id: oldState?.state?.sessionId ?? "",
+      },
+      tabs: {
+        tabs: [
+          {
+            id:
+              Date.now().toString(36) + Math.random().toString(36).substring(2),
+            title: "Chat 1",
+            isActive: true,
+          },
+        ],
       },
       _persist: oldState?._persist,
     };

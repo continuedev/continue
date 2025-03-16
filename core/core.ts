@@ -1,7 +1,4 @@
-import path from "path";
-
 import { fetchwithRequestOptions } from "@continuedev/fetch";
-import ignore from "ignore";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -14,31 +11,26 @@ import {
   setupQuickstartConfig,
 } from "./config/onboarding";
 import { addContextProvider, addModel, deleteModel } from "./config/util";
+import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
+import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
-import { ControlPlaneClient } from "./control-plane/client";
 import { getControlPlaneEnv } from "./control-plane/env";
+import { DevDataSqliteDb } from "./data/devdataSqlite";
+import { DataLogger } from "./data/log";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
-import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
-import { logDevData } from "./util/devdata";
-import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  setupInitialDotContinueDirectory,
-} from "./util/paths";
-import { localPathToUri } from "./util/pathToUri";
+import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -52,8 +44,9 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
-import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
-import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
+import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { shouldIgnore } from "./indexing/shouldIgnore";
+import { walkDirCache } from "./indexing/walkDir";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -63,7 +56,6 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   codebaseIndexingState: IndexingProgressUpdate;
-  controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
 
@@ -96,7 +88,7 @@ export class Core {
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
-    setupInitialDotContinueDirectory();
+    migrateV1DevDataFiles();
 
     this.codebaseIndexingState = {
       status: "loading",
@@ -104,22 +96,23 @@ export class Core {
       progress: 0,
     };
 
+    const ideInfoPromise = messenger.request("getIdeInfo", undefined);
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
       useOnboarding: false,
     });
 
-    this.controlPlaneClient = new ControlPlaneClient(
-      sessionInfoPromise,
-      ideSettingsPromise,
-    );
-
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
       this.onWrite,
-      this.controlPlaneClient,
+      sessionInfoPromise,
+      (orgId: string | null) => {
+        void messenger.request("didSelectOrganization", {
+          orgId,
+        });
+      },
     );
 
     this.docsService = DocsService.createSingleton(
@@ -135,11 +128,30 @@ export class Core {
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
       });
+
+      // update additional submenu context providers registered via VSCode API
+      const additionalProviders =
+        this.configHandler.getAdditionalSubmenuContextProviders();
+      if (additionalProviders.length > 0) {
+        this.messenger.send("refreshSubmenuItems", {
+          providers: additionalProviders,
+        });
+      }
     });
 
-    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
-      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    this.configHandler.onDidChangeAvailableProfiles(
+      (profiles, selectedProfileId) =>
+        this.messenger.send("didChangeAvailableProfiles", {
+          profiles,
+          selectedProfileId,
+        }),
     );
+
+    // Dev Data Logger
+    const dataLogger = DataLogger.getInstance();
+    dataLogger.core = this;
+    dataLogger.ideInfoPromise = ideInfoPromise;
+    dataLogger.ideSettingsPromise = ideSettingsPromise;
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;
@@ -187,12 +199,10 @@ export class Core {
 
     const getLlm = async () => {
       const { config } = await this.configHandler.loadConfig();
-      const selected = this.globalContext.get("selectedTabAutocompleteModel");
-      return (
-        config?.tabAutocompleteModels?.find(
-          (model) => model.title === selected,
-        ) ?? config?.tabAutocompleteModels?.[0]
-      );
+      if (!config) {
+        return undefined;
+      }
+      return config.selectedModelByRole.autocomplete ?? undefined;
     };
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -226,11 +236,6 @@ export class Core {
       }
     });
 
-    on("update/selectTabAutocompleteModel", async (msg) => {
-      this.globalContext.update("selectedTabAutocompleteModel", msg.data);
-      void this.configHandler.reloadConfig();
-    });
-
     // Special
     on("abort", (msg) => {
       this.abortedMessageIds.add(msg.messageId);
@@ -261,8 +266,8 @@ export class Core {
     });
 
     // Dev data
-    on("devdata/log", (msg) => {
-      logDevData(msg.data.tableName, msg.data.data);
+    on("devdata/log", async (msg) => {
+      void DataLogger.getInstance().logDevData(msg.data);
     });
 
     // Edit config
@@ -296,8 +301,15 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
-    on("config/listProfiles", (msg) => {
-      return this.configHandler.listProfiles();
+    on("config/listProfiles", async (msg) => {
+      const profiles = this.configHandler.listProfiles();
+      const selectedProfileId =
+        this.configHandler.currentProfile?.profileDescription.id ?? null;
+      return { profiles, selectedProfileId };
+    });
+
+    on("config/refreshProfiles", async (msg) => {
+      await this.configHandler.loadAssistantsForSelectedOrg();
     });
 
     on("config/addContextProvider", async (msg) => {
@@ -305,8 +317,19 @@ export class Core {
     });
 
     on("config/updateSharedConfig", async (msg) => {
-      this.globalContext.updateSharedConfig(msg.data);
+      const newSharedConfig = this.globalContext.updateSharedConfig(msg.data);
       await this.configHandler.reloadConfig();
+      return newSharedConfig;
+    });
+
+    on("config/updateSelectedModel", async (msg) => {
+      const newSelectedModels = this.globalContext.updateSelectedModel(
+        msg.data.profileId,
+        msg.data.role,
+        msg.data.title,
+      );
+      await this.configHandler.reloadConfig();
+      return newSelectedModels;
     });
 
     on("controlPlane/openUrl", async (msg) => {
@@ -319,7 +342,7 @@ export class Core {
     });
 
     on("controlPlane/listOrganizations", async (msg) => {
-      return await this.controlPlaneClient.listOrganizations();
+      return await this.configHandler.listOrganizations();
     });
 
     // Context providers
@@ -386,11 +409,11 @@ export class Core {
         const items = await provider.getContextItems(query, {
           config,
           llm,
-          embeddingsProvider: config.embeddingsProvider,
+          embeddingsProvider: config.selectedModelByRole.embed,
           fullInput,
           ide,
           selectedCode,
-          reranker: config.reranker,
+          reranker: config.selectedModelByRole.rerank,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
@@ -411,26 +434,25 @@ export class Core {
         let knownError = false;
 
         if (e instanceof Error) {
-          // A specific error where we're forcing the presence of embeddings provider on the config
-          // But Jetbrains doesn't support transformers JS
-          // So if a context provider needs it it will throw this error when the file isn't found
-          if (e.message.includes("all-MiniLM-L6-v2")) {
-            knownError = true;
-            const toastOption = "See Docs";
-            void this.ide
-              .showToast(
-                "error",
-                `Set up an embeddings model to use @${name}`,
-                toastOption,
-              )
-              .then((userSelection) => {
-                if (userSelection === toastOption) {
-                  void this.ide.openUrl(
-                    "https://docs.continue.dev/customize/model-types/embeddings",
-                  );
-                }
-              });
-          }
+          // After removing transformers JS embeddings provider from jetbrains
+          // Should no longer see this error
+          // if (e.message.toLowerCase().includes("embeddings provider")) {
+          //   knownError = true;
+          //   const toastOption = "See Docs";
+          //   void this.ide
+          //     .showToast(
+          //       "error",
+          //       `Set up an embeddings model to use @${name}`,
+          //       toastOption,
+          //     )
+          //     .then((userSelection) => {
+          //       if (userSelection === toastOption) {
+          //         void this.ide.openUrl(
+          //           "https://docs.continue.dev/customize/model-roles/embeddings",
+          //         );
+          //       }
+          //     });
+          // }
         }
         if (!knownError) {
           void this.ide.showToast(
@@ -636,6 +658,7 @@ export class Core {
         params,
         historyIndex,
         selectedCode,
+        completionOptions,
       } = msg.data;
 
       const { config } = await configHandler.loadConfig();
@@ -684,6 +707,7 @@ export class Core {
           config,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
+          completionOptions,
         })) {
           if (abortedMessageIds.has(msg.messageId)) {
             abortedMessageIds.delete(msg.messageId);
@@ -807,6 +831,11 @@ export class Core {
 
     // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config || config.disableIndexing) {
+        return; // TODO silent in case of commands?
+      }
+      walkDirCache.invalidate();
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
         await codebaseIndexer.clearIndexes();
@@ -834,10 +863,12 @@ export class Core {
     // TODO - remove remaining logic for these from IDEs where possible
     on("files/changed", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
         for (const uri of data.uris) {
-          // Listen for file changes in the workspace
-          // URI TODO is this equality statement valid?
-          if (URI.equal(uri, localPathToUri(getConfigJsonPath()))) {
+          const currentProfileUri =
+            this.configHandler.currentProfile?.profileDescription.uri ?? "";
+
+          if (URI.equal(uri, currentProfileUri)) {
             // Trigger a toast notification to provide UI feedback that config has been updated
             const showToast =
               this.globalContext.get("showConfigUpdateToast") ?? true;
@@ -851,6 +882,8 @@ export class Core {
                 this.globalContext.update("showConfigUpdateToast", false);
               }
             }
+            await this.configHandler.reloadConfig();
+            continue;
           }
 
           if (
@@ -864,32 +897,71 @@ export class Core {
             uri.endsWith(".gitignore")
           ) {
             // Reindex the workspaces
-            this.invoke("index/forceReIndex", undefined);
+            this.invoke("index/forceReIndex", {
+              shouldClearIndexes: true,
+            });
           } else {
-            // Reindex the file
-            await this.refreshCodebaseIndexFiles([uri]);
+            const { config } = await this.configHandler.loadConfig();
+            if (config && !config.disableIndexing) {
+              // Reindex the file
+              const ignore = await shouldIgnore(uri, this.ide);
+              if (!ignore) {
+                await this.refreshCodebaseIndexFiles([uri]);
+              }
+            }
           }
         }
       }
     });
 
-    on("files/created", async ({ data }) => {
-      if (data?.uris?.length) {
+    const refreshIfNotIgnored = async (uris: string[]) => {
+      const toRefresh: string[] = [];
+      for (const uri of uris) {
+        const ignore = await shouldIgnore(uri, ide);
+        if (!ignore) {
+          toRefresh.push(uri);
+        }
+      }
+      if (toRefresh.length > 0) {
         this.messenger.send("refreshSubmenuItems", {
           providers: ["file"],
         });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        const { config } = await this.configHandler.loadConfig();
+        if (config && !config.disableIndexing) {
+          await this.refreshCodebaseIndexFiles(toRefresh);
+        }
+      }
+    };
+
+    on("files/created", async ({ data }) => {
+      if (data?.uris?.length) {
+        walkDirCache.invalidate();
+        void refreshIfNotIgnored(data.uris);
+
+        // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
+        for (const uri of data.uris) {
+          if (isLocalAssistantFile(uri)) {
+            await this.configHandler.loadAssistantsForSelectedOrg();
+          }
+        }
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: ["file"],
-        });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        walkDirCache.invalidate();
+        void refreshIfNotIgnored(data.uris);
       }
     });
+
+    on("files/closed", async ({ data }) => {
+      if (data.uris) {
+        this.messenger.send("didCloseFiles", {
+          uris: data.uris,
+        });
+      }
+    });
+
     on("files/opened", async ({ data }) => {
       if (data?.uris?.length) {
         // Do something on files opened
@@ -928,15 +1000,21 @@ export class Core {
     });
     //
 
-    on("didChangeSelectedProfile", (msg) => {
-      void this.configHandler.setSelectedProfile(msg.data.id);
-      void this.configHandler.reloadConfig();
+    on("didChangeSelectedProfile", async (msg) => {
+      await this.configHandler.setSelectedProfile(msg.data.id);
+      await this.configHandler.reloadConfig();
     });
 
-    on("didChangeSelectedOrg", (msg) => {
-      void this.configHandler.setSelectedOrgId(msg.data.id);
-      void this.configHandler.reloadConfig();
-      void this.configHandler.loadPlatformProfiles();
+    on("didChangeSelectedOrg", async (msg) => {
+      await this.configHandler.setSelectedOrgId(msg.data.id);
+      await this.configHandler.loadAssistantsForSelectedOrg();
+      if (msg.data.profileId) {
+        this.invoke("didChangeSelectedProfile", {
+          id: msg.data.profileId,
+        });
+      } else {
+        await this.configHandler.reloadConfig();
+      }
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
@@ -953,19 +1031,15 @@ export class Core {
     });
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      const ignoreInstance = ignore().add(defaultIgnoreFile);
-      let rootDirectory = await this.ide.getWorkspaceDirs();
-      const relativeFilePath = path.relative(rootDirectory[0], filepath);
       try {
-        if (!ignoreInstance.ignores(relativeFilePath)) {
+        const ignore = shouldIgnore(filepath, this.ide);
+        if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
       } catch (e) {
-        if (e instanceof RangeError) {
-          // do nothing, this can happen when editing a file outside the workspace such as `../extensions/.continue-debug/config.json`
-        } else {
-          console.debug("unhandled ignores error", relativeFilePath, e);
-        }
+        console.error(
+          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
+        );
       }
     });
 
@@ -1086,6 +1160,7 @@ export class Core {
     this.messenger.send("refreshSubmenuItems", {
       providers: "dependsOnIndexing",
     });
+    this.indexingCancellationController = undefined;
   }
 
   // private

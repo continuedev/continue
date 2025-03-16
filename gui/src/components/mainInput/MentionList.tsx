@@ -257,7 +257,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     if (queryInputRef.current) {
       queryInputRef.current.focus();
     }
-  }, [querySubmenuItem]);
+  }, [querySubmenuItem, queryInputRef]);
 
   const selectItem = (index: number) => {
     const item = allItems[index];
@@ -378,6 +378,9 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     <ItemsDiv>
       {querySubmenuItem ? (
         <QueryInput
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
           rows={1}
           ref={queryInputRef}
           placeholder={querySubmenuItem.description}
@@ -436,7 +439,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   ref={(el) => (itemRefs.current[index] = el)}
                   className={`item cursor-pointer ${isSelected ? "is-selected" : ""}`}
                   key={index}
-                  onClick={() => selectItem(index)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectItem(index);
+                  }}
                   onMouseEnter={() => setSelectedIndex(index)}
                   data-testid="context-provider-dropdown-item"
                 >

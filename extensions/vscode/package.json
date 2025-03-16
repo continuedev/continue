@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.268",
+  "version": "1.1.12",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -52,6 +52,7 @@
     "llama"
   ],
   "activationEvents": [
+    "onUri",
     "onStartupFinished",
     "onView:continueGUIView"
   ],
@@ -95,11 +96,6 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable Continue for teams beta features. To sign in, click the gear icon to go to the settings page, and click Sign In."
-        },
-        "continue.enableContinueHub": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable Continue Hub (internal)"
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -324,7 +320,7 @@
         "group": "Continue"
       },
       {
-        "command": "continue.focusContinueSessionId",
+        "command": "continue.focusContinueInput",
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
@@ -467,27 +463,27 @@
         {
           "command": "continue.writeCommentsForCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.writeDocstringForCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.fixCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.optimizeCode",
           "group": "Continue",
-          "when": "editorHasSelection"
+          "when": "editorHasSelection && !editorReadonly"
         },
         {
           "command": "continue.fixGrammar",
           "group": "Continue",
-          "when": "editorHasSelection && editorLangId == 'markdown'"
+          "when": "editorHasSelection && editorLangId == 'markdown' && !editorReadonly"
         }
       ],
       "explorer/context": [
@@ -599,7 +595,7 @@
     "e2e:compile": "tsc -p ./tsconfig.e2e.json",
     "e2e:build": "npm --prefix ../../gui run build && npm run package",
     "e2e:create-storage": "mkdir -p ./e2e/storage",
-    "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage",
+    "e2e:get-chromedriver": "CODE_VERSION=\"1.95.0\" extest get-chromedriver --storage ./e2e/storage",
     "e2e:get-vscode": "CODE_VERSION=\"1.95.0\" extest get-vscode --storage ./e2e/storage",
     "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",

@@ -1,20 +1,19 @@
-// NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
-import lance, { Table } from "vectordb";
 
-import { IContinueServerClient } from "../continueServer/interface.js";
+import { isSupportedLanceDbCpuTargetForLinux } from "../config/util";
 import {
   BranchAndDir,
   Chunk,
   ILLM,
   IndexTag,
   IndexingProgressUpdate,
-} from "../index.js";
-import { getLanceDbPath, migrate } from "../util/paths.js";
+} from "../index";
+import { getLanceDbPath, migrate } from "../util/paths";
+import { getUriPathBasename } from "../util/uri";
 
-import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { basicChunker } from "./chunk/basic.js";
+import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
@@ -22,10 +21,10 @@ import {
   MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
-} from "./types.js";
-import { getUriPathBasename } from "../util/uri.js";
+} from "./types";
 
-// LanceDB  converts to lowercase, so names must all be lowercase
+import type * as LanceType from "vectordb";
+
 interface LanceDbRow {
   uuid: string;
   path: string;
@@ -39,16 +38,47 @@ type ItemWithChunks = { item: PathAndCacheKey; chunks: Chunk[] };
 type ChunkMap = Map<string, ItemWithChunks>;
 
 export class LanceDbIndex implements CodebaseIndex {
+  private static lance: typeof LanceType | null = null;
+
   relativeExpectedTime: number = 13;
   get artifactId(): string {
-    return `vectordb::${this.embeddingsProvider.embeddingId}`;
+    return `vectordb::${this.embeddingsProvider?.embeddingId}`;
   }
 
-  constructor(
+  /**
+   * Factory method for creating LanceDbIndex instances.
+   *
+   * We dynamically import LanceDB only when supported to avoid native module loading errors
+   * on incompatible platforms. LanceDB has CPU-specific native dependencies that can crash
+   * the application if loaded on unsupported architectures.
+   *
+   * See isSupportedLanceDbCpuTargetForLinux() for platform compatibility details.
+   */
+  static async create(
+    embeddingsProvider: ILLM,
+    readFile: (filepath: string) => Promise<string>,
+  ): Promise<LanceDbIndex | null> {
+    if (!isSupportedLanceDbCpuTargetForLinux()) {
+      return null;
+    }
+
+    try {
+      this.lance = await import("vectordb");
+      return new LanceDbIndex(embeddingsProvider, readFile);
+    } catch (err) {
+      console.error("Failed to load LanceDB:", err);
+      return null;
+    }
+  }
+
+  private constructor(
     private readonly embeddingsProvider: ILLM,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: IContinueServerClient,
-  ) {}
+  ) {
+    if (!LanceDbIndex.lance) {
+      throw new Error("LanceDB not initialized");
+    }
+  }
 
   tableNameForTag(tag: IndexTag) {
     return tagToString(tag).replace(/[^\w-_.]/g, "");
@@ -98,12 +128,10 @@ export class LanceDbIndex implements CodebaseIndex {
     );
     const embeddings = await this.getEmbeddings(allChunks);
 
-    // Remove undefined embeddings and their corresponding chunks
     for (let i = embeddings.length - 1; i >= 0; i--) {
       if (embeddings[i] === undefined) {
         const chunk = allChunks[i];
         const chunks = chunkMap.get(chunk.filepath)?.chunks;
-
         if (chunks) {
           const index = chunks.findIndex((c) => c === chunk);
           if (index !== -1) {
@@ -143,6 +171,9 @@ export class LanceDbIndex implements CodebaseIndex {
     item: PathAndCacheKey,
     content: string,
   ): Promise<Chunk[]> {
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     const chunks: Chunk[] = [];
 
     const chunkParams = {
@@ -164,6 +195,9 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async getEmbeddings(chunks: Chunk[]): Promise<number[][]> {
+    if (!this.embeddingsProvider) {
+      return [];
+    }
     try {
       return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
     } catch (err) {
@@ -205,6 +239,7 @@ export class LanceDbIndex implements CodebaseIndex {
     markComplete: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
+    const lance = LanceDbIndex.lance!;
     const sqliteDb = await SqliteDb.get();
     await this.createSqliteCacheTable(sqliteDb);
 
@@ -212,15 +247,13 @@ export class LanceDbIndex implements CodebaseIndex {
     const lanceDb = await lance.connect(getLanceDbPath());
     const existingLanceTables = await lanceDb.tableNames();
 
-    let lanceTable: Table<number[]> | undefined = undefined;
+    let lanceTable: LanceType.Table<number[]> | undefined = undefined;
     let needToCreateLanceTable = !existingLanceTables.includes(lanceTableName);
 
-    // Compute
     const addComputedLanceDbRows = async (
       pathAndCacheKeys: PathAndCacheKey[],
       computedRows: LanceDbRow[],
     ) => {
-      // Create table if needed, add computed rows
       if (lanceTable) {
         if (computedRows.length > 0) {
           await lanceTable.add(computedRows);
@@ -236,67 +269,8 @@ export class LanceDbIndex implements CodebaseIndex {
         needToCreateLanceTable = false;
       }
 
-      // Mark item complete
       await markComplete(pathAndCacheKeys, IndexResultType.Compute);
     };
-
-    // Check remote cache
-    if (this.continueServerClient?.connected) {
-      try {
-        const keys = results.compute.map(({ cacheKey }) => cacheKey);
-        const resp = await this.continueServerClient.getFromIndexCache(
-          keys,
-          "embeddings",
-          repoName,
-        );
-        for (const [cacheKey, chunks] of Object.entries(resp.files)) {
-          // Get path for cacheKey
-          const path = results.compute.find(
-            (item) => item.cacheKey === cacheKey,
-          )?.path;
-          if (!path) {
-            console.warn(
-              "Continue server sent a cacheKey that wasn't requested",
-              cacheKey,
-            );
-            continue;
-          }
-
-          // Build LanceDbRow objects
-          const rows: LanceDbRow[] = [];
-          for (const chunk of chunks) {
-            const row = {
-              path,
-              cachekey: cacheKey,
-              uuid: uuidv4(),
-              vector: chunk.vector,
-            };
-            rows.push(row);
-
-            await sqliteDb.run(
-              "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-              row.uuid,
-              row.cachekey,
-              row.path,
-              this.artifactId,
-              JSON.stringify(row.vector),
-              chunk.startLine,
-              chunk.endLine,
-              chunk.contents,
-            );
-          }
-
-          await addComputedLanceDbRows([{ cacheKey, path }], rows);
-        }
-
-        // Remove items that don't need to be recomputed
-        results.compute = results.compute.filter(
-          (item) => !resp.files[item.cacheKey],
-        );
-      } catch (e) {
-        console.log("Error checking remote cache: ", e);
-      }
-    }
 
     yield {
       progress: 0,
@@ -311,12 +285,10 @@ export class LanceDbIndex implements CodebaseIndex {
     await addComputedLanceDbRows(results.compute, dbRows);
     let accumulatedProgress = 0;
 
-    // Add tag - retrieve the computed info from lance sqlite cache
     for (const { path, cacheKey } of results.addTag) {
       const stmt = await sqliteDb.prepare(
-        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
+        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND artifact_id = ?",
         cacheKey,
-        path,
         this.artifactId,
       );
       const cachedItems = await stmt.all();
@@ -355,7 +327,6 @@ export class LanceDbIndex implements CodebaseIndex {
       };
     }
 
-    // Delete or remove tag - remove from lance table)
     if (!needToCreateLanceTable) {
       const toDel = [...results.removeTag, ...results.del];
 
@@ -364,7 +335,6 @@ export class LanceDbIndex implements CodebaseIndex {
       }
 
       for (const { path, cacheKey } of toDel) {
-        // This is where the aforementioned lowercase conversion problem shows
         await lanceTable.delete(
           `cachekey = '${cacheKey}' AND path = '${path}'`,
         );
@@ -380,7 +350,6 @@ export class LanceDbIndex implements CodebaseIndex {
 
     await markComplete(results.removeTag, IndexResultType.RemoveTag);
 
-    // Delete - also remove from sqlite cache
     for (const { path, cacheKey } of results.del) {
       await sqliteDb.run(
         "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
@@ -410,7 +379,7 @@ export class LanceDbIndex implements CodebaseIndex {
     n: number,
     directory: string | undefined,
     vector: number[],
-    db: any, /// lancedb.Connection
+    db: any,
   ): Promise<LanceDbRow[]> {
     const tableName = this.tableNameForTag(tag);
     const tableNames = await db.tableNames();
@@ -422,7 +391,6 @@ export class LanceDbIndex implements CodebaseIndex {
     const table = await db.openTable(tableName);
     let query = table.search(vector);
     if (directory) {
-      // seems like lancedb is only post-filtering, so have to return a bunch of results and slice after
       query = query.where(`path LIKE '${directory}%'`).limit(300);
     } else {
       query = query.limit(n);
@@ -437,6 +405,12 @@ export class LanceDbIndex implements CodebaseIndex {
     tags: BranchAndDir[],
     filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
+    const lance = LanceDbIndex.lance!;
+    if (!this.embeddingsProvider) {
+      return [];
+    }
+
+    // Use just the first chunk of the user query in case it is too long
     const chunks = [];
     for await (const chunk of basicChunker(
       query,

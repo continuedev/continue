@@ -12,25 +12,46 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(
     args: RetrievalPipelineRunArguments,
   ): Promise<Chunk[]> {
-    const { input, nRetrieve, filterDirectory, includeEmbeddings } =
-      this.options;
+    const { input, nRetrieve, filterDirectory, config } = this.options;
 
     let retrievalResults: Chunk[] = [];
 
-    const ftsChunks = await this.retrieveFts(args, nRetrieve);
-    const embeddingsChunks = includeEmbeddings
-      ? await this.retrieveEmbeddings(input, nRetrieve)
-      : [];
-    const recentlyEditedFilesChunks =
-      await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    let ftsChunks: Chunk[] = [];
+    try {
+      ftsChunks = await this.retrieveFts(args, nRetrieve);
+    } catch (error) {
+      console.error("Error retrieving FTS chunks:", error);
+    }
 
-    const repoMapChunks = await requestFilesFromRepoMap(
-      this.options.llm,
-      this.options.config,
-      this.options.ide,
-      input,
-      filterDirectory,
-    );
+    let embeddingsChunks: Chunk[] = [];
+    try {
+      embeddingsChunks = !!config.selectedModelByRole.embed
+        ? await this.retrieveEmbeddings(input, nRetrieve)
+        : [];
+    } catch (error) {
+      console.error("Error retrieving embeddings chunks:", error);
+    }
+
+    let recentlyEditedFilesChunks: Chunk[] = [];
+    try {
+      recentlyEditedFilesChunks =
+        await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    } catch (error) {
+      console.error("Error retrieving recently edited files chunks:", error);
+    }
+
+    let repoMapChunks: Chunk[] = [];
+    try {
+      repoMapChunks = await requestFilesFromRepoMap(
+        this.options.llm,
+        this.options.config,
+        this.options.ide,
+        input,
+        filterDirectory,
+      );
+    } catch (error) {
+      console.error("Error retrieving repo map chunks:", error);
+    }
 
     retrievalResults.push(
       ...recentlyEditedFilesChunks,
@@ -42,7 +63,8 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
       retrievalResults = retrievalResults.filter(
-        (chunk) => !!findUriInDirs(chunk.filepath, [filterDirectory]),
+        (chunk) =>
+          !!findUriInDirs(chunk.filepath, [filterDirectory]).foundInDir,
       );
     }
 
@@ -53,35 +75,44 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   }
 
   private async _rerank(input: string, chunks: Chunk[]): Promise<Chunk[]> {
-    if (!this.options.config.reranker) {
-      throw new Error("No reranker provided");
+    if (!this.options.config.selectedModelByRole.rerank) {
+      throw new Error("No reranker set up");
     }
 
     // remove empty chunks -- some APIs fail on that
     chunks = chunks.filter((chunk) => chunk.content);
 
-    let scores: number[] = await this.options.config.reranker.rerank(
-      input,
-      chunks,
-    );
+    try {
+      let scores: number[] =
+        await this.options.config.selectedModelByRole.rerank.rerank(
+          input,
+          chunks,
+        );
 
-    // Filter out low-scoring results
-    let results = chunks;
-    // let results = chunks.filter(
-    //   (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
-    // );
-    // scores = scores.filter(
-    //   (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
-    // );
+      // Filter out low-scoring results
+      let results = chunks;
+      // let results = chunks.filter(
+      //   (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
+      // );
+      // scores = scores.filter(
+      //   (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
+      // );
 
-    const chunkIndexMap = new Map<Chunk, number>();
-    chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
+      const chunkIndexMap = new Map<Chunk, number>();
+      chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
 
-    results.sort(
-      (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
-    );
-    results = results.slice(-this.options.nFinal);
-    return results;
+      results.sort(
+        (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
+      );
+      results = results.slice(-this.options.nFinal);
+      return results;
+    } catch (e) {
+      void this.options.ide.showToast(
+        "warning",
+        `Failed to rerank retrieval results\n${e}`,
+      );
+      return chunks.slice(-this.options.nFinal);
+    }
   }
 
   private async _expandWithEmbeddings(chunks: Chunk[]): Promise<Chunk[]> {

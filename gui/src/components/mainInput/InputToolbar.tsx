@@ -6,6 +6,8 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
+  vscButtonBackground,
+  vscButtonForeground,
   vscForeground,
   vscInputBackground,
 } from "..";
@@ -46,14 +48,15 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
   }
 `;
 
-const EnterButton = styled.button`
+const EnterButton = styled.button<{ isPrimary?: boolean }>`
   all: unset;
   padding: 2px 4px;
   display: flex;
   align-items: center;
-  background-color: ${lightGray}33;
+  background-color: ${(props) =>
+    props.isPrimary ? vscButtonBackground : lightGray + "33"};
   border-radius: ${defaultBorderRadius};
-  color: ${vscForeground};
+  color: ${(props) => (props.isPrimary ? vscButtonForeground : vscForeground)};
   cursor: pointer;
 
   :disabled {
@@ -67,7 +70,6 @@ export interface ToolbarOptions {
   hideAddContext?: boolean;
   enterText?: string;
   hideSelectModel?: boolean;
-  hideTools?: boolean;
 }
 
 interface InputToolbarProps {
@@ -80,6 +82,7 @@ interface InputToolbarProps {
   activeKey: string | null;
   toolbarOptions?: ToolbarOptions;
   disabled?: boolean;
+  isMainInput?: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -91,10 +94,7 @@ function InputToolbar(props: InputToolbarProps) {
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
-  const toolsSupported =
-    defaultModel &&
-    modelSupportsTools(defaultModel) &&
-    !props.toolbarOptions?.hideTools;
+  const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =
     defaultModel &&
@@ -110,7 +110,6 @@ function InputToolbar(props: InputToolbarProps) {
       <StyledDiv
         isHidden={props.hidden}
         onClick={props.onClick}
-        id="input-toolbar"
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
@@ -131,7 +130,7 @@ function InputToolbar(props: InputToolbarProps) {
                       }
                     }}
                   />
-                  <HoverItem>
+                  <HoverItem className="">
                     <PhotoIcon
                       className="h-4 w-4 hover:brightness-125"
                       data-tooltip-id="image-tooltip"
@@ -165,7 +164,7 @@ function InputToolbar(props: InputToolbarProps) {
         <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
-              className={`${toolsSupported ? "md:flex" : "sm:flex"} hover:underline" hidden transition-colors duration-200`}
+              className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
             >
               {props.activeKey === "Alt" ? (
                 <HoverItem className="underline">
@@ -212,6 +211,7 @@ function InputToolbar(props: InputToolbarProps) {
           )}
 
           <EnterButton
+            isPrimary={props.isMainInput}
             data-testid="submit-input-button"
             onClick={async (e) => {
               if (props.onEnter) {

@@ -1,5 +1,6 @@
 import { Popover } from "@headlessui/react";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -9,7 +10,18 @@ import { getFontSize, isMetaEquivalentKeyPressed } from "../../../util";
 import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
 import AssistantIcon from "./AssistantIcon";
 import { AssistantSelectOptions } from "./AssistantSelectOptions";
-import { getProfileDisplayText } from "./utils";
+
+function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
+  return (
+    <div className="flex max-w-[50vw] items-center gap-0.5">
+      <div className="mr-1 h-4 w-4 flex-shrink-0">
+        <AssistantIcon assistant={props.selectedProfile} />
+      </div>
+      <span className="truncate">{props.selectedProfile.title}</span>
+      <ChevronDownIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+    </div>
+  );
+}
 
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
@@ -68,22 +80,11 @@ export default function AssistantSelect() {
           className="text-lightgray cursor-pointer border-none bg-transparent hover:brightness-125"
           style={{ fontSize: `${getFontSize() - 2}px` }}
         >
-          <div className="flex max-w-[50vw] items-center gap-0.5">
-            <div className="mr-1 h-4 w-4 flex-shrink-0">
-              <AssistantIcon assistant={selectedProfile} />
-            </div>
-            <span className="truncate">
-              {getProfileDisplayText(selectedProfile)}
-            </span>
-            <ChevronDownIcon
-              className="h-3 w-3 flex-shrink-0"
-              aria-hidden="true"
-            />
-          </div>
+          <AssistantSelectButton selectedProfile={selectedProfile} />
         </Popover.Button>
 
         <PopoverTransition>
-          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border border-gray-400 p-0">
+          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex min-w-[200px] max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border-2 border-zinc-600 p-0">
             <AssistantSelectOptions
               onClose={() => {
                 if (buttonRef.current) {

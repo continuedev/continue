@@ -399,7 +399,8 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("gpt") ||
     lowerCaseModel.includes("davinci-002") ||
     lowerCaseModel.includes("claude") ||
-    lowerCaseModel.includes("granite3")
+    lowerCaseModel.includes("granite3") ||
+    lowerCaseModel.includes("granite-3")
   ) {
     return holeFillerTemplate;
   }

@@ -5,40 +5,7 @@ description: How to customize Edit
 keywords: [edit, cmd i, works]
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
-You can configure a particular model to be used for Edit:
-
-<Tabs groupId="config-example">
-  <TabItem value="yaml" label="YAML">
-  Use model roles.
-  ```yaml title="Package or config.yaml"
-  models:
-    - name: Claude 3.5 Sonnet
-      provider: anthropic
-      model: claude-3-5-sonnet-latest
-      apiKey: <YOUR_ANTHROPIC_API_KEY>
-      roles:
-        - edit
-  ```
-  </TabItem>
-  <TabItem value="json" label="JSON">
-  Set the `experimental.modelRoles.inlineEdit` property in `config.json`.
-  ```json title="config.json"
-  {
-    "models": {
-      "name": "Claude 3.5 Sonnet",
-      "provider": "anthropic",
-      "model": "claude-3-5-sonnet-latest",
-      "apiKey": "<YOUR_ANTHROPIC_API_KEY>"
-    },
-    "experimental": {
-      "modelRoles": {
-          "inlineEdit": "Claude 3.5 Sonnet",
-      }
-    }
-  }
-  ```
-  </TabItem>
-</Tabs>
+You can configure a particular model to be used for Edit by setting/overriding `roles` in the model's YAML config. See [Edit role](../customize/model-roles/edit.mdx) for more details.

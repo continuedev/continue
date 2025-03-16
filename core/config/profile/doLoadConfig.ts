@@ -4,6 +4,7 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
+  ModelRole,
 } from "@continuedev/config-yaml";
 import {
   ContinueConfig,
@@ -18,10 +19,12 @@ import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
+import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
 import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
+import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
@@ -33,7 +36,8 @@ export default async function doLoadConfig(
   overrideConfigJson: SerializedContinueConfig | undefined,
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
-  workspaceId?: string,
+  profileId: string,
+  overrideConfigYamlByPath: string | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
@@ -48,7 +52,9 @@ export default async function doLoadConfig(
     migrateJsonSharedConfig(configJsonPath, ide);
   }
 
-  const configYamlPath = getConfigYamlPath(ideInfo.ideType);
+  const configYamlPath = localPathOrUriToPath(
+    overrideConfigYamlByPath || getConfigYamlPath(ideInfo.ideType),
+  );
 
   let newConfig: ContinueConfig | undefined;
   let errors: ConfigValidationError[] | undefined;
@@ -59,13 +65,14 @@ export default async function doLoadConfig(
       ide,
       workspaceConfigs.map((c) => JSON.stringify(c)),
       ideSettings,
-      ideInfo.ideType,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,
       overrideConfigYaml,
       platformConfigMetadata,
       controlPlaneClient,
+      configYamlPath,
     );
     newConfig = result.config;
     errors = result.errors;
@@ -75,7 +82,7 @@ export default async function doLoadConfig(
       ide,
       workspaceConfigs,
       ideSettings,
-      ideInfo.ideType,
+      ideInfo,
       uniqueId,
       writeLog,
       workOsAccessToken,
@@ -84,6 +91,11 @@ export default async function doLoadConfig(
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
+  }
+
+  // Rectify model selections for each role
+  if (newConfig) {
+    newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
   }
 
   if (configLoadInterrupted || !newConfig) {
@@ -117,7 +129,7 @@ export default async function doLoadConfig(
     controlPlaneProxyUrl += "/";
   }
   const controlPlaneProxyInfo = {
-    workspaceId,
+    profileId,
     controlPlaneProxyUrl,
     workOsAccessToken,
   };
@@ -147,21 +159,26 @@ async function injectControlPlaneProxyInfo(
   config: ContinueConfig,
   info: ControlPlaneProxyInfo,
 ): Promise<ContinueConfig> {
-  [...config.models, ...(config.tabAutocompleteModels ?? [])].forEach(
-    async (model) => {
+  Object.keys(config.modelsByRole).forEach((key) => {
+    config.modelsByRole[key as ModelRole].forEach((model) => {
       if (model.providerName === "continue-proxy") {
         (model as ContinueProxy).controlPlaneProxyInfo = info;
       }
-    },
-  );
+    });
+  });
 
-  if (config.embeddingsProvider?.providerName === "continue-proxy") {
-    (config.embeddingsProvider as ContinueProxy).controlPlaneProxyInfo = info;
-  }
+  Object.keys(config.selectedModelByRole).forEach((key) => {
+    const model = config.selectedModelByRole[key as ModelRole];
+    if (model?.providerName === "continue-proxy") {
+      (model as ContinueProxy).controlPlaneProxyInfo = info;
+    }
+  });
 
-  if (config.reranker?.providerName === "continue-proxy") {
-    (config.reranker as ContinueProxy).controlPlaneProxyInfo = info;
-  }
+  config.models.forEach((model) => {
+    if (model.providerName === "continue-proxy") {
+      (model as ContinueProxy).controlPlaneProxyInfo = info;
+    }
+  });
 
   return config;
 }

@@ -5,7 +5,10 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setConfigError, setConfigResult } from "../redux/slices/configSlice";
+import {
+  selectDefaultModel,
+  setConfigResult,
+} from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
@@ -13,21 +16,19 @@ import {
   setInactive,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
-import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 
 function useSetup() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
-  const defaultModelTitle = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
+  const defaultModel = useAppSelector(selectDefaultModel);
 
   const hasLoadedConfig = useRef(false);
 
@@ -209,10 +210,6 @@ function useSetup() {
     dispatch(setTTSActive(status));
   });
 
-  useWebviewListener("configError", async (error) => {
-    dispatch(setConfigError(error));
-  });
-
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
     dispatch(
@@ -239,9 +236,9 @@ function useSetup() {
   useWebviewListener(
     "getDefaultModelTitle",
     async () => {
-      return defaultModelTitle;
+      return defaultModel?.title;
     },
-    [defaultModelTitle],
+    [defaultModel],
   );
 }
 

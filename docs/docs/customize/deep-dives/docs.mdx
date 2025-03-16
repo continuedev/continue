@@ -14,8 +14,8 @@ keywords:
 toc_max_heading_level: 5
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 # @Docs
 
@@ -62,6 +62,10 @@ Pre-indexed docs are only available in VS Code because the VS Code extension shi
 
 ## Indexing Your Own Documentation
 
+### Hub `docs` Blocks
+
+@Docs uses [`docs` blocks](../../hub/blocks/block-types.md#docs) in Assistants from the hub. Visit the hub to [explore `docs` blocks](https://hub.continue.dev/explore/docs) or [create your own](https://hub.continue.dev/new?type=block&blockType=docs).
+
 ### Through the `@Docs` Context Provider
 
 To add a single documentation site, we recommend using the **Add Documentation** Form within the GUI. This can be accessed
@@ -85,7 +89,7 @@ Documentation sources may be suggested based on package files in your repo. This
 
 ![Add documentation form](/img/docs-form.png)
 
-### Through global configuration
+### In a configuration file
 
 For bulk documentation site adds or edits, we recommend editing your global configuration file directly. Documentation sites are stored in an array within `docs` in your global configuration, as follows:
 
@@ -121,7 +125,7 @@ Indexing will re-sync upon saving the configuration file.
 
 ### Using Your Embeddings Provider
 
-If you have set up an [embeddings provider](../model-types/embeddings.mdx), @docs will use your embeddings provider. Switching embeddings providers will trigger a re-index of all documentation sites in your configuration.
+If you have set up an [embeddings provider](../model-roles/embeddings.mdx), @docs will use your embeddings provider. Switching embeddings providers will trigger a re-index of all documentation sites in your configuration.
 
 ### Reranking
 
@@ -133,7 +137,7 @@ As with [@Codebase context provider configuration](./codebase#configuration), yo
   context:
     - provider: docs
       params:
-        nRetrieve: 25 # The number of docs to retreive from the embeddings query
+        nRetrieve: 25 # The number of docs to retrieve from the embeddings query
         nFinal: 5 # The number of docs chunks to return IF reranking
         useReranking: true # use reranking if a reranker is configured (defaults to true)
   ```
@@ -145,7 +149,7 @@ As with [@Codebase context provider configuration](./codebase#configuration), yo
       {
         "name": "docs",
         "params": {
-          "nRetrieve": 25, // The number of docs to retreive from the embeddings query
+          "nRetrieve": 25, // The number of docs to retrieve from the embeddings query
           "nFinal": 5, // The number of docs chunks to return IF reranking
           "useReranking": true // use reranking if a reranker is configured (defaults to true)
         }
@@ -278,7 +282,7 @@ The following configuration example works out of the box for VS Code. This uses 
 
 ### Jetbrains minimal setup
 
-Here is the equivalent minimal example for Jetbrains, which requires setting up an [embeddings provider](../model-types/embeddings.mdx). Pre-indexed docs will _not_ be accessible.
+Here is the equivalent minimal example for Jetbrains, which requires setting up an [embeddings provider](../model-roles/embeddings.mdx). Pre-indexed docs will _not_ be accessible.
 
 <Tabs groupId="config-example">
   <TabItem value="yaml" label="YAML">

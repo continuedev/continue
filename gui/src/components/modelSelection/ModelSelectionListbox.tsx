@@ -1,11 +1,10 @@
-import { Transition } from "@headlessui/react";
+import { Listbox, Transition } from "@headlessui/react";
 import {
   CheckIcon,
   ChevronUpDownIcon,
   CubeIcon,
 } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
-import { Listbox } from "@headlessui/react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,

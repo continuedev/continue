@@ -301,7 +301,9 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
   }
 
-  const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
+  // Ensure we're using the correct history key - chat for main input, edit for edit mode
+  const historyKey = props.historyKey === 'edit' ? 'edit' : 'chat';
+  const { prevRef, nextRef, addRef } = useInputHistory(historyKey);
 
   const editor: Editor | null = useEditor({
     extensions: [
@@ -424,7 +426,8 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
             Escape: () => {
               if (inDropdownRef.current || !isInEditModeRef.current) {
-                return false;
+                ideMessenger.post("focusEditor", undefined);
+                return true;
               }
               (async () => {
                 await dispatch(
@@ -591,11 +594,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   useEffect(() => {
     if (editor) {
       const handleFocus = () => {
-        debouncedShouldHideToolbar(false);
+        setShouldHideToolbar(false);
       };
 
       const handleBlur = () => {
-        debouncedShouldHideToolbar(true);
+        // TODO - make toolbar auto-hiding work without breaking tool dropdown focus
+        // debouncedShouldHideToolbar(true);
       };
 
       editor.on("focus", handleFocus);
@@ -658,9 +662,9 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      if (props.isMainInput) {
-        addRef.current(json);
-      }
+      // Always add to input history regardless of input type
+      // This ensures that both chat and edit modes maintain their own history
+      addRef.current(json);
 
       props.onEnter(json, modifiers, editor);
     },
@@ -987,6 +991,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           }}
         />
         <InputToolbar
+          isMainInput={props.isMainInput}
           toolbarOptions={props.toolbarOptions}
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}

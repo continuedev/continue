@@ -36,6 +36,7 @@ class FolderContextProvider extends BaseContextProvider {
       args.ide,
       {
         onlyDirs: true,
+        source: "load submenu items - folder",
       },
       workspaceDirs,
     );
