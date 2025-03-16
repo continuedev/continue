@@ -424,7 +424,8 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
             Escape: () => {
               if (inDropdownRef.current || !isInEditModeRef.current) {
-                return false;
+                ideMessenger.post("focusEditor", undefined);
+                return true;
               }
               (async () => {
                 await dispatch(
