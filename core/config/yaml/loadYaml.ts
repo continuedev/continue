@@ -20,7 +20,6 @@ import {
   IDE,
   IdeInfo,
   IdeSettings,
-  SlashCommand,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
 import { AllRerankers } from "../../context/allRerankers";
@@ -97,23 +96,6 @@ async function loadConfigYaml(
   };
 }
 
-async function slashCommandsFromV1PromptFiles(
-  ide: IDE,
-): Promise<SlashCommand[]> {
-  const slashCommands: SlashCommand[] = [];
-
-  const promptFiles = await getAllPromptFiles(ide, undefined, true);
-
-  for (const file of promptFiles) {
-    const slashCommand = slashCommandFromPromptFileV1(file.path, file.content);
-    if (slashCommand) {
-      slashCommands.push(slashCommand);
-    }
-  }
-
-  return slashCommands;
-}
-
 async function configYamlToContinueConfig(
   config: AssistantUnrolled,
   ide: IDE,
@@ -127,10 +109,7 @@ async function configYamlToContinueConfig(
 ): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const localErrors: ConfigValidationError[] = [];
   const continueConfig: ContinueConfig = {
-    slashCommands: [
-      ...(await slashCommandsFromV1PromptFiles(ide)),
-      ...(config.prompts?.map(slashFromCustomCommand) ?? []),
-    ],
+    slashCommands: [],
     models: [],
     tools: allTools,
     systemMessage: config.rules?.join("\n"),
@@ -171,6 +150,45 @@ async function configYamlToContinueConfig(
     },
     data: config.data,
   };
+
+  // Prompt files -
+  try {
+    const promptFiles = await getAllPromptFiles(ide, undefined, true);
+
+    for (const file of promptFiles) {
+      try {
+        const slashCommand = slashCommandFromPromptFileV1(
+          file.path,
+          file.content,
+        );
+        if (slashCommand) {
+          continueConfig.slashCommands?.push(slashCommand);
+        }
+      } catch (e) {
+        localErrors.push({
+          fatal: false,
+          message: `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`,
+        });
+      }
+    }
+  } catch (e) {
+    localErrors.push({
+      fatal: false,
+      message: `Error loading local prompt files: ${e instanceof Error ? e.message : e}`,
+    });
+  }
+
+  config.prompts?.forEach((prompt) => {
+    try {
+      const slashCommand = slashFromCustomCommand(prompt);
+      continueConfig.slashCommands?.push(slashCommand);
+    } catch (e) {
+      localErrors.push({
+        message: `Error loading prompt ${prompt.name}: ${e instanceof Error ? e.message : e}`,
+        fatal: false,
+      });
+    }
+  });
 
   // Models
   const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
