@@ -5,7 +5,10 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setConfigResult } from "../redux/slices/configSlice";
+import {
+  selectDefaultModel,
+  setConfigResult,
+} from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
@@ -25,9 +28,7 @@ function useSetup() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
-  const defaultModelTitle = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
+  const defaultModel = useAppSelector(selectDefaultModel);
 
   const hasLoadedConfig = useRef(false);
 
@@ -235,9 +236,9 @@ function useSetup() {
   useWebviewListener(
     "getDefaultModelTitle",
     async () => {
-      return defaultModelTitle;
+      return defaultModel?.title;
     },
-    [defaultModelTitle],
+    [defaultModel],
   );
 }
 

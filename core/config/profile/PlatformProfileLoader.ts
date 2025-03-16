@@ -80,7 +80,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    if (this.configResult.errors?.length) {
+    if (this.configResult.errors?.find((e) => e.fatal)) {
       return {
         config: undefined,
         errors: this.configResult.errors,
@@ -103,7 +103,11 @@ export default class PlatformProfileLoader implements IProfileLoader {
       undefined,
     );
 
-    return results;
+    return {
+      config: results.config,
+      errors: [...(this.configResult.errors ?? []), ...(results.errors ?? [])],
+      configLoadInterrupted: results.configLoadInterrupted,
+    };
   }
 
   setIsActive(isActive: boolean): void {}

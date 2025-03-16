@@ -92,10 +92,7 @@ async function loadConfigYaml(
   // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
   return {
     config,
-    errors: errors.map((error) => ({
-      message: error.message,
-      fatal: error.fatal,
-    })),
+    errors,
     configLoadInterrupted: false,
   };
 }
@@ -128,7 +125,7 @@ async function configYamlToContinueConfig(
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   allowFreeTrial: boolean = true,
 ): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
-  const errors: ConfigValidationError[] = [];
+  const localErrors: ConfigValidationError[] = [];
   const continueConfig: ContinueConfig = {
     slashCommands: [
       ...(await slashCommandsFromV1PromptFiles(ide)),
@@ -179,85 +176,94 @@ async function configYamlToContinueConfig(
   const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
     model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
-    const llms = await llmsFromModelConfig(
-      model,
-      ide,
-      uniqueId,
-      ideSettings,
-      writeLog,
-      platformConfigMetadata,
-      continueConfig.systemMessage,
-    );
+    try {
+      const llms = await llmsFromModelConfig(
+        model,
+        ide,
+        uniqueId,
+        ideSettings,
+        writeLog,
+        platformConfigMetadata,
+        continueConfig.systemMessage,
+      );
 
-    //
-    if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
-      continueConfig.models.push(...llms);
-    }
+      //
+      if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
+        continueConfig.models.push(...llms);
+      }
 
-    if (model.roles?.includes("chat")) {
-      continueConfig.modelsByRole.chat.push(...llms);
-    }
+      if (model.roles?.includes("chat")) {
+        continueConfig.modelsByRole.chat.push(...llms);
+      }
 
-    if (model.roles?.includes("summarize")) {
-      continueConfig.modelsByRole.summarize.push(...llms);
-    }
+      if (model.roles?.includes("summarize")) {
+        continueConfig.modelsByRole.summarize.push(...llms);
+      }
 
-    if (model.roles?.includes("apply")) {
-      continueConfig.modelsByRole.apply.push(...llms);
-    }
+      if (model.roles?.includes("apply")) {
+        continueConfig.modelsByRole.apply.push(...llms);
+      }
 
-    if (model.roles?.includes("edit")) {
-      continueConfig.modelsByRole.edit.push(...llms);
-    }
+      if (model.roles?.includes("edit")) {
+        continueConfig.modelsByRole.edit.push(...llms);
+      }
 
-    if (model.roles?.includes("autocomplete")) {
-      continueConfig.modelsByRole.autocomplete.push(...llms);
-    }
+      if (model.roles?.includes("autocomplete")) {
+        continueConfig.modelsByRole.autocomplete.push(...llms);
+      }
 
-    if (model.roles?.includes("embed")) {
-      const { provider, ...options } = model;
-      const embeddingsProviderClass = allEmbeddingsProviders[provider];
-      if (embeddingsProviderClass) {
-        if (
-          embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-        ) {
-          continueConfig.modelsByRole.embed.push(new embeddingsProviderClass());
+      if (model.roles?.includes("embed")) {
+        const { provider, ...options } = model;
+        const embeddingsProviderClass = allEmbeddingsProviders[provider];
+        if (embeddingsProviderClass) {
+          if (
+            embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
+          ) {
+            continueConfig.modelsByRole.embed.push(
+              new embeddingsProviderClass(),
+            );
+          } else {
+            continueConfig.modelsByRole.embed.push(
+              new embeddingsProviderClass(
+                options,
+                (url: string | URL, init: any) =>
+                  fetchwithRequestOptions(url, init, {
+                    ...options.requestOptions,
+                  }),
+              ),
+            );
+          }
         } else {
-          continueConfig.modelsByRole.embed.push(
-            new embeddingsProviderClass(
-              options,
-              (url: string | URL, init: any) =>
-                fetchwithRequestOptions(url, init, {
-                  ...options.requestOptions,
-                }),
+          localErrors.push({
+            fatal: false,
+            message: `Unsupported embeddings model provider found: ${provider}`,
+          });
+        }
+      }
+
+      if (model.roles?.includes("rerank")) {
+        const { provider, ...options } = model;
+        const rerankerClass = AllRerankers[provider];
+        if (rerankerClass) {
+          continueConfig.modelsByRole.rerank.push(
+            new rerankerClass(options, (url: string | URL, init: any) =>
+              fetchwithRequestOptions(url, init, {
+                ...options.requestOptions,
+              }),
             ),
           );
+        } else {
+          localErrors.push({
+            fatal: false,
+            message: `Unsupported reranking model provider found: ${provider}`,
+          });
         }
-      } else {
-        errors.push({
-          fatal: false,
-          message: `Unsupported embeddings model provider found: ${provider}`,
-        });
       }
-    }
-
-    if (model.roles?.includes("rerank")) {
-      const { provider, ...options } = model;
-      const rerankerClass = AllRerankers[provider];
-      if (rerankerClass) {
-        continueConfig.modelsByRole.rerank.push(
-          new rerankerClass(options, (url: string | URL, init: any) =>
-            fetchwithRequestOptions(url, init, {
-              ...options.requestOptions,
-            }),
-          ),
-        );
-      } else {
-        errors.push({
-          fatal: false,
-          message: `Unsupported reranking model provider found: ${provider}`,
-        });
-      }
+    } catch (e) {
+      localErrors.push({
+        fatal: false,
+        message: `Failed to load model:\nName: ${model.name}\nModel: ${model.model}\nProvider: ${model.provider}\n${e instanceof Error ? e.message : e}`,
+      });
     }
   }
 
@@ -279,9 +285,20 @@ async function configYamlToContinueConfig(
       (model) => model.providerName === "free-trial",
     );
     if (freeTrialModels.length > 0) {
-      const ghAuthToken = await ide.getGitHubAuthToken({});
-      for (const model of freeTrialModels) {
-        (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+      try {
+        const ghAuthToken = await ide.getGitHubAuthToken({});
+        for (const model of freeTrialModels) {
+          (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+        }
+      } catch (e) {
+        localErrors.push({
+          fatal: false,
+          message: `Failed to obtain GitHub auth token for free trial:\n${e instanceof Error ? e.message : e}`,
+        });
+        // Remove free trial models
+        continueConfig.models = continueConfig.models.filter(
+          (model) => model.providerName !== "free-trial",
+        );
       }
     }
   } else {
@@ -310,7 +327,10 @@ async function configYamlToContinueConfig(
       const cls = contextProviderClassFromName(context.provider) as any;
       if (!cls) {
         if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
-          console.warn(`Unknown context provider ${context.provider}`);
+          localErrors.push({
+            fatal: false,
+            message: `Unknown context provider ${context.provider}`,
+          });
         }
         return undefined;
       }
@@ -360,7 +380,7 @@ async function configYamlToContinueConfig(
           server.faviconUrl,
         );
         if (mcpError) {
-          errors.push(mcpError);
+          localErrors.push(mcpError);
         }
       } catch (e) {
         let errorMessage = `Failed to load MCP server ${server.name}`;
@@ -371,7 +391,7 @@ async function configYamlToContinueConfig(
             errorMessage += ": " + e.message;
           }
         }
-        errors.push({
+        localErrors.push({
           fatal: false,
           message: errorMessage,
         });
@@ -381,7 +401,7 @@ async function configYamlToContinueConfig(
     }) ?? [],
   );
 
-  return { config: continueConfig, errors };
+  return { config: continueConfig, errors: localErrors };
 }
 
 export async function loadContinueConfigFromYaml(
@@ -421,28 +441,37 @@ export async function loadContinueConfigFromYaml(
     };
   }
 
-  const { config: continueConfig, errors } = await configYamlToContinueConfig(
-    configYamlResult.config,
-    ide,
-    ideSettings,
-    ideInfo,
-    uniqueId,
-    writeLog,
-    workOsAccessToken,
-    platformConfigMetadata,
-  );
+  const { config: continueConfig, errors: localErrors } =
+    await configYamlToContinueConfig(
+      configYamlResult.config,
+      ide,
+      ideSettings,
+      ideInfo,
+      uniqueId,
+      writeLog,
+      workOsAccessToken,
+      platformConfigMetadata,
+    );
 
-  const systemPromptDotFile = await getSystemPromptDotFile(ide);
-  if (systemPromptDotFile) {
-    if (continueConfig.systemMessage) {
-      continueConfig.systemMessage += "\n\n" + systemPromptDotFile;
-    } else {
-      continueConfig.systemMessage = systemPromptDotFile;
+  try {
+    const systemPromptDotFile = await getSystemPromptDotFile(ide);
+    if (systemPromptDotFile) {
+      if (continueConfig.systemMessage) {
+        continueConfig.systemMessage += "\n\n" + systemPromptDotFile;
+      } else {
+        continueConfig.systemMessage = systemPromptDotFile;
+      }
     }
+  } catch (e) {
+    localErrors.push({
+      fatal: false,
+      message: `Failed to load system prompt dot file: ${e instanceof Error ? e.message : e}`,
+    });
   }
 
   // Apply shared config
   // TODO: override several of these values with user/org shared config
+  // Don't try catch this - has security implications and failure should be fatal
   const sharedConfig = new GlobalContext().getSharedConfig();
   const withShared = modifyAnyConfigWithSharedConfig(
     continueConfig,
@@ -454,7 +483,7 @@ export async function loadContinueConfigFromYaml(
 
   return {
     config: withShared,
-    errors: [...(configYamlResult.errors ?? []), ...errors],
+    errors: [...(configYamlResult.errors ?? []), ...localErrors],
     configLoadInterrupted: false,
   };
 }
