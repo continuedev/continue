@@ -9,7 +9,6 @@ import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 import {
   mockPathAndCacheKey,
   mockTag,
-  testContinueServerClient,
   updateIndexAndAwaitGenerator,
 } from "./test/indexing";
 import { IndexResultType } from "./types";
@@ -34,11 +33,10 @@ describe.skip("ChunkCodebaseIndex", () => {
       throw new Error("No embeddings model selected");
     }
 
-    index = new LanceDbIndex(
+    index = (await LanceDbIndex.create(
       mockConfig.selectedModelByRole.embed,
       testIde.readFile.bind(testIde),
-      testContinueServerClient,
-    );
+    ))!;
 
     sqliteDb = await SqliteDb.get();
     lanceDb = await lance.connect(getLanceDbPath());

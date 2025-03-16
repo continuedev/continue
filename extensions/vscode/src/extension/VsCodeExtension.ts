@@ -28,6 +28,7 @@ import { registerAllPromptFilesCompletionProviders } from "../lang-server/prompt
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { UriEventHandler } from "../stubs/uriHandler";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
@@ -55,10 +56,11 @@ export class VsCodeExtension {
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
+  private uriHandler = new UriEventHandler();
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
-    this.workOsAuthProvider = new WorkOsAuthProvider(context);
+    this.workOsAuthProvider = new WorkOsAuthProvider(context, this.uriHandler);
     this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
 
@@ -158,7 +160,7 @@ export class VsCodeExtension {
     });
 
     this.configHandler.onConfigUpdate(
-      async ({ config: newConfig, errors, configLoadInterrupted }) => {
+      async ({ config: newConfig, configLoadInterrupted }) => {
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);
@@ -192,6 +194,41 @@ export class VsCodeExtension {
         ),
       ),
     );
+
+    // Handle uri events
+    this.uriHandler.event((uri) => {
+      const queryParams = new URLSearchParams(uri.query);
+      let profileId = queryParams.get("profile_id");
+      let orgId = queryParams.get("org_id");
+
+      if (orgId) {
+        if (orgId === "null") {
+          orgId = null;
+        }
+        // In case org id is passed with profile id
+        // Make sure org is updated before profile is set
+        if (profileId) {
+          if (profileId === "null") {
+            profileId = null;
+          }
+          this.core.invoke("didChangeSelectedOrg", {
+            id: orgId,
+            profileId,
+          });
+        } else {
+          this.core.invoke("didChangeSelectedOrg", {
+            id: orgId,
+          });
+        }
+      } else if (profileId) {
+        if (profileId === "null") {
+          profileId = null;
+        }
+        this.core.invoke("didChangeSelectedProfile", {
+          id: profileId,
+        });
+      }
+    });
 
     // Battery
     this.battery = new Battery();
@@ -270,6 +307,12 @@ export class VsCodeExtension {
     vscode.workspace.onDidDeleteFiles(async (event) => {
       this.core.invoke("files/deleted", {
         uris: event.files.map((uri) => uri.toString()),
+      });
+    });
+
+    vscode.workspace.onDidCloseTextDocument(async (event) => {
+      this.core.invoke("files/closed", {
+        uris: [event.uri.toString()],
       });
     });
 

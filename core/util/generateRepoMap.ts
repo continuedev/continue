@@ -24,7 +24,8 @@ class RepoMapGenerator {
   private allUris: string[] = [];
   private pathsInDirsWithSnippets: Set<string> = new Set();
 
-  private BATCH_SIZE = 100;
+  private SNIPPETS_BATCH_SIZE = 100;
+  private URI_BATCH_SIZE = 100;
   private REPO_MAX_CONTEXT_LENGTH_RATIO = 0.5;
   private PREAMBLE =
     "Below is a repository map. \n" +
@@ -50,20 +51,29 @@ class RepoMapGenerator {
 
   async generate(): Promise<string> {
     this.dirs = this.options.dirUris ?? (await this.ide.getWorkspaceDirs());
-    this.allUris = await walkDirs(this.ide, undefined, this.dirs);
+    this.allUris = await walkDirs(
+      this.ide,
+      {
+        source: "generate repo map",
+      },
+      this.dirs,
+    );
 
     // Initialize
     await this.writeToStream(this.PREAMBLE);
 
     if (this.options.includeSignatures) {
       // Process uris and signatures
-      let offset = 0;
+      let snippetOffset = 0;
+      let uriOffset = 0;
       while (true) {
-        const { groupedByUri, hasMore } =
+        const { groupedByUri, hasMoreSnippets, hasMoreUris } =
           await CodeSnippetsCodebaseIndex.getPathsAndSignatures(
             this.allUris,
-            offset,
-            this.BATCH_SIZE,
+            uriOffset,
+            this.URI_BATCH_SIZE,
+            snippetOffset,
+            this.SNIPPETS_BATCH_SIZE,
           );
         // process batch
         for (const [uri, signatures] of Object.entries(groupedByUri)) {
@@ -103,10 +113,17 @@ class RepoMapGenerator {
             await this.writeToStream(content);
           }
         }
-        if (!hasMore || this.contentTokens >= this.maxRepoMapTokens) {
+        if (this.contentTokens >= this.maxRepoMapTokens) {
           break;
         }
-        offset += this.BATCH_SIZE;
+        if (hasMoreSnippets) {
+          snippetOffset += this.SNIPPETS_BATCH_SIZE;
+        } else if (hasMoreUris) {
+          snippetOffset = 0;
+          uriOffset += this.URI_BATCH_SIZE;
+        } else {
+          break;
+        }
       }
 
       // Remaining Uris just so that written repo map isn't incomplete

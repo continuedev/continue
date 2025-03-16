@@ -14,8 +14,8 @@ import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
 import miscReducer from "./slices/miscSlice";
 import sessionReducer from "./slices/sessionSlice";
-import uiReducer from "./slices/uiSlice";
 import tabsReducer from "./slices/tabsSlice";
+import uiReducer from "./slices/uiSlice";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -68,18 +68,21 @@ const migrations: MigrationManifest = {
 
     return {
       config: {
-        defaultModelTitle: oldState?.state?.defaultModelTitle ?? "GPT-4",
+        defaultModelTitle: oldState?.state?.defaultModelTitle ?? undefined,
       },
       session: {
         history: oldState?.state?.history ?? [],
         id: oldState?.state?.sessionId ?? "",
       },
       tabs: {
-        tabs: [{
-          id: Date.now().toString(36) + Math.random().toString(36).substring(2),
-          title: "Chat 1",
-          isActive: true
-        }]
+        tabs: [
+          {
+            id:
+              Date.now().toString(36) + Math.random().toString(36).substring(2),
+            title: "Chat 1",
+            isActive: true,
+          },
+        ],
       },
       _persist: oldState?._persist,
     };

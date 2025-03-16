@@ -15,6 +15,7 @@ import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
+  PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
@@ -85,22 +86,58 @@ export class CodebaseIndexer {
       return [];
     }
 
-    const indexes = [
+    const indexes: CodebaseIndex[] = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
         embeddingsModel.maxEmbeddingChunkSize,
       ), // Chunking must come first
-      new LanceDbIndex(
-        embeddingsModel,
-        this.ide.readFile.bind(this.ide),
-        this.continueServerClient,
-      ),
-      new FullTextSearchCodebaseIndex(),
-      new CodeSnippetsCodebaseIndex(this.ide),
     ];
 
+    const lanceDbIndex = await LanceDbIndex.create(
+      embeddingsModel,
+      this.ide.readFile.bind(this.ide),
+    );
+
+    if (lanceDbIndex) {
+      indexes.push(lanceDbIndex);
+    }
+
+    indexes.push(
+      new FullTextSearchCodebaseIndex(),
+      new CodeSnippetsCodebaseIndex(this.ide),
+    );
+
     return indexes;
+  }
+
+  private totalIndexOps(results: RefreshIndexResults): number {
+    return (
+      results.compute.length +
+      results.del.length +
+      results.addTag.length +
+      results.removeTag.length
+    );
+  }
+
+  private singleFileIndexOps(
+    results: RefreshIndexResults,
+    lastUpdated: PathAndCacheKey[],
+    filePath: string,
+  ): [RefreshIndexResults, PathAndCacheKey[]] {
+    const filterFn = (item: PathAndCacheKey) => item.path === filePath;
+    const compute = results.compute.filter(filterFn);
+    const del = results.del.filter(filterFn);
+    const addTag = results.addTag.filter(filterFn);
+    const removeTag = results.removeTag.filter(filterFn);
+    const newResults = {
+      compute,
+      del,
+      addTag,
+      removeTag,
+    };
+    const newLastUpdated = lastUpdated.filter(filterFn);
+    return [newResults, newLastUpdated];
   }
 
   public async refreshFile(
@@ -120,26 +157,28 @@ export class CodebaseIndexer {
     const repoName = await this.ide.getRepoName(foundInDir);
     const indexesToBuild = await this.getIndexesToBuild();
     const stats = await this.ide.getFileStats([file]);
+    const filePath = Object.keys(stats)[0];
     for (const index of indexesToBuild) {
       const tag = {
         directory: foundInDir,
         branch,
         artifactId: index.artifactId,
       };
-      const [results, lastUpdated, markComplete] =
+      const [fullResults, fullLastUpdated, markComplete] =
         await getComputeDeleteAddRemove(
           tag,
           { ...stats },
           (filepath) => this.ide.readFile(filepath),
           repoName,
         );
-      // since this is only a single file update / save we do not want to actualy remove anything, we just want to recompute for our single file
-      results.removeTag = [];
-      results.addTag = [];
-      results.del = [];
 
+      const [results, lastUpdated] = this.singleFileIndexOps(
+        fullResults,
+        fullLastUpdated,
+        filePath,
+      );
       // Don't update if nothing to update. Some of the indices might do unnecessary setup work
-      if (results.compute.length === 0) {
+      if (this.totalIndexOps(results) + lastUpdated.length === 0) {
         continue;
       }
 
@@ -242,7 +281,9 @@ export class CodebaseIndexer {
         status: "indexing",
       };
       const directoryFiles = [];
-      for await (const p of walkDirAsync(directory, this.ide)) {
+      for await (const p of walkDirAsync(directory, this.ide, {
+        source: "codebase indexing: refresh dirs",
+      })) {
         directoryFiles.push(p);
         if (abortSignal.aborted) {
           yield {
@@ -420,11 +461,7 @@ export class CodebaseIndexer {
           (filepath) => this.ide.readFile(filepath),
           repoName,
         );
-      const totalOps =
-        results.compute.length +
-        results.del.length +
-        results.addTag.length +
-        results.removeTag.length;
+      const totalOps = this.totalIndexOps(results);
       let completedOps = 0;
 
       // Don't update if nothing to update. Some of the indices might do unnecessary setup work

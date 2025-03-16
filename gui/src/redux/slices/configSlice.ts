@@ -6,46 +6,48 @@ import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
 export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
   config: BrowserSerializedContinueConfig;
-  defaultModelTitle: string;
+  defaultModelTitle?: string;
+};
+
+const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
+  slashCommands: [
+    {
+      name: "share",
+      description: "Export the current chat session to markdown",
+    },
+    {
+      name: "cmd",
+      description: "Generate a shell command",
+    },
+  ],
+  contextProviders: [],
+  models: [],
+  tools: [],
+  usePlatform: true,
+  modelsByRole: {
+    chat: [],
+    apply: [],
+    edit: [],
+    summarize: [],
+    autocomplete: [],
+    rerank: [],
+    embed: [],
+  },
+  selectedModelByRole: {
+    chat: null,
+    apply: null,
+    edit: null,
+    summarize: null,
+    autocomplete: null,
+    rerank: null,
+    embed: null,
+  },
 };
 
 const initialState: ConfigState = {
   configError: undefined,
-  defaultModelTitle: "GPT-4",
-  config: {
-    slashCommands: [
-      {
-        name: "share",
-        description: "Export the current chat session to markdown",
-      },
-      {
-        name: "cmd",
-        description: "Generate a shell command",
-      },
-    ],
-    contextProviders: [],
-    models: [],
-    tools: [],
-    usePlatform: true,
-    modelsByRole: {
-      chat: [],
-      apply: [],
-      edit: [],
-      summarize: [],
-      autocomplete: [],
-      rerank: [],
-      embed: [],
-    },
-    selectedModelByRole: {
-      chat: null,
-      apply: null,
-      edit: null,
-      summarize: null,
-      autocomplete: null,
-      rerank: null,
-      embed: null,
-    },
-  },
+  defaultModelTitle: undefined,
+  config: EMPTY_CONFIG,
 };
 
 export const configSlice = createSlice({
@@ -61,29 +63,25 @@ export const configSlice = createSlice({
       const { config, errors } = result;
       state.configError = errors;
 
+      // If an error is found in config on save,
+      // We must invalidate the GUI config too,
+      // Since core won't be able to load config
+      // Don't invalidate the loaded config
       if (!config) {
-        return;
+        state.config = EMPTY_CONFIG;
+        state.defaultModelTitle = undefined;
+      } else {
+        state.config = config;
+        state.defaultModelTitle =
+          config.models.find((model) => model.title === state.defaultModelTitle)
+            ?.title || config.models[0]?.title;
       }
-
-      const defaultModelTitle =
-        config.models.find((model) => model.title === state.defaultModelTitle)
-          ?.title ||
-        config.models[0]?.title ||
-        "";
-      state.config = config;
-      state.defaultModelTitle = defaultModelTitle;
     },
     updateConfig: (
       state,
       { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
     ) => {
       state.config = config;
-    },
-    setConfigError: (
-      state,
-      { payload: error }: PayloadAction<ConfigValidationError[] | undefined>,
-    ) => {
-      state.configError = error;
     },
     setDefaultModel: (
       state,
@@ -136,7 +134,6 @@ export const {
   cycleDefaultModel,
   updateConfig,
   setConfigResult,
-  setConfigError,
 } = configSlice.actions;
 
 export const {

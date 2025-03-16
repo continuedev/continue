@@ -16,7 +16,9 @@ export async function getPromptFilesFromDir(
       return [];
     }
 
-    const uris = await walkDir(dir, ide, { ignoreFiles: [] });
+    const uris = await walkDir(dir, ide, {
+      source: "get dir prompt files",
+    });
     const promptFilePaths = uris.filter((p) => p.endsWith(".prompt"));
     const results = promptFilePaths.map(async (uri) => {
       const content = await ide.readFile(uri); // make a try catch
