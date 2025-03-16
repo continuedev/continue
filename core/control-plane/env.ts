@@ -1,6 +1,9 @@
 import * as fs from "node:fs";
 import { IdeSettings } from "..";
-import { getStagingEnvironmentDotFilePath } from "../util/paths";
+import {
+  getLocalEnvironmentDotFilePath,
+  getStagingEnvironmentDotFilePath,
+} from "../util/paths";
 
 export interface ControlPlaneEnv {
   DEFAULT_CONTROL_PLANE_PROXY_URL: string;
@@ -18,7 +21,7 @@ const WORKOS_CLIENT_ID_STAGING = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ";
 const WORKOS_ENV_ID_PRODUCTION = "continue";
 const WORKOS_ENV_ID_STAGING = "continue-staging";
 
-const PRODUCTION_ENV: ControlPlaneEnv = {
+export const PRODUCTION_ENV: ControlPlaneEnv = {
   DEFAULT_CONTROL_PLANE_PROXY_URL:
     "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/",
   CONTROL_PLANE_URL:
@@ -78,6 +81,11 @@ export function getControlPlaneEnvSync(
   ideTestEnvironment: IdeSettings["continueTestEnvironment"],
   enableControlServerBeta: IdeSettings["enableControlServerBeta"],
 ): ControlPlaneEnv {
+  // Note .local overrides .staging
+  if (fs.existsSync(getLocalEnvironmentDotFilePath())) {
+    return LOCAL_ENV;
+  }
+
   if (fs.existsSync(getStagingEnvironmentDotFilePath())) {
     return STAGING_ENV;
   }

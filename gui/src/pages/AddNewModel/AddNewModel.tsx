@@ -221,13 +221,13 @@ function AddNewModel() {
           disabled={false}
           onClick={(e) => {
             ideMessenger.post("config/openProfile", {
-              profileId: "local",
+              profileId: undefined,
             });
           }}
         >
           <h3 className="my-2 text-center">
             <Cog6ToothIcon className="inline-block h-5 w-5 px-4 align-middle" />
-            Open config.json
+            Open Assistant configuration
           </h3>
         </CustomModelButton>
       </div>
