@@ -1,19 +1,29 @@
-import fs from "node:fs";
+import { PosthogFeatureFlag } from "./posthog";
 
 import { ModelRole } from "@continuedev/config-yaml";
-
+import fs from "node:fs";
 import { SiteIndexingConfig } from "..";
+
 import {
   salvageSharedConfig,
   sharedConfigSchema,
   SharedConfigSchema,
 } from "../config/sharedConfig";
-
 import { getGlobalContextFilePath } from "./paths";
 
 export type GlobalContextModelSelections = Partial<
   Record<ModelRole, string | null>
 >;
+
+// Add this type near the top of the file
+export type FeatureFlagCacheEntry = {
+  lastUpdated: number;
+  value: any;
+};
+
+export type FeatureFlagCache = {
+  flags: Partial<Record<PosthogFeatureFlag, FeatureFlagCacheEntry>>;
+};
 
 export type GlobalContextType = {
   indexingPaused: boolean;
@@ -37,6 +47,7 @@ export type GlobalContextType = {
   hasAlreadyCreatedAPromptFile: boolean;
   showConfigUpdateToast: boolean;
   isSupportedLanceDbCpuTargetForLinux: boolean;
+  featureFlagCache: FeatureFlagCache;
   sharedConfig: SharedConfigSchema;
   failedDocs: SiteIndexingConfig[];
 };
