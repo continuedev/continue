@@ -262,7 +262,7 @@ export class CompletionProvider {
 
       // When using the JetBrains extension, Mark as displayed
       const ideType = (await this.ide.getIdeInfo()).ideType;
-      if (ideType === "jetbrains") {
+      if (ideType.toLowerCase() === "jetbrains") {
         this.markDisplayed(input.completionId, outcome);
       }
 
