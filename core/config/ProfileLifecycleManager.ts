@@ -21,6 +21,7 @@ export interface ProfileDescription {
   id: string;
   iconUrl: string;
   errors: ConfigValidationError[] | undefined;
+  uri: string;
 }
 
 export interface OrganizationDescription {
@@ -77,14 +78,18 @@ export class ProfileLifecycleManager {
     // Set pending config promise
     this.pendingConfigPromise = new Promise(async (resolve, reject) => {
       let result: ConfigResult<ContinueConfig>;
+      // This try catch is expected to catch high-level errors that aren't block-specific
+      // Like invalid json, invalid yaml, file read errors, etc.
+      // NOT block-specific loading errors
       try {
         result = await this.profileLoader.doLoadConfig();
-      } catch (e: any) {
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Error loading config";
         result = {
           errors: [
             {
               fatal: true,
-              message: e.message,
+              message,
             },
           ],
           config: undefined,
@@ -99,7 +104,6 @@ export class ProfileLifecycleManager {
         ).concat(additionalContextProviders);
       }
 
-      this.savedConfigResult = result;
       resolve(result);
     });
 

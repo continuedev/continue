@@ -2,7 +2,6 @@ import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
 
 import { isSupportedLanceDbCpuTargetForLinux } from "../config/util";
-import { IContinueServerClient } from "../continueServer/interface";
 import {
   BranchAndDir,
   Chunk,
@@ -57,7 +56,6 @@ export class LanceDbIndex implements CodebaseIndex {
   static async create(
     embeddingsProvider: ILLM,
     readFile: (filepath: string) => Promise<string>,
-    continueServerClient?: IContinueServerClient,
   ): Promise<LanceDbIndex | null> {
     if (!isSupportedLanceDbCpuTargetForLinux()) {
       return null;
@@ -65,11 +63,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
     try {
       this.lance = await import("vectordb");
-      return new LanceDbIndex(
-        embeddingsProvider,
-        readFile,
-        continueServerClient,
-      );
+      return new LanceDbIndex(embeddingsProvider, readFile);
     } catch (err) {
       console.error("Failed to load LanceDB:", err);
       return null;
@@ -79,7 +73,6 @@ export class LanceDbIndex implements CodebaseIndex {
   private constructor(
     private readonly embeddingsProvider: ILLM,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: IContinueServerClient,
   ) {
     if (!LanceDbIndex.lance) {
       throw new Error("LanceDB not initialized");
@@ -277,60 +270,6 @@ export class LanceDbIndex implements CodebaseIndex {
 
       await markComplete(pathAndCacheKeys, IndexResultType.Compute);
     };
-
-    if (this.continueServerClient?.connected) {
-      try {
-        const keys = results.compute.map(({ cacheKey }) => cacheKey);
-        const resp = await this.continueServerClient.getFromIndexCache(
-          keys,
-          "embeddings",
-          repoName,
-        );
-        for (const [cacheKey, chunks] of Object.entries(resp.files)) {
-          const path = results.compute.find(
-            (item) => item.cacheKey === cacheKey,
-          )?.path;
-          if (!path) {
-            console.warn(
-              "Continue server sent a cacheKey that wasn't requested",
-              cacheKey,
-            );
-            continue;
-          }
-
-          const rows: LanceDbRow[] = [];
-          for (const chunk of chunks) {
-            const row = {
-              path,
-              cachekey: cacheKey,
-              uuid: uuidv4(),
-              vector: chunk.vector,
-            };
-            rows.push(row);
-
-            await sqliteDb.run(
-              "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-              row.uuid,
-              row.cachekey,
-              row.path,
-              this.artifactId,
-              JSON.stringify(row.vector),
-              chunk.startLine,
-              chunk.endLine,
-              chunk.contents,
-            );
-          }
-
-          await addComputedLanceDbRows([{ cacheKey, path }], rows);
-        }
-
-        results.compute = results.compute.filter(
-          (item) => !resp.files[item.cacheKey],
-        );
-      } catch (e) {
-        console.log("Error checking remote cache: ", e);
-      }
-    }
 
     yield {
       progress: 0,

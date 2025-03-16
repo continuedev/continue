@@ -96,7 +96,6 @@ export class ContinueCompletionProvider
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
 
-  _lastVsCodeCompletionInput: VsCodeCompletionInput | undefined;
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -121,28 +120,26 @@ export class ContinueCompletionProvider
       return null;
     }
 
-    // If the text at the range isn't a prefix of the intellisense text,
-    // no completion will be displayed, regardless of what we return
-    if (
-      context.selectedCompletionInfo &&
-      !context.selectedCompletionInfo.text.startsWith(
-        document.getText(context.selectedCompletionInfo.range),
-      )
-    ) {
-      return null;
-    }
-
-    let injectDetails: string | undefined = undefined;
-
-    // The first time intellisense dropdown shows up, and the first choice is selected,
-    // we should not consider this. Only once user explicitly moves down the list
-    const newVsCodeInput = {
-      context,
-      document,
-      position,
-    };
     const selectedCompletionInfo = context.selectedCompletionInfo;
-    this._lastVsCodeCompletionInput = newVsCodeInput;
+
+    // This code checks if there is a selected completion suggestion in the given context and ensures that it is valid
+    // To improve the accuracy of suggestions it checks if the user has typed at least 4 characters
+    // This helps refine and filter out irrelevant autocomplete options
+    if (selectedCompletionInfo) {
+      const { text, range } = selectedCompletionInfo;
+      const typedText = document.getText(range);
+
+      const typedLength = range.end.character - range.start.character;
+
+      if (typedLength < 4) {
+        return null;
+      }
+
+      if (!text.startsWith(typedText)) {
+        return null;
+      }
+    }
+    let injectDetails: string | undefined = undefined;
 
     try {
       const abortController = new AbortController();

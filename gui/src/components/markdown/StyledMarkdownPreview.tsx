@@ -36,6 +36,30 @@ const StyledMarkdown = styled.div<{
   whiteSpace: string;
   bgColor: string;
 }>`
+  h1 {
+    font-size: 1.25em;
+  }
+
+  h2 {
+    font-size: 1.15em;
+  }
+
+  h3 {
+    font-size: 1.05em;
+  }
+
+  h4 {
+    font-size: 1em;
+  }
+
+  h5 {
+    font-size: 0.95em;
+  }
+
+  h6 {
+    font-size: 0.9em;
+  }
+
   pre {
     white-space: ${(props) => props.whiteSpace};
     background-color: ${vscEditorBackground};
@@ -61,7 +85,7 @@ const StyledMarkdown = styled.div<{
 
   code:not(pre > code) {
     font-family: var(--vscode-editor-font-family);
-    color: #f78383;
+    color: var(--vscode-input-placeholderForeground);
   }
 
   background-color: ${(props) => props.bgColor};

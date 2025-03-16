@@ -50,7 +50,9 @@ class FileTreeContextProvider extends BaseContextProvider {
         directories: [],
       };
 
-      const uris = await walkDir(workspaceDir, extras.ide);
+      const uris = await walkDir(workspaceDir, extras.ide, {
+        source: "get context items - file tree",
+      });
       const relativePaths = uris.map(
         (uri) => findUriInDirs(uri, [workspaceDir]).relativePathOrBasename,
       );

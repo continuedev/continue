@@ -275,7 +275,7 @@ jobs:
           cd core
           npm test
         env:
-          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true && github.actor == 'dependabot[bot]' }}
+          IGNORE_API_KEY_TESTS: ${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -420,8 +420,7 @@ jobs:
         id: test-extensions-cache
         with:
           path: extensions/vscode/e2e/.test-extensions
-          # package.json used as the key because that's where the download script is defined
-          key: vscode-test-extensions-${{ hashFiles('extensions/vscode/package.json') }}
+          key: CONSTANT
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
@@ -460,7 +459,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd extensions/vscode
-          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork == false && github.actor != 'dependabot[bot]' }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
+          IGNORE_SSH_TESTS="${{ github.event.pull_request.head.repo.fork == true || github.actor == 'dependabot[bot]' }}" TEST_FILE="${{ matrix.test_file }}" npm run ${{ matrix.command }}
         env:
           DISPLAY: :99
 
