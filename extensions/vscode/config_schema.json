@@ -2855,11 +2855,11 @@
                     "description": "The name of your VertexAI project"
                   },
                   "region": {
-                    "description": "The region your VertexAI model is hosted in - typically central1",
-                    "default": "central1"
+                    "description": "The region your VertexAI model is hosted in - typically us-central1",
+                    "default": "us-central1"
                   },
                   "model": {
-                    "default": "text-embedding-004"
+                    "default": "text-embedding-005"
                   }
                 },
                 "required": ["projectId", "model", "region"]
