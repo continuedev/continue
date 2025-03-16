@@ -7,12 +7,7 @@ import {
   getQueryForFile,
 } from "../util/treeSitter";
 
-import {
-  DatabaseConnection,
-  SqliteDb,
-  tagToString,
-  truncateSqliteLikePattern,
-} from "./refreshIndex";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
@@ -398,18 +393,23 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
   static async getPathsAndSignatures(
     workspaceDirs: string[],
-    offset: number = 0,
-    batchSize: number = 100,
+    uriOffset: number = 0,
+    uriBatchSize: number = 100,
+    snippetOffset: number = 0,
+    snippetBatchSize: number = 100,
   ): Promise<{
     groupedByUri: { [path: string]: string[] };
-    hasMore: boolean;
+    hasMoreSnippets: boolean;
+    hasMoreUris: boolean;
   }> {
     const db = await SqliteDb.get();
     await CodeSnippetsCodebaseIndex._createTables(db);
 
-    const likePatterns = workspaceDirs.map((dir) =>
-      truncateSqliteLikePattern(`${dir}%`),
-    );
+    const endIndex = uriOffset + uriBatchSize;
+    const uriBatch = workspaceDirs.slice(uriOffset, endIndex);
+
+    const likePatterns = uriBatch.map((dir) => `${dir}%`);
+
     const placeholders = likePatterns.map(() => "?").join(" OR path LIKE ");
 
     const query = `
@@ -420,7 +420,11 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     LIMIT ? OFFSET ?
   `;
 
-    const rows = await db.all(query, [...likePatterns, batchSize, offset]);
+    const rows = await db.all(query, [
+      ...likePatterns,
+      snippetBatchSize,
+      snippetOffset,
+    ]);
 
     const groupedByUri: { [path: string]: string[] } = {};
 
@@ -431,8 +435,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       groupedByUri[path].push(signature);
     }
 
-    const hasMore = rows.length === batchSize;
+    const hasMoreUris = endIndex < workspaceDirs.length;
+    const hasMoreSnippets = rows.length === snippetBatchSize;
 
-    return { groupedByUri, hasMore };
+    return { groupedByUri, hasMoreUris, hasMoreSnippets };
   }
 }

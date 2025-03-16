@@ -1,9 +1,10 @@
-import { PropsWithChildren } from "react";
-import { render } from "@testing-library/react";
 import type { RenderOptions } from "@testing-library/react";
-import { Provider } from "react-redux";
+import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { PropsWithChildren } from "react";
+import { Provider } from "react-redux";
 import { MemoryRouter, RouterProps } from "react-router-dom";
+import { AuthProvider } from "../../context/Auth";
 import { setupStore } from "../../redux/store";
 // As a basic setup, import your same slice reducers
 
@@ -29,7 +30,9 @@ export function renderWithProviders(
 
   const Wrapper = ({ children }: PropsWithChildren) => (
     <MemoryRouter {...routerProps}>
-      <Provider store={store}>{children}</Provider>
+      <Provider store={store}>
+        <AuthProvider>{children}</AuthProvider>
+      </Provider>
     </MemoryRouter>
   );
 

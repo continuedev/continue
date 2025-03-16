@@ -68,7 +68,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/deleteModel": [{ title: string }, void];
   "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/listProfiles": [undefined, ProfileDescription[] | null];
+  "config/listProfiles": [
+    undefined,
+    { profiles: ProfileDescription[] | null; selectedProfileId: string | null },
+  ];
   "config/refreshProfiles": [undefined, void];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
@@ -184,6 +187,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "files/opened": [{ uris?: string[] }, void];
   "files/created": [{ uris?: string[] }, void];
   "files/deleted": [{ uris?: string[] }, void];
+  "files/closed": [{ uris?: string[] }, void];
 
   // Docs etc. Indexing. TODO move codebase to this
   "indexing/reindex": [{ type: string; id: string }, void];

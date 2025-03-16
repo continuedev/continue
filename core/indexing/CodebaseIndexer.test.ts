@@ -14,12 +14,12 @@ import {
 } from "../test/testDir.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 
+import { localPathToUri } from "../util/pathToUri.js";
 import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
-import { walkDir } from "./walkDir.js";
-import { localPathToUri } from "../util/pathToUri.js";
+import { walkDir, walkDirCache } from "./walkDir.js";
 
 jest.useFakeTimers();
 
@@ -85,6 +85,10 @@ describe("CodebaseIndexer", () => {
 
   afterAll(async () => {
     tearDownTestDir();
+  });
+
+  afterEach(() => {
+    walkDirCache.invalidate();
   });
 
   async function refreshIndex() {

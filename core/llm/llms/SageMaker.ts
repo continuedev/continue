@@ -1,9 +1,9 @@
 import {
-  InvokeEndpointCommand,
-  InvokeEndpointWithResponseStreamCommand,
-  SageMakerRuntimeClient,
+    InvokeEndpointCommand,
+    InvokeEndpointWithResponseStreamCommand,
+    SageMakerRuntimeClient,
 } from "@aws-sdk/client-sagemaker-runtime";
-import { fromIni } from "@aws-sdk/credential-providers";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 // @ts-ignore
 import jinja from "jinja-js";
@@ -130,14 +130,14 @@ class SageMaker extends BaseLLM {
 
   private async _getCredentials() {
     try {
-      return await fromIni({
+      return await fromNodeProviderChain({
         profile: this.profile,
       })();
     } catch (e) {
       console.warn(
         `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
       );
-      return await fromIni()();
+      return await fromNodeProviderChain()();
     }
   }
 

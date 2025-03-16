@@ -41,7 +41,7 @@ If you're getting a response from the LLM that doesn't seem to make sense, you c
 
 1. Open the "Output" panel (right next to the terminal)
 2. In the dropdown, select "Continue - LLM Prompts/Completions"
-3. View the exact prompts that were sent to the LLM and the completions recieved
+3. View the exact prompts that were sent to the LLM and the completions received
 
 ### JetBrains
 
@@ -150,6 +150,14 @@ This can be accomplished using the following command: `Continue: Rebuild codebas
 ### Android Studio - "Nothing to show" in Chat
 
 This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then selecting the latest version, and then restarting Android Studio. [See this thread](https://github.com/continuedev/continue/issues/596#issuecomment-1789327178) for details.
+
+### I received a "Codebase indexing disabled - Your Linux system lacks required CPU features (AVX2, FMA)" notification
+
+We use LanceDB as our vector database for codebase search features. On x64 Linux systems, LanceDB requires specific CPU features (FMA and AVX2) which may not be available on older processors.
+
+Most Continue features will work normally, including autocomplete and chat. However, commands that rely on codebase indexing, such as `@codebase`, `@files`, and `@folder`, will be disabled.
+
+For more details about this requirement, see the [LanceDB issue #2195](https://github.com/lancedb/lance/issues/2195).
 
 ## Still having trouble?
 

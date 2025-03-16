@@ -10,7 +10,6 @@ import { getFontSize, isMetaEquivalentKeyPressed } from "../../../util";
 import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
 import AssistantIcon from "./AssistantIcon";
 import { AssistantSelectOptions } from "./AssistantSelectOptions";
-import { getProfileDisplayText } from "./utils";
 
 function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
   return (
@@ -18,9 +17,7 @@ function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
       <div className="mr-1 h-4 w-4 flex-shrink-0">
         <AssistantIcon assistant={props.selectedProfile} />
       </div>
-      <span className="truncate">
-        {getProfileDisplayText(props.selectedProfile)}
-      </span>
+      <span className="truncate">{props.selectedProfile.title}</span>
       <ChevronDownIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
     </div>
   );
@@ -29,7 +26,7 @@ function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, selectedOrganization, profiles } = useAuth();
+  const { selectedProfile, selectedOrganization } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
   useEffect(() => {
@@ -87,7 +84,7 @@ export default function AssistantSelect() {
         </Popover.Button>
 
         <PopoverTransition>
-          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border border-gray-400 p-0">
+          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex min-w-[200px] max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border-2 border-zinc-600 p-0">
             <AssistantSelectOptions
               onClose={() => {
                 if (buttonRef.current) {

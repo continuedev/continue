@@ -3,6 +3,15 @@ import { AllMediaTypes, ModelProvider } from "../types.js";
 export const Gemini: ModelProvider = {
   models: [
     {
+      model: "gemini-2.0-flash",
+      displayName: "Gemini 2.0 Flash",
+      contextLength: 1048576,
+      maxCompletionTokens: 8192,
+      mediaTypes: AllMediaTypes,
+      regex: /gemini-2\.0-flash/i,
+      recommendedFor: ["chat"]
+    },
+    {
       model: "gemini-1.5-flash",
       displayName: "Gemini 1.5 Flash",
       contextLength: 1048576,
@@ -21,17 +30,17 @@ export const Gemini: ModelProvider = {
     },
     // embed
     {
-      model: "text-embedding-004",
+      model: "text-embedding-005",
       displayName: "Vertex Text Embedding",
       recommendedFor: ["embed"],
     },
     //autocomplete
     {
-        model: "code-gecko",
-        displayName: "VertexAI Code Gecko",
-        recommendedFor: ["autocomplete"],
-        maxCompletionTokens: 64,
-    }
+      model: "code-gecko",
+      displayName: "VertexAI Code Gecko",
+      recommendedFor: ["autocomplete"],
+      maxCompletionTokens: 64,
+    },
   ],
   id: "gemini",
   displayName: "Gemini",
