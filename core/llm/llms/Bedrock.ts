@@ -1,7 +1,9 @@
 import {
   BedrockRuntimeClient,
+  ContentBlock,
   ConverseStreamCommand,
   InvokeModelCommand,
+  Message
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
@@ -9,7 +11,7 @@ import {
   ChatMessage,
   Chunk,
   CompletionOptions,
-  LLMOptions,
+  LLMOptions
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -86,9 +88,9 @@ class Bedrock extends BaseLLM {
     });
 
     let config_headers =
-    this.requestOptions && this.requestOptions.headers
-      ? this.requestOptions.headers
-      : {};
+      this.requestOptions && this.requestOptions.headers
+        ? this.requestOptions.headers
+        : {};
     // AWS SigV4 requires strict canonicalization of headers.
     // DO NOT USE "_" in your header name. It will return an error like below.
     // "The request signature we calculated does not match the signature you provided."
@@ -113,6 +115,7 @@ class Bedrock extends BaseLLM {
     try {
       response = await client.send(command, { abortSignal: signal });
     } catch (error: unknown) {
+      console.error(error);
       const message = error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to communicate with Bedrock API: ${message}`);
     }
@@ -124,13 +127,31 @@ class Bedrock extends BaseLLM {
     try {
       for await (const chunk of response.stream) {
 
-        console.log(chunk);
-
         if (chunk.contentBlockDelta?.delta) {
+
+          const delta: any = chunk.contentBlockDelta.delta
 
           // Handle text content
           if (chunk.contentBlockDelta.delta.text) {
             yield { role: "assistant", content: chunk.contentBlockDelta.delta.text };
+            continue;
+          }
+
+          // Handle text content
+          if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
+            yield { role: "thinking", content: (chunk.contentBlockDelta.delta as any).reasoningContent.text };
+            continue;
+          }
+
+          // Handle signature for thinking
+          if (delta.reasoningContent?.signature) {
+            yield { role: "thinking", content: "", signature: delta.reasoningContent.signature };
+            continue;
+          }
+
+          // Handle redacted thinking
+          if (delta.redactedReasoning?.data) {
+            yield { role: "thinking", content: "", redactedThinking: delta.redactedReasoning.data };
             continue;
           }
 
@@ -145,6 +166,12 @@ class Bedrock extends BaseLLM {
         }
 
         if (chunk.contentBlockStart?.start) {
+          const start: any = chunk.contentBlockStart.start
+          if (start.redactedReasoning) {
+            yield { role: "thinking", content: "", redactedThinking: start.redactedReasoning.data };
+            continue;
+          }
+
           const toolUse = chunk.contentBlockStart.start.toolUse;
           if (toolUse?.toolUseId && toolUse?.name) {
             this._currentToolResponse = {
@@ -186,6 +213,7 @@ class Bedrock extends BaseLLM {
       }
       throw new Error("Error processing Bedrock stream: Unknown error occurred");
     }
+
   }
 
   /**
@@ -232,13 +260,19 @@ class Bedrock extends BaseLLM {
           ?.filter((stop) => stop.trim() !== "")
           .slice(0, 4),
       },
+      additionalModelRequestFields: {
+        "thinking": options.reasoning ? {
+          "type": "enabled",
+          "budget_tokens": options.reasoningBudgetTokens
+        } : undefined,
+      }
     };
   }
 
-  private _convertMessage(message: ChatMessage): any {
+  private _convertMessage(message: ChatMessage): Message | null {
     // Handle system messages explicitly
     if (message.role === "system") {
-      return;
+      return null;
     }
 
     // Tool response handling
@@ -265,13 +299,41 @@ class Bedrock extends BaseLLM {
       return {
         role: "assistant",
         content: message.toolCalls.map((toolCall) => ({
-            toolUse: {
-              toolUseId: toolCall.id,
-              name: toolCall.function?.name,
-              input: JSON.parse(toolCall.function?.arguments || "{}"),
-            }
+          toolUse: {
+            toolUseId: toolCall.id,
+            name: toolCall.function?.name,
+            input: JSON.parse(toolCall.function?.arguments || "{}"),
+          }
         }))
       };
+    }
+
+    if (message.role === "thinking") {
+      if (message.redactedThinking) {
+        const content: ContentBlock.ReasoningContentMember = {
+          reasoningContent: {
+            redactedContent: new Uint8Array(Buffer.from(message.redactedThinking))
+          }
+        };
+        return {
+          role: "assistant",
+          content: [content]
+        };
+      } else {
+        const content: ContentBlock.ReasoningContentMember = {
+          reasoningContent: {
+            reasoningText: {
+              text: (message.content as string) || "",
+              signature: message.signature
+            }
+
+          }
+        };
+        return {
+          role: "assistant",
+          content: [content]
+        };
+      }
     }
 
     // Standard text message
@@ -309,12 +371,14 @@ class Bedrock extends BaseLLM {
           }
           return null;
         }).filter(Boolean)
-      };
+      } as Message;
     }
+    return null;
   }
 
   private _convertMessages(messages: ChatMessage[]): any[] {
-    return messages
+
+    const converted = messages
       .map((message) => {
         try {
           return this._convertMessage(message);
@@ -324,6 +388,8 @@ class Bedrock extends BaseLLM {
         }
       })
       .filter(Boolean);
+    return converted;
+
   }
 
   private async _getCredentials() {
