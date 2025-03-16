@@ -420,6 +420,7 @@ jobs:
         id: test-extensions-cache
         with:
           path: extensions/vscode/e2e/.test-extensions
+          key: CONSTANT
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
