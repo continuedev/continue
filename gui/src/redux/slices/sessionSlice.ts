@@ -364,10 +364,11 @@ export const sessionSlice = createSlice({
                   startAt: Date.now(),
                   active: true,
                   text: message.reasoning,
+                  inField: true,
                 };
               }
             } else if (message.role == "assistant") {
-              if (lastItem.reasoning?.active) {
+              if (lastItem.reasoning?.active && lastItem.reasoning?.inField) {
                 lastItem.reasoning.text += message.reasoning;
                 lastItem.reasoning.active = false;
                 lastItem.reasoning.endAt = Date.now();
@@ -382,6 +383,7 @@ export const sessionSlice = createSlice({
                   startAt: Date.now(),
                   active: true,
                   text: messageContent.replace("<think>", "").trim(),
+                  inField: false,
                 };
               } else if (
                 lastItem.reasoning?.active &&

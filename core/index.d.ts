@@ -445,6 +445,7 @@ interface Reasoning {
   text: string;
   startAt: number;
   endAt?: number;
+  inField: boolean; //< If true, then `reasoning` field used checked for text of reasoning, if false - <think> </think> tags in `content` used
 }
 
 export interface ChatHistoryItem {
