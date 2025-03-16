@@ -5,8 +5,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { vscBackground } from "../../components";
-import { ROUTES } from "../../util/navigation";
 import { useAppSelector } from "../../redux/hooks";
+import { ROUTES } from "../../util/navigation";
 
 export default function ConfigErrorPage() {
   const navigate = useNavigate();
@@ -52,12 +52,12 @@ export default function ConfigErrorPage() {
                     ) : (
                       <ExclamationTriangleIcon className="mr-2 h-5 w-5" />
                     )}
-                    <p className="m-0">
+                    <pre className="m-0">
                       <strong>
                         {error.fatal ? "Fatal Error:" : "Warning:"}
                       </strong>{" "}
                       {error.message}
-                    </p>
+                    </pre>
                   </li>
                 ))}
               </ul>
