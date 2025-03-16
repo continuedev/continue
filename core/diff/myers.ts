@@ -27,8 +27,18 @@ export function convertMyersChangeToDiffLines(change: Change): DiffLine[] {
 // [ { type: "old", line: "foo" }, { type: "new", line: "foo" } ], we
 // pass ignoreNewlineAtEof: true.
 export function myersDiff(oldContent: string, newContent: string): DiffLine[] {
-  const theirFormat = diffLines(oldContent, newContent, { ignoreNewlineAtEof: true });
+  const theirFormat = diffLines(oldContent, newContent, {
+    ignoreNewlineAtEof: true,
+  });
   const ourFormat = theirFormat.flatMap(convertMyersChangeToDiffLines);
+
+  while (
+    ourFormat.length > 0 &&
+    ourFormat[ourFormat.length - 1].type === "old" &&
+    ourFormat[ourFormat.length - 1].line === ""
+  ) {
+    ourFormat.pop();
+  }
 
   return ourFormat;
 }
