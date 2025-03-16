@@ -80,7 +80,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    if (this.configResult.errors?.length) {
+    if (this.configResult.errors?.find((e) => e.fatal)) {
       return {
         config: undefined,
         errors: this.configResult.errors,
@@ -104,8 +104,9 @@ export default class PlatformProfileLoader implements IProfileLoader {
     );
 
     return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
+      config: results.config,
+      errors: [...(this.configResult.errors ?? []), ...(results.errors ?? [])],
+      configLoadInterrupted: results.configLoadInterrupted,
     };
   }
 

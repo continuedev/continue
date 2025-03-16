@@ -24,7 +24,11 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setDefaultModel, updateConfig } from "../../redux/slices/configSlice";
+import {
+  selectDefaultModel,
+  setDefaultModel,
+  updateConfig,
+} from "../../redux/slices/configSlice";
 import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import { getFontSize, isJetBrains } from "../../util";
 import ModelRoleSelector from "./ModelRoleSelector";
@@ -71,9 +75,7 @@ function ConfigPage() {
 
   /////// User settings section //////
   const config = useAppSelector((state) => state.config.config);
-  const selectedChatModel = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
+  const selectedChatModel = useAppSelector(selectDefaultModel);
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -335,11 +337,15 @@ function ConfigPage() {
                 displayName="Chat"
                 description="Used in the chat interface"
                 models={config.modelsByRole.chat}
-                selectedModel={{
-                  title: selectedChatModel,
-                  provider: "mock",
-                  model: "mock",
-                }}
+                selectedModel={
+                  selectedChatModel
+                    ? {
+                        title: selectedChatModel.title,
+                        provider: selectedChatModel.provider,
+                        model: selectedChatModel.model,
+                      }
+                    : null
+                }
                 onSelect={(model) => handleChatModelSelection(model)}
               />
               <ModelRoleSelector
