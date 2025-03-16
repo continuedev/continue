@@ -6,7 +6,10 @@ class EditDecorationManager {
   constructor(context: vscode.ExtensionContext) {
     this.decorationType = vscode.window.createTextEditorDecorationType({
       backgroundColor: new vscode.ThemeColor(
-        "editor.inactiveSelectionBackground",
+        // "editor.selectionHighlightBackground" requires partial transparency.
+        // This ensures the highlight does not completely obscure the selection,
+        // making it useful for repurposing here.
+        "editor.selectionHighlightBackground",
       ),
       isWholeLine: true,
     });

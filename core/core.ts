@@ -30,12 +30,7 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  migrateV1DevDataFiles,
-} from "./util/paths";
-import { localPathToUri } from "./util/pathToUri";
+import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -49,7 +44,9 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import { shouldIgnore } from "./indexing/shouldIgnore";
+import { walkDirCache } from "./indexing/walkDir";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -111,6 +108,11 @@ export class Core {
       ideSettingsPromise,
       this.onWrite,
       sessionInfoPromise,
+      (orgId: string | null) => {
+        void messenger.request("didSelectOrganization", {
+          orgId,
+        });
+      },
     );
 
     this.docsService = DocsService.createSingleton(
@@ -299,8 +301,11 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
-    on("config/listProfiles", (msg) => {
-      return this.configHandler.listProfiles();
+    on("config/listProfiles", async (msg) => {
+      const profiles = this.configHandler.listProfiles();
+      const selectedProfileId =
+        this.configHandler.currentProfile?.profileDescription.id ?? null;
+      return { profiles, selectedProfileId };
     });
 
     on("config/refreshProfiles", async (msg) => {
@@ -830,6 +835,7 @@ export class Core {
       if (!config || config.disableIndexing) {
         return; // TODO silent in case of commands?
       }
+      walkDirCache.invalidate();
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
         await codebaseIndexer.clearIndexes();
@@ -857,10 +863,12 @@ export class Core {
     // TODO - remove remaining logic for these from IDEs where possible
     on("files/changed", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
         for (const uri of data.uris) {
-          // Listen for file changes in the workspace
-          // URI TODO is this equality statement valid?
-          if (URI.equal(uri, localPathToUri(getConfigJsonPath()))) {
+          const currentProfileUri =
+            this.configHandler.currentProfile?.profileDescription.uri ?? "";
+
+          if (URI.equal(uri, currentProfileUri)) {
             // Trigger a toast notification to provide UI feedback that config has been updated
             const showToast =
               this.globalContext.get("showConfigUpdateToast") ?? true;
@@ -874,6 +882,8 @@ export class Core {
                 this.globalContext.update("showConfigUpdateToast", false);
               }
             }
+            await this.configHandler.reloadConfig();
+            continue;
           }
 
           if (
@@ -925,15 +935,33 @@ export class Core {
 
     on("files/created", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
+
+        // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
+        for (const uri of data.uris) {
+          if (isLocalAssistantFile(uri)) {
+            await this.configHandler.loadAssistantsForSelectedOrg();
+          }
+        }
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate();
         void refreshIfNotIgnored(data.uris);
       }
     });
+
+    on("files/closed", async ({ data }) => {
+      if (data.uris) {
+        this.messenger.send("didCloseFiles", {
+          uris: data.uris,
+        });
+      }
+    });
+
     on("files/opened", async ({ data }) => {
       if (data?.uris?.length) {
         // Do something on files opened

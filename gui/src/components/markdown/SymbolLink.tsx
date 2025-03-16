@@ -44,7 +44,12 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
         data-tooltip-id={id}
         data-tooltip-delay-show={500}
       >
-        <code className="align-middle underline underline-offset-2">
+        <code
+          className="align-middle"
+          style={{
+            color: "var(--vscode-textLink-foreground)",
+          }}
+        >
           {content}
         </code>
       </span>

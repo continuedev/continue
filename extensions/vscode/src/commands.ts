@@ -129,9 +129,20 @@ function getRangeInFileWithContents(
       return null;
     }
 
-    // adjust starting position to include indentation
-    const start = new vscode.Position(selection.start.line, 0);
-    const selectionRange = new vscode.Range(start, selection.end);
+    let selectionRange = new vscode.Range(selection.start, selection.end);
+    const document = editor.document;
+    // Select the context from the beginning of the selection start line to the selection start position
+    const beginningOfSelectionStartLine = selection.start.with(undefined, 0);
+    const textBeforeSelectionStart = document.getText(
+      new vscode.Range(beginningOfSelectionStartLine, selection.start),
+    );
+    // If there are only whitespace before the start of the selection, include the indentation
+    if (textBeforeSelectionStart.trim().length === 0) {
+      selectionRange = selectionRange.with({
+        start: beginningOfSelectionStartLine,
+      });
+    }
+
     const contents = editor.document.getText(selectionRange);
 
     return {
@@ -272,9 +283,7 @@ async function processDiff(
     });
   }
 
-  if (action === "accept") {
-    await sidebar.webviewProtocol.request("exitEditMode", undefined);
-  }
+  await sidebar.webviewProtocol.request("exitEditMode", undefined);
 }
 
 function waitForSidebarReady(
@@ -347,13 +356,12 @@ const getCommandsMap: (
       throw new Error("Config not loaded");
     }
 
-    const defaultModelTitle = await sidebar.webviewProtocol.request(
-      "getDefaultModelTitle",
-      undefined,
-    );
-
     const modelTitle =
-      config.selectedModelByRole.edit?.title ?? defaultModelTitle;
+      config.selectedModelByRole.edit?.title ??
+      (await sidebar.webviewProtocol.request(
+        "getDefaultModelTitle",
+        undefined,
+      ));
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
@@ -540,9 +548,26 @@ const getCommandsMap: (
         return;
       }
 
+      const startFromCharZero = editor.selection.start.with(undefined, 0);
+      const document = editor.document;
+      let lastLine, lastChar;
+      // If the user selected onto a trailing line but didn't actually include any characters in it
+      // they don't want to include that line, so trim it off.
+      if (editor.selection.end.character === 0) {
+        // This is to prevent the rare case that the previous line gets selected when user
+        // is selecting nothing and the cursor is at the beginning of the line
+        if (editor.selection.end.line === editor.selection.start.line) {
+          lastLine = editor.selection.start.line;
+        } else {
+          lastLine = editor.selection.end.line - 1;
+        }
+      } else {
+        lastLine = editor.selection.end.line;
+      }
+      lastChar = document.lineAt(lastLine).range.end.character;
+      const endAtCharLast = new vscode.Position(lastLine, lastChar);
       const range =
-        args?.range ??
-        new vscode.Range(editor.selection.start, editor.selection.end);
+        args?.range ?? new vscode.Range(startFromCharZero, endAtCharLast);
 
       editDecorationManager.setDecoration(editor, range);
 
@@ -819,7 +844,9 @@ const getCommandsMap: (
           .stat(uri)
           ?.then((stat) => stat.type === vscode.FileType.Directory);
         if (isDirectory) {
-          for await (const fileUri of walkDirAsync(uri.toString(), ide)) {
+          for await (const fileUri of walkDirAsync(uri.toString(), ide, {
+            source: "vscode continue.selectFilesAsContext command",
+          })) {
             addEntireFileToContext(
               vscode.Uri.parse(fileUri),
               sidebar.webviewProtocol,
@@ -960,12 +987,9 @@ const getCommandsMap: (
           }
         } else if (selectedOption === "$(feedback) Give feedback") {
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
-        } else if (selectedOption === "$(comment) Open chat (Cmd+L)") {
+        } else if (selectedOption === "$(comment) Open chat") {
           vscode.commands.executeCommand("continue.focusContinueInput");
-        } else if (
-          selectedOption ===
-          "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
-        ) {
+        } else if (selectedOption === "$(screen-full) Open full screen chat") {
           vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(question) Open help center") {
           focusGUI();

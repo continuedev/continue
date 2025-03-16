@@ -54,7 +54,7 @@ export const gatherContext = createAsyncThunk<
 
     // Automatically use currently open file
     if (!modifiers.noContext) {
-      const usingFreeTrial = defaultModel?.provider === "free-trial";
+      const usingFreeTrial = defaultModel.provider === "free-trial";
 
       const currentFileResponse = await extra.ideMessenger.request(
         "context/getContextItems",
