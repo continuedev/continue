@@ -25,7 +25,7 @@ import { ProfileDescription } from "core/config/ConfigHandler";
 import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
-import { renderChatMessage } from "core/util/messageContent";
+import { renderChatMessage, renderReasoningMessage } from "core/util/messageContent";
 import { findUriInDirs, getUriPathBasename } from "core/util/uri";
 import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
@@ -356,20 +356,25 @@ export const sessionSlice = createSlice({
             }
             state.history.push(historyItem);
           } else {
+
             if (message.role == "assistant" && message.reasoning) {
+              const messageReasoning = renderReasoningMessage(message);
+
               if (lastItem.reasoning?.active) {
-                lastItem.reasoning.text += message.reasoning;
+                lastItem.reasoning.text += messageReasoning;
               } else {
                 lastItem.reasoning = {
                   startAt: Date.now(),
                   active: true,
-                  text: message.reasoning,
+                  text: messageReasoning ?? "",
                   inField: true,
                 };
               }
             } else if (message.role == "assistant") {
+              const messageReasoning = renderReasoningMessage(message);
+              
               if (lastItem.reasoning?.active && lastItem.reasoning?.inField) {
-                lastItem.reasoning.text += message.reasoning;
+                lastItem.reasoning.text += messageReasoning ?? "";
                 lastItem.reasoning.active = false;
                 lastItem.reasoning.endAt = Date.now();
               }

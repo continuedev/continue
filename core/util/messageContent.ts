@@ -28,6 +28,14 @@ export function renderChatMessage(message: ChatMessage): string {
   }
 }
 
+export function renderReasoningMessage(message: ChatMessage): string | undefined {
+  if (message.role === "assistant" && message.reasoning) {
+    return stripImages(message.reasoning);
+  }
+
+  return undefined;
+}
+
 export function renderContextItems(contextItems: ContextItem[]): string {
   return contextItems.map((item) => item.content).join("\n\n");
 }
