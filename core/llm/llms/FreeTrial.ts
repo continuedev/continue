@@ -6,6 +6,7 @@ import {
   Chunk,
   CompletionOptions,
   LLMOptions,
+  TextMessagePart,
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -124,7 +125,7 @@ class FreeTrial extends BaseLLM {
       }
       return {
         type: "text",
-        text: part.text,
+        text: (part as TextMessagePart).text,
       };
     });
     return {

@@ -26,7 +26,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
 
   return (
     <div
-      className="flex w-full items-center justify-between gap-2 px-2 py-1"
+      className="xs:flex-row xs:items-center xs:gap-2 flex w-full flex-col justify-between px-2 py-1"
       onClick={(e) => {
         dispatch(toggleToolSetting(props.tool.function.name));
         e.stopPropagation();
