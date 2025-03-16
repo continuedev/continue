@@ -283,9 +283,7 @@ async function processDiff(
     });
   }
 
-  if (action === "accept") {
-    await sidebar.webviewProtocol.request("exitEditMode", undefined);
-  }
+  await sidebar.webviewProtocol.request("exitEditMode", undefined);
 }
 
 function waitForSidebarReady(
