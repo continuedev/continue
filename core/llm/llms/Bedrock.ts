@@ -1,23 +1,34 @@
 import {
   BedrockRuntimeClient,
+  ContentBlock,
   ConverseStreamCommand,
   InvokeModelCommand,
+  Message
 } from "@aws-sdk/client-bedrock-runtime";
-import { fromIni } from "@aws-sdk/credential-providers";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 import {
   ChatMessage,
   Chunk,
   CompletionOptions,
-  LLMOptions,
-  MessageContent,
+  LLMOptions
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
+import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
   extractEmbeddings: (responseBody: any) => number[][];
+}
+
+/**
+ * Interface for tool use state tracking
+ */
+interface ToolUseState {
+  toolUseId: string;
+  name: string;
+  input: string;
 }
 
 class Bedrock extends BaseLLM {
@@ -29,6 +40,10 @@ class Bedrock extends BaseLLM {
     profile: "bedrock",
   };
 
+  private _currentToolResponse: Partial<ToolUseState> | null = null;
+
+  public requestOptions: { region?: string; credentials?: any; headers?: Record<string, string> };
+
   constructor(options: LLMOptions) {
     super(options);
     if (!options.apiBase) {
@@ -39,6 +54,10 @@ class Bedrock extends BaseLLM {
     } else {
       this.profile = "bedrock";
     }
+    this.requestOptions = {
+      region: options.region,
+      headers: {},
+    };
   }
 
   protected async *_streamComplete(
@@ -58,7 +77,6 @@ class Bedrock extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const credentials = await this._getCredentials();
-
     const client = new BedrockRuntimeClient({
       region: this.region,
       endpoint: this.apiBase,
@@ -90,32 +108,142 @@ class Bedrock extends BaseLLM {
       },
     );
 
-    const input = this._generateConverseInput(messages, options);
+    const input = this._generateConverseInput(messages, { ...options, stream: true });
     const command = new ConverseStreamCommand(input);
-    const response = await client.send(command, { abortSignal: signal });
 
-    if (response.stream) {
+    let response;
+    try {
+      response = await client.send(command, { abortSignal: signal });
+    } catch (error: unknown) {
+      console.error(error);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Failed to communicate with Bedrock API: ${message}`);
+    }
+
+    if (!response?.stream) {
+      throw new Error("No stream received from Bedrock API");
+    }
+
+    try {
       for await (const chunk of response.stream) {
-        if (chunk.contentBlockDelta?.delta?.text) {
-          yield {
-            role: "assistant",
-            content: chunk.contentBlockDelta.delta.text,
-          };
+
+        if (chunk.contentBlockDelta?.delta) {
+
+          const delta: any = chunk.contentBlockDelta.delta
+
+          // Handle text content
+          if (chunk.contentBlockDelta.delta.text) {
+            yield { role: "assistant", content: chunk.contentBlockDelta.delta.text };
+            continue;
+          }
+
+          // Handle text content
+          if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
+            yield { role: "thinking", content: (chunk.contentBlockDelta.delta as any).reasoningContent.text };
+            continue;
+          }
+
+          // Handle signature for thinking
+          if (delta.reasoningContent?.signature) {
+            yield { role: "thinking", content: "", signature: delta.reasoningContent.signature };
+            continue;
+          }
+
+          // Handle redacted thinking
+          if (delta.redactedReasoning?.data) {
+            yield { role: "thinking", content: "", redactedThinking: delta.redactedReasoning.data };
+            continue;
+          }
+
+          if (chunk.contentBlockDelta.delta.toolUse?.input && this._currentToolResponse) {
+            // Append the new input to the existing string
+            if (this._currentToolResponse.input === undefined) {
+              this._currentToolResponse.input = "";
+            }
+            this._currentToolResponse.input += chunk.contentBlockDelta.delta.toolUse.input;
+            continue;
+          }
+        }
+
+        if (chunk.contentBlockStart?.start) {
+          const start: any = chunk.contentBlockStart.start
+          if (start.redactedReasoning) {
+            yield { role: "thinking", content: "", redactedThinking: start.redactedReasoning.data };
+            continue;
+          }
+
+          const toolUse = chunk.contentBlockStart.start.toolUse;
+          if (toolUse?.toolUseId && toolUse?.name) {
+            this._currentToolResponse = {
+              toolUseId: toolUse.toolUseId,
+              name: toolUse.name,
+              input: ""
+            };
+          }
+          continue;
+        }
+
+        if (chunk.contentBlockStop) {
+          if (this._currentToolResponse) {
+            yield {
+              role: "assistant",
+              content: "",
+              toolCalls: [{
+                id: this._currentToolResponse.toolUseId,
+                type: "function",
+                function: {
+                  name: this._currentToolResponse.name,
+                  arguments: this._currentToolResponse.input
+                }
+              }],
+            };
+            this._currentToolResponse = null;
+          }
+          continue;
         }
       }
+    } catch (error: unknown) {
+      this._currentToolResponse = null;
+      if (error instanceof Error) {
+        if ("code" in error) {
+          // AWS SDK specific errors
+          throw new Error(`AWS Bedrock stream error (${(error as any).code}): ${error.message}`);
+        }
+        throw new Error(`Error processing Bedrock stream: ${error.message}`);
+      }
+      throw new Error("Error processing Bedrock stream: Unknown error occurred");
     }
+
   }
 
+  /**
+   * Generates the input payload for the Bedrock Converse API
+   * @param messages - Array of chat messages
+   * @param options - Completion options
+   * @returns Formatted input payload for the API
+   */
   private _generateConverseInput(
     messages: ChatMessage[],
     options: CompletionOptions,
   ): any {
     const convertedMessages = this._convertMessages(messages);
 
+    const supportsTools = PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
     return {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
+      toolConfig: supportsTools && options.tools ? {
+        tools: options.tools.map(tool => ({
+          toolSpec: {
+            name: tool.function.name,
+            description: tool.function.description,
+            inputSchema: {
+              json: tool.function.parameters
+            }
+          }
+        }))
+      } : undefined,
       inferenceConfig: {
         maxTokens: options.maxTokens,
         temperature: options.temperature,
@@ -132,45 +260,141 @@ class Bedrock extends BaseLLM {
           ?.filter((stop) => stop.trim() !== "")
           .slice(0, 4),
       },
+      additionalModelRequestFields: {
+        "thinking": options.reasoning ? {
+          "type": "enabled",
+          "budget_tokens": options.reasoningBudgetTokens
+        } : undefined,
+      }
     };
   }
 
-  private _convertMessages(messages: ChatMessage[]): any[] {
-    return messages
-      .filter((message) => message.role !== "system")
-      .map((message) => ({
+  private _convertMessage(message: ChatMessage): Message | null {
+    // Handle system messages explicitly
+    if (message.role === "system") {
+      return null;
+    }
+
+    // Tool response handling
+    if (message.role === "tool") {
+      return {
+        role: "user",
+        content: [
+          {
+            toolResult: {
+              toolUseId: message.toolCallId,
+              content: [
+                {
+                  text: message.content || ""
+                }
+              ]
+            }
+          }
+        ]
+      };
+    }
+
+    // Tool calls handling
+    if (message.role === "assistant" && message.toolCalls) {
+      return {
+        role: "assistant",
+        content: message.toolCalls.map((toolCall) => ({
+          toolUse: {
+            toolUseId: toolCall.id,
+            name: toolCall.function?.name,
+            input: JSON.parse(toolCall.function?.arguments || "{}"),
+          }
+        }))
+      };
+    }
+
+    if (message.role === "thinking") {
+      if (message.redactedThinking) {
+        const content: ContentBlock.ReasoningContentMember = {
+          reasoningContent: {
+            redactedContent: new Uint8Array(Buffer.from(message.redactedThinking))
+          }
+        };
+        return {
+          role: "assistant",
+          content: [content]
+        };
+      } else {
+        const content: ContentBlock.ReasoningContentMember = {
+          reasoningContent: {
+            reasoningText: {
+              text: (message.content as string) || "",
+              signature: message.signature
+            }
+
+          }
+        };
+        return {
+          role: "assistant",
+          content: [content]
+        };
+      }
+    }
+
+    // Standard text message
+    if (typeof message.content === "string") {
+      return {
         role: message.role,
-        content: this._convertMessageContent(message.content),
-      }));
+        content: [{ text: message.content }]
+      };
+    }
+
+    // Improved multimodal content handling
+    if (Array.isArray(message.content)) {
+      return {
+        role: message.role,
+        content: message.content.map(part => {
+          if (part.type === "text") {
+            return { text: part.text };
+          }
+          if (part.type === "imageUrl" && part.imageUrl) {
+            try {
+              const [mimeType, base64Data] = part.imageUrl.url.split(",");
+              const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
+              return {
+                image: {
+                  format,
+                  source: {
+                    bytes: Buffer.from(base64Data, "base64")
+                  }
+                }
+              };
+            } catch (error) {
+              console.warn(`Failed to process image: ${error}`);
+              return null;
+            }
+          }
+          return null;
+        }).filter(Boolean)
+      } as Message;
+    }
+    return null;
   }
 
-  private _convertMessageContent(messageContent: MessageContent): any[] {
-    if (typeof messageContent === "string") {
-      return [{ text: messageContent }];
-    }
-    return messageContent
-      .map((part) => {
-        if (part.type === "text") {
-          return { text: part.text };
+  private _convertMessages(messages: ChatMessage[]): any[] {
+
+    const converted = messages
+      .map((message) => {
+        try {
+          return this._convertMessage(message);
+        } catch (error) {
+          console.error(`Failed to convert message: ${error}`);
+          return null;
         }
-        if (part.type === "imageUrl" && part.imageUrl) {
-          return {
-            image: {
-              format: "jpeg",
-              source: {
-                bytes: Buffer.from(part.imageUrl.url.split(",")[1], "base64"),
-              },
-            },
-          };
-        }
-        return null;
       })
       .filter(Boolean);
+    return converted;
+
   }
 
   private async _getCredentials() {
     try {
-      return await fromIni({
+      return await fromNodeProviderChain({
         profile: this.profile,
         ignoreCache: true,
       })();
@@ -178,7 +402,7 @@ class Bedrock extends BaseLLM {
       console.warn(
         `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
       );
-      return await fromIni()();
+      return await fromNodeProviderChain()();
     }
   }
 
@@ -228,6 +452,7 @@ class Bedrock extends BaseLLM {
     const modelConfig = this._getModelConfig();
     return modelConfig.extractEmbeddings(responseBody);
   }
+
 
   private _getModelConfig() {
     const modelConfigs: { [key: string]: ModelConfig } = {
@@ -301,9 +526,15 @@ class Bedrock extends BaseLLM {
       return responseBody.results
         .sort((a: any, b: any) => a.index - b.index)
         .map((result: any) => result.relevance_score);
-    } catch (error) {
-      console.error("Error in BedrockReranker.rerank:", error);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if ("code" in error) {
+          // AWS SDK specific errors
+          throw new Error(`AWS Bedrock rerank error (${(error as any).code}): ${error.message}`);
+        }
+        throw new Error(`Error in BedrockReranker.rerank: ${error.message}`);
+      }
+      throw new Error("Error in BedrockReranker.rerank: Unknown error occurred");
     }
   }
 }

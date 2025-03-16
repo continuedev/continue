@@ -58,7 +58,6 @@ class MessageTypes {
         // Note: If updating these values, make a corresponding update in
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
-            "configError",
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress", // Codebase
@@ -71,6 +70,8 @@ class MessageTypes {
             "getWebviewHistoryLength",
             "getCurrentSessionId",
             "docs/suggestions",
+            "didCloseFiles",
+            "didSelectOrganization"
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -89,8 +90,10 @@ class MessageTypes {
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/listProfiles",
+            "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
+            "config/updateSelectedModel",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",

@@ -35,8 +35,11 @@ async function modelConfigToBaseLLM(
     return undefined;
   }
 
+  const { capabilities, ...rest } = model;
+
   let options: LLMOptions = {
-    ...model,
+    ...rest,
+    // contextLength: model.defaultCompletionOptions?.contextLength ?? undefined,
     completionOptions: {
       ...(model.defaultCompletionOptions ?? {}),
       model: model.model,
@@ -49,7 +52,76 @@ async function modelConfigToBaseLLM(
     title: model.name,
     systemMessage,
     promptTemplates: model.promptTemplates,
+    capabilities: {
+      tools: model.capabilities?.includes("tool_use"),
+      uploadImage: model.capabilities?.includes("image_input"),
+    },
   };
+
+  // Model capabilities - need to be undefined if not found
+  // To fallback to our autodetection
+  if (capabilities?.find((c) => c === "tool_use")) {
+    options.capabilities = {
+      ...options.capabilities,
+      tools: true,
+    };
+  }
+
+  if (capabilities?.find((c) => c === "image_input")) {
+    options.capabilities = {
+      ...options.capabilities,
+      uploadImage: true,
+    };
+  }
+
+  if (model.embedOptions?.maxBatchSize) {
+    options.maxEmbeddingBatchSize = model.embedOptions.maxBatchSize;
+  }
+  if (model.embedOptions?.maxChunkSize) {
+    options.maxEmbeddingChunkSize = model.embedOptions.maxChunkSize;
+  }
+
+  // These are params that are at model config level in JSON
+  // But we decided to move to nested `env` in YAML
+  // Since types vary and we don't want to blindly spread env for now,
+  // Each one is handled individually here
+  const env = model.env ?? {};
+  if (
+    "useLegacyCompletionsEndpoint" in env &&
+    typeof env.useLegacyCompletionsEndpoint === "boolean"
+  ) {
+    options.useLegacyCompletionsEndpoint = env.useLegacyCompletionsEndpoint;
+  }
+  if ("apiType" in env && typeof env.apiType === "string") {
+    options.apiType = env.apiType;
+  }
+  if ("apiVersion" in env && typeof env.apiVersion === "string") {
+    options.apiVersion = env.apiVersion;
+  }
+  if ("deployment" in env && typeof env.deployment === "string") {
+    options.deployment = env.deployment;
+  }
+  if ("deploymentId" in env && typeof env.deploymentId === "string") {
+    options.deploymentId = env.deploymentId;
+  }
+  if ("projectId" in env && typeof env.projectId === "string") {
+    options.projectId = env.projectId;
+  }
+  if ("region" in env && typeof env.region === "string") {
+    options.region = env.region;
+  }
+  if ("profile" in env && typeof env.profile === "string") {
+    options.profile = env.profile;
+  }
+  if ("modelArn" in env && typeof env.modelArn === "string") {
+    options.modelArn = env.modelArn;
+  }
+  if ("aiGatewaySlug" in env && typeof env.aiGatewaySlug === "string") {
+    options.aiGatewaySlug = env.aiGatewaySlug;
+  }
+  if ("accountId" in env && typeof env.accountId === "string") {
+    options.accountId = env.accountId;
+  }
 
   const llm = new cls(options);
   return llm;
@@ -78,7 +150,7 @@ async function autodetectModels(
           {
             ...model,
             model: modelName,
-            name: `${llm.title} - ${modelName}`,
+            name: modelName,
           },
           uniqueId,
           ideSettings,

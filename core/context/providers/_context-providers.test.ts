@@ -42,10 +42,10 @@ async function getContextProviderExtras(
     fullInput,
     ide,
     config,
-    embeddingsProvider: config.embeddingsProvider,
+    embeddingsProvider: config.selectedModelByRole.embed,
     fetch: fetch,
     llm: config.models[0],
-    reranker: config.reranker,
+    reranker: config.selectedModelByRole.rerank,
     selectedCode: [],
   };
 }

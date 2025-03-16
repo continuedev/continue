@@ -6,10 +6,11 @@ import {
   PencilSquareIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { lightGray } from "..";
-import { getMetaKeyLabel, isJetBrains } from "../../util";
 import { useContext } from "react";
+import { lightGray } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { isJetBrains } from "../../util";
+import Shortcut from "../gui/Shortcut";
 
 interface TutorialCardProps {
   onClose: () => void;
@@ -56,8 +57,8 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             <PencilSquareIcon className="h-4 w-4 pr-3 align-middle" />
           </div>
           <span>
-            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> +{" "}
-            <kbd>I</kbd> to quickly make natural language edits
+            Highlight code and press <Shortcut>meta I</Shortcut> to quickly make
+            natural language edits
           </span>
         </li>
         <li className="flex items-start">
@@ -65,8 +66,8 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             <ClipboardDocumentIcon className="h-4 w-4 pr-3 align-middle" />
           </div>
           <span>
-            Highlight code and press <kbd>{getMetaKeyLabel()}</kbd> +{" "}
-            <kbd>{jetbrains ? "J" : "L"}</kbd> to add it to the chat window
+            Highlight code and press <Shortcut>meta L</Shortcut> to add it to
+            the chat window
           </span>
         </li>
         <li className="flex items-start">
@@ -74,8 +75,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             <Cog6ToothIcon className="h-4 w-4 pr-3 align-middle" />
           </div>
           <span>
-            Click the gear icon at the top of the chat window to configure
-            Continue
+            Click the gear icon in the upper right to configure Continue
           </span>
         </li>
         <li className="flex items-start">

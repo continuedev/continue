@@ -36,6 +36,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `engine`: Engine for Azure OpenAI requests.
 - `capabilities`: Override auto-detected capabilities:
   - `uploadImage`: Boolean indicating if the model supports image uploads.
+  - `tools`: Boolean indicating if the model supports tool calls.
 
 _(AWS Only)_
 
@@ -111,7 +112,7 @@ Embeddings model settings - the model used for @Codebase and @docs.
 
 **Properties:**
 
-- `provider` (**required**): Specifies the embeddings provider, with options including `transformers.js`, `ollama`, `openai`, `cohere`, `free-trial`, `gemini`, etc
+- `provider` (**required**): Specifies the embeddings provider, with options including `transformers.js`, `ollama`, `openai`, `cohere`, `gemini`, etc
 - `model`: Model name for embeddings.
 - `apiKey`: API key for the provider.
 - `apiBase`: Base URL for API requests.
@@ -205,7 +206,7 @@ Configuration for the reranker model used in response ranking.
 
 **Properties:**
 
-- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`, `bedrock`
+- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `huggingface-tei`, `bedrock`
 - `params`:
   - `model`: Model name
   - `apiKey`: Api key

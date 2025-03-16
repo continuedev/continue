@@ -19,7 +19,7 @@ const config = {
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
-  url: "https://continue.dev",
+  url: "https://docs.continue.dev",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
@@ -108,6 +108,13 @@ const config = {
             href: "/reference",
           },
           {
+            type: "docSidebar",
+            sidebarId: "hubSidebar",
+            position: "left",
+            label: "Hub",
+            href: "/hub/introduction",
+          },
+          {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
             position: "right",
@@ -194,6 +201,30 @@ const config = {
       {
         redirects: [
           {
+            to: "/hub/introduction",
+            from: "/hub",
+          },
+          {
+            to: "/hub/governance/org-permissions",
+            from: "/hub/governance",
+          },
+          {
+            to: "/hub/secrets/secret-types",
+            from: "/hub/secrets",
+          },
+          {
+            to: "/hub/assistants/intro",
+            from: "/hub/assistants",
+          },
+          {
+            to: "/hub/blocks/intro",
+            from: "/hub/blocks",
+          },
+          {
+            to: "/customize/overview",
+            from: "/customize",
+          },
+          {
             to: "/customize/overview",
             from: "/customization",
           },
@@ -206,8 +237,24 @@ const config = {
           //   from: "/getting-started",
           // },
           {
-            to: "/customize/model-types",
-            from: "/setup/overview",
+            to: "/customize/model-roles",
+            from: ["/customize/model-types", "/setup/overview"],
+          },
+          {
+            to: "/customize/model-roles/embeddings",
+            from: "/customize/model-types/embeddings",
+          },
+          {
+            to: "/customize/model-roles/autocomplete",
+            from: "/customize/model-types/autocomplete",
+          },
+          {
+            to: "/customize/model-roles/chat",
+            from: "/customize/model-types/chat",
+          },
+          {
+            to: "/customize/model-roles/reranking",
+            from: "/customize/model-types/reranking",
           },
           {
             to: "/getting-started/overview",
@@ -255,11 +302,11 @@ const config = {
           },
           {
             to: "/customize/context-providers",
-            from: "/customization/context-providers",
+            from: ["/customization/context-providers"],
           },
           {
-            to: "/customize/development-data",
-            from: "/development-data",
+            to: "/customize/deep-dives/development-data",
+            from: ["/development-data", "/customize/development-data"],
           },
           {
             to: "/customize/deep-dives/docs",
@@ -282,7 +329,7 @@ const config = {
             from: "/reference/Model Providers/deepseek",
           },
           {
-            to: "/customize/model-providers/free-trial",
+            to: "/customize/model-providers",
             from: "/reference/Model Providers/freetrial",
           },
           {

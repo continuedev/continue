@@ -4,35 +4,107 @@ description: Reference for the Continue configuration YAML file
 keywords: [config, yaml, configuration, customize, customization]
 ---
 
-# confg.yaml Reference
+# config.yaml Reference
 
-<!-- TODO - data section -->
+## Introduction
 
-Continue can be configured using a YAML file `config.yaml` which for local configuration can be placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
+Continue hub assistants are defined using the `config.yaml` specification. Local assistants can also be configured using a YAML file `config.yaml` placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
+
+:::info
+Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**.
+:::
+
+An assistant is made up of:
+
+1. **Top level properties**, which specify the `name`, `version`, and `config.yaml` `schema` for the assistant
+2. **Block lists**, which are composable arrays of coding assistant building blocks available to the assistant, such as models, docs, and context providers.
+
+A block is a single standalone building block of a coding assistants, e.g., one model or one documentation source. In `config.yaml` syntax, a block consists of the same top-level properties as assistants (`name`, `version`, and `schema`), but only has **ONE** item under whichever block type it is.
+
+Examples of blocks and assistants can be found on the [Continue hub](https://hub.continue.dev/explore/assistants).
+
+Assistants can either explicitly define blocks - see [Properties](#properties) below - or import and configure existing hub blocks.
+
+### Using Blocks
+
+Hub blocks and assistants are identified with a slug in the format `owner-slug/block-or-assistant-slug`, where an owner can be a user or organization.
+
+Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
+
+:::info
+Note that `uses` blocks cannot be used with a local `config.yaml`
+:::
+
+For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
+
+```yaml title="Assistant models section"
+models:
+  - uses: anthropic/claude-3.5-sonnet # an imported model block
+  - model: deepseek-reasoner # an explicit model block
+    provider: ollama
+```
+
+### Inputs
+
+Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
+
+```yaml title="Block config.yaml"
+name: myprofile/custom-model
+models:
+  - name: My Favorite Model
+    provider: anthropic
+    apiKey: ${{ inputs.ANTHROPIC_API_KEY }}
+    defaultCompletionOptions:
+      temperature: ${{ inputs.TEMP }}
+```
+
+Which can then be imported like
+
+```yaml title="Assistant config.yaml"
+name: myprofile/custom-assistant
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+```
+
+Note that hub secrets can be passed as inputs, using the a similar mustache format: `secrets.SECRET_NAME`.
+
+### Overrides
+
+Block properties can be also be directly overriden using `override`. For example:
+
+```yaml title="Assistant config.yaml"
+name: myprofile/custom-assistant
+models:
+  - uses: myprofile/custom-model
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.MY_ANTHROPIC_API_KEY }}
+      TEMP: 0.9
+    override:
+      roles:
+        - chat
+```
+
+## Properties
 
 Below are details for each property that can be set in `config.yaml`.
 
-:::info
-Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**. `config.yaml` currently only works in VS Code pre-release.
-:::
-
 **All properties at all levels are optional unless explicitly marked as required.**
-
-## Properties
 
 The top-level properties in the `config.yaml` configuration file are:
 
 - [`name`](#name) (**required**)
-<!-- - [`packages`](#packages) -->
 - [`version`](#version) (**required**)
+- [`schema`](#schema) (**required**)
 - [`models`](#models)
 - [`context`](#context)
 - [`rules`](#rules)
 - [`prompts`](#prompts)
 - [`docs`](#docs)
-  <!-- - [`data`](#data) -->
-  <!-- - [`tools`](#tools) -->
 - [`mcpServers`](#mcpservers)
+- [`data`](#data)
 
 ---
 
@@ -44,9 +116,15 @@ The `name` property specifies the name of your project or configuration.
 name: MyProject
 ```
 
+---
+
 ### `version`
 
 The `version` property specifies the version of your project or configuration.
+
+### `schema`
+
+The `schema` property specifies the schema version used for the `config.yaml`, e.g. `v1`
 
 ---
 
@@ -59,7 +137,13 @@ The `models` section defines the language models used in your configuration. Mod
 - `name` (**required**): A unique name to identify the model within your configuration.
 - `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 - `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
-- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`.
+- `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
+- `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
+
+  - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+  - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+
 - `defaultCompletionOptions`: Default completion options for model settings.
 
   **Properties:**
@@ -108,6 +192,17 @@ models:
     model: codestral-latest
     roles:
       - autocomplete
+
+  - name: My Model - OpenAI-Compatible
+    provider: openai
+    apiBase: http://my-endpoint/v1
+    model: my-custom-model
+    capabilities:
+      - tool_use
+      - image_input
+    roles:
+      - chat
+      - edit
 ```
 
 ---
@@ -148,6 +243,9 @@ Example
 
 ```yaml title="config.yaml"
 rules:
+  - uses: myprofile/my-mood-setter
+    with:
+      MOOD: happy
   - Always annotate Python functions with their parameter and return types
   - Always write Google style docstrings for functions and classes
 ```
@@ -195,25 +293,6 @@ docs:
 
 ---
 
-<!-- ### `tools`
-
-The `tools` section specifies external tools or APIs that can be used within your configuration.
-
-**Properties:**
-
-- `url` (**required**): The URL of the tool's API or endpoint.
-- `apiKey`: An optional API key required by the tool.
-
-**Example:**
-
-```yaml title="config.yaml"
-tools:
-  - url: https://api.exampletool.com/tool1
-    apiKey: <YOUR_API_KEY>
-```
-
---- -->
-
 ### `mcpServers`
 
 <!-- TODO is this correct? -->
@@ -239,21 +318,38 @@ mcpServers:
       - /Users/NAME/test.db
 ```
 
-<!-- ### `data`
+### `data`
 
-The `data` section specifies data providers used in your configuration. Data providers supply data or resources for use in various operations.
+Destinations to which [development data](./customize/deep-dives/development-data.md) will be sent.
 
 **Properties:**
 
-- `provider` (**required**): The name of the data provider.
+- `name` (**required**): The display name of the data destination
+- `destination` (**required**): The destination/endpoint that will receive the data. Can be:
+  - an HTTP endpoint that will receive a POST request with a JSON blob
+  - a file URL to a directory in which events will be dumpted to `.jsonl` files
+- `schema` (**required**): the schema version of the JSON blobs to be sent
+- `events`: an array of event names to include. Defaults to all events if not specified.
+- `level`: a pre-defined filter for event fields. Options include `all` and `noCode`; the latter excludes data like file contents, prompts, and completions. Defaults to `all`
+- `apiKey`: api key to be sent with request (Bearer header)
+- `requestOptions`: Options for event POST requests. Same format as [model requestOptions](#models).
 
-**Example:**
+  **Example:**
 
 ```yaml title="config.yaml"
 data:
-  - provider: embeddings
+  - name: Local Data Bank
+    destination: file:///Users/dallin/Documents/code/continuedev/continue-extras/external-data
+    schema: 0.2.0
+    level: all
+  - name: My Private Company
+    destination: https://mycompany.com/ingest
+    schema: 0.2.0
+    level: noCode
+    events:
+      - autocomplete
+      - chatInteraction
 ```
---- -->
 
 ---
 
@@ -267,6 +363,12 @@ version: 0.0.1
 schema: v1
 
 models:
+  - uses: anthropic/claude-3.5-sonnet
+    with:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    override:
+      defaultCompletionOptions:
+        temperature: 0.8
   - name: GPT-4
     provider: openai
     model: gpt-4
@@ -299,6 +401,7 @@ prompts:
     description: Unit test a function
     prompt: |
       Please write a complete suite of unit tests for this function. You should use the Jest testing framework.  The tests should cover all possible edge cases and should be as thorough as possible.  You should also include a description of each test case.
+  - uses: myprofile/my-favorite-prompt
 
 context:
   - provider: diff
@@ -319,6 +422,15 @@ mcpServers:
       - dev
     env:
       PORT: "3000"
+
+data:
+  - name: My Private Company
+    destination: https://mycompany.com/ingest
+    schema: 0.2.0
+    level: noCode
+    events:
+      - autocomplete
+      - chatInteraction
 ```
 
 ## Using YAML anchors to avoid config duplication

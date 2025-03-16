@@ -1,8 +1,8 @@
 import { Chunk, ContinueConfig, IDE, ILLM } from "../..";
 import { getModelByRole } from "../../config/util";
 import generateRepoMap from "../../util/generateRepoMap";
+import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { renderChatMessage } from "../../util/messageContent";
-import { getUriPathBasename } from "../../util/uri";
 
 const SUPPORTED_MODEL_TITLE_FAMILIES = [
   "claude-3",
@@ -16,7 +16,7 @@ function isSupportedModel(
   config: ContinueConfig,
   modelTitle?: string,
 ): boolean {
-  if (config.experimental?.modelRoles?.applyCodeBlock) {
+  if (config.experimental?.modelRoles?.repoMapFileSelection) {
     return true;
   }
 
@@ -49,14 +49,14 @@ export async function requestFilesFromRepoMap(
     const repoMap = await generateRepoMap(llm, ide, {
       dirUris: filterDirUri ? [filterDirUri] : undefined,
       includeSignatures: false,
-      outputRelativeUriPaths: false,
+      outputRelativeUriPaths: true,
     });
 
     const prompt = `${repoMap}
 
 Given the above repo map, your task is to decide which files are most likely to be relevant in answering a question. Before giving your answer, you should write your reasoning about which files/folders are most important. This thinking should start with a <reasoning> tag, followed by a paragraph explaining your reasoning, and then a closing </reasoning> tag on the last line.
 
-After this, your response should begin with a <results> tag, followed by a list of each file, one per line, and then a closing </results> tag on the last line. You should select between 5 and 10 files. The names that you list should be the full path from the root of the repo, not just the basename of the file.
+After this, your response should begin with a <results> tag, followed by a list of each file, one per line, and then a closing </results> tag on the last line. You should select between 5 and 10 files. The names that you list should be the exact relative path that you saw in the repo map, not just the basename of the file.
 
 This is the question that you should select relevant files for: "${input}"`;
 
@@ -73,16 +73,20 @@ This is the question that you should select relevant files for: "${input}"`;
       return [];
     }
 
-    const fileUris = content
+    const filepaths = content
       .split("<results>")[1]
       ?.split("</results>")[0]
       ?.split("\n")
       .filter(Boolean)
-      .map((uri) => uri.trim());
+      .map((filepath) => filepath.trim());
 
     const chunks = await Promise.all(
-      fileUris.map(async (uri) => {
-        const content = await ide.readFile(uri);
+      filepaths.map(async (filepath) => {
+        const uri = await resolveRelativePathInDir(filepath, ide);
+        if (!uri) {
+          return undefined;
+        }
+        const content = await ide.readFile(filepath);
         const lineCount = content.split("\n").length;
         const chunk: Chunk = {
           digest: uri,
@@ -96,7 +100,7 @@ This is the question that you should select relevant files for: "${input}"`;
       }),
     );
 
-    return chunks;
+    return chunks.filter((c) => c !== undefined) as Chunk[];
   } catch (e) {
     console.debug("Error requesting files from repo map", e);
     return [];

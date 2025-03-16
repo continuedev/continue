@@ -33,7 +33,7 @@
           "description": "The presence penalty Aof the completion.",
           "type": "number"
         },
-        "frequencePenalty": {
+        "frequencyPenalty": {
           "title": "Frequency Penalty",
           "description": "The frequency penalty of the completion.",
           "type": "number"
@@ -175,6 +175,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -187,12 +188,15 @@
             "llama.cpp",
             "replicate",
             "gemini",
+            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
+            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
+            "ncompass",
             "cloudflare",
             "deepseek",
             "azure",
@@ -238,16 +242,20 @@
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
             "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
             "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
+            "### Ncompass\nnCompass is an extremely fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://app.ncompass.tech/api-settings).",
             "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
             "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
             "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
+            "### SambaNova\n SambaNova provides fast inference of open-source language models with zero data retention. To get started, obtain an API key in [SambaNova Cloud](https://cloud.sambanova.ai/apis).",
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
             "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
+            "### Nebius\nNebius AI platform is a cloud service for machine learning model inference and training. To get started, obtain an API key from the [Nebius console](https://console.nebius.ai/).",
+            "### Vertex AI\nVertex AI provides access to Google's foundation models and ML tools. To get started, enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
@@ -264,7 +272,7 @@
         },
         "apiKey": {
           "title": "Api Key",
-          "description": "OpenAI, Anthropic, Cohere, Together, Novita AI, or other API key",
+          "description": "OpenAI, Anthropic, Cohere, Together, Novita AI, nCompass, or other API key",
           "type": "string"
         },
         "apiBase": {
@@ -481,6 +489,7 @@
                   "huggingface-inference-api",
                   "replicate",
                   "together",
+                  "ncompass",
                   "novita",
                   "cloudflare",
                   "sambanova",
@@ -835,6 +844,7 @@
                       "claude-2",
                       "claude-instant-1",
                       "claude-3-5-sonnet-latest",
+                      "claude-3-7-sonnet-20250219",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
@@ -941,7 +951,10 @@
                   "gemini-1.5-flash",
                   "gemini-1.5-flash-8b",
                   "gemini-2.0-flash-exp",
-                  "gemini-2.0-flash"
+                  "gemini-2.0-flash",
+                  "gemini-2.0-flash-thinking-exp-01-21",
+                  "gemini-2.0-pro-exp-02-05",
+                  "gemini-2.0-flash-lite-preview-02-05"
                 ]
               }
             }
@@ -1314,7 +1327,17 @@
                   "nvidia/Llama-3.1-Nemotron-70B-Instruct",
                   "Qwen/Qwen2-VL-72B-Instruct",
                   "TeleAI/TeleMM",
-                  "deepseek-ai/DeepSeek-V2.5"
+                  "deepseek-ai/DeepSeek-V2.5",
+                  "deepseek-ai/deepseek-vl2",
+                  "deepseek-ai/Janus-Pro-7B",
+                  "deepseek-ai/DeepSeek-V3",
+                  "deepseek-ai/DeepSeek-R1",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
+                  "deepseek-ai/DeepSeek-R1-Distill-Llama-8B"
                 ]
               }
             }
@@ -1372,6 +1395,23 @@
         {
           "if": {
             "properties": {
+              "provider": {
+                "enum": ["ncompass"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["qwen2.5-coder-32b", "qwen2.5-72b", "llama3.3-70b"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
               "apiType": {
                 "const": "azure"
               }
@@ -1403,23 +1443,6 @@
           "if": {
             "properties": {
               "provider": {
-                "const": "llamafile"
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "llamafileCommand": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
                 "enum": ["cerebras"]
               }
             },
@@ -1429,23 +1452,6 @@
             "properties": {
               "model": {
                 "enum": ["llama3.1-8b", "llama3.1-70b"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["text-gen-webui"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "streamingUrl": {
-                "type": "string"
               }
             }
           }
@@ -1639,7 +1645,22 @@
               "model": {
                 "anyOf": [
                   {
-                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
+                    "enum": [
+                      "Qwen2.5-Coder-32B-Instruct",
+                      "Meta-Llama-3.3-70B-Instruct",
+                      "Meta-Llama-3.1-8B-Instruct",
+                      "Meta-Llama-3.1-70B-Instruct",
+                      "Meta-Llama-3.1-405B-Instruct",
+                      "Llama-3.1-Tulu-3-405B",
+                      "Meta-Llama-3.2-1B-Instruct",
+                      "Meta-Llama-3.2-3B-Instruct",
+                      "Llama-3.2-11B-Vision-Instruct",
+                      "Llama-3.2-90B-Vision-Instruct",
+                      "Qwen2.5-72B-Instruct",
+                      "QwQ-32B-Preview",
+                      "DeepSeek-R1-Distill-Llama-70B",
+                      "DeepSeek-R1"
+                    ]
                   },
                   {
                     "type": "string"
@@ -2308,6 +2329,10 @@
                     "type": "string",
                     "description": "Customize the query used to find Jira issues"
                   },
+                  "maxResults": {
+                    "type": "string",
+                    "description": "The maximum number of issues that will be returned. Defaults to 50."
+                  },
                   "apiVersion": {
                     "type": "integer",
                     "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property.",
@@ -2755,14 +2780,14 @@
               "description": "Request options to be used in any fetch requests made by the embeddings provider",
               "$ref": "#/$defs/RequestOptions"
             },
-            "maxChunkSize": {
+            "maxEmbeddingChunkSize": {
               "title": "Maximum Chunk Size",
               "description": "The maximum number of tokens that each chunk of a document is allowed to have",
               "type": "integer",
               "minimum": 128,
               "exclusiveMaximum": 2147483647
             },
-            "maxBatchSize": {
+            "maxEmbeddingBatchSize": {
               "title": "Maximum Batch Size",
               "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
               "type": "integer",
@@ -2834,11 +2859,11 @@
                     "description": "The name of your VertexAI project"
                   },
                   "region": {
-                    "description": "The region your VertexAI model is hosted in - typically central1",
-                    "default": "central1"
+                    "description": "The region your VertexAI model is hosted in - typically us-central1",
+                    "default": "us-central1"
                   },
                   "model": {
-                    "default": "text-embedding-004"
+                    "default": "text-embedding-005"
                   }
                 },
                 "required": ["projectId", "model", "region"]

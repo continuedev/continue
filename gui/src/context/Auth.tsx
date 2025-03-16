@@ -27,6 +27,7 @@ interface AuthContextType {
   login: (useOnboarding: boolean) => Promise<boolean>;
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
+  refreshProfiles: () => void;
   controlServerBetaEnabled: boolean;
   organizations: OrganizationDescription[];
   selectedOrganization: OrganizationDescription | null;
@@ -165,21 +166,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     ideMessenger.request("config/listProfiles", undefined).then((result) => {
       if (result.status === "success") {
-        console.log("PROFILES: ", result.content);
         dispatch(
           updateProfilesThunk({
-            profiles: result.content,
-            selectedProfileId: null,
+            profiles: result.content.profiles,
+            selectedProfileId: result.content.selectedProfileId,
           }),
         );
       }
     });
   }, []);
 
+  const refreshProfiles = async () => {
+    try {
+      await ideMessenger.request("config/refreshProfiles", undefined);
+      ideMessenger.post("showToast", ["info", "Config refreshed"]);
+    } catch (e) {
+      console.error("Failed to refresh profiles", e);
+      ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
+    }
+  };
+
   useWebviewListener(
     "didChangeAvailableProfiles",
     async (data) => {
-      console.log("AVAILABLE: ", data.profiles, data.selectedProfileId);
       dispatch(
         updateProfilesThunk({
           profiles: data.profiles,
@@ -198,6 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         selectedProfile,
         profiles,
+        refreshProfiles,
         selectedOrganization,
         organizations: orgs,
         controlServerBetaEnabled,

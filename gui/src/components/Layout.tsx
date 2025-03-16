@@ -5,6 +5,7 @@ import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { AuthProvider } from "../context/Auth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { selectUseHub } from "../redux/selectors";
 import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
 import {
   addCodeToEdit,
@@ -203,17 +204,21 @@ const Layout = () => {
   );
 
   const isInEditMode = useAppSelector(selectIsInEditMode);
-  useWebviewListener("exitEditMode", async () => {
-    if (!isInEditMode) {
-      return;
-    }
-    dispatch(
-      loadLastSession({
-        saveCurrentSession: false,
-      }),
-    );
-    dispatch(exitEditMode());
-  });
+  useWebviewListener(
+    "exitEditMode",
+    async () => {
+      if (!isInEditMode) {
+        return;
+      }
+      dispatch(
+        loadLastSession({
+          saveCurrentSession: false,
+        }),
+      );
+      dispatch(exitEditMode());
+    },
+    [isInEditMode],
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
@@ -243,6 +248,21 @@ const Layout = () => {
       onboardingCard.open("Quickstart");
     }
   }, [location]);
+
+  const useHub = useAppSelector(selectUseHub);
+
+  // Existing users that have already seen the onboarding card
+  // should be shown an intro card for hub.continue.dev
+  // useEffect(() => {
+  //   if (useHub !== true) {
+  //     return;
+  //   }
+  //   const seenHubIntro = getLocalStorage("seenHubIntro");
+  //   if (!onboardingCard.show && !seenHubIntro) {
+  //     onboardingCard.setActiveTab("ExistingUserHubIntro");
+  //   }
+  //   setLocalStorage("seenHubIntro", true);
+  // }, [onboardingCard.show, useHub]);
 
   return (
     <AuthProvider>
@@ -278,9 +298,7 @@ const Layout = () => {
                 onClick={() => navigate(ROUTES.CONFIG_ERROR)}
               >
                 <strong className="font-bold">Error!</strong>{" "}
-                <span className="block sm:inline">
-                  Could not load config.json
-                </span>
+                <span className="block sm:inline">Could not load config</span>
                 <div className="mt-2 underline">Learn More</div>
               </div>
             )}

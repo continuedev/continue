@@ -11,7 +11,6 @@ import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import AssistantIcon from "./AssistantIcon";
 import { Divider, Option, OptionDiv } from "./shared";
-import { getProfileDisplayText } from "./utils";
 
 interface AssistantSelectOptionsProps {
   onClose: () => void;
@@ -21,7 +20,8 @@ export function AssistantSelectOptions({
   onClose,
 }: AssistantSelectOptionsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { profiles, selectedProfile, selectedOrganization } = useAuth();
+  const { profiles, selectedProfile, selectedOrganization, session, login } =
+    useAuth();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -48,8 +48,8 @@ export function AssistantSelectOptions({
   }
 
   return (
-    <div className="border-lightgray flex min-w-0 flex-col overflow-x-hidden pt-0">
-      <div className={`max-h-[300px]`}>
+    <div className="border-lightgray flex w-full flex-col overflow-x-hidden pt-0">
+      <div className={`max-h-[300px] w-full`}>
         {profiles.map((profile, idx) => {
           return (
             <Option
@@ -68,7 +68,7 @@ export function AssistantSelectOptions({
                 onClose();
               }}
             >
-              <div className="flex min-w-0 items-center">
+              <div className="flex w-full items-center">
                 <div className="mr-2 h-4 w-4 flex-shrink-0">
                   <AssistantIcon assistant={profile} />
                 </div>
@@ -76,7 +76,7 @@ export function AssistantSelectOptions({
                   className="flex-1 truncate"
                   style={{ fontSize: getFontSize() - 2 }}
                 >
-                  {getProfileDisplayText(profile)}
+                  {profile.title}
                 </span>
               </div>
             </Option>
@@ -85,7 +85,10 @@ export function AssistantSelectOptions({
       </div>
 
       <div className="mt-auto w-full">
-        <OptionDiv key={profiles.length} onClick={onNewAssistant}>
+        <OptionDiv
+          key={"new-assistant"}
+          onClick={session ? onNewAssistant : () => login(false)}
+        >
           <div
             className="flex items-center py-0.5"
             style={{ fontSize: getFontSize() - 2 }}

@@ -5,7 +5,10 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setConfigError, setConfigResult } from "../redux/slices/configSlice";
+import {
+  selectDefaultModel,
+  setConfigResult,
+} from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
@@ -25,9 +28,7 @@ function useSetup() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
-  const defaultModelTitle = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
+  const defaultModel = useAppSelector(selectDefaultModel);
 
   const hasLoadedConfig = useRef(false);
 
@@ -45,7 +46,6 @@ function useSetup() {
       }
       hasLoadedConfig.current = true;
       dispatch(setConfigResult(configResult));
-      console.log("selecting 1", profileId);
       dispatch(selectProfileThunk(profileId));
 
       // Perform any actions needed with the config
@@ -95,7 +95,6 @@ function useSetup() {
   useWebviewListener(
     "configUpdate",
     async (update) => {
-      console.log("CONFIG UPDATE: ", update);
       if (!update) {
         return;
       }
@@ -211,10 +210,6 @@ function useSetup() {
     dispatch(setTTSActive(status));
   });
 
-  useWebviewListener("configError", async (error) => {
-    dispatch(setConfigError(error));
-  });
-
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
     dispatch(
@@ -241,9 +236,9 @@ function useSetup() {
   useWebviewListener(
     "getDefaultModelTitle",
     async () => {
-      return defaultModelTitle;
+      return defaultModel?.title;
     },
-    [defaultModelTitle],
+    [defaultModel],
   );
 }
 

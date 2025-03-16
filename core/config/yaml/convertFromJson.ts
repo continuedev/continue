@@ -6,7 +6,7 @@ export function convertConfigJsonToConfigYaml(
   configJson: SerializedContinueConfig,
 ): AssistantUnrolled {
   return {
-    name: "Local Config",
+    name: "Local Assistant",
     version: "1.0.0",
     schema: "v1",
     models: [
@@ -16,10 +16,11 @@ export function convertConfigJsonToConfigYaml(
           name: model.title,
           // defaultCompletionOptions: model.completionOptions,
           provider: model.provider,
-          roles: ["chat"],
+          roles: ["chat", "edit", "apply", "summarize"],
         }),
       ),
-      //   ... tabAutocompleteModels
+      // TODO
+      // tabAutocompleteModels
       // embeddingsModels
       // rerankModels
     ],

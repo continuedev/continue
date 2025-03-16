@@ -2,14 +2,15 @@ import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
 
 import { Range } from "core";
-import { enableHubContinueDev, EXTENSION_NAME } from "core/control-plane/env";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import { GetGhTokenArgs } from "core/protocol/ide";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
+import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import * as URI from "uri-js";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
+import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -28,7 +29,6 @@ import type {
   TerminalOptions,
   Thread,
 } from "core";
-import { SecretStorage } from "./stubs/SecretStorage";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -212,7 +212,7 @@ class VsCodeIde implements IDE {
           .showInformationMessage(
             "We'll only ask you to log in if using the free trial. To avoid this prompt, make sure to remove free trial models from your config.json",
             "Remove for me",
-            "Open config.json",
+            "Open Assistant configuration",
           )
           .then((selection) => {
             if (selection === "Remove for me") {
@@ -223,7 +223,7 @@ class VsCodeIde implements IDE {
                 configJson.tabAutocompleteModel = undefined;
                 return configJson;
               });
-            } else if (selection === "Open config.json") {
+            } else if (selection === "Open Assistant configuration") {
               this.openFile(getConfigJsonPath());
             }
           });
@@ -645,9 +645,7 @@ class VsCodeIde implements IDE {
         "enableContinueForTeams",
         false,
       ),
-      continueTestEnvironment: settings.get<boolean>("enableContinueHub")
-        ? "production"
-        : "none",
+      continueTestEnvironment: "production",
       pauseCodebaseIndexOnStart: settings.get<boolean>(
         "pauseCodebaseIndexOnStart",
         false,
@@ -662,15 +660,6 @@ class VsCodeIde implements IDE {
 
   async getIdeSettings(): Promise<IdeSettings> {
     const ideSettings = this.getIdeSettingsSync();
-
-    // Feature flag for when hub is enabled
-    if (ideSettings.continueTestEnvironment !== "production") {
-      const enableHub = await enableHubContinueDev();
-      if (enableHub) {
-        ideSettings.continueTestEnvironment = "production";
-      }
-    }
-
     return ideSettings;
   }
 }

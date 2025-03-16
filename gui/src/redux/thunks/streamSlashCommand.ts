@@ -5,6 +5,7 @@ import {
   RangeInFile,
   SlashCommandDescription,
 } from "core";
+import { modelSupportsTools } from "core/llm/autodetect";
 import { selectDefaultModel } from "../slices/configSlice";
 import { abortStream, streamUpdate } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -30,10 +31,17 @@ export const streamSlashCommand = createAsyncThunk<
     const defaultModel = selectDefaultModel(state);
     const isStreaming = state.session.isStreaming;
     const streamAborter = state.session.streamAborter;
+    const toolSettings = state.ui.toolSettings;
 
     if (!defaultModel) {
       throw new Error("Default model not defined");
     }
+
+    const useTools = state.ui.useTools;
+    const includeTools =
+      useTools &&
+      modelSupportsTools(defaultModel) &&
+      state.session.mode === "chat";
 
     const modelTitle = defaultModel.title;
 
@@ -55,6 +63,14 @@ export const streamSlashCommand = createAsyncThunk<
         params: slashCommand.params,
         historyIndex,
         selectedCode,
+        completionOptions: includeTools
+          ? {
+              // Temporarily commented out until slash commands are hooked up to the tool use feedback loop
+              // tools: state.config.config.tools.filter(
+              //   (tool) => toolSettings[tool.function.name] !== "disabled",
+              // ),
+            }
+          : {},
       },
       streamAborter.signal,
     )) {
