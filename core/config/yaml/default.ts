@@ -6,6 +6,7 @@ export const defaultConfigYaml: AssistantUnrolled = {
   context: [],
   name: "Local Assistant",
   version: "1.0.0",
+  schema: "v1",
 };
 
 export const defaultConfigYamlJetBrains: AssistantUnrolled = {
@@ -13,4 +14,5 @@ export const defaultConfigYamlJetBrains: AssistantUnrolled = {
   context: [],
   name: "Local Assistant",
   version: "1.0.0",
+  schema: "v1",
 };
