@@ -83,9 +83,9 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
           </div>
 
           {isExpanded && !!args.length && (
-            <div className="ml-7">
+            <div className="ml-7 mt-1">
               {args.map(([key, value]) => (
-                <div key={key} className="flex gap-2 py-1">
+                <div key={key} className="flex gap-2 py-0.5">
                   <span className="text-lightgray">{key}:</span>
                   <code className="lines lines-1">{value}</code>
                 </div>
