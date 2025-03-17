@@ -60,7 +60,9 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
               {tool?.faviconUrl && (
                 <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
               )}
-              <span className="">Continue wants to{wouldLikeToMessage}</span>
+              <div className="">
+                Continue wants to <span>{wouldLikeToMessage.trim()}</span>
+              </div>
             </div>
             {!!args.length ? (
               <div
