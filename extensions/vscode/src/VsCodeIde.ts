@@ -584,13 +584,13 @@ class VsCodeIde implements IDE {
         return line?.match(/^ */)?.[0].length ?? 0;
       }
 
-      function formatLine(line: string, sectionIndent: number): string {
-        return line.replace(new RegExp(`^[ ]{0,${n}}`), "");
-      }
+      // function formatLine(line: string, sectionIndent: number): string {
+      //   return line.replace(new RegExp(`^[ ]{0,${sectionIndent}}`), "");
+      // }
 
       let leading = false;
       let sectionIndent = 0;
-      let sectionTrim = 0;
+      // let sectionTrim = 0;
       for (const line of dirResults.split("\n").filter((l) => !!l)) {
         if (line.startsWith("./") || line === "--") {
           leading = true;
@@ -604,7 +604,7 @@ class VsCodeIde implements IDE {
             // Record spacing at first non-single char line
             leading = false;
             sectionIndent = countLeadingSpaces(line);
-            keepLines.push(formatLine(line, sectionTrim));
+            keepLines.push(line);
           }
           continue;
         }
@@ -615,7 +615,7 @@ class VsCodeIde implements IDE {
         //   relevantThing
         //
         if (countLeadingSpaces(line) >= sectionIndent) {
-          keepLines.push(formatLine(line, sectionIndent));
+          keepLines.push(line);
         }
       }
       results.push(keepLines.join("\n"));
