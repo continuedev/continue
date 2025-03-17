@@ -30,7 +30,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     }
 
     dispatch(setCalling());
-    debugger;
+
     const result = await extra.ideMessenger.request("tools/call", {
       toolCall: toolCallState.toolCall,
       selectedModelTitle: defaultModel.title,
