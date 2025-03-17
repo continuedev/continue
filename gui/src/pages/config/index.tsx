@@ -48,12 +48,7 @@ function ConfigPage() {
     dispatch(selectProfileThunk(id));
   };
 
-  const [hubEnabled, setHubEnabled] = useState(false);
-  useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
-      setHubEnabled(continueTestEnvironment === "production");
-    });
-  }, [ideMessenger]);
+  const hubEnabled = false;
 
   function handleOpenConfig() {
     if (!selectedProfile) {
@@ -223,7 +218,7 @@ function ConfigPage() {
         <div className="flex flex-col">
           <div className="flex max-w-[400px] flex-col gap-4 py-6">
             <h2 className="mb-1 mt-0">Configuration</h2>
-            {profiles ? (
+            {hubEnabled && profiles ? (
               <>
                 <div className="flex flex-col gap-1.5">
                   <span className="text-lightgray">{`${hubEnabled ? "Assistant" : "Profile"}`}</span>
@@ -314,7 +309,7 @@ function ConfigPage() {
                 )} */}
               </>
             ) : (
-              <div>Loading...</div>
+              hubEnabled && <div>Loading...</div>
             )}
             <div>
               <h2 className="m-0 mb-3 p-0 text-center text-sm">Model Roles</h2>
