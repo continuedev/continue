@@ -180,9 +180,10 @@ export const sessionSlice = createSlice({
       }: PayloadAction<{
         index: number;
         editorState: JSONContent;
+        cancelsToolId: string | undefined;
       }>,
     ) => {
-      const { index, editorState } = payload;
+      const { index, editorState, cancelsToolId } = payload;
 
       if (state.history.length && index < state.history.length) {
         // Resubmission - update input message, truncate history after resubmit with new empty response message
@@ -209,7 +210,7 @@ export const sessionSlice = createSlice({
         state.curCheckpointIndex = Math.floor(index / 2);
       } else {
         // New input/response messages
-        state.history = state.history.concat([
+        const newMessages: ChatHistoryItemWithMessageId[] = [
           {
             message: {
               id: uuidv4(),
@@ -227,7 +228,22 @@ export const sessionSlice = createSlice({
             },
             contextItems: [],
           },
-        ]);
+        ];
+
+        if (cancelsToolId) {
+          newMessages.unshift({
+            message: {
+              role: "tool",
+              content:
+                "The user cancelled this tool call and is giving further instructions/feedback below.",
+              toolCallId: cancelsToolId,
+              id: uuidv4(),
+            },
+            contextItems: [],
+          });
+        }
+
+        state.history = state.history.concat(newMessages);
 
         state.curCheckpointIndex = Math.floor((state.history.length - 1) / 2); // TODO this feels really fragile
       }
@@ -294,7 +310,6 @@ export const sessionSlice = createSlice({
       state.streamAborter = new AbortController();
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
-
       if (state.history.length) {
         function toolCallDeltaToState(
           toolCallDelta: ToolCallDelta,
@@ -332,7 +347,7 @@ export const sessionSlice = createSlice({
                 id: uuidv4(),
               },
               contextItems: [],
-            })
+            });
             continue;
           }
 
@@ -345,7 +360,7 @@ export const sessionSlice = createSlice({
               !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
               // And there's a difference in tool call presence
               (lastMessage.toolCalls?.length ?? 0) !==
-              (message.toolCalls?.length ?? 0))
+                (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -495,9 +510,9 @@ export const sessionSlice = createSlice({
       state.allSessionMetadata = state.allSessionMetadata.map((session) =>
         session.sessionId === payload.sessionId
           ? {
-            ...session,
-            ...payload,
-          }
+              ...session,
+              ...payload,
+            }
           : session,
       );
       if (payload.title && payload.sessionId === state.id) {
@@ -532,8 +547,9 @@ export const sessionSlice = createSlice({
         payload.rangeInFileWithContents.filepath,
       );
 
-      const lineNums = `(${payload.rangeInFileWithContents.range.start.line + 1
-        }-${payload.rangeInFileWithContents.range.end.line + 1})`;
+      const lineNums = `(${
+        payload.rangeInFileWithContents.range.start.line + 1
+      }-${payload.rangeInFileWithContents.range.end.line + 1})`;
 
       contextItems.push({
         name: `${fileName} ${lineNums}`,
@@ -718,9 +734,9 @@ function addPassthroughCases(
 ) {
   thunks.forEach((thunk) => {
     builder
-      .addCase(thunk.fulfilled, (state, action) => { })
-      .addCase(thunk.rejected, (state, action) => { })
-      .addCase(thunk.pending, (state, action) => { });
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
   });
 }
 
