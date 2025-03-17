@@ -140,13 +140,20 @@ class MCPConnection {
         }),
       ]);
     } catch (error) {
-      // don't throw error if it's just a "server already running" case
-      if (
-        !(
-          error instanceof Error &&
-          error.message.startsWith("StdioClientTransport already started")
-        )
-      ) {
+      if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("spawn") && msg.includes("enoent")) {
+          const command = msg.split(" ")[1];
+          throw new Error(
+            `command "${command}" not found. To use this MCP server, install the ${command} CLI.`,
+          );
+        } else if (
+          !error.message.startsWith("StdioClientTransport already started")
+        ) {
+          // don't throw error if it's just a "server already running" case
+          throw error;
+        }
+      } else {
         throw error;
       }
     }

@@ -392,6 +392,7 @@ async function configYamlToContinueConfig(
             ...server,
           },
         });
+
         await mcpConnection.modifyConfig(
           continueConfig,
           mcpId,
