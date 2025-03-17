@@ -87,7 +87,7 @@ async function callToolFromUri(
       }
 
       const contextItems: ContextItem[] = [];
-      return (response.content as any).forEach((item: any) => {
+      (response.content as any).forEach((item: any) => {
         if (item.type === "text") {
           contextItems.push({
             name: extras.tool.displayTitle,
@@ -123,7 +123,7 @@ async function callToolFromUri(
           });
         }
       });
-
+      return contextItems;
     default:
       throw new Error(`Unsupported protocol: ${parsedUri?.protocol}`);
   }
