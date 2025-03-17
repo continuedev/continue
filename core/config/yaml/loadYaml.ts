@@ -369,6 +369,11 @@ async function configYamlToContinueConfig(
 
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
+  if (config.mcpServers) {
+    await mcpManager.removeUnusedConnections(
+      config.mcpServers.map((s) => s.name),
+    );
+  }
   await Promise.allSettled(
     config.mcpServers?.map(async (server) => {
       const abortController = new AbortController();
