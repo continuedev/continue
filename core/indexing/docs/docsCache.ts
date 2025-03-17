@@ -6,9 +6,12 @@ import { Chunk } from "../../";
  * Generate a standardized S3 cache key for any doc URL.
  * This creates a predictable cache key format based on the embedding provider and URL.
  */
-export function getS3CacheKey(embeddingsProviderId: string, url: string): string {
+export function getS3CacheKey(
+  embeddingsProviderId: string,
+  url: string,
+): string {
   // URL-encode and normalize the URL to use as cache key
-  const normalizedUrl = encodeURIComponent(url);
+  const normalizedUrl = encodeURIComponent(url.replace(/\//g, "_"));
   return `${embeddingsProviderId}/${normalizedUrl}`;
 }
 

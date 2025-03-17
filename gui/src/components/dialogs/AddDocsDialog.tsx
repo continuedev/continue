@@ -85,7 +85,7 @@ function AddDocsDialog() {
         <h1 className="mb-0 hidden sm:block">Add documentation</h1>
         <h1 className="sm:hidden">Add docs</h1>
         <p className="m-0 mt-2 p-0 text-stone-500">
-          For the @docs context provider
+          Common documentation sites are cached for faster loading
         </p>
         <div className="mt-3">
           <form onSubmit={onSubmit} className="flex flex-col gap-1">
