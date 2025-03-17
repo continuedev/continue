@@ -164,7 +164,11 @@ export interface ILLM extends LLMOptions {
 }
 
 export interface ModelInstaller {
-  installModel(modelName: string, signal: AbortSignal, progressReporter?: (task: string, increment: number, total: number) => void): Promise<any>;
+  installModel(
+    modelName: string,
+    signal: AbortSignal,
+    progressReporter?: (task: string, increment: number, total: number) => void,
+  ): Promise<any>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -1242,6 +1246,7 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  rules?: string[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1263,6 +1268,7 @@ export interface BrowserSerializedContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  rules?: string[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;

@@ -24,6 +24,7 @@ export interface ProfileDescription {
   errors: ConfigValidationError[] | undefined;
   uri: string;
   unrolledAssistant?: AssistantUnrolled;
+  rawYaml?: string;
 }
 
 export interface OrganizationDescription {

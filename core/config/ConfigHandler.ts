@@ -170,6 +170,7 @@ export class ConfigHandler {
   }
 
   async loadAssistantsForSelectedOrg() {
+    // debugger;
     // Get the profiles and create their lifecycle managers
     const userId = await this.controlPlaneClient.userId;
     const selectedOrgId = await this.getSelectedOrgId();
@@ -186,6 +187,7 @@ export class ConfigHandler {
 
       const hubProfiles = await Promise.all(
         assistants.map(async (assistant) => {
+          // debugger;
           const profileLoader = await PlatformProfileLoader.create(
             {
               ...assistant.configResult,
@@ -200,6 +202,7 @@ export class ConfigHandler {
             this.ideSettingsPromise,
             this.writeLog,
             this.reloadConfig.bind(this),
+            assistant.rawYaml,
           );
 
           return new ProfileLifecycleManager(profileLoader, this.ide);
