@@ -86,18 +86,42 @@ async function callToolFromUri(
         throw new Error(`Failed to call tool: ${toolName}`);
       }
 
-      return (response.content as any).map((item: any): ContextItem => {
-        if (item.type !== "text") {
-          throw new Error(
-            `Continue received item of type "${item.type}" from MCP tool, but currently only supports "text".`,
-          );
+      const contextItems: ContextItem[] = [];
+      return (response.content as any).forEach((item: any) => {
+        if (item.type === "text") {
+          contextItems.push({
+            name: extras.tool.displayTitle,
+            description: "Tool output",
+            content: item.text,
+            icon: extras.tool.faviconUrl,
+          });
+        } else if (item.type === "resource") {
+          // TODO resource change subscribers https://modelcontextprotocol.io/docs/concepts/resources
+          if (item.resource?.blob) {
+            contextItems.push({
+              name: extras.tool.displayTitle,
+              description: "MCP Item Error",
+              content:
+                "Error: tool call received unsupported blob resource item",
+              icon: extras.tool.faviconUrl,
+            });
+          }
+          // TODO account for mimetype? // const mimeType = item.resource.mimeType
+          // const uri = item.resource.uri;
+          contextItems.push({
+            name: extras.tool.displayTitle,
+            description: "Tool output",
+            content: item.resource.text,
+            icon: extras.tool.faviconUrl,
+          });
+        } else {
+          contextItems.push({
+            name: extras.tool.displayTitle,
+            description: "MCP Item Error",
+            content: `Error: tool call received unsupported item of type "${item.type}"`,
+            icon: extras.tool.faviconUrl,
+          });
         }
-        return {
-          name: extras.tool.displayTitle,
-          description: "Tool output",
-          content: item.text,
-          icon: extras.tool.faviconUrl,
-        };
       });
 
     default:
