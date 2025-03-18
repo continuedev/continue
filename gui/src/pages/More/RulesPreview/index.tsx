@@ -47,20 +47,15 @@ export function RulesPreview() {
     (state: RootState) => state.config.config.rules ?? [],
   );
 
-  const parsed = useMemo(() => {
-    if (!selectedProfile?.rawYaml) {
-      return undefined;
-    }
-
-    return parseConfigYaml(selectedProfile?.rawYaml ?? "");
-  }, [rules]);
-
   const mergedRules = useMemo(() => {
+    const parsed = selectedProfile?.rawYaml
+      ? parseConfigYaml(selectedProfile?.rawYaml ?? "")
+      : undefined;
     return rules.map((rule, index) => ({
       unrolledRule: rule,
       ruleFromYaml: parsed?.rules?.[index],
     }));
-  }, [rules, parsed]);
+  }, [rules]);
 
   const openUrl = (path: string) =>
     ideMessenger.request("controlPlane/openUrl", {
