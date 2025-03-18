@@ -30,7 +30,6 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
-import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 import {
   OnboardingCard,
@@ -42,7 +41,6 @@ import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
@@ -145,7 +143,6 @@ export function Chat() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
-  const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
@@ -549,13 +546,7 @@ export function Chat() {
                 </div>
               )}
 
-              {showTutorialCard !== false && !onboardingCard.show && (
-                <div className="flex w-full justify-center">
-                  <TutorialCard onClose={closeTutorialCard} />
-                </div>
-              )}
-
-              {!onboardingCard.show && showTutorialCard === false && (
+              {!onboardingCard.show && (
                 <div className="mx-2 mt-10">
                   <ExploreHubCard />
                 </div>
