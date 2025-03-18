@@ -55,6 +55,7 @@ class RepoMapContextProvider extends BaseContextProvider {
       args.ide,
       {
         onlyDirs: true,
+        source: "load submenu items - repo map",
       },
       workspaceDirs,
     );

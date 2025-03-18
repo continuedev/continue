@@ -10,6 +10,7 @@ import {
 } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
+import { PRODUCTION_ENV } from "../../control-plane/env.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -39,6 +40,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       },
       title: workspaceTitle,
       errors: undefined,
+      uri: `${PRODUCTION_ENV.APP_URL}workspaces/${workspaceId}`,
     };
 
     setInterval(async () => {
@@ -60,7 +62,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       )) as any);
     const serializedConfig: SerializedContinueConfig = settings;
 
-    const results = await doLoadConfig(
+    return await doLoadConfig(
       this.ide,
       ideSettingsPromise,
       this.controlPlaneClient,
@@ -69,12 +71,8 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       undefined,
       undefined,
       this.workspaceId,
+      undefined,
     );
-
-    return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
-    };
   }
 
   setIsActive(isActive: boolean): void {}

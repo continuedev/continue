@@ -59,15 +59,17 @@ import {
   toFimBody,
 } from "./openaiTypeConverters.js";
 
-
 export class LLMError extends Error {
-  constructor(message: string, public llm: ILLM) {
+  constructor(
+    message: string,
+    public llm: ILLM,
+  ) {
     super(message);
   }
 }
 
 export function isModelInstaller(provider: any): provider is ModelInstaller {
-  return provider && typeof provider.installModel === 'function';
+  return provider && typeof provider.installModel === "function";
 }
 
 export abstract class BaseLLM implements ILLM {
@@ -193,11 +195,11 @@ export abstract class BaseLLM implements ILLM {
         options.completionOptions?.maxTokens ??
         (llmInfo?.maxCompletionTokens
           ? Math.min(
-              llmInfo.maxCompletionTokens,
-              // Even if the model has a large maxTokens, we don't want to use that every time,
-              // because it takes away from the context length
-              this.contextLength / 4,
-            )
+            llmInfo.maxCompletionTokens,
+            // Even if the model has a large maxTokens, we don't want to use that every time,
+            // because it takes away from the context length
+            this.contextLength / 4,
+          )
           : DEFAULT_MAX_TOKENS),
     };
     this.requestOptions = options.requestOptions;
@@ -396,7 +398,7 @@ export abstract class BaseLLM implements ILLM {
             let model = error?.match(/model '(.*)' not found/)?.[1];
             if (model && resp.url.match("127.0.0.1:11434")) {
               text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-              throw new LLMError(text, this);// No need to add HTTP status details
+              throw new LLMError(text, this); // No need to add HTTP status details
             } else if (text.includes("/api/chat")) {
               text =
                 "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
@@ -780,8 +782,9 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
+    let thinking = "";
     let completion = "";
-    let citations: null | string[] = null
+    let citations: null | string[] = null;
 
     try {
       if (this.templateMessages) {
@@ -809,8 +812,6 @@ export abstract class BaseLLM implements ILLM {
             completion = renderChatMessage(msg);
           } else {
             // Stream true
-            console.log("Streaming");
-
             const stream = this.openaiAdapter.chatCompletionStream(
               {
                 ...body,
@@ -821,9 +822,14 @@ export abstract class BaseLLM implements ILLM {
             for await (const chunk of stream) {
               const result = fromChatCompletionChunk(chunk);
               if (result) {
+                completion += result.content;
                 yield result;
               }
-              if (!citations && (chunk as any).citations && Array.isArray((chunk as any).citations)) {
+              if (
+                !citations &&
+                (chunk as any).citations &&
+                Array.isArray((chunk as any).citations)
+              ) {
                 citations = (chunk as any).citations;
               }
             }
@@ -834,8 +840,16 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-            completion += chunk.content;
-            yield chunk;
+
+            if (chunk.role === "assistant") {
+              completion += chunk.content;
+              yield chunk;
+            }
+
+            if (chunk.role === "thinking") {
+              thinking += chunk.content;
+              yield chunk;
+            }
           }
         }
       }
@@ -847,10 +861,24 @@ export abstract class BaseLLM implements ILLM {
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
     if (logEnabled && this.writeLog) {
+      if (thinking) {
+        await this.writeLog(`Thinking:\n${thinking}\n\n`);
+      }
+      /*
+      TODO: According to: https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking
+      During tool use, you must pass thinking and redacted_thinking blocks back to the API,
+      and you must include the complete unmodified block back to the API. This is critical
+      for maintaining the model's reasoning flow and conversation integrity.
+      
+      On the other hand, adding thinking and redacted_thinking blocks are ignored on subsequent
+      requests when not using tools, so it's the simplest option to always add to history.
+      */
       await this.writeLog(`Completion:\n${completion}\n\n`);
 
       if (citations) {
-        await this.writeLog(`Citations:\n${citations.map((c, i) => `${i + 1}: ${c}`).join("\n")}\n\n`);
+        await this.writeLog(
+          `Citations:\n${citations.map((c, i) => `${i + 1}: ${c}`).join("\n")}\n\n`,
+        );
       }
     }
 
@@ -920,7 +948,7 @@ export abstract class BaseLLM implements ILLM {
     );
   }
 
-  protected async *_streamComplete(
+  protected async * _streamComplete(
     prompt: string,
     signal: AbortSignal,
     options: CompletionOptions,
@@ -928,7 +956,7 @@ export abstract class BaseLLM implements ILLM {
     throw new Error("Not implemented");
   }
 
-  protected async *_streamChat(
+  protected async * _streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,

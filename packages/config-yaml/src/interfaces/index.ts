@@ -32,6 +32,7 @@ export function getLocationsToLook(
   blockSlug: PackageSlug | undefined,
   currentUserSlug: string,
   secretName: string,
+  orgScopeSlug: string | null,
 ): SecretLocation[] {
   const locationsToLook: SecretLocation[] = [
     ...(blockSlug
@@ -57,11 +58,15 @@ export function getLocationsToLook(
       secretName,
     },
     // Organization that owns assistant (org secrets can only be used in assistants owned by that org)
-    {
-      secretType: SecretType.Organization as const,
-      orgSlug: assistantSlug.ownerSlug,
-      secretName,
-    },
+    ...(orgScopeSlug
+      ? [
+          {
+            secretType: SecretType.Organization as const,
+            orgSlug: orgScopeSlug,
+            secretName,
+          },
+        ]
+      : []),
     // User
     {
       secretType: SecretType.User as const,
@@ -90,6 +95,7 @@ export function listAvailableSecrets(
   assistantSlug: PackageSlug,
   blockSlug: PackageSlug | undefined,
   currentUserSlug: string,
+  orgScopeSlug: string | null,
 ): SecretLocation[] {
   // Create a set of all secret names
   const allSecretNames = new Set([
@@ -108,6 +114,7 @@ export function listAvailableSecrets(
       blockSlug,
       currentUserSlug,
       secretName,
+      orgScopeSlug,
     );
 
     // Go through the locations one by one
@@ -155,6 +162,7 @@ export async function resolveFQSN(
   currentUserSlug: string,
   fqsn: FQSN,
   platformSecretStore: PlatformSecretStore,
+  orgScopeSlug: string | null,
 ): Promise<SecretResult> {
   // First create the list of secret locations to try in order
   const assistantSlug = fqsn.packageSlugs[0];
@@ -164,6 +172,7 @@ export async function resolveFQSN(
     blockSlug,
     currentUserSlug,
     fqsn.secretName,
+    orgScopeSlug,
   );
 
   // Then try to get the secret from each location

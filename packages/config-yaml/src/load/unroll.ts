@@ -23,11 +23,20 @@ import { useProxyForUnrenderedSecrets } from "./clientRender.js";
 export function parseConfigYaml(configYaml: string): ConfigYaml {
   try {
     const parsed = YAML.parse(configYaml);
-    const result = configYamlSchema.parse(parsed);
-    return result;
-  } catch (e: any) {
-    console.log(configYaml);
-    throw new Error(`Failed to parse rolled assistant: ${e.message}`);
+    const result = configYamlSchema.safeParse(parsed);
+    if (result.success) {
+      return result.data;
+    }
+    throw new Error(
+      result.error.errors
+        .map((e) => `${e.path.join(".")}: ${e.message}`)
+        .join(""),
+    );
+  } catch (e) {
+    console.log("Failed to parse rolled assistant:", configYaml);
+    throw new Error(
+      `Failed to parse assistant:\n${e instanceof Error ? e.message : e}`,
+    );
   }
 }
 
@@ -273,15 +282,7 @@ export async function unrollBlocks(
   const sections: (keyof Omit<
     ConfigYaml,
     "name" | "version" | "rules" | "schema"
-  >)[] = [
-    "models",
-    "context",
-    "data",
-    "tools",
-    "mcpServers",
-    "prompts",
-    "docs",
-  ];
+  >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // For each section, replace "uses/with" blocks with the real thing
   for (const section of sections) {

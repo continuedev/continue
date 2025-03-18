@@ -170,3 +170,4 @@ extensions/.granite-code-debug/
 *.vsix
 
 .continuerules
+**/.continue/assistants/

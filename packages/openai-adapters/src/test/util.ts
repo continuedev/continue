@@ -260,6 +260,65 @@ export function testChat(api: BaseLlmApi, model: string) {
     const parsedArgs = JSON.parse(args);
     expect(parsedArgs.name).toBe("Nate");
   });
+
+  test("Tool Call second message works", async () => {
+    let response = "";
+    for await (const chunk of api.chatCompletionStream(
+      {
+        messages: [
+          {
+            role: "user",
+            content:
+              "Hi, my name is Nate. Please call the say_hello function to respond to me, then respond to me again.",
+          },
+          {
+            role: "assistant",
+            tool_calls: [
+              {
+                function: {
+                  arguments: '{"name":"Nate"}',
+                  name: "say_hello",
+                },
+                id: "tool_call_1",
+                type: "function",
+              },
+            ],
+          },
+          {
+            role: "tool",
+            tool_call_id: "tool_call_1",
+            content: "Nate was greeted",
+          },
+        ],
+        tools: [
+          {
+            function: {
+              name: "say_hello",
+              description: "Say Hello",
+              parameters: {
+                type: "object",
+                properties: {
+                  name: {
+                    type: "string",
+                    description: "The name of the person to greet",
+                  },
+                },
+              },
+            },
+            type: "function",
+          },
+        ],
+        stream: true,
+        model,
+      },
+      new AbortController().signal,
+    )) {
+      console.log(JSON.stringify(chunk, null, 2));
+      response += chunk.choices[0].delta.content ?? "";
+    }
+
+    expect(response.length).toBeGreaterThan(0);
+  });
 }
 
 export function testCompletion(api: BaseLlmApi, model: string) {

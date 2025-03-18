@@ -160,7 +160,7 @@ export class VsCodeExtension {
     });
 
     this.configHandler.onConfigUpdate(
-      async ({ config: newConfig, errors, configLoadInterrupted }) => {
+      async ({ config: newConfig, configLoadInterrupted }) => {
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);
@@ -307,6 +307,12 @@ export class VsCodeExtension {
     vscode.workspace.onDidDeleteFiles(async (event) => {
       this.core.invoke("files/deleted", {
         uris: event.files.map((uri) => uri.toString()),
+      });
+    });
+
+    vscode.workspace.onDidCloseTextDocument(async (event) => {
+      this.core.invoke("files/closed", {
+        uris: [event.uri.toString()],
       });
     });
 

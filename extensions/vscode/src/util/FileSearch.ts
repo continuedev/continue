@@ -24,7 +24,9 @@ export class FileSearch {
     },
   });
   private async initializeFileSearchState() {
-    const results = await walkDirs(this.ide);
+    const results = await walkDirs(this.ide, {
+      source: "file search initialization",
+    });
     this.miniSearch.addAll(
       results.flat().map((uri) => ({
         id: uri,
