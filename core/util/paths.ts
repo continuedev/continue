@@ -94,7 +94,7 @@ export function getSessionsListPath(): string {
 export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
   const p = path.join(getContinueGlobalPath(), "config.json");
   if (!fs.existsSync(p)) {
-    if (ideType === "jetbrains") {
+    if (ideType.toLowerCase() === "jetbrains") {
       fs.writeFileSync(p, JSON.stringify(defaultConfigJetBrains, null, 2));
     } else {
       fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
@@ -106,7 +106,7 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
 export function getConfigYamlPath(ideType?: IdeType): string {
   const p = path.join(getContinueGlobalPath(), "config.yaml");
   // if (!fs.existsSync(p)) {
-  //   if (ideType === "jetbrains") {
+  //   if (ideType.toLowerCase() === "jetbrains") {
   //     fs.writeFileSync(p, YAML.stringify(defaultConfigYamlJetBrains));
   //   } else {
   //     fs.writeFileSync(p, YAML.stringify(defaultConfigYaml));
