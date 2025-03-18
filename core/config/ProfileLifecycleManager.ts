@@ -1,5 +1,4 @@
 import {
-  AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
   FullSlug,
@@ -23,7 +22,6 @@ export interface ProfileDescription {
   iconUrl: string;
   errors: ConfigValidationError[] | undefined;
   uri: string;
-  unrolledAssistant?: AssistantUnrolled;
   rawYaml?: string;
 }
 
