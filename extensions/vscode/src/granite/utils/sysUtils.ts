@@ -31,13 +31,14 @@ export async function getSystemDiskSpace(): Promise<DiskSpace> {
 
 // Returns the system's available GPUs
 export async function getSystemGPUs(): Promise<
-  { model: string; cores: number }[]
+  { model: string; cores: number; vram: number }[]
 > {
   try {
     const gpus = await si.graphics();
     return gpus.controllers.map((controller) => ({
       model: controller.model,
       cores: controller.cores || 0,
+      vram: controller.vram || 0,
     }));
   } catch (error) {
     console.error("Error detecting GPUs:", error);

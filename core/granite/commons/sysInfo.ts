@@ -8,7 +8,7 @@ export interface SystemInfo {
   };
   cpus: number;
   diskSpace: DiskSpace;
-  gpus: { model: string; cores: number }[];
+  gpus: { model: string; cores: number; vram: number }[];
 }
 
 export interface GpuInfo {
