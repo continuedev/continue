@@ -191,7 +191,7 @@ async function getWorkspaceConfigs(ide: IDE): Promise<ContinueRcJson[]> {
     workspaceConfigs = await ide.getWorkspaceConfigs();
 
     // Config is sent over the wire from JB so we need to parse it
-    if (ideInfo.ideType.toLowerCase() === "jetbrains") {
+    if (ideInfo.ideType === "jetbrains") {
       workspaceConfigs = (workspaceConfigs as any).map(JSON.parse);
     }
   } catch (e) {
