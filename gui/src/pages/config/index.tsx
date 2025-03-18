@@ -195,7 +195,7 @@ function ConfigPage() {
               <div>You are using Continue for Teams</div>
             )}
 
-            {profiles ? (
+            {profiles && profiles.length > 1 ? (
               <>
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between gap-1.5 text-sm">
