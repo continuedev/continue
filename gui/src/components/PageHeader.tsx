@@ -1,5 +1,4 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { AccountButton } from "../pages/config/AccountButton";
 
 export interface PageHeaderProps {
   onTitleClick?: () => void;
@@ -34,7 +33,6 @@ export default function PageHeader({
                 {title}
               </span>
             </div>
-            <AccountButton />
           </>
         )}
       </div>
