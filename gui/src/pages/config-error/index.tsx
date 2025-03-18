@@ -33,7 +33,7 @@ export default function ConfigErrorPage() {
         <div className="py-5">
           <h3 className="mb-2 mt-0 text-xl">Config Errors</h3>
           <p className="text-md mb-4">
-            Please resolve the following errors in your config.json file.
+            Please resolve the following errors in your assistant configuration.
           </p>
           <div className="flex flex-col gap-5">
             {sortedErrors.length > 0 ? (
