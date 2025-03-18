@@ -49,6 +49,7 @@ export class MCPManagerSingleton {
   async removeUnusedConnections(keepIds: string[]) {
     const toRemove = this.connections
       .keys()
+      .toArray()
       .filter((k) => !keepIds.includes(k));
     await Promise.all(toRemove.map(this.removeConnection));
   }
