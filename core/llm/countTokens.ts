@@ -398,6 +398,7 @@ function compileChatMessages(
     msgsCopy.push(promptMsg);
   }
 
+  /* Original logic, moved to core/llm/constructMessages.ts
   if (
     (systemMessage && systemMessage.trim() !== "") ||
     msgs?.[0]?.role === "system"
@@ -419,6 +420,29 @@ function compileChatMessages(
     };
     // Insert as second to last
     // Later moved to top, but want second-priority to last user message
+    msgsCopy.splice(-1, 0, systemChatMsg);
+  }*/
+
+  if (
+    msgs?.[0]?.role === "system"
+  ) {
+    let content = "";
+
+    content = renderChatMessage(msgs?.[0]);
+
+    const systemChatMsg: ChatMessage = {
+      role: "system",
+      content,
+    };
+    // Insert as second to last
+    // Later moved to top, but want second-priority to last user message
+    msgsCopy.splice(-1, 0, systemChatMsg);
+  } else if (systemMessage && systemMessage.trim() !== "") {
+    // In case core/llm/constructMessages.ts constructSystemPrompt() is not called
+    const systemChatMsg: ChatMessage = {
+      role: "system",
+      content: systemMessage,
+    };
     msgsCopy.splice(-1, 0, systemChatMsg);
   }
 
