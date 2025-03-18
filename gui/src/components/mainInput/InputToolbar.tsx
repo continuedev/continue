@@ -1,4 +1,4 @@
-import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { AtSymbolIcon, PaperAirplaneIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
@@ -50,7 +50,8 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
 
 const EnterButton = styled.button<{ isPrimary?: boolean }>`
   all: unset;
-  padding: 2px 4px;
+  padding: 3px 4px;
+  padding-bottom: 0px;
   display: flex;
   align-items: center;
   background-color: ${(props) =>
@@ -83,6 +84,7 @@ interface InputToolbarProps {
   toolbarOptions?: ToolbarOptions;
   disabled?: boolean;
   isMainInput?: boolean;
+  hasText?: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -223,10 +225,18 @@ function InputToolbar(props: InputToolbarProps) {
             }}
             disabled={isEnterDisabled}
           >
-            <span className="hidden md:inline">
-              ⏎ {props.toolbarOptions?.enterText ?? "Enter"}
+            <span data-tooltip-id="submit-tooltip">
+              <PaperAirplaneIcon
+                className={`h-4 w-4 ${
+                  props.hasText
+                  ? "text-[var(--vscode-editorForeground)]"
+                  : "text-[var(--vscode-descriptionForeground)]"
+                } transition duration-150 ease-in-out`}
+              />
             </span>
-            <span className="md:hidden">⏎</span>
+            <ToolTip id="submit-tooltip" place="top-middle">
+              Send (Enter)
+            </ToolTip>
           </EnterButton>
         </div>
       </StyledDiv>
