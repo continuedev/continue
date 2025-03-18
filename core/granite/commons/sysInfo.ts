@@ -1,3 +1,5 @@
+import { DEFAULT_MODEL_GRANITE_LARGE } from "../../config/default";
+import { MODEL_REQUIREMENTS } from "./modelRequirements";
 import { GB } from "./sizeUtils";
 
 // All the system's information
@@ -68,4 +70,20 @@ export function getRecommendedModels(systemInfo: SystemInfo) {
     defaultTabModel: defaultGraniteModel,
     defaultEmbeddingsModel: "nomic-embed-text:latest",
   };
+}
+
+export function shouldRecommendLargeModel(systemInfo: SystemInfo): boolean {
+  const requirements = MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model];
+  if (!requirements) return false;
+
+  if (isHighEndApple(systemInfo.gpus))
+    return systemInfo.memory.totalMemory >= requirements.recommendedMemoryBytes;
+
+  if (!hasDiscreteGPU(systemInfo.gpus)) return false;
+
+  const maxVRAM = systemInfo.gpus.reduce((max, gpu) => {
+    return Math.max(max, (gpu.vram || 0) * GB);
+  }, 0);
+
+  return maxVRAM >= requirements.recommendedMemoryBytes;
 }
