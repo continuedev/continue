@@ -192,7 +192,7 @@ function ConfigPage() {
               )
             ) : (
               // Continue for teams: show org text
-              <div>You are using Continue for Teams</div>
+              false && <div>You are using Continue for Teams</div>
             )}
 
             {profiles && profiles.length > 1 ? (
