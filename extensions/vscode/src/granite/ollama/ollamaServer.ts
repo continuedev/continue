@@ -1,12 +1,14 @@
 import os from "os";
 import path from 'path';
 
-import { DEFAULT_MODEL_GRANITE_LARGE, DEFAULT_MODEL_GRANITE_SMALL } from "core/config/default";
+
+import { EXTENSION_NAME } from "core/control-plane/env";
 import { DEFAULT_MODEL_INFO, ModelInfo } from "core/granite/commons/modelInfo";
 import { getStandardName } from "core/granite/commons/naming";
 import { ProgressData, ProgressReporter } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
-import { env, ExtensionContext, Uri, CancellationToken } from "vscode";
+import { isOllamaInstalled } from "core/util/ollamaHelper";
+import { env, ExtensionContext, Uri } from "vscode";
 
 import { IModelServer } from "../modelServer";
 import { terminalCommandRunner } from "../terminal/terminalCommandRunner";
@@ -14,9 +16,7 @@ import { executeCommand } from "../utils/cpUtils";
 import { downloadFileFromUrl } from "../utils/downloadUtils";
 
 import { getRemoteModelInfo } from "./ollamaLibrary";
-import { isOllamaInstalled } from "core/util/ollamaHelper";
-import { EXTENSION_NAME } from "core/control-plane/env";
-import { LocalModelSize } from "core";
+
 
 const PLATFORM = os.platform();
 
@@ -190,9 +190,8 @@ export class OllamaServer implements IModelServer {
     return ollamaInstallerPath;
   }
 
-
-  async getModelStatus(modelName?: string): Promise<ModelStatus> {
-    if (!modelName || this.currentStatus !== ServerStatus.started) {
+  async getModelStatus(modelName?: string, wait?: boolean): Promise<ModelStatus> {
+    if (!modelName) {
       return ModelStatus.unknown;
     }
     // Check if the model is currently being installed
@@ -210,7 +209,11 @@ export class OllamaServer implements IModelServer {
         // Query the model info - once - from the remote server, in the background, to avoid blocking the UI.
         // modelInfoResults will be updated with the most recent info once it's available
         if (!this.modelInfoPromises.has(modelName)) {
-          this.modelInfoPromises.set(modelName, this.fetchModelInfo(modelName));
+          const modelInfoPromise = this.fetchModelInfo(modelName);
+          if (wait) {
+            await modelInfoPromise;
+          }
+          this.modelInfoPromises.set(modelName, modelInfoPromise);
         }
         //It's installed, but is it the most recent version?
         const cachedInfo = this.modelInfoResults.get(modelName);
@@ -256,10 +259,8 @@ export class OllamaServer implements IModelServer {
     return models;
   }
 
-  async pullModels(type: LocalModelSize, signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean> {
-    const graniteModel = (type === 'large') ? DEFAULT_MODEL_GRANITE_LARGE : DEFAULT_MODEL_GRANITE_SMALL;
-    const models: string[] = [graniteModel.model, 'nomic-embed-text:latest'];
-
+  async pullModels(models: string[], signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean> {
+    
     if (signal.aborted) {
       return false;
     }
@@ -278,7 +279,7 @@ export class OllamaServer implements IModelServer {
     const expectedTotal = modelInfos.reduce((sum, modelInfo) => sum + modelInfo.size, 0);
     console.log(`Expected total: ${expectedTotal}`);
     const progressReporter = new DownloadingProgressReporter(reportProgress);
-    progressReporter.begin("Downloading models", expectedTotal)
+    progressReporter.begin("Downloading models", expectedTotal);
     for (const modelInfo of modelInfos) {
       if (signal.aborted) {
         return false;
@@ -400,6 +401,8 @@ class DownloadingProgressReporter implements ProgressReporter {
     });
   }
   done(): void {
-    this.update(this.total ?? 0);
+    if (this.total) {
+      this.update(Math.max(0, this.total - this.currentProgress));
+    }
   }
 }

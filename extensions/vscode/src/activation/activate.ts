@@ -7,6 +7,7 @@ import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
+import { registerModelUpdateProvider } from "../granite/ollama/modelUpdater";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 
@@ -49,6 +50,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   if (showOnboarding && !isTestMode) {
     await vscode.commands.executeCommand("granite.setup");
   }
+
+  registerModelUpdateProvider(context);
 
   const continuePublicApi = {
     registerCustomContextProvider: api.registerCustomContextProvider.bind(api),

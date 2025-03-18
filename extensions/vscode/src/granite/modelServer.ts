@@ -1,6 +1,5 @@
 import { ProgressData } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
-import { LocalModelSize } from "core";
 
 export interface IModelServer {
   getName(): string;
@@ -11,6 +10,6 @@ export interface IModelServer {
   startServer(): Promise<boolean>;
   installServer(mode: string, signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean>;
   getModelStatus(modelName?: string): Promise<ModelStatus>;
-  pullModels(type: LocalModelSize, signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean>;
+  pullModels(models: string[], signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean>;
   listModels(): Promise<string[]>;
 }
