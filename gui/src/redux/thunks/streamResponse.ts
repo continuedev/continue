@@ -9,14 +9,16 @@ import {
 import { constructMessages } from "core/llm/constructMessages";
 import { renderChatMessage } from "core/util/messageContent";
 import posthog from "posthog-js";
+import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
+import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { selectDefaultModel } from "../slices/configSlice";
 import {
+  cancelToolCall,
   submitEditorAndInitAtIndex,
   updateHistoryItemAtIndex,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { gatherContext } from "./gatherContext";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamSlashCommand } from "./streamSlashCommand";
@@ -71,29 +73,107 @@ export const streamResponseThunk = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const useTools = state.ui.useTools;
-        const defaultModel = selectDefaultModel(state);
-        const slashCommands = state.config.config.slashCommands || [];
-        const inputIndex = index ?? state.session.history.length; // Either given index or concat to end
 
+        const defaultModel = selectDefaultModel(state);
         if (!defaultModel) {
           throw new Error("No chat model selected");
         }
 
+        const useTools = state.ui.useTools;
+        const slashCommands = state.config.config.slashCommands || [];
+        const insertIndex = index ?? state.session.history.length; // Either given index or concat to end
+        let userMessageIndex = insertIndex;
+        const lastItem = state.session.history[insertIndex - 1];
+
+        let cancelsToolId: string | undefined = undefined;
+        if (
+          lastItem &&
+          lastItem.message.role === "assistant" &&
+          lastItem.message.toolCalls?.length &&
+          lastItem.toolCallState?.toolCallId
+        ) {
+          cancelsToolId = lastItem.toolCallState.toolCallId;
+          userMessageIndex++;
+          dispatch(cancelToolCall());
+        }
+
         dispatch(
-          submitEditorAndInitAtIndex({ index: inputIndex, editorState }),
+          submitEditorAndInitAtIndex({
+            index: insertIndex,
+            editorState,
+            cancelsToolId,
+          }),
         );
         resetStateForNewMessage();
 
-        const result = await dispatch(
-          gatherContext({
+        const defaultContextProviders =
+          state.config.config.experimental?.defaultContext ?? [];
+
+        // Resolve context providers and construct new history
+        let [selectedContextItems, selectedCode, content] =
+          await resolveEditorContent({
             editorState,
             modifiers,
-            promptPreamble,
-          }),
-        );
-        const unwrapped = unwrapResult(result);
-        const { selectedContextItems, selectedCode, content } = unwrapped;
+            ideMessenger: extra.ideMessenger,
+            defaultContextProviders,
+            dispatch,
+            selectedModelTitle: defaultModel.title,
+          });
+
+        // Automatically use currently open file
+        if (!modifiers.noContext) {
+          const usingFreeTrial = defaultModel.provider === "free-trial";
+
+          const currentFileResponse = await extra.ideMessenger.request(
+            "context/getContextItems",
+            {
+              name: "currentFile",
+              query: "non-mention-usage",
+              fullInput: "",
+              selectedCode: [],
+              selectedModelTitle: defaultModel.title,
+            },
+          );
+          if (currentFileResponse.status === "success") {
+            const items = currentFileResponse.content;
+            if (items.length > 0) {
+              const currentFile = items[0];
+              const uri = currentFile.uri?.value;
+
+              // don't add the file if it's already in the context items
+              if (
+                uri &&
+                !selectedContextItems.find(
+                  (item) => item.uri?.value && URI.equal(item.uri.value, uri),
+                )
+              ) {
+                // Limit to 1000 lines if using free trial
+                if (usingFreeTrial) {
+                  currentFile.content = currentFile.content
+                    .split("\n")
+                    .slice(0, 1000)
+                    .join("\n");
+                  if (!currentFile.content.endsWith("```")) {
+                    currentFile.content += "\n```";
+                  }
+                }
+                currentFile.id = {
+                  providerTitle: "file",
+                  itemId: uri,
+                };
+                selectedContextItems.unshift(currentFile);
+              }
+            }
+          }
+        }
+
+        if (promptPreamble) {
+          if (typeof content === "string") {
+            content = promptPreamble + content;
+          } else if (content[0].type === "text") {
+            content[0].text = promptPreamble + content[0].text;
+          }
+        }
 
         // symbols for both context items AND selected codeblocks
         const filesForSymbols = [
@@ -106,7 +186,7 @@ export const streamResponseThunk = createAsyncThunk<
 
         dispatch(
           updateHistoryItemAtIndex({
-            index: inputIndex,
+            index: userMessageIndex,
             updates: {
               message: {
                 role: "user",
@@ -153,7 +233,7 @@ export const streamResponseThunk = createAsyncThunk<
               messages,
               slashCommand,
               input: commandInput,
-              historyIndex: inputIndex,
+              historyIndex: userMessageIndex,
               selectedCode,
               contextItems: [],
             }),
