@@ -35,7 +35,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "autocomplete/complete",
     "autocomplete/cancel",
     "autocomplete/accept",
-    "command/run",
     "tts/kill",
     "llm/complete",
     "llm/streamComplete",

@@ -26,6 +26,7 @@ import type {
   Session,
   SessionMetadata,
   SiteIndexingConfig,
+  SlashCommandDescription,
   ToolCall,
 } from "../";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
@@ -101,20 +102,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
-  "command/run": [
-    {
-      input: string;
-      history: ChatMessage[];
-      modelTitle: string;
-      slashCommandName: string;
-      contextItems: ContextItemWithId[];
-      params: any;
-      historyIndex: number;
-      selectedCode: RangeInFile[];
-      completionOptions?: LLMFullCompletionOptions;
-    },
-    AsyncGenerator<string>,
-  ];
   "llm/complete": [
     {
       prompt: string;
@@ -137,6 +124,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
+      legacySlashCommandData?: {
+        command: SlashCommandDescription;
+        input: string;
+        contextItems: ContextItemWithId[];
+        historyIndex: number;
+        selectedCode: RangeInFile[];
+      };
     },
     AsyncGenerator<ChatMessage, PromptLog>,
   ];

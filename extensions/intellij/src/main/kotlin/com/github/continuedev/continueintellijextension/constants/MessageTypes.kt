@@ -103,7 +103,6 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
-            "command/run",
             "tts/kill",
             "llm/complete",
             "llm/streamComplete",
