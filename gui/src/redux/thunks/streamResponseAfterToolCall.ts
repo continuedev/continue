@@ -65,8 +65,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           defaultModel,
           useTools,
         );
-        const output = await dispatch(streamNormalInput(messages));
-        unwrapResult(output);
+        unwrapResult(await dispatch(streamNormalInput({ messages })));
       }),
     );
   },

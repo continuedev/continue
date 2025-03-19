@@ -79,6 +79,7 @@ export function slashCommandFromPromptFileV1(
       for await (const chunk of context.llm.streamChat(
         messages,
         new AbortController().signal,
+        context.completionOptions,
       )) {
         yield renderChatMessage(chunk);
       }

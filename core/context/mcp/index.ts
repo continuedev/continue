@@ -50,7 +50,7 @@ export class MCPManagerSingleton {
     const toRemove = Array.from(this.connections.keys()).filter(
       (k) => !keepIds.includes(k),
     );
-    await Promise.all(toRemove.map(this.removeConnection));
+    await Promise.all(toRemove.map((id) => this.removeConnection(id)));
   }
 }
 
