@@ -18,7 +18,7 @@ export function stripImages(messageContent: MessageContent): string {
 }
 
 export function renderChatMessage(message: ChatMessage): string {
-  switch (message.role) {
+  switch (message?.role) {
     case "user":
     case "assistant":
     case "thinking":
@@ -26,6 +26,8 @@ export function renderChatMessage(message: ChatMessage): string {
       return stripImages(message.content);
     case "tool":
       return message.content;
+    default:
+      return "";
   }
 }
 
