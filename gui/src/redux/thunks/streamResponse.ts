@@ -148,7 +148,7 @@ export const streamResponseThunk = createAsyncThunk<
           //   dispatch(setIsInMultifileEdit(true));
           // }
 
-          await dispatch(
+          const result = await dispatch(
             streamSlashCommand({
               messages,
               slashCommand,
@@ -158,6 +158,7 @@ export const streamResponseThunk = createAsyncThunk<
               contextItems: [],
             }),
           );
+          unwrapResult(result);
         }
       }),
     );
