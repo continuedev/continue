@@ -10,7 +10,7 @@ export const searchWebTool: Tool = {
   function: {
     name: BuiltInToolNames.SearchWeb,
     description:
-      "Performs a web search, returning top results. This tool should only be called for questions that require external knowledge. Common programming questions do not require web search.",
+      "Performs a web search, returning top results. Use this tool sparingly - only for questions that require specialized, external, and/or up-to-date knowledege. Common programming questions do not require web search.",
     parameters: {
       type: "object",
       required: ["query"],

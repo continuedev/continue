@@ -119,11 +119,7 @@ export const streamResponseThunk = createAsyncThunk<
 
         // Construct messages from updated history
         const updatedHistory = getState().session.history;
-        const messages = constructMessages(
-          [...updatedHistory],
-          defaultModel,
-          useTools,
-        );
+        const messages = constructMessages([...updatedHistory]);
 
         posthog.capture("step run", {
           step_name: "User Input",
