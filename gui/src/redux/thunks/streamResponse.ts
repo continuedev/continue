@@ -19,7 +19,6 @@ import { ThunkApiType } from "../store";
 import { gatherContext } from "./gatherContext";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
-import { streamSlashCommand } from "./streamSlashCommand";
 import { streamThunkWrapper } from "./streamThunkWrapper";
 import { updateFileSymbolsFromFiles } from "./updateFileSymbols";
 
@@ -132,27 +131,30 @@ export const streamResponseThunk = createAsyncThunk<
         let commandAndInput = getSlashCommandForInput(content, slashCommands);
 
         if (!commandAndInput) {
-          unwrapResult(await dispatch(streamNormalInput(messages)));
+          unwrapResult(await dispatch(streamNormalInput({ messages })));
         } else {
           const [slashCommand, commandInput] = commandAndInput;
+
           posthog.capture("step run", {
             step_name: slashCommand.name,
             params: {},
           });
 
-          // if (slashCommand.name === "multifile-edit") {
-          //   dispatch(setIsInMultifileEdit(true));
-          // }
-
-          await dispatch(
-            streamSlashCommand({
-              messages,
-              slashCommand,
-              input: commandInput,
-              historyIndex: inputIndex,
-              selectedCode,
-              contextItems: [],
-            }),
+          // TODO - handle non-legacy slash commands, update messages if relevant
+          // Pass around isFromConfigTs
+          unwrapResult(
+            await dispatch(
+              streamNormalInput({
+                messages,
+                legacySlashCommandData: {
+                  command: slashCommand,
+                  contextItems: selectedContextItems,
+                  historyIndex: inputIndex,
+                  input: commandInput,
+                  selectedCode,
+                },
+              }),
+            ),
           );
         }
       }),
