@@ -26,10 +26,13 @@ import {
 
 // Relace only supports apply through a /v1/apply endpoint
 export class RelaceApi implements BaseLlmApi {
-  private apiBase = "https://instantapply.endpoint.relace.run/v1/code/apply";
+  private apiBase = "https://instantapply.endpoint.relace.run/v1/";
 
   constructor(private readonly config: z.infer<typeof OpenAIConfigSchema>) {
     this.apiBase = config.apiBase ?? this.apiBase;
+    if (!this.apiBase.endsWith("/")) {
+      this.apiBase += "/";
+    }
     this.config = config;
   }
 
@@ -78,7 +81,8 @@ export class RelaceApi implements BaseLlmApi {
       editSnippet,
     };
 
-    const response = await fetch(this.apiBase, {
+    const url = this.apiBase + "code/apply";
+    const response = await fetch(url, {
       method: "POST",
       headers,
       body: JSON.stringify(data),

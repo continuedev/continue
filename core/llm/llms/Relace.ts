@@ -6,7 +6,7 @@ import OpenAI from "./OpenAI";
 export class Relace extends OpenAI {
   static providerName = "relace";
   static defaultOptions: Partial<LLMOptions> | undefined = {
-    apiBase: "https://instantapply.endpoint.relace.run/v1/code/apply",
+    apiBase: "https://instantapply.endpoint.relace.run/v1/",
   };
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
 }
