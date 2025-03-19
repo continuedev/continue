@@ -37,7 +37,6 @@ import { TTS } from "./util/tts";
 
 import {
   DiffLine,
-  PromptLog,
   type ContextItemId,
   type IDE,
   type IndexingProgressUpdate,
@@ -494,45 +493,6 @@ export class Core {
         ide,
         this.messenger,
       ),
-    );
-
-    async function* llmStreamComplete(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
-    ): AsyncGenerator<string, PromptLog> {
-      const model = await configHandler.llmFromTitle(msg.data.title);
-      const gen = model.streamComplete(
-        msg.data.prompt,
-        new AbortController().signal,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({
-            modelTitle: model.title ?? model.model,
-            completion: "",
-            prompt: "",
-            completionOptions: {
-              ...msg.data.completionOptions,
-              model: model.model,
-            },
-          });
-          break;
-        }
-        yield next.value;
-        next = await gen.next();
-      }
-      if (!next.done) {
-        throw new Error("This will never happen");
-      }
-      return next.value;
-    }
-
-    on("llm/streamComplete", (msg) =>
-      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg),
     );
 
     on("llm/complete", async (msg) => {

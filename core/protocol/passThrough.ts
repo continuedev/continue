@@ -37,7 +37,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "autocomplete/accept",
     "tts/kill",
     "llm/complete",
-    "llm/streamComplete",
     "llm/streamChat",
     "llm/listModels",
     "streamDiffLines",

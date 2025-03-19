@@ -105,7 +105,6 @@ class MessageTypes {
             "autocomplete/accept",
             "tts/kill",
             "llm/complete",
-            "llm/streamComplete",
             "llm/streamChat",
             "llm/listModels",
             "streamDiffLines",
