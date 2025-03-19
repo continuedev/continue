@@ -124,14 +124,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     string,
   ];
   "llm/listModels": [{ title: string }, string[] | undefined];
-  "llm/streamComplete": [
-    {
-      prompt: string;
-      completionOptions: LLMFullCompletionOptions;
-      title: string;
-    },
-    AsyncGenerator<string>,
-  ];
   "llm/streamChat": [
     {
       messages: ChatMessage[];

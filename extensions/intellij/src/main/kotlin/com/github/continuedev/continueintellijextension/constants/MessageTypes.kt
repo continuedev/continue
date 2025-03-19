@@ -106,7 +106,6 @@ class MessageTypes {
             "command/run",
             "tts/kill",
             "llm/complete",
-            "llm/streamComplete",
             "llm/streamChat",
             "llm/listModels",
             "streamDiffLines",
