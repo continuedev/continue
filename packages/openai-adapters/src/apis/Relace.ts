@@ -16,7 +16,7 @@ import {
 import { Model } from "openai/resources/models.mjs";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
-import { chatChunk, customFetch } from "../util.js";
+import { chatChunk, chatCompletion, customFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -36,13 +36,29 @@ export class RelaceApi implements BaseLlmApi {
     this.config = config;
   }
 
-  chatCompletionNonStream(
+  async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
     signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    throw new Error(
-      "Relace provider does not support non-streaming chat completion.",
-    );
+    let content = "";
+
+    // Convert the non-streaming params to streaming params
+    const streamingBody: ChatCompletionCreateParamsStreaming = {
+      ...body,
+      stream: true,
+    };
+
+    for await (const chunk of this.chatCompletionStream(
+      streamingBody,
+      signal,
+    )) {
+      content += chunk.choices[0]?.delta?.content || "";
+    }
+
+    return chatCompletion({
+      content,
+      model: body.model,
+    });
   }
 
   // We convert from what would be sent to OpenAI (a prediction for the existing code and a user message with the new code)
