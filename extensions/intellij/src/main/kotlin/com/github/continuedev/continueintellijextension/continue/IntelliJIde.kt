@@ -83,7 +83,7 @@ class IntelliJIDE(
         val extensionVersion = plugin?.version ?: "Unknown"
 
         return IdeInfo(
-            ideType = IdeType.JETBRAINS,
+            ideType = "jetbrains",
             name = ideName,
             version = ideVersion,
             remoteName = remoteName,
