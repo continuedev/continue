@@ -31,6 +31,7 @@ import {
 } from "../../redux/slices/configSlice";
 import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import { getFontSize, isJetBrains } from "../../util";
+import { AccountButton } from "./AccountButton";
 import ModelRoleSelector from "./ModelRoleSelector";
 import { ScopeSelect } from "./ScopeSelect";
 
@@ -181,7 +182,12 @@ function ConfigPage() {
 
   return (
     <div className="overflow-y-scroll">
-      <PageHeader showBorder onTitleClick={() => navigate("/")} title="Chat" />
+      <PageHeader
+        showBorder
+        onTitleClick={() => navigate("/")}
+        title="Chat"
+        rightContent={<AccountButton />}
+      />
 
       <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="flex flex-col">
