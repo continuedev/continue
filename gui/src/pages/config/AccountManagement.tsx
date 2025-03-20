@@ -4,7 +4,7 @@ import {
   ChevronUpDownIcon,
   PlusCircleIcon,
 } from "@heroicons/react/24/outline";
-import { Fragment, useContext, useEffect, useState } from "react";
+import { Fragment, useContext } from "react";
 import AssistantIcon from "../../components/modelSelection/platform/AssistantIcon";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -13,7 +13,7 @@ import { useAppDispatch } from "../../redux/hooks";
 import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import { ScopeSelect } from "./ScopeSelect";
 
-export function AccountManagement() {
+export function AccountManagement({ hubEnabled }: { hubEnabled: boolean }) {
   useNavigationListener();
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -24,14 +24,6 @@ export function AccountManagement() {
   const changeProfileId = (id: string) => {
     dispatch(selectProfileThunk(id));
   };
-
-  const [hubEnabled, setHubEnabled] = useState(false);
-
-  useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
-      setHubEnabled(continueTestEnvironment === "production");
-    });
-  }, [ideMessenger]);
 
   function handleOpenConfig() {
     if (!selectedProfile) {
