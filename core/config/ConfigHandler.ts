@@ -200,6 +200,7 @@ export class ConfigHandler {
             this.ideSettingsPromise,
             this.writeLog,
             this.reloadConfig.bind(this),
+            assistant.rawYaml,
           );
 
           return new ProfileLifecycleManager(profileLoader, this.ide);

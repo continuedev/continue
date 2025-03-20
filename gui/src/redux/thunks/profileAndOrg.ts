@@ -21,7 +21,7 @@ export const selectProfileThunk = createAsyncThunk<
     return;
   }
 
-  const initialId = state.session.selectedProfile?.id;
+  const initialId = state.session.selectedProfileId;
 
   let newId = id;
 
@@ -44,11 +44,7 @@ export const selectProfileThunk = createAsyncThunk<
 
   // Only update if there's a change
   if ((newId ?? null) !== (initialId ?? null)) {
-    dispatch(
-      setSelectedProfile(
-        state.session.availableProfiles.find((p) => p.id === newId) ?? null,
-      ),
-    );
+    dispatch(setSelectedProfile(newId));
     extra.ideMessenger.post("didChangeSelectedProfile", {
       id: newId,
     });
@@ -72,8 +68,8 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
     let nextId = profileIds[0];
-    if (state.session.selectedProfile) {
-      const curIndex = profileIds.indexOf(state.session.selectedProfile?.id);
+    if (state.session.selectedProfileId) {
+      const curIndex = profileIds.indexOf(state.session.selectedProfileId);
       const nextIndex = (curIndex + 1) % profileIds.length;
       nextId = profileIds[nextIndex];
     }

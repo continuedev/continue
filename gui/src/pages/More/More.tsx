@@ -16,6 +16,7 @@ import { AccountButton } from "../config/AccountButton";
 import IndexingProgress from "./IndexingProgress";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import MoreHelpRow from "./MoreHelpRow";
+import { RulesPreview } from "./RulesPreview";
 
 function MorePage() {
   useNavigationListener();
@@ -59,6 +60,10 @@ function MorePage() {
 
         <div className="flex flex-col py-5">
           <DocsIndexingStatuses />
+        </div>
+
+        <div className="flex flex-col py-5">
+          <RulesPreview />
         </div>
 
         <div className="py-5">
