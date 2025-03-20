@@ -107,7 +107,7 @@ class Anthropic extends BaseLLM {
           const newpart = {
             ...part,
             // If multiple text parts, only add cache_control to the last one
-            ...(addCaching && contentIdx == message.content.length - 1
+            ...(addCaching && contentIdx === message.content.length - 1
               ? { cache_control: { type: "ephemeral" } }
               : {}),
           };
