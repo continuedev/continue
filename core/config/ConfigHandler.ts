@@ -355,9 +355,6 @@ export class ConfigHandler {
   }
 
   async setSelectedProfile(profileId: string | null) {
-    console.log(
-      `Changing selected profile from ${this.selectedProfileId} to ${profileId}`,
-    );
     this.selectedProfileId = profileId;
     const result = await this.loadConfig();
     this.notifyConfigListeners(result);

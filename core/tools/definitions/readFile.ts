@@ -9,7 +9,7 @@ export const readFileTool: Tool = {
   function: {
     name: BuiltInToolNames.ReadFile,
     description:
-      "Use this tool whenever you need to view the contents of a file.",
+      "Use this tool if you need to view the contents of an existing file.",
     parameters: {
       type: "object",
       required: ["filepath"],
@@ -17,7 +17,7 @@ export const readFileTool: Tool = {
         filepath: {
           type: "string",
           description:
-            "The path of the file to read, relative to the root of the workspace.",
+            "The path of the file to read, relative to the root of the workspace (NOT uri or absolute path)",
         },
       },
     },

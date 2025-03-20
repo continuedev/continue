@@ -160,7 +160,7 @@ export class VsCodeExtension {
     });
 
     this.configHandler.onConfigUpdate(
-      async ({ config: newConfig, errors, configLoadInterrupted }) => {
+      async ({ config: newConfig, configLoadInterrupted }) => {
         if (configLoadInterrupted) {
           // Show error in status bar
           setupStatusBar(undefined, undefined, true);

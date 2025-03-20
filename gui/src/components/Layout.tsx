@@ -204,17 +204,21 @@ const Layout = () => {
   );
 
   const isInEditMode = useAppSelector(selectIsInEditMode);
-  useWebviewListener("exitEditMode", async () => {
-    if (!isInEditMode) {
-      return;
-    }
-    dispatch(
-      loadLastSession({
-        saveCurrentSession: false,
-      }),
-    );
-    dispatch(exitEditMode());
-  });
+  useWebviewListener(
+    "exitEditMode",
+    async () => {
+      if (!isInEditMode) {
+        return;
+      }
+      dispatch(
+        loadLastSession({
+          saveCurrentSession: false,
+        }),
+      );
+      dispatch(exitEditMode());
+    },
+    [isInEditMode],
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {

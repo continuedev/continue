@@ -420,8 +420,7 @@ jobs:
         id: test-extensions-cache
         with:
           path: extensions/vscode/e2e/.test-extensions
-          # package.json used as the key because that's where the download script is defined
-          key: vscode-test-extensions-${{ hashFiles('extensions/vscode/package.json') }}
+          key: CONSTANT
 
       - name: Download build artifact
         uses: actions/download-artifact@v4

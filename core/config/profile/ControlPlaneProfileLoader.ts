@@ -61,7 +61,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       )) as any);
     const serializedConfig: SerializedContinueConfig = settings;
 
-    const results = await doLoadConfig(
+    return await doLoadConfig(
       this.ide,
       this.ideSettingsPromise,
       this.controlPlaneClient,
@@ -72,11 +72,6 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       this.workspaceId,
       undefined,
     );
-
-    return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
-    };
   }
 
   setIsActive(isActive: boolean): void {}

@@ -12,6 +12,7 @@ import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setOnboardingCard } from "../../redux/slices/uiSlice";
 import { saveCurrentSession } from "../../redux/thunks/session";
+import { AccountButton } from "../config/AccountButton";
 import IndexingProgress from "./IndexingProgress";
 import KeyboardShortcuts from "./KeyboardShortcuts";
 import MoreHelpRow from "./MoreHelpRow";
@@ -27,7 +28,12 @@ function MorePage() {
 
   return (
     <div className="overflow-y-scroll">
-      <PageHeader showBorder onTitleClick={() => navigate("/")} title="Chat" />
+      <PageHeader
+        showBorder
+        onTitleClick={() => navigate("/")}
+        title="Chat"
+        rightContent={<AccountButton />}
+      />
 
       <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="py-5">

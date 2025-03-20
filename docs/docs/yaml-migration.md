@@ -23,6 +23,7 @@ Give your configuration a `name` and a `version`:
 ```yaml title="config.yaml"
 name: my-configuration
 version: 0.0.1
+schema: v1
 ```
 
 ### Models

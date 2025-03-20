@@ -69,7 +69,7 @@ const migrations: MigrationManifest = {
 
     return {
       config: {
-        defaultModelTitle: oldState?.state?.defaultModelTitle ?? "GPT-4",
+        defaultModelTitle: oldState?.state?.defaultModelTitle ?? undefined,
       },
       session: {
         history: oldState?.state?.history ?? [],

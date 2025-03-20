@@ -86,7 +86,7 @@ This is the question that you should select relevant files for: "${input}"`;
         if (!uri) {
           return undefined;
         }
-        const content = await ide.readFile(filepath);
+        const content = await ide.readFile(uri);
         const lineCount = content.split("\n").length;
         const chunk: Chunk = {
           digest: uri,

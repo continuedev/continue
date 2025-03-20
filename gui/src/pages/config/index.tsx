@@ -5,7 +5,6 @@ import {
   CheckIcon,
   ChevronUpDownIcon,
   PlusCircleIcon,
-  UserCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
@@ -15,18 +14,24 @@ import {
 } from "core/config/sharedConfig";
 import { Fragment, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input, SecondaryButton } from "../../components";
+import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
+import AssistantIcon from "../../components/modelSelection/platform/AssistantIcon";
 import PageHeader from "../../components/PageHeader";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setDefaultModel, updateConfig } from "../../redux/slices/configSlice";
+import {
+  selectDefaultModel,
+  setDefaultModel,
+  updateConfig,
+} from "../../redux/slices/configSlice";
 import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import { getFontSize, isJetBrains } from "../../util";
+import { AccountButton } from "./AccountButton";
 import ModelRoleSelector from "./ModelRoleSelector";
 import { ScopeSelect } from "./ScopeSelect";
 
@@ -71,9 +76,7 @@ function ConfigPage() {
 
   /////// User settings section //////
   const config = useAppSelector((state) => state.config.config);
-  const selectedChatModel = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
+  const selectedChatModel = useAppSelector(selectDefaultModel);
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -179,42 +182,14 @@ function ConfigPage() {
 
   return (
     <div className="overflow-y-scroll">
-      <PageHeader showBorder onTitleClick={() => navigate("/")} title="Chat" />
+      <PageHeader
+        showBorder
+        onTitleClick={() => navigate("/")}
+        title="Chat"
+        rightContent={<AccountButton />}
+      />
 
-      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4 pt-4">
-        {(session || hubEnabled || controlServerBetaEnabled) && (
-          <div className="flex flex-col">
-            <div className="flex max-w-[400px] flex-col gap-4 pb-4">
-              <h2 className="mb-1 mt-0">Account</h2>
-              {!session ? (
-                <div className="flex flex-col gap-2">
-                  <span>You are not signed in.</span>
-                  <SecondaryButton onClick={() => login(false)}>
-                    Sign in
-                  </SecondaryButton>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-row items-center gap-2">
-                    <UserCircleIcon className="h-6 w-6" />
-                    <span>
-                      {session.account.label === ""
-                        ? "Signed in"
-                        : session.account.label}
-                    </span>
-                    <span
-                      onClick={logout}
-                      className="text-lightgray cursor-pointer underline"
-                    >
-                      (Sign out)
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
+      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="flex flex-col">
           <div className="flex max-w-[400px] flex-col gap-4 py-6">
             <h2 className="mb-1 mt-0">Configuration</h2>
@@ -244,9 +219,15 @@ function ConfigPage() {
                     {({ open }) => (
                       <div className="relative w-full">
                         <Listbox.Button className="border-vsc-input-border bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground relative m-0 flex w-full cursor-pointer items-center justify-between rounded-md border border-solid px-3 py-2 text-left">
-                          <span className="lines lines-1">
-                            {selectedProfile?.title ?? "No Assistant Selected"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {selectedProfile && (
+                              <AssistantIcon assistant={selectedProfile} />
+                            )}
+                            <span className="lines lines-1">
+                              {selectedProfile?.title ??
+                                "No Assistant Selected"}
+                            </span>
+                          </div>
                           <div className="pointer-events-none flex items-center">
                             <ChevronUpDownIcon
                               className="h-5 w-5"
@@ -272,6 +253,7 @@ function ConfigPage() {
                                 value={option.id}
                                 className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-3 py-2 ${selectedProfile?.id === option.id ? "bg-list-active" : "bg-vsc-input-background"}`}
                               >
+                                <AssistantIcon assistant={option} />
                                 <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
                                   {option.title}
                                 </span>
@@ -335,11 +317,15 @@ function ConfigPage() {
                 displayName="Chat"
                 description="Used in the chat interface"
                 models={config.modelsByRole.chat}
-                selectedModel={{
-                  title: selectedChatModel,
-                  provider: "mock",
-                  model: "mock",
-                }}
+                selectedModel={
+                  selectedChatModel
+                    ? {
+                        title: selectedChatModel.title,
+                        provider: selectedChatModel.provider,
+                        model: selectedChatModel.model,
+                      }
+                    : null
+                }
                 onSelect={(model) => handleChatModelSelection(model)}
               />
               <ModelRoleSelector
@@ -490,25 +476,6 @@ function ConfigPage() {
 
                   <label className="flex items-center justify-between gap-3">
                     <span className="lines lines-1 text-left">
-                      Codeblock Actions Position
-                    </span>
-                    <Select
-                      value={codeBlockToolbarPosition}
-                      onChange={(e) =>
-                        handleUpdate({
-                          codeBlockToolbarPosition: e.target.value as
-                            | "top"
-                            | "bottom",
-                        })
-                      }
-                    >
-                      <option value="top">Top</option>
-                      <option value="bottom">Bottom</option>
-                    </Select>
-                  </label>
-
-                  <label className="flex items-center justify-between gap-3">
-                    <span className="lines lines-1 text-left">
                       Multiline Autocompletions
                     </span>
                     <Select
@@ -540,48 +507,6 @@ function ConfigPage() {
                     />
                   </label>
 
-                  <form
-                    className="flex flex-col gap-1"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSubmitPromptPath();
-                    }}
-                  >
-                    <div className="flex items-center justify-between gap-1">
-                      <span>Workspace prompts path</span>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={formPromptPath}
-                          className="max-w-[100px]"
-                          onChange={(e) => {
-                            setFormPromptPath(e.target.value);
-                          }}
-                        />
-                        <div className="flex h-full flex-col">
-                          {formPromptPath !== promptPath ? (
-                            <>
-                              <div
-                                onClick={handleSubmitPromptPath}
-                                className="cursor-pointer"
-                              >
-                                <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
-                              </div>
-                              <div
-                                onClick={cancelChangePromptPath}
-                                className="cursor-pointer"
-                              >
-                                <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
-                              </div>
-                            </>
-                          ) : (
-                            <div>
-                              <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </form>
                   <form
                     className="flex flex-col gap-1"
                     onSubmit={(e) => {

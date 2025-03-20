@@ -444,6 +444,7 @@ a `config.yaml` configuration file using anchors:
 ---
 name: MyProject
 version: 0.0.1
+schema: v1
 
 model_defaults: &model_defaults
   provider: openai

@@ -9,7 +9,7 @@ export const runTerminalCommandTool: Tool = {
   function: {
     name: BuiltInToolNames.RunTerminalCommand,
     description:
-      "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands.",
+      "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands. Do NOT perform actions requiring special/admin priveleges.",
     parameters: {
       type: "object",
       required: ["command"],
@@ -17,7 +17,7 @@ export const runTerminalCommandTool: Tool = {
         command: {
           type: "string",
           description:
-            "The command to run. This will be passed directly into the shell.",
+            "The command to run. This will be passed directly into the IDE shell.",
         },
       },
     },

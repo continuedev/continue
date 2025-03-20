@@ -7,7 +7,7 @@ import {
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
 import { streamResponse } from "core/llm/stream";
-import { stripImages } from "core/util/messageContent";
+import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -29,6 +29,7 @@ import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
+import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 import {
@@ -145,9 +146,6 @@ export function Chat() {
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const selectedModelTitle = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
@@ -276,6 +274,10 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
+    if (!defaultModel) {
+      console.error("No selected chat model");
+      return;
+    }
     const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
       modifiers: {
@@ -285,7 +287,7 @@ export function Chat() {
       ideMessenger,
       defaultContextProviders: [],
       dispatch,
-      selectedModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     const prompt = [
@@ -296,7 +298,7 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
-      selectedModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     dispatch(submitEdit(prompt));
@@ -402,6 +404,15 @@ export function Chat() {
                     );
                   })}
                 </div>
+              ) : item.message.role === "thinking" ? (
+                <ThinkingBlockPeek
+                  content={renderChatMessage(item.message)}
+                  redactedThinking={item.message.redactedThinking}
+                  index={index}
+                  prevItem={index > 0 ? history[index - 1] : null}
+                  inProgress={index === history.length - 1}
+                  signature={item.message.signature}
+                />
               ) : (
                 <div className="thread-message">
                   <TimelineItem
