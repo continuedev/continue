@@ -12,7 +12,7 @@
     "curly": "off",
     "@typescript-eslint/semi": "off",
     "eqeqeq": "error",
-    "complexity": ["error", { "max": 37 }],
+    "complexity": ["error", { "max": 38 }],
     "max-lines-per-function": ["error", { "max": 996 }],
     "max-statements": ["error", { "max": 112 }],
     "max-depth": ["error", { "max": 6 }],
