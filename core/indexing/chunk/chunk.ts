@@ -1,7 +1,5 @@
 import { Chunk, ChunkWithoutID } from "../../index.js";
 import { countTokensAsync } from "../../llm/countTokens.js";
-import { extractMinimalStackTraceInfo } from "../../util/extractMinimalStackTraceInfo.js";
-import { Telemetry } from "../../util/posthog.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
 import { getUriFileExtension, getUriPathBasename } from "../../util/uri.js";
 
@@ -31,10 +29,6 @@ async function* chunkDocumentWithoutId(
       }
       return;
     } catch (e: any) {
-      void Telemetry.capture("code_chunker_error", {
-        fileExtension: extension,
-        stack: extractMinimalStackTraceInfo(e.stack),
-      });
       // falls back to basicChunker
     }
   }
