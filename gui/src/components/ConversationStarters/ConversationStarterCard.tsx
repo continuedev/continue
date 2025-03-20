@@ -20,13 +20,13 @@ export function ConversationStarterCard({
         backgroundColor: vscInputBackground,
       }}
     >
-      <div className="flex items-start p-3">
+      <div className="flex items-center px-3 py-2">
         <div className="mr-3 flex-shrink-0">
-          <ChatBubbleLeftIcon className="h-5 w-5 text-gray-400" />
+          <ChatBubbleLeftIcon className="text-lightgray h-5 w-5" />
         </div>
         <div className="flex flex-col">
-          <div className="font-medium text-gray-200">{command.name}</div>
-          <div className="text-sm text-gray-400">{command.description}</div>
+          <div className="font-medium">{command.name}</div>
+          <div className="text-lightgray text-sm">{command.description}</div>
         </div>
       </div>
     </div>

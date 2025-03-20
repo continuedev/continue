@@ -8,8 +8,8 @@ import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import MentionList from "./MentionList";
-import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
 import { TIPPY_DIV_ID } from "./TipTapEditor";
+import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
@@ -198,27 +198,18 @@ export function getSlashCommandDropdownOptions(
   ideMessenger: IIdeMessenger,
 ) {
   const items = async ({ query }: { query: string }) => {
-    const options = [
-      ...availableSlashCommandsRef.current,
-      // {
-      //   title: "Build a custom prompt",
-      //   description: "Build a custom prompt",
-      //   type: "action",
-      //   id: "createPromptFile",
-      //   label: "Create Prompt File",
-      //   action: () => {
-      //     ideMessenger.post("config/newPromptFile", undefined);
-      //   },
-      //   name: "Create Prompt File",
-      // },
-    ];
-    return (
-      options.filter((slashCommand) => {
-        const sc = slashCommand.title.substring(1).toLowerCase();
-        const iv = query.toLowerCase();
-        return sc.startsWith(iv);
-      }) || []
-    ).map((provider) => ({
+    const options = [...availableSlashCommandsRef.current];
+
+    const filteredCommands =
+      query.length > 0
+        ? options.filter((slashCommand) => {
+            const sc = slashCommand.title.substring(1).toLowerCase();
+            const iv = query.toLowerCase();
+            return sc.startsWith(iv);
+          })
+        : options;
+
+    const commandItems = (filteredCommands || []).map((provider) => ({
       name: provider.title,
       description: provider.description,
       id: provider.title,
@@ -227,6 +218,24 @@ export function getSlashCommandDropdownOptions(
       type: (provider.type ?? "slashCommand") as ComboBoxItemType,
       action: provider.action,
     }));
+
+    if (query.length === 0 && commandItems.length > 0) {
+      commandItems.push({
+        title: "Explore prompts",
+        type: "action",
+        action: () =>
+          ideMessenger.post(
+            "openUrl",
+            "https://hub.continue.dev/explore/prompts",
+          ),
+        description: "",
+        name: "",
+        id: "",
+        label: "",
+      });
+    }
+
+    return commandItems;
   };
   return getSuggestion(items, undefined, onClose, onOpen);
 }

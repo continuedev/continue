@@ -45,7 +45,6 @@ import ContinueProxyContextProvider from "../context/providers/ContinueProxyCont
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
-import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
 import { useHub } from "../control-plane/env";
 import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
@@ -401,8 +400,6 @@ async function intermediateToFinalConfig(
     ...(!config.disableIndexing
       ? [new CodebaseContextProvider(codebaseContextParams)]
       : []),
-    // Add prompt files provider if enabled
-    ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(

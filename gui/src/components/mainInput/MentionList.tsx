@@ -3,9 +3,9 @@ import {
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
   Bars3BottomLeftIcon,
-  BoltIcon,
   BookOpenIcon,
   BugAntIcon,
+  ChatBubbleLeftIcon,
   CircleStackIcon,
   CodeBracketIcon,
   CommandLineIcon,
@@ -88,7 +88,8 @@ export function getIconFromDropdownItem(
   id: string | undefined,
   type: ComboBoxItemType,
 ) {
-  const typeIcon = type === "contextProvider" ? AtSymbolIcon : BoltIcon;
+  const typeIcon =
+    type === "contextProvider" ? AtSymbolIcon : ChatBubbleLeftIcon;
   return id ? (ICONS_FOR_DROPDOWN[id] ?? typeIcon) : typeIcon;
 }
 
@@ -506,7 +507,6 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           ) : (
             <ItemDiv className="item">No results</ItemDiv>
           )}
-          {/* </CustomScrollbarDiv> */}
         </>
       )}
     </ItemsDiv>

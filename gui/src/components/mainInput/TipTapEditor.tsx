@@ -565,7 +565,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
 
     return historyLength === 0
-      ? "Ask anything, '@' to add context"
+      ? "Ask anything, '/' for prompts, '@' to add context"
       : "Ask a follow-up";
   }
 

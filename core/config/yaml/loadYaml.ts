@@ -28,7 +28,6 @@ import CodebaseContextProvider from "../../context/providers/CodebaseContextProv
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
-import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
 import { ControlPlaneClient } from "../../control-plane/client";
 import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
@@ -333,7 +332,6 @@ async function configYamlToContinueConfig(
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),
-    new PromptFilesContextProvider({}),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
