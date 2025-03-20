@@ -43,13 +43,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-  | "loading"
-  | "indexing"
-  | "done"
-  | "failed"
-  | "paused"
-  | "disabled"
-  | "cancelled";
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
@@ -164,7 +164,11 @@ export interface ILLM extends LLMOptions {
 }
 
 export interface ModelInstaller {
-  installModel(modelName: string, signal: AbortSignal, progressReporter?: (task: string, increment: number, total: number) => void): Promise<any>;
+  installModel(
+    modelName: string,
+    signal: AbortSignal,
+    progressReporter?: (task: string, increment: number, total: number) => void,
+  ): Promise<any>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -312,7 +316,12 @@ export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
 }
 
-export type ChatMessageRole = "user" | "assistant" | "thinking" | "system" | "tool";
+export type ChatMessageRole =
+  | "user"
+  | "assistant"
+  | "thinking"
+  | "system"
+  | "tool";
 
 export type TextMessagePart = {
   type: "text";
@@ -688,10 +697,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-      isUntitled: boolean;
-      path: string;
-      contents: string;
-    }
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
   >;
 
   getLastFileSaveTimestamp?(): number;
@@ -757,6 +766,7 @@ export interface ContinueSDK {
 export interface SlashCommand {
   name: string;
   description: string;
+  prompt?: string;
   params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
@@ -860,11 +870,7 @@ export interface ContextProviderWithParams {
   params: { [key: string]: any };
 }
 
-export interface SlashCommandDescription {
-  name: string;
-  description: string;
-  params?: { [key: string]: any };
-}
+export type SlashCommandDescription = Omit<SlashCommand, "run">;
 
 export interface CustomCommand {
   name: string;
@@ -875,11 +881,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-  | string
-  | {
-    type: "text";
-    text: string;
-  }[];
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 export interface ToolExtras {
@@ -1219,9 +1225,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1313,9 +1319,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-    | { error: string; details?: never }
-    | { details: PackageDetailsSuccess; error?: never }
-  );
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;

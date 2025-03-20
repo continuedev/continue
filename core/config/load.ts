@@ -667,11 +667,9 @@ async function finalToBrowserConfig(
     models: final.models.map(llmToSerializedModelDescription),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((s) => ({
-      name: s.name,
-      description: s.description,
-      params: s.params, // TODO: is this why params aren't referenced properly by slash commands?
-    })),
+    slashCommands: final.slashCommands?.map(
+      ({ run, ...slashCommandDescription }) => slashCommandDescription,
+    ),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,

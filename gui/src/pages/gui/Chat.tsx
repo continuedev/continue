@@ -22,7 +22,6 @@ import {
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
-import { ExploreHubCard } from "../../components/ExploreHubCard";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
@@ -31,11 +30,7 @@ import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
 import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
-import {
-  OnboardingCard,
-  useOnboardingCard,
-} from "../../components/OnboardingCard";
-import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform/PlatformOnboardingCard";
+import { useOnboardingCard } from "../../components/OnboardingCard";
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
@@ -76,6 +71,7 @@ import {
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
+import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
@@ -535,23 +531,10 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
 
           {history.length === 0 && (
-            <>
-              {onboardingCard.show && (
-                <div className="mx-2 mt-10">
-                  {useHub ? (
-                    <PlatformOnboardingCard isDialog={false} />
-                  ) : (
-                    <OnboardingCard isDialog={false} />
-                  )}
-                </div>
-              )}
-
-              {!onboardingCard.show && (
-                <div className="mx-2 mt-10">
-                  <ExploreHubCard />
-                </div>
-              )}
-            </>
+            <EmptyChatBody
+              useHub={useHub}
+              showOnboardingCard={onboardingCard.show}
+            />
           )}
         </div>
       </div>

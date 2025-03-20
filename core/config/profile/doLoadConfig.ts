@@ -6,6 +6,7 @@ import {
   ConfigValidationError,
   ModelRole,
 } from "@continuedev/config-yaml";
+
 import {
   ContinueConfig,
   ContinueRcJson,
@@ -26,6 +27,7 @@ import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
+
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
 export default async function doLoadConfig(

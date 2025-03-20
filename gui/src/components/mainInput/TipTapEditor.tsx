@@ -302,7 +302,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   }
 
   // Ensure we're using the correct history key - chat for main input, edit for edit mode
-  const historyKey = props.historyKey === 'edit' ? 'edit' : 'chat';
+  const historyKey = props.historyKey === "edit" ? "edit" : "chat";
   const { prevRef, nextRef, addRef } = useInputHistory(historyKey);
 
   const editor: Editor | null = useEditor({
@@ -996,7 +996,6 @@ function TipTapEditor(props: TipTapEditorProps) {
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}
           onAddContextItem={() => insertCharacterWithWhitespace("@")}
-          onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
           onEnter={onEnterRef.current}
           onImageFileSelected={(file) => {
             handleImageFile(file).then((result) => {

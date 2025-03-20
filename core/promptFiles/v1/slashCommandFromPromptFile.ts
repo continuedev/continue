@@ -63,6 +63,7 @@ export function slashCommandFromPromptFileV1(
   return {
     name,
     description,
+    prompt,
     run: async function* (context) {
       const originalSystemMessage = context.llm.systemMessage;
       context.llm.systemMessage = systemMessage;

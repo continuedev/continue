@@ -157,6 +157,7 @@ Icon?
 notes.md
 
 manual-testing-sandbox/.idea/**
+manual-testing-sandbox/.continue/**
 extensions/intellij/.idea/**
 
 **/.idea/workspace.xml

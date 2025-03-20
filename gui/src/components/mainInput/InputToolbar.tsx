@@ -75,7 +75,6 @@ export interface ToolbarOptions {
 interface InputToolbarProps {
   onEnter?: (modifiers: InputModifiers) => void;
   onAddContextItem?: () => void;
-  onAddSlashCommand?: () => void;
   onClick?: () => void;
   onImageFileSelected?: (file: File) => void;
   hidden?: boolean;
