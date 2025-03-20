@@ -1,6 +1,7 @@
 import { DEFAULT_MODEL_GRANITE_LARGE } from "../../config/default";
 import { MODEL_REQUIREMENTS } from "./modelRequirements";
 import { GB } from "./sizeUtils";
+import { SYSTEM_REQUIREMENTS } from "./systemRequirements";
 
 // All the system's information
 export interface SystemInfo {
@@ -73,11 +74,14 @@ export function getRecommendedModels(systemInfo: SystemInfo) {
 }
 
 export function shouldRecommendLargeModel(systemInfo: SystemInfo): boolean {
-  const requirements = MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model];
-  if (!requirements) return false;
+  const modelRequirements = MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model];
+  if (!modelRequirements) return false;
 
-  if (isHighEndApple(systemInfo.gpus))
-    return systemInfo.memory.totalMemory >= requirements.recommendedMemoryBytes;
+  if (isHighEndApple(systemInfo.gpus)) {
+    const availableMemory =
+     systemInfo.memory.totalMemory - SYSTEM_REQUIREMENTS.reservedSystemMemory;
+    return availableMemory >= modelRequirements.recommendedMemoryBytes;
+  }
 
   if (!hasDiscreteGPU(systemInfo.gpus)) return false;
 
@@ -85,5 +89,6 @@ export function shouldRecommendLargeModel(systemInfo: SystemInfo): boolean {
     return Math.max(max, (gpu.vram || 0) * GB);
   }, 0);
 
-  return maxVRAM >= requirements.recommendedMemoryBytes;
+  const availableVRAM = maxVRAM - SYSTEM_REQUIREMENTS.reservedGraphicsMemory;
+  return availableVRAM >= modelRequirements.recommendedMemoryBytes;
 }
