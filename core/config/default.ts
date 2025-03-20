@@ -94,7 +94,7 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
   data: [],
 };
 
-const DEFAULT_CONTEXT_LENGTH = 16384;
+const DEFAULT_CONTEXT_LENGTH = 8192;
 
 const BASE_GRANITE_CONFIG: Partial<ModelDescription> = {
   contextLength: DEFAULT_CONTEXT_LENGTH,
