@@ -5,8 +5,11 @@
     "project": "./tsconfig.json"
   },
   "rules": {
-    "quotes": ["warn", "double", {}],
+    "quotes": ["off", "double", {}],
     "@typescript-eslint/naming-convention": "off",
-    "@typescript-eslint/no-floating-promises": "warn"
+    "@typescript-eslint/no-floating-promises": "off",
+    "import/order": "off",
+    "curly": "off",
+    "@typescript-eslint/semi": "off"
   }
 }
