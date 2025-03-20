@@ -8,7 +8,7 @@ import { getStandardName } from "core/granite/commons/naming";
 import { ProgressData, ProgressReporter } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
 import { isOllamaInstalled } from "core/util/ollamaHelper";
-import { env, ExtensionContext, Uri } from "vscode";
+import { Disposable, env, ExtensionContext, Uri } from "vscode";
 
 import { IModelServer } from "../modelServer";
 import { terminalCommandRunner } from "../terminal/terminalCommandRunner";
@@ -20,13 +20,19 @@ import { getRemoteModelInfo } from "./ollamaLibrary";
 
 const PLATFORM = os.platform();
 
-export class OllamaServer implements IModelServer {
-
+export class OllamaServer implements IModelServer, Disposable {
   private currentStatus = ServerStatus.unknown;
   protected installingModels = new Set<string>();
   private modelInfoPromises: Map<string, Promise<ModelInfo | undefined>> = new Map();
   private modelInfoResults: Map<string, ModelInfo | undefined> = new Map();
   constructor(private context: ExtensionContext, private name: string = "Ollama", private serverUrl = "http://localhost:11434") { }
+
+  dispose(): void {
+    // Clean up all caches
+    this.installingModels.clear();
+    this.modelInfoPromises.clear();
+    this.modelInfoResults.clear();
+  }
 
   getName(): string {
     return this.name;
@@ -190,7 +196,25 @@ export class OllamaServer implements IModelServer {
     return ollamaInstallerPath;
   }
 
-  async getModelStatus(modelName?: string, wait?: boolean): Promise<ModelStatus> {
+  /**
+   * Returns the status of a model, which can be:
+   *  - missing: The model is not installed on the local machine
+   *  - installed: The model is installed on the local machine
+   *  - stale: The model is installed, but a newer version is available
+   *  - unknown: An error occurred while fetching the model status
+   *
+   * By default, the function will return immediately with the cached status (or unknown if the model was not previously cached) and the remote status will be updated in the background, so as not to slow down the UI.
+   * If the `waitForRemoteStatus` parameter is set to true, and the model status was not previously cached, the function will wait for the remote status to be fetched and updated before returning.
+   *
+   * @param modelName The name of the model to check (e.g. "granite3.2:2b")
+   * @param waitForRemoteStatus If true, and the model status was not previously cached, the function will wait for the remote status to be fetched and updated before returning. If false,
+   *  the function will return immediately with the cached status (or unknown if the model was not previously cached) and the remote status will be updated in the background.
+   * @returns The status of the model
+   */
+  async getModelStatus(
+    modelName?: string,
+    waitForRemoteStatus?: boolean,
+  ): Promise<ModelStatus> {
     if (!modelName) {
       return ModelStatus.unknown;
     }
@@ -210,7 +234,7 @@ export class OllamaServer implements IModelServer {
         // modelInfoResults will be updated with the most recent info once it's available
         if (!this.modelInfoPromises.has(modelName)) {
           const modelInfoPromise = this.fetchModelInfo(modelName);
-          if (wait) {
+          if (waitForRemoteStatus) {
             await modelInfoPromise;
           }
           this.modelInfoPromises.set(modelName, modelInfoPromise);
@@ -260,7 +284,7 @@ export class OllamaServer implements IModelServer {
   }
 
   async pullModels(models: string[], signal: AbortSignal, reportProgress: (progress: ProgressData) => void): Promise<boolean> {
-    
+
     if (signal.aborted) {
       return false;
     }
