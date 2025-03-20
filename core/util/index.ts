@@ -204,3 +204,10 @@ export function removeCodeBlocksAndTrim(text: string): string {
 
   return textWithoutCodeBlocks.trim();
 }
+
+export function splitCamelCaseAndNonAlphaNumeric(value: string) {
+  return value
+    .split(/(?<=[a-z0-9])(?=[A-Z])|[^a-zA-Z0-9]/)
+    .filter(t => t.length > 0)
+    .map(t => t.toLowerCase());
+}
