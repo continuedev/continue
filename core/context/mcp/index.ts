@@ -4,7 +4,6 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
-import { ConfigValidationError } from "@continuedev/config-yaml";
 import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import { encodeMCPToolUri } from "../../tools/callTool";
@@ -24,13 +23,13 @@ export class MCPManagerSingleton {
     return MCPManagerSingleton.instance;
   }
 
-  createConnection(id: string, options: MCPOptions): MCPConnection | undefined {
+  createConnection(id: string, options: MCPOptions): MCPConnection {
     if (!this.connections.has(id)) {
       const connection = new MCPConnection(options);
       this.connections.set(id, connection);
       return connection;
     } else {
-      return this.connections.get(id);
+      return this.connections.get(id)!;
     }
   }
 
@@ -45,6 +44,13 @@ export class MCPManagerSingleton {
     }
 
     this.connections.delete(id);
+  }
+
+  async removeUnusedConnections(keepIds: string[]) {
+    const toRemove = Array.from(this.connections.keys()).filter(
+      (k) => !keepIds.includes(k),
+    );
+    await Promise.all(toRemove.map((id) => this.removeConnection(id)));
   }
 }
 
@@ -123,25 +129,32 @@ class MCPConnection {
     signal: AbortSignal,
     name: string,
     faviconUrl: string | undefined,
-  ): Promise<ConfigValidationError | undefined> {
+  ) {
     try {
       await Promise.race([
         this.connectClient(),
         new Promise((_, reject) => {
           signal.addEventListener("abort", () =>
-            reject(new Error("Connection aborted")),
+            reject(new Error("Connection timed out")),
           );
         }),
       ]);
-    } catch (error: any) {
-      if (signal.aborted) {
-        throw new Error("Operation aborted");
-      }
-      if (!error.message.startsWith("StdioClientTransport already started")) {
-        return {
-          fatal: false,
-          message: `Failed to connect to MCP: ${error.message}`,
-        };
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("spawn") && msg.includes("enoent")) {
+          const command = msg.split(" ")[1];
+          throw new Error(
+            `command "${command}" not found. To use this MCP server, install the ${command} CLI.`,
+          );
+        } else if (
+          !error.message.startsWith("StdioClientTransport already started")
+        ) {
+          // don't throw error if it's just a "server already running" case
+          throw error;
+        }
+      } else {
+        throw error;
       }
     }
 

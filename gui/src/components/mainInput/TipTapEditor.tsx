@@ -301,9 +301,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
   }
 
-  // Ensure we're using the correct history key - chat for main input, edit for edit mode
-  const historyKey = props.historyKey === 'edit' ? 'edit' : 'chat';
-  const { prevRef, nextRef, addRef } = useInputHistory(historyKey);
+  const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
   const editor: Editor | null = useEditor({
     extensions: [
@@ -662,9 +660,9 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      // Always add to input history regardless of input type
-      // This ensures that both chat and edit modes maintain their own history
-      addRef.current(json);
+      if (props.isMainInput) {
+        addRef.current(json);
+      }
 
       props.onEnter(json, modifiers, editor);
     },

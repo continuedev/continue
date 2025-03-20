@@ -4,7 +4,7 @@ export interface PageHeaderProps {
   onTitleClick?: () => void;
   title?: string;
   rightContent?: React.ReactNode;
-  showBorder?: boolean; // Added this prop
+  showBorder?: boolean;
 }
 
 export default function PageHeader({

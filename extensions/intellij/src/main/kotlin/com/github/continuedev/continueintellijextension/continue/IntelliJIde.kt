@@ -343,7 +343,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getSearchResults(query: String): String {
-        val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--", query, ".")
+        val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
         command.setWorkDirectory(project.basePath)
         return ExecUtil.execAndGetOutput(command).stdout
     }
