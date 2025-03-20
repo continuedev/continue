@@ -10,6 +10,7 @@
     "@typescript-eslint/no-floating-promises": "off",
     "import/order": "off",
     "curly": "off",
-    "@typescript-eslint/semi": "off"
+    "@typescript-eslint/semi": "off",
+    "eqeqeq": "error"
   }
 }
