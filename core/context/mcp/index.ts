@@ -195,7 +195,7 @@ class MCPConnection {
         faviconUrl,
         readonly: false,
         type: "function",
-        wouldLikeTo: `use the ${name} ${tool.name} tool`,
+        wouldLikeTo: "",
         uri: encodeMCPToolUri(mcpId, tool.name),
       }));
 
