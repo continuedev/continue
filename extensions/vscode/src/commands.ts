@@ -569,7 +569,7 @@ const getCommandsMap: (
       const range =
         args?.range ?? new vscode.Range(startFromCharZero, endAtCharLast);
 
-      editDecorationManager.setDecoration(editor, range);
+      editDecorationManager.addDecorations(editor, [range]);
 
       const rangeInFileWithContents = getRangeInFileWithContents(true, range);
 
