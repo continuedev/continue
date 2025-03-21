@@ -29,14 +29,14 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
 
   return (
     <div
-      className="flex w-full items-center justify-between gap-2 px-2 py-1"
+      className="text-vsc-foreground flex w-full cursor-pointer items-center justify-between gap-2 px-2 py-1 text-left text-xs brightness-75 hover:brightness-125"
       onClick={(e) => {
         dispatch(toggleToolSetting(props.tool.function.name));
         e.stopPropagation();
         e.preventDefault();
       }}
     >
-      <span className="flex items-center gap-1">
+      <div className="flex flex-row items-center gap-2">
         {props.duplicatesDetected ? (
           <>
             <InformationCircleIcon
@@ -60,15 +60,17 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
             </ToolTip>
           </>
         ) : null}
-        {props.tool.faviconUrl && (
-          <img
-            src={props.tool.faviconUrl}
-            alt={props.tool.displayTitle}
-            className="h-4 w-4"
-          />
-        )}
-        {props.tool.displayTitle}{" "}
-      </span>
+        <span className="flex items-center gap-1">
+          {props.tool.faviconUrl && (
+            <img
+              src={props.tool.faviconUrl}
+              alt={props.tool.displayTitle}
+              className="h-4 w-4"
+            />
+          )}
+          {props.tool.displayTitle}{" "}
+        </span>
+      </div>
       <div className="flex cursor-pointer gap-2 pr-4">
         {(settings === "allowedWithPermission" || settings === undefined) && (
           <span className="text-yellow-500">Allowed</span>
