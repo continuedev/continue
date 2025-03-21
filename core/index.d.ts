@@ -912,6 +912,7 @@ export interface Tool {
   readonly: boolean;
   uri?: string;
   faviconUrl?: string;
+  group: string;
 }
 
 interface ToolChoice {

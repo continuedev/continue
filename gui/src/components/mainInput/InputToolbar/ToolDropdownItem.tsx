@@ -29,21 +29,22 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
 
   return (
     <div
-      className="text-vsc-foreground flex w-full cursor-pointer items-center justify-between gap-2 px-2 py-1 text-left text-xs brightness-75 hover:brightness-125"
+      className="text-vsc-foreground flex cursor-pointer items-center justify-between gap-2 py-1 pl-2 pr-1 text-left text-xs brightness-75 hover:brightness-125"
       onClick={(e) => {
         dispatch(toggleToolSetting(props.tool.function.name));
         e.stopPropagation();
         e.preventDefault();
       }}
     >
-      <div className="flex flex-row items-center gap-2">
+      <div className="flex flex-1 flex-row items-center gap-1">
         {props.duplicatesDetected ? (
           <>
-            <InformationCircleIcon
-              data-tooltip-id={props.tool.displayTitle + "-duplicate-warning"}
-              className="h-4 w-4 cursor-help text-yellow-500"
-            />
-
+            <div>
+              <InformationCircleIcon
+                data-tooltip-id={props.tool.displayTitle + "-duplicate-warning"}
+                className="h-3 w-3 cursor-help text-yellow-500"
+              />
+            </div>
             <ToolTip
               id={props.tool.displayTitle + "-duplicate-warning"}
               place="bottom"
@@ -60,7 +61,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
             </ToolTip>
           </>
         ) : null}
-        <span className="flex items-center gap-1">
+        <span className="lines lines-1 flex items-center gap-1">
           {props.tool.faviconUrl && (
             <img
               src={props.tool.faviconUrl}
@@ -71,7 +72,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
           {props.tool.displayTitle}{" "}
         </span>
       </div>
-      <div className="flex cursor-pointer gap-2 pr-4">
+      <div className="flex cursor-pointer gap-2">
         {(settings === "allowedWithPermission" || settings === undefined) && (
           <span className="text-yellow-500">Allowed</span>
         )}

@@ -1,10 +1,11 @@
 import { Tool } from "../..";
-import { BuiltInToolNames } from "../builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const createNewFileTool: Tool = {
   type: "function",
   displayTitle: "Create New File",
   wouldLikeTo: "create a new file",
+  group: BUILT_IN_GROUP_NAME,
   readonly: false,
   function: {
     name: BuiltInToolNames.CreateNewFile,

@@ -134,6 +134,7 @@ export default async function doLoadConfig(
         type: "function" as const,
         wouldLikeTo: "",
         uri: encodeMCPToolUri(server.id, tool.name),
+        group: server.name,
       }));
       newConfig.tools.push(...serverTools);
 
