@@ -51,7 +51,7 @@ export function ModelsSection() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-[auto_1fr]">
+    <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 sm:grid-cols-[auto_1fr]">
       <ModelRoleSelector
         displayName="Chat"
         description="Used in the chat interface"

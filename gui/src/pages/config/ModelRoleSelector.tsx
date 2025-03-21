@@ -1,11 +1,11 @@
-import { Fragment } from "react";
 import { Listbox, Transition } from "@headlessui/react";
-import {
-  ChevronUpDownIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { type ModelDescription } from "core";
+import { Fragment } from "react";
+import { defaultBorderRadius } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
+import InfoHover from "../../components/InfoHover";
+import { getFontSize } from "../../util";
 
 interface ModelRoleSelectorProps {
   models: ModelDescription[];
@@ -29,11 +29,14 @@ const ModelRoleSelector = ({
   return (
     <>
       <div className="mt-2 flex flex-row items-center gap-1 sm:mt-0">
-        <span className="text-sm">{displayName}</span>
-        <InformationCircleIcon
-          className="h-3 w-3"
-          data-tooltip-id={`${displayName}-description`}
-        />
+        <span
+          style={{
+            fontSize: `${getFontSize() - 3}px`,
+          }}
+        >
+          {displayName}
+        </span>
+        <InfoHover size="3" id={displayName} msg={description} />
         <ToolTip id={`${displayName}-description`} place={"bottom"}>
           {description}
         </ToolTip>
@@ -42,21 +45,24 @@ const ModelRoleSelector = ({
         {({ open }) => (
           <div className="relative">
             <Listbox.Button
-              className={`border-vsc-input-border bg-vsc-background ${!!models.length ? "hover:bg-vsc-input-background cursor-pointer" : ""} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-2 py-1 text-left`}
+              className={`border-vsc-input-border bg-vsc-background ${!!models.length ? "hover:bg-vsc-input-background cursor-pointer" : ""} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-1.5 py-0.5 text-left text-sm`}
             >
               {models.length === 0 ? (
-                <span className="text-lightgray italic">{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
+                <span
+                  className="text-lightgray italic"
+                  style={{ fontSize: `${getFontSize() - 3}px` }}
+                >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
               ) : (
-                <span className="lines lines-1">
+                <span
+                  className="lines lines-1"
+                  style={{ fontSize: `${getFontSize() - 3}px` }}
+                >
                   {selectedModel?.title ?? `Select ${displayName} model`}
                 </span>
               )}
               {models.length ? (
                 <div className="pointer-events-none flex items-center">
-                  <ChevronUpDownIcon
-                    className="h-3.5 w-3.5"
-                    aria-hidden="true"
-                  />
+                  <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
                 </div>
               ) : null}
             </Listbox.Button>
@@ -71,14 +77,20 @@ const ModelRoleSelector = ({
               leaveFrom="transform opacity-100 scale-100"
               leaveTo="transform opacity-0 scale-95"
             >
-              <Listbox.Options className="bg-vsc-background max-h-80vh absolute z-[800] mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
+              <Listbox.Options
+                style={{ borderRadius: defaultBorderRadius }}
+                className="bg-vsc-background border-vsc-input-border absolute z-[800] mt-0.5 w-[calc(100%-2px)] overflow-hidden border border-solid p-0"
+              >
                 {models.map((option, idx) => (
                   <Listbox.Option
                     key={idx}
                     value={option.title}
-                    className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-2 py-1 ${option?.title === selectedModel?.title ? "bg-list-active" : "bg-vsc-input-background"}`}
+                    className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-2 px-1 py-0.5 ${option?.title === selectedModel?.title ? "bg-list-active" : "bg-vsc-input-background"}`}
                   >
-                    <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
+                    <span
+                      className="lines lines-1 relative flex h-4 items-center justify-between gap-2 pr-1"
+                      style={{ fontSize: `${getFontSize() - 3}px` }}
+                    >
                       {option.title}
                     </span>
                   </Listbox.Option>
