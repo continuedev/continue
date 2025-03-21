@@ -5,6 +5,7 @@ import {
   CubeIcon,
   PlusIcon,
   TrashIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -29,6 +30,7 @@ interface ModelOptionProps {
   idx: number;
   showMissingApiKeyMsg: boolean;
   showDelete?: boolean;
+  isSelected?: boolean;
 }
 
 interface Option {
@@ -132,6 +134,7 @@ function ModelOption({
   idx,
   showDelete,
   showMissingApiKeyMsg,
+  isSelected,
 }: ModelOptionProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -198,6 +201,9 @@ function ModelOption({
             <StyledCog6ToothIcon $hovered={hovered} onClick={onClickGear} />
             {showDelete && (
               <StyledTrashIcon $hovered={hovered} onClick={onClickDelete} />
+            )}
+            {isSelected && (
+              <CheckIcon className="ml-1 h-4 w-4" />
             )}
           </div>
         </div>
@@ -338,6 +344,7 @@ function ModelSelect() {
                 key={idx}
                 showDelete={options.length > 1}
                 showMissingApiKeyMsg={option.apiKey === ""}
+                isSelected={option.value === defaultModel?.title}
               />
             ))}
           </div>
