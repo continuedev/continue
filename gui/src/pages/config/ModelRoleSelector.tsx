@@ -1,5 +1,5 @@
 import { Listbox, Transition } from "@headlessui/react";
-import { ChevronUpDownIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { type ModelDescription } from "core";
 import { Fragment } from "react";
 import { defaultBorderRadius } from "../../components";
@@ -49,7 +49,7 @@ const ModelRoleSelector = ({
             >
               {models.length === 0 ? (
                 <span
-                  className="text-lightgray italic"
+                  className="text-lightgray lines lines-1 italic"
                   style={{ fontSize: `${getFontSize() - 3}px` }}
                 >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
               ) : (
@@ -79,20 +79,23 @@ const ModelRoleSelector = ({
             >
               <Listbox.Options
                 style={{ borderRadius: defaultBorderRadius }}
-                className="bg-vsc-background border-vsc-input-border absolute z-[800] mt-0.5 w-[calc(100%-2px)] overflow-hidden border border-solid p-0"
+                className="bg-vsc-input-background border-vsc-input-border absolute z-[800] mt-0.5 w-[calc(100%-2px)] overflow-hidden border border-solid p-0"
               >
                 {models.map((option, idx) => (
                   <Listbox.Option
                     key={idx}
                     value={option.title}
-                    className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-2 px-1 py-0.5 ${option?.title === selectedModel?.title ? "bg-list-active" : "bg-vsc-input-background"}`}
+                    className={`text-vsc-foreground hover:bg-list-active hover:text-list-active-foreground flex cursor-pointer flex-row items-center justify-between px-1 py-0.5`}
                   >
                     <span
-                      className="lines lines-1 relative flex h-4 items-center justify-between gap-2 pr-1"
+                      className="lines lines-1 relative flex h-4 items-center gap-2"
                       style={{ fontSize: `${getFontSize() - 3}px` }}
                     >
                       {option.title}
                     </span>
+                    {option.title === selectedModel?.title && (
+                      <CheckIcon className="h-3 w-3" aria-hidden="true" />
+                    )}
                   </Listbox.Option>
                 ))}
               </Listbox.Options>
