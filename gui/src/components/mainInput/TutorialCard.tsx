@@ -22,7 +22,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
 
   return (
     <div
-      className="border-0.5 border-lightGray bg-vsc-background m-1 max-w-96 rounded-md border-solid px-3 py-3 sm:px-5"
+      className="border-lightGray bg-vsc-background m-1 max-w-96 rounded-md border-[0.7px] border-solid px-3 py-3 sm:px-5"
       data-testid={`tutorial-card`}
     >
       <div className="flex items-center justify-between">
