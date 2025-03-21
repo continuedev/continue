@@ -387,16 +387,6 @@ export class ConfigHandler {
       this.ideSettingsPromise,
     );
 
-    // After login, default to the first org as the selected org
-    try {
-      const orgs = await this.controlPlaneClient.listOrganizations();
-      if (orgs.length) {
-        await this.setSelectedOrgId(orgs[0].id);
-      }
-    } catch (e) {
-      console.error("Failed to fetch control plane profiles: ", e);
-    }
-
     this.fetchControlPlaneProfiles().catch(async (e) => {
       console.error("Failed to fetch control plane profiles: ", e);
       await this.loadLocalProfilesOnly();
