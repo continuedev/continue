@@ -2,14 +2,7 @@ import { Editor, EditorContent, JSONContent } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { debounce } from "lodash";
-import {
-  KeyboardEvent,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
@@ -23,16 +16,12 @@ import {
   setNewestCodeblocksForInput,
 } from "../../../redux/slices/sessionSlice";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
-import { isJetBrains, isMetaEquivalentKeyPressed } from "../../../util";
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
-import {
-  handleJetBrainsOSRMetaKeyIssues,
-  handleVSCMetaKeyIssues,
-} from "../util/handleMetaKeyIssues";
 import { DragOverlay } from "./DragOverlay";
 import { createEditorConfig, getPlaceholderText } from "./editorConfig";
 import { handleImageFile } from "./imageUtils";
+import { useEditorEventHandlers } from "./keyHandlers";
 import { InputBoxDiv } from "./StyledComponents";
 import "./TipTapEditor.css";
 
@@ -73,9 +62,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
-  const debouncedShouldHideToolbar = debounce((value) => {
-    setShouldHideToolbar(value);
-  }, 200);
 
   useEffect(() => {
     if (!editor) {
@@ -118,38 +104,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, [editor]);
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
-
-  /**
-   * This handles various issues with meta key actions
-   * - In JetBrains, when using OSR in JCEF, there is a bug where using the meta key to
-   *   highlight code using arrow keys is not working
-   * - In VS Code, while working with .ipynb files there is a problem where copy/paste/cut will affect
-   *   the actual notebook cells, even when performing them in our GUI
-   *
-   *  Currently keydown events for a number of keys are not registering if the
-   *  meta/shift key is pressed, for example "x", "c", "v", "z", etc.
-   *  Until this is resolved we can't turn on OSR for non-Mac users due to issues
-   *  with those key actions.
-   */
-  const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!editor) {
-      return;
-    }
-
-    setActiveKey(e.key);
-
-    if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
-
-    if (isOSREnabled) {
-      handleJetBrainsOSRMetaKeyIssues(e, editor);
-    } else if (!isJetBrains()) {
-      await handleVSCMetaKeyIssues(e, editor);
-    }
-  };
-
-  const handleKeyUp = () => {
-    setActiveKey(null);
-  };
 
   useEffect(() => {
     if (props.isMainInput) {
@@ -385,6 +339,14 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
     [editor],
   );
+
+  const { handleKeyUp, handleKeyDown } = useEditorEventHandlers({
+    editor,
+    isOSREnabled: isOSREnabled,
+    editorFocusedRef,
+    isInEditMode,
+    setActiveKey,
+  });
 
   return (
     <InputBoxDiv
