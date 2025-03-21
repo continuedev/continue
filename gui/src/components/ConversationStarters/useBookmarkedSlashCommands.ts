@@ -1,4 +1,5 @@
 import { SlashCommandDescription } from "core";
+import { usePostHog } from "posthog-js/react";
 import { useMemo } from "react";
 import {
   bookmarkSlashCommand,
@@ -11,6 +12,7 @@ import { isDeprecatedCommandName, sortCommandsByBookmarkStatus } from "./utils";
 
 export function useBookmarkedSlashCommands() {
   const dispatch = useAppDispatch();
+  const posthog = usePostHog();
 
   const slashCommands =
     useAppSelector((state) => state.config.config.slashCommands) ?? [];
@@ -37,9 +39,12 @@ export function useBookmarkedSlashCommands() {
     [filteredSlashCommands, bookmarkedCommands],
   );
 
-  // Function to toggle bookmark status
   const toggleBookmark = (command: SlashCommandDescription) => {
     const isBookmarked = bookmarkStatuses[command.name];
+
+    posthog.capture("toggle_bookmarked_slash_command", {
+      isBookmarked,
+    });
 
     if (isBookmarked) {
       dispatch(
