@@ -29,7 +29,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
 
   return (
     <div
-      className="text-vsc-foreground flex cursor-pointer items-center justify-between gap-2 py-1 pl-2 pr-1 text-left text-xs brightness-75 hover:brightness-125"
+      className="text-vsc-foreground flex cursor-pointer items-center justify-between gap-2 py-1 text-left text-xs brightness-75 hover:brightness-125"
       onClick={(e) => {
         dispatch(toggleToolSetting(props.tool.function.name));
         e.stopPropagation();
@@ -69,7 +69,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
               className="h-4 w-4"
             />
           )}
-          {props.tool.displayTitle}{" "}
+          {props.tool.function.name}{" "}
         </span>
       </div>
       <div className="flex cursor-pointer gap-2">

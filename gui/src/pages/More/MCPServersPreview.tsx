@@ -47,7 +47,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
 
   return (
     <div className="flex flex-col gap-1.5 pb-4">
-      <h3 className="m-0 mb-1 text-base">{server.name}</h3>
+      <h3 className="m-0 mb-1 text-xs sm:text-sm">{server.name}</h3>
       <div className="flex flex-row items-center justify-between gap-3">
         <div className="flex flex-row items-center gap-2">
           {server.status === "not-connected" ? (

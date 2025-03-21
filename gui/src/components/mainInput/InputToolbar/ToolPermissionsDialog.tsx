@@ -1,3 +1,4 @@
+import { Tool } from "core";
 import { useMemo } from "react";
 import { useAppSelector } from "../../../redux/hooks";
 import InfoHover from "../../InfoHover";
@@ -5,6 +6,17 @@ import ToolDropdownItem from "./ToolDropdownItem";
 
 const ToolPermissionsDialog = () => {
   const availableTools = useAppSelector((state) => state.config.config.tools);
+
+  const toolsByGroup = useMemo(() => {
+    const byGroup: Record<string, Tool[]> = {};
+    for (const tool of availableTools) {
+      if (!byGroup[tool.group]) {
+        byGroup[tool.group] = [];
+      }
+      byGroup[tool.group].push(tool);
+    }
+    return Object.entries(byGroup);
+  }, [availableTools]);
 
   // Detect duplicate tool names
   const duplicateDetection = useMemo(() => {
@@ -48,13 +60,18 @@ const ToolPermissionsDialog = () => {
           }
         />
       </div>
-      <div className="max-h-72 overflow-y-auto pr-2">
-        {availableTools.map((tool) => (
-          <ToolDropdownItem
-            key={tool.uri + tool.function.name}
-            tool={tool}
-            duplicatesDetected={duplicateDetection[tool.function.name]}
-          />
+      <div className="flex max-h-72 flex-col gap-2 divide-y divide-zinc-700 overflow-y-auto px-2">
+        {toolsByGroup.map(([groupName, tools]) => (
+          <div key={groupName} className="flex flex-col gap-1">
+            <h3 className="m-0 p-0 text-sm">{groupName}</h3>
+            {tools.map((tool) => (
+              <ToolDropdownItem
+                key={tool.uri + tool.function.name}
+                tool={tool}
+                duplicatesDetected={duplicateDetection[tool.function.name]}
+              />
+            ))}
+          </div>
         ))}
       </div>
     </div>
