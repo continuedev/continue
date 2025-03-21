@@ -45,7 +45,8 @@ const ModelRoleSelector = ({
         {({ open }) => (
           <div className="relative">
             <Listbox.Button
-              className={`border-vsc-input-border bg-vsc-background ${!!models.length ? "hover:bg-vsc-input-background cursor-pointer" : ""} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-1.5 py-0.5 text-left text-sm`}
+              aria-disabled={models.length === 0}
+              className={`border-vsc-input-border bg-vsc-background ${models.length > 0 ? "hover:bg-vsc-input-background cursor-pointer" : "cursor-not-allowed opacity-50"} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-1.5 py-0.5 text-left text-sm`}
             >
               {models.length === 0 ? (
                 <span
@@ -79,7 +80,7 @@ const ModelRoleSelector = ({
             >
               <Listbox.Options
                 style={{ borderRadius: defaultBorderRadius }}
-                className="bg-vsc-input-background border-vsc-input-border absolute z-[800] mt-0.5 w-[calc(100%-2px)] overflow-hidden border border-solid p-0"
+                className="bg-vsc-input-background border-vsc-input-border fixed z-[800] mt-0.5 min-w-40 overflow-auto border border-solid p-0 shadow-lg"
               >
                 {models.map((option, idx) => (
                   <Listbox.Option
