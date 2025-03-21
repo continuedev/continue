@@ -1,4 +1,3 @@
-import { ModelRole } from "@continuedev/config-yaml";
 import { Listbox, Transition } from "@headlessui/react";
 import {
   ArrowTopRightOnSquareIcon,
@@ -7,7 +6,6 @@ import {
   PlusCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { ModelDescription } from "core";
 import {
   SharedConfigSchema,
   modifyAnyConfigWithSharedConfig,
@@ -24,15 +22,10 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  selectDefaultModel,
-  setDefaultModel,
-  updateConfig,
-} from "../../redux/slices/configSlice";
+import { updateConfig } from "../../redux/slices/configSlice";
 import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
-import { getFontSize, isJetBrains } from "../../util";
+import { getFontSize } from "../../util";
 import { AccountButton } from "./AccountButton";
-import ModelRoleSelector from "./ModelRoleSelector";
 import { ScopeSelect } from "./ScopeSelect";
 
 function ConfigPage() {
@@ -76,7 +69,6 @@ function ConfigPage() {
 
   /////// User settings section //////
   const config = useAppSelector((state) => state.config.config);
-  const selectedChatModel = useAppSelector(selectDefaultModel);
 
   function handleUpdate(sharedConfig: SharedConfigSchema) {
     // Optimistic update
@@ -87,35 +79,6 @@ function ConfigPage() {
 
     // Actual update to core which propagates back with config update event
     ideMessenger.post("config/updateSharedConfig", sharedConfig);
-  }
-
-  function handleRoleUpdate(role: ModelRole, model: ModelDescription | null) {
-    if (!selectedProfile) {
-      return;
-    }
-    // Optimistic update
-    dispatch(
-      updateConfig({
-        ...config,
-        selectedModelByRole: {
-          ...config.selectedModelByRole,
-          [role]: model,
-        },
-      }),
-    );
-    ideMessenger.post("config/updateSelectedModel", {
-      profileId: selectedProfile.id,
-      role,
-      title: model?.title ?? null,
-    });
-  }
-
-  // TODO use handleRoleUpdate for chat
-  function handleChatModelSelection(model: ModelDescription | null) {
-    if (!model) {
-      return;
-    }
-    dispatch(setDefaultModel({ title: model.title }));
   }
 
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
@@ -177,8 +140,6 @@ function ConfigPage() {
     // Necessary so that reformatted/trimmed values don't cause dirty state
     setFormPromptPath(promptPath);
   }, [promptPath]);
-
-  const jetbrains = isJetBrains();
 
   return (
     <div className="overflow-y-scroll">
@@ -305,68 +266,6 @@ function ConfigPage() {
             ) : (
               <div>Loading...</div>
             )}
-          </div>
-        </div>
-
-        {/* Model Roles as a separate section */}
-        <div className="flex flex-col">
-          <div className="flex max-w-[400px] flex-col gap-4 py-6">
-            <h2 className="mb-1 mt-0">Model Roles</h2>
-            <div className="grid grid-cols-1 gap-x-3 gap-y-2 sm:grid-cols-[auto_1fr]">
-              <ModelRoleSelector
-                displayName="Chat"
-                description="Used in the chat interface"
-                models={config.modelsByRole.chat}
-                selectedModel={
-                  selectedChatModel
-                    ? {
-                        title: selectedChatModel.title,
-                        provider: selectedChatModel.provider,
-                        model: selectedChatModel.model,
-                      }
-                    : null
-                }
-                onSelect={(model) => handleChatModelSelection(model)}
-              />
-              <ModelRoleSelector
-                displayName="Autocomplete"
-                description="Used to generate code completion suggestions"
-                models={config.modelsByRole.autocomplete}
-                selectedModel={config.selectedModelByRole.autocomplete}
-                onSelect={(model) => handleRoleUpdate("autocomplete", model)}
-              />
-              {/* Jetbrains has a model selector inline */}
-              {!jetbrains && (
-                <ModelRoleSelector
-                  displayName="Edit"
-                  description="Used for inline edits"
-                  models={config.modelsByRole.edit}
-                  selectedModel={config.selectedModelByRole.edit}
-                  onSelect={(model) => handleRoleUpdate("edit", model)}
-                />
-              )}
-              <ModelRoleSelector
-                displayName="Apply"
-                description="Used to apply generated codeblocks to files"
-                models={config.modelsByRole.apply}
-                selectedModel={config.selectedModelByRole.apply}
-                onSelect={(model) => handleRoleUpdate("apply", model)}
-              />
-              <ModelRoleSelector
-                displayName="Embed"
-                description="Used to generate and query embeddings for the @codebase and @docs context providers"
-                models={config.modelsByRole.embed}
-                selectedModel={config.selectedModelByRole.embed}
-                onSelect={(model) => handleRoleUpdate("embed", model)}
-              />
-              <ModelRoleSelector
-                displayName="Rerank"
-                description="Used for reranking results from the @codebase and @docs context providers"
-                models={config.modelsByRole.rerank}
-                selectedModel={config.selectedModelByRole.rerank}
-                onSelect={(model) => handleRoleUpdate("rerank", model)}
-              />
-            </div>
           </div>
         </div>
 
