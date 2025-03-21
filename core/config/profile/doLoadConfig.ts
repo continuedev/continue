@@ -230,7 +230,6 @@ export default async function doLoadConfig(
     newConfig,
     controlPlaneProxyInfo,
   );
-  debugger;
 
   return { config: newConfig, errors, configLoadInterrupted: false };
 }
