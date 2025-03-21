@@ -1,5 +1,5 @@
 import { ContextSection } from "./ContextSection";
-import { DocsSection } from "./DocsSection";
+import DocsSection from "./docs/DocsSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
 import { RulesSection } from "./RulesSection";

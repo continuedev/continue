@@ -5,7 +5,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses";
 import PageHeader from "../../components/PageHeader";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
@@ -55,10 +54,6 @@ function MorePage() {
           ) : (
             <IndexingProgress />
           )}
-        </div>
-
-        <div className="flex flex-col py-5">
-          <DocsIndexingStatuses />
         </div>
 
         <div className="py-5">

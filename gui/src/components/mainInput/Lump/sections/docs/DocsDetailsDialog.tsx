@@ -1,38 +1,15 @@
-import {
-  CheckIcon,
-  InformationCircleIcon,
-  PencilIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
-import {
-  DocsIndexingDetails,
-  IndexingStatus,
-  PackageDocsResult,
-  SiteIndexingConfig,
-} from "core";
-import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
+import { DocsIndexingDetails } from "core";
 import { usePostHog } from "posthog-js/react";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Input, SecondaryButton } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useAppSelector } from "../../redux/hooks";
-import { updateConfig } from "../../redux/slices/configSlice";
-import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
-import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import FileIcon from "../FileIcon";
-import { ToolTip } from "../gui/Tooltip";
-import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
 import { Tooltip } from "react-tooltip";
-
+import { SecondaryButton } from "../../../..";
+import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { useAppSelector } from "../../../../../redux/hooks";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../../../../redux/slices/uiSlice";
 interface DocsDetailsDialogProps {
   startUrl: string;
 }

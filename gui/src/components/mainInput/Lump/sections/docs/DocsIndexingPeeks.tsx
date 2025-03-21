@@ -1,9 +1,11 @@
-import { useDispatch } from "react-redux";
 import { IndexingStatus } from "core";
 import { useMemo } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { useAppSelector } from "../../redux/hooks";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../../../../redux/slices/uiSlice";
 
 export interface DocsIndexingPeekProps {
   status: IndexingStatus;

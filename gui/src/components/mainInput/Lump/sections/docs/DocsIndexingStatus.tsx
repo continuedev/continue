@@ -1,6 +1,3 @@
-import { IndexingStatus, SiteIndexingConfig } from "core";
-import { useContext, useMemo, useState } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
@@ -10,10 +7,16 @@ import {
   PauseCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
-import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import { IndexingStatus, SiteIndexingConfig } from "core";
+import { useContext, useMemo, useState } from "react";
+import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
+import { updateIndexingStatus } from "../../../../../redux/slices/indexingSlice";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../../../../redux/slices/uiSlice";
+import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
 import DocsDetailsDialog from "./DocsDetailsDialog";
 
 interface IndexingStatusViewerProps {
