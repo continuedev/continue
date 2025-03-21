@@ -1,13 +1,8 @@
 import {
-  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  EyeIcon,
-  PauseCircleIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { IndexingStatus, SiteIndexingConfig } from "core";
+import { SiteIndexingConfig } from "core";
 import { useContext, useMemo, useState } from "react";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
@@ -17,20 +12,11 @@ import {
   setShowDialog,
 } from "../../../../../redux/slices/uiSlice";
 import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
-import DocsDetailsDialog from "./DocsDetailsDialog";
+import { StatusIndicator } from "./StatusIndicator";
 
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
 }
-
-const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
-  indexing: ArrowPathIcon,
-  paused: PauseCircleIcon,
-  complete: CheckCircleIcon,
-  aborted: null,
-  pending: null,
-  failed: ExclamationTriangleIcon, // Since we show an error message below
-};
 
 function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
   const config = useAppSelector((store) => store.config.config);
@@ -87,7 +73,6 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
     return Math.min(100, Math.max(0, status.progress * 100)).toFixed(0);
   }, [status?.progress]);
 
-  const Icon = STATUS_TO_ICON[status?.status];
   const showProgressPercentage = progressPercentage !== "100";
 
   if (hasDeleted) return null;
@@ -121,98 +106,17 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
           <div className="text-xs text-stone-500">Pending...</div>
         ) : (
           <div className="flex flex-row items-center gap-1 text-stone-500">
-            {showProgressPercentage && (
-              <span className="text-xs">{progressPercentage}%</span>
-            )}
+            {true && <span className="text-xs">{progressPercentage}%</span>}
+
             {status?.status !== "indexing" ? (
               <TrashIcon
                 className="h-4 w-4 cursor-pointer text-stone-500 hover:brightness-125"
                 onClick={onDelete}
               />
             ) : null}
-            {Icon ? (
-              <Icon
-                className={`inline-block h-4 w-4 text-stone-500 ${
-                  status?.status === "indexing" ? "animate-spin-slow" : ""
-                }`}
-              ></Icon>
-            ) : null}
+            <StatusIndicator status={status?.status} />
           </div>
         )}
-      </div>
-
-      <div className="my-2 h-1.5 w-full rounded-md border border-solid border-gray-400">
-        <div
-          className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
-            status?.status === "failed" ? "bg-red-600" : "bg-stone-500"
-          }`}
-          style={{
-            width: `${progressPercentage}%`,
-          }}
-        />
-      </div>
-
-      <div className="flex flex-row items-center justify-between gap-4">
-        <span
-          className={`cursor-pointer whitespace-nowrap text-xs text-stone-500 ${config.disableIndexing ? "" : "underline"}`}
-          onClick={
-            config.disableIndexing
-              ? undefined
-              : {
-                  complete: reIndex,
-                  indexing: abort,
-                  failed: reIndex,
-                  aborted: reIndex,
-                  paused: () => {},
-                  pending: () => {},
-                }[status?.status]
-          }
-        >
-          {config.disableIndexing
-            ? "Indexing disabled"
-            : {
-                complete: "Click to re-index",
-                indexing: "Cancel indexing",
-                failed: "Click to retry",
-                aborted: "Click to index",
-                paused: "",
-                pending: "",
-              }[status?.status]}
-        </span>
-        <div className="flex flex-row items-center gap-1">
-          {status?.description === "Github rate limit exceeded" ? (
-            <span
-              className="lines lines-1 cursor-pointer text-right text-xs text-stone-500 underline"
-              onClick={() =>
-                ideMessenger.post(
-                  "openUrl",
-                  "https://docs.continue.dev/customize/deep-dives/docs#github",
-                )
-              }
-            >
-              {status.description}
-            </span>
-          ) : (
-            <span className="lines lines-1 text-right text-xs text-stone-500">
-              {status?.description}
-            </span>
-          )}
-          {status?.status === "complete" ? (
-            <EyeIcon
-              className="h-4 w-4 cursor-pointer text-stone-500"
-              onClick={() => {
-                dispatch(setShowDialog(true));
-                dispatch(
-                  setDialogMessage(
-                    <DocsDetailsDialog startUrl={docConfig.startUrl} />,
-                  ),
-                );
-              }}
-            >
-              Add Docs
-            </EyeIcon>
-          ) : null}
-        </div>
       </div>
     </div>
   );

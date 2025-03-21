@@ -1,7 +1,6 @@
 import { IndexingStatus } from "core";
-import { useContext, useMemo } from "react";
+import { useMemo } from "react";
 import { useDispatch } from "react-redux";
-import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../../redux/hooks";
 import {
   setDialogMessage,
@@ -13,16 +12,9 @@ import DocsIndexingStatus from "./DocsIndexingStatus";
 function DocsIndexingStatuses() {
   const dispatch = useDispatch();
   const config = useAppSelector((store) => store.config.config);
-  const ideMessenger = useContext(IdeMessengerContext);
   const indexingStatuses = useAppSelector(
     (store) => store.indexing.indexing.statuses,
   );
-
-  const hasDocsProvider = useMemo(() => {
-    return !!config.contextProviders?.some(
-      (provider) => provider.title === "docs",
-    );
-  }, [config]);
 
   const handleAddDocs = () => {
     dispatch(setShowDialog(true));
