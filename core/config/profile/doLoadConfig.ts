@@ -175,7 +175,7 @@ export default async function doLoadConfig(
   });
   Object.entries(counts).forEach(([toolName, count]) => {
     if (count > 1) {
-      errors.push({
+      errors!.push({
         fatal: false,
         message: `Duplicate (${count}) tools named "${toolName}" detected. Permissions will conflict and usage may be unpredictable`,
       });
