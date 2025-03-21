@@ -111,7 +111,7 @@ async function configYamlToContinueConfig(
   const continueConfig: ContinueConfig = {
     slashCommands: [],
     models: [],
-    tools: allTools,
+    tools: [...allTools],
     mcpServerStatuses: [],
     systemMessage: config.rules?.join("\n"),
     experimental: {
