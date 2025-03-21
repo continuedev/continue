@@ -63,7 +63,7 @@ export default function AssistantSelect() {
             orgSlug: selectedOrganization?.slug,
           });
         }}
-        className="text-lightgray hover:bg mb-1 mr-3 flex cursor-pointer select-none items-center gap-1 whitespace-nowrap"
+        className="hover:bg flex cursor-pointer select-none items-center gap-1 whitespace-nowrap text-gray-400"
         style={{ fontSize: `${getFontSize() - 3}px` }}
       >
         <PlusIcon className="h-3 w-3" /> Create your first assistant
@@ -77,7 +77,7 @@ export default function AssistantSelect() {
         <Popover.Button
           data-testid="assistant-select-button"
           ref={buttonRef}
-          className="text-lightgray cursor-pointer border-none bg-transparent hover:brightness-125"
+          className="cursor-pointer border-none bg-transparent text-gray-400 hover:brightness-125"
           style={{ fontSize: `${getFontSize() - 3}px` }}
         >
           <AssistantSelectButton selectedProfile={selectedProfile} />

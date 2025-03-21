@@ -23,10 +23,6 @@ const LumpDiv = styled.div<{ open: boolean }>`
   border-right: 1px solid ${vscCommandCenterInactiveBorder};
 `;
 
-const TopBarContainer = styled.div`
-  height: 24px;
-`;
-
 export function Lump(props: LumpProps) {
   const { open, setOpen } = props;
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
@@ -37,19 +33,12 @@ export function Lump(props: LumpProps) {
 
   return (
     <LumpDiv open={open}>
-      <div className="px-2">
-        <TopBarContainer className="flex items-center justify-between pt-1">
-          <TopInputToolbar
-            selectedSection={selectedSection}
-            setSelectedSection={setSelectedSection}
-          />
-          <div
-            onClick={() => setOpen(false)}
-            className="cursor-pointer select-none px-2"
-          >
-            ×
-          </div>
-        </TopBarContainer>
+      <div className="px-2 pt-0.5">
+        <TopInputToolbar
+          selectedSection={selectedSection}
+          setSelectedSection={setSelectedSection}
+        />
+
         <SelectedSection selectedSection={selectedSection} />
       </div>
     </LumpDiv>
