@@ -373,7 +373,7 @@ async function configYamlToContinueConfig(
   const mcpManager = MCPManagerSingleton.getInstance();
   mcpManager.setConnections(
     (config.mcpServers ?? []).map((server) => ({
-      id: JSON.stringify(server),
+      id: server.name,
       name: server.name,
       transport: {
         type: "stdio",

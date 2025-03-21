@@ -8,7 +8,9 @@ import {
   MCPConnectionStatus,
   MCPOptions,
   MCPPrompt,
+  MCPResource,
   MCPServerStatus,
+  MCPTool,
 } from "../..";
 
 export class MCPManagerSingleton {
@@ -52,9 +54,12 @@ export class MCPManagerSingleton {
   }
 
   setConnections(servers: MCPOptions[], forceRefresh: boolean) {
+    let refresh = false;
+
     // Remove any connections that are no longer in config
-    this.connections.entries().forEach(([id, connection]) => {
+    Array.from(this.connections.entries()).forEach(([id, connection]) => {
       if (!servers.find((s) => s.id === id)) {
+        refresh = true;
         connection.abortController.abort();
         void connection.client.close();
         this.connections.delete(id);
@@ -64,12 +69,26 @@ export class MCPManagerSingleton {
     // Add any connections that are not yet in manager
     servers.forEach((server) => {
       if (!this.connections.has(server.id)) {
+        refresh = true;
         this.connections.set(server.id, new MCPConnection(server));
       }
     });
 
     // NOTE the id is made by stringifying the options
-    void this.refreshConnections(forceRefresh);
+    if (refresh) {
+      void this.refreshConnections(forceRefresh);
+    }
+  }
+
+  async refreshConnection(serverId: string) {
+    const connection = this.connections.get(serverId);
+    if (!connection) {
+      throw new Error(`MCP Connection ${serverId} not found`);
+    }
+    await connection.connectClient(true, this.abortController.signal);
+    if (this.onConnectionsRefreshed) {
+      this.onConnectionsRefreshed();
+    }
   }
 
   async refreshConnections(force: boolean) {
@@ -83,7 +102,7 @@ export class MCPManagerSingleton {
       }),
       (async () => {
         await Promise.all(
-          this.connections.values().map(async (connection) => {
+          Array.from(this.connections.values()).map(async (connection) => {
             await connection.connectClient(force, this.abortController.signal);
           }),
         );
@@ -95,22 +114,12 @@ export class MCPManagerSingleton {
   }
 
   getStatuses(): (MCPServerStatus & { client: Client })[] {
-    return Array.from(
-      this.connections.values().map((connection) => ({
-        ...connection.getStatus(),
-        client: connection.client,
-      })),
-    );
+    return Array.from(this.connections.values()).map((connection) => ({
+      ...connection.getStatus(),
+      client: connection.client,
+    }));
   }
 }
-
-interface MCPTool {
-  name: string;
-  description?: string;
-  inputSchema: {};
-}
-
-type MCPResources = Awaited<ReturnType<Client["listResources"]>>["resources"];
 
 const DEFAULT_MCP_TIMEOUT = 20_000; // 10 seconds
 
@@ -126,7 +135,7 @@ class MCPConnection {
 
   public prompts: MCPPrompt[] = [];
   public tools: MCPTool[] = [];
-  public resources: MCPResources = [];
+  public resources: MCPResource[] = [];
 
   constructor(private readonly options: MCPOptions) {
     this.transport = this.constructTransport(options);

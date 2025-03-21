@@ -1070,6 +1070,24 @@ export interface MCPPrompt {
   }[];
 }
 
+// Leaving here to ideate on
+// export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
+
+export interface MCPResource {
+  name: string;
+  uri: string;
+  description?: string;
+  mimeType?: string;
+}
+export interface MCPTool {
+  name: string;
+  description?: string;
+  inputSchema: {
+    type: "object";
+    properties?: Record<string, any>;
+  };
+}
+
 export interface MCPServerStatus extends MCPOptions {
   status: MCPConnectionStatus;
   errors: string[];

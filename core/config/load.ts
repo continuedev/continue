@@ -545,11 +545,13 @@ async function intermediateToFinalConfig(
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
   mcpManager.setConnections(
-    (config.experimental?.modelContextProtocolServers ?? []).map((server) => ({
-      id: JSON.stringify(server),
-      name: "MCP Server",
-      ...server,
-    })),
+    (config.experimental?.modelContextProtocolServers ?? []).map(
+      (server, index) => ({
+        id: `continue-mcp-server-${index + 1}`,
+        name: `MCP Server ${index + 1}`,
+        ...server,
+      }),
+    ),
     false,
   );
 

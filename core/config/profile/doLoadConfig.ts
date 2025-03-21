@@ -149,7 +149,7 @@ export default async function doLoadConfig(
 
       const submenuItems = server.resources.map((resource) => ({
         title: resource.name,
-        description: resource.description,
+        description: resource.description ?? resource.name,
         id: resource.uri,
         icon: server.faviconUrl,
       }));
@@ -176,7 +176,7 @@ export default async function doLoadConfig(
     if (count > 1) {
       errors.push({
         fatal: false,
-        message: `Duplicate tool name ${toolName} detected (${count} tools). Permissions will conflict and usage may be unpredictable`,
+        message: `Duplicate (${count}) tools named "${toolName}" detected. Permissions will conflict and usage may be unpredictable`,
       });
     }
   });

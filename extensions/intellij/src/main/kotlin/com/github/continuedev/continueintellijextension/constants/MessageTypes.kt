@@ -94,6 +94,7 @@ class MessageTypes {
             "config/openProfile",
             "config/updateSharedConfig",
             "config/updateSelectedModel",
+            "mcp/reloadServer",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
