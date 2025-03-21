@@ -1,21 +1,16 @@
 import { Editor, EditorContent, JSONContent } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
-import { rifWithContentsToContextItem } from "core/commands/util";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
-import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectDefaultModel } from "../../../redux/slices/configSlice";
 import {
-  clearCodeToEdit,
   selectIsInEditMode,
   setMainEditorContentTrigger,
-  setNewestCodeblocksForInput,
 } from "../../../redux/slices/sessionSlice";
-import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
 import { DragOverlay } from "./DragOverlay";
@@ -24,6 +19,7 @@ import { handleImageFile } from "./imageUtils";
 import { useEditorEventHandlers } from "./keyHandlers";
 import { InputBoxDiv } from "./StyledComponents";
 import "./TipTapEditor.css";
+import { useWebviewListeners } from "./useWebviewListeners";
 
 export interface TipTapEditorProps {
   availableContextProviders: ContextProviderDescription[];
@@ -138,186 +134,14 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, [editor, props.isMainInput, mainInputContentTrigger]);
 
   // IDE event listeners
-  useWebviewListener(
-    "userInput",
-    async (data) => {
-      if (!props.isMainInput) {
-        return;
-      }
-      editor?.commands.insertContent(data.input);
-      onEnterRef.current({ useCodebase: false, noContext: true });
-    },
-    [editor, onEnterRef.current, props.isMainInput],
-  );
-
-  useWebviewListener("jetbrains/editorInsetRefresh", async () => {
-    editor?.chain().clearContent().focus().run();
+  useWebviewListeners({
+    editor,
+    onEnterRef,
+    dispatch,
+    historyLength,
+    props,
+    editorFocusedRef,
   });
-
-  useWebviewListener(
-    "focusContinueInput",
-    async (data) => {
-      if (!props.isMainInput) {
-        return;
-      }
-
-      dispatch(clearCodeToEdit());
-
-      if (historyLength > 0) {
-        await dispatch(
-          saveCurrentSession({
-            openNewSession: false,
-            generateTitle: true,
-          }),
-        );
-      }
-      setTimeout(() => {
-        editor?.commands.blur();
-        editor?.commands.focus("end");
-      }, 20);
-    },
-    [historyLength, editor, props.isMainInput],
-  );
-
-  useWebviewListener(
-    "focusContinueInputWithoutClear",
-    async () => {
-      if (!props.isMainInput) {
-        return;
-      }
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 20);
-    },
-    [editor, props.isMainInput],
-  );
-
-  useWebviewListener(
-    "focusContinueInputWithNewSession",
-    async () => {
-      if (!props.isMainInput) {
-        return;
-      }
-      await dispatch(
-        saveCurrentSession({
-          openNewSession: true,
-          generateTitle: true,
-        }),
-      );
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 20);
-    },
-    [editor, props.isMainInput],
-  );
-
-  useWebviewListener(
-    "highlightedCode",
-    async (data) => {
-      if (!props.isMainInput || !editor) {
-        return;
-      }
-
-      const contextItem = rifWithContentsToContextItem(
-        data.rangeInFileWithContents,
-      );
-
-      let index = 0;
-      for (const el of editor.getJSON()?.content ?? []) {
-        if (el.attrs?.item?.name === contextItem.name) {
-          return; // Prevent exact duplicate code blocks
-        }
-        if (el.type === "codeBlock") {
-          index += 2;
-        } else {
-          break;
-        }
-      }
-      editor
-        .chain()
-        .insertContentAt(index, {
-          type: "codeBlock",
-          attrs: {
-            item: contextItem,
-            inputId: props.inputId,
-          },
-        })
-        .run();
-      dispatch(
-        setNewestCodeblocksForInput({
-          inputId: props.inputId,
-          contextItemId: contextItem.id.itemId,
-        }),
-      );
-      if (data.prompt) {
-        editor.commands.focus("end");
-        editor.commands.insertContent(data.prompt);
-      }
-
-      if (data.shouldRun) {
-        onEnterRef.current({ useCodebase: false, noContext: true });
-      }
-
-      setTimeout(() => {
-        editor.commands.blur();
-        editor.commands.focus("end");
-      }, 20);
-    },
-    [editor, props.isMainInput, historyLength, onEnterRef.current],
-  );
-
-  useWebviewListener(
-    "focusEdit",
-    async () => {
-      if (!props.isMainInput) {
-        return;
-      }
-
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 20);
-    },
-    [editor, props.isMainInput],
-  );
-
-  useWebviewListener(
-    "focusEditWithoutClear",
-    async () => {
-      if (!props.isMainInput) {
-        return;
-      }
-
-      setTimeout(() => {
-        editor?.commands.focus("end");
-      }, 2000);
-    },
-    [editor, props.isMainInput],
-  );
-
-  useWebviewListener(
-    "isContinueInputFocused",
-    async () => {
-      return props.isMainInput && !!editorFocusedRef.current;
-    },
-    [editorFocusedRef, props.isMainInput],
-    !props.isMainInput,
-  );
-
-  useWebviewListener(
-    "focusContinueSessionId",
-    async (data) => {
-      if (!props.isMainInput || !data.sessionId) {
-        return;
-      }
-      await dispatch(
-        loadSession({
-          sessionId: data.sessionId,
-          saveCurrentSession: true,
-        }),
-      );
-    },
-    [props.isMainInput],
-  );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
