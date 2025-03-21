@@ -36,7 +36,7 @@ function DocsIndexingStatuses() {
       const statusB = indexingStatuses[b.startUrl]?.status ?? "pending";
 
       // First, compare by status
-      const statusCompare = sorter(statusB) - sorter(statusA);
+      const statusCompare = sorter(statusA) - sorter(statusB);
       if (statusCompare !== 0) return statusCompare;
 
       // If status is the same, sort by presence of icon

@@ -1,5 +1,7 @@
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
+  StopIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
@@ -74,8 +76,6 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
     return Math.min(100, Math.max(0, status.progress * 100)).toFixed(0);
   }, [status?.progress]);
 
-  const showProgressPercentage = progressPercentage !== "100";
-
   if (hasDeleted) return null;
 
   return (
@@ -106,13 +106,12 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
           >
             {docConfig.title ?? docConfig.startUrl}
           </p>
-          <ArrowTopRightOnSquareIcon className="h-2 w-2 text-stone-500" />
+          <ArrowTopRightOnSquareIcon className="h-2 w-2 text-gray-400" />
         </div>
-        {status?.status === "pending" ? (
-          <div className="text-xs text-stone-500">Pending...</div>
-        ) : (
-          <div className="flex flex-row items-center gap-1 text-stone-500">
-            {true && (
+
+        <div className="flex flex-row items-center gap-2">
+          <div className="flex flex-row items-center gap-1 text-gray-400">
+            {status?.status === "indexing" && (
               <span
                 className="text-xs"
                 style={{
@@ -123,15 +122,32 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               </span>
             )}
 
+            {status?.status === "indexing" && (
+              <StopIcon
+                className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
+                onClick={abort}
+              />
+            )}
+
+            {["aborted", "complete", "failed"].includes(
+              status?.status ?? "",
+            ) && (
+              <ArrowPathIcon
+                className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
+                onClick={reIndex}
+              />
+            )}
+
             {status?.status !== "indexing" ? (
               <TrashIcon
-                className="h-4 w-4 cursor-pointer text-stone-500 hover:brightness-125"
+                className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
                 onClick={onDelete}
               />
             ) : null}
+
             <StatusIndicator status={status?.status} />
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
