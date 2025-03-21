@@ -33,7 +33,7 @@ export function Lump(props: LumpProps) {
 
   return (
     <LumpDiv open={open}>
-      <div className="px-2 pt-0.5">
+      <div className="mt-0.5 px-2">
         <TopInputToolbar
           selectedSection={selectedSection}
           setSelectedSection={setSelectedSection}
