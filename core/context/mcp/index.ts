@@ -87,7 +87,7 @@ export class MCPManagerSingleton {
     }
     await connection.connectClient(true, this.abortController.signal);
     if (this.onConnectionsRefreshed) {
-      await this.onConnectionsRefreshed();
+      this.onConnectionsRefreshed();
     }
   }
 
@@ -237,7 +237,23 @@ class MCPConnection {
               });
             }),
             (async () => {
-              await this.client.connect(this.transport);
+              this.transport = this.constructTransport(this.options);
+              try {
+                await this.client.connect(this.transport);
+              } catch (error) {
+                // Allow the case where for whatever reason is already connected
+                if (
+                  error instanceof Error &&
+                  error.message.startsWith(
+                    "StdioClientTransport already started",
+                  )
+                ) {
+                  await this.client.close();
+                  await this.client.connect(this.transport);
+                } else {
+                  throw error;
+                }
+              }
 
               // TODO register server notification handlers
               // this.client.transport?.onmessage(msg => console.log())
@@ -302,15 +318,6 @@ class MCPConnection {
             })(),
           ]);
         } catch (error) {
-          // Catch the case where for whatever reason is already connected
-          if (
-            error instanceof Error &&
-            error.message.startsWith("StdioClientTransport already started")
-          ) {
-            this.status = "connected";
-            return;
-          }
-
           // Otherwise it's a connection error
           let errorMessage = `Failed to connect to MCP server ${this.options.name}`;
           if (error instanceof Error) {
