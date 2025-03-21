@@ -5,9 +5,11 @@ import {
   DEFAULT_MODEL_GRANITE_SMALL,
 } from "core/config/default";
 import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
+import { MODEL_REQUIREMENTS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
+import { GB } from "core/granite/commons/sizeUtils";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
-import { isHighEndMachine, SystemInfo } from "core/granite/commons/sysInfo";
+import { isHighEndApple, shouldRecommendLargeModel, SystemInfo } from "core/granite/commons/sysInfo";
 import { formatSize } from "core/granite/commons/textUtils";
 import {
   FINAL_STEP,
@@ -57,8 +59,8 @@ interface WizardContextProps {
   setInstallationModes: React.Dispatch<
     React.SetStateAction<InstallationMode[]>
   >;
-  recommendedModel: LocalModelSize;
-  setRecommendedModel: React.Dispatch<React.SetStateAction<LocalModelSize>>;
+  preselectedModel: LocalModelSize;
+  setPreselectedModel: React.Dispatch<React.SetStateAction<LocalModelSize>>;
   selectedModel: LocalModelSize;
   setSelectedModel: React.Dispatch<React.SetStateAction<LocalModelSize>>;
   statusByModel: Map<string, ModelStatus>;
@@ -119,10 +121,10 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
   const [installationModes, setInstallationModes] = useState<
     InstallationMode[]
   >([]);
-  const [recommendedModel, setRecommendedModel] =
+  const [preselectedModel, setPreselectedModel] =
     useState<LocalModelSize>("small");
   const [selectedModel, setSelectedModel] =
-    useState<LocalModelSize>(recommendedModel);
+    useState<LocalModelSize>(preselectedModel);
   const [modelInstallationProgress, setModelInstallationProgress] =
     useState<number>(0);
   const [modelInstallationError, setModelInstallationError] = useState<
@@ -153,8 +155,8 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
         setSystemInfo,
         installationModes,
         setInstallationModes,
-        recommendedModel,
-        setRecommendedModel,
+        preselectedModel,
+        setPreselectedModel,
         selectedModel,
         setSelectedModel,
         statusByModel,
@@ -372,7 +374,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
 const ModelSelectionStep: React.FC<StepProps> = (props) => {
   const {
     serverStatus,
-    recommendedModel,
+    preselectedModel,
     selectedModel,
     setSelectedModel,
     modelInstallationProgress,
@@ -440,16 +442,25 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     }
   }, [systemInfo, selectedModel, statusByModel]);
 
+  const recommendedMemoryThreshold = MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model].recommendedMemoryBytes / GB;
   const modelOptions: ModelOption[] = [
     {
       key: "large",
       name: "Large",
-      description: "For machines with 32GB of memory and a fast GPU",
+      description: `For machines with ${recommendedMemoryThreshold}GB of ${
+        systemInfo && isHighEndApple(systemInfo.gpus)
+          ? "system memory"
+          : "video memory and a high-performance GPU"
+      }`,
     },
     {
       key: "small",
       name: "Small",
-      description: "For machines with less than 32GB of memory and a slow GPU",
+      description: `For machines with less than ${recommendedMemoryThreshold}GB of ${
+        systemInfo && isHighEndApple(systemInfo.gpus)
+          ? "system memory"
+          : "video memory and a lower-performance GPU"
+      }`,
     },
   ];
 
@@ -489,9 +500,19 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
                         <RadioGroup.Description className="text-sm leading-normal text-[--vscode-editor-foreground] opacity-80">
                           {option.description}
                         </RadioGroup.Description>
-                        {option.key === recommendedModel && (
+                        {option.key === preselectedModel && option.key === "large" && (
                           <p className="text-sm leading-normal text-[--vscode-editorWarning-foreground,#ddb100]">
                             Recommended for your machine
+                          </p>
+                        )}
+                        {option.key === "large" && option.key !== preselectedModel && selectedModel === "large" && (
+                          <p className="text-sm leading-normal text-[--vscode-errorForeground]">
+                            Not recommended for your machine
+                          </p>
+                        )}
+                        {option.key === "small" && selectedModel === "small" && (
+                          <p className="text-sm leading-normal text-[--vscode-errorForeground]">
+                            Limited capabilities, for experimentation only
                           </p>
                         )}
                       </div>
@@ -618,7 +639,7 @@ const WizardContent: React.FC = () => {
     setServerStatus,
     setSystemInfo,
     setInstallationModes,
-    setRecommendedModel,
+    setPreselectedModel,
     setSelectedModel,
     setModelInstallationProgress,
     setModelInstallationError,
@@ -651,22 +672,22 @@ const WizardContent: React.FC = () => {
           setInstallationModes(data.installModes);
           const sysinfo = data.systemInfo as SystemInfo;
           setSystemInfo(sysinfo);
-          const recommendedModel = isHighEndMachine(sysinfo)
+          const preselectedModel = shouldRecommendLargeModel(sysinfo)
             ? "large"
             : "small";
-          setRecommendedModel(recommendedModel);
+          setPreselectedModel(preselectedModel);
           const wizardState = data.wizardState as WizardState | undefined;
           if (wizardState) {
             if (wizardState?.selectedModelSize) {
               setSelectedModel(wizardState.selectedModelSize);
             } else {
-              setSelectedModel(recommendedModel);
+              setSelectedModel(preselectedModel);
             }
             if (wizardState?.stepStatuses) {
               setStepStatuses(wizardState.stepStatuses);
             }
           } else {
-            setSelectedModel(recommendedModel);
+            setSelectedModel(preselectedModel);
           }
 
           break;
