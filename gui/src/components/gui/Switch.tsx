@@ -1,4 +1,5 @@
 import React from "react";
+import { vscButtonBackground } from "..";
 
 type ToggleSwitchProps = {
   isToggled: boolean;
@@ -21,7 +22,10 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         >
           <div className="relative h-full w-full">
             <div
-              className={`absolute left-1/4 top-0 h-full w-1/2 transform rounded-full transition-all ${isToggled ? "translate-x-1/2 bg-green-500" : "-translate-x-1/2 bg-red-500"}`}
+              className={`absolute left-1/4 top-0 h-full w-1/2 transform rounded-full transition-all ${isToggled ? "translate-x-1/2" : "-translate-x-1/2"}`}
+              style={{
+                backgroundColor: isToggled ? vscButtonBackground : "lightgray",
+              }}
             />
           </div>
         </div>

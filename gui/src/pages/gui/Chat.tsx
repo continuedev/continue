@@ -451,7 +451,7 @@ export function Chat() {
           </div>
         ))}
       </StepsDiv>
-      <div className={`relative`}>
+      <div className={`relative mt-1`}>
         <div className="absolute -top-8 right-2 z-30">
           {ttsActive && (
             <StopButton
