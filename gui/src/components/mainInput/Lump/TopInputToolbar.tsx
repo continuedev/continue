@@ -6,6 +6,8 @@ import {
   PencilIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
+import { vscBadgeBackground, vscBadgeForeground } from "../..";
+import { getFontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
 
@@ -20,12 +22,33 @@ interface TopToolbarIconProps {
 function TopToolbarIcon(props: TopToolbarIconProps) {
   return (
     <HoverItem onClick={props.onClick}>
-      <div className="relative flex items-center">
+      <div
+        style={{
+          backgroundColor: props.isSelected ? vscBadgeBackground : undefined,
+        }}
+        className={`relative flex select-none items-center px-0.5 transition-all duration-200 ${
+          props.isSelected ? "rounded-full" : ""
+        }`}
+      >
         <props.icon
-          className={`h-3 w-3 hover:brightness-125 ${
-            props.isSelected ? "text-blue-500" : ""
-          }`}
+          className="h-3 w-3 hover:brightness-125"
+          style={{
+            color: props.isSelected ? vscBadgeForeground : undefined,
+          }}
         />
+        <div
+          style={{ fontSize: `${getFontSize() - 3}px` }}
+          className={`overflow-hidden transition-all duration-200 ${
+            props.isSelected ? "ml-1 w-auto opacity-100" : "w-0 opacity-0"
+          }`}
+        >
+          <span
+            className="whitespace-nowrap"
+            style={{ color: vscBadgeForeground }}
+          >
+            {props.tooltip}
+          </span>
+        </div>
       </div>
     </HoverItem>
   );
@@ -40,7 +63,7 @@ export function TopInputToolbar(props: TopInputProps) {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <div className="flex items-center justify-center gap-1 text-gray-400">
+        <div className="flex items-center justify-center text-gray-400">
           <TopToolbarIcon
             icon={CubeIcon}
             tooltip="Models"
