@@ -452,7 +452,7 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={`relative mt-1`}>
-        <div className="absolute -top-8 right-2 z-30">
+        <div className="absolute -top-8 right-2 z-30 flex flex-col gap-1">
           {ttsActive && (
             <StopButton
               className=""
