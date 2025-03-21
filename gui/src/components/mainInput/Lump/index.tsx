@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -23,9 +23,36 @@ const LumpDiv = styled.div<{ open: boolean }>`
   border-right: 1px solid ${vscCommandCenterInactiveBorder};
 `;
 
+const ContentDiv = styled.div<{ hasSection: boolean; isVisible: boolean }>`
+  transition:
+    max-height 0.3s ease-in-out,
+    margin 0.3s ease-in-out,
+    opacity 0.2s ease-in-out;
+  max-height: ${(props) => (props.hasSection ? "200px" : "0px")};
+  margin: ${(props) => (props.hasSection ? "4px 0" : "0")};
+  opacity: ${(props) => (props.isVisible ? "1" : "0")};
+  overflow-y: auto;
+`;
+
 export function Lump(props: LumpProps) {
   const { open, setOpen } = props;
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  const [displayedSection, setDisplayedSection] = useState<string | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (selectedSection) {
+      setDisplayedSection(selectedSection);
+      setIsVisible(true);
+    } else {
+      setIsVisible(false);
+      // Delay clearing the displayed section until after the fade-out
+      const timeout = setTimeout(() => {
+        setDisplayedSection(null);
+      }, 300); // Match the transition duration
+      return () => clearTimeout(timeout);
+    }
+  }, [selectedSection]);
 
   if (!open) {
     return null;
@@ -39,11 +66,9 @@ export function Lump(props: LumpProps) {
           setSelectedSection={setSelectedSection}
         />
 
-        <div
-          className={`${selectedSection ? "my-1" : ""} max-h-[200px] overflow-y-auto`}
-        >
-          <SelectedSection selectedSection={selectedSection} />
-        </div>
+        <ContentDiv hasSection={!!selectedSection} isVisible={isVisible}>
+          <SelectedSection selectedSection={displayedSection} />
+        </ContentDiv>
       </div>
     </LumpDiv>
   );
