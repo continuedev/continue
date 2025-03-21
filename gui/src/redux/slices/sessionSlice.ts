@@ -47,7 +47,7 @@ type SessionState = {
   id: string;
   /** null indicates loading state */
   availableProfiles: ProfileDescription[] | null;
-  selectedProfile: ProfileDescription | null;
+  selectedProfileId: string | null;
   organizations: OrganizationDescription[];
   selectedOrganizationId: string | null;
   streamAborter: AbortController;
@@ -88,7 +88,7 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfile: null,
+  selectedProfileId: null,
   availableProfiles: null,
   organizations: [],
   selectedOrganizationId: "",
@@ -294,6 +294,7 @@ export const sessionSlice = createSlice({
       state.streamAborter = new AbortController();
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
+
       if (state.history.length) {
         function toolCallDeltaToState(
           toolCallDelta: ToolCallDelta,
@@ -319,6 +320,22 @@ export const sessionSlice = createSlice({
         for (const message of action.payload) {
           const lastItem = state.history[state.history.length - 1];
           const lastMessage = lastItem.message;
+
+          if (message.role === "thinking" && message.redactedThinking) {
+            console.log("add redacted_thinking blocks");
+
+            state.history.push({
+              message: {
+                role: "thinking",
+                content: "internal reasoning is hidden due to safety reasons",
+                redactedThinking: message.redactedThinking,
+                id: uuidv4(),
+              },
+              contextItems: [],
+            })
+            continue;
+          }
+
           if (
             lastMessage.role !== message.role ||
             // This is for when a tool call comes immediately before/after tool call
@@ -328,7 +345,7 @@ export const sessionSlice = createSlice({
               !(!lastMessage.toolCalls?.length && !lastMessage.content) &&
               // And there's a difference in tool call presence
               (lastMessage.toolCalls?.length ?? 0) !==
-              (message.toolCalls?.length ?? 0))
+                (message.toolCalls?.length ?? 0))
           ) {
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
@@ -381,6 +398,11 @@ export const sessionSlice = createSlice({
                 // Note this only works because new message above
                 // was already rendered from parts to string
                 lastMessage.content += messageContent;
+              }
+            } else if (message.role === "thinking" && message.signature) {
+              if (lastMessage.role === "thinking") {
+                console.log("add signature", message.signature);
+                lastMessage.signature = message.signature;
               }
             } else if (
               message.role === "assistant" &&
@@ -473,9 +495,9 @@ export const sessionSlice = createSlice({
       state.allSessionMetadata = state.allSessionMetadata.map((session) =>
         session.sessionId === payload.sessionId
           ? {
-            ...session,
-            ...payload,
-          }
+              ...session,
+              ...payload,
+            }
           : session,
       );
       if (payload.title && payload.sessionId === state.id) {
@@ -510,8 +532,9 @@ export const sessionSlice = createSlice({
         payload.rangeInFileWithContents.filepath,
       );
 
-      const lineNums = `(${payload.rangeInFileWithContents.range.start.line + 1
-        }-${payload.rangeInFileWithContents.range.end.line + 1})`;
+      const lineNums = `(${
+        payload.rangeInFileWithContents.range.start.line + 1
+      }-${payload.rangeInFileWithContents.range.end.line + 1})`;
 
       contextItems.push({
         name: `${fileName} ${lineNums}`,
@@ -533,11 +556,8 @@ export const sessionSlice = createSlice({
     },
     // Important: these reducers don't handle selected profile/organization fallback logic
     // That is done in thunks
-    setSelectedProfile: (
-      state,
-      { payload }: PayloadAction<ProfileDescription | null>,
-    ) => {
-      state.selectedProfile = payload;
+    setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
+      state.selectedProfileId = payload;
     },
     setAvailableProfiles: (
       state,
@@ -670,6 +690,15 @@ export const sessionSlice = createSlice({
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
     },
+    selectSelectedProfile: (state) => {
+      // state.session.availableProfiles.find((p) => p.id === newId) ?? null,
+
+      return (
+        state.availableProfiles?.find(
+          (profile) => profile.id === state.selectedProfileId,
+        ) ?? null
+      );
+    },
     selectIsSingleRangeEditOrInsertion: (state) => {
       if (state.mode !== "edit") {
         return false;
@@ -696,9 +725,9 @@ function addPassthroughCases(
 ) {
   thunks.forEach((thunk) => {
     builder
-      .addCase(thunk.fulfilled, (state, action) => { })
-      .addCase(thunk.rejected, (state, action) => { })
-      .addCase(thunk.pending, (state, action) => { });
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
   });
 }
 
@@ -765,6 +794,7 @@ export const {
 export const {
   selectIsGatheringContext,
   selectIsInEditMode,
+  selectSelectedProfile,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
 } = sessionSlice.selectors;

@@ -424,7 +424,8 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
             Escape: () => {
               if (inDropdownRef.current || !isInEditModeRef.current) {
-                return false;
+                ideMessenger.post("focusEditor", undefined);
+                return true;
               }
               (async () => {
                 await dispatch(
@@ -988,6 +989,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           }}
         />
         <InputToolbar
+          isMainInput={props.isMainInput}
           toolbarOptions={props.toolbarOptions}
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}

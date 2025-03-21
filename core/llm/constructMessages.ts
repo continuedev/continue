@@ -1,48 +1,23 @@
-import {
-  ChatHistoryItem,
-  ChatMessage,
-  MessagePart,
-  ModelDescription,
-} from "../";
+import { ChatHistoryItem, ChatMessage, MessagePart } from "../";
 import { normalizeToMessageParts } from "../util/messageContent";
 
-import { modelSupportsTools } from "./autodetect";
-
-const TOOL_USE_RULES = `When using tools, follow the following guidelines:
-- Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
-
-function constructSystemPrompt(
-  modelDescription: ModelDescription,
-  useTools: boolean,
-): string | null {
-  let systemMessage =
-    "Always include the language and file name in the info string when you write code blocks, for example '```python file.py'.";
-  if (useTools && modelSupportsTools(modelDescription)) {
-    systemMessage += "\n\n" + TOOL_USE_RULES;
-  }
-  return systemMessage;
-}
+const DEFAULT_SYSTEM_MESSAGE = `<important_rules>
+  Always include the language and file name in the info string when you write code blocks. If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'.
+</important_rules>`;
 
 const CANCELED_TOOL_CALL_MESSAGE =
   "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
 
-export function constructMessages(
-  history: ChatHistoryItem[],
-  modelDescription: ModelDescription,
-  useTools: boolean,
-): ChatMessage[] {
+export function constructMessages(history: ChatHistoryItem[]): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
   const msgs: ChatMessage[] = [];
 
-  const systemMessage = constructSystemPrompt(modelDescription, useTools);
-  if (systemMessage) {
-    msgs.push({
-      role: "system",
-      content: systemMessage,
-    });
-  }
+  msgs.push({
+    role: "system",
+    content: DEFAULT_SYSTEM_MESSAGE,
+  });
 
   for (let i = 0; i < filteredHistory.length; i++) {
     const historyItem = filteredHistory[i];

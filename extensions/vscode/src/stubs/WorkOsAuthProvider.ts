@@ -15,13 +15,13 @@ import {
   ExtensionContext,
   ProgressLocation,
   Uri,
-  UriHandler,
   window,
   workspace,
 } from "vscode";
 
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 import { SecretStorage } from "./SecretStorage";
+import { UriEventHandler } from "./uriHandler";
 
 const AUTH_NAME = "Continue";
 
@@ -35,11 +35,6 @@ const controlPlaneEnv = getControlPlaneEnvSync(
 
 const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
 
-class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
-  public handleUri(uri: Uri) {
-    this.fire(uri);
-  }
-}
 // Function to generate a random string of specified length
 function generateRandomString(length: number): string {
   const possibleCharacters =
@@ -83,13 +78,15 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     string,
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
-  private _uriHandler = new UriEventHandler();
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
 
   private secretStorage: SecretStorage;
 
-  constructor(private readonly context: ExtensionContext) {
+  constructor(
+    private readonly context: ExtensionContext,
+    private readonly _uriHandler: UriEventHandler,
+  ) {
     this._disposable = Disposable.from(
       authentication.registerAuthenticationProvider(
         controlPlaneEnv.AUTH_TYPE,
@@ -169,19 +166,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   get ideRedirectUri() {
-    if (
-      env.uriScheme === "vscode-insiders" ||
-      env.uriScheme === "vscode" ||
-      env.uriScheme === "code-oss"
-    ) {
-      // We redirect to a page that says "you can close this page", and that page finishes the redirect
-      const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/auth/${env.uriScheme}-redirect`;
-      return url.toString();
-    }
-    const publisher = this.context.extension.packageJSON.publisher;
-    const name = this.context.extension.packageJSON.name;
-    return `${env.uriScheme}://${publisher}.${name}`;
+    // We redirect to a page that says "you can close this page", and that page finishes the redirect
+    const url = new URL(controlPlaneEnv.APP_URL);
+    url.pathname = `/auth/${env.uriScheme}-redirect`;
+    return url.toString();
   }
 
   public static useOnboardingUri: boolean = false;

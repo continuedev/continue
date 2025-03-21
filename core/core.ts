@@ -1,7 +1,4 @@
-import path from "path";
-
 import { fetchwithRequestOptions } from "@continuedev/fetch";
-import ignore from "ignore";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 
@@ -26,7 +23,6 @@ import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
-import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -34,25 +30,22 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  migrateV1DevDataFiles,
-} from "./util/paths";
-import { localPathToUri } from "./util/pathToUri";
+import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
-  ChatMessage,
   DiffLine,
-  PromptLog,
   type ContextItemId,
   type IDE,
   type IndexingProgressUpdate,
 } from ".";
 
+import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { shouldIgnore } from "./indexing/shouldIgnore";
+import { walkDirCache } from "./indexing/walkDir";
+import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -114,6 +107,11 @@ export class Core {
       ideSettingsPromise,
       this.onWrite,
       sessionInfoPromise,
+      (orgId: string | null) => {
+        void messenger.request("didSelectOrganization", {
+          orgId,
+        });
+      },
     );
 
     this.docsService = DocsService.createSingleton(
@@ -302,8 +300,11 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
-    on("config/listProfiles", (msg) => {
-      return this.configHandler.listProfiles();
+    on("config/listProfiles", async (msg) => {
+      const profiles = this.configHandler.listProfiles();
+      const selectedProfileId =
+        this.configHandler.currentProfile?.profileDescription.id ?? null;
+      return { profiles, selectedProfileId };
     });
 
     on("config/refreshProfiles", async (msg) => {
@@ -484,111 +485,14 @@ export class Core {
       }
     });
 
-    async function* llmStreamChat(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
-    ): AsyncGenerator<ChatMessage, PromptLog> {
-      const { config } = await configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      // Stop TTS on new StreamChat
-      if (config.experimental?.readResponseTTS) {
-        void TTS.kill();
-      }
-
-      const model = await configHandler.llmFromTitle(msg.data.title);
-
-      const gen = model.streamChat(
-        msg.data.messages,
-        new AbortController().signal,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({
-            modelTitle: model.title ?? model.model,
-            completion: "",
-            prompt: "",
-            completionOptions: {
-              ...msg.data.completionOptions,
-              model: model.model,
-            },
-          });
-          break;
-        }
-
-        const chunk = next.value;
-
-        yield chunk;
-        next = await gen.next();
-      }
-
-      if (config.experimental?.readResponseTTS && "completion" in next.value) {
-        void TTS.read(next.value?.completion);
-      }
-
-      void Telemetry.capture(
-        "chat",
-        {
-          model: model.model,
-          provider: model.providerName,
-        },
-        true,
-      );
-
-      if (!next.done) {
-        throw new Error("Will never happen");
-      }
-
-      return next.value;
-    }
-
     on("llm/streamChat", (msg) =>
-      llmStreamChat(this.configHandler, this.abortedMessageIds, msg),
-    );
-
-    async function* llmStreamComplete(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
-    ): AsyncGenerator<string, PromptLog> {
-      const model = await configHandler.llmFromTitle(msg.data.title);
-      const gen = model.streamComplete(
-        msg.data.prompt,
-        new AbortController().signal,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({
-            modelTitle: model.title ?? model.model,
-            completion: "",
-            prompt: "",
-            completionOptions: {
-              ...msg.data.completionOptions,
-              model: model.model,
-            },
-          });
-          break;
-        }
-        yield next.value;
-        next = await gen.next();
-      }
-      if (!next.done) {
-        throw new Error("This will never happen");
-      }
-      return next.value;
-    }
-
-    on("llm/streamComplete", (msg) =>
-      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg),
+      llmStreamChat(
+        this.configHandler,
+        this.abortedMessageIds,
+        msg,
+        ide,
+        this.messenger,
+      ),
     );
 
     on("llm/complete", async (msg) => {
@@ -640,96 +544,6 @@ export class Core {
       );
       return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
-
-    async function* runNodeJsSlashCommand(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["command/run"][0]>,
-      messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-    ): AsyncGenerator<string> {
-      const {
-        input,
-        history,
-        modelTitle,
-        slashCommandName,
-        contextItems,
-        params,
-        historyIndex,
-        selectedCode,
-        completionOptions,
-      } = msg.data;
-
-      const { config } = await configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      const llm = await configHandler.llmFromTitle(modelTitle);
-      const slashCommand = config.slashCommands?.find(
-        (sc) => sc.name === slashCommandName,
-      );
-      if (!slashCommand) {
-        throw new Error(`Unknown slash command ${slashCommandName}`);
-      }
-
-      void Telemetry.capture(
-        "useSlashCommand",
-        {
-          name: slashCommandName,
-        },
-        true,
-      );
-
-      const checkActiveInterval = setInterval(() => {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          clearInterval(checkActiveInterval);
-        }
-      }, 100);
-
-      try {
-        for await (const content of slashCommand.run({
-          input,
-          history,
-          llm,
-          contextItems,
-          params,
-          ide,
-          addContextItem: (item) => {
-            void messenger.request("addContextItem", {
-              item,
-              historyIndex,
-            });
-          },
-          selectedCode,
-          config,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-          completionOptions,
-        })) {
-          if (abortedMessageIds.has(msg.messageId)) {
-            abortedMessageIds.delete(msg.messageId);
-            clearInterval(checkActiveInterval);
-            break;
-          }
-          if (content) {
-            yield content;
-          }
-        }
-      } catch (e) {
-        throw e;
-      } finally {
-        clearInterval(checkActiveInterval);
-      }
-    }
-    on("command/run", (msg) =>
-      runNodeJsSlashCommand(
-        this.configHandler,
-        this.abortedMessageIds,
-        msg,
-        this.messenger,
-      ),
-    );
 
     // Autocomplete
     on("autocomplete/complete", async (msg) => {
@@ -829,6 +643,11 @@ export class Core {
 
     // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config || config.disableIndexing) {
+        return; // TODO silent in case of commands?
+      }
+      walkDirCache.invalidate();
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
         await codebaseIndexer.clearIndexes();
@@ -856,10 +675,12 @@ export class Core {
     // TODO - remove remaining logic for these from IDEs where possible
     on("files/changed", async ({ data }) => {
       if (data?.uris?.length) {
+        walkDirCache.invalidate(); // safe approach for now - TODO - only invalidate on relevant changes
         for (const uri of data.uris) {
-          // Listen for file changes in the workspace
-          // URI TODO is this equality statement valid?
-          if (URI.equal(uri, localPathToUri(getConfigJsonPath()))) {
+          const currentProfileUri =
+            this.configHandler.currentProfile?.profileDescription.uri ?? "";
+
+          if (URI.equal(uri, currentProfileUri)) {
             // Trigger a toast notification to provide UI feedback that config has been updated
             const showToast =
               this.globalContext.get("showConfigUpdateToast") ?? true;
@@ -873,6 +694,8 @@ export class Core {
                 this.globalContext.update("showConfigUpdateToast", false);
               }
             }
+            await this.configHandler.reloadConfig();
+            continue;
           }
 
           if (
@@ -886,32 +709,71 @@ export class Core {
             uri.endsWith(".gitignore")
           ) {
             // Reindex the workspaces
-            this.invoke("index/forceReIndex", undefined);
+            this.invoke("index/forceReIndex", {
+              shouldClearIndexes: true,
+            });
           } else {
-            // Reindex the file
-            await this.refreshCodebaseIndexFiles([uri]);
+            const { config } = await this.configHandler.loadConfig();
+            if (config && !config.disableIndexing) {
+              // Reindex the file
+              const ignore = await shouldIgnore(uri, this.ide);
+              if (!ignore) {
+                await this.refreshCodebaseIndexFiles([uri]);
+              }
+            }
           }
         }
       }
     });
 
-    on("files/created", async ({ data }) => {
-      if (data?.uris?.length) {
+    const refreshIfNotIgnored = async (uris: string[]) => {
+      const toRefresh: string[] = [];
+      for (const uri of uris) {
+        const ignore = await shouldIgnore(uri, ide);
+        if (!ignore) {
+          toRefresh.push(uri);
+        }
+      }
+      if (toRefresh.length > 0) {
         this.messenger.send("refreshSubmenuItems", {
           providers: ["file"],
         });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        const { config } = await this.configHandler.loadConfig();
+        if (config && !config.disableIndexing) {
+          await this.refreshCodebaseIndexFiles(toRefresh);
+        }
+      }
+    };
+
+    on("files/created", async ({ data }) => {
+      if (data?.uris?.length) {
+        walkDirCache.invalidate();
+        void refreshIfNotIgnored(data.uris);
+
+        // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
+        for (const uri of data.uris) {
+          if (isLocalAssistantFile(uri)) {
+            await this.configHandler.loadAssistantsForSelectedOrg();
+          }
+        }
       }
     });
 
     on("files/deleted", async ({ data }) => {
       if (data?.uris?.length) {
-        this.messenger.send("refreshSubmenuItems", {
-          providers: ["file"],
-        });
-        await this.refreshCodebaseIndexFiles(data.uris);
+        walkDirCache.invalidate();
+        void refreshIfNotIgnored(data.uris);
       }
     });
+
+    on("files/closed", async ({ data }) => {
+      if (data.uris) {
+        this.messenger.send("didCloseFiles", {
+          uris: data.uris,
+        });
+      }
+    });
+
     on("files/opened", async ({ data }) => {
       if (data?.uris?.length) {
         // Do something on files opened
@@ -950,15 +812,21 @@ export class Core {
     });
     //
 
-    on("didChangeSelectedProfile", (msg) => {
-      void this.configHandler.setSelectedProfile(msg.data.id);
-      void this.configHandler.reloadConfig();
+    on("didChangeSelectedProfile", async (msg) => {
+      await this.configHandler.setSelectedProfile(msg.data.id);
+      await this.configHandler.reloadConfig();
     });
 
-    on("didChangeSelectedOrg", (msg) => {
-      void this.configHandler.setSelectedOrgId(msg.data.id);
-      void this.configHandler.reloadConfig();
-      void this.configHandler.loadAssistantsForSelectedOrg();
+    on("didChangeSelectedOrg", async (msg) => {
+      await this.configHandler.setSelectedOrgId(msg.data.id);
+      await this.configHandler.loadAssistantsForSelectedOrg();
+      if (msg.data.profileId) {
+        this.invoke("didChangeSelectedProfile", {
+          id: msg.data.profileId,
+        });
+      } else {
+        await this.configHandler.reloadConfig();
+      }
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
@@ -975,19 +843,15 @@ export class Core {
     });
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      const ignoreInstance = ignore().add(defaultIgnoreFile);
-      let rootDirectory = await this.ide.getWorkspaceDirs();
-      const relativeFilePath = path.relative(rootDirectory[0], filepath);
       try {
-        if (!ignoreInstance.ignores(relativeFilePath)) {
+        const ignore = shouldIgnore(filepath, this.ide);
+        if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
       } catch (e) {
-        if (e instanceof RangeError) {
-          // do nothing, this can happen when editing a file outside the workspace such as `../extensions/.continue-debug/config.json`
-        } else {
-          console.debug("unhandled ignores error", relativeFilePath, e);
-        }
+        console.error(
+          `didChangeActiveTextEditor: failed to update recentlyEditedFiles cache for ${filepath}`,
+        );
       }
     });
 

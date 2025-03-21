@@ -1,15 +1,18 @@
-import { ChatMessage, IDE, LLMFullCompletionOptions, PromptLog } from "core";
-import type { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import { ChatMessage, IDE, PromptLog } from "core";
+import type {
+  FromWebviewProtocol,
+  ToCoreProtocol,
+  ToWebviewProtocol,
+} from "core/protocol";
+import { Message } from "core/protocol/messenger";
+import { MessageIde } from "core/protocol/messenger/messageIde";
 import {
   GeneratorReturnType,
   GeneratorYieldType,
-  WebviewMessage,
   WebviewProtocolGeneratorMessage,
   WebviewSingleMessage,
   WebviewSingleProtocolMessage,
 } from "core/protocol/util";
-import { MessageIde } from "core/protocol/messenger/messageIde";
-import { Message } from "core/protocol/messenger";
 import { createContext } from "react";
 import { v4 as uuidv4 } from "uuid";
 import "vscode-webview";
@@ -50,10 +53,8 @@ export interface IIdeMessenger {
   >;
 
   llmStreamChat(
-    modelTitle: string,
-    cancelToken: AbortSignal | undefined,
-    messages: ChatMessage[],
-    options?: LLMFullCompletionOptions,
+    msg: ToCoreProtocol["llm/streamChat"][0],
+    cancelToken: AbortSignal,
   ): AsyncGenerator<ChatMessage[], PromptLog | undefined>;
 
   ide: IDE;
@@ -247,20 +248,10 @@ export class IdeMessenger implements IIdeMessenger {
   }
 
   async *llmStreamChat(
-    modelTitle: string,
-    cancelToken: AbortSignal | undefined,
-    messages: ChatMessage[],
-    options: LLMFullCompletionOptions = {},
+    msg: ToCoreProtocol["llm/streamChat"][0],
+    cancelToken: AbortSignal,
   ): AsyncGenerator<ChatMessage[], PromptLog | undefined> {
-    const gen = this.streamRequest(
-      "llm/streamChat",
-      {
-        messages,
-        title: modelTitle,
-        completionOptions: options,
-      },
-      cancelToken,
-    );
+    const gen = this.streamRequest("llm/streamChat", msg, cancelToken);
 
     let next = await gen.next();
     while (!next.done) {

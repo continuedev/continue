@@ -9,6 +9,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedProfile } from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { isLocalProfile } from "../../util";
 import { providers } from "../AddNewModel/configs/providers";
@@ -21,9 +22,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedModel = useAppSelector(selectDefaultModel);
   const hubEnabled = useAppSelector(selectUseHub);
-  const selectedProfile = useAppSelector(
-    (store) => store.session.selectedProfile,
-  );
+  const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
 
   const handleRefreshProfiles = () => {
@@ -66,11 +65,13 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   ) {
     message = error["message"];
     const parts = message?.split(" ") ?? [];
-    const status = parts[0] === "HTTP" ? parts[1] : parts[0];
-    if (status) {
-      const code = Number(status);
-      if (!Number.isNaN(statusCode)) {
-        statusCode = code;
+    if (parts.length > 1) {
+      const status = parts[0] === "HTTP" ? parts[1] : parts[0];
+      if (status) {
+        const code = Number(status);
+        if (!Number.isNaN(code)) {
+          statusCode = code;
+        }
       }
     }
   }
@@ -98,7 +99,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div>
         <Cog8ToothIcon className="h-4 w-4" />
       </div>
-      <span>Open config</span>
+      <span>Open Assistant configuration</span>
     </SecondaryButton>
   );
 

@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/core",
-  "version": "1.0.13",
+  "version": "1.1.0",
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js",
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
@@ -17,7 +17,7 @@
     "@babel/preset-env": "^7.24.7",
     "@biomejs/biome": "1.6.4",
     "@google/generative-ai": "^0.11.4",
-    "@types/diff": "^5.2.2",
+    "@types/diff": "^7.0.1",
     "@types/follow-redirects": "^1.14.4",
     "@types/jest": "^29.5.12",
     "@types/jquery": "^3.5.29",
@@ -42,14 +42,14 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.620.1",
-    "@aws-sdk/client-sagemaker-runtime": "^3.621.0",
-    "@aws-sdk/credential-providers": "^3.620.1",
+    "@aws-sdk/client-bedrock-runtime": "^3.758.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.758.0",
+    "@aws-sdk/credential-providers": "^3.758.0",
     "@continuedev/config-types": "^1.0.13",
-    "@continuedev/config-yaml": "^1.0.52",
+    "@continuedev/config-yaml": "^1.0.63",
     "@continuedev/fetch": "^1.0.4",
     "@continuedev/llm-info": "^1.0.2",
-    "@continuedev/openai-adapters": "^1.0.10",
+    "@continuedev/openai-adapters": "^1.0.18",
     "@modelcontextprotocol/sdk": "^1.5.0",
     "@mozilla/readability": "^0.5.0",
     "@octokit/rest": "^20.1.1",

@@ -14,7 +14,7 @@ You can read more about how development data is generated as a byproduct of LLM-
 
 You can also configure custom destinations for your data, including remote HTTP endpoints and local file directories.
 
-For hub assistants, data destinations are configured in `data` blocks. Visit the hub to [explore example data blocks](https://hub.continue.dev/explore/data) or [create your own](https://hub.continue.dev/new?type=block&block=data).
+For hub assistants, data destinations are configured in `data` blocks. Visit the hub to [explore example data blocks](https://hub.continue.dev/explore/data) or [create your own](https://hub.continue.dev/new?type=block&blockType=data).
 
 See more details about adding `data` blocks to your configuration files in the [YAML specification](../../yaml-reference.md#data)
 

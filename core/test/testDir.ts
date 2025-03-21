@@ -1,7 +1,7 @@
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { localPathToUri, localPathOrUriToPath } from "../util/pathToUri";
+import { localPathOrUriToPath, localPathToUri } from "../util/pathToUri";
 
 // Want this outside of the git repository so we can change branches in tests
 export const TEST_DIR_PATH = path.join(os.tmpdir(), "testWorkspaceDir");
@@ -26,7 +26,7 @@ export function tearDownTestDir() {
   "index/index.ts" creates an empty index/index.ts
   ["index/index.ts", "hello"] creates index/index.ts with contents "hello"
 */
-export function addToTestDir(pathsOrUris: (string | string[])[]) {
+export function addToTestDir(pathsOrUris: (string | [string, string])[]) {
   // Allow tests to use URIs or local paths
   const paths = pathsOrUris.map((val) => {
     if (Array.isArray(val)) {

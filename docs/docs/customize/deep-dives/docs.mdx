@@ -64,7 +64,7 @@ Pre-indexed docs are only available in VS Code because the VS Code extension shi
 
 ### Hub `docs` Blocks
 
-@Docs uses [`docs` blocks](../../hub/blocks/block-types.md#docs) in Assistants from the hub. Visit the hub to [explore `docs` blocks](https://hub.continue.dev/explore/docs) or [create your own](https://hub.continue.dev/new?type=block&block=docs).
+@Docs uses [`docs` blocks](../../hub/blocks/block-types.md#docs) in Assistants from the hub. Visit the hub to [explore `docs` blocks](https://hub.continue.dev/explore/docs) or [create your own](https://hub.continue.dev/new?type=block&blockType=docs).
 
 ### Through the `@Docs` Context Provider
 
@@ -137,7 +137,7 @@ As with [@Codebase context provider configuration](./codebase#configuration), yo
   context:
     - provider: docs
       params:
-        nRetrieve: 25 # The number of docs to retreive from the embeddings query
+        nRetrieve: 25 # The number of docs to retrieve from the embeddings query
         nFinal: 5 # The number of docs chunks to return IF reranking
         useReranking: true # use reranking if a reranker is configured (defaults to true)
   ```
@@ -149,7 +149,7 @@ As with [@Codebase context provider configuration](./codebase#configuration), yo
       {
         "name": "docs",
         "params": {
-          "nRetrieve": 25, // The number of docs to retreive from the embeddings query
+          "nRetrieve": 25, // The number of docs to retrieve from the embeddings query
           "nFinal": 5, // The number of docs chunks to return IF reranking
           "useReranking": true // use reranking if a reranker is configured (defaults to true)
         }

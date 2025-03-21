@@ -6,6 +6,8 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
+  vscButtonBackground,
+  vscButtonForeground,
   vscForeground,
   vscInputBackground,
 } from "..";
@@ -46,14 +48,15 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
   }
 `;
 
-const EnterButton = styled.button`
+const EnterButton = styled.button<{ isPrimary?: boolean }>`
   all: unset;
   padding: 2px 4px;
   display: flex;
   align-items: center;
-  background-color: ${lightGray}33;
+  background-color: ${(props) =>
+    props.isPrimary ? vscButtonBackground : lightGray + "33"};
   border-radius: ${defaultBorderRadius};
-  color: ${vscForeground};
+  color: ${(props) => (props.isPrimary ? vscButtonForeground : vscForeground)};
   cursor: pointer;
 
   :disabled {
@@ -79,6 +82,7 @@ interface InputToolbarProps {
   activeKey: string | null;
   toolbarOptions?: ToolbarOptions;
   disabled?: boolean;
+  isMainInput?: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -207,6 +211,7 @@ function InputToolbar(props: InputToolbarProps) {
           )}
 
           <EnterButton
+            isPrimary={props.isMainInput}
             data-testid="submit-input-button"
             onClick={async (e) => {
               if (props.onEnter) {

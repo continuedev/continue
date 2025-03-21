@@ -5,11 +5,12 @@ import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { GetGhTokenArgs } from "core/protocol/ide";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
+import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import * as URI from "uri-js";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
+import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -28,7 +29,6 @@ import type {
   TerminalOptions,
   Thread,
 } from "core";
-import { SecretStorage } from "./stubs/SecretStorage";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -212,7 +212,7 @@ class VsCodeIde implements IDE {
           .showInformationMessage(
             "We'll only ask you to log in if using the free trial. To avoid this prompt, make sure to remove free trial models from your config.json",
             "Remove for me",
-            "Open config.json",
+            "Open Assistant configuration",
           )
           .then((selection) => {
             if (selection === "Remove for me") {
@@ -223,7 +223,7 @@ class VsCodeIde implements IDE {
                 configJson.tabAutocompleteModel = undefined;
                 return configJson;
               });
-            } else if (selection === "Open config.json") {
+            } else if (selection === "Open Assistant configuration") {
               this.openFile(getConfigJsonPath());
             }
           });
@@ -545,6 +545,7 @@ class VsCodeIde implements IDE {
         "-i", // Case-insensitive search
         "-C",
         "2", // Show 2 lines of context
+        "--heading", // Only show filepath once per result
         "-e",
         query, // Pattern to search for
         ".", // Directory to search in
@@ -573,9 +574,51 @@ class VsCodeIde implements IDE {
   }
 
   async getSearchResults(query: string): Promise<string> {
-    const results = [];
+    const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
-      results.push(await this._searchDir(query, dir));
+      const dirResults = await this._searchDir(query, dir);
+
+      const keepLines: string[] = [];
+
+      function countLeadingSpaces(line: string) {
+        return line?.match(/^ */)?.[0].length ?? 0;
+      }
+
+      // function formatLine(line: string, sectionIndent: number): string {
+      //   return line.replace(new RegExp(`^[ ]{0,${sectionIndent}}`), "");
+      // }
+
+      let leading = false;
+      let sectionIndent = 0;
+      // let sectionTrim = 0;
+      for (const line of dirResults.split("\n").filter((l) => !!l)) {
+        if (line.startsWith("./") || line === "--") {
+          leading = true;
+          keepLines.push(line);
+          continue;
+        }
+
+        if (leading) {
+          // Exclude leading single-char lines
+          if (line.trim().length > 1) {
+            // Record spacing at first non-single char line
+            leading = false;
+            sectionIndent = countLeadingSpaces(line);
+            keepLines.push(line);
+          }
+          continue;
+        }
+        // Exclude trailing
+        // TODO may exclude wanted results for lines that look like
+        // ./filename
+        //      thisThing
+        //   relevantThing
+        //
+        if (countLeadingSpaces(line) >= sectionIndent) {
+          keepLines.push(line);
+        }
+      }
+      results.push(keepLines.join("\n"));
     }
 
     return results.join("\n\n");

@@ -28,6 +28,7 @@ import {
   IdeType,
   ILLM,
   LLMOptions,
+  MCPOptions,
   ModelDescription,
   RerankerDescription,
   SerializedContinueConfig,
@@ -272,7 +273,7 @@ async function intermediateToFinalConfig(
                 {
                   ...desc,
                   model: modelName,
-                  title: `${llm.title} - ${modelName}`,
+                  title: modelName,
                 },
                 ide.readFile.bind(ide),
                 uniqueId,
@@ -505,7 +506,11 @@ async function intermediateToFinalConfig(
         model: "rerank-2",
         ...params,
       };
-      return new rerankerClass(llmOptions);
+      return new rerankerClass(llmOptions, (url: string | URL, init: any) =>
+        fetchwithRequestOptions(url, init, {
+          ...params?.requestOptions,
+        }),
+      );
     }
     return null;
   }
@@ -538,37 +543,46 @@ async function intermediateToFinalConfig(
 
   // Apply MCP if specified
   const mcpManager = MCPManagerSingleton.getInstance();
+  function getMcpId(options: MCPOptions) {
+    return JSON.stringify(options);
+  }
   if (config.experimental?.modelContextProtocolServers) {
-    await Promise.all(
+    await mcpManager.removeUnusedConnections(
+      config.experimental.modelContextProtocolServers.map(getMcpId),
+    );
+  }
+
+  if (config.experimental?.modelContextProtocolServers) {
+    const abortController = new AbortController();
+    const mcpConnectionTimeout = setTimeout(
+      () => abortController.abort(),
+      5000,
+    );
+
+    await Promise.allSettled(
       config.experimental.modelContextProtocolServers?.map(
         async (server, index) => {
-          const mcpId = index.toString();
-          const mcpConnection = mcpManager.createConnection(mcpId, server);
-          if (!mcpConnection) {
-            return;
-          }
-
-          const abortController = new AbortController();
-
           try {
-            const mcpError = await mcpConnection.modifyConfig(
+            const mcpId = getMcpId(server);
+            const mcpConnection = mcpManager.createConnection(mcpId, server);
+            await mcpConnection.modifyConfig(
               continueConfig,
               mcpId,
               abortController.signal,
               "MCP Server",
               server.faviconUrl,
             );
-            if (mcpError) {
-              errors.push(mcpError);
+          } catch (e) {
+            let errorMessage = "Failed to load MCP server";
+            if (e instanceof Error) {
+              errorMessage += ": " + e.message;
             }
-          } catch (e: any) {
             errors.push({
               fatal: false,
-              message: `Failed to load MCP server: ${e.message}`,
+              message: errorMessage,
             });
-            if (e.name !== "AbortError") {
-              throw e;
-            }
+          } finally {
+            clearTimeout(mcpConnectionTimeout);
           }
         },
       ) || [],
@@ -664,6 +678,7 @@ async function finalToBrowserConfig(
     userToken: final.userToken,
     ui: final.ui,
     experimental: final.experimental,
+    rules: final.rules,
     docs: final.docs,
     tools: final.tools,
     tabAutocompleteOptions: final.tabAutocompleteOptions,

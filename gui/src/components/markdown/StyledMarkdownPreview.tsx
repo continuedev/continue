@@ -36,6 +36,30 @@ const StyledMarkdown = styled.div<{
   whiteSpace: string;
   bgColor: string;
 }>`
+  h1 {
+    font-size: 1.25em;
+  }
+
+  h2 {
+    font-size: 1.15em;
+  }
+
+  h3 {
+    font-size: 1.05em;
+  }
+
+  h4 {
+    font-size: 1em;
+  }
+
+  h5 {
+    font-size: 0.95em;
+  }
+
+  h6 {
+    font-size: 0.9em;
+  }
+
   pre {
     white-space: ${(props) => props.whiteSpace};
     background-color: ${vscEditorBackground};
@@ -61,7 +85,7 @@ const StyledMarkdown = styled.div<{
 
   code:not(pre > code) {
     font-family: var(--vscode-editor-font-family);
-    color: #f78383;
+    color: var(--vscode-input-placeholderForeground);
   }
 
   background-color: ${(props) => props.bgColor};
@@ -110,7 +134,7 @@ interface StyledMarkdownPreviewProps {
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
 
-function getLanuageFromClassName(className: any): string | null {
+function getLanguageFromClassName(className: any): string | null {
   if (!className || typeof className !== "string") {
     return null;
   }
@@ -265,7 +289,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             return <SyntaxHighlightedPre {...preProps} />;
           }
 
-          const language = getLanuageFromClassName(className);
+          const language = getLanguageFromClassName(className);
 
           // If we don't have a filepath show the more basic toolbar
           // that is just action buttons on hover.

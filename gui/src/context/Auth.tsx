@@ -14,6 +14,7 @@ import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
+import { selectSelectedProfile } from "../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import {
   updateOrgsThunk,
@@ -60,9 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Profiles
   const profiles = useAppSelector((store) => store.session.availableProfiles);
-  const selectedProfile = useAppSelector(
-    (store) => store.session.selectedProfile,
-  );
+  const selectedProfile = useAppSelector(selectSelectedProfile);
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
     return new Promise((resolve) => {
@@ -168,8 +167,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (result.status === "success") {
         dispatch(
           updateProfilesThunk({
-            profiles: result.content,
-            selectedProfileId: null,
+            profiles: result.content.profiles,
+            selectedProfileId: result.content.selectedProfileId,
           }),
         );
       }

@@ -65,7 +65,7 @@ class ContinueProxy extends OpenAI {
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
     const url = new URL("rerank", this.apiBase);
-    const resp = await fetch(url, {
+    const resp = await this.fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -75,6 +75,7 @@ class ContinueProxy extends OpenAI {
         query,
         documents: chunks.map((chunk) => chunk.content),
         model: this.model,
+        ...this.extraBodyProperties(),
       }),
     });
     const data: any = await resp.json();
