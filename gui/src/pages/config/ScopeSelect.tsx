@@ -12,7 +12,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 export function ScopeSelect() {
   const { organizations, selectedOrganization } = useAuth();
   const selectedOrgId = useAppSelector(
-    (state) => state.session.selectedOrganizationId,
+    (state) => state.profiles.selectedOrganizationId,
   );
   const dispatch = useAppDispatch();
 

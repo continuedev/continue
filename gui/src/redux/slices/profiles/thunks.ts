@@ -16,29 +16,29 @@ export const selectProfileThunk = createAsyncThunk<
 >("profiles/select", async (id, { dispatch, extra, getState }) => {
   const state = getState();
 
-  if (state.session.availableProfiles === null) {
+  if (state.profiles.availableProfiles === null) {
     // Currently in loading state
     return;
   }
 
-  const initialId = state.session.selectedProfileId;
+  const initialId = state.profiles.selectedProfileId;
 
   let newId = id;
 
   // If no profiles, force clear
-  if (state.session.availableProfiles.length === 0) {
+  if (state.profiles.availableProfiles.length === 0) {
     newId = null;
   } else {
     // If new id doesn't match an existing profile, clear it
     if (newId) {
-      if (!state.session.availableProfiles.find((p) => p.id === newId)) {
+      if (!state.profiles.availableProfiles.find((p) => p.id === newId)) {
         newId = null;
       }
     }
     if (!newId) {
       // At this point if null ID and there ARE profiles,
       // Fallback to a profile, prioritizing the first in the list
-      newId = state.session.availableProfiles[0].id;
+      newId = state.profiles.availableProfiles[0].id;
     }
   }
 
@@ -56,11 +56,11 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
   async (_, { dispatch, getState }) => {
     const state = getState();
 
-    if (state.session.availableProfiles === null) {
+    if (state.profiles.availableProfiles === null) {
       return;
     }
 
-    const profileIds = state.session.availableProfiles.map(
+    const profileIds = state.profiles.availableProfiles.map(
       (profile) => profile.id,
     );
     // In case of no profiles just does nothing
@@ -68,8 +68,8 @@ export const cycleProfile = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
     let nextId = profileIds[0];
-    if (state.session.selectedProfileId) {
-      const curIndex = profileIds.indexOf(state.session.selectedProfileId);
+    if (state.profiles.selectedProfileId) {
+      const curIndex = profileIds.indexOf(state.profiles.selectedProfileId);
       const nextIndex = (curIndex + 1) % profileIds.length;
       nextId = profileIds[nextIndex];
     }
@@ -96,15 +96,15 @@ export const selectOrgThunk = createAsyncThunk<
   ThunkApiType
 >("session/selectOrg", async (id, { dispatch, extra, getState }) => {
   const state = getState();
-  const initialId = state.session.selectedOrganizationId;
+  const initialId = state.profiles.selectedOrganizationId;
   let newId = id;
 
   // If no orgs, force clear
-  if (state.session.organizations.length === 0) {
+  if (state.profiles.organizations.length === 0) {
     newId = null;
   } else if (newId) {
     // If new id doesn't match an existing org, clear it
-    if (!state.session.organizations.find((o) => o.id === newId)) {
+    if (!state.profiles.organizations.find((o) => o.id === newId)) {
       newId = null;
     }
   }
@@ -129,5 +129,5 @@ export const updateOrgsThunk = createAsyncThunk<
   dispatch(setOrganizations(orgs));
 
   // This will trigger reselection if needed
-  dispatch(selectOrgThunk(state.session.selectedOrganizationId));
+  dispatch(selectOrgThunk(state.profiles.selectedOrganizationId));
 });

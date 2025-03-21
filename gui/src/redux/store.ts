@@ -10,7 +10,7 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
-import { profilesReducer } from "./redux";
+import { profilesReducer } from "./slices";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
@@ -38,8 +38,6 @@ const rootReducer = combineReducers({
 const saveSubsetFilters = [
   createFilter("session", [
     "history",
-    "selectedOrganizationId",
-    "selectedProfile",
     "id",
     "lastSessionId",
     "title",
@@ -63,6 +61,12 @@ const saveSubsetFilters = [
   createFilter("ui", ["toolSettings", "useTools"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
+  // Add this new filter for the profiles slice
+  createFilter("profiles", [
+    "preferencesByProfileId",
+    "selectedOrganizationId",
+    "selectedProfileId",
+  ]),
 ];
 
 const migrations: MigrationManifest = {
