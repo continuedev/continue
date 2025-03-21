@@ -8,16 +8,23 @@ import {
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
 
-function TopToolbarIcon(props: {
+interface TopToolbarIconProps {
   tooltip: string;
   icon: React.ComponentType<any>;
   itemCount?: number;
   onClick: () => void;
-}) {
+  isSelected?: boolean;
+}
+
+function TopToolbarIcon(props: TopToolbarIconProps) {
   return (
     <HoverItem onClick={props.onClick}>
       <div className="relative flex items-center">
-        <props.icon className="h-3 w-3 hover:brightness-125" />
+        <props.icon
+          className={`h-3 w-3 hover:brightness-125 ${
+            props.isSelected ? "text-blue-500" : ""
+          }`}
+        />
       </div>
     </HoverItem>
   );
@@ -27,6 +34,7 @@ interface TopInputProps {
   selectedSection: string | null;
   setSelectedSection: (value: string | null) => void;
 }
+
 export function TopInputToolbar(props: TopInputProps) {
   return (
     <div>
@@ -35,6 +43,7 @@ export function TopInputToolbar(props: TopInputProps) {
           <TopToolbarIcon
             icon={CubeIcon}
             tooltip="Models"
+            isSelected={props.selectedSection === "models"}
             onClick={() =>
               props.setSelectedSection(
                 props.selectedSection === "models" ? null : "models",
@@ -44,6 +53,7 @@ export function TopInputToolbar(props: TopInputProps) {
           <TopToolbarIcon
             icon={PencilIcon}
             tooltip="Rules"
+            isSelected={props.selectedSection === "rules"}
             onClick={() =>
               props.setSelectedSection(
                 props.selectedSection === "rules" ? null : "rules",
@@ -53,6 +63,7 @@ export function TopInputToolbar(props: TopInputProps) {
           <TopToolbarIcon
             icon={BookOpenIcon}
             tooltip="Docs"
+            isSelected={props.selectedSection === "docs"}
             onClick={() =>
               props.setSelectedSection(
                 props.selectedSection === "docs" ? null : "docs",
@@ -62,6 +73,7 @@ export function TopInputToolbar(props: TopInputProps) {
           <TopToolbarIcon
             icon={ChatBubbleLeftIcon}
             tooltip="Prompts"
+            isSelected={props.selectedSection === "prompts"}
             onClick={() =>
               props.setSelectedSection(
                 props.selectedSection === "prompts" ? null : "prompts",
@@ -71,6 +83,7 @@ export function TopInputToolbar(props: TopInputProps) {
           <TopToolbarIcon
             icon={FolderIcon}
             tooltip="Context"
+            isSelected={props.selectedSection === "context"}
             onClick={() =>
               props.setSelectedSection(
                 props.selectedSection === "context" ? null : "context",
