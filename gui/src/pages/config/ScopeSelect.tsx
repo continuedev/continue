@@ -7,12 +7,12 @@ import {
 import { useAuth } from "../../context/Auth";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectOrgThunk } from "../../redux/slices/profiles/thunks";
+import { selectOrgThunk } from "../../redux/thunks/profileAndOrg";
 
 export function ScopeSelect() {
   const { organizations, selectedOrganization } = useAuth();
   const selectedOrgId = useAppSelector(
-    (state) => state.profiles.selectedOrganizationId,
+    (state) => state.session.selectedOrganizationId,
   );
   const dispatch = useAppDispatch();
 

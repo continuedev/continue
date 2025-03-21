@@ -5,7 +5,7 @@ import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
-import { cycleProfile } from "../../../redux/slices/profiles/thunks";
+import { cycleProfile } from "../../../redux/thunks/profileAndOrg";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../../../util";
 import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
 import AssistantIcon from "./AssistantIcon";

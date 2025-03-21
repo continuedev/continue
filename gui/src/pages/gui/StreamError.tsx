@@ -22,7 +22,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const selectedModel = useAppSelector(selectDefaultModel);
   const hubEnabled = useAppSelector(selectUseHub);
   const selectedProfile = useAppSelector(
-    (store) => store.profiles.selectedProfile,
+    (store) => store.session.selectedProfile,
   );
   const { session, refreshProfiles } = useAuth();
 

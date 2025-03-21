@@ -6,7 +6,7 @@ import { lightGray } from "../..";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../redux/hooks";
-import { selectProfileThunk } from "../../../redux/slices/profiles/thunks";
+import { selectProfileThunk } from "../../../redux/thunks/profileAndOrg";
 import { getFontSize, getMetaKeyLabel, isLocalProfile } from "../../../util";
 import { ROUTES } from "../../../util/navigation";
 import AssistantIcon from "./AssistantIcon";

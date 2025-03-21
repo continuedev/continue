@@ -529,7 +529,7 @@ class VsCodeIde implements IDE {
     const tabArray = vscode.window.tabGroups.all[0].tabs;
 
     return tabArray
-      .filter((t) => t.isBookmarked)
+      .filter((t) => t.isPinned)
       .map((t) => (t.input as vscode.TabInputText).uri.toString());
   }
 

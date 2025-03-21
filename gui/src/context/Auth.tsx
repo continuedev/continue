@@ -14,11 +14,11 @@ import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import {
   updateOrgsThunk,
   updateProfilesThunk,
-} from "../redux/slices/profiles/thunks";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+} from "../redux/thunks/profileAndOrg";
 import { IdeMessengerContext } from "./IdeMessenger";
 
 interface AuthContextType {
@@ -47,9 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   // Orgs
-  const orgs = useAppSelector((store) => store.profiles.organizations);
+  const orgs = useAppSelector((store) => store.session.organizations);
   const selectedOrgId = useAppSelector(
-    (store) => store.profiles.selectedOrganizationId,
+    (store) => store.session.selectedOrganizationId,
   );
   const selectedOrganization = useMemo(() => {
     if (!selectedOrgId) {
@@ -59,9 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [orgs, selectedOrgId]);
 
   // Profiles
-  const profiles = useAppSelector((store) => store.profiles.availableProfiles);
+  const profiles = useAppSelector((store) => store.session.availableProfiles);
   const selectedProfile = useAppSelector(
-    (store) => store.profiles.selectedProfile,
+    (store) => store.session.selectedProfile,
   );
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
