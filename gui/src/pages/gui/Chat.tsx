@@ -31,7 +31,6 @@ import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/Thinkin
 import { TutorialCard } from "../../components/mainInput/belowMainInput/TutorialCard";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
-import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 import {
   OnboardingCard,
   useOnboardingCard,
@@ -343,7 +342,6 @@ export function Chat() {
                 }
               : undefined
           }
-          rightContent={useHub && <AssistantSelect />}
         />
       )}
 

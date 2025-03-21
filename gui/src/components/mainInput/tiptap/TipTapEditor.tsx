@@ -32,6 +32,8 @@ export interface TipTapEditorProps {
   ) => void;
   editorState?: JSONContent;
   toolbarOptions?: ToolbarOptions;
+  lumpOpen: boolean;
+  setLumpOpen: (open: boolean) => void;
   placeholder?: string;
   historyKey: string;
   inputId: string;
@@ -226,6 +228,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       }}
     >
       <div className="px-2.5 pb-1 pt-2">
+        {/* <TopInputToolbar /> */}
         <EditorContent
           className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[70vh]" : ""}`}
           spellCheck={false}
@@ -241,6 +244,8 @@ function TipTapEditor(props: TipTapEditorProps) {
           hidden={shouldHideToolbar && !props.isMainInput}
           onAddContextItem={() => insertCharacterWithWhitespace("@")}
           onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
+          lumpOpen={props.lumpOpen}
+          setLumpOpen={props.setLumpOpen}
           onEnter={onEnterRef.current}
           onImageFileSelected={(file) => {
             handleImageFile(ideMessenger, file).then((result) => {

@@ -14,11 +14,11 @@ import { AssistantSelectOptions } from "./AssistantSelectOptions";
 function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
   return (
     <div className="flex max-w-[50vw] items-center gap-0.5">
-      <div className="mr-1 h-4 w-4 flex-shrink-0">
-        <AssistantIcon assistant={props.selectedProfile} />
+      <div className="mr-1 h-3 w-3 flex-shrink-0">
+        <AssistantIcon size={3} assistant={props.selectedProfile} />
       </div>
       <span className="truncate">{props.selectedProfile.title}</span>
-      <ChevronDownIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+      <ChevronDownIcon className="h-2 w-2 flex-shrink-0" aria-hidden="true" />
     </div>
   );
 }
@@ -64,9 +64,9 @@ export default function AssistantSelect() {
           });
         }}
         className="text-lightgray hover:bg mb-1 mr-3 flex cursor-pointer items-center gap-1 whitespace-nowrap"
-        style={{ fontSize: `${getFontSize() - 2}px` }}
+        style={{ fontSize: `${getFontSize() - 3}px` }}
       >
-        <PlusIcon className="h-4 w-4" /> Create your first assistant
+        <PlusIcon className="h-3 w-3" /> Create your first assistant
       </div>
     );
   }
@@ -78,7 +78,7 @@ export default function AssistantSelect() {
           data-testid="assistant-select-button"
           ref={buttonRef}
           className="text-lightgray cursor-pointer border-none bg-transparent hover:brightness-125"
-          style={{ fontSize: `${getFontSize() - 2}px` }}
+          style={{ fontSize: `${getFontSize() - 3}px` }}
         >
           <AssistantSelectButton selectedProfile={selectedProfile} />
         </Popover.Button>

@@ -83,6 +83,8 @@ interface InputToolbarProps {
   toolbarOptions?: ToolbarOptions;
   disabled?: boolean;
   isMainInput?: boolean;
+  lumpOpen: boolean;
+  setLumpOpen: (open: boolean) => void;
 }
 
 function InputToolbar(props: InputToolbarProps) {
