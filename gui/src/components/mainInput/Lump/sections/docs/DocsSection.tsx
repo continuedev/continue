@@ -1,7 +1,6 @@
 import { IndexingStatus } from "core";
 import { useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
-import { SecondaryButton } from "../../../..";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../../redux/hooks";
 import {
@@ -25,7 +24,11 @@ function DocsIndexingStatuses() {
     );
   }, [config]);
 
-  // TODO - this might significantly impact performance during indexing
+  const handleAddDocs = () => {
+    dispatch(setShowDialog(true));
+    dispatch(setDialogMessage(<AddDocsDialog />));
+  };
+
   const sortedConfigDocs = useMemo(() => {
     const sorter = (status: IndexingStatus["status"]) => {
       // TODO - further sorting?
@@ -47,37 +50,39 @@ function DocsIndexingStatuses() {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex flex-row items-center justify-between">
-        {sortedConfigDocs.length ? (
-          <SecondaryButton
-            className="!my-0 flex h-7 flex-col items-center justify-center"
-            onClick={() => {
-              dispatch(setShowDialog(true));
-              dispatch(setDialogMessage(<AddDocsDialog />));
-            }}
-          >
-            Add
-          </SecondaryButton>
-        ) : null}
-      </div>
-      <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
+      <div className="flex flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
         <div>
           {sortedConfigDocs.length === 0 && (
-            <SecondaryButton
-              className="flex h-7 flex-col items-center justify-center"
-              onClick={() => {
-                dispatch(setShowDialog(true));
-                dispatch(setDialogMessage(<AddDocsDialog />));
+            <a
+              href="#"
+              className="cursor-pointer text-blue-500 hover:text-blue-600 hover:underline"
+              onClick={(e) => {
+                e.preventDefault();
+                handleAddDocs();
               }}
             >
               Add Docs
-            </SecondaryButton>
+            </a>
           )}
         </div>
         {sortedConfigDocs.map((doc) => {
           return <DocsIndexingStatus key={doc.startUrl} docConfig={doc} />;
         })}
       </div>
+      {sortedConfigDocs.length > 0 && (
+        <div className="flex justify-start">
+          <a
+            href="#"
+            className="cursor-pointer text-blue-500 hover:text-blue-600 hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddDocs();
+            }}
+          >
+            Add
+          </a>
+        </div>
+      )}
     </div>
   );
 }
