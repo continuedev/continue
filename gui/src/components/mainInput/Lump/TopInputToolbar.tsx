@@ -35,27 +35,47 @@ export function TopInputToolbar(props: TopInputProps) {
           <TopToolbarIcon
             icon={CubeIcon}
             tooltip="Models"
-            onClick={() => props.setSelectedSection("models")}
+            onClick={() =>
+              props.setSelectedSection(
+                props.selectedSection === "models" ? null : "models",
+              )
+            }
           />
           <TopToolbarIcon
             icon={PencilIcon}
             tooltip="Rules"
-            onClick={() => props.setSelectedSection("rules")}
+            onClick={() =>
+              props.setSelectedSection(
+                props.selectedSection === "rules" ? null : "rules",
+              )
+            }
           />
           <TopToolbarIcon
             icon={BookOpenIcon}
             tooltip="Docs"
-            onClick={() => props.setSelectedSection("docs")}
+            onClick={() =>
+              props.setSelectedSection(
+                props.selectedSection === "docs" ? null : "docs",
+              )
+            }
           />
           <TopToolbarIcon
             icon={ChatBubbleLeftIcon}
             tooltip="Prompts"
-            onClick={() => props.setSelectedSection("prompts")}
+            onClick={() =>
+              props.setSelectedSection(
+                props.selectedSection === "prompts" ? null : "prompts",
+              )
+            }
           />
           <TopToolbarIcon
             icon={FolderIcon}
             tooltip="Context"
-            onClick={() => props.setSelectedSection("context")}
+            onClick={() =>
+              props.setSelectedSection(
+                props.selectedSection === "context" ? null : "context",
+              )
+            }
           />
         </div>
         <AssistantSelect />

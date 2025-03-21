@@ -63,7 +63,7 @@ export default function AssistantSelect() {
             orgSlug: selectedOrganization?.slug,
           });
         }}
-        className="text-lightgray hover:bg mb-1 mr-3 flex cursor-pointer items-center gap-1 whitespace-nowrap"
+        className="text-lightgray hover:bg mb-1 mr-3 flex cursor-pointer select-none items-center gap-1 whitespace-nowrap"
         style={{ fontSize: `${getFontSize() - 3}px` }}
       >
         <PlusIcon className="h-3 w-3" /> Create your first assistant
