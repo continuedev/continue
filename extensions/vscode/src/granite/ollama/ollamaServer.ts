@@ -1,12 +1,13 @@
 import os from "os";
 import path from 'path';
 
-
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { DEFAULT_MODEL_INFO, ModelInfo } from "core/granite/commons/modelInfo";
 import { getStandardName } from "core/granite/commons/naming";
 import { ProgressData, ProgressReporter } from "core/granite/commons/progressData";
+import { ServerState } from "core/granite/commons/serverState";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
+import { isSemVer } from "core/granite/commons/versions";
 import { isOllamaInstalled } from "core/util/ollamaHelper";
 import { Disposable, env, ExtensionContext, Uri } from "vscode";
 
@@ -17,8 +18,8 @@ import { downloadFileFromUrl } from "../utils/downloadUtils";
 
 import { getRemoteModelInfo } from "./ollamaLibrary";
 
-
 const PLATFORM = os.platform();
+const CLI_VERSION_REGEX = /client version is (.*)/s;
 
 export class OllamaServer implements IModelServer, Disposable {
   private currentStatus = ServerStatus.unknown;
@@ -26,6 +27,7 @@ export class OllamaServer implements IModelServer, Disposable {
   private modelInfoPromises: Map<string, Promise<ModelInfo | undefined>> = new Map();
   private modelInfoResults: Map<string, ModelInfo | undefined> = new Map();
   private cachedTags?: { timestamp: number, tags: Promise<any[]> };
+  private serverState: ServerState = { status: ServerStatus.unknown, version: undefined };
 
   constructor(private context: ExtensionContext, private name: string = "Ollama", private serverUrl = "http://localhost:11434") { }
 
@@ -63,6 +65,12 @@ export class OllamaServer implements IModelServer, Disposable {
     return modes;
   }
 
+  async getState() : Promise<ServerState> {
+    this.serverState.status = await this.getStatus();
+    this.serverState.version = await this.getOllamaVersion();
+    return this.serverState;
+  }
+
   async getStatus(): Promise<ServerStatus> {
     let isStarted = false;
     try {
@@ -78,6 +86,34 @@ export class OllamaServer implements IModelServer, Disposable {
       }
     }
     return this.currentStatus;
+  }
+
+  async getOllamaVersion(): Promise<string | undefined> {
+    let version = undefined;
+    try {
+      const json = (
+        await fetch(`${this.serverUrl}/api/version`)
+      ).json() as any;
+      version = (await json)?.version || "";
+    } catch (e) {
+      //fallback to cli
+      version = await this._getOllamaVersionFromCli();
+    }
+    return version;
+  }
+
+  private async _getOllamaVersionFromCli(): Promise<string | undefined> {
+    try {
+      const output = (await executeCommand("ollama", ["--version"]))?.trim();
+      //check if cliVersion matches semver pattern
+      const cliVersion = CLI_VERSION_REGEX.exec(output)?.[1];
+      if (isSemVer(cliVersion)) {
+        return cliVersion;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+    return undefined;
   }
 
   async isServerInstalled(): Promise<boolean> {

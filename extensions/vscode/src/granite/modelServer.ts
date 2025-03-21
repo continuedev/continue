@@ -1,10 +1,11 @@
 import { ProgressData } from "core/granite/commons/progressData";
-import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
+import { ServerState } from "core/granite/commons/serverState";
+import { ModelStatus } from "core/granite/commons/statuses";
 
 export interface IModelServer {
   getName(): string;
   supportedInstallModes(): Promise<{ id: string; label: string, supportsRefresh: boolean }[]>;
-  getStatus(): Promise<ServerStatus>;
+  getState(): Promise<ServerState>;
   isServerInstalled(): Promise<boolean>;
   isServerStarted(): Promise<boolean>;
   startServer(): Promise<boolean>;

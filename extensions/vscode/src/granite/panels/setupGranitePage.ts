@@ -373,9 +373,9 @@ export class SetupGranitePage {
 
   private async installModels(modelSize: LocalModelSize, panel: WebviewPanel) {
     // Check if the server is running, if not, start it and wait for it to be ready until timeout is reached
-    var { serverStatus, timeout } = await this.waitUntilOllamaStarts();
+    var { serverState, timeout } = await this.waitUntilOllamaStarts();
     const webview = panel.webview;
-    if (serverStatus !== ServerStatus.started) {
+    if (serverState.status !== ServerStatus.started) {
       const errorMessage = `Ollama server failed to start in ${timeout / 1000} seconds`;
       console.error(errorMessage);
       webview.postMessage({
@@ -445,23 +445,23 @@ export class SetupGranitePage {
   }
 
   private async waitUntilOllamaStarts() {
-    let serverStatus = await this.server.getStatus();
+    let serverState = await this.server.getState();
     const timeout = 30000;
     const interval = 500;
-    if (serverStatus !== ServerStatus.started) {
+    if (serverState.status !== ServerStatus.started) {
       console.log("Starting ollama server");
       await this.server.startServer();
       // Check if the server is running until timeout is reached
       for (let i = 0; i < timeout / interval; i++) {
-        serverStatus = await this.server.getStatus();
-        if (serverStatus === ServerStatus.started) {
+        serverState = await this.server.getState();
+        if (serverState.status === ServerStatus.started) {
           break;
         }
         console.log("Waiting for ollama server to start " + i);
         await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
-    return { serverStatus, timeout };
+    return { serverState, timeout };
   }
 
   async getStatusByModel(): Promise<Map<string, ModelStatus>> {
@@ -477,16 +477,18 @@ export class SetupGranitePage {
 
   async publishStatus(webview: Webview) {
     // console.log("Received fetchStatus msg " + debounceStatus);
-    const serverStatus = await this.server.getStatus();
-    const statusByModel = await this.getStatusByModel();
+    const [serverState, statusByModel] = await Promise.all([
+      this.server.getState(),
+      this.getStatusByModel(),
+    ]);
     const statusByModelObject = Object.fromEntries(statusByModel); // Convert Map to Object
     this.wizardState.stepStatuses[OLLAMA_STEP] =
-      serverStatus === ServerStatus.started ||
-      serverStatus === ServerStatus.stopped;
+      serverState.status === ServerStatus.started ||
+      serverState.status === ServerStatus.stopped;
     webview.postMessage({
       command: "status",
       data: {
-        serverStatus,
+        serverState,
         statusByModel: statusByModelObject,
         wizardState: this.wizardState,
       },
