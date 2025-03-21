@@ -10,18 +10,12 @@ const NUM_CARDS_TO_RENDER_COLLAPSED = 3;
 
 export function ConversationStarterCards() {
   const dispatch = useAppDispatch();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [bookmarkedCommands, setBookmarkedCommands] = useState<string[]>([]);
+
   const slashCommands =
     useAppSelector((state) => state.config.config.slashCommands) ?? [];
 
   const filteredSlashCommands = slashCommands?.filter(isDeprecatedCommandName);
-
-  const numFilteredSlashCommands = filteredSlashCommands.length;
-  const displayedCommands = isExpanded
-    ? filteredSlashCommands
-    : filteredSlashCommands.slice(0, NUM_CARDS_TO_RENDER_COLLAPSED);
-  const hasMoreCommands =
-    numFilteredSlashCommands > NUM_CARDS_TO_RENDER_COLLAPSED;
 
   function onClick(command: SlashCommandDescription) {
     if (command.prompt) {
@@ -31,8 +25,14 @@ export function ConversationStarterCards() {
     }
   }
 
-  function handleToggleExpand() {
-    setIsExpanded(!isExpanded);
+  function handleBookmarkCommand(command: SlashCommandDescription) {
+    setBookmarkedCommands((prev) => {
+      if (prev.includes(command.name)) {
+        return prev.filter((name) => name !== command.name);
+      } else {
+        return [...prev, command.name];
+      }
+    });
   }
 
   if (!filteredSlashCommands || filteredSlashCommands.length === 0) {
@@ -40,29 +40,18 @@ export function ConversationStarterCards() {
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <h4 className="mb-2 w-full max-w-md self-start">Prompts</h4>
-
-      <div className="w-full max-w-md">
-        {displayedCommands.map((command, i) => (
+    <div className="flex w-full max-w-full flex-col lg:grid lg:grid-cols-3 lg:gap-4">
+      {filteredSlashCommands
+        .slice(0, NUM_CARDS_TO_RENDER_COLLAPSED)
+        .map((command, i) => (
           <ConversationStarterCard
             key={command.name + i}
             command={command}
             onClick={onClick}
+            onBookmark={handleBookmarkCommand}
+            isBookmarked={bookmarkedCommands.includes(command.name)}
           />
         ))}
-      </div>
-
-      {hasMoreCommands && (
-        <p
-          onClick={handleToggleExpand}
-          className="text-lightgray cursor-pointer self-start text-xs hover:underline"
-        >
-          {isExpanded
-            ? "Show less"
-            : `Show ${numFilteredSlashCommands - NUM_CARDS_TO_RENDER_COLLAPSED} more...`}
-        </p>
-      )}
     </div>
   );
 }
