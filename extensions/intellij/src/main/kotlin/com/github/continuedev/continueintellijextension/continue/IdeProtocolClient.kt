@@ -45,6 +45,10 @@ class IdeProtocolClient(
         )
     }
 
+    fun updateLastFileSaveTimestamp() {
+        (ide as IntelliJIDE).updateLastFileSaveTimestamp()
+    }
+
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val message = Gson().fromJson(msg, Message::class.java)
@@ -199,6 +203,11 @@ class IdeProtocolClient(
                             SaveFileParams::class.java
                         )
                         ide.saveFile(params.filepath)
+                        respond(null)
+                    }
+
+                    "updateLastFileSaveTimestamp" -> {
+                        (ide as IntelliJIDE).updateLastFileSaveTimestamp()
                         respond(null)
                     }
 

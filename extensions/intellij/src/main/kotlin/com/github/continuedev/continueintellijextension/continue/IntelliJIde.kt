@@ -51,8 +51,19 @@ import java.nio.file.Paths
 class IntelliJIDE(
     private val project: Project,
     private val continuePluginService: ContinuePluginService,
+    private var lastFileSaveTimestamp: Long = System.currentTimeMillis()
 
-    ) : IDE {
+) : IDE {
+
+    // Add a simple cache for diff results
+    private data class DiffCache(
+        val timestamp: Long,
+        val diffs: List<String>
+    )
+
+    // Cache the last diff result
+    private var diffCache: DiffCache? = null
+
     private val ripgrep: String
 
     init {
@@ -64,6 +75,14 @@ class IntelliJIDE(
         val os = getOS()
         ripgrep =
             Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + if (os == OS.WINDOWS) ".exe" else "").toString()
+    }
+
+    /**
+     * Updates the timestamp when a file is saved
+     */
+    override fun updateLastFileSaveTimestamp() {
+        println("Updating last file save timestamp")
+        lastFileSaveTimestamp = System.currentTimeMillis()
     }
 
     override suspend fun getIdeInfo(): IdeInfo {
@@ -110,6 +129,16 @@ class IntelliJIDE(
     }
 
     override suspend fun getDiff(includeUnstaged: Boolean): List<String> {
+        println("Getting diff, cache timestamp: ${diffCache?.timestamp}, current timestamp: $lastFileSaveTimestamp")
+
+        // Check if we have a valid cache entry
+        if (diffCache != null && diffCache!!.timestamp == lastFileSaveTimestamp) {
+            println("Using cached diff")
+            return diffCache!!.diffs
+        }
+
+        // If no cache hit, compute the diff
+        println("Computing fresh diff")
         val workspaceDirs = workspaceDirectories()
         val diffs = mutableListOf<String>()
 
@@ -144,6 +173,8 @@ class IntelliJIDE(
             diffs.add(output.toString())
         }
 
+        // Cache the result
+        diffCache = DiffCache(lastFileSaveTimestamp, diffs)
         return diffs
     }
 
