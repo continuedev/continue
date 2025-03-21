@@ -1,17 +1,20 @@
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Tool } from "core";
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { useAppSelector } from "../../../redux/hooks";
 import { addTool, toggleToolSetting } from "../../../redux/slices/uiSlice";
-import { RootState } from "../../../redux/store";
+import { ToolTip } from "../../gui/Tooltip";
 
 interface ToolDropdownItemProps {
   tool: Tool;
+  duplicatesDetected: boolean;
 }
 
 function ToolDropdownItem(props: ToolDropdownItemProps) {
   const dispatch = useDispatch();
-  const settings = useSelector(
-    (state: RootState) => state.ui.toolSettings[props.tool.function.name],
+  const settings = useAppSelector(
+    (state) => state.ui.toolSettings[props.tool.function.name],
   );
 
   useEffect(() => {
@@ -34,6 +37,29 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
       }}
     >
       <span className="flex items-center gap-1">
+        {props.duplicatesDetected ? (
+          <>
+            <InformationCircleIcon
+              data-tooltip-id={props.tool.displayTitle + "-duplicate-warning"}
+              className="h-4 w-4 cursor-help text-yellow-500"
+            />
+
+            <ToolTip
+              id={props.tool.displayTitle + "-duplicate-warning"}
+              place="bottom"
+              className="flex flex-wrap items-center"
+            >
+              <p className="m-0 p-0">
+                <span>Duplicate tool name</span>{" "}
+                <code>{props.tool.function.name}</code>{" "}
+                <span>
+                  detected. Permissions will conflict and usage may be
+                  unpredictable
+                </span>
+              </p>
+            </ToolTip>
+          </>
+        ) : null}
         {props.tool.faviconUrl && (
           <img
             src={props.tool.faviconUrl}
@@ -42,11 +68,6 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
           />
         )}
         {props.tool.displayTitle}{" "}
-        {/* <InfoHover
-          id={`tool-policy-row-${props.tool.function.name}`}
-          size={"3"}
-          msg={props.tool.function.description}
-        /> */}
       </span>
       <div className="flex cursor-pointer gap-2 pr-4">
         {(settings === "allowedWithPermission" || settings === undefined) && (

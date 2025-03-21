@@ -4,15 +4,20 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
-import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
-import { constructMcpSlashCommand } from "../../commands/slash/mcp";
-import { encodeMCPToolUri } from "../../tools/callTool";
-import MCPContextProvider from "../providers/MCPContextProvider";
+import {
+  MCPConnectionStatus,
+  MCPOptions,
+  MCPPrompt,
+  MCPServerStatus,
+} from "../..";
 
 export class MCPManagerSingleton {
   private static instance: MCPManagerSingleton;
 
+  public onConnectionsRefreshed?: () => void;
   private connections: Map<string, MCPConnection> = new Map();
+
+  private abortController: AbortController = new AbortController();
 
   private constructor() {}
 
@@ -46,17 +51,82 @@ export class MCPManagerSingleton {
     this.connections.delete(id);
   }
 
-  async removeUnusedConnections(keepIds: string[]) {
-    const toRemove = Array.from(this.connections.keys()).filter(
-      (k) => !keepIds.includes(k),
+  setConnections(servers: MCPOptions[], forceRefresh: boolean) {
+    // Remove any connections that are no longer in config
+    this.connections.entries().forEach(([id, connection]) => {
+      if (!servers.find((s) => s.id === id)) {
+        connection.abortController.abort();
+        void connection.client.close();
+        this.connections.delete(id);
+      }
+    });
+
+    // Add any connections that are not yet in manager
+    servers.forEach((server) => {
+      if (!this.connections.has(server.id)) {
+        this.connections.set(server.id, new MCPConnection(server));
+      }
+    });
+
+    // NOTE the id is made by stringifying the options
+    void this.refreshConnections(forceRefresh);
+  }
+
+  async refreshConnections(force: boolean) {
+    this.abortController.abort();
+    this.abortController = new AbortController();
+    await Promise.race([
+      new Promise((resolve) => {
+        this.abortController.signal.addEventListener("abort", () => {
+          resolve(undefined);
+        });
+      }),
+      (async () => {
+        await Promise.all(
+          this.connections.values().map(async (connection) => {
+            await connection.connectClient(force, this.abortController.signal);
+          }),
+        );
+        if (this.onConnectionsRefreshed) {
+          this.onConnectionsRefreshed();
+        }
+      })(),
+    ]);
+  }
+
+  getStatuses(): (MCPServerStatus & { client: Client })[] {
+    return Array.from(
+      this.connections.values().map((connection) => ({
+        ...connection.getStatus(),
+        client: connection.client,
+      })),
     );
-    await Promise.all(toRemove.map((id) => this.removeConnection(id)));
   }
 }
+
+interface MCPTool {
+  name: string;
+  description?: string;
+  inputSchema: {};
+}
+
+type MCPResources = Awaited<ReturnType<Client["listResources"]>>["resources"];
+
+const DEFAULT_MCP_TIMEOUT = 20_000; // 10 seconds
 
 class MCPConnection {
   public client: Client;
   private transport: Transport;
+
+  private connectionPromise: Promise<unknown> | null = null;
+  public abortController: AbortController;
+
+  public status: MCPConnectionStatus = "not-connected";
+  public errors: string[] = [];
+
+  public prompts: MCPPrompt[] = [];
+  public tools: MCPTool[] = [];
+  public resources: MCPResources = [];
 
   constructor(private readonly options: MCPOptions) {
     this.transport = this.constructTransport(options);
@@ -70,6 +140,8 @@ class MCPConnection {
         capabilities: {},
       },
     );
+
+    this.abortController = new AbortController();
   }
 
   private constructTransport(options: MCPOptions): Transport {
@@ -95,131 +167,157 @@ class MCPConnection {
     }
   }
 
-  private isConnected: boolean = false;
-  private connectPromise: Promise<void> | null = null;
-
-  private async connectClient() {
-    if (this.isConnected) {
-      // Already connected
-      return;
-    }
-
-    if (this.connectPromise) {
-      // Connection is already in progress; wait for it to complete
-      await this.connectPromise;
-      return;
-    }
-
-    this.connectPromise = (async () => {
-      await this.client.connect(this.transport);
-      this.isConnected = true;
-    })();
-
-    try {
-      await this.connectPromise;
-    } finally {
-      // Reset the promise so future attempts can try again if necessary
-      this.connectPromise = null;
-    }
+  getStatus(): MCPServerStatus {
+    return {
+      ...this.options,
+      errors: this.errors,
+      prompts: this.prompts,
+      resources: this.resources,
+      tools: this.tools,
+      status: this.status,
+    };
   }
 
-  async modifyConfig(
-    config: ContinueConfig,
-    mcpId: string,
-    signal: AbortSignal,
-    name: string,
-    faviconUrl: string | undefined,
-  ) {
-    try {
-      await Promise.race([
-        this.connectClient(),
-        new Promise((_, reject) => {
-          signal.addEventListener("abort", () =>
-            reject(new Error("Connection timed out")),
-          );
-        }),
-      ]);
-    } catch (error) {
-      if (error instanceof Error) {
-        const msg = error.message.toLowerCase();
-        if (msg.includes("spawn") && msg.includes("enoent")) {
-          const command = msg.split(" ")[1];
-          throw new Error(
-            `command "${command}" not found. To use this MCP server, install the ${command} CLI.`,
-          );
-        } else if (
-          !error.message.startsWith("StdioClientTransport already started")
-        ) {
-          // don't throw error if it's just a "server already running" case
-          throw error;
+  async connectClient(forceRefresh: boolean, externalSignal: AbortSignal) {
+    if (!forceRefresh) {
+      // Already connected
+      if (this.status === "connected") {
+        return;
+      }
+
+      // Connection is already in progress; wait for it to complete
+      if (this.connectionPromise) {
+        await this.connectionPromise;
+        return;
+      }
+    }
+
+    this.status = "connecting";
+    this.tools = [];
+    this.prompts = [];
+    this.resources = [];
+    this.errors = [];
+
+    this.abortController.abort();
+    this.abortController = new AbortController();
+
+    this.connectionPromise = Promise.race([
+      // If aborted by a refresh or other, cancel and don't do anything
+      new Promise((resolve) => {
+        externalSignal.addEventListener("abort", () => {
+          resolve(undefined);
+        });
+      }),
+      new Promise((resolve) => {
+        this.abortController.signal.addEventListener("abort", () => {
+          resolve(undefined);
+        });
+      }),
+      (async () => {
+        const timeoutController = new AbortController();
+        const connectionTimeout = setTimeout(
+          () => timeoutController.abort(),
+          this.options.timeout ?? DEFAULT_MCP_TIMEOUT,
+        );
+
+        try {
+          await Promise.race([
+            new Promise((_, reject) => {
+              timeoutController.signal.addEventListener("abort", () => {
+                reject(new Error("Connection timed out"));
+              });
+            }),
+            (async () => {
+              await this.client.connect(this.transport);
+
+              const capabilities = this.client.getServerCapabilities();
+
+              // Resources <—> Context Provider
+              if (capabilities?.resources) {
+                try {
+                  const { resources } = await this.client.listResources(
+                    {},
+                    { signal: timeoutController.signal },
+                  );
+                  this.resources = resources;
+                } catch (e) {
+                  let errorMessage = `Error loading resources for MCP Server ${this.options.name}`;
+                  if (e instanceof Error) {
+                    errorMessage += `: ${e.message}`;
+                  }
+                  this.errors.push(errorMessage);
+                }
+              }
+
+              // Tools <—> Tools
+              if (capabilities?.tools) {
+                try {
+                  const { tools } = await this.client.listTools(
+                    {},
+                    { signal: timeoutController.signal },
+                  );
+                  this.tools = tools;
+                } catch (e) {
+                  let errorMessage = `Error loading tools for MCP Server ${this.options.name}`;
+                  if (e instanceof Error) {
+                    errorMessage += `: ${e.message}`;
+                  }
+                  this.errors.push(errorMessage);
+                }
+              }
+
+              // Prompts <—> Slash commands
+              if (capabilities?.prompts) {
+                try {
+                  const { prompts } = await this.client.listPrompts(
+                    {},
+                    { signal: timeoutController.signal },
+                  );
+                  this.prompts = prompts;
+                } catch (e) {
+                  let errorMessage = `Error loading prompts for MCP Server ${this.options.name}`;
+                  if (e instanceof Error) {
+                    errorMessage += `: ${e.message}`;
+                  }
+                  this.errors.push(errorMessage);
+                }
+              }
+
+              this.status = "connected";
+            })(),
+          ]);
+        } catch (error) {
+          // Catch the case where for whatever reason is already connected
+          if (
+            error instanceof Error &&
+            error.message.startsWith("StdioClientTransport already started")
+          ) {
+            this.status = "connected";
+            return;
+          }
+
+          // Otherwise it's a connection error
+          let errorMessage = `Failed to connect to MCP server ${this.options.name}`;
+          if (error instanceof Error) {
+            const msg = error.message.toLowerCase();
+            if (msg.includes("spawn") && msg.includes("enoent")) {
+              const command = msg.split(" ")[1];
+              errorMessage += `command "${command}" not found. To use this MCP server, install the ${command} CLI.`;
+            } else {
+              errorMessage += ": " + error.message;
+            }
+          }
+
+          this.status = "error";
+          this.errors.push(errorMessage);
+        } finally {
+          this.connectionPromise = null;
+          clearTimeout(connectionTimeout);
         }
-      } else {
-        throw error;
-      }
-    }
+      })(),
+    ]);
 
-    const capabilities = this.client.getServerCapabilities();
-
-    // Resources <—> Context Provider
-    if (capabilities?.resources) {
-      const { resources } = await this.client.listResources({}, { signal });
-      const submenuItems = resources.map((resource: any) => ({
-        title: resource.name,
-        description: resource.description,
-        id: resource.uri,
-        icon: faviconUrl,
-      }));
-
-      if (!config.contextProviders) {
-        config.contextProviders = [];
-      }
-
-      config.contextProviders.push(
-        new MCPContextProvider({
-          submenuItems,
-          mcpId,
-        }),
-      );
-    }
-
-    // Tools <—> Tools
-    if (capabilities?.tools) {
-      const { tools } = await this.client.listTools({}, { signal });
-      const continueTools: Tool[] = tools.map((tool: any) => ({
-        displayTitle: name + " " + tool.name,
-        function: {
-          description: tool.description,
-          name: tool.name,
-          parameters: tool.inputSchema,
-        },
-        faviconUrl,
-        readonly: false,
-        type: "function",
-        wouldLikeTo: "",
-        uri: encodeMCPToolUri(mcpId, tool.name),
-      }));
-
-      config.tools = [...continueTools, ...config.tools];
-    }
-
-    // Prompts <—> Slash commands
-    if (capabilities?.prompts) {
-      const { prompts } = await this.client.listPrompts({}, { signal });
-      if (!config.slashCommands) {
-        config.slashCommands = [];
-      }
-
-      const slashCommands: SlashCommand[] = prompts.map((prompt: any) =>
-        constructMcpSlashCommand(
-          this.client,
-          prompt.name,
-          prompt.description,
-          prompt.arguments?.map((a: any) => a.name),
-        ),
-      );
-
-      config.slashCommands.push(...slashCommands);
-    }
+    await this.connectionPromise;
   }
 }
 

@@ -112,6 +112,7 @@ async function configYamlToContinueConfig(
     slashCommands: [],
     models: [],
     tools: allTools,
+    mcpServerStatuses: [],
     systemMessage: config.rules?.join("\n"),
     experimental: {
       modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
@@ -368,52 +369,19 @@ async function configYamlToContinueConfig(
     continueConfig.contextProviders.push(new DocsContextProvider({}));
   }
 
-  // Apply MCP if specified
+  // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  if (config.mcpServers) {
-    await mcpManager.removeUnusedConnections(
-      config.mcpServers.map((s) => s.name),
-    );
-  }
-
-  await Promise.allSettled(
-    config.mcpServers?.map(async (server) => {
-      const abortController = new AbortController();
-      const mcpConnectionTimeout = setTimeout(
-        () => abortController.abort(),
-        5000,
-      );
-
-      try {
-        const mcpId = server.name;
-        const mcpConnection = mcpManager.createConnection(mcpId, {
-          transport: {
-            type: "stdio",
-            args: [],
-            ...server,
-          },
-        });
-
-        await mcpConnection.modifyConfig(
-          continueConfig,
-          mcpId,
-          abortController.signal,
-          server.name,
-          server.faviconUrl,
-        );
-      } catch (e) {
-        let errorMessage = `Failed to load MCP server ${server.name}`;
-        if (e instanceof Error) {
-          errorMessage += ": " + e.message;
-        }
-        localErrors.push({
-          fatal: false,
-          message: errorMessage,
-        });
-      } finally {
-        clearTimeout(mcpConnectionTimeout);
-      }
-    }) ?? [],
+  mcpManager.setConnections(
+    (config.mcpServers ?? []).map((server) => ({
+      id: JSON.stringify(server),
+      name: server.name,
+      transport: {
+        type: "stdio",
+        args: [],
+        ...server,
+      },
+    })),
+    false,
   );
 
   return { config: continueConfig, errors: localErrors };

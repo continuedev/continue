@@ -4,17 +4,17 @@ import {
   WrenchScrewdriverIcon as WrenchScrewdriverIconOutline,
 } from "@heroicons/react/24/outline";
 import { WrenchScrewdriverIcon as WrenchScrewdriverIconSolid } from "@heroicons/react/24/solid";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { lightGray, vscForeground } from "../..";
 import { useAppSelector } from "../../../redux/hooks";
+import { selectIsInEditMode } from "../../../redux/slices/sessionSlice";
 import { toggleUseTools } from "../../../redux/slices/uiSlice";
 import { ToolTip } from "../../gui/Tooltip";
 import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
 import PopoverTransition from "./PopoverTransition";
 import ToolDropdownItem from "./ToolDropdownItem";
-import { selectIsInEditMode } from "../../../redux/slices/sessionSlice";
 
 interface ToolDropdownProps {
   disabled: boolean;
@@ -49,6 +49,23 @@ export default function ToolDropdown(props: ToolDropdownProps) {
       checkPosition();
     }
   }, [isDropdownOpen]);
+
+  const tools = useAppSelector((store) => store.config.config.tools);
+
+  // Detect duplicate tool names
+  const duplicateDetection = useMemo(() => {
+    const counts: Record<string, number> = {};
+    tools.forEach((tool) => {
+      if (counts[tool.function.name]) {
+        counts[tool.function.name] = counts[tool.function.name] + 1;
+      } else {
+        counts[tool.function.name] = 1;
+      }
+    });
+    return Object.fromEntries(
+      Object.entries(counts).map(([k, v]) => [k, v > 1]),
+    );
+  }, [tools]);
 
   const isDisabled = props.disabled || isInEditMode;
 
@@ -154,13 +171,18 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                           </div>
                         </div>
                         <div className="max-h-48 overflow-y-auto overflow-x-hidden pr-2">
-                          {availableTools.map((tool: any) => (
+                          {availableTools.map((tool) => (
                             <Listbox.Option
                               key={tool.function.name}
                               value="addAllFiles"
                               className="text-vsc-foreground block w-full cursor-pointer text-left text-xs brightness-75 hover:brightness-125"
                             >
-                              <ToolDropdownItem tool={tool} />
+                              <ToolDropdownItem
+                                tool={tool}
+                                duplicatesDetected={
+                                  duplicateDetection[tool.function.name]
+                                }
+                              />
                             </Listbox.Option>
                           ))}
                         </div>

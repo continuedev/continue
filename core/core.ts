@@ -43,6 +43,7 @@ import {
 } from ".";
 
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { MCPManagerSingleton } from "./context/mcp";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
 import { llmStreamChat } from "./llm/streamChat";
@@ -119,6 +120,9 @@ export class Core {
       this.ide,
       this.messenger,
     );
+
+    const mcpManager = MCPManagerSingleton.getInstance();
+    mcpManager.onConnectionsRefreshed = this.configHandler.reloadConfig;
 
     this.configHandler.onConfigUpdate(async (result) => {
       const serializedResult = await this.configHandler.getSerializedConfig();
