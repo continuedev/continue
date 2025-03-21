@@ -87,7 +87,7 @@ export class MCPManagerSingleton {
     }
     await connection.connectClient(true, this.abortController.signal);
     if (this.onConnectionsRefreshed) {
-      this.onConnectionsRefreshed();
+      await this.onConnectionsRefreshed();
     }
   }
 
@@ -238,6 +238,12 @@ class MCPConnection {
             }),
             (async () => {
               await this.client.connect(this.transport);
+
+              // TODO register server notification handlers
+              // this.client.transport?.onmessage(msg => console.log())
+              // this.client.setNotificationHandler(, notification => {
+              //   console.log(notification)
+              // })
 
               const capabilities = this.client.getServerCapabilities();
 

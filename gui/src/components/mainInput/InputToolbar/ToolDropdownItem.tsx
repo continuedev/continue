@@ -9,6 +9,7 @@ import { ToolTip } from "../../gui/Tooltip";
 interface ToolDropdownItemProps {
   tool: Tool;
   duplicatesDetected: boolean;
+  excluded: boolean;
 }
 
 function ToolDropdownItem(props: ToolDropdownItemProps) {
@@ -72,17 +73,21 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
           {props.tool.function.name}{" "}
         </span>
       </div>
-      <div className="flex cursor-pointer gap-2">
-        {(settings === "allowedWithPermission" || settings === undefined) && (
-          <span className="text-yellow-500">Allowed</span>
-        )}
-        {settings === "allowedWithoutPermission" && (
-          <span className="text-green-500">Automatic</span>
-        )}
-        {settings === "disabled" && (
-          <span className="text-red-500">Disabled</span>
-        )}
-      </div>
+      {props.excluded ? (
+        <span className="text-lightgray">Excluded</span>
+      ) : (
+        <div className="flex cursor-pointer gap-2">
+          {(settings === "allowedWithPermission" || settings === undefined) && (
+            <span className="text-yellow-500">Ask First</span>
+          )}
+          {settings === "allowedWithoutPermission" && (
+            <span className="text-green-500">Automatic</span>
+          )}
+          {settings === "disabled" && (
+            <span className="text-lightgray">Excluded</span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -30,6 +30,7 @@ export const streamNormalInput = createAsyncThunk<
     const state = getState();
     const defaultModel = selectDefaultModel(state);
     const toolSettings = state.ui.toolSettings;
+    const toolGroupSettings = state.ui.toolGroupSettings;
     const streamAborter = state.session.streamAborter;
     const useTools = state.ui.useTools;
     if (!defaultModel) {
@@ -47,7 +48,9 @@ export const streamNormalInput = createAsyncThunk<
         completionOptions: includeTools
           ? {
               tools: state.config.config.tools.filter(
-                (tool) => toolSettings[tool.function.name] !== "disabled",
+                (tool) =>
+                  toolSettings[tool.function.name] !== "disabled" &&
+                  toolGroupSettings[tool.group] !== "exclude",
               ),
             }
           : {},
