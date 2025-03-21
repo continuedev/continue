@@ -13,6 +13,7 @@ import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
 import miscReducer from "./slices/miscSlice";
+import { profilesReducer } from "./slices/profiles";
 import sessionReducer from "./slices/sessionSlice";
 import tabsReducer from "./slices/tabsSlice";
 import uiReducer from "./slices/uiSlice";
@@ -30,13 +31,12 @@ const rootReducer = combineReducers({
   config: configReducer,
   indexing: indexingReducer,
   tabs: tabsReducer,
+  profiles: profilesReducer,
 });
 
 const saveSubsetFilters = [
   createFilter("session", [
     "history",
-    "selectedOrganizationId",
-    "selectedProfile",
     "id",
     "lastSessionId",
     "title",
@@ -44,10 +44,6 @@ const saveSubsetFilters = [
     // Persist edit mode in case closes in middle
     "mode",
     "codeToEdit",
-
-    // TODO consider removing persisted profiles/orgs
-    "availableProfiles",
-    "organizations",
 
     // higher risk to persist
     // codeBlockApplyStates
@@ -60,6 +56,13 @@ const saveSubsetFilters = [
   createFilter("ui", ["toolSettings", "useTools"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
+  createFilter("profiles", [
+    // TODO consider removing persisted profiles/orgs
+    "availableProfiles",
+    "organizations",
+    "selectedOrganizationId",
+    "selectedProfile",
+  ]),
 ];
 
 const migrations: MigrationManifest = {

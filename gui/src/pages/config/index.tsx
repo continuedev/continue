@@ -29,7 +29,7 @@ import {
   setDefaultModel,
   updateConfig,
 } from "../../redux/slices/configSlice";
-import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
+import { selectProfileThunk } from "../../redux/slices/profiles/thunks";
 import { getFontSize, isJetBrains } from "../../util";
 import ModelRoleSelector from "./ModelRoleSelector";
 import { ScopeSelect } from "./ScopeSelect";
