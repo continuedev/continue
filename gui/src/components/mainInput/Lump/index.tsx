@@ -6,7 +6,7 @@ import {
   vscInputBackground,
 } from "../..";
 import { TopInputToolbar } from "./TopInputToolbar";
-import { SelectedSection } from "./sections";
+import { SelectedSection } from "./sections/SelectedSection";
 
 interface LumpProps {
   open: boolean;
