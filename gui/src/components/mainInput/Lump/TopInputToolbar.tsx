@@ -23,18 +23,25 @@ function TopToolbarIcon(props: TopToolbarIconProps) {
   return (
     <HoverItem onClick={props.onClick}>
       <div
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            props.onClick();
+          }
+        }}
         style={{
           backgroundColor: props.isSelected ? vscBadgeBackground : undefined,
         }}
-        className={`relative flex select-none items-center px-0.5 transition-all duration-200 ${
-          props.isSelected ? "rounded-full" : ""
-        }`}
+        className={`relative flex select-none items-center rounded-full px-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50`}
       >
         <props.icon
           className="h-3 w-3 hover:brightness-125"
           style={{
             color: props.isSelected ? vscBadgeForeground : undefined,
           }}
+          aria-hidden="true"
         />
         <div
           style={{ fontSize: `${getFontSize() - 3}px` }}
