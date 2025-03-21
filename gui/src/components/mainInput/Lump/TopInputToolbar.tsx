@@ -4,6 +4,7 @@ import {
   CubeIcon,
   FolderIcon,
   PencilIcon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
@@ -87,6 +88,16 @@ export function TopInputToolbar(props: TopInputProps) {
             onClick={() =>
               props.setSelectedSection(
                 props.selectedSection === "context" ? null : "context",
+              )
+            }
+          />
+          <TopToolbarIcon
+            icon={WrenchScrewdriverIcon}
+            tooltip="Tools"
+            isSelected={props.selectedSection === "tools"}
+            onClick={() =>
+              props.setSelectedSection(
+                props.selectedSection === "tools" ? null : "tools",
               )
             }
           />

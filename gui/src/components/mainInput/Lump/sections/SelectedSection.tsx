@@ -3,6 +3,7 @@ import { DocsSection } from "./DocsSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
 import { RulesSection } from "./RulesSection";
+import { ToolsSection } from "./ToolsSection";
 
 interface SelectedSectionProps {
   selectedSection: string | null;
@@ -20,6 +21,8 @@ export function SelectedSection(props: SelectedSectionProps) {
       return <PromptsSection />;
     case "context":
       return <ContextSection />;
+    case "tools":
+      return <ToolsSection />;
     default:
       return null;
   }

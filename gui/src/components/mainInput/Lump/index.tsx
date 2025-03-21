@@ -39,7 +39,9 @@ export function Lump(props: LumpProps) {
           setSelectedSection={setSelectedSection}
         />
 
-        <SelectedSection selectedSection={selectedSection} />
+        <div className="max-h-[200px] overflow-y-auto">
+          <SelectedSection selectedSection={selectedSection} />
+        </div>
       </div>
     </LumpDiv>
   );
