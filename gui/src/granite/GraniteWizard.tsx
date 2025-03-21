@@ -7,10 +7,12 @@ import {
 import { DEFAULT_MODEL_INFO } from "core/granite/commons/modelInfo";
 import { MODEL_REQUIREMENTS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
+import { ServerState } from "core/granite/commons/serverState";
 import { GB } from "core/granite/commons/sizeUtils";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
 import { isHighEndApple, shouldRecommendLargeModel, SystemInfo } from "core/granite/commons/sysInfo";
 import { formatSize } from "core/granite/commons/textUtils";
+import { compareVersions, MIN_OLLAMA_VERSION } from "core/granite/commons/versions";
 import {
   FINAL_STEP,
   MODELS_STEP,
@@ -51,8 +53,8 @@ interface WizardContextProps {
   setActiveStep: React.Dispatch<React.SetStateAction<number>>;
   stepStatuses: boolean[];
   setStepStatuses: React.Dispatch<React.SetStateAction<boolean[]>>;
-  serverStatus: ServerStatus;
-  setServerStatus: React.Dispatch<React.SetStateAction<ServerStatus>>;
+  serverState: ServerState;
+  setServerState: React.Dispatch<React.SetStateAction<ServerState>>;
   systemInfo: SystemInfo | null;
   setSystemInfo: React.Dispatch<React.SetStateAction<SystemInfo | null>>;
   installationModes: InstallationMode[];
@@ -111,9 +113,11 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     false,
     false,
   ]);
-  const [serverStatus, setServerStatus] = useState<ServerStatus>(
-    ServerStatus.unknown,
-  );
+  const [serverState, setServerState] = useState<ServerState>({
+      status: ServerStatus.unknown,
+      version: undefined
+    });
+
   const [statusByModel, setStatusByModel] = useState<Map<string, ModelStatus>>(
     new Map(),
   );
@@ -149,8 +153,8 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
         setActiveStep,
         stepStatuses,
         setStepStatuses,
-        serverStatus,
-        setServerStatus,
+        serverState,
+        setServerState,
         systemInfo,
         setSystemInfo,
         installationModes,
@@ -243,7 +247,7 @@ const WizardStep: React.FC<StepProps> = ({
 
 const OllamaInstallStep: React.FC<StepProps> = (props) => {
   const {
-    serverStatus,
+    serverState,
     installationModes,
     currentStatus,
     setCurrentStatus,
@@ -252,7 +256,8 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
     ollamaInstallationProgress,
     setOllamaInstallationProgress,
   } = useWizardContext();
-
+  const [systemErrors, setSystemErrors] = useState<string[] | undefined>();
+  const [isOllamaOutdated, setOllamaOutdated] = useState<boolean | undefined>();
   const handleDownload = () => {
     setCurrentStatus(WizardStatus.downloadingOllama);
     vscode.postMessage({
@@ -281,18 +286,28 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
     }
   }, [ollamaInstallationError, isOffline]);
 
+  useEffect(() => {
+    const ollamaVersion = serverState.version;
+    const sysErrors = [];
+    if (ollamaVersion && !checkMinimumServerVersion(ollamaVersion )) {
+      setOllamaOutdated(true);
+      sysErrors.push(
+        `Ollama v${MIN_OLLAMA_VERSION} is required. Version ${ollamaVersion} is detected`,
+      );
+    } else {
+      setOllamaOutdated(false)
+    }
+    setSystemErrors(sysErrors);
+  }, [serverState.version]);
+
   const isDevspaces =
     installationModes.length > 0 && installationModes[0].id === "devspaces";
 
   let serverButton;
-
-  if (
-    serverStatus === ServerStatus.started ||
-    serverStatus === ServerStatus.stopped
-  ) {
+  if (isOllamaOutdated) {
     serverButton = (
       <VSCodeButton variant="secondary" disabled>
-        Complete!
+        Ollama must be updated
       </VSCodeButton>
     );
   } else if (isDevspaces) {
@@ -349,17 +364,20 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
             <VSCodeButton variant="secondary" onClick={cancelDownload}>
               Cancel
             </VSCodeButton>
-            not here
             <ProgressBlock progress={ollamaInstallationProgress} />
           </div>
         )}
 
         {!isDevspaces && installationModes.length > 0 && (
           <p className="text-sm text-[--vscode-editor-foreground]">
-            If you prefer, you can also{" "}
-            <a href="https://ollama.com/download">install Ollama manually</a>.
+            <a href="https://ollama.com/download">
+              {isOllamaOutdated ? "Update Ollama manually" : "Install Ollama manually"}
+            </a>.
           </p>
         )}
+        {systemErrors?.map((systemError) => (
+            <DiagnosticMessage key={systemError} message={systemError} type="error" />
+        ))}
         {!isDevspaces && isOffline && (
           <DiagnosticMessage
             type="info"
@@ -373,7 +391,7 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
 
 const ModelSelectionStep: React.FC<StepProps> = (props) => {
   const {
-    serverStatus,
+    serverState,
     preselectedModel,
     selectedModel,
     setSelectedModel,
@@ -387,7 +405,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     systemInfo,
     statusByModel,
   } = useWizardContext();
-  const [systemError, setSystemError] = useState<string | undefined>();
+  const [systemErrors, setSystemErrors] = useState<string[] | undefined>();
 
   const startDownload = () => {
     setModelInstallationError(undefined);
@@ -429,18 +447,24 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
   }, [modelInstallationError, isOffline]);
 
   useEffect(() => {
+    const sysErrors = [];
     if (systemInfo && systemInfo.diskSpace) {
       const { freeDiskSpace } = systemInfo.diskSpace;
       const requiredDiskSpace = getRequiredSpace(selectedModel, statusByModel);
       if (freeDiskSpace < requiredDiskSpace) {
-        setSystemError(
+        sysErrors.push(
           `Insufficient disk space available: ${formatSize(freeDiskSpace)} free, ${formatSize(requiredDiskSpace)} required.`,
         );
-      } else {
-        setSystemError(undefined);
       }
     }
-  }, [systemInfo, selectedModel, statusByModel]);
+    const ollamaVersion = serverState.version;
+    if (ollamaVersion && !checkMinimumServerVersion(ollamaVersion )) {
+      sysErrors.push(
+        `Ollama v${MIN_OLLAMA_VERSION} is required. Version ${ollamaVersion} is detected`,
+      );
+    }
+    setSystemErrors(sysErrors);
+  }, [systemInfo, selectedModel, statusByModel, serverState.version]);
 
   const recommendedMemoryThreshold = MODEL_REQUIREMENTS[DEFAULT_MODEL_GRANITE_LARGE.model].recommendedMemoryBytes / GB;
   const modelOptions: ModelOption[] = [
@@ -463,6 +487,8 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
       }`,
     },
   ];
+
+  const serverStatus = serverState.status;
 
   return (
     <WizardStep {...props}>
@@ -529,7 +555,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
                 onClick={startDownload}
                 disabled={
                   isOffline ||
-                  systemError !== undefined ||
+                  (systemErrors && systemErrors.length > 0) ||
                   (serverStatus !== ServerStatus.started &&
                     serverStatus !== ServerStatus.stopped)
                 }
@@ -554,9 +580,9 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
             )}
           </div>
 
-          {systemError && (
-            <DiagnosticMessage message={systemError} type="error" />
-          )}
+          {systemErrors?.map((systemError) => (
+            <DiagnosticMessage key={systemError} message={systemError} type="error" />
+          ))}
           {modelInstallationError && (
             <DiagnosticMessage message={modelInstallationError} type="error" />
           )}
@@ -636,7 +662,7 @@ const WizardContent: React.FC = () => {
     setActiveStep,
     stepStatuses,
     setStepStatuses,
-    setServerStatus,
+    setServerState,
     setSystemInfo,
     setInstallationModes,
     setPreselectedModel,
@@ -694,13 +720,24 @@ const WizardContent: React.FC = () => {
         }
         case "status": {
           const data = payload.data;
-          setServerStatus(data.serverStatus);
+          console.log(activeStep);
+          const newServerState = data.serverState;
+          const isOllamaOutdated = !checkMinimumServerVersion(newServerState.version );
+          setServerState((oldState) => {
+            if (oldState.version !== undefined && oldState.version !== newServerState.version && isOllamaOutdated) {
+              console.log("Setting OLLAMA_STEP");
+              setActiveStep(OLLAMA_STEP);
+            }
+            return newServerState;
+          });
+
           const newStepStatuses = data.wizardState.stepStatuses as boolean[];
           setStepStatuses((prevStatuses) => {
             if (
               newStepStatuses[OLLAMA_STEP] &&
               !newStepStatuses[MODELS_STEP] &&
-              prevStatuses[OLLAMA_STEP] != newStepStatuses[OLLAMA_STEP]
+              prevStatuses[OLLAMA_STEP] !== newStepStatuses[OLLAMA_STEP] &&
+              !isOllamaOutdated
             ) {
               setActiveStep(MODELS_STEP);
             }
@@ -709,7 +746,8 @@ const WizardContent: React.FC = () => {
               setModelInstallationStatus("complete");
               if (
                 !newStepStatuses[FINAL_STEP] &&
-                prevStatuses[MODELS_STEP] != newStepStatuses[MODELS_STEP]
+                prevStatuses[MODELS_STEP] !== newStepStatuses[MODELS_STEP] &&
+                !isOllamaOutdated
               ) {
                 setActiveStep(FINAL_STEP);
               }
@@ -862,4 +900,9 @@ function getRequiredSpace(
       const modelInfo = DEFAULT_MODEL_INFO.get(model); //FIXME get from registry
       return sum + (modelInfo ? modelInfo.size : 0);
     }, 0);
+}
+
+function checkMinimumServerVersion(version: string): boolean {
+  const result = compareVersions(version, MIN_OLLAMA_VERSION) >= 0;
+  return result;
 }
