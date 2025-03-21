@@ -46,6 +46,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
     ideSettingsPromise: Promise<IdeSettings>,
     writeLog: (message: string) => Promise<void>,
     onReload: () => void,
+    rawYaml: string,
   ): Promise<PlatformProfileLoader> {
     const controlPlaneEnv = await getControlPlaneEnv(ideSettingsPromise);
 
@@ -61,6 +62,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       errors: configResult.errors,
       iconUrl: iconUrl,
       uri: `${controlPlaneEnv}${ownerSlug}/${packageSlug}`,
+      rawYaml,
     };
 
     return new PlatformProfileLoader(

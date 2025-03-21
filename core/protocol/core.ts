@@ -30,6 +30,7 @@ import type {
   Session,
   SessionMetadata,
   SiteIndexingConfig,
+  SlashCommandDescription,
   ToolCall,
 } from "../";
 
@@ -104,20 +105,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
-  "command/run": [
-    {
-      input: string;
-      history: ChatMessage[];
-      modelTitle: string;
-      slashCommandName: string;
-      contextItems: ContextItemWithId[];
-      params: any;
-      historyIndex: number;
-      selectedCode: RangeInFile[];
-      completionOptions?: LLMFullCompletionOptions;
-    },
-    AsyncGenerator<string>,
-  ];
   "llm/complete": [
     {
       prompt: string;
@@ -127,19 +114,18 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     string,
   ];
   "llm/listModels": [{ title: string }, string[] | undefined];
-  "llm/streamComplete": [
-    {
-      prompt: string;
-      completionOptions: LLMFullCompletionOptions;
-      title: string;
-    },
-    AsyncGenerator<string>,
-  ];
   "llm/streamChat": [
     {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
+      legacySlashCommandData?: {
+        command: SlashCommandDescription;
+        input: string;
+        contextItems: ContextItemWithId[];
+        historyIndex: number;
+        selectedCode: RangeInFile[];
+      };
     },
     AsyncGenerator<ChatMessage, PromptLog>,
   ];

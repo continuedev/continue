@@ -17,7 +17,7 @@ export function constructMcpSlashCommand(
       const userInput = context.input.split(" ").slice(1).join(" ");
       if (args) {
         args.forEach((arg, i) => {
-          argsObject[arg] = userInput;
+          argsObject[arg] = ""; // userInput
         });
       }
 
@@ -35,9 +35,22 @@ export function constructMcpSlashCommand(
         };
       });
 
+      if (messages.length === 0) {
+        yield "The MCP prompt returned no messages";
+        return;
+      }
+
+      const reversedMessages = [...messages].reverse();
+      const messageToAppendInput =
+        reversedMessages.find((m) => m.role === "user") ??
+        reversedMessages.find((m) => m.role === "assistant") ??
+        reversedMessages[0];
+      messageToAppendInput.content += ` ${userInput}`;
+
       for await (const chunk of context.llm.streamChat(
         messages,
         new AbortController().signal,
+        context.completionOptions,
       )) {
         yield renderChatMessage(chunk);
       }

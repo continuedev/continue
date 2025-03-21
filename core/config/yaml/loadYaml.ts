@@ -128,6 +128,7 @@ async function configYamlToContinueConfig(
       rootUrl: doc.rootUrl,
       faviconUrl: doc.faviconUrl,
     })),
+    rules: config.rules,
     contextProviders: [],
     modelsByRole: {
       chat: [],

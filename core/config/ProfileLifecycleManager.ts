@@ -22,6 +22,7 @@ export interface ProfileDescription {
   iconUrl: string;
   errors: ConfigValidationError[] | undefined;
   uri: string;
+  rawYaml?: string;
 }
 
 export interface OrganizationDescription {

@@ -62,18 +62,23 @@ export function matchLine(
   const isEndBracket = END_BRACKETS.includes(newLine.trim());
 
   for (let i = 0; i < oldLines.length; i++) {
+    // trims trailing whitespaces from the lines before comparison
+    //this ensures trailing spaces don't affect matching.
+    const oldLineTrimmed = oldLines[i].trimEnd();
+    const newLineTrimmed = newLine.trimEnd();
+
     // Don't match end bracket lines if too far away
     if (i > 4 && isEndBracket) {
       return { matchIndex: -1, isPerfectMatch: false, newLine };
     }
 
-    if (linesMatchPerfectly(newLine, oldLines[i])) {
+    if (linesMatchPerfectly(newLineTrimmed, oldLineTrimmed)) {
       return { matchIndex: i, isPerfectMatch: true, newLine };
     }
-    if (linesMatch(newLine, oldLines[i], i)) {
+    if (linesMatch(newLineTrimmed, oldLineTrimmed, i)) {
       // This is a way to fix indentation, but only for sufficiently long lines to avoid matching whitespace or short lines
       if (
-        newLine.trimStart() === oldLines[i].trimStart() &&
+        newLineTrimmed.trimStart() === oldLineTrimmed.trimStart() &&
         (permissiveAboutIndentation || newLine.trim().length > 8)
       ) {
         return {

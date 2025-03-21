@@ -19,7 +19,6 @@ import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
 import Fireworks from "./Fireworks";
-import NCompass from "./NCompass";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import FunctionNetwork from "./FunctionNetwork";
@@ -35,11 +34,14 @@ import Mistral from "./Mistral";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
+import NCompass from "./NCompass";
 import Nebius from "./Nebius";
+import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
+import { Relace } from "./Relace";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
@@ -49,7 +51,6 @@ import ContinueProxy from "./stubs/ContinueProxy";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
-import Novita from "./Novita";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
@@ -102,6 +103,7 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Scaleway,
+  Relace,
 ];
 
 export async function llmFromDescription(

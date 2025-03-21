@@ -1259,6 +1259,7 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  rules?: string[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1280,6 +1281,7 @@ export interface BrowserSerializedContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  rules?: string[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
