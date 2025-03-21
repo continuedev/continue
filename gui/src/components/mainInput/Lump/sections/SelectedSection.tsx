@@ -1,9 +1,8 @@
-import React from 'react';
-import { ModelsSection } from './ModelsSection';
-import { RulesSection } from './RulesSection';
-import { DocsSection } from './DocsSection';
-import { PromptsSection } from './PromptsSection';
-import { ContextSection } from './ContextSection';
+import { ContextSection } from "./ContextSection";
+import { DocsSection } from "./DocsSection";
+import { ModelsSection } from "./ModelsSection";
+import { PromptsSection } from "./PromptsSection";
+import { RulesSection } from "./RulesSection";
 
 interface SelectedSectionProps {
   selectedSection: string | null;
