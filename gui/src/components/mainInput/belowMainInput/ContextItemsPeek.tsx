@@ -7,13 +7,13 @@ import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
 import { useContext, useMemo, useState } from "react";
-import { AnimatedEllipsis, lightGray, vscBackground } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useAppSelector } from "../../redux/hooks";
-import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
-import FileIcon from "../FileIcon";
-import SafeImg from "../SafeImg";
-import { getIconFromDropdownItem } from "./MentionList";
+import { AnimatedEllipsis, lightGray, vscBackground } from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectIsGatheringContext } from "../../../redux/slices/sessionSlice";
+import FileIcon from "../../FileIcon";
+import SafeImg from "../../SafeImg";
+import { getIconFromDropdownItem } from "../AtMentionDropdown";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];

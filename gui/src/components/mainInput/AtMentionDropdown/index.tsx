@@ -39,18 +39,18 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
   vscQuickInputBackground,
-} from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import FileIcon from "../FileIcon";
-import SafeImg from "../SafeImg";
-import AddDocsDialog from "../dialogs/AddDocsDialog";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { DiscordIcon } from "../svg/DiscordIcon";
-import { GithubIcon } from "../svg/GithubIcon";
-import { GitlabIcon } from "../svg/GitlabIcon";
-import { GoogleIcon } from "../svg/GoogleIcon";
-import { ComboBoxItem, ComboBoxItemType } from "./types";
+} from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
+import FileIcon from "../../FileIcon";
+import SafeImg from "../../SafeImg";
+import AddDocsDialog from "../../dialogs/AddDocsDialog";
+import HeaderButtonWithToolTip from "../../gui/HeaderButtonWithToolTip";
+import { DiscordIcon } from "../../svg/DiscordIcon";
+import { GithubIcon } from "../../svg/GithubIcon";
+import { GitlabIcon } from "../../svg/GitlabIcon";
+import { GoogleIcon } from "../../svg/GoogleIcon";
+import { ComboBoxItem, ComboBoxItemType } from "../types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -180,7 +180,7 @@ const QueryInput = styled.textarea`
   resize: none;
 `;
 
-interface MentionListProps {
+interface AtMentionDropdownProps {
   items: ComboBoxItem[];
   command: (item: any) => void;
 
@@ -189,7 +189,7 @@ interface MentionListProps {
   onClose: () => void;
 }
 
-const MentionList = forwardRef((props: MentionListProps, ref) => {
+const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
@@ -512,4 +512,4 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     </ItemsDiv>
   );
 });
-export default MentionList;
+export default AtMentionDropdown;

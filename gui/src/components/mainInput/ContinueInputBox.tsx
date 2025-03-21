@@ -1,14 +1,13 @@
 import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
-import { useDispatch } from "react-redux";
+import { useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
-import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import ContextItemsPeek from "./ContextItemsPeek";
-import TipTapEditor from "./TipTapEditor";
 import { useAppSelector } from "../../redux/hooks";
+import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
+import ContextItemsPeek from "./belowMainInput/ContextItemsPeek";
 import { ToolbarOptions } from "./InputToolbar";
-import { useMemo } from "react";
+import TipTapEditor from "./tiptap/TipTapEditor";
 
 interface ContinueInputBoxProps {
   isEditMode?: boolean;

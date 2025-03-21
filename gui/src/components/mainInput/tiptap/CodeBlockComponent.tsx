@@ -1,7 +1,7 @@
 import { NodeViewWrapper, NodeViewWrapperProps } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { vscBadgeBackground } from "..";
-import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
+import { vscBadgeBackground } from "../..";
+import CodeSnippetPreview from "../../markdown/CodeSnippetPreview";
 
 export const CodeBlockComponent = (props: any) => {
   const { node, deleteNode, selected, editor, updateAttributes } = props;

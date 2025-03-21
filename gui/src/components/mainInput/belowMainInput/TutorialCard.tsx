@@ -7,10 +7,10 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
-import { lightGray } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { isJetBrains } from "../../util";
-import Shortcut from "../gui/Shortcut";
+import { lightGray } from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { isJetBrains } from "../../../util";
+import Shortcut from "../../gui/Shortcut";
 
 interface TutorialCardProps {
   onClose: () => void;

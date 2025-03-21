@@ -1,6 +1,6 @@
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "..";
-import { getFontSize } from "../../util";
+import { defaultBorderRadius, lightGray, vscForeground } from "../..";
+import { getFontSize } from "../../../util";
 
 export const NewSessionButton = styled.div`
   width: fit-content;

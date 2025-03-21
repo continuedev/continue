@@ -29,16 +29,16 @@ import {
   vscForeground,
   vscInputBackground,
   vscInputBorderFocus,
-} from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
-import { useInputHistory } from "../../hooks/useInputHistory";
-import useIsOSREnabled from "../../hooks/useIsOSREnabled";
-import useUpdatingRef from "../../hooks/useUpdatingRef";
-import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectUseActiveFile } from "../../redux/selectors";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+} from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useSubmenuContextProviders } from "../../../context/SubmenuContextProviders";
+import { useInputHistory } from "../../../hooks/useInputHistory";
+import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
+import useUpdatingRef from "../../../hooks/useUpdatingRef";
+import { useWebviewListener } from "../../../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { selectUseActiveFile } from "../../../redux/selectors";
+import { selectDefaultModel } from "../../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   clearCodeToEdit,
@@ -46,34 +46,34 @@ import {
   selectIsInEditMode,
   setMainEditorContentTrigger,
   setNewestCodeblocksForInput,
-} from "../../redux/slices/sessionSlice";
-import { exitEditMode } from "../../redux/thunks";
+} from "../../../redux/slices/sessionSlice";
+import { exitEditMode } from "../../../redux/thunks";
 import {
   loadLastSession,
   loadSession,
   saveCurrentSession,
-} from "../../redux/thunks/session";
+} from "../../../redux/thunks/session";
 import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
-} from "../../util";
-import { AddCodeToEdit } from "./AddCodeToEditExtension";
-import { CodeBlockExtension } from "./CodeBlockExtension";
-import { SlashCommand } from "./CommandsExtension";
-import { MockExtension } from "./FillerExtension";
-import InputToolbar, { ToolbarOptions } from "./InputToolbar";
-import { Mention } from "./MentionExtension";
-import "./TipTapEditor.css";
+} from "../../../util";
+import InputToolbar, { ToolbarOptions } from "../InputToolbar";
+import { ComboBoxItem } from "../types";
+import {
+  handleJetBrainsOSRMetaKeyIssues,
+  handleVSCMetaKeyIssues,
+} from "../util/handleMetaKeyIssues";
+import { AddCodeToEdit } from "./extensions/AddCodeToEditExtension";
+import { CodeBlockExtension } from "./extensions/CodeBlockExtension";
+import { SlashCommand } from "./extensions/CommandsExtension";
+import { MockExtension } from "./extensions/FillerExtension";
+import { Mention } from "./extensions/MentionExtension";
 import {
   getContextProviderDropdownOptions,
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
-import {
-  handleJetBrainsOSRMetaKeyIssues,
-  handleVSCMetaKeyIssues,
-} from "./handleMetaKeyIssues";
-import { ComboBoxItem } from "./types";
+import "./TipTapEditor.css";
 
 const InputBoxDiv = styled.div<{}>`
   resize: none;

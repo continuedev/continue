@@ -1,6 +1,6 @@
 import { Editor } from "@tiptap/react";
 import { KeyboardEvent } from "react";
-import { getPlatform, isWebEnvironment } from "../../util";
+import { getPlatform, isWebEnvironment } from "../../../util";
 
 const isWebEnv = isWebEnvironment();
 

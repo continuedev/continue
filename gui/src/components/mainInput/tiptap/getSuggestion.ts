@@ -6,9 +6,9 @@ import {
 } from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
-import { IIdeMessenger } from "../../context/IdeMessenger";
-import MentionList from "./MentionList";
-import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
+import { IIdeMessenger } from "../../../context/IdeMessenger";
+import AtMentionDropdown from "../AtMentionDropdown";
+import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../types";
 import { TIPPY_DIV_ID } from "./TipTapEditor";
 
 function getSuggestion(
@@ -32,7 +32,7 @@ function getSuggestion(
 
       return {
         onStart: (props: any) => {
-          component = new ReactRenderer(MentionList, {
+          component = new ReactRenderer(AtMentionDropdown, {
             props: { ...props, enterSubmenu, onClose: onExit },
             editor: props.editor,
           });

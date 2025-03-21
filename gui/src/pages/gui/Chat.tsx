@@ -26,11 +26,11 @@ import { ExploreHubCard } from "../../components/ExploreHubCard";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
+import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
+import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
+import { TutorialCard } from "../../components/mainInput/belowMainInput/TutorialCard";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
-import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
-import { TutorialCard } from "../../components/mainInput/TutorialCard";
+import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
 import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
 import {
   OnboardingCard,

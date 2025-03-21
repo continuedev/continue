@@ -4,9 +4,9 @@ import { ChevronUpIcon } from "@heroicons/react/24/solid";
 import { ChatHistoryItem } from "core";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscBackground } from "..";
-import { getFontSize } from "../../util";
-import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import { defaultBorderRadius, lightGray, vscBackground } from "../..";
+import { getFontSize } from "../../../util";
+import StyledMarkdownPreview from "../../markdown/StyledMarkdownPreview";
 
 const SpoilerButton = styled.div`
   background-color: ${vscBackground};

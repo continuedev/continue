@@ -1,3 +1,4 @@
+import { Dispatch } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
@@ -8,12 +9,11 @@ import {
   RangeInFile,
   TextMessagePart,
 } from "core";
-import { stripImages } from "core/util/messageContent";
-import { IIdeMessenger } from "../../context/IdeMessenger";
-import { Dispatch } from "@reduxjs/toolkit";
-import { setIsGatheringContext } from "../../redux/slices/sessionSlice";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
+import { IIdeMessenger } from "../../../context/IdeMessenger";
+import { setIsGatheringContext } from "../../../redux/slices/sessionSlice";
 
 interface MentionAttrs {
   label: string;
