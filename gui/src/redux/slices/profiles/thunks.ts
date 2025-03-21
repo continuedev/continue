@@ -1,13 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
+import { ThunkApiType } from "../../store";
 import {
   setAvailableProfiles,
   setOrganizations,
   setSelectedOrganizationId,
   setSelectedProfile,
-} from "../slices/sessionSlice";
-import { ThunkApiType } from "../store";
+} from "./slice";
 
 export const selectProfileThunk = createAsyncThunk<
   void,

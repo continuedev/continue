@@ -8,8 +8,8 @@ import { Fragment, useContext } from "react";
 import AssistantIcon from "../../components/modelSelection/platform/AssistantIcon";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { selectProfileThunk } from "../../redux";
 import { useAppDispatch } from "../../redux/hooks";
-import { selectProfileThunk } from "../../redux/thunks/profileAndOrg";
 import { ScopeSelect } from "./ScopeSelect";
 
 export function AccountManagement({ hubEnabled }: { hubEnabled: boolean }) {

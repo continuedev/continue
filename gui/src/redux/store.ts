@@ -10,6 +10,7 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
+import { profilesReducer } from "./redux";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
@@ -31,6 +32,7 @@ const rootReducer = combineReducers({
   config: configReducer,
   indexing: indexingReducer,
   tabs: tabsReducer,
+  profiles: profilesReducer,
 });
 
 const saveSubsetFilters = [
