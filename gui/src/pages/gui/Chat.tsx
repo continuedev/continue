@@ -322,7 +322,7 @@ export function Chat() {
     [history],
   );
 
-  const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
   useAutoScroll(stepsDivRef, history);
 
