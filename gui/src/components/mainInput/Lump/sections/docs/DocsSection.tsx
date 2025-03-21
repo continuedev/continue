@@ -23,20 +23,27 @@ function DocsIndexingStatuses() {
 
   const sortedConfigDocs = useMemo(() => {
     const sorter = (status: IndexingStatus["status"]) => {
-      // TODO - further sorting?
-      if (status === "indexing" || status === "paused") return 0;
-      if (status === "failed") return 1;
-      if (status === "aborted" || status === "pending") return 2;
-      return 3;
+      if (status === "complete") return 0;
+      if (status === "indexing" || status === "paused") return 1;
+      if (status === "failed") return 2;
+      if (status === "aborted" || status === "pending") return 3;
+      return 4;
     };
 
     const docs = [...(config.docs ?? [])];
-    docs.sort((a, b) =>
-      sorter(indexingStatuses[b.startUrl]?.status ?? "pending") >
-      sorter(indexingStatuses[a.startUrl]?.status ?? "pending")
-        ? -1
-        : 1,
-    );
+    docs.sort((a, b) => {
+      const statusA = indexingStatuses[a.startUrl]?.status ?? "pending";
+      const statusB = indexingStatuses[b.startUrl]?.status ?? "pending";
+
+      // First, compare by status
+      const statusCompare = sorter(statusB) - sorter(statusA);
+      if (statusCompare !== 0) return statusCompare;
+
+      // If status is the same, sort by presence of icon
+      const hasIconA = !!a.faviconUrl;
+      const hasIconB = !!b.faviconUrl;
+      return hasIconB === hasIconA ? 0 : hasIconB ? 1 : -1;
+    });
     return docs;
   }, [config, indexingStatuses]);
 

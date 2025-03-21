@@ -7,8 +7,8 @@ interface StatusIndicatorProps {
 }
 
 const STATUS_TO_COLOR: Record<IndexingStatus["status"], string> = {
-  indexing: "bg-blue-500",
-  paused: "bg-yellow-500",
+  indexing: "bg-yellow-500",
+  paused: "bg-blue-500",
   complete: "bg-green-500",
   aborted: "bg-gray-500",
   pending: "bg-gray-300",

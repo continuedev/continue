@@ -11,6 +11,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../../redux/slices/uiSlice";
+import { getFontSize } from "../../../../../util";
 import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
 import { StatusIndicator } from "./StatusIndicator";
 
@@ -83,7 +84,7 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
         <div
-          className={`flex flex-row items-center gap-2 ${status?.url ? "cursor-pointer hover:underline" : ""}`}
+          className={`flex flex-row items-center gap-1 ${status?.url ? "cursor-pointer hover:underline" : ""}`}
           onClick={() => {
             if (status?.url) {
               ideMessenger.post("openUrl", status.url);
@@ -94,19 +95,33 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
             <img
               src={docConfig.faviconUrl}
               alt="doc icon"
-              className="h-4 w-4"
+              className="h-3 w-3"
             />
           ) : null}
-          <p className="lines lines-1 m-0 p-0 text-left">
+          <p
+            style={{
+              fontSize: `${getFontSize() - 3}px`,
+            }}
+            className="lines lines-1 m-0 p-0 text-left"
+          >
             {docConfig.title ?? docConfig.startUrl}
           </p>
-          <ArrowTopRightOnSquareIcon className="mb-0.5 h-3 w-3 text-stone-500" />
+          <ArrowTopRightOnSquareIcon className="h-2 w-2 text-stone-500" />
         </div>
         {status?.status === "pending" ? (
           <div className="text-xs text-stone-500">Pending...</div>
         ) : (
           <div className="flex flex-row items-center gap-1 text-stone-500">
-            {true && <span className="text-xs">{progressPercentage}%</span>}
+            {true && (
+              <span
+                className="text-xs"
+                style={{
+                  fontSize: `${getFontSize() - 3}px`,
+                }}
+              >
+                {progressPercentage}%
+              </span>
+            )}
 
             {status?.status !== "indexing" ? (
               <TrashIcon
