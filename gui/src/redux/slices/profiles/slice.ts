@@ -1,12 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
+import { ensureProfilePreferences } from "./utils";
 
-interface PreferencesState {
+export interface PreferencesState {
   bookmarksByName: string[];
 }
 
-interface ProfilesState {
+export interface ProfilesState {
   availableProfiles: ProfileDescription[] | null;
   selectedProfileId: string | null;
   organizations: OrganizationDescription[];
@@ -28,12 +29,22 @@ export const profilesSlice = createSlice({
   reducers: {
     setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedProfileId = payload;
+
+      if (payload) {
+        ensureProfilePreferences(state, payload);
+      }
     },
     setAvailableProfiles: (
       state,
       { payload }: PayloadAction<ProfileDescription[] | null>,
     ) => {
       state.availableProfiles = payload;
+
+      if (payload) {
+        for (const profile of payload) {
+          ensureProfilePreferences(state, profile.id);
+        }
+      }
     },
     setOrganizations: (
       state,
@@ -56,14 +67,6 @@ export const profilesSlice = createSlice({
 
       if (!profileId) return;
 
-      // Initialize preferences for this profile if needed
-      if (!state.preferencesByProfileId[profileId]) {
-        state.preferencesByProfileId[profileId] = {
-          bookmarksByName: [],
-        };
-      }
-
-      // Only add if not already bookmarked
       const bookmarks = state.preferencesByProfileId[profileId].bookmarksByName;
       if (!bookmarks.includes(commandName)) {
         bookmarks.push(commandName);
@@ -77,7 +80,7 @@ export const profilesSlice = createSlice({
       const { commandName } = action.payload;
       const profileId = state.selectedProfileId;
 
-      if (!profileId || !state.preferencesByProfileId[profileId]) return;
+      if (!profileId) return;
 
       const preferences = state.preferencesByProfileId[profileId];
       preferences.bookmarksByName = preferences.bookmarksByName.filter(
