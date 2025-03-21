@@ -1,4 +1,5 @@
 import {
+  ArrowPathIcon,
   CircleStackIcon,
   CommandLineIcon,
   InformationCircleIcon,
@@ -48,45 +49,54 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
     <div className="flex flex-col gap-1.5 pb-4">
       <h3 className="m-0 mb-1 text-base">{server.name}</h3>
       <div className="flex flex-row items-center justify-between gap-3">
-        {server.status === "not-connected" ? (
-          <div className="flex flex-row items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-stone-500"></div>
-            <span>Not connected</span>
-          </div>
-        ) : server.status === "connected" ? (
-          <div className="flex flex-row items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500"></div>
-            <span>Connected</span>
-          </div>
-        ) : server.status === "connecting" ? (
-          <div className="flex flex-row items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
-            <span>Connecting...</span>
-          </div>
-        ) : (
-          <div className="flex flex-row items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-red-500"></div>
-            <span>Error</span>
-            <InformationCircleIcon
-              className="h-3 w-3"
-              data-tooltip-id={errorsTooltipId}
-            />
-            <ToolTip id={errorsTooltipId} className="flex flex-col gap-0.5">
-              {server.errors.map((error, idx) => (
-                <code key={idx}>{error}</code>
-              ))}
-              {server.errors.length === 0 ? (
-                <span className="text-stone-500">No known errors</span>
-              ) : null}
-            </ToolTip>
-          </div>
-        )}
-        <span
-          className="text-lightgray cursor-pointer underline hover:opacity-80"
+        <div className="flex flex-row items-center gap-2">
+          {server.status === "not-connected" ? (
+            <div className="flex flex-row items-center gap-2">
+              <div className="hidden h-2 w-2 rounded-full bg-stone-500 sm:flex"></div>
+              <span>Not connected</span>
+            </div>
+          ) : server.status === "connected" ? (
+            <div className="flex flex-row items-center gap-2">
+              <div className="hidden h-2 w-2 rounded-full bg-green-500 sm:flex"></div>
+              <span className="">Connected</span>
+            </div>
+          ) : server.status === "connecting" ? (
+            <div className="flex flex-row items-center gap-2">
+              <div className="hidden h-2 w-2 rounded-full bg-yellow-500 sm:flex"></div>
+              <span>Connecting...</span>
+            </div>
+          ) : (
+            <div className="flex flex-row items-center gap-2">
+              <div className="hidden h-2 w-2 rounded-full bg-red-500 sm:flex"></div>
+              <span>Error</span>
+            </div>
+          )}
+          {server.errors.length ? (
+            <>
+              <InformationCircleIcon
+                className={`h-3 w-3 ${server.status === "error" ? "text-red-500" : "text-yellow-500"}`}
+                data-tooltip-id={errorsTooltipId}
+              />
+              <ToolTip id={errorsTooltipId} className="flex flex-col gap-0.5">
+                {server.errors.map((error, idx) => (
+                  <code key={idx}>{error}</code>
+                ))}
+                {server.errors.length === 0 ? (
+                  <span className="text-stone-500">No known errors</span>
+                ) : null}
+              </ToolTip>
+            </>
+          ) : null}
+        </div>
+        <div
+          className="text-lightgray flex cursor-pointer flex-row items-center gap-2 underline hover:opacity-80"
           onClick={onRefresh}
         >
-          Refresh
-        </span>
+          <div>
+            <ArrowPathIcon className="h-3 w-3" />
+          </div>
+          <span className="hidden sm:flex">Refresh</span>
+        </div>
       </div>
       <div className="relative flex flex-row flex-wrap items-center gap-4">
         {/* Tools */}

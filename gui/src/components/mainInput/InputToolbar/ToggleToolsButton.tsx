@@ -128,9 +128,9 @@ export default function ToolDropdown(props: ToolDropdownProps) {
                     >
                       <Listbox.Options
                         className={`bg-vsc-editor-background border-lightgray/50 absolute -left-32 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}
-                        static
+                        // static
                       >
-                        <div className="sticky">
+                        <div className="">
                           <div
                             className="mb-1 flex items-center gap-2 px-2 py-1 text-xs"
                             style={{
