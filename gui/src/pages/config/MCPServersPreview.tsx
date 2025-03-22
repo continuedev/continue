@@ -46,23 +46,10 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
   }
 
   return (
-    <div className="flex flex-row items-center justify-between gap-3 pb-4">
+    <div className="flex flex-row items-center justify-between gap-3">
       <div className="flex flex-row items-center gap-3">
         {/* Name and Status */}
         <h3 className="m-0 text-xs sm:text-sm">{server.name}</h3>
-        <div
-          className="hidden h-2 w-2 rounded-full sm:flex"
-          style={{
-            backgroundColor:
-              server.status === "connected"
-                ? "#22c55e" // green-500
-                : server.status === "connecting"
-                  ? "#eab308" // yellow-500
-                  : server.status === "not-connected"
-                    ? "#78716c" // stone-500
-                    : "#ef4444", // red-500 for error
-          }}
-        />
 
         {/* Error indicator if any */}
         {server.errors.length ? (
@@ -130,11 +117,27 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
       </div>
 
       {/* Refresh button */}
-      <div
-        className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
-        onClick={onRefresh}
-      >
-        <ArrowPathIcon className="h-3 w-3" />
+      <div className="flex items-center gap-2">
+        <div
+          className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
+          onClick={onRefresh}
+        >
+          <ArrowPathIcon className="h-3 w-3" />
+        </div>
+
+        <div
+          className="hidden h-2 w-2 rounded-full sm:flex"
+          style={{
+            backgroundColor:
+              server.status === "connected"
+                ? "#22c55e" // green-500
+                : server.status === "connecting"
+                  ? "#eab308" // yellow-500
+                  : server.status === "not-connected"
+                    ? "#78716c" // stone-500
+                    : "#ef4444", // red-500 for error
+          }}
+        />
       </div>
     </div>
   );
