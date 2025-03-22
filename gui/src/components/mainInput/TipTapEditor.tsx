@@ -563,7 +563,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
 
     return historyLength === 0
-      ? "Ask anything, '@' to add context"
+      ? "Ask anything, '/' for prompts, '@' to add context"
       : "Ask a follow-up";
   }
 
@@ -994,7 +994,6 @@ function TipTapEditor(props: TipTapEditorProps) {
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}
           onAddContextItem={() => insertCharacterWithWhitespace("@")}
-          onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
           onEnter={onEnterRef.current}
           onImageFileSelected={(file) => {
             handleImageFile(file).then((result) => {

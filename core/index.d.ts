@@ -766,6 +766,7 @@ export interface ContinueSDK {
 export interface SlashCommand {
   name: string;
   description: string;
+  prompt?: string;
   params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
@@ -869,11 +870,7 @@ export interface ContextProviderWithParams {
   params: { [key: string]: any };
 }
 
-export interface SlashCommandDescription {
-  name: string;
-  description: string;
-  params?: { [key: string]: any };
-}
+export type SlashCommandDescription = Omit<SlashCommand, "run">;
 
 export interface CustomCommand {
   name: string;

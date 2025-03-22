@@ -1,4 +1,5 @@
 import * as YAML from "yaml";
+
 import { getLastNPathParts } from "../../util/uri";
 
 export function extractName(preamble: { name?: string }, path: string): string {

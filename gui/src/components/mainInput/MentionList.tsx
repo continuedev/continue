@@ -1,7 +1,7 @@
 import {
   ArrowRightIcon,
   AtSymbolIcon,
-  BoltIcon,
+  ChatBubbleLeftIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { Editor } from "@tiptap/react";
@@ -36,7 +36,8 @@ export function getIconFromDropdownItem(
   id: string | undefined,
   type: ComboBoxItemType,
 ) {
-  const typeIcon = type === "contextProvider" ? AtSymbolIcon : BoltIcon;
+  const typeIcon =
+    type === "contextProvider" ? AtSymbolIcon : ChatBubbleLeftIcon;
   return id ? (NAMED_ICONS[id] ?? typeIcon) : typeIcon;
 }
 
@@ -454,7 +455,6 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           ) : (
             <ItemDiv className="item">No results</ItemDiv>
           )}
-          {/* </CustomScrollbarDiv> */}
         </>
       )}
     </ItemsDiv>

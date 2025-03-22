@@ -22,7 +22,6 @@ import {
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
-import { ExploreHubCard } from "../../components/ExploreHubCard";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
@@ -30,19 +29,13 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
-import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
-import {
-  OnboardingCard,
-  useOnboardingCard,
-} from "../../components/OnboardingCard";
-import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform/PlatformOnboardingCard";
+import { useOnboardingCard } from "../../components/OnboardingCard";
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
@@ -78,6 +71,7 @@ import {
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
+import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
@@ -145,7 +139,6 @@ export function Chat() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
-  const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
@@ -538,29 +531,10 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
 
           {history.length === 0 && (
-            <>
-              {onboardingCard.show && (
-                <div className="mx-2 mt-10">
-                  {useHub ? (
-                    <PlatformOnboardingCard isDialog={false} />
-                  ) : (
-                    <OnboardingCard isDialog={false} />
-                  )}
-                </div>
-              )}
-
-              {showTutorialCard !== false && !onboardingCard.show && (
-                <div className="flex w-full justify-center">
-                  <TutorialCard onClose={closeTutorialCard} />
-                </div>
-              )}
-
-              {!onboardingCard.show && showTutorialCard === false && (
-                <div className="mx-2 mt-10">
-                  <ExploreHubCard />
-                </div>
-              )}
-            </>
+            <EmptyChatBody
+              useHub={useHub}
+              showOnboardingCard={onboardingCard.show}
+            />
           )}
         </div>
       </div>

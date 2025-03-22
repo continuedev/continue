@@ -3,6 +3,7 @@ import { contextProviderClassFromName } from "../../context/providers";
 import URLContextProvider from "../../context/providers/URLContextProvider";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 import { getUriPathBasename } from "../../util/uri";
+
 import { getPreambleAndBody } from "./parse";
 
 async function resolveAttachment(
