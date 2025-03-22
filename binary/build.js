@@ -240,32 +240,44 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   console.log("[info] Building binaries with pkg...");
   for (const target of targets) {
     const targetDir = `bin/${target}`;
+    
     fs.mkdirSync(targetDir, { recursive: true });
     console.log(`[info] Building ${target}...`);
     execCmdSync(
       `npx pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path ${targetDir}`,
     );
 
-    // Download and unzip prebuilt sqlite3 binary for the target
-    console.log("[info] Downloading node-sqlite3");
+    // Download and unzip prebuilt sqlite3 binary or copy cached sqlite3 binary for the target
+    const tempSqlite3Dir = `node_modules/.catch/node-sqlite3/${target}`
 
-    const downloadUrl =
-      // node-sqlite3 doesn't have a pre-built binary for win32-arm64
-      target === "win32-arm64"
-        ? "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz"
-        : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
-            target
-          }.tar.gz`;
+    if (!fs.existsSync(tempSqlite3Dir)) {
+      fs.mkdirSync(tempSqlite3Dir, { recursive: true });
+    }
+    if (!fs.existsSync(`${tempSqlite3Dir}/build/Release/node_sqlite3.node`)) {
+      console.log(`[info] Downloading ${target} node-sqlite3`);
 
-    execCmdSync(`curl -L -o ${targetDir}/build.tar.gz ${downloadUrl}`);
-    execCmdSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
+      const downloadUrl =
+        // node-sqlite3 doesn't have a pre-built binary for win32-arm64
+        target === "win32-arm64"
+          ? "https://continue-server-binaries.s3.us-west-1.amazonaws.com/win32-arm64/node_sqlite3.tar.gz"
+          : `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
+              target
+            }.tar.gz`;
 
+      execCmdSync(`curl -L -o ${tempSqlite3Dir}/build.tar.gz ${downloadUrl}`);
+      execCmdSync(`cd ${tempSqlite3Dir} && tar -xvzf build.tar.gz`);
+    } else {
+      console.log(`[info] ${target} node-sqlite3 file exist in Cache!`);
+    }
+    // Copy cache files for target
+    fs.cpSync(`${tempSqlite3Dir}/build`, `${targetDir}/build`, { recursive: true });
+    
     // Copy to build directory for testing
     try {
       const [platform, arch] = target.split("-");
       if (platform === currentPlatform && arch === currentArch) {
         fs.copyFileSync(
-          `${targetDir}/build/Release/node_sqlite3.node`,
+          `${tempSqlite3Dir}/build/Release/node_sqlite3.node`,
           `build/node_sqlite3.node`,
         );
       }
@@ -274,7 +286,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       console.log(error);
     }
 
-    fs.unlinkSync(`${targetDir}/build.tar.gz`);
+    // fs.unlinkSync(`${targetDir}/build.tar.gz`);
 
     // copy @lancedb to bin folders
     console.log("[info] Copying @lancedb files to bin");
