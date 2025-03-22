@@ -2,7 +2,6 @@ import {
   BookOpenIcon,
   ChatBubbleLeftIcon,
   CubeIcon,
-  FolderIcon,
   PencilIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
@@ -110,7 +109,7 @@ export function TopInputToolbar(props: TopInputProps) {
             )
           }
         />
-        <TopToolbarIcon
+        {/* <TopToolbarIcon
           icon={FolderIcon}
           tooltip="Context"
           isSelected={props.selectedSection === "context"}
@@ -119,7 +118,7 @@ export function TopInputToolbar(props: TopInputProps) {
               props.selectedSection === "context" ? null : "context",
             )
           }
-        />
+        /> */}
         <TopToolbarIcon
           icon={WrenchScrewdriverIcon}
           tooltip="Tools"
