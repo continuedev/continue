@@ -55,15 +55,15 @@ function ConfigPage() {
   ];
 
   return (
-    <div className="flex h-full flex-col overflow-y-scroll">
-      <PageHeader
-        showBorder
-        onTitleClick={() => navigate("/")}
-        title="Chat"
-        rightContent={<AccountButton />}
-      />
+    <div className="flex h-full flex-col">
+      <div className="bg-vsc-background sticky top-0 z-10">
+        <PageHeader
+          showBorder
+          onTitleClick={() => navigate("/")}
+          title="Chat"
+          rightContent={<AccountButton />}
+        />
 
-      <div className="flex flex-1 flex-col">
         {/* Tab Headers */}
         <div className="flex w-full justify-center border-0 border-b-[1px] border-solid border-b-zinc-700">
           {tabs.map((tab) => (
@@ -80,11 +80,11 @@ function ConfigPage() {
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 px-4">
-          {tabs.find((tab) => tab.id === activeTab)?.component}
-        </div>
+      {/* Tab Content */}
+      <div className="flex-1 overflow-y-auto px-4">
+        {tabs.find((tab) => tab.id === activeTab)?.component}
       </div>
     </div>
   );
