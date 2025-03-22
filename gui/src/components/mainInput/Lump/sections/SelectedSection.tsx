@@ -1,5 +1,6 @@
 import { ContextSection } from "./ContextSection";
 import DocsSection from "./docs/DocsSection";
+import { MCPSection } from "./MCPSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
 import { RulesSection } from "./RulesSection";
@@ -23,6 +24,8 @@ export function SelectedSection(props: SelectedSectionProps) {
       return <ContextSection />;
     case "tools":
       return <ToolsSection />;
+    case "mcp":
+      return <MCPSection />;
     default:
       return null;
   }

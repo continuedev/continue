@@ -46,108 +46,95 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
   }
 
   return (
-    <div className="flex flex-col gap-1.5 pb-4">
-      <h3 className="m-0 mb-1 text-xs sm:text-sm">{server.name}</h3>
-      <div className="flex flex-row items-center justify-between gap-3">
-        <div className="flex flex-row items-center gap-2">
-          {server.status === "not-connected" ? (
-            <div className="flex flex-row items-center gap-2">
-              <div className="hidden h-2 w-2 rounded-full bg-stone-500 sm:flex"></div>
-              <span>Not connected</span>
-            </div>
-          ) : server.status === "connected" ? (
-            <div className="flex flex-row items-center gap-2">
-              <div className="hidden h-2 w-2 rounded-full bg-green-500 sm:flex"></div>
-              <span className="">Connected</span>
-            </div>
-          ) : server.status === "connecting" ? (
-            <div className="flex flex-row items-center gap-2">
-              <div className="hidden h-2 w-2 rounded-full bg-yellow-500 sm:flex"></div>
-              <span>Connecting...</span>
-            </div>
-          ) : (
-            <div className="flex flex-row items-center gap-2">
-              <div className="hidden h-2 w-2 rounded-full bg-red-500 sm:flex"></div>
-              <span>Error</span>
-            </div>
-          )}
-          {server.errors.length ? (
-            <>
-              <InformationCircleIcon
-                className={`h-3 w-3 ${server.status === "error" ? "text-red-500" : "text-yellow-500"}`}
-                data-tooltip-id={errorsTooltipId}
-              />
-              <ToolTip id={errorsTooltipId} className="flex flex-col gap-0.5">
-                {server.errors.map((error, idx) => (
-                  <code key={idx}>{error}</code>
-                ))}
-                {server.errors.length === 0 ? (
-                  <span className="text-stone-500">No known errors</span>
-                ) : null}
-              </ToolTip>
-            </>
-          ) : null}
-        </div>
+    <div className="flex flex-row items-center justify-between gap-3 pb-4">
+      <div className="flex flex-row items-center gap-3">
+        {/* Name and Status */}
+        <h3 className="m-0 text-xs sm:text-sm">{server.name}</h3>
         <div
-          className="text-lightgray flex cursor-pointer flex-row items-center gap-2 underline hover:opacity-80"
-          onClick={onRefresh}
-        >
-          <div>
-            <ArrowPathIcon className="h-3 w-3" />
+          className="hidden h-2 w-2 rounded-full sm:flex"
+          style={{
+            backgroundColor:
+              server.status === "connected"
+                ? "#22c55e" // green-500
+                : server.status === "connecting"
+                  ? "#eab308" // yellow-500
+                  : server.status === "not-connected"
+                    ? "#78716c" // stone-500
+                    : "#ef4444", // red-500 for error
+          }}
+        />
+
+        {/* Error indicator if any */}
+        {server.errors.length ? (
+          <>
+            <InformationCircleIcon
+              className={`h-3 w-3 ${server.status === "error" ? "text-red-500" : "text-yellow-500"}`}
+              data-tooltip-id={errorsTooltipId}
+            />
+            <ToolTip id={errorsTooltipId} className="flex flex-col gap-0.5">
+              {server.errors.map((error, idx) => (
+                <code key={idx}>{error}</code>
+              ))}
+            </ToolTip>
+          </>
+        ) : null}
+
+        {/* Tools, Prompts, Resources with counts */}
+        <div className="flex flex-row items-center gap-3">
+          <div
+            className="flex cursor-zoom-in items-center gap-1 hover:opacity-80"
+            data-tooltip-id={toolsTooltipId}
+          >
+            <WrenchScrewdriverIcon className="h-4 w-4" />
+            <span className="text-xs">{server.tools.length}</span>
+            <ToolTip id={toolsTooltipId} className="flex flex-col gap-0.5">
+              {server.tools.map((tool, idx) => (
+                <code key={idx}>{tool.name}</code>
+              ))}
+              {server.tools.length === 0 && (
+                <span className="text-stone-500">No tools</span>
+              )}
+            </ToolTip>
           </div>
-          <span className="hidden sm:flex">Refresh</span>
+          <div
+            className="flex cursor-zoom-in items-center gap-1 hover:opacity-80"
+            data-tooltip-id={promptsTooltipId}
+          >
+            <CommandLineIcon className="h-4 w-4" />
+            <span className="text-xs">{server.prompts.length}</span>
+            <ToolTip id={promptsTooltipId} className="flex flex-col gap-0.5">
+              {server.prompts.map((prompt, idx) => (
+                <code key={idx}>{prompt.name}</code>
+              ))}
+              {server.prompts.length === 0 && (
+                <span className="text-stone-500">No prompts</span>
+              )}
+            </ToolTip>
+          </div>
+          <div
+            className="flex cursor-zoom-in items-center gap-1 hover:opacity-80"
+            data-tooltip-id={resourcesTooltipId}
+          >
+            <CircleStackIcon className="h-4 w-4" />
+            <span className="text-xs">{server.resources.length}</span>
+            <ToolTip id={resourcesTooltipId} className="flex flex-col gap-0.5">
+              {server.resources.map((resource, idx) => (
+                <code key={idx}>{resource.name}</code>
+              ))}
+              {server.resources.length === 0 && (
+                <span className="text-stone-500">No resources</span>
+              )}
+            </ToolTip>
+          </div>
         </div>
       </div>
-      <div className="relative flex flex-row flex-wrap items-center gap-4">
-        {/* Tools */}
-        <div
-          className="flex cursor-zoom-in flex-row items-center gap-2 hover:opacity-80"
-          data-tooltip-id={toolsTooltipId}
-        >
-          <WrenchScrewdriverIcon className="h-4 w-4" />
-          <span>{`Tools: ${server.tools.length}`}</span>
-        </div>
-        <ToolTip id={toolsTooltipId} className="flex flex-col gap-0.5">
-          {server.tools.map((tool, idx) => (
-            <code key={idx}>{tool.name}</code>
-          ))}
-          {server.tools.length === 0 ? (
-            <span className="text-stone-500">No tools</span>
-          ) : null}
-        </ToolTip>
 
-        {/* Prompts */}
-        <div
-          className="flex cursor-zoom-in flex-row items-center gap-2 hover:opacity-80"
-          data-tooltip-id={promptsTooltipId}
-        >
-          <CommandLineIcon className="h-4 w-4" />
-          <span>{`Prompts: ${server.prompts.length}`}</span>
-        </div>
-        <ToolTip id={promptsTooltipId} className="flex flex-col gap-0.5">
-          {server.prompts.map((prompt, idx) => (
-            <code key={idx}>{prompt.name}</code>
-          ))}
-          {server.prompts.length === 0 ? (
-            <span className="text-stone-500">No prompts</span>
-          ) : null}
-        </ToolTip>
-        {/* Resources */}
-        <div
-          className="flex cursor-zoom-in flex-row items-center gap-2 hover:opacity-80"
-          data-tooltip-id={resourcesTooltipId}
-        >
-          <CircleStackIcon className="h-4 w-4" />
-          <span>{`Resources: ${server.resources.length}`}</span>
-        </div>
-        <ToolTip id={resourcesTooltipId} className="flex flex-col gap-0.5">
-          {server.resources.map((resource, idx) => (
-            <code key={idx}>{resource.name}</code>
-          ))}
-          {server.resources.length === 0 ? (
-            <span className="text-stone-500">No resources</span>
-          ) : null}
-        </ToolTip>
+      {/* Refresh button */}
+      <div
+        className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
+        onClick={onRefresh}
+      >
+        <ArrowPathIcon className="h-3 w-3" />
       </div>
     </div>
   );
@@ -160,10 +147,6 @@ function MCPServersPreview() {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex flex-row items-center justify-between">
-        <h3 className="mb-0 mt-0 text-lg">MCP Servers</h3>
-      </div>
-
       <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
         <div>
           {servers.length === 0 && (

@@ -3,6 +3,7 @@ import {
   ChatBubbleLeftIcon,
   CubeIcon,
   PencilIcon,
+  Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
@@ -126,6 +127,16 @@ export function TopInputToolbar(props: TopInputProps) {
           onClick={() =>
             props.setSelectedSection(
               props.selectedSection === "tools" ? null : "tools",
+            )
+          }
+        />
+        <TopToolbarIcon
+          icon={Squares2X2Icon}
+          tooltip="MCP"
+          isSelected={props.selectedSection === "mcp"}
+          onClick={() =>
+            props.setSelectedSection(
+              props.selectedSection === "mcp" ? null : "mcp",
             )
           }
         />
