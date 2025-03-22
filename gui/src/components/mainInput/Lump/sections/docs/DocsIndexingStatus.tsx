@@ -147,7 +147,12 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               />
             ) : null} */}
 
-            <StatusIndicator status={status?.status} />
+            <StatusIndicator
+              status={status?.status}
+              hoverMessage={
+                status?.status === "failed" ? status?.debugInfo : undefined
+              }
+            />
           </div>
         </div>
       </div>

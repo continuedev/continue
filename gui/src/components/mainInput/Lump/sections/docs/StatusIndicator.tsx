@@ -1,9 +1,11 @@
 import { IndexingStatus } from "core";
+import { ToolTip } from "../../../../gui/Tooltip";
 
 interface StatusIndicatorProps {
   status?: IndexingStatus["status"];
   className?: string;
   size?: number;
+  hoverMessage?: string;
 }
 
 const STATUS_TO_COLOR: Record<IndexingStatus["status"], string> = {
@@ -19,14 +21,24 @@ export function StatusIndicator({
   status,
   className = "",
   size = 2,
+  hoverMessage,
 }: StatusIndicatorProps) {
   if (!status) return null;
 
-  return (
+  const indicator = (
     <div
+      data-tooltip-id={hoverMessage ? "status-tooltip" : undefined}
+      data-tooltip-content={hoverMessage}
       className={`h-${size} w-${size} rounded-full ${STATUS_TO_COLOR[status]} ${
         status === "indexing" ? "animate-pulse" : ""
       } ${className}`}
     />
+  );
+
+  return (
+    <>
+      {indicator}
+      {hoverMessage && <ToolTip id="status-tooltip" />}
+    </>
   );
 }
