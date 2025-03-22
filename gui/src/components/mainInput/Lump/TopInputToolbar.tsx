@@ -21,7 +21,7 @@ interface TopToolbarIconProps {
 
 function TopToolbarIcon(props: TopToolbarIconProps) {
   return (
-    <HoverItem onClick={props.onClick}>
+    <HoverItem className="px-0" onClick={props.onClick}>
       <div
         role="button"
         tabIndex={0}
@@ -34,7 +34,7 @@ function TopToolbarIcon(props: TopToolbarIconProps) {
         style={{
           backgroundColor: props.isSelected ? vscBadgeBackground : undefined,
         }}
-        className={`relative flex select-none items-center rounded-full px-0.5 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50`}
+        className={`relative flex select-none items-center rounded-full px-1 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50`}
       >
         <props.icon
           className="h-3 w-3 hover:brightness-125"
