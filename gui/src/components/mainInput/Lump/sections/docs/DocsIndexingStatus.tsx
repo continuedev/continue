@@ -18,7 +18,6 @@ import {
 import { getFontSize } from "../../../../../util";
 import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
 import { StatusIndicator } from "./StatusIndicator";
-
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
   docFromYaml?: NonNullable<ConfigYaml["docs"]>[number];
@@ -113,13 +112,19 @@ function DocsIndexingStatus({
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
         <div
-          className={`flex flex-row items-center gap-1 ${status?.url ? "cursor-pointer hover:underline" : ""}`}
+          className={`flex flex-row items-center gap-1`}
           onClick={() => {
             if (status?.url) {
               ideMessenger.post("openUrl", status.url);
             }
           }}
         >
+          <StatusIndicator
+            status={status?.status}
+            hoverMessage={
+              status?.status === "failed" ? status?.debugInfo : undefined
+            }
+          />
           {docConfig.faviconUrl ? (
             <img
               src={docConfig.faviconUrl}
@@ -131,7 +136,7 @@ function DocsIndexingStatus({
             style={{
               fontSize: `${getFontSize() - 3}px`,
             }}
-            className="lines lines-1 m-0 p-0 text-left"
+            className={`lines lines-1 m-0 p-0 text-left ${status?.url ? "cursor-pointer hover:underline" : ""}`}
           >
             {docConfig.title ?? docConfig.startUrl}
           </p>
@@ -172,21 +177,7 @@ function DocsIndexingStatus({
               onClick={handleEdit}
             />
 
-            {/* Commenting out until we have ability to edit local YAML for the user to remove the docs  */}
-            {/* {selectedProfile?.profileType === "local" &&
-            status?.status !== "indexing" ? (
-              <TrashIcon
-                className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
-                onClick={onDelete}
-              />
-            ) : null} */}
-
-            <StatusIndicator
-              status={status?.status}
-              hoverMessage={
-                status?.status === "failed" ? status?.debugInfo : undefined
-              }
-            />
+            {/* Removed StatusIndicator from here */}
           </div>
         </div>
       </div>
