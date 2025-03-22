@@ -1,6 +1,8 @@
+import { ConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
+  PencilIcon,
   StopIcon,
 } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
@@ -19,9 +21,17 @@ import { StatusIndicator } from "./StatusIndicator";
 
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
+  docFromYaml?: NonNullable<ConfigYaml["docs"]>[number];
 }
 
-function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
+function isUsesBlock(block: any): block is { uses: string } {
+  return typeof block !== "string" && "uses" in block;
+}
+
+function DocsIndexingStatus({
+  docConfig,
+  docFromYaml,
+}: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { selectedProfile } = useAuth();
   const dispatch = useAppDispatch();
@@ -69,6 +79,25 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
     dispatch(setShowDialog(true));
   };
 
+  const openUrl = (path: string) =>
+    ideMessenger.request("controlPlane/openUrl", {
+      path,
+      orgSlug: undefined,
+    });
+
+  const handleEdit = () => {
+    console.log("edit", docFromYaml);
+    if (selectedProfile?.profileType === "local") {
+      ideMessenger.post("config/openProfile", {
+        profileId: undefined,
+      });
+    } else if (docFromYaml && isUsesBlock(docFromYaml)) {
+      openUrl(`${docFromYaml.uses}/new-version`);
+    } else if (selectedProfile?.fullSlug) {
+      const slug = `${selectedProfile.fullSlug.ownerSlug}/${selectedProfile.fullSlug.packageSlug}`;
+      openUrl(`${slug}/new-version`);
+    }
+  };
   const progressPercentage = useMemo(() => {
     if (!status) {
       return 0;
@@ -137,6 +166,11 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
                 onClick={reIndex}
               />
             )}
+
+            <PencilIcon
+              className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
+              onClick={handleEdit}
+            />
 
             {/* Commenting out until we have ability to edit local YAML for the user to remove the docs  */}
             {/* {selectedProfile?.profileType === "local" &&

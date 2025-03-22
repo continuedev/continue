@@ -1,3 +1,4 @@
+import { parseConfigYaml } from "@continuedev/config-yaml";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus } from "core";
 import { useContext, useMemo } from "react";
@@ -22,6 +23,16 @@ function DocsIndexingStatuses() {
   const { selectedProfile } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const mergedDocs = useMemo(() => {
+    const parsed = selectedProfile?.rawYaml
+      ? parseConfigYaml(selectedProfile?.rawYaml ?? "")
+      : undefined;
+    return (config.docs ?? []).map((doc, index) => ({
+      doc,
+      docFromYaml: parsed?.docs?.[index],
+    }));
+  }, [config.docs, selectedProfile?.rawYaml]);
+
   const handleAddDocs = () => {
     if (selectedProfile?.profileType === "local") {
       dispatch(setShowDialog(true));
@@ -43,22 +54,22 @@ function DocsIndexingStatuses() {
       return 4;
     };
 
-    const docs = [...(config.docs ?? [])];
+    const docs = [...mergedDocs];
     docs.sort((a, b) => {
-      const statusA = indexingStatuses[a.startUrl]?.status ?? "pending";
-      const statusB = indexingStatuses[b.startUrl]?.status ?? "pending";
+      const statusA = indexingStatuses[a.doc.startUrl]?.status ?? "pending";
+      const statusB = indexingStatuses[b.doc.startUrl]?.status ?? "pending";
 
       // First, compare by status
       const statusCompare = sorter(statusA) - sorter(statusB);
       if (statusCompare !== 0) return statusCompare;
 
       // If status is the same, sort by presence of icon
-      const hasIconA = !!a.faviconUrl;
-      const hasIconB = !!b.faviconUrl;
+      const hasIconA = !!a.doc.faviconUrl;
+      const hasIconB = !!b.doc.faviconUrl;
       return hasIconB === hasIconA ? 0 : hasIconB ? 1 : -1;
     });
     return docs;
-  }, [config, indexingStatuses]);
+  }, [mergedDocs, indexingStatuses]);
 
   return (
     <div className="flex flex-col gap-1">
@@ -77,8 +88,20 @@ function DocsIndexingStatuses() {
             </a>
           )}
         </div>
-        {sortedConfigDocs.map((doc) => {
-          return <DocsIndexingStatus key={doc.startUrl} docConfig={doc} />;
+        {sortedConfigDocs.map((docConfig) => {
+          return (
+            <div
+              key={docConfig.doc.startUrl}
+              className="flex items-center gap-2"
+            >
+              <div className="flex-grow">
+                <DocsIndexingStatus
+                  docFromYaml={docConfig.docFromYaml}
+                  docConfig={docConfig.doc}
+                />
+              </div>
+            </div>
+          );
         })}
       </div>
       {sortedConfigDocs.length > 0 && (
