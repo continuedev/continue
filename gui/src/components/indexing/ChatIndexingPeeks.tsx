@@ -1,8 +1,8 @@
-import { useDispatch } from "react-redux";
+import { ArrowPathIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus } from "core";
 import { useMemo } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { ArrowPathIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../../redux/hooks";
 import { setIndexingChatPeekHidden } from "../../redux/slices/indexingSlice";
 
@@ -32,12 +32,7 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
 
   if (hiddenPeeks[state.type]) return null;
   return (
-    <div
-      className="flex flex-row items-center border-0 border-t border-solid border-t-zinc-700 px-3 py-0.5"
-      onClick={() => {
-        navigate("/more");
-      }}
-    >
+    <div className="flex flex-row items-center border-0 border-t border-solid border-t-zinc-700 px-3 py-0.5">
       <div className="group flex flex-1 cursor-pointer flex-row items-center gap-2">
         <div className={`flex flex-row items-center gap-2`}>
           <p className="m-0 p-0 text-xs text-stone-500 group-hover:underline">

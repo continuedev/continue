@@ -17,7 +17,7 @@ import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import FileIcon from "../FileIcon";
 import { ToolTip } from "../gui/Tooltip";
-import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
+import DocsIndexingPeeks from "../mainInput/Lump/sections/docs/DocsIndexingPeeks";
 
 function AddDocsDialog() {
   const config = useAppSelector((store) => store.config.config);

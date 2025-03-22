@@ -25,7 +25,7 @@ export function ToolTip(props: any) {
   return (
     tooltipPortalDiv &&
     ReactDOM.createPortal(
-      <Tooltip {...props} style={combinedStyles} opacity={1} />,
+      <Tooltip {...props} style={combinedStyles} opacity={1} delayShow={400} />,
       tooltipPortalDiv,
     )
   );

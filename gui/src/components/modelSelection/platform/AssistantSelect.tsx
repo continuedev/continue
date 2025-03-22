@@ -14,11 +14,16 @@ import { AssistantSelectOptions } from "./AssistantSelectOptions";
 function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
   return (
     <div className="flex max-w-[50vw] items-center gap-0.5">
-      <div className="mr-1 h-4 w-4 flex-shrink-0">
-        <AssistantIcon assistant={props.selectedProfile} />
+      <div className="mr-1 h-3 w-3 flex-shrink-0 select-none">
+        <AssistantIcon size={3} assistant={props.selectedProfile} />
       </div>
-      <span className="truncate">{props.selectedProfile.title}</span>
-      <ChevronDownIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+      <span className="select-none truncate">
+        {props.selectedProfile.title}
+      </span>
+      <ChevronDownIcon
+        className="h-2 w-2 flex-shrink-0 select-none"
+        aria-hidden="true"
+      />
     </div>
   );
 }
@@ -63,10 +68,10 @@ export default function AssistantSelect() {
             orgSlug: selectedOrganization?.slug,
           });
         }}
-        className="text-lightgray hover:bg mb-1 mr-3 flex cursor-pointer items-center gap-1 whitespace-nowrap"
-        style={{ fontSize: `${getFontSize() - 2}px` }}
+        className="hover:bg flex cursor-pointer select-none items-center gap-1 whitespace-nowrap text-gray-400"
+        style={{ fontSize: `${getFontSize() - 3}px` }}
       >
-        <PlusIcon className="h-4 w-4" /> Create your first assistant
+        <PlusIcon className="h-3 w-3 select-none" /> Create your first assistant
       </div>
     );
   }
@@ -77,8 +82,8 @@ export default function AssistantSelect() {
         <Popover.Button
           data-testid="assistant-select-button"
           ref={buttonRef}
-          className="text-lightgray cursor-pointer border-none bg-transparent hover:brightness-125"
-          style={{ fontSize: `${getFontSize() - 2}px` }}
+          className="mt-0.5 cursor-pointer border-none bg-transparent text-gray-400 hover:brightness-125"
+          style={{ fontSize: `${getFontSize() - 3}px` }}
         >
           <AssistantSelectButton selectedProfile={selectedProfile} />
         </Popover.Button>

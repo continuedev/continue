@@ -1,5 +1,5 @@
 import { ContextItemWithId } from "core";
-import ContextItemsPeek from "../../../components/mainInput/ContextItemsPeek";
+import ContextItemsPeek from "../../../components/mainInput/belowMainInput/ContextItemsPeek";
 
 interface ToolOutputProps {
   contextItems: ContextItemWithId[];

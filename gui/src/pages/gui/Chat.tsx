@@ -25,11 +25,10 @@ import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
+import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
+import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
-import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
-import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
+import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
@@ -336,7 +335,6 @@ export function Chat() {
                 }
               : undefined
           }
-          rightContent={useHub && <AssistantSelect />}
         />
       )}
 

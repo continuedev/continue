@@ -30,7 +30,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
 
   return (
     <div
-      className="text-vsc-foreground flex cursor-pointer items-center justify-between gap-2 py-1 text-left text-xs brightness-75 hover:brightness-125"
+      className="flex items-center justify-between gap-2 px-2 py-0.5"
       onClick={(e) => {
         dispatch(toggleToolSetting(props.tool.function.name));
         e.stopPropagation();
