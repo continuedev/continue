@@ -317,6 +317,33 @@ export class VsCodeMessenger {
       editDecorationManager.clear();
     });
 
+    this.onWebview("switchMode", async (msg) => {
+      const { mode } = msg.data;
+      if (mode === "agent") {
+        // Handle agent mode activation
+        // Reset current window with user confirmation
+        const userConfirmed = await vscode.window.showInformationMessage(
+          "Switching to agent mode will reset the current window and cancel the current response generation process. Do you want to continue?",
+          "Yes",
+          "No",
+        );
+
+        if (userConfirmed !== "Yes") {
+          return;
+        }
+
+        // Cancel current response generation process
+        // Implement the logic to cancel the current response generation process here
+
+        // Apply changes directly to files in agent mode
+        // Display a progress bar in the chat window with a file name being edited and percentage of edits applied
+        // Implement the logic to apply changes directly to files and display the progress bar here
+      } else if (mode === "chat") {
+        // Handle chat mode activation
+        // Implement the logic to switch back to chat mode here
+      }
+    });
+
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
