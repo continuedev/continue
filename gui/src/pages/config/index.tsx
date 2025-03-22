@@ -17,7 +17,6 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
 import { getFontSize } from "../../util";
 import { AccountButton } from "./AccountButton";
-import { AccountManagement } from "./AccountManagement";
 
 function ConfigPage() {
   useNavigationListener();
@@ -121,8 +120,6 @@ function ConfigPage() {
       />
 
       <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
-        <AccountManagement hubEnabled={hubEnabled} />
-
         {!controlServerBetaEnabled || hubEnabled ? (
           <div className="flex flex-col">
             <div className="flex max-w-[400px] flex-col">
