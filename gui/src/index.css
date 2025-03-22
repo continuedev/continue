@@ -66,33 +66,10 @@ body {
   animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Update the thin-scrollbar class to work across browsers */
 .thin-scrollbar {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-gutter: stable;
+  scrollbar-width: thin;
 }
 
-/* Add WebKit-specific styles for Chrome, Safari, and Edge */
-.thin-scrollbar::-webkit-scrollbar {
-  width: 8px; /* Width of the vertical scrollbar */
-  height: 8px; /* Width of the horizontal scrollbar */
-}
-
-.thin-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-  border-radius: 4px;
-}
-
-.thin-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #888;
-  border-radius: 4px;
-  border: 2px solid transparent; /* Creates padding effect */
-  background-clip: padding-box;
-}
-
-.thin-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #555;
-}
 /* Hide scrollbar for Chrome, Safari and Opera */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
