@@ -1,17 +1,21 @@
 import { BookmarkIcon as BookmarkOutline } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
-import { useState } from "react";
-import { useAppSelector } from "../../../../redux/hooks";
 import { getFontSize } from "../../../../util";
+import { useBookmarkedSlashCommands } from "../../../ConversationStarters/useBookmarkedSlashCommands";
 
 interface PromptRowProps {
   command: string;
   description: string;
+  isBookmarked: boolean;
+  setIsBookmarked: (isBookmarked: boolean) => void;
 }
 
-function PromptRow({ command, description }: PromptRowProps) {
-  const [isBookmarked, setIsBookmarked] = useState(false);
-
+function PromptRow({
+  command,
+  description,
+  isBookmarked,
+  setIsBookmarked,
+}: PromptRowProps) {
   return (
     <div
       className="flex items-center justify-between"
@@ -38,15 +42,18 @@ function PromptRow({ command, description }: PromptRowProps) {
 }
 
 export function PromptsSection() {
-  const prompts = useAppSelector((store) => store.config.config.slashCommands);
+  const { cmdsSortedByBookmark, bookmarkStatuses, toggleBookmark } =
+    useBookmarkedSlashCommands();
 
   return (
     <div className="flex flex-col gap-1 pr-2">
-      {prompts?.map((prompt) => (
+      {cmdsSortedByBookmark?.map((prompt, i) => (
         <PromptRow
           key={prompt.name}
           command={prompt.name}
           description={prompt.description}
+          isBookmarked={bookmarkStatuses[prompt.name]}
+          setIsBookmarked={() => toggleBookmark(prompt)}
         />
       ))}
     </div>
