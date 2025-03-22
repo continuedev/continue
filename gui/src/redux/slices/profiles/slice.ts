@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ProfileDescription } from "core/config/ConfigHandler";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import { ensureProfilePreferences } from "./utils";
 
 export interface PreferencesState {
@@ -10,16 +9,12 @@ export interface PreferencesState {
 export interface ProfilesState {
   availableProfiles: ProfileDescription[] | null;
   selectedProfileId: string | null;
-  organizations: OrganizationDescription[];
-  selectedOrganizationId: string | null;
   preferencesByProfileId: Record<string, PreferencesState>;
 }
 
 const initialState: ProfilesState = {
   availableProfiles: null,
   selectedProfileId: null,
-  organizations: [],
-  selectedOrganizationId: null,
   preferencesByProfileId: {},
 };
 
@@ -45,18 +40,6 @@ export const profilesSlice = createSlice({
           ensureProfilePreferences(state, profile.id);
         }
       }
-    },
-    setOrganizations: (
-      state,
-      { payload }: PayloadAction<OrganizationDescription[]>,
-    ) => {
-      state.organizations = payload;
-    },
-    setSelectedOrganizationId: (
-      state,
-      { payload }: PayloadAction<string | null>,
-    ) => {
-      state.selectedOrganizationId = payload;
     },
     bookmarkSlashCommand: (
       state,
@@ -112,8 +95,6 @@ export const profilesSlice = createSlice({
 export const {
   setAvailableProfiles,
   setSelectedProfile,
-  setOrganizations,
-  setSelectedOrganizationId,
   bookmarkSlashCommand,
   unbookmarkSlashCommand,
 } = profilesSlice.actions;

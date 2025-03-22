@@ -45,9 +45,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   // Orgs
-  const orgs = useAppSelector((store) => store.profiles.organizations);
+  const orgs = useAppSelector((store) => store.organizations.organizations);
   const selectedOrgId = useAppSelector(
-    (store) => store.profiles.selectedOrganizationId,
+    (store) => store.organizations.selectedOrganizationId,
   );
   const selectedOrganization = useMemo(() => {
     if (!selectedOrgId) {
