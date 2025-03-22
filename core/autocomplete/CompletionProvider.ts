@@ -175,11 +175,19 @@ export class CompletionProvider {
         this.ide.getWorkspaceDirs(),
       ]);
 
-      const { prompt, prefix, suffix, completionOptions } = renderPrompt({
+      const { prompt, prefix, suffix, completionOptions: _completionOptions } = renderPrompt({
         snippetPayload,
         workspaceDirs,
         helper,
       });
+
+      // Default maxTokens for autocomplete set in core/llm/llms/index.ts llmFromDescription()
+      const completionOptions = {
+        ..._completionOptions,
+        maxTokens: _completionOptions?.maxTokens ||
+          llm.completionOptions.autoCompleteMaxTokens ||
+          llm.completionOptions.maxTokens
+      };
 
       // Completion
       let completion: string | undefined = "";
@@ -220,11 +228,11 @@ export class CompletionProvider {
 
         const processedCompletion = helper.options.transform
           ? postprocessCompletion({
-              completion,
-              prefix: helper.prunedPrefix,
-              suffix: helper.prunedSuffix,
-              llm,
-            })
+            completion,
+            prefix: helper.prunedPrefix,
+            suffix: helper.prunedSuffix,
+            llm,
+          })
           : completion;
 
         completion = processedCompletion;
