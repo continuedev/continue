@@ -1,7 +1,9 @@
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus } from "core";
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { useDispatch } from "react-redux";
+import { useAuth } from "../../../../../context/Auth";
+import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../../redux/hooks";
 import {
   setDialogMessage,
@@ -17,10 +19,19 @@ function DocsIndexingStatuses() {
   const indexingStatuses = useAppSelector(
     (store) => store.indexing.indexing.statuses,
   );
+  const { selectedProfile } = useAuth();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const handleAddDocs = () => {
-    dispatch(setShowDialog(true));
-    dispatch(setDialogMessage(<AddDocsDialog />));
+    if (selectedProfile?.profileType === "local") {
+      dispatch(setShowDialog(true));
+      dispatch(setDialogMessage(<AddDocsDialog />));
+    } else {
+      ideMessenger.request("controlPlane/openUrl", {
+        path: "new?type=block&blockType=docs",
+        orgSlug: undefined,
+      });
+    }
   };
 
   const sortedConfigDocs = useMemo(() => {
