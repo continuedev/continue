@@ -106,7 +106,7 @@ function DocsIndexingStatuses() {
       </div>
       {sortedConfigDocs.length > 0 && (
         <div
-          className="cursor-pointer rounded px-2 py-1 text-center text-gray-400 hover:text-gray-300"
+          className="cursor-pointer rounded px-2 pb-1 text-center text-gray-400 hover:text-gray-300"
           style={{
             fontSize: `${getFontSize() - 3}px`,
           }}

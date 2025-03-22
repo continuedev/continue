@@ -1,4 +1,7 @@
-import { BookmarkIcon as BookmarkOutline } from "@heroicons/react/24/outline";
+import {
+  BookmarkIcon as BookmarkOutline,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { getFontSize } from "../../../../util";
 import { useBookmarkedSlashCommands } from "../../../ConversationStarters/useBookmarkedSlashCommands";
@@ -8,6 +11,7 @@ interface PromptRowProps {
   description: string;
   isBookmarked: boolean;
   setIsBookmarked: (isBookmarked: boolean) => void;
+  onEdit?: () => void;
 }
 
 function PromptRow({
@@ -15,6 +19,7 @@ function PromptRow({
   description,
   isBookmarked,
   setIsBookmarked,
+  onEdit,
 }: PromptRowProps) {
   return (
     <div
@@ -27,15 +32,21 @@ function PromptRow({
         <span className="text-vscForeground shrink-0">{command}</span>
         <span className="truncate text-gray-400">{description}</span>
       </div>
-      <div
-        onClick={() => setIsBookmarked(!isBookmarked)}
-        className="cursor-pointer"
-      >
-        {isBookmarked ? (
-          <BookmarkSolid className="h-3 w-3" />
-        ) : (
-          <BookmarkOutline className="h-3 w-3" />
-        )}
+      <div className="flex items-center gap-2">
+        <PencilIcon
+          className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
+          onClick={onEdit}
+        />
+        <div
+          onClick={() => setIsBookmarked(!isBookmarked)}
+          className="cursor-pointer pt-0.5 text-gray-400"
+        >
+          {isBookmarked ? (
+            <BookmarkSolid className="h-3 w-3" />
+          ) : (
+            <BookmarkOutline className="h-3 w-3" />
+          )}
+        </div>
       </div>
     </div>
   );
@@ -44,6 +55,11 @@ function PromptRow({
 export function PromptsSection() {
   const { cmdsSortedByBookmark, bookmarkStatuses, toggleBookmark } =
     useBookmarkedSlashCommands();
+
+  const handleEdit = (prompt: any) => {
+    // Handle edit action here
+    console.log("Editing prompt:", prompt);
+  };
 
   return (
     <div className="flex flex-col gap-1 pr-2">
@@ -54,6 +70,7 @@ export function PromptsSection() {
           description={prompt.description}
           isBookmarked={bookmarkStatuses[prompt.name]}
           setIsBookmarked={() => toggleBookmark(prompt)}
+          onEdit={() => handleEdit(prompt)}
         />
       ))}
     </div>
