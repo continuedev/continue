@@ -549,6 +549,21 @@ function TipTapEditor(props: TipTapEditorProps) {
     editable: !isStreaming || props.isMainInput,
   });
 
+  const [hasText, setHasText] = useState(false);
+  useEffect(() => {
+    if (!editor) return;
+    // Check if the editor has text
+    const updateEditorHandler = () => {
+      const text = editor.getText().trim();
+      setHasText(text.length > 0);
+    };
+    editor.on("update", updateEditorHandler);
+    updateEditorHandler();
+    return () => {
+      editor.off("update", updateEditorHandler);
+    };
+  }, [editor]);
+
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
   const debouncedShouldHideToolbar = debounce((value) => {
     setShouldHideToolbar(value);
@@ -1012,6 +1027,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             });
           }}
           disabled={isStreaming}
+          hasText={hasText}
         />
       </div>
 
