@@ -2805,6 +2805,22 @@
               "title": "Profile",
               "description": "The AWS security profile to use",
               "type": "string"
+            },
+            "embeddingPrefixes" : {
+              "title": "Embedding Prefixes",
+              "description" : "Prefixes for the embedding model tasks",
+              "type": "object",
+              "properties": {
+                "chunk": {
+                  "description": "Prefix to be used before chunks of code when generating embeddings.",
+                  "type": "string"
+                },
+                "query": {
+                  "description": "Prefix to be used before queries when generating embeddings.",
+                  "type": "string"
+                }
+              },
+              "required": []
             }
           },
           "required": ["provider"],
