@@ -1,6 +1,7 @@
+import { v4 as uuidv4 } from "uuid";
+
 import { ContextItemWithId, RangeInFileWithContents } from "../";
 import { findUriInDirs, getUriPathBasename } from "../util/uri";
-import { v4 as uuidv4 } from "uuid";
 
 export function rifWithContentsToContextItem(
   rif: RangeInFileWithContents,

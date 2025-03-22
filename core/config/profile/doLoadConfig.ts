@@ -6,18 +6,24 @@ import {
   ConfigValidationError,
   ModelRole,
 } from "@continuedev/config-yaml";
+
 import {
   ContinueConfig,
   ContinueRcJson,
   IDE,
   IdeSettings,
   SerializedContinueConfig,
+  Tool,
 } from "../../";
+import { constructMcpSlashCommand } from "../../commands/slash/mcp";
+import { MCPManagerSingleton } from "../../context/mcp";
+import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { encodeMCPToolUri } from "../../tools/callTool";
 import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
@@ -26,6 +32,7 @@ import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
+
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
 export default async function doLoadConfig(
@@ -93,14 +100,89 @@ export default async function doLoadConfig(
     configLoadInterrupted = result.configLoadInterrupted;
   }
 
-  // Rectify model selections for each role
-  if (newConfig) {
-    newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
-  }
-
   if (configLoadInterrupted || !newConfig) {
     return { errors, config: newConfig, configLoadInterrupted: true };
   }
+
+  // TODO using config result but result with non-fatal errors is an antipattern?
+  // Remove ability have undefined errors, just have an array
+  errors = [...(errors ?? [])];
+
+  // Rectify model selections for each role
+  newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
+
+  // Add things from MCP servers
+  const mcpManager = MCPManagerSingleton.getInstance();
+  const mcpServerStatuses = mcpManager.getStatuses();
+
+  // Slightly hacky just need connection's client to make slash command for now
+  const serializableStatuses = mcpServerStatuses.map((server) => {
+    const { client, ...rest } = server;
+    return rest;
+  });
+  newConfig.mcpServerStatuses = serializableStatuses;
+
+  for (const server of mcpServerStatuses) {
+    if (server.status === "connected") {
+      const serverTools: Tool[] = server.tools.map((tool) => ({
+        displayTitle: server.name + " " + tool.name,
+        function: {
+          description: tool.description,
+          name: tool.name,
+          parameters: tool.inputSchema,
+        },
+        faviconUrl: server.faviconUrl,
+        readonly: false,
+        type: "function" as const,
+        wouldLikeTo: "",
+        uri: encodeMCPToolUri(server.id, tool.name),
+        group: server.name,
+      }));
+      newConfig.tools.push(...serverTools);
+
+      const serverSlashCommands = server.prompts.map((prompt) =>
+        constructMcpSlashCommand(
+          server.client,
+          prompt.name,
+          prompt.description,
+          prompt.arguments?.map((a: any) => a.name),
+        ),
+      );
+      newConfig.slashCommands.push(...serverSlashCommands);
+
+      const submenuItems = server.resources.map((resource) => ({
+        title: resource.name,
+        description: resource.description ?? resource.name,
+        id: resource.uri,
+        icon: server.faviconUrl,
+      }));
+      if (submenuItems.length > 0) {
+        const serverContextProvider = new MCPContextProvider({
+          submenuItems,
+          mcpId: server.id,
+        });
+        newConfig.contextProviders.push(serverContextProvider);
+      }
+    }
+  }
+
+  // Detect duplicate tool names
+  const counts: Record<string, number> = {};
+  newConfig.tools.forEach((tool) => {
+    if (counts[tool.function.name]) {
+      counts[tool.function.name] = counts[tool.function.name] + 1;
+    } else {
+      counts[tool.function.name] = 1;
+    }
+  });
+  Object.entries(counts).forEach(([toolName, count]) => {
+    if (count > 1) {
+      errors!.push({
+        fatal: false,
+        message: `Duplicate (${count}) tools named "${toolName}" detected. Permissions will conflict and usage may be unpredictable`,
+      });
+    }
+  });
 
   newConfig.allowAnonymousTelemetry =
     newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());

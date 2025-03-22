@@ -142,6 +142,7 @@ function testLLM(
                   type: "function",
                   wouldLikeTo: "Say hello",
                   readonly: true,
+                  group: "Hello",
                 },
               ],
               toolChoice: {

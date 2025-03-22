@@ -14,6 +14,7 @@ import { saveCurrentSession } from "../../redux/thunks/session";
 import { AccountButton } from "../config/AccountButton";
 import IndexingProgress from "./IndexingProgress";
 import KeyboardShortcuts from "./KeyboardShortcuts";
+import MCPServersPreview from "./MCPServersPreview";
 import MoreHelpRow from "./MoreHelpRow";
 
 function MorePage() {
@@ -54,6 +55,10 @@ function MorePage() {
           ) : (
             <IndexingProgress />
           )}
+        </div>
+
+        <div className="flex flex-col py-5">
+          <MCPServersPreview />
         </div>
 
         <div className="py-5">

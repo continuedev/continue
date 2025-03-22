@@ -4,6 +4,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
+import { selectProfileThunk } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   selectDefaultModel,
@@ -16,7 +17,6 @@ import {
   setInactive,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";

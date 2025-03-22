@@ -28,7 +28,6 @@ import CodebaseContextProvider from "../../context/providers/CodebaseContextProv
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
-import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
 import { ControlPlaneClient } from "../../control-plane/client";
 import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
@@ -111,7 +110,8 @@ async function configYamlToContinueConfig(
   const continueConfig: ContinueConfig = {
     slashCommands: [],
     models: [],
-    tools: allTools,
+    tools: [...allTools],
+    mcpServerStatuses: [],
     systemMessage: config.rules?.join("\n"),
     experimental: {
       modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
@@ -334,7 +334,6 @@ async function configYamlToContinueConfig(
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),
-    new PromptFilesContextProvider({}),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
@@ -368,52 +367,19 @@ async function configYamlToContinueConfig(
     continueConfig.contextProviders.push(new DocsContextProvider({}));
   }
 
-  // Apply MCP if specified
+  // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  if (config.mcpServers) {
-    await mcpManager.removeUnusedConnections(
-      config.mcpServers.map((s) => s.name),
-    );
-  }
-
-  await Promise.allSettled(
-    config.mcpServers?.map(async (server) => {
-      const abortController = new AbortController();
-      const mcpConnectionTimeout = setTimeout(
-        () => abortController.abort(),
-        5000,
-      );
-
-      try {
-        const mcpId = server.name;
-        const mcpConnection = mcpManager.createConnection(mcpId, {
-          transport: {
-            type: "stdio",
-            args: [],
-            ...server,
-          },
-        });
-
-        await mcpConnection.modifyConfig(
-          continueConfig,
-          mcpId,
-          abortController.signal,
-          server.name,
-          server.faviconUrl,
-        );
-      } catch (e) {
-        let errorMessage = `Failed to load MCP server ${server.name}`;
-        if (e instanceof Error) {
-          errorMessage += ": " + e.message;
-        }
-        localErrors.push({
-          fatal: false,
-          message: errorMessage,
-        });
-      } finally {
-        clearTimeout(mcpConnectionTimeout);
-      }
-    }) ?? [],
+  mcpManager.setConnections(
+    (config.mcpServers ?? []).map((server) => ({
+      id: server.name,
+      name: server.name,
+      transport: {
+        type: "stdio",
+        args: [],
+        ...server,
+      },
+    })),
+    false,
   );
 
   return { config: continueConfig, errors: localErrors };

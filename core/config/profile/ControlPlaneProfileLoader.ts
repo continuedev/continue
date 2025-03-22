@@ -2,6 +2,7 @@ import { ConfigJson } from "@continuedev/config-types";
 import { ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
+import { PRODUCTION_ENV } from "../../control-plane/env.js";
 import {
   ContinueConfig,
   IDE,
@@ -10,7 +11,6 @@ import {
 } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
-import { PRODUCTION_ENV } from "../../control-plane/env.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 

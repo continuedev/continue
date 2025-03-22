@@ -2,10 +2,10 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 
+import { DevEventName } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 
-import { DevEventName } from "@continuedev/config-yaml";
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";

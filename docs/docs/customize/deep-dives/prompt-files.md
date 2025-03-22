@@ -2,11 +2,11 @@
 title: Prompt files
 ---
 
-Prompt files provide a convenient way to standardize common patterns and share a collection of LLM prompts with your team. They make it easy to build and use these prompts.
+Prompt files allow you to build and use local prompts, and provide a convenient way to test and iterate on prompts before publishing them to the Hub.
 
-On the [hub](../../hub/introduction.md), prompt files are stored within [prompt blocks](../../hub/blocks/block-types.md#prompts), which show up as [slash commands](../slash-commands.mdx) in Chat. Visit the hub to [explore prompts](https://hub.continue.dev/explore/prompts) or [create your own](https://hub.continue.dev/new?type=block&blockType=rules).
-
-Prompt files can also be stored within your project's root directory as `.prompt` files. See below.
+:::info
+Visit the Hub to [explore prompts](https://hub.continue.dev/explore/prompts) or [create your own](https://hub.continue.dev/new?type=block&blockType=prompts)
+:::
 
 ## Quick start
 
@@ -25,7 +25,7 @@ Attached is a summary of the current Ruby on Rails application, including the @G
 
 Now to use this prompt, you can highlight code and use <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> to select it in the Continue sidebar.
 
-Then, type "@", select "Prompt files", and choose the one called "Rails Project". You can now ask any question as usual and the LLM will have the information from your .prompt file.
+Then, type <kbd>/</kbd> and choose the "Rails Project" prompt. You can now ask any question as usual and the LLM will have the information from your .prompt file.
 
 ## Format
 

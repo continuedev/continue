@@ -1,11 +1,15 @@
-import { ConfigResult, ModelRole } from "@continuedev/config-yaml";
+import {
+  ConfigResult,
+  DevDataLogEvent,
+  ModelRole,
+} from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
+import { GlobalContextModelSelections } from "../util/GlobalContext";
 
-import { DevDataLogEvent } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -29,7 +33,6 @@ import type {
   SlashCommandDescription,
   ToolCall,
 } from "../";
-import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -93,6 +96,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       selectedModelTitle: string;
     },
     ContextItemWithId[],
+  ];
+  "mcp/reloadServer": [
+    {
+      id: string;
+    },
+    void,
   ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
