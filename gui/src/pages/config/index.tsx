@@ -89,17 +89,17 @@ function ConfigPage() {
   }
 
   // TODO defaults are in multiple places, should be consolidated and probably not explicit here
-  const showSessionTabs = config.ui?.showSessionTabs ?? false;
+  const enableSessionTabs = config.ui?.showSessionTabs ?? false;
   const codeWrap = config.ui?.codeWrap ?? false;
   const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
-  const displayRawMarkdown = config.ui?.displayRawMarkdown ?? false;
-  const disableSessionTitles = config.disableSessionTitles ?? false;
+  const formatMarkdownOutput = !(config.ui?.displayRawMarkdown ?? false);
+  const enableSessionTitles = !(config.disableSessionTitles ?? false);
   const readResponseTTS = config.experimental?.readResponseTTS ?? false;
 
   const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
-  const disableIndexing = config.disableIndexing ?? false;
+  const enableIndexing = !(config.disableIndexing ?? false);
 
-  const useAutocompleteCache = config.tabAutocompleteOptions?.useCache ?? false;
+  const useAutocompleteCache = config.tabAutocompleteOptions?.useCache ?? true;
   const useChromiumForDocsCrawling =
     config.experimental?.useChromiumForDocsCrawling ?? false;
   const codeBlockToolbarPosition = config.ui?.codeBlockToolbarPosition ?? "top";
@@ -217,10 +217,10 @@ function ConfigPage() {
 
                 <div className="flex flex-col gap-4">
                   <ToggleSwitch
-                    isToggled={showSessionTabs}
+                    isToggled={enableSessionTabs}
                     onToggle={() =>
                       handleUpdate({
-                        showSessionTabs: !showSessionTabs,
+                        showSessionTabs: !enableSessionTabs,
                       })
                     }
                     text="Show Session Tabs"
@@ -234,52 +234,6 @@ function ConfigPage() {
                     }
                     text="Wrap Codeblocks"
                   />
-                  <ToggleSwitch
-                    isToggled={displayRawMarkdown}
-                    onToggle={() =>
-                      handleUpdate({
-                        displayRawMarkdown: !displayRawMarkdown,
-                      })
-                    }
-                    text="Display Raw Markdown"
-                  />
-                  <ToggleSwitch
-                    isToggled={allowAnonymousTelemetry}
-                    onToggle={() =>
-                      handleUpdate({
-                        allowAnonymousTelemetry: !allowAnonymousTelemetry,
-                      })
-                    }
-                    text="Allow Anonymous Telemetry"
-                  />
-                  <ToggleSwitch
-                    isToggled={disableIndexing}
-                    onToggle={() =>
-                      handleUpdate({
-                        disableIndexing: !disableIndexing,
-                      })
-                    }
-                    text="Disable Indexing"
-                  />
-
-                  <ToggleSwitch
-                    isToggled={disableSessionTitles}
-                    onToggle={() =>
-                      handleUpdate({
-                        disableSessionTitles: !disableSessionTitles,
-                      })
-                    }
-                    text="Disable Session Titles"
-                  />
-                  <ToggleSwitch
-                    isToggled={readResponseTTS}
-                    onToggle={() =>
-                      handleUpdate({
-                        readResponseTTS: !readResponseTTS,
-                      })
-                    }
-                    text="Response Text to Speech"
-                  />
 
                   <ToggleSwitch
                     isToggled={showChatScrollbar}
@@ -290,18 +244,17 @@ function ConfigPage() {
                     }
                     text="Show Chat Scrollbar"
                   />
-
                   <ToggleSwitch
-                    isToggled={useAutocompleteCache}
+                    isToggled={readResponseTTS}
                     onToggle={() =>
                       handleUpdate({
-                        useAutocompleteCache: !useAutocompleteCache,
+                        readResponseTTS: !readResponseTTS,
                       })
                     }
-                    text="Use Autocomplete Cache"
+                    text="Text to Speech Output"
                   />
 
-                  <ToggleSwitch
+                  {/* <ToggleSwitch
                     isToggled={useChromiumForDocsCrawling}
                     onToggle={() =>
                       handleUpdate({
@@ -309,7 +262,55 @@ function ConfigPage() {
                       })
                     }
                     text="Use Chromium for Docs Crawling"
+                  /> */}
+                  <ToggleSwitch
+                    isToggled={enableSessionTitles}
+                    onToggle={() =>
+                      handleUpdate({
+                        disableSessionTitles: !enableSessionTitles,
+                      })
+                    }
+                    text="Enable Session Titles"
                   />
+                  <ToggleSwitch
+                    isToggled={formatMarkdownOutput}
+                    onToggle={() =>
+                      handleUpdate({
+                        displayRawMarkdown: !formatMarkdownOutput,
+                      })
+                    }
+                    text="Format Markdown"
+                  />
+
+                  <ToggleSwitch
+                    isToggled={allowAnonymousTelemetry}
+                    onToggle={() =>
+                      handleUpdate({
+                        allowAnonymousTelemetry: !allowAnonymousTelemetry,
+                      })
+                    }
+                    text="Allow Anonymous Telemetry"
+                  />
+
+                  <ToggleSwitch
+                    isToggled={enableIndexing}
+                    onToggle={() =>
+                      handleUpdate({
+                        disableIndexing: !enableIndexing,
+                      })
+                    }
+                    text="Enable Indexing"
+                  />
+
+                  {/* <ToggleSwitch
+                    isToggled={useAutocompleteCache}
+                    onToggle={() =>
+                      handleUpdate({
+                        useAutocompleteCache: !useAutocompleteCache,
+                      })
+                    }
+                    text="Use Autocomplete Cache"
+                  /> */}
 
                   <label className="flex items-center justify-between gap-3">
                     <span className="lines lines-1 text-left">

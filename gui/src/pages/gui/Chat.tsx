@@ -315,7 +315,7 @@ export function Chat() {
     [history],
   );
 
-  const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
   useAutoScroll(stepsDivRef, history);
 
@@ -444,8 +444,8 @@ export function Chat() {
           </div>
         ))}
       </StepsDiv>
-      <div className={`relative`}>
-        <div className="absolute -top-8 right-2 z-30">
+      <div className={`relative mt-1`}>
+        <div className="absolute -top-8 right-2 z-30 flex flex-col gap-1">
           {ttsActive && (
             <StopButton
               className=""
