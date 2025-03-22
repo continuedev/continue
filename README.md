@@ -50,6 +50,12 @@
 
 ![actions](docs/static/img/actions.gif)
 
+## Apply
+
+[Apply](https://continue.dev/docs/apply/how-to-use-it) integrates code smoothly into your files with a specialized model
+
+![apply](docs/static/img/apply.gif)
+
 </div>
 
 ## Getting Started
