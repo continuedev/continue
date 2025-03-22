@@ -14,6 +14,7 @@ const GridDiv = styled.div`
   padding: 1rem 0;
   justify-items: center;
   align-items: center;
+  overflow-x: hidden;
 `;
 
 const StyledKeyDiv = styled.div`
@@ -64,7 +65,7 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
   const shortcut = getPlatform() === "mac" ? props.mac : props.windows;
   return (
     <div className="flex w-full items-center justify-between gap-x-4">
-      <span className="text-sm">{props.description}</span>
+      <span className="text-xs">{props.description}</span>
       <div className="float-right flex gap-2">
         {shortcut.split(" ").map((key, i) => {
           return <KeyDiv key={i} text={key}></KeyDiv>;
