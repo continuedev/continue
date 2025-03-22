@@ -1,22 +1,22 @@
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import {
-  SharedConfigSchema,
-  modifyAnyConfigWithSharedConfig,
-} from "core/config/sharedConfig";
-import { useContext, useEffect, useState } from "react";
+  ArrowTopRightOnSquareIcon,
+  DocumentArrowUpIcon,
+  TableCellsIcon,
+} from "@heroicons/react/24/outline";
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "../../components";
-import NumberInput from "../../components/gui/NumberInput";
-import { Select } from "../../components/gui/Select";
-import ToggleSwitch from "../../components/gui/Switch";
 import PageHeader from "../../components/PageHeader";
-import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { updateConfig } from "../../redux/slices/configSlice";
-import { getFontSize } from "../../util";
+import { setOnboardingCard } from "../../redux/slices/uiSlice";
+import { saveCurrentSession } from "../../redux/thunks/session";
 import { AccountButton } from "./AccountButton";
+import IndexingProgress from "./IndexingProgress";
+import KeyboardShortcuts from "./KeyboardShortcuts";
+import MCPServersPreview from "./MCPServersPreview";
+import MoreHelpRow from "./MoreHelpRow";
+import { UserSettingsForm } from "./UserSettingsForm";
 
 function ConfigPage() {
   useNavigationListener();
@@ -24,91 +24,7 @@ function ConfigPage() {
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const { selectedProfile, controlServerBetaEnabled } = useAuth();
-
-  const [hubEnabled, setHubEnabled] = useState(false);
-  useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ continueTestEnvironment }) => {
-      setHubEnabled(continueTestEnvironment === "production");
-    });
-  }, [ideMessenger]);
-
-  // NOTE Hub takes priority over Continue for Teams
-  // Since teams will be moving to hub, not vice versa
-
-  /////// User settings section //////
   const config = useAppSelector((state) => state.config.config);
-
-  function handleUpdate(sharedConfig: SharedConfigSchema) {
-    // Optimistic update
-    const updatedConfig = modifyAnyConfigWithSharedConfig(config, sharedConfig);
-    dispatch(updateConfig(updatedConfig));
-    // IMPORTANT no need for model role updates (separate logic for selected model roles)
-    // simply because this function won't be used to update model roles
-
-    // Actual update to core which propagates back with config update event
-    ideMessenger.post("config/updateSharedConfig", sharedConfig);
-  }
-
-  // TODO defaults are in multiple places, should be consolidated and probably not explicit here
-  const enableSessionTabs = config.ui?.showSessionTabs ?? false;
-  const codeWrap = config.ui?.codeWrap ?? false;
-  const showChatScrollbar = config.ui?.showChatScrollbar ?? false;
-  const formatMarkdownOutput = !(config.ui?.displayRawMarkdown ?? false);
-  const enableSessionTitles = !(config.disableSessionTitles ?? false);
-  const readResponseTTS = config.experimental?.readResponseTTS ?? false;
-
-  const allowAnonymousTelemetry = config.allowAnonymousTelemetry ?? true;
-  const enableIndexing = !(config.disableIndexing ?? false);
-
-  const useAutocompleteCache = config.tabAutocompleteOptions?.useCache ?? true;
-  const useChromiumForDocsCrawling =
-    config.experimental?.useChromiumForDocsCrawling ?? false;
-  const codeBlockToolbarPosition = config.ui?.codeBlockToolbarPosition ?? "top";
-  const useAutocompleteMultilineCompletions =
-    config.tabAutocompleteOptions?.multilineCompletions ?? "auto";
-  const fontSize = getFontSize();
-
-  // Disable autocomplete
-  const disableAutocompleteInFiles = (
-    config.tabAutocompleteOptions?.disableInFiles ?? []
-  ).join(", ");
-  const [formDisableAutocomplete, setFormDisableAutocomplete] = useState(
-    disableAutocompleteInFiles,
-  );
-  const cancelChangeDisableAutocomplete = () => {
-    setFormDisableAutocomplete(disableAutocompleteInFiles);
-  };
-  const handleDisableAutocompleteSubmit = () => {
-    handleUpdate({
-      disableAutocompleteInFiles: formDisableAutocomplete
-        .split(",")
-        .map((val) => val.trim())
-        .filter((val) => !!val),
-    });
-  };
-
-  useEffect(() => {
-    // Necessary so that reformatted/trimmed values don't cause dirty state
-    setFormDisableAutocomplete(disableAutocompleteInFiles);
-  }, [disableAutocompleteInFiles]);
-
-  // Workspace prompts
-  const promptPath = config.experimental?.promptPath || "";
-  const [formPromptPath, setFormPromptPath] = useState(promptPath);
-  const cancelChangePromptPath = () => {
-    setFormPromptPath(promptPath);
-  };
-  const handleSubmitPromptPath = () => {
-    handleUpdate({
-      promptPath: formPromptPath || "",
-    });
-  };
-
-  useEffect(() => {
-    // Necessary so that reformatted/trimmed values don't cause dirty state
-    setFormPromptPath(promptPath);
-  }, [promptPath]);
 
   return (
     <div className="overflow-y-scroll">
@@ -119,196 +35,99 @@ function ConfigPage() {
         rightContent={<AccountButton />}
       />
 
-      <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
-        {!controlServerBetaEnabled || hubEnabled ? (
-          <div className="flex flex-col">
-            <div className="flex max-w-[400px] flex-col">
-              <div className="flex flex-col gap-4 py-6">
-                <div>
-                  <h2 className="mb-2 mt-0">User settings</h2>
-                </div>
+      <UserSettingsForm />
 
-                <div className="flex flex-col gap-4">
-                  <ToggleSwitch
-                    isToggled={enableSessionTabs}
-                    onToggle={() =>
-                      handleUpdate({
-                        showSessionTabs: !enableSessionTabs,
-                      })
-                    }
-                    text="Show Session Tabs"
-                  />
-                  <ToggleSwitch
-                    isToggled={codeWrap}
-                    onToggle={() =>
-                      handleUpdate({
-                        codeWrap: !codeWrap,
-                      })
-                    }
-                    text="Wrap Codeblocks"
-                  />
-
-                  <ToggleSwitch
-                    isToggled={showChatScrollbar}
-                    onToggle={() =>
-                      handleUpdate({
-                        showChatScrollbar: !showChatScrollbar,
-                      })
-                    }
-                    text="Show Chat Scrollbar"
-                  />
-                  <ToggleSwitch
-                    isToggled={readResponseTTS}
-                    onToggle={() =>
-                      handleUpdate({
-                        readResponseTTS: !readResponseTTS,
-                      })
-                    }
-                    text="Text to Speech Output"
-                  />
-
-                  {/* <ToggleSwitch
-                    isToggled={useChromiumForDocsCrawling}
-                    onToggle={() =>
-                      handleUpdate({
-                        useChromiumForDocsCrawling: !useChromiumForDocsCrawling,
-                      })
-                    }
-                    text="Use Chromium for Docs Crawling"
-                  /> */}
-                  <ToggleSwitch
-                    isToggled={enableSessionTitles}
-                    onToggle={() =>
-                      handleUpdate({
-                        disableSessionTitles: !enableSessionTitles,
-                      })
-                    }
-                    text="Enable Session Titles"
-                  />
-                  <ToggleSwitch
-                    isToggled={formatMarkdownOutput}
-                    onToggle={() =>
-                      handleUpdate({
-                        displayRawMarkdown: !formatMarkdownOutput,
-                      })
-                    }
-                    text="Format Markdown"
-                  />
-
-                  <ToggleSwitch
-                    isToggled={allowAnonymousTelemetry}
-                    onToggle={() =>
-                      handleUpdate({
-                        allowAnonymousTelemetry: !allowAnonymousTelemetry,
-                      })
-                    }
-                    text="Allow Anonymous Telemetry"
-                  />
-
-                  <ToggleSwitch
-                    isToggled={enableIndexing}
-                    onToggle={() =>
-                      handleUpdate({
-                        disableIndexing: !enableIndexing,
-                      })
-                    }
-                    text="Enable Indexing"
-                  />
-
-                  {/* <ToggleSwitch
-                    isToggled={useAutocompleteCache}
-                    onToggle={() =>
-                      handleUpdate({
-                        useAutocompleteCache: !useAutocompleteCache,
-                      })
-                    }
-                    text="Use Autocomplete Cache"
-                  /> */}
-
-                  <label className="flex items-center justify-between gap-3">
-                    <span className="lines lines-1 text-left">
-                      Multiline Autocompletions
-                    </span>
-                    <Select
-                      value={useAutocompleteMultilineCompletions}
-                      onChange={(e) =>
-                        handleUpdate({
-                          useAutocompleteMultilineCompletions: e.target
-                            .value as "auto" | "always" | "never",
-                        })
-                      }
-                    >
-                      <option value="auto">Auto</option>
-                      <option value="always">Always</option>
-                      <option value="never">Never</option>
-                    </Select>
-                  </label>
-
-                  <label className="flex items-center justify-between gap-3">
-                    <span className="text-left">Font Size</span>
-                    <NumberInput
-                      value={fontSize}
-                      onChange={(val) =>
-                        handleUpdate({
-                          fontSize: val,
-                        })
-                      }
-                      min={7}
-                      max={50}
-                    />
-                  </label>
-
-                  <form
-                    className="flex flex-col gap-1"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleDisableAutocompleteSubmit();
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span>Disable autocomplete in files</span>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          value={formDisableAutocomplete}
-                          className="max-w-[100px]"
-                          onChange={(e) => {
-                            setFormDisableAutocomplete(e.target.value);
-                          }}
-                        />
-                        <div className="flex h-full flex-col">
-                          {formDisableAutocomplete !==
-                          disableAutocompleteInFiles ? (
-                            <>
-                              <div
-                                onClick={handleDisableAutocompleteSubmit}
-                                className="cursor-pointer"
-                              >
-                                <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
-                              </div>
-                              <div
-                                onClick={cancelChangeDisableAutocomplete}
-                                className="cursor-pointer"
-                              >
-                                <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
-                              </div>
-                            </>
-                          ) : (
-                            <div>
-                              <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-vsc-foreground-muted text-lightgray self-end text-xs">
-                      Comma-separated list of path matchers
-                    </span>
-                  </form>
-                </div>
-              </div>
-            </div>
+      <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
+        <div className="py-5">
+          <div>
+            <h3 className="mx-auto mb-1 mt-0 text-xl">@codebase index</h3>
+            <span className="w-3/4 text-xs text-stone-500">
+              Local embeddings of your codebase
+            </span>
           </div>
-        ) : null}
+          {config.disableIndexing ? (
+            <div className="pb-2 pt-5">
+              <p className="py-1 text-center font-semibold">
+                Indexing is disabled
+              </p>
+              <p className="text-lightgray cursor-pointer text-center text-xs">
+                Open settings and toggle <code>Disable Indexing</code> to
+                re-enable
+              </p>
+            </div>
+          ) : (
+            <IndexingProgress />
+          )}
+        </div>
+
+        <div className="flex flex-col py-5">
+          <MCPServersPreview />
+        </div>
+
+        <div className="py-5">
+          <h3 className="mb-4 mt-0 text-xl">Help center</h3>
+          <div className="-mx-4 flex flex-col">
+            <MoreHelpRow
+              title="Documentation"
+              description="Learn how to configure and use Continue"
+              Icon={ArrowTopRightOnSquareIcon}
+              onClick={() =>
+                ideMessenger.post("openUrl", "https://docs.continue.dev/")
+              }
+            />
+
+            <MoreHelpRow
+              title="Have an issue?"
+              description="Let us know on GitHub and we'll do our best to resolve it"
+              Icon={ArrowTopRightOnSquareIcon}
+              onClick={() =>
+                ideMessenger.post(
+                  "openUrl",
+                  "https://github.com/continuedev/continue/issues/new/choose",
+                )
+              }
+            />
+
+            <MoreHelpRow
+              title="Join the community!"
+              description="Join us on Discord to stay up-to-date on the latest developments"
+              Icon={ArrowTopRightOnSquareIcon}
+              onClick={() =>
+                ideMessenger.post("openUrl", "https://discord.gg/vapESyrFmJ")
+              }
+            />
+
+            <MoreHelpRow
+              title="Token usage"
+              description="Daily token usage across models"
+              Icon={TableCellsIcon}
+              onClick={() => navigate("/stats")}
+            />
+
+            <MoreHelpRow
+              title="Quickstart"
+              description="Reopen the quickstart and tutorial file"
+              Icon={DocumentArrowUpIcon}
+              onClick={async () => {
+                navigate("/");
+                // Used to clear the chat panel before showing onboarding card
+                await dispatch(
+                  saveCurrentSession({
+                    openNewSession: true,
+                    generateTitle: true,
+                  }),
+                );
+                dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+                ideMessenger.post("showTutorial", undefined);
+              }}
+            />
+          </div>
+        </div>
+
+        <div>
+          <h3 className="mx-auto mb-1 text-lg">Keyboard shortcuts</h3>
+          <KeyboardShortcuts />
+        </div>
       </div>
     </div>
   );

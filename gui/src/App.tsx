@@ -9,7 +9,6 @@ import ConfigErrorPage from "./pages/config-error";
 import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
 import History from "./pages/history";
-import MorePage from "./pages/More";
 import Stats from "./pages/stats";
 import { ROUTES } from "./util/navigation";
 
@@ -42,10 +41,6 @@ const router = createMemoryRouter([
       {
         path: "/addModel/provider/:providerName",
         element: <ConfigureProvider />,
-      },
-      {
-        path: "/more",
-        element: <MorePage />,
       },
       {
         path: ROUTES.CONFIG_ERROR,

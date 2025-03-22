@@ -23,7 +23,7 @@ function DocsIndexingPeek({ status }: DocsIndexingPeekProps) {
     <div
       className="flex cursor-pointer flex-row items-center gap-2 rounded-md px-1 text-stone-500 hover:bg-gray-700/10"
       onClick={() => {
-        navigate("/more");
+        // navigate("/more"); TODO
         dispatch(setShowDialog(false));
         dispatch(setDialogMessage(undefined));
       }}
