@@ -12,6 +12,8 @@ type ToolSetting =
   | "allowedWithoutPermission"
   | "disabled";
 
+type ToolGroupSetting = "include" | "exclude";
+
 type UIState = {
   showDialog: boolean;
   dialogMessage: string | JSX.Element | undefined;
@@ -22,6 +24,7 @@ type UIState = {
   shouldAddFileForEditing: boolean;
   useTools: boolean;
   toolSettings: { [toolName: string]: ToolSetting };
+  toolGroupSettings: { [toolGroupName: string]: ToolGroupSetting };
   ttsActive: boolean;
 };
 
@@ -50,6 +53,9 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.ExactSearch]: "allowedWithoutPermission",
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
+    },
+    toolGroupSettings: {
+      BUILT_IN_GROUP_NAME: "include",
     },
   } as UIState,
   reducers: {
@@ -109,6 +115,15 @@ export const uiSlice = createSlice({
           break;
       }
     },
+    toggleToolGroupSetting: (state, action: PayloadAction<string>) => {
+      const setting = state.toolGroupSettings[action.payload] ?? "include";
+
+      if (setting === "include") {
+        state.toolGroupSettings[action.payload] = "exclude";
+      } else {
+        state.toolGroupSettings[action.payload] = "include";
+      }
+    },
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
@@ -124,6 +139,7 @@ export const {
   setHasDismissedExploreDialog,
   toggleUseTools,
   toggleToolSetting,
+  toggleToolGroupSetting,
   addTool,
   setTTSActive,
 } = uiSlice.actions;

@@ -1,25 +1,8 @@
 import {
   ArrowRightIcon,
-  ArrowUpOnSquareIcon,
   AtSymbolIcon,
-  Bars3BottomLeftIcon,
-  BookOpenIcon,
-  BugAntIcon,
   ChatBubbleLeftIcon,
-  CircleStackIcon,
-  CodeBracketIcon,
-  CommandLineIcon,
-  CpuChipIcon,
-  DocumentTextIcon,
-  ExclamationTriangleIcon,
-  FolderIcon,
-  FolderOpenIcon,
-  GlobeAltIcon,
-  MagnifyingGlassIcon,
-  PaperClipIcon,
   PlusIcon,
-  SparklesIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { Editor } from "@tiptap/react";
 import {
@@ -46,43 +29,8 @@ import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { DiscordIcon } from "../svg/DiscordIcon";
-import { GithubIcon } from "../svg/GithubIcon";
-import { GitlabIcon } from "../svg/GitlabIcon";
-import { GoogleIcon } from "../svg/GoogleIcon";
+import { NAMED_ICONS } from "./icons";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
-
-const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
-  file: FolderIcon,
-  code: CodeBracketIcon,
-  terminal: CommandLineIcon,
-  diff: PlusIcon,
-  search: MagnifyingGlassIcon,
-  url: GlobeAltIcon,
-  open: FolderOpenIcon,
-  codebase: SparklesIcon,
-  problems: ExclamationTriangleIcon,
-  folder: FolderIcon,
-  docs: BookOpenIcon,
-  web: GlobeAltIcon,
-  clipboard: PaperClipIcon,
-  database: CircleStackIcon,
-  postgres: CircleStackIcon,
-  debugger: BugAntIcon,
-  os: CpuChipIcon,
-  tree: Bars3BottomLeftIcon,
-  "prompt-files": DocumentTextIcon,
-  "repo-map": FolderIcon,
-  "/clear": TrashIcon,
-  "/share": ArrowUpOnSquareIcon,
-  "/cmd": CommandLineIcon,
-  issue: GithubIcon,
-  discord: DiscordIcon,
-  google: GoogleIcon,
-  "gitlab-mr": GitlabIcon,
-  http: GlobeAltIcon,
-  trash: TrashIcon,
-};
 
 export function getIconFromDropdownItem(
   id: string | undefined,
@@ -90,7 +38,7 @@ export function getIconFromDropdownItem(
 ) {
   const typeIcon =
     type === "contextProvider" ? AtSymbolIcon : ChatBubbleLeftIcon;
-  return id ? (ICONS_FOR_DROPDOWN[id] ?? typeIcon) : typeIcon;
+  return id ? (NAMED_ICONS[id] ?? typeIcon) : typeIcon;
 }
 
 function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
