@@ -58,7 +58,7 @@ const saveSubsetFilters = [
   // Don't persist any of the edit state for now
   createFilter("editModeState", []),
   createFilter("config", ["defaultModelTitle"]),
-  createFilter("ui", ["toolSettings", "useTools"]),
+  createFilter("ui", ["toolSettings", "toolGroupSettings", "useTools"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
 ];

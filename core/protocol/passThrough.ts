@@ -26,6 +26,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/openProfile",
     "config/updateSharedConfig",
     "config/updateSelectedModel",
+    "mcp/reloadServer",
     "context/getContextItems",
     "context/getSymbolsForFiles",
     "context/loadSubmenuItems",

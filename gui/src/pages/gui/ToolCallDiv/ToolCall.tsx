@@ -29,7 +29,7 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
       tool.wouldLikeTo,
       props.toolCallState.parsedArgs,
     );
-    return rendered;
+    return rendered.trim();
   }, [props.toolCallState, tool]);
 
   const args: [string, any][] = useMemo(() => {
@@ -61,7 +61,15 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
                 <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
               )}
               <div className="">
-                Continue wants to <span>{wouldLikeToMessage.trim()}</span>
+                Continue wants to{" "}
+                {wouldLikeToMessage ? (
+                  <span>{wouldLikeToMessage}</span>
+                ) : (
+                  <>
+                    <span>use the</span> <code>{tool?.displayTitle}</code>{" "}
+                    <span>tool</span>
+                  </>
+                )}
               </div>
             </div>
             {!!args.length ? (

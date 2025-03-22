@@ -14,6 +14,7 @@ import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { getIconFromDropdownItem } from "./MentionList";
+import { NAMED_ICONS } from "./icons";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -59,13 +60,28 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
     const dimensions = "18px";
 
     if (contextItem.icon) {
+      const NamedIcon = contextItem.icon
+        ? NAMED_ICONS[contextItem.icon]
+        : undefined;
       return (
         <SafeImg
           className="mr-2 flex-shrink-0 rounded-md p-1"
           src={contextItem.icon}
           height={dimensions}
           width={dimensions}
-          fallback={null}
+          fallback={
+            NamedIcon ? (
+              <div
+                className="mr-2 flex-shrink-0"
+                style={{
+                  height: dimensions,
+                  width: dimensions,
+                }}
+              >
+                <NamedIcon />
+              </div>
+            ) : null
+          }
         />
       );
     }
