@@ -1,3 +1,9 @@
+import {
+  FeatureFlagCache,
+  FeatureFlagCacheEntry,
+  GlobalContext,
+} from "./GlobalContext";
+
 import os from "node:os";
 
 import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
@@ -107,28 +113,65 @@ export class Telemetry {
   }
 
   private static featureValueCache: Record<string, any> = {};
+  private static globalContext = new GlobalContext();
 
-  static async getFeatureFlag(flag: PosthogFeatureFlag) {
-    const value = Telemetry.client?.getFeatureFlag(flag, Telemetry.uniqueId);
+  private static shouldRefreshFlag(flag: PosthogFeatureFlag): boolean {
+    const cache = Telemetry.globalContext.get("featureFlagCache");
+    if (!cache?.flags[flag]) return true;
 
+    const ONE_DAY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+    const now = Date.now();
+    return now - cache.flags[flag].lastUpdated > ONE_DAY;
+  }
+
+  private static async updateFlagCache(flag: PosthogFeatureFlag, value: any) {
+    const cache = Telemetry.globalContext.get("featureFlagCache") || {
+      flags: {},
+    };
+
+    const newEntry: FeatureFlagCacheEntry = {
+      lastUpdated: Date.now(),
+      value,
+    };
+
+    const updatedCache: FeatureFlagCache = {
+      flags: {
+        ...cache.flags,
+        [flag]: newEntry,
+      },
+    };
+
+    Telemetry.globalContext.update("featureFlagCache", updatedCache);
     Telemetry.featureValueCache[flag] = value;
-    return value;
   }
 
   static async getValueForFeatureFlag(flag: PosthogFeatureFlag) {
     try {
-      if (Telemetry.featureValueCache[flag]) {
-        return Telemetry.featureValueCache[flag];
+      // Check if we have a valid cached value
+      const cache = Telemetry.globalContext.get("featureFlagCache");
+      if (cache?.flags[flag] && !Telemetry.shouldRefreshFlag(flag)) {
+        return cache.flags[flag].value;
       }
 
+      // If we need to refresh, get the new value
       const userGroup = await Telemetry.getFeatureFlag(flag);
       if (typeof userGroup === "string") {
-        return EXPERIMENTS[flag][userGroup].value;
+        const value = EXPERIMENTS[flag][userGroup].value;
+        await Telemetry.updateFlagCache(flag, value);
+        return value;
       }
 
+      // If no value is found, cache undefined to prevent repeated lookups
+      await Telemetry.updateFlagCache(flag, undefined);
       return undefined;
     } catch {
       return undefined;
     }
+  }
+
+  // The getFeatureFlag method can remain unchanged
+  static async getFeatureFlag(flag: PosthogFeatureFlag) {
+    const value = Telemetry.client?.getFeatureFlag(flag, Telemetry.uniqueId);
+    return value;
   }
 }
