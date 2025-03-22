@@ -4,8 +4,8 @@ import {
   lightGray,
   vscForeground,
 } from "../../components";
-import { getPlatform, isJetBrains } from "../../util";
 import { ToolTip } from "../../components/gui/Tooltip";
+import { getPlatform, isJetBrains } from "../../util";
 
 const GridDiv = styled.div`
   display: grid;
@@ -201,20 +201,23 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
 
 function KeyboardShortcuts() {
   return (
-    <GridDiv>
-      {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
-        (shortcut, i) => {
-          return (
-            <KeyboardShortcut
-              key={i}
-              mac={shortcut.mac}
-              windows={shortcut.windows}
-              description={shortcut.description}
-            />
-          );
-        },
-      )}
-    </GridDiv>
+    <div>
+      <h3 className="mx-auto mb-1 text-lg">Keyboard shortcuts</h3>
+      <GridDiv>
+        {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
+          (shortcut, i) => {
+            return (
+              <KeyboardShortcut
+                key={i}
+                mac={shortcut.mac}
+                windows={shortcut.windows}
+                description={shortcut.description}
+              />
+            );
+          },
+        )}
+      </GridDiv>
+    </div>
   );
 }
 

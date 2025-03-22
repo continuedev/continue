@@ -101,7 +101,7 @@ export function UserSettingsForm() {
   }, [ideMessenger]);
 
   return (
-    <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
+    <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700">
       {!controlServerBetaEnabled || hubEnabled ? (
         <div className="flex flex-col">
           <div className="flex max-w-[400px] flex-col">
