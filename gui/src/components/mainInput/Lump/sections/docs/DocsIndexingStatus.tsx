@@ -2,10 +2,10 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   StopIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { useContext, useMemo, useState } from "react";
+import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { updateIndexingStatus } from "../../../../../redux/slices/indexingSlice";
@@ -22,8 +22,8 @@ interface IndexingStatusViewerProps {
 }
 
 function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
-  const config = useAppSelector((store) => store.config.config);
   const ideMessenger = useContext(IdeMessengerContext);
+  const { selectedProfile } = useAuth();
   const dispatch = useAppDispatch();
 
   const status = useAppSelector(
@@ -138,12 +138,14 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               />
             )}
 
-            {status?.status !== "indexing" ? (
+            {/* Commenting out until we have ability to edit local YAML for the user to remove the docs  */}
+            {/* {selectedProfile?.profileType === "local" &&
+            status?.status !== "indexing" ? (
               <TrashIcon
                 className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
                 onClick={onDelete}
               />
-            ) : null}
+            ) : null} */}
 
             <StatusIndicator status={status?.status} />
           </div>

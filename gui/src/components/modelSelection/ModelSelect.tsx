@@ -1,11 +1,11 @@
 import { Listbox } from "@headlessui/react";
 import {
+  CheckIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
   CubeIcon,
   PlusIcon,
   TrashIcon,
-  CheckIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -29,7 +29,6 @@ interface ModelOptionProps {
   option: Option;
   idx: number;
   showMissingApiKeyMsg: boolean;
-  showDelete?: boolean;
   isSelected?: boolean;
 }
 
@@ -132,7 +131,6 @@ function modelSelectTitle(model: any): string {
 function ModelOption({
   option,
   idx,
-  showDelete,
   showMissingApiKeyMsg,
   isSelected,
 }: ModelOptionProps) {
@@ -199,12 +197,7 @@ function ModelOption({
           </div>
           <div className="ml-5 flex items-center">
             <StyledCog6ToothIcon $hovered={hovered} onClick={onClickGear} />
-            {showDelete && (
-              <StyledTrashIcon $hovered={hovered} onClick={onClickDelete} />
-            )}
-            {isSelected && (
-              <CheckIcon className="ml-1 h-4 w-4" />
-            )}
+            {isSelected && <CheckIcon className="ml-1 h-4 w-4" />}
           </div>
         </div>
       </div>
@@ -342,7 +335,6 @@ function ModelSelect() {
                 option={option}
                 idx={idx}
                 key={idx}
-                showDelete={options.length > 1}
                 showMissingApiKeyMsg={option.apiKey === ""}
                 isSelected={option.value === defaultModel?.title}
               />

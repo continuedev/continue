@@ -1,3 +1,4 @@
+import { PlusIcon } from "@heroicons/react/24/outline";
 import { IndexingStatus } from "core";
 import { useMemo } from "react";
 import { useDispatch } from "react-redux";
@@ -6,6 +7,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../../redux/slices/uiSlice";
+import { getFontSize } from "../../../../../util";
 import AddDocsDialog from "../../../../dialogs/AddDocsDialog";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
@@ -69,17 +71,19 @@ function DocsIndexingStatuses() {
         })}
       </div>
       {sortedConfigDocs.length > 0 && (
-        <div className="flex justify-start">
-          <a
-            href="#"
-            className="cursor-pointer text-blue-500 hover:text-blue-600 hover:underline"
-            onClick={(e) => {
-              e.preventDefault();
-              handleAddDocs();
-            }}
-          >
-            Add
-          </a>
+        <div
+          className="cursor-pointer rounded px-2 py-1 text-center text-gray-400 hover:text-gray-300"
+          style={{
+            fontSize: `${getFontSize() - 3}px`,
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            handleAddDocs();
+          }}
+        >
+          <div className="flex items-center justify-center gap-1">
+            <PlusIcon className="h-3 w-3" /> Add
+          </div>
         </div>
       )}
     </div>
