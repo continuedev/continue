@@ -1,13 +1,9 @@
 import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.`continue`.GitService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.OS
-import com.github.continuedev.continueintellijextension.utils.getMachineUniqueID
-import com.github.continuedev.continueintellijextension.utils.getOS
-import com.github.continuedev.continueintellijextension.utils.toUriOrNull
-import com.github.continuedev.continueintellijextension.utils.Desktop
-import com.google.gson.Gson
+import com.github.continuedev.continueintellijextension.utils.*
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
@@ -31,12 +27,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
-import com.intellij.util.containers.toArray
 import kotlinx.coroutines.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.io.BufferedReader
@@ -44,25 +35,17 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 import java.net.URI
-import java.net.URL
 import java.nio.charset.Charset
 import java.nio.file.Paths
 
 class IntelliJIDE(
     private val project: Project,
     private val continuePluginService: ContinuePluginService,
-    private var lastFileSaveTimestamp: Long = System.currentTimeMillis()
 
 ) : IDE {
 
-    // Add a simple cache for diff results
-    private data class DiffCache(
-        val timestamp: Long,
-        val diffs: List<String>
-    )
+    private val gitService = GitService(project, continuePluginService)
 
-    // Cache the last diff result
-    private var diffCache: DiffCache? = null
 
     private val ripgrep: String
 
@@ -81,8 +64,7 @@ class IntelliJIDE(
      * Updates the timestamp when a file is saved
      */
     override fun updateLastFileSaveTimestamp() {
-        println("Updating last file save timestamp")
-        lastFileSaveTimestamp = System.currentTimeMillis()
+        gitService.updateLastFileSaveTimestamp()
     }
 
     override suspend fun getIdeInfo(): IdeInfo {
@@ -129,53 +111,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getDiff(includeUnstaged: Boolean): List<String> {
-        println("Getting diff, cache timestamp: ${diffCache?.timestamp}, current timestamp: $lastFileSaveTimestamp")
-
-        // Check if we have a valid cache entry
-        if (diffCache != null && diffCache!!.timestamp == lastFileSaveTimestamp) {
-            println("Using cached diff")
-            return diffCache!!.diffs
-        }
-
-        // If no cache hit, compute the diff
-        println("Computing fresh diff")
-        val workspaceDirs = workspaceDirectories()
-        val diffs = mutableListOf<String>()
-
-        for (workspaceDir in workspaceDirs) {
-            val output = StringBuilder()
-            val builder = if (includeUnstaged) {
-                ProcessBuilder("git", "diff")
-            } else {
-                ProcessBuilder("git", "diff", "--cached")
-            }
-            builder.directory(File(URI(workspaceDir)))
-            val process = withContext(Dispatchers.IO) {
-                builder.start()
-            }
-
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            var line: String? = withContext(Dispatchers.IO) {
-                reader.readLine()
-            }
-            while (line != null) {
-                output.append(line)
-                output.append("\n")
-                line = withContext(Dispatchers.IO) {
-                    reader.readLine()
-                }
-            }
-
-            withContext(Dispatchers.IO) {
-                process.waitFor()
-            }
-
-            diffs.add(output.toString())
-        }
-
-        // Cache the result
-        diffCache = DiffCache(lastFileSaveTimestamp, diffs)
-        return diffs
+        return gitService.getDiff(includeUnstaged)
     }
 
     override suspend fun getClipboardContent(): Map<String, String> {
@@ -212,11 +148,11 @@ class IntelliJIDE(
     }
 
     override suspend fun getWorkspaceDirs(): List<String> {
-        return workspaceDirectories().toList()
+        return gitService.workspaceDirectories().toList()
     }
 
     override suspend fun getWorkspaceConfigs(): List<ContinueRcJson> {
-        val workspaceDirs = workspaceDirectories()
+        val workspaceDirs = gitService.workspaceDirectories()
 
         val configs = mutableListOf<String>()
 
@@ -465,7 +401,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getTags(artifactId: String): List<IndexTag> {
-        val workspaceDirs = workspaceDirectories()
+        val workspaceDirs = gitService.workspaceDirectories()
 
         // Collect branches concurrently using Kotlin coroutines
         val branches = withContext(Dispatchers.IO) {
@@ -599,13 +535,4 @@ class IntelliJIDE(
         }
     }
 
-    private fun workspaceDirectories(): Array<String> {
-        val dirs = this.continuePluginService.workspacePaths
-
-        if (dirs?.isNotEmpty() == true) {
-            return dirs
-        }
-
-        return listOfNotNull(project.guessProjectDir()?.toUriOrNull()).toTypedArray()
-    }
 }

@@ -3,7 +3,8 @@ class Test {
 
     fun add(number: Double): Test {
         result += number
-        return this
+
+        return
     }
 
     fun subtract(number: Double): Test {

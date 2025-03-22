@@ -206,11 +206,6 @@ class IdeProtocolClient(
                         respond(null)
                     }
 
-                    "updateLastFileSaveTimestamp" -> {
-                        (ide as IntelliJIDE).updateLastFileSaveTimestamp()
-                        respond(null)
-                    }
-
                     "showVirtualFile" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
