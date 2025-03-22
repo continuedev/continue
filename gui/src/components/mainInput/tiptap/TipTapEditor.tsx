@@ -243,7 +243,6 @@ function TipTapEditor(props: TipTapEditorProps) {
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}
           onAddContextItem={() => insertCharacterWithWhitespace("@")}
-          onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
           lumpOpen={props.lumpOpen}
           setLumpOpen={props.setLumpOpen}
           onEnter={onEnterRef.current}
