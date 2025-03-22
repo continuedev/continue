@@ -192,6 +192,10 @@ interface IDE {
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
+
+    fun updateLastFileSaveTimestamp() {
+        // Default implementation does nothing
+    }
 }
 
 data class GetGhTokenArgs(
