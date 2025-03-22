@@ -28,6 +28,7 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
+import ModeSelect from "../modelSelection/ModeSelect";
 import HoverItem from "./InputToolbar/HoverItem";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
@@ -113,6 +114,7 @@ function InputToolbar(props: InputToolbarProps) {
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
+          <ModeSelect />
           <ModelSelect />
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
@@ -132,7 +134,7 @@ function InputToolbar(props: InputToolbarProps) {
                   />
                   <HoverItem className="">
                     <PhotoIcon
-                      className="h-4 w-4 hover:brightness-125"
+                      className="h-3 w-3 hover:brightness-125"
                       data-tooltip-id="image-tooltip"
                       onClick={(e) => {
                         fileInputRef.current?.click();
@@ -148,7 +150,7 @@ function InputToolbar(props: InputToolbarProps) {
               <HoverItem onClick={props.onAddContextItem}>
                 <AtSymbolIcon
                   data-tooltip-id="add-context-item-tooltip"
-                  className="h-4 w-4 hover:brightness-125"
+                  className="h-3 w-3 hover:brightness-125"
                 />
 
                 <ToolTip id="add-context-item-tooltip" place="top-middle">

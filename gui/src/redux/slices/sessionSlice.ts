@@ -634,6 +634,12 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    cycleMode: (state) => {
+      const modes = ["chat", "edit", "agent"];
+      const currentIndex = modes.indexOf(state.mode);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      state.mode = modes[nextIndex] as MessageModes;
+    },
     setNewestCodeblocksForInput: (
       state,
       {
@@ -653,6 +659,9 @@ export const sessionSlice = createSlice({
     },
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
+    },
+    selectCurrentMode: (state) => {
+      return state.mode;
     },
     selectIsSingleRangeEditOrInsertion: (state) => {
       if (state.mode !== "edit") {
@@ -739,11 +748,13 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
+  cycleMode,
 } = sessionSlice.actions;
 
 export const {
   selectIsGatheringContext,
   selectIsInEditMode,
+  selectCurrentMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
 } = sessionSlice.selectors;
