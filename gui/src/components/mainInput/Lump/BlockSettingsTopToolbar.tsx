@@ -1,11 +1,14 @@
 import {
   BookOpenIcon,
   ChatBubbleLeftIcon,
+  ChevronLeftIcon,
   CubeIcon,
+  EllipsisHorizontalIcon,
   PencilIcon,
   Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
+import { useState } from "react";
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
@@ -82,22 +85,44 @@ interface BlockSettingsTopToolbarProps {
 }
 
 export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
+  const [isExpanded, setIsExpanded] = useState(true);
+
+  const handleEllipsisClick = () => {
+    if (isExpanded) {
+      props.setSelectedSection(null);
+    }
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <div className="flex w-full items-center justify-between">
       <div className="xs:flex hidden items-center justify-center text-gray-400">
-        {sections.map((section) => (
-          <BlockSettingsToolbarIcon
-            key={section.id}
-            icon={section.icon}
-            tooltip={section.tooltip}
-            isSelected={props.selectedSection === section.id}
-            onClick={() =>
-              props.setSelectedSection(
-                props.selectedSection === section.id ? null : section.id,
-              )
-            }
-          />
-        ))}
+        <BlockSettingsToolbarIcon
+          icon={isExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
+          tooltip={isExpanded ? "Collapse sections" : "Expand sections"}
+          isSelected={false}
+          onClick={handleEllipsisClick}
+        />
+        <div
+          className="flex overflow-hidden transition-all duration-200"
+          style={{ width: isExpanded ? `160px` : "0px" }}
+        >
+          <div className="flex">
+            {sections.map((section) => (
+              <BlockSettingsToolbarIcon
+                key={section.id}
+                icon={section.icon}
+                tooltip={section.tooltip}
+                isSelected={props.selectedSection === section.id}
+                onClick={() =>
+                  props.setSelectedSection(
+                    props.selectedSection === section.id ? null : section.id,
+                  )
+                }
+              />
+            ))}
+          </div>
+        </div>
       </div>
       <div className="ml-auto">
         <AssistantSelect />
