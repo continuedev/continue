@@ -19,7 +19,12 @@ import {
   selectCurrentMode,
   setMode,
 } from "../../redux/slices/sessionSlice";
-import { fontSize, getFontSize, getMetaKeyLabel } from "../../util";
+import {
+  fontSize,
+  getFontSize,
+  getMetaKeyLabel,
+  isJetBrains,
+} from "../../util";
 
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
@@ -76,6 +81,7 @@ function ModeSelect() {
   const mode = useAppSelector(selectCurrentMode);
   const selectedModel = useAppSelector(selectDefaultModel);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
+  const jetbrains = isJetBrains();
 
   const getModeIcon = (mode: MessageModes) => {
     switch (mode) {
@@ -99,13 +105,13 @@ function ModeSelect() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "." && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        dispatch(cycleMode());
+        dispatch(cycleMode({ isJetBrains: jetbrains }));
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [dispatch, mode]);
+  }, [dispatch, mode, jetbrains]);
 
   return (
     <Listbox
@@ -154,12 +160,16 @@ function ModeSelect() {
             <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
-          <StyledListboxOption value="edit">
-            <PencilIcon className="h-3 w-3" />
-            <span className="font-semibold">Edit</span>
-            <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
-            {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
-          </StyledListboxOption>
+
+          {!jetbrains && (
+            <StyledListboxOption value="edit">
+              <PencilIcon className="h-3 w-3" />
+              <span className="font-semibold">Edit</span>
+              <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
+              {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
+            </StyledListboxOption>
+          )}
+
           <div className="text-lightgray px-2 py-1">
             {getMetaKeyLabel()}
             <span>.</span> for next mode
