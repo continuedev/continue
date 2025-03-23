@@ -2,7 +2,10 @@ import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { type ModelDescription } from "core";
 import { Fragment } from "react";
-import { defaultBorderRadius } from "../../components";
+import {
+  defaultBorderRadius,
+  vscCommandCenterInactiveBorder,
+} from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
 import InfoHover from "../../components/InfoHover";
 import { fontSize } from "../../util";
@@ -46,7 +49,11 @@ const ModelRoleSelector = ({
           <div className="relative">
             <Listbox.Button
               aria-disabled={models.length === 0}
-              className={`border-vsc-input-border bg-vsc-background ${models.length > 0 ? "hover:bg-vsc-input-background cursor-pointer" : "cursor-not-allowed opacity-50"} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-1.5 py-0.5 text-left text-sm`}
+              style={{
+                border: `1px solid ${vscCommandCenterInactiveBorder}`,
+                borderRadius: defaultBorderRadius,
+              }}
+              className={`bg-vsc-background ${models.length > 0 ? "hover:bg-vsc-input-background cursor-pointer" : "cursor-not-allowed opacity-50"} text-vsc-foreground relative m-0 flex w-full items-center justify-between px-1.5 py-0.5 text-left text-sm`}
             >
               {models.length === 0 ? (
                 <span
@@ -79,8 +86,11 @@ const ModelRoleSelector = ({
               leaveTo="transform opacity-0 scale-95"
             >
               <Listbox.Options
-                style={{ borderRadius: defaultBorderRadius }}
-                className="bg-vsc-input-background border-vsc-input-border fixed z-[800] mt-0.5 min-w-40 overflow-auto border border-solid p-0 shadow-lg"
+                style={{
+                  borderRadius: defaultBorderRadius,
+                  border: `1px solid ${vscCommandCenterInactiveBorder}`,
+                }}
+                className="bg-vsc-input-background fixed z-[800] mt-0.5 min-w-40 overflow-auto p-0 shadow-lg"
               >
                 {models.map((option, idx) => (
                   <Listbox.Option
