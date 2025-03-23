@@ -5,6 +5,7 @@ import {
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { fontSize } from "../../../../util";
 import { useBookmarkedSlashCommands } from "../../../ConversationStarters/useBookmarkedSlashCommands";
+import { AddBlockButton } from "./AddBlockButton";
 
 interface PromptRowProps {
   command: string;
@@ -62,7 +63,7 @@ export function PromptsSection() {
   };
 
   return (
-    <div className="flex flex-col gap-1 pr-2">
+    <div className="flex flex-col gap-1">
       {cmdsSortedByBookmark?.map((prompt, i) => (
         <PromptRow
           key={prompt.name}
@@ -73,6 +74,7 @@ export function PromptsSection() {
           onEdit={() => handleEdit(prompt)}
         />
       ))}
+      <AddBlockButton blockType="prompts" />
     </div>
   );
 }

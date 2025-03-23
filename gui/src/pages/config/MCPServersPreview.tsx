@@ -7,8 +7,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
 import { useContext } from "react";
-import { SecondaryButton } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
+import { AddBlockButton } from "../../components/mainInput/Lump/sections/AddBlockButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
@@ -158,24 +158,11 @@ function MCPServersPreview() {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
-        <div>
-          {servers.length === 0 && (
-            <SecondaryButton
-              className="flex h-7 flex-col items-center justify-center"
-              onClick={() => {
-                ideMessenger.post("config/openProfile", {
-                  profileId: undefined,
-                });
-              }}
-            >
-              Add MCP Servers
-            </SecondaryButton>
-          )}
-        </div>
         {servers.map((server, idx) => (
           <MCPServerPreview key={idx} server={server} />
         ))}
       </div>
+      <AddBlockButton blockType="mcpServers" />
     </div>
   );
 }

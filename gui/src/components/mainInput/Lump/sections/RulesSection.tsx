@@ -8,6 +8,7 @@ import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { RootState } from "../../../../redux/store";
 import { fontSize } from "../../../../util";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
+import { AddBlockButton } from "./AddBlockButton";
 
 interface RuleCardProps {
   index: number;
@@ -141,6 +142,7 @@ export function RulesSection() {
           })}
         </div>
       )}
+      <AddBlockButton blockType="rules" />
     </div>
   );
 }
