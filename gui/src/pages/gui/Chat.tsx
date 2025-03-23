@@ -390,7 +390,7 @@ export function Chat() {
           </div>
         ))}
       </StepsDiv>
-      <div className={`relative mt-1`}>
+      <div className={"relative"}>
         {toolCallState?.status === "generated" && <ToolCallButtons />}
 
         {isInEditMode && history.length === 0 && <CodeToEditCard />}

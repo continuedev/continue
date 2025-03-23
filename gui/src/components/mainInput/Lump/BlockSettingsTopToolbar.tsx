@@ -8,8 +8,9 @@ import {
   Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { toggleBlockSettingsToolbar } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/bottom/HoverItem";
@@ -85,13 +86,15 @@ interface BlockSettingsTopToolbarProps {
 }
 
 export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-
+  const isExpanded = useAppSelector(
+    (state) => state.ui.isBlockSettingsToolbarExpanded,
+  );
+  const dispatch = useAppDispatch();
   const handleEllipsisClick = () => {
     if (isExpanded) {
       props.setSelectedSection(null);
     }
-    setIsExpanded(!isExpanded);
+    dispatch(toggleBlockSettingsToolbar());
   };
 
   return (

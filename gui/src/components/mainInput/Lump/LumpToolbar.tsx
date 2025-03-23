@@ -1,6 +1,5 @@
 import { useContext } from "react";
 import styled from "styled-components";
-import { lightGray } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -18,8 +17,8 @@ const Container = styled.div`
 
 const StopButton = styled.div`
   font-size: ${getFontSize() - 3}px;
-  color: ${lightGray};
-  padding: 4px;
+  padding: 2px;
+  padding-right: 4px;
   cursor: pointer;
 `;
 
@@ -38,6 +37,7 @@ export function LumpToolbar(props: TopToolbarProps) {
     return (
       <Container>
         <StopButton
+          className="text-gray-400"
           onClick={() => {
             ideMessenger.post("tts/kill", undefined);
           }}
@@ -52,6 +52,7 @@ export function LumpToolbar(props: TopToolbarProps) {
     return (
       <Container>
         <StopButton
+          className="text-gray-400"
           onClick={() => {
             dispatch(setInactive());
             dispatch(clearLastEmptyResponse());
