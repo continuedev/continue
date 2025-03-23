@@ -4,7 +4,11 @@ import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
-import { lightGray, vscEditorBackground } from "../..";
+import {
+  defaultBorderRadius,
+  vscCommandCenterInactiveBorder,
+  vscEditorBackground,
+} from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
@@ -22,9 +26,9 @@ import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
 
 const TopDiv = styled.div`
-  outline: 0.5px solid rgba(153, 153, 152);
+  outline: 1px solid ${vscCommandCenterInactiveBorder};
   outline-offset: -0.5px;
-  border-radius: 2.5px;
+  border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
   min-width: 0;
@@ -39,7 +43,7 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
   padding: 4px 6px;
   margin: 0;
   border-bottom: ${({ isExpanded }) =>
-    isExpanded ? `0.5px solid ${lightGray}80` : "inherit"};
+    isExpanded ? `1px solid ${vscCommandCenterInactiveBorder}` : "inherit"};
 `;
 
 export interface StepContainerPreToolbarProps {
