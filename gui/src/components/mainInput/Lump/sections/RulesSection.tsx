@@ -1,10 +1,12 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
-import { PencilSquareIcon } from "@heroicons/react/24/outline";
+import { PencilIcon } from "@heroicons/react/24/outline";
 import { useContext, useMemo } from "react";
 import { useSelector } from "react-redux";
+import { defaultBorderRadius, vscCommandCenterActiveBorder } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { RootState } from "../../../../redux/store";
+import { fontSize } from "../../../../util";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 
 interface RuleCardProps {
@@ -23,16 +25,35 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
   };
 
   return (
-    <div className="rounded-lg bg-[#1e1e1e] p-4 transition-colors hover:bg-[#252525]">
+    <div
+      style={{
+        borderRadius: defaultBorderRadius,
+        border: `1px solid ${vscCommandCenterActiveBorder}`,
+      }}
+      className="px-2 py-1 transition-colors"
+    >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="mb-2 font-mono text-sm text-[#9cdcfe]">{title}</div>
-          <div className="whitespace-pre-wrap font-mono text-sm text-gray-300">
+          <div
+            className="text-vsc-foreground mb-1"
+            style={{
+              fontSize: fontSize(-2),
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              fontSize: fontSize(-3),
+              whiteSpace: "pre-line",
+            }}
+            className="text-gray-400"
+          >
             {truncateRule(rule)}
           </div>
         </div>
         <HeaderButtonWithToolTip onClick={onClick} text="Edit">
-          <PencilSquareIcon className="h-4 w-4 transition-colors group-hover:text-blue-400" />
+          <PencilIcon className="h-3 w-3 text-gray-400" />
         </HeaderButtonWithToolTip>
       </div>
     </div>
