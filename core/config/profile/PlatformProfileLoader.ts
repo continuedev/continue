@@ -1,11 +1,10 @@
 import { AssistantUnrolled, ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
+import { getControlPlaneEnv } from "../../control-plane/env.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
-
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
-import { getControlPlaneEnv } from "../../control-plane/env.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -47,6 +46,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
     ideSettingsPromise: Promise<IdeSettings>,
     writeLog: (message: string) => Promise<void>,
     onReload: () => void,
+    rawYaml: string,
   ): Promise<PlatformProfileLoader> {
     const controlPlaneEnv = await getControlPlaneEnv(ideSettingsPromise);
 
@@ -62,6 +62,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       errors: configResult.errors,
       iconUrl: iconUrl,
       uri: `${controlPlaneEnv}${ownerSlug}/${packageSlug}`,
+      rawYaml,
     };
 
     return new PlatformProfileLoader(
@@ -80,7 +81,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
-    if (this.configResult.errors?.length) {
+    if (this.configResult.errors?.find((e) => e.fatal)) {
       return {
         config: undefined,
         errors: this.configResult.errors,
@@ -104,8 +105,9 @@ export default class PlatformProfileLoader implements IProfileLoader {
     );
 
     return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
+      config: results.config,
+      errors: [...(this.configResult.errors ?? []), ...(results.errors ?? [])],
+      configLoadInterrupted: results.configLoadInterrupted,
     };
   }
 

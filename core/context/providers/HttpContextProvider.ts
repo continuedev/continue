@@ -36,6 +36,7 @@ class HttpContextProvider extends BaseContextProvider {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...(this.options.headers || {}),
       },
       body: JSON.stringify({
         query: query || "",

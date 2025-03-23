@@ -1,15 +1,16 @@
 import { Tool } from "../..";
-import { BuiltInToolNames } from "../builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const readFileTool: Tool = {
   type: "function",
   displayTitle: "Read File",
   wouldLikeTo: "read {{{ filepath }}}",
   readonly: true,
+  group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.ReadFile,
     description:
-      "Use this tool whenever you need to view the contents of a file.",
+      "Use this tool if you need to view the contents of an existing file.",
     parameters: {
       type: "object",
       required: ["filepath"],
@@ -17,7 +18,7 @@ export const readFileTool: Tool = {
         filepath: {
           type: "string",
           description:
-            "The path of the file to read, relative to the root of the workspace.",
+            "The path of the file to read, relative to the root of the workspace (NOT uri or absolute path)",
         },
       },
     },

@@ -1,4 +1,5 @@
 import * as YAML from "yaml";
+
 import { getLastNPathParts } from "../../util/uri";
 
 export function parsePromptFileV1V2(path: string, content: string) {

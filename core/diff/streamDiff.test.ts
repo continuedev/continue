@@ -223,6 +223,109 @@ describe("streamDiff(", () => {
     await expectDiff("fastapi-tabs-vs-spaces.py");
   });
 
+  test("trailing whitespaces should match ", async () => {
+    const oldLines = ["first item  ", "second arg ", "third param  "];
+
+    const newLines = ["first item", "second arg", "third param "];
+
+    const { streamDiffs } = await collectDiffs(oldLines, newLines);
+
+    expect(streamDiffs).toEqual([
+      { type: "same", line: "first item  " },
+      { type: "same", line: "second arg " },
+      { type: "same", line: "third param  " },
+    ]);
+  });
+
+  //indentation and whitespace handling
+  test.each([false, true])(
+    "ignores indentation changes for sufficiently long lines (trailingWhitespace: %s)",
+    async (trailingWhitespace) => {
+      let oldLines = [
+        " short",
+        "   middle",
+        " a long enough line",
+        "  short2",
+        "indented line",
+        "final line",
+      ];
+
+      let newLines = [
+        "short",
+        "middle",
+        "a long enough line",
+        "short2",
+        " indented line",
+        "final line",
+      ];
+
+      if (trailingWhitespace) {
+        oldLines = oldLines.map((line) => line + " ");
+      }
+
+      const { streamDiffs } = await collectDiffs(oldLines, newLines);
+      const expected = trailingWhitespace
+        ? [
+            { type: "old", line: " short " },
+            { type: "new", line: "short" },
+            { type: "old", line: "   middle " },
+            { type: "new", line: "middle" },
+            { type: "same", line: " a long enough line " },
+            { type: "same", line: "  short2 " },
+            { type: "same", line: "indented line " },
+            { type: "same", line: "final line " },
+          ]
+        : [
+            { type: "old", line: " short" },
+            { type: "new", line: "short" },
+            { type: "old", line: "   middle" },
+            { type: "new", line: "middle" },
+            { type: "same", line: " a long enough line" },
+            { type: "same", line: "  short2" },
+            { type: "same", line: "indented line" },
+            { type: "same", line: "final line" },
+          ];
+
+      expect(streamDiffs).toEqual(expected);
+    },
+  );
+
+  test("preserves original lines for minor reindentation in simple block", async () => {
+    const oldLines = ["if (checkValueOf(x)) {", "   doSomethingWith(x);", "}"];
+    const newLines = ["if (checkValueOf(x)) {", "  doSomethingWith(x);", "}"];
+
+    const { streamDiffs } = await collectDiffs(oldLines, newLines);
+
+    expect(streamDiffs).toEqual([
+      { type: "same", line: "if (checkValueOf(x)) {" },
+      { type: "same", line: "   doSomethingWith(x);" },
+      { type: "same", line: "}" },
+    ]);
+  });
+
+  test("uses new lines for nested reindentation changes", async () => {
+    const oldLines = ["if (checkValueOf(x)) {", "   doSomethingWith(x);", "}"];
+    const newLines = [
+      "if (checkValueOf(x)) {",
+      "   if (reallyCheckValueOf(x)) {",
+      "     doSomethingElseWith(x);",
+      "   }",
+      "}",
+    ];
+
+    const { streamDiffs } = await collectDiffs(oldLines, newLines);
+
+    expect(streamDiffs).toEqual([
+      { type: "same", line: "if (checkValueOf(x)) {" },
+      { type: "new", line: "   if (reallyCheckValueOf(x)) {" },
+      { type: "old", line: "   doSomethingWith(x);" },
+      { type: "new", line: "     doSomethingElseWith(x);" },
+      { type: "old", line: "}" },
+      { type: "new", line: "   }" },
+      { type: "new", line: "}" },
+    ]);
+  });
+
   test("FastAPI example", async () => {
     await expectDiff("fastapi.py");
   });

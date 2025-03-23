@@ -166,19 +166,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   get ideRedirectUri() {
-    if (
-      env.uriScheme === "vscode-insiders" ||
-      env.uriScheme === "vscode" ||
-      env.uriScheme === "code-oss"
-    ) {
-      // We redirect to a page that says "you can close this page", and that page finishes the redirect
-      const url = new URL(controlPlaneEnv.APP_URL);
-      url.pathname = `/auth/${env.uriScheme}-redirect`;
-      return url.toString();
-    }
-    const publisher = this.context.extension.packageJSON.publisher;
-    const name = this.context.extension.packageJSON.name;
-    return `${env.uriScheme}://${publisher}.${name}`;
+    // We redirect to a page that says "you can close this page", and that page finishes the redirect
+    const url = new URL(controlPlaneEnv.APP_URL);
+    url.pathname = `/auth/${env.uriScheme}-redirect`;
+    return url.toString();
   }
 
   public static useOnboardingUri: boolean = false;

@@ -281,7 +281,9 @@ export class CodebaseIndexer {
         status: "indexing",
       };
       const directoryFiles = [];
-      for await (const p of walkDirAsync(directory, this.ide)) {
+      for await (const p of walkDirAsync(directory, this.ide, {
+        source: "codebase indexing: refresh dirs",
+      })) {
         directoryFiles.push(p);
         if (abortSignal.aborted) {
           yield {

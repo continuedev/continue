@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from "react";
-import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
 import { Combobox } from "@headlessui/react";
-import FileIcon from "../FileIcon";
-import { useAppSelector } from "../../redux/hooks";
 import { ContextSubmenuItemWithProvider } from "core";
+import { useEffect, useRef, useState } from "react";
+import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
+import { useAppSelector } from "../../redux/hooks";
+import FileIcon from "../FileIcon";
 
 export interface AddFileComboboxProps {
   onSelect: (filepaths: string[]) => void | Promise<void>;

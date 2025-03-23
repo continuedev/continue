@@ -1,5 +1,4 @@
 import { streamLines } from "../../../diff/util";
-import { PosthogFeatureFlag, Telemetry } from "../../../util/posthog";
 import { HelperVars } from "../../util/HelperVars";
 
 import { stopAtStartOf, stopAtStopTokens } from "./charStream";
@@ -73,9 +72,7 @@ export class StreamTransformPipeline {
       fullStop,
     );
 
-    const timeoutValue = await Telemetry.getValueForFeatureFlag(
-      PosthogFeatureFlag.AutocompleteTimeout,
-    );
+    const timeoutValue = helper.options.showWhateverWeHaveAtXMs;
 
     lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, timeoutValue!);
 

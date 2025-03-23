@@ -6,6 +6,7 @@ import { DiscordIcon } from "../../components/svg/DiscordIcon";
 import { GithubIcon } from "../../components/svg/GithubIcon";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { selectSelectedProfile } from "../../redux/";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
@@ -21,9 +22,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedModel = useAppSelector(selectDefaultModel);
   const hubEnabled = useAppSelector(selectUseHub);
-  const selectedProfile = useAppSelector(
-    (store) => store.session.selectedProfile,
-  );
+  const selectedProfile = useAppSelector(selectSelectedProfile);
   const { session, refreshProfiles } = useAuth();
 
   const handleRefreshProfiles = () => {

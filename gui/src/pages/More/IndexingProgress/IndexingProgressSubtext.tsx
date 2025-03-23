@@ -27,19 +27,19 @@ function IndexingProgressSubtext({
   return (
     <div className="flex justify-between">
       <span
-        className={`cursor-pointer text-xs text-stone-500 underline ${
-          showIndexingDesc ? "w-1/3" : "w-full"
-        }`}
+        className={`inline-block cursor-pointer text-xs text-stone-500 underline`}
         onClick={onClick}
       >
         {STATUS_TO_SUBTITLE_TEXT[update.status]}
       </span>
 
-      {showIndexingDesc && (
-        <span className="w-2/3 truncate text-right text-xs text-stone-500">
-          {update.desc}
-        </span>
-      )}
+      <div className={`${showIndexingDesc ? "w-2/3" : "flex-1"}`}>
+        {showIndexingDesc && (
+          <span className="block truncate text-right text-xs text-stone-500">
+            {update.desc}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
