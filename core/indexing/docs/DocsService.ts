@@ -21,7 +21,7 @@ import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { IMessenger } from "../../protocol/messenger";
-import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
+import { fetchFavicon } from "../../util/fetchFavicon";
 import { GlobalContext } from "../../util/GlobalContext";
 import {
   editConfigJson,
@@ -37,14 +37,9 @@ import {
 } from "./article";
 import DocsCrawler, { DocsCrawlerType, PageData } from "./crawlers/DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
-import {
-  downloadFromS3,
-  getS3CacheKey,
-  S3Buckets,
-  SiteIndexingResults,
-} from "./docsCache";
 
 import type * as LanceType from "vectordb";
+import { DocsCache, SiteIndexingResults } from "./DocsCache";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -88,8 +83,7 @@ export default class DocsService {
   static lanceTableName = "docs";
   static sqlitebTableName = "docs";
 
-  static defaultEmbeddingsProvider =
-    new TransformersJsEmbeddingsProvider();
+  static defaultEmbeddingsProvider = new TransformersJsEmbeddingsProvider();
 
   public isInitialized: Promise<void>;
   public isSyncing: boolean = false;
@@ -266,7 +260,7 @@ export default class DocsService {
         provider: this.config.selectedModelByRole.embed,
       };
     }
-    
+
     // Fall back to transformers if supported
     const canUseTransformers = await this.canUseTransformersEmbeddings();
     if (canUseTransformers) {
@@ -274,7 +268,7 @@ export default class DocsService {
         provider: DocsService.defaultEmbeddingsProvider,
       };
     }
-    
+
     // No provider available
     return {
       provider: undefined,
@@ -390,11 +384,14 @@ export default class DocsService {
       console.warn("@docs indexAndAdd: no embeddings provider found");
       return;
     }
-    
+
     // Try to fetch from cache first before crawling
     if (!forceReindex) {
       try {
-        const cacheHit = await this.tryFetchFromCache(startUrl, provider.embeddingId);
+        const cacheHit = await this.tryFetchFromCache(
+          startUrl,
+          provider.embeddingId,
+        );
         if (cacheHit) {
           console.log(`Successfully loaded cached embeddings for ${startUrl}`);
           // Update status to complete
@@ -734,21 +731,14 @@ export default class DocsService {
    */
   private async tryFetchFromCache(
     startUrl: string,
-    embeddingsProviderId: string
+    embeddingId: string,
   ): Promise<boolean> {
     try {
-      // Generate a cache key for this URL and embeddings provider
-      const cacheKey = getS3CacheKey(embeddingsProviderId, startUrl);
-      
-      // Attempt to download from S3 cache
-      const data = await downloadFromS3(
-        S3Buckets.docsEmbeddingsCache,
-        cacheKey
-      );
+      const data = await DocsCache.getDocsCacheForUrl(embeddingId, startUrl);
 
       // Parse the cached data
       const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
-      
+
       // Try to get a favicon for the site
       const favicon = await fetchFavicon(new URL(startUrl));
 
@@ -766,7 +756,7 @@ export default class DocsService {
       return true;
     } catch (e) {
       // Cache miss or error - silently fail
-      console.log(`Cache miss for ${startUrl} with provider ${embeddingsProviderId}`);
+      console.log(`Cache miss for ${startUrl} with provider ${embeddingId}`);
       return false;
     }
   }
@@ -790,7 +780,7 @@ export default class DocsService {
 
     // Try to get embeddings for the query
     const [vector] = await provider.embed([query]);
-    
+
     // Retrieve chunks using the query vector
     return await this.retrieveChunks(startUrl, vector, nRetrieve);
   }
@@ -888,8 +878,11 @@ export default class DocsService {
     if (docs.length === 0 && !isRetry) {
       try {
         // Try to fetch the document from the S3 cache
-        const cacheHit = await this.tryFetchFromCache(startUrl, provider.embeddingId);
-        
+        const cacheHit = await this.tryFetchFromCache(
+          startUrl,
+          provider.embeddingId,
+        );
+
         if (cacheHit) {
           // If cache hit, retry the search once
           return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
