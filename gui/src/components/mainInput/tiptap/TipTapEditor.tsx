@@ -59,7 +59,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     dispatch,
   });
 
-  const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
+  const [shouldHideToolbar, setShouldHideToolbar] = useState(true);
 
   useEffect(() => {
     if (!editor) {
@@ -79,27 +79,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       editor?.commands.clearContent(true);
     }
   }, [editor, isInEditMode, props.isMainInput]);
-
-  useEffect(() => {
-    if (editor) {
-      const handleFocus = () => {
-        setShouldHideToolbar(false);
-      };
-
-      const handleBlur = () => {
-        // TODO - make toolbar auto-hiding work without breaking tool dropdown focus
-        // debouncedShouldHideToolbar(true);
-      };
-
-      editor.on("focus", handleFocus);
-      editor.on("blur", handleBlur);
-
-      return () => {
-        editor.off("focus", handleFocus);
-        editor.off("blur", handleBlur);
-      };
-    }
-  }, [editor]);
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 
@@ -176,9 +155,15 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   return (
     <InputBoxDiv
+      onFocus={() => {
+        setShouldHideToolbar(false);
+      }}
+      onBlur={() => {
+        setShouldHideToolbar(true);
+      }}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
-      className="cursor-text"
+      className={shouldHideToolbar ? "cursor-default" : "cursor-text"}
       onClick={() => {
         editor?.commands.focus();
       }}
@@ -240,33 +225,35 @@ function TipTapEditor(props: TipTapEditorProps) {
             event.stopPropagation();
           }}
         />
-        <InputToolbar
-          isMainInput={props.isMainInput}
-          toolbarOptions={props.toolbarOptions}
-          activeKey={activeKey}
-          hidden={shouldHideToolbar && !props.isMainInput}
-          onAddContextItem={() => insertCharacterWithWhitespace("@")}
-          lumpOpen={props.lumpOpen}
-          setLumpOpen={props.setLumpOpen}
-          onEnter={onEnterRef.current}
-          onImageFileSelected={(file) => {
-            handleImageFile(ideMessenger, file).then((result) => {
-              if (!editor) {
-                return;
-              }
-              if (result) {
-                const [_, dataUrl] = result;
-                const { schema } = editor.state;
-                const node = schema.nodes.image.create({ src: dataUrl });
-                editor.commands.command(({ tr }) => {
-                  tr.insert(0, node);
-                  return true;
-                });
-              }
-            });
-          }}
-          disabled={isStreaming}
-        />
+        {(shouldHideToolbar && !props.isMainInput) || (
+          <InputToolbar
+            isMainInput={props.isMainInput}
+            toolbarOptions={props.toolbarOptions}
+            activeKey={activeKey}
+            hidden={shouldHideToolbar && !props.isMainInput}
+            onAddContextItem={() => insertCharacterWithWhitespace("@")}
+            lumpOpen={props.lumpOpen}
+            setLumpOpen={props.setLumpOpen}
+            onEnter={onEnterRef.current}
+            onImageFileSelected={(file) => {
+              handleImageFile(ideMessenger, file).then((result) => {
+                if (!editor) {
+                  return;
+                }
+                if (result) {
+                  const [_, dataUrl] = result;
+                  const { schema } = editor.state;
+                  const node = schema.nodes.image.create({ src: dataUrl });
+                  editor.commands.command(({ tr }) => {
+                    tr.insert(0, node);
+                    return true;
+                  });
+                }
+              });
+            }}
+            disabled={isStreaming}
+          />
+        )}
       </div>
 
       {showDragOverMsg &&
