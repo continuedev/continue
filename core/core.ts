@@ -22,7 +22,6 @@ import { DataLogger } from "./data/log";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
-import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -807,14 +806,6 @@ export class Core {
         // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
     });
-    on("docs/getSuggestedDocs", async (msg) => {
-      if (hasRequestedDocs) {
-        return;
-      } // TODO, remove, hack because of rerendering
-      hasRequestedDocs = true;
-      const suggestedDocs = await getAllSuggestedDocs(this.ide);
-      this.messenger.send("docs/suggestions", suggestedDocs);
-    });
     on("docs/initStatuses", async (msg) => {
       void this.docsService.initStatuses();
     });
@@ -989,4 +980,3 @@ export class Core {
   // private
 }
 
-let hasRequestedDocs = false;
