@@ -51,6 +51,10 @@ export class LocalPlatformClient implements PlatformClient {
   ) {}
 
   async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+    if (fqsns.length === 0) {
+      return [];
+    }
+
     const response = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
     return response;
   }

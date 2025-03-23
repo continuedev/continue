@@ -86,62 +86,56 @@ export function RulesSection() {
     });
 
   return (
-    <div className="space-y-4">
-      {mergedRules.length === 0 ? (
-        <div className="rounded-lg bg-[#1e1e1e] p-6">
-          <p className="italic text-gray-400">No rules defined yet</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {mergedRules.map((rule, index) => {
-            if (!rule.ruleFromYaml) {
-              return (
-                <RuleCard
-                  key={index}
-                  index={index}
-                  rule={rule.unrolledRule}
-                  onClick={() =>
-                    ideMessenger.post("config/openProfile", {
-                      profileId: undefined,
-                    })
-                  }
-                  title="Locally Defined Rule"
-                />
-              );
-            }
+    <div>
+      <div className="space-y-3">
+        {mergedRules.map((rule, index) => {
+          if (!rule.ruleFromYaml) {
+            return (
+              <RuleCard
+                key={index}
+                index={index}
+                rule={rule.unrolledRule}
+                onClick={() =>
+                  ideMessenger.post("config/openProfile", {
+                    profileId: undefined,
+                  })
+                }
+                title="Locally Defined Rule"
+              />
+            );
+          }
 
-            if (typeof rule.ruleFromYaml === "string") {
-              const slug = `${selectedProfile?.fullSlug.ownerSlug}/${selectedProfile?.fullSlug.packageSlug}`;
-
-              return (
-                <RuleCard
-                  key={index}
-                  index={index}
-                  rule={rule.unrolledRule}
-                  onClick={() => openUrl(`${slug}/new-version`)}
-                  title="Inline Rule"
-                />
-              );
-            }
-
-            if (!rule.ruleFromYaml?.uses) {
-              return null;
-            }
-
-            const ruleSlug = rule.ruleFromYaml?.uses;
+          if (typeof rule.ruleFromYaml === "string") {
+            const slug = `${selectedProfile?.fullSlug.ownerSlug}/${selectedProfile?.fullSlug.packageSlug}`;
 
             return (
               <RuleCard
                 key={index}
                 index={index}
                 rule={rule.unrolledRule}
-                onClick={() => openUrl(`${ruleSlug}/new-version`)}
-                title={ruleSlug}
+                onClick={() => openUrl(`${slug}/new-version`)}
+                title="Inline Rule"
               />
             );
-          })}
-        </div>
-      )}
+          }
+
+          if (!rule.ruleFromYaml?.uses) {
+            return null;
+          }
+
+          const ruleSlug = rule.ruleFromYaml?.uses;
+
+          return (
+            <RuleCard
+              key={index}
+              index={index}
+              rule={rule.unrolledRule}
+              onClick={() => openUrl(`${ruleSlug}/new-version`)}
+              title={ruleSlug}
+            />
+          );
+        })}
+      </div>
       <AddBlockButton blockType="rules" />
     </div>
   );
