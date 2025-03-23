@@ -142,7 +142,7 @@ function ModeSelect() {
         >
           <StyledListboxOption value="agent" disabled={!agentModeSupported}>
             <SparklesIcon className="h-3 w-3" />
-            <span>Agent</span>
+            <span className="font-semibold">Agent</span>
             {/* <ShortcutText></ShortcutText> */}
             {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
             {!agentModeSupported && <span>(Not supported)</span>}
@@ -150,13 +150,13 @@ function ModeSelect() {
 
           <StyledListboxOption value="chat">
             <ChatBubbleLeftIcon className="h-3 w-3" />
-            <span>Chat</span>
+            <span className="font-semibold">Chat</span>
             <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
           <StyledListboxOption value="edit">
             <PencilIcon className="h-3 w-3" />
-            <span>Edit</span>
+            <span className="font-semibold">Edit</span>
             <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
             {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
