@@ -11,7 +11,6 @@ import {
   setConfigResult,
 } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
-import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
   addContextItemsAtIndex,
   setInactive,
@@ -77,7 +76,6 @@ function useSetup() {
     const interval = setInterval(() => {
       if (hasLoadedConfig.current) {
         // Init to run on initial config load
-        ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
         dispatch(updateFileSymbolsFromHistory());
         dispatch(refreshSessionMetadata({}));
@@ -180,10 +178,6 @@ function useSetup() {
     },
     [],
   );
-
-  useWebviewListener("docs/suggestions", async (data) => {
-    dispatch(updateDocsSuggestions(data));
-  });
 
   // IDE event listeners
   useWebviewListener(

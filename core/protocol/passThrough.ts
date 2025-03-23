@@ -52,7 +52,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "indexing/reindex",
     "indexing/abort",
     "indexing/setPaused",
-    "docs/getSuggestedDocs",
     "docs/initStatuses",
     "docs/getDetails",
     //
@@ -81,7 +80,6 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "setTTSActive",
     "getWebviewHistoryLength",
     "getCurrentSessionId",
-    "docs/suggestions",
     "didCloseFiles",
     "didSelectOrganization",
   ];
