@@ -10,7 +10,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../../redux/slices/uiSlice";
-import { getFontSize } from "../../../../../util";
+import { fontSize } from "../../../../../util";
 import AddDocsDialog from "../../../../dialogs/AddDocsDialog";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
@@ -108,7 +108,7 @@ function DocsIndexingStatuses() {
         <div
           className="cursor-pointer rounded px-2 pb-1 text-center text-gray-400 hover:text-gray-300"
           style={{
-            fontSize: `${getFontSize() - 3}px`,
+            fontSize: fontSize(-3),
           }}
           onClick={(e) => {
             e.preventDefault();

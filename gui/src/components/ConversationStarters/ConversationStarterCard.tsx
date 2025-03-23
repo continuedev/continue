@@ -16,24 +16,22 @@ export function ConversationStarterCard({
 
   return (
     <div
-      className="mb-2 w-full shadow-md hover:brightness-110"
+      className="mb-2 w-full shadow-md hover:cursor-pointer hover:brightness-110"
       style={{
         borderRadius: defaultBorderRadius,
         backgroundColor: vscInputBackground,
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={() => onClick(command)}
     >
-      <div className="flex items-center px-3 py-1.5">
-        <div className="mr-3 flex-shrink-0">
+      <div className="flex px-3 py-1.5">
+        <div className="mr-3 flex-shrink-0 self-start pt-0.5">
           <ChatBubbleLeftIcon className="text-lightgray h-5 w-5" />
         </div>
-        <div
-          onClick={() => onClick(command)}
-          className="flex flex-1 flex-col hover:cursor-pointer"
-        >
-          <div className="font-medium">{command.name}</div>
-          <div className="text-lightgray text-sm">{command.description}</div>
+        <div className="flex flex-1 flex-col">
+          <div className="text-xs font-medium">{command.name}</div>
+          <div className="text-lightgray text-xs">{command.description}</div>
         </div>
       </div>
     </div>

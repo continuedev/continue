@@ -5,7 +5,7 @@ import { Fragment } from "react";
 import { defaultBorderRadius } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
 import InfoHover from "../../components/InfoHover";
-import { getFontSize } from "../../util";
+import { fontSize } from "../../util";
 
 interface ModelRoleSelectorProps {
   models: ModelDescription[];
@@ -31,7 +31,7 @@ const ModelRoleSelector = ({
       <div className="mt-2 flex flex-row items-center gap-1 sm:mt-0">
         <span
           style={{
-            fontSize: `${getFontSize() - 3}px`,
+            fontSize: fontSize(-3),
           }}
         >
           {displayName}
@@ -51,12 +51,12 @@ const ModelRoleSelector = ({
               {models.length === 0 ? (
                 <span
                   className="text-lightgray lines lines-1 italic"
-                  style={{ fontSize: `${getFontSize() - 3}px` }}
+                  style={{ fontSize: fontSize(-3) }}
                 >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
               ) : (
                 <span
                   className="lines lines-1"
-                  style={{ fontSize: `${getFontSize() - 3}px` }}
+                  style={{ fontSize: fontSize(-3) }}
                 >
                   {selectedModel?.title ?? `Select ${displayName} model`}
                 </span>
@@ -90,7 +90,7 @@ const ModelRoleSelector = ({
                   >
                     <span
                       className="lines lines-1 relative flex h-4 items-center gap-2"
-                      style={{ fontSize: `${getFontSize() - 3}px` }}
+                      style={{ fontSize: fontSize(-3) }}
                     >
                       {option.title}
                     </span>

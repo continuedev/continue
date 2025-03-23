@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../../components/PageHeader";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { getFontSize } from "../../util";
+import { fontSize } from "../../util";
 import { AccountButton } from "./AccountButton";
 import { HelpCenterSection } from "./HelpCenterSection";
 import { IndexingSettingsSection } from "./IndexingSettingsSection";
@@ -69,7 +69,7 @@ function ConfigPage() {
           {tabs.map((tab) => (
             <div
               style={{
-                fontSize: `${getFontSize() - 2}px`,
+                fontSize: fontSize(-2),
               }}
               key={tab.id}
               className={`hover:bg-vsc-input-background flex cursor-pointer items-center justify-center gap-2 rounded-md px-4 py-2 ${

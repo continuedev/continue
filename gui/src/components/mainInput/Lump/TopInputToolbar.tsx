@@ -7,7 +7,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
-import { getFontSize } from "../../../util";
+import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
 
@@ -44,7 +44,7 @@ function TopToolbarIcon(props: TopToolbarIconProps) {
           aria-hidden="true"
         />
         <div
-          style={{ fontSize: `${getFontSize() - 3}px` }}
+          style={{ fontSize: fontSize(-3) }}
           className={`overflow-hidden transition-all duration-200 ${
             props.isSelected ? "ml-1 w-auto opacity-100" : "w-0 opacity-0"
           }`}

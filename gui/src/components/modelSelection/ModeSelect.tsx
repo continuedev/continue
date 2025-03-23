@@ -17,7 +17,7 @@ import {
   selectCurrentMode,
   setMode,
 } from "../../redux/slices/sessionSlice";
-import { getFontSize, getMetaKeyLabel } from "../../util";
+import { fontSize, getFontSize, getMetaKeyLabel } from "../../util";
 
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
@@ -97,8 +97,8 @@ function ModeSelect() {
   return (
     <Listbox
       value={mode}
-      onChange={() => {
-        dispatch(setMode(mode));
+      onChange={(newMode) => {
+        dispatch(setMode(newMode));
       }}
     >
       <div className="relative">
@@ -116,7 +116,7 @@ function ModeSelect() {
             {getModeIcon(mode)}
             <span>{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
             <ChevronDownIcon
-              className="h-3 w-3 flex-shrink-0"
+              className="h-2 w-2 flex-shrink-0"
               aria-hidden="true"
             />
           </div>
@@ -124,26 +124,26 @@ function ModeSelect() {
         <StyledListboxOptions
           className="z-50"
           style={{
-            fontSize: `${getFontSize() - 3}px`,
+            fontSize: fontSize(-3),
           }}
         >
-          <StyledListboxOption value="Agent">
+          <StyledListboxOption value="agent">
             <SparklesIcon className="h-3 w-3" />
             <span>Agent</span>
             {/* <ShortcutText></ShortcutText> */}
-            {mode === "agent" && <CheckIcon className="ml-2 h-3 w-3" />}
+            {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
-          <StyledListboxOption value="Chat">
+          <StyledListboxOption value="chat">
             <ChatBubbleLeftIcon className="h-3 w-3" />
             <span>Chat</span>
             <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
-            {mode === "chat" && <CheckIcon className="ml-2 h-3 w-3" />}
+            {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
-          <StyledListboxOption value="Edit">
+          <StyledListboxOption value="edit">
             <PencilIcon className="h-3 w-3" />
             <span>Edit</span>
             <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
-            {mode === "edit" && <CheckIcon className="ml-2 h-3 w-3" />}
+            {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
           <div className="text-lightgray px-2 py-1">
             {getMetaKeyLabel()}

@@ -15,7 +15,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../../redux/slices/uiSlice";
-import { getFontSize } from "../../../../../util";
+import { fontSize } from "../../../../../util";
 import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
 import { StatusIndicator } from "./StatusIndicator";
 interface IndexingStatusViewerProps {
@@ -134,7 +134,7 @@ function DocsIndexingStatus({
           ) : null}
           <p
             style={{
-              fontSize: `${getFontSize() - 3}px`,
+              fontSize: fontSize(-3),
             }}
             className={`lines lines-1 m-0 p-0 text-left ${status?.url ? "cursor-pointer hover:underline" : ""}`}
           >
@@ -149,7 +149,7 @@ function DocsIndexingStatus({
               <span
                 className="text-xs"
                 style={{
-                  fontSize: `${getFontSize() - 3}px`,
+                  fontSize: fontSize(-3),
                 }}
               >
                 {progressPercentage}%

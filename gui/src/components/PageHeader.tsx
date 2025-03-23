@@ -1,5 +1,5 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { getFontSize } from "../util";
+import { fontSize } from "../util";
 
 export interface PageHeaderProps {
   onTitleClick?: () => void;
@@ -33,7 +33,7 @@ export default function PageHeader({
               <span
                 className="mx-2 inline-block text-base font-bold"
                 style={{
-                  fontSize: `${getFontSize() - 2}px`,
+                  fontSize: fontSize(-2),
                 }}
               >
                 {title}

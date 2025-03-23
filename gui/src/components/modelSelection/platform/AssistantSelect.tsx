@@ -6,7 +6,7 @@ import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile } from "../../../redux";
 import { useAppDispatch } from "../../../redux/hooks";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../../../util";
+import { fontSize, isMetaEquivalentKeyPressed } from "../../../util";
 import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
 import AssistantIcon from "./AssistantIcon";
 import { AssistantSelectOptions } from "./AssistantSelectOptions";
@@ -69,7 +69,7 @@ export default function AssistantSelect() {
           });
         }}
         className="hover:bg flex cursor-pointer select-none items-center gap-1 whitespace-nowrap text-gray-400"
-        style={{ fontSize: `${getFontSize() - 3}px` }}
+        style={{ fontSize: fontSize(-3) }}
       >
         <PlusIcon className="h-3 w-3 select-none" /> Create your first assistant
       </div>
@@ -83,7 +83,7 @@ export default function AssistantSelect() {
           data-testid="assistant-select-button"
           ref={buttonRef}
           className="mt-0.5 cursor-pointer border-none bg-transparent text-gray-400 hover:brightness-125"
-          style={{ fontSize: `${getFontSize() - 3}px` }}
+          style={{ fontSize: fontSize(-3) }}
         >
           <AssistantSelectButton selectedProfile={selectedProfile} />
         </Popover.Button>

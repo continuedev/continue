@@ -3,7 +3,7 @@ import {
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
-import { getFontSize } from "../../../../util";
+import { fontSize } from "../../../../util";
 import { useBookmarkedSlashCommands } from "../../../ConversationStarters/useBookmarkedSlashCommands";
 
 interface PromptRowProps {
@@ -25,7 +25,7 @@ function PromptRow({
     <div
       className="flex items-center justify-between"
       style={{
-        fontSize: `${getFontSize() - 3}px`,
+        fontSize: fontSize(-3),
       }}
     >
       <div className="flex min-w-0 gap-2">
