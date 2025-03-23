@@ -41,6 +41,7 @@ import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
+import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { llmsFromModelConfig } from "./models";
 
 export class LocalPlatformClient implements PlatformClient {
@@ -60,6 +61,7 @@ async function loadConfigYaml(
   overrideConfigYaml: AssistantUnrolled | undefined,
   controlPlaneClient: ControlPlaneClient,
   orgScopeId: string | null,
+  ideSettings: IdeSettings,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   let config =
     overrideConfigYaml ??
@@ -71,7 +73,13 @@ async function loadConfigYaml(
         versionSlug: "",
       },
       rawYaml,
-      new RegistryClient(),
+      new RegistryClient(
+        await controlPlaneClient.getAccessToken(),
+        getControlPlaneEnvSync(
+          ideSettings.continueTestEnvironment,
+          ideSettings.enableControlServerBeta,
+        ).CONTROL_PLANE_URL,
+      ),
       {
         currentUserSlug: "",
         onPremProxyUrl: null,
@@ -414,6 +422,7 @@ export async function loadContinueConfigFromYaml(
     overrideConfigYaml,
     controlPlaneClient,
     orgScopeId,
+    ideSettings,
   );
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
