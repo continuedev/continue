@@ -8,10 +8,12 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
+import { modelSupportsTools } from "core/llm/autodetect";
 import { useEffect } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   cycleMode,
   selectCurrentMode,
@@ -51,13 +53,15 @@ const StyledListboxOptions = styled(Listbox.Options)`
 const StyledListboxOption = styled(Listbox.Option)`
   border-radius: ${defaultBorderRadius};
   padding: 6px 12px;
-  cursor: pointer;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   display: flex;
   align-items: center;
   gap: 8px;
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
 
   &:hover {
-    background: ${lightGray}33;
+    background: ${(props) =>
+      props.disabled ? "transparent" : `${lightGray}33`};
   }
 `;
 
@@ -70,6 +74,8 @@ const ShortcutText = styled.span`
 function ModeSelect() {
   const dispatch = useAppDispatch();
   const mode = useAppSelector(selectCurrentMode);
+  const selectedModel = useAppSelector(selectDefaultModel);
+  const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
 
   const getModeIcon = (mode: MessageModes) => {
     switch (mode) {
@@ -81,6 +87,13 @@ function ModeSelect() {
         return <PencilIcon className="h-3 w-3" />;
     }
   };
+
+  // Switch to chat mode if agent mode is selected but not supported
+  useEffect(() => {
+    if (mode === "agent" && !agentModeSupported) {
+      dispatch(setMode("chat"));
+    }
+  }, [mode, agentModeSupported, dispatch]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -127,12 +140,14 @@ function ModeSelect() {
             fontSize: fontSize(-3),
           }}
         >
-          <StyledListboxOption value="agent">
+          <StyledListboxOption value="agent" disabled={!agentModeSupported}>
             <SparklesIcon className="h-3 w-3" />
             <span>Agent</span>
             {/* <ShortcutText></ShortcutText> */}
             {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
+            {!agentModeSupported && <span>(Not supported)</span>}
           </StyledListboxOption>
+
           <StyledListboxOption value="chat">
             <ChatBubbleLeftIcon className="h-3 w-3" />
             <span>Chat</span>
