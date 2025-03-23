@@ -28,7 +28,7 @@ interface TopToolbarProps {
   setSelectedSection: (value: string | null) => void;
 }
 
-export function TopToolbar(props: TopToolbarProps) {
+export function LumpToolbar(props: TopToolbarProps) {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);

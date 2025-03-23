@@ -30,7 +30,7 @@ import {
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
-import HoverItem from "./InputToolbar/HoverItem";
+import HoverItem from "./InputToolbar/bottom/HoverItem";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;

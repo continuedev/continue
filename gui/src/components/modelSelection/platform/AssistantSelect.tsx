@@ -7,7 +7,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile } from "../../../redux";
 import { useAppDispatch } from "../../../redux/hooks";
 import { fontSize, isMetaEquivalentKeyPressed } from "../../../util";
-import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
+import PopoverTransition from "../../mainInput/InputToolbar/bottom/PopoverTransition";
 import AssistantIcon from "./AssistantIcon";
 import { AssistantSelectOptions } from "./AssistantSelectOptions";
 

@@ -228,7 +228,10 @@ function TipTapEditor(props: TipTapEditorProps) {
       }}
     >
       <div className="px-2.5 pb-1 pt-2">
-        {/* <TopInputToolbar /> */}
+        {/* <TopInputToolbar
+          lumpOpen={props.lumpOpen}
+          setLumpOpen={props.setLumpOpen}
+        /> */}
         <EditorContent
           className={`scroll-container overflow-y-scroll ${props.isMainInput ? "max-h-[70vh]" : ""}`}
           spellCheck={false}

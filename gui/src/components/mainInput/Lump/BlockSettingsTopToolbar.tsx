@@ -9,7 +9,7 @@ import {
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
-import HoverItem from "../InputToolbar/HoverItem";
+import HoverItem from "../InputToolbar/bottom/HoverItem";
 
 interface BlockSettingsToolbarIcon {
   tooltip: string;
