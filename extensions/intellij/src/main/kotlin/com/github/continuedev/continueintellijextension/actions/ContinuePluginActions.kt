@@ -126,12 +126,3 @@ class OpenConfigAction : AnAction() {
         continuePluginService.sendToWebview("navigateTo", params)
     }
 }
-
-class OpenMorePageAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getContinuePluginService(e.project) ?: return
-        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        val params = mapOf("path" to "/more", "toggle" to true)
-        continuePluginService.sendToWebview("navigateTo", params)
-    }
-}

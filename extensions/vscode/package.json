@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -259,13 +259,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.openMorePage",
-        "category": "Continue",
-        "title": "More",
-        "icon": "$(ellipsis)",
-        "group": "Continue"
-      },
-      {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
         "title": "Write Comments for this Code",
@@ -511,11 +504,6 @@
         {
           "command": "continue.openConfigPage",
           "group": "navigation@4",
-          "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.openMorePage",
-          "group": "navigation@6",
           "when": "view == continue.continueGUIView"
         }
       ],

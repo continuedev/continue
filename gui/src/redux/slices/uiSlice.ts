@@ -22,10 +22,10 @@ type UIState = {
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
   shouldAddFileForEditing: boolean;
-  useTools: boolean;
   toolSettings: { [toolName: string]: ToolSetting };
   toolGroupSettings: { [toolGroupName: string]: ToolGroupSetting };
   ttsActive: boolean;
+  isBlockSettingsToolbarExpanded: boolean;
 };
 
 export const DEFAULT_TOOL_SETTING: ToolSetting = "allowedWithPermission";
@@ -43,7 +43,6 @@ export const uiSlice = createSlice({
     ),
     shouldAddFileForEditing: false,
     ttsActive: false,
-    useTools: false,
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
       [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
@@ -57,6 +56,7 @@ export const uiSlice = createSlice({
     toolGroupSettings: {
       BUILT_IN_GROUP_NAME: "include",
     },
+    isBlockSettingsToolbarExpanded: true,
   } as UIState,
   reducers: {
     setOnboardingCard: (
@@ -90,9 +90,6 @@ export const uiSlice = createSlice({
       state.hasDismissedExploreDialog = action.payload;
     },
     // Tools
-    toggleUseTools: (state) => {
-      state.useTools = !state.useTools;
-    },
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
         "allowedWithPermission";
@@ -127,6 +124,10 @@ export const uiSlice = createSlice({
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
+    toggleBlockSettingsToolbar: (state) => {
+      state.isBlockSettingsToolbarExpanded =
+        !state.isBlockSettingsToolbarExpanded;
+    },
   },
 });
 
@@ -137,11 +138,11 @@ export const {
   setShowDialog,
   setIsExploreDialogOpen,
   setHasDismissedExploreDialog,
-  toggleUseTools,
   toggleToolSetting,
   toggleToolGroupSetting,
   addTool,
   setTTSActive,
+  toggleBlockSettingsToolbar,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;
