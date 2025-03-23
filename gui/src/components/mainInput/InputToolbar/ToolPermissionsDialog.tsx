@@ -2,6 +2,7 @@ import { Tool } from "core";
 import { useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { toggleToolGroupSetting } from "../../../redux/slices/uiSlice";
+import { fontSize } from "../../../util";
 import ToggleSwitch from "../../gui/Switch";
 import ToolDropdownItem from "./ToolDropdownItem";
 
@@ -41,14 +42,21 @@ export const ToolPermissionsDialog = () => {
   return (
     <>
       {toolsByGroup.map(([groupName, tools]) => (
-        <div key={groupName} className="mt-2 flex flex-col">
-          <div className="mb-1 flex flex-row items-center justify-between px-1">
-            <h3 className="m-0 p-0 text-xs font-bold">{groupName}</h3>
+        <div key={groupName} className="mt-2 flex flex-col pr-1">
+          <div className="flex flex-row items-center justify-between px-1 pr-3">
+            <h3
+              className="m-0 p-0 font-bold"
+              style={{
+                fontSize: fontSize(-2),
+              }}
+            >
+              {groupName}
+            </h3>
             <ToggleSwitch
               isToggled={toolGroupSettings[groupName] !== "exclude"}
               onToggle={() => dispatch(toggleToolGroupSetting(groupName))}
               text=""
-              size={12}
+              size={10}
             />
           </div>
           <div className="relative flex flex-col p-1">

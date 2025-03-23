@@ -12,6 +12,7 @@ import { ToolTip } from "../../components/gui/Tooltip";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
+import { fontSize } from "../../util";
 
 interface MCPServerStatusProps {
   server: MCPServerStatus;
@@ -46,10 +47,15 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
   }
 
   return (
-    <div className="flex flex-row items-center justify-between gap-3">
+    <div
+      style={{
+        fontSize: fontSize(-2),
+      }}
+      className="flex flex-row items-center justify-between gap-3"
+    >
       <div className="flex flex-row items-center gap-3">
         {/* Name and Status */}
-        <h3 className="m-0 text-xs sm:text-sm">{server.name}</h3>
+        <h3 className="m-0">{server.name}</h3>
 
         {/* Error indicator if any */}
         {server.errors.length ? (
@@ -72,7 +78,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
             className="flex cursor-zoom-in items-center gap-1 hover:opacity-80"
             data-tooltip-id={toolsTooltipId}
           >
-            <WrenchScrewdriverIcon className="h-4 w-4" />
+            <WrenchScrewdriverIcon className="h-3 w-3" />
             <span className="text-xs">{server.tools.length}</span>
             <ToolTip id={toolsTooltipId} className="flex flex-col gap-0.5">
               {server.tools.map((tool, idx) => (
@@ -87,7 +93,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
             className="flex cursor-zoom-in items-center gap-1 hover:opacity-80"
             data-tooltip-id={promptsTooltipId}
           >
-            <CommandLineIcon className="h-4 w-4" />
+            <CommandLineIcon className="h-3 w-3" />
             <span className="text-xs">{server.prompts.length}</span>
             <ToolTip id={promptsTooltipId} className="flex flex-col gap-0.5">
               {server.prompts.map((prompt, idx) => (
@@ -102,7 +108,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
             className="flex cursor-zoom-in items-center gap-1 hover:opacity-80"
             data-tooltip-id={resourcesTooltipId}
           >
-            <CircleStackIcon className="h-4 w-4" />
+            <CircleStackIcon className="h-3 w-3" />
             <span className="text-xs">{server.resources.length}</span>
             <ToolTip id={resourcesTooltipId} className="flex flex-col gap-0.5">
               {server.resources.map((resource, idx) => (
@@ -142,6 +148,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
     </div>
   );
 }
+
 function MCPServersPreview() {
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,

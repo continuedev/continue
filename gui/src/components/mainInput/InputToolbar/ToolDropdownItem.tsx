@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useAppSelector } from "../../../redux/hooks";
 import { addTool, toggleToolSetting } from "../../../redux/slices/uiSlice";
+import { fontSize } from "../../../util";
 import { ToolTip } from "../../gui/Tooltip";
 
 interface ToolDropdownItemProps {
@@ -31,6 +32,9 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
   return (
     <div
       className="flex items-center justify-between gap-2 px-2 py-0.5"
+      style={{
+        fontSize: fontSize(-3),
+      }}
       onClick={(e) => {
         dispatch(toggleToolSetting(props.tool.function.name));
         e.stopPropagation();

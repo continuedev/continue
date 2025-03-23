@@ -20,7 +20,7 @@ import {
   setDefaultModel,
 } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../../util";
+import { fontSize, isMetaEquivalentKeyPressed } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import Shortcut from "../gui/Shortcut";
 import { Divider } from "./platform/shared";
@@ -47,7 +47,7 @@ const StyledListboxButton = styled(Listbox.Button)`
   gap: 2px;
   border: none;
   cursor: pointer;
-  font-size: ${getFontSize() - 2}px;
+  font-size: ${fontSize(-3)};
   background: transparent;
   color: ${lightGray};
   &:focus {

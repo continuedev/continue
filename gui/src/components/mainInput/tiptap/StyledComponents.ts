@@ -13,9 +13,9 @@ import { getFontSize } from "../../../util";
 
 export const InputBoxDiv = styled.div<{}>`
   resize: none;
-  padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
+  padding-bottom: 1px;
   margin: 0;
   height: auto;
   width: 100%;

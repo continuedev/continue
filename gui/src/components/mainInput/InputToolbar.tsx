@@ -21,6 +21,7 @@ import {
 import { exitEditMode } from "../../redux/thunks";
 import { loadLastSession } from "../../redux/thunks/session";
 import {
+  fontSize,
   getAltKeyLabel,
   getFontSize,
   getMetaKeyLabel,
@@ -161,7 +162,12 @@ function InputToolbar(props: InputToolbarProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
+        <div
+          className="flex items-center gap-2 whitespace-nowrap text-gray-400"
+          style={{
+            fontSize: fontSize(-3),
+          }}
+        >
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}

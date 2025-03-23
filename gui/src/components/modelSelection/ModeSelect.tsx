@@ -105,7 +105,7 @@ function ModeSelect() {
         <StyledListboxButton
           data-testid="mode-select-button"
           className="h-[18px] overflow-hidden"
-          style={{ padding: 0 }}
+          style={{ padding: 0, fontSize: fontSize(-3) }}
         >
           <div
             style={{
