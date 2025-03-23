@@ -5,7 +5,6 @@ import {
   Cog6ToothIcon,
   CubeIcon,
   PlusIcon,
-  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -21,7 +20,6 @@ import {
 } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { fontSize, isMetaEquivalentKeyPressed } from "../../util";
-import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import Shortcut from "../gui/Shortcut";
 import { Divider } from "./platform/shared";
 
@@ -66,6 +64,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
   display: flex;
   flex-direction: column;
 
+  font-size: ${fontSize(-3)};
   border-radius: ${defaultBorderRadius};
   border: 0.5px solid ${lightGray};
   background-color: ${vscInputBackground};
@@ -80,7 +79,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
 
 const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
   border-radius: ${defaultBorderRadius};
-  padding: 6px 12px;
+  padding: 4px 12px;
 
   ${({ isDisabled }) =>
     !isDisabled &&
@@ -114,7 +113,6 @@ const IconBase = styled.div<{ $hovered: boolean }>`
   }
 `;
 
-const StyledTrashIcon = styled(IconBase).attrs({ as: TrashIcon })``;
 const StyledCog6ToothIcon = styled(IconBase).attrs({ as: Cog6ToothIcon })``;
 
 function modelSelectTitle(model: any): string {
@@ -136,28 +134,7 @@ function ModelOption({
 }: ModelOptionProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
-
-  function onClickDelete(e: any) {
-    e.stopPropagation();
-    e.preventDefault();
-
-    dispatch(setShowDialog(true));
-    dispatch(
-      setDialogMessage(
-        <ConfirmationDialog
-          title={`Delete ${option.title}`}
-          text={`Are you sure you want to remove ${option.title} from your configuration?`}
-          onConfirm={() => {
-            ideMessenger.post("config/deleteModel", {
-              title: option.title,
-            });
-          }}
-        />,
-      ),
-    );
-  }
 
   function onClickGear(e: any) {
     e.stopPropagation();
@@ -185,7 +162,7 @@ function ModelOption({
       <div className="flex w-full flex-col gap-0.5">
         <div className="flex w-full items-center justify-between">
           <div className="flex flex-grow items-center">
-            <CubeIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+            <CubeIcon className="mr-2 h-3 w-3 flex-shrink-0" />
             <span className="flex-grow">
               {option.title}
               {showMissingApiKeyMsg && (
@@ -197,7 +174,7 @@ function ModelOption({
           </div>
           <div className="ml-5 flex items-center">
             <StyledCog6ToothIcon $hovered={hovered} onClick={onClickGear} />
-            {isSelected && <CheckIcon className="ml-1 h-4 w-4" />}
+            {isSelected && <CheckIcon className="ml-1 h-3 w-3" />}
           </div>
         </div>
       </div>
@@ -209,7 +186,6 @@ function ModelSelect() {
   const dispatch = useDispatch();
   const defaultModel = useAppSelector(selectDefaultModel);
   const allModels = useAppSelector((state) => state.config.config.models);
-  const ideMessenger = useContext(IdeMessengerContext);
   const [showAbove, setShowAbove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
@@ -352,7 +328,7 @@ function ModelSelect() {
                   value={"addModel" as any}
                 >
                   <div className="flex items-center py-0.5">
-                    <PlusIcon className="mr-2 h-4 w-4" />
+                    <PlusIcon className="mr-2 h-3 w-3" />
                     Add Chat model
                   </div>
                 </StyledListboxOption>
@@ -361,7 +337,7 @@ function ModelSelect() {
 
             <Divider className="!my-0" />
 
-            <span className="block px-3 py-3" style={{ color: lightGray }}>
+            <span className="block px-3 py-2" style={{ color: lightGray }}>
               <Shortcut>meta '</Shortcut> to toggle model
             </span>
           </div>
