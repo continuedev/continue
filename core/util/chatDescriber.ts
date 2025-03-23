@@ -30,19 +30,14 @@ export class ChatDescriber {
     completionOptions.maxTokens = ChatDescriber.maxTokens;
 
     // Prompt the user's current LLM for the title
-    const titleResponse = await model.chat(
-      [
-        {
-          role: "user",
-          content: ChatDescriber.prompt + message,
-        },
-      ],
+    const titleResponse = await model.complete(
+      ChatDescriber.prompt + message,
       new AbortController().signal,
       completionOptions,
     );
 
     // Set the title
-    return removeQuotesAndEscapes(titleResponse.content.toString());
+    return removeQuotesAndEscapes(titleResponse);
   }
 
   //   // TODO: Allow the user to manually set specific/tailored prompts to generate their titles
