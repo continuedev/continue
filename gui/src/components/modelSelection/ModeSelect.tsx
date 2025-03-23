@@ -157,7 +157,10 @@ function ModeSelect() {
           <StyledListboxOption value="chat">
             <ChatBubbleLeftIcon className="h-3 w-3" />
             <span className="font-semibold">Chat</span>
-            <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
+            <ShortcutText>
+              {getMetaKeyLabel()}
+              {jetbrains ? "J" : "L"}
+            </ShortcutText>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
 
