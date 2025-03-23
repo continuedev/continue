@@ -7,7 +7,7 @@ import {
   RangeInFile,
 } from "core";
 import * as URI from "uri-js";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
+import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
 import { selectDefaultModel } from "../slices/configSlice";
 import { ThunkApiType } from "../store";
 

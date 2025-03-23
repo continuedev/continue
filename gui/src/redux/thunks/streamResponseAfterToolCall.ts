@@ -26,7 +26,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const useTools = state.ui.useTools;
         const initialHistory = state.session.history;
         const defaultModel = selectDefaultModel(state);
 

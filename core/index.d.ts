@@ -437,7 +437,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "edit";
+export type MessageModes = "chat" | "edit" | "agent";
 
 export type ToolStatus =
   | "generating"

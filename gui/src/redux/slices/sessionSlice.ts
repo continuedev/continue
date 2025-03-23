@@ -634,6 +634,14 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    cycleMode: (state, action: PayloadAction<{ isJetBrains: boolean }>) => {
+      const modes = action.payload.isJetBrains
+        ? ["chat", "edit", "agent"]
+        : ["chat", "agent"];
+      const currentIndex = modes.indexOf(state.mode);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      state.mode = modes[nextIndex] as MessageModes;
+    },
     setNewestCodeblocksForInput: (
       state,
       {
@@ -654,6 +662,9 @@ export const sessionSlice = createSlice({
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
     },
+    selectCurrentMode: (state) => {
+      return state.mode;
+    },
     selectIsSingleRangeEditOrInsertion: (state) => {
       if (state.mode !== "edit") {
         return false;
@@ -667,6 +678,9 @@ export const sessionSlice = createSlice({
     },
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
+    },
+    selectUseTools: (state) => {
+      return state.mode === "agent";
     },
   },
   extraReducers: (builder) => {
@@ -739,13 +753,16 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
+  cycleMode,
 } = sessionSlice.actions;
 
 export const {
   selectIsGatheringContext,
   selectIsInEditMode,
+  selectCurrentMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
+  selectUseTools,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;
