@@ -236,7 +236,6 @@ export interface SiteIndexingConfig {
   maxDepth?: number;
   faviconUrl?: string;
   useLocalCrawling?: boolean;
-  rootUrl?: string; // Currently only used by preindexed docs
 }
 
 export interface DocsIndexingDetails {

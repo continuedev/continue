@@ -95,7 +95,7 @@ function getSubActionsForSubmenuItem(
   item: ContextSubmenuItem & { providerTitle: string },
   ideMessenger: IIdeMessenger,
 ): ComboBoxSubAction[] | undefined {
-  if (item.providerTitle === "docs" && !item.metadata?.preIndexed) {
+  if (item.providerTitle === "docs") {
     return [
       {
         label: "Open in new tab",

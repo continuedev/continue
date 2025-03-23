@@ -366,6 +366,44 @@ export default class DocsService {
     }
   }
 
+  /**
+   * Attempt to load document embeddings from cache
+   * @returns true if cache was successfully loaded, false otherwise
+   */
+  private async tryLoadFromCache(
+    startUrl: string,
+    embeddingId: string,
+    siteIndexingConfig: SiteIndexingConfig,
+  ): Promise<boolean> {
+    try {
+      const cacheHit = await this.tryFetchFromCache(startUrl, embeddingId);
+
+      if (cacheHit) {
+        console.log(`Successfully loaded cached embeddings for ${startUrl}`);
+        // Update status to complete
+        this.handleStatusUpdate({
+          type: "docs",
+          id: startUrl,
+          embeddingsProviderId: embeddingId,
+          isReindexing: false,
+          title: siteIndexingConfig.title,
+          debugInfo: "Loaded from cache",
+          icon: siteIndexingConfig.faviconUrl,
+          url: startUrl,
+          progress: 1,
+          description: "Complete",
+          status: "complete",
+        });
+        return true;
+      }
+    } catch (e) {
+      console.log(`Error trying to fetch from cache: ${e}`);
+      // Continue with regular indexing
+    }
+
+    return false;
+  }
+
   async indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
     forceReindex: boolean = false,
@@ -387,39 +425,20 @@ export default class DocsService {
 
     // Try to fetch from cache first before crawling
     if (!forceReindex) {
-      try {
-        const cacheHit = await this.tryFetchFromCache(
-          startUrl,
-          provider.embeddingId,
-        );
-        if (cacheHit) {
-          console.log(`Successfully loaded cached embeddings for ${startUrl}`);
-          // Update status to complete
-          this.handleStatusUpdate({
-            type: "docs",
-            id: startUrl,
-            embeddingsProviderId: provider.embeddingId,
-            isReindexing: false,
-            title: siteIndexingConfig.title,
-            debugInfo: "Loaded from cache",
-            icon: siteIndexingConfig.faviconUrl,
-            url: startUrl,
-            progress: 1,
-            description: "Complete",
-            status: "complete",
-          });
-          return;
-        }
-      } catch (e) {
-        console.log(`Error trying to fetch from cache: ${e}`);
-        // Continue with regular indexing
+      const cacheLoaded = await this.tryLoadFromCache(
+        startUrl,
+        provider.embeddingId,
+        siteIndexingConfig,
+      );
+
+      if (cacheLoaded) {
+        return;
       }
     }
 
     const startedWithEmbedder = provider.embeddingId;
 
     // Check if doc has been successfully indexed with the given embedder
-    // Note at this point we know it's not a pre-indexed doc
     const indexExists = await this.hasMetadata(startUrl);
 
     // Build status update - most of it is fixed values
@@ -874,7 +893,7 @@ export default class DocsService {
       console.warn("Error retrieving chunks from LanceDB", e);
     }
 
-    // If no docs are found and this isn't a retry, try fetching from S3 cache
+    // If no docs are found and this isn't a retry, try fetching from cache
     if (docs.length === 0 && !isRetry) {
       try {
         // Try to fetch the document from the S3 cache
@@ -941,10 +960,9 @@ export default class DocsService {
     return result.favicon;
   }
 
-  /*
-    Sync with no embeddings provider change
-    Ignores pre-indexed docs
-  */
+  /**
+   * Sync with no embeddings provider change
+   */
   private async syncDocs(
     oldConfig: ContinueConfig | undefined,
     newConfig: ContinueConfig,
