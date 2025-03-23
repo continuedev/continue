@@ -9,7 +9,12 @@ import {
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscCommandCenterInactiveBorder,
+  vscInputBackground,
+} from "..";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
@@ -66,7 +71,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
 
   font-size: ${fontSize(-3)};
   border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${lightGray};
+  border: 1px solid ${vscCommandCenterInactiveBorder};
   background-color: ${vscInputBackground};
 
   max-height: ${MAX_HEIGHT_PX}px;
@@ -318,7 +323,7 @@ function ModelSelect() {
           </div>
 
           <div className="mt-auto">
-            <Divider className="!my-0" />
+            {sortedOptions.length > 0 && <Divider className="!my-0" />}
 
             {selectedProfile?.profileType === "local" && (
               <>

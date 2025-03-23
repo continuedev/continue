@@ -11,7 +11,12 @@ import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { useEffect } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscCommandCenterInactiveBorder,
+  vscInputBackground,
+} from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
@@ -51,7 +56,7 @@ const StyledListboxOptions = styled(Listbox.Options)`
   display: flex;
   flex-direction: column;
   border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${lightGray};
+  border: 1px solid ${vscCommandCenterInactiveBorder};
   background-color: ${vscInputBackground};
 `;
 
