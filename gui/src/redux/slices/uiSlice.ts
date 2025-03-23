@@ -22,7 +22,6 @@ type UIState = {
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
   shouldAddFileForEditing: boolean;
-  useTools: boolean;
   toolSettings: { [toolName: string]: ToolSetting };
   toolGroupSettings: { [toolGroupName: string]: ToolGroupSetting };
   ttsActive: boolean;
@@ -43,7 +42,6 @@ export const uiSlice = createSlice({
     ),
     shouldAddFileForEditing: false,
     ttsActive: false,
-    useTools: false,
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
       [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
@@ -90,9 +88,6 @@ export const uiSlice = createSlice({
       state.hasDismissedExploreDialog = action.payload;
     },
     // Tools
-    toggleUseTools: (state) => {
-      state.useTools = !state.useTools;
-    },
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
         "allowedWithPermission";
@@ -137,7 +132,6 @@ export const {
   setShowDialog,
   setIsExploreDialogOpen,
   setHasDismissedExploreDialog,
-  toggleUseTools,
   toggleToolSetting,
   toggleToolGroupSetting,
   addTool,
