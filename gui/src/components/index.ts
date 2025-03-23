@@ -133,7 +133,7 @@ export const Button = styled.button`
 
 export const SecondaryButton = styled.button`
   padding: 6px 12px;
-  margin: 8px 0;
+  margin: 8px;
   border-radius: ${defaultBorderRadius};
 
   border: 1px solid ${vscInputBorder};
