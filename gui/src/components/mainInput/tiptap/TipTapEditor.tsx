@@ -153,14 +153,24 @@ function TipTapEditor(props: TipTapEditorProps) {
     setActiveKey,
   });
 
+  const handleBlur = (e: React.FocusEvent) => {
+    // Check if the new focus target is within our InputBoxDiv
+    const currentTarget = e.currentTarget;
+    const relatedTarget = e.relatedTarget as Node | null;
+
+    if (relatedTarget && currentTarget.contains(relatedTarget)) {
+      return;
+    }
+
+    setShouldHideToolbar(true);
+  };
+
   return (
     <InputBoxDiv
       onFocus={() => {
         setShouldHideToolbar(false);
       }}
-      onBlur={() => {
-        setShouldHideToolbar(true);
-      }}
+      onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       className={shouldHideToolbar ? "cursor-default" : "cursor-text"}
