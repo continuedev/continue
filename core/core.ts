@@ -45,6 +45,7 @@ import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import { MCPManagerSingleton } from "./context/mcp";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
+import { countTokens } from "./llm/countTokens";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -893,6 +894,26 @@ export class Core {
 
       return { contextItems };
     });
+
+    on("isItemTooBig", async ({ data: { item, selectedModelTitle } }) => {
+      const { config } = await this.configHandler.loadConfig();
+
+      if (!config) {
+        return false;
+      }
+
+      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+
+      // Count the size of the file tokenwise
+      const tokens = countTokens(item.content);
+
+      // File exceeds context length of the model
+      if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
+        return true;
+      }
+
+      return false;
+    });
   }
 
   private indexingCancellationController: AbortController | undefined;
@@ -979,4 +1000,3 @@ export class Core {
 
   // private
 }
-
