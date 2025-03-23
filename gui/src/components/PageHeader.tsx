@@ -35,8 +35,8 @@ export default function PageHeader({
             </div>
           </>
         )}
+        <div className="ml-auto">{rightContent}</div>
       </div>
-      <div className="ml-auto">{rightContent}</div>
     </div>
   );
 }
