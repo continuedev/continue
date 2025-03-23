@@ -225,7 +225,7 @@ export default function StepContainerPreToolbar(
       {isExpanded && (
         <div
           className={`overflow-hidden overflow-y-auto ${
-            isExpanded ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+            isExpanded ? "opacity-100" : "max-h-0 opacity-0"
           }`}
         >
           {props.children}
