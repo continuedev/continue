@@ -199,8 +199,8 @@ export class ConfigHandler {
             this.ide,
             this.ideSettingsPromise,
             this.writeLog,
-            this.reloadConfig.bind(this),
             assistant.rawYaml,
+            selectedOrgId,
           );
 
           return new ProfileLifecycleManager(profileLoader, this.ide);
