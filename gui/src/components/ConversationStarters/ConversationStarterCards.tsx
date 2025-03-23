@@ -9,8 +9,7 @@ const NUM_CARDS_TO_RENDER = 3;
 
 export function ConversationStarterCards() {
   const dispatch = useAppDispatch();
-  const { cmdsSortedByBookmark, bookmarkStatuses, toggleBookmark } =
-    useBookmarkedSlashCommands();
+  const { cmdsSortedByBookmark } = useBookmarkedSlashCommands();
 
   function onClick(command: SlashCommandDescription) {
     if (command.prompt) {
@@ -31,8 +30,6 @@ export function ConversationStarterCards() {
           key={command.name + i}
           command={command}
           onClick={onClick}
-          onBookmark={() => toggleBookmark(command)}
-          isBookmarked={bookmarkStatuses[command.name]}
         />
       ))}
     </div>

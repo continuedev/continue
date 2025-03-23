@@ -59,7 +59,7 @@ const saveSubsetFilters = [
   // Don't persist any of the edit state for now
   createFilter("editModeState", []),
   createFilter("config", ["defaultModelTitle"]),
-  createFilter("ui", ["toolSettings", "toolGroupSettings", "useTools"]),
+  createFilter("ui", ["toolSettings", "toolGroupSettings"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
   // Add this new filter for the profiles slice

@@ -17,7 +17,7 @@ import {
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
@@ -305,10 +305,7 @@ const Layout = () => {
             <Footer />
           </GridDiv>
         </div>
-        <div
-          style={{ fontSize: `${getFontSize() - 4}px` }}
-          id="tooltip-portal-div"
-        />
+        <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
       </LayoutTopDiv>
     </AuthProvider>
   );

@@ -59,6 +59,7 @@ export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, $
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
 export const vscInputBorderFocus = `var(${VSC_FOCUS_BORDER_VAR}, ${lightGray})`;
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
+export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #ffffff)`;
 export const vscCommandCenterActiveBorder = `var(${VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR}, #1bbe84)`;
 export const vscCommandCenterInactiveBorder = `var(${VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR}, #1bbe84)`;
 export const vscFindMatchSelected = `var(${VSC_FIND_MATCH_SELECTED_VAR}, rgba(255, 223, 0))`;
