@@ -19,9 +19,24 @@ interface BlockSettingsToolbarIcon {
   isSelected?: boolean;
 }
 
+interface Section {
+  id: string;
+  tooltip: string;
+  icon: React.ComponentType<any>;
+}
+
+const sections: Section[] = [
+  { id: "models", tooltip: "Models", icon: CubeIcon },
+  { id: "rules", tooltip: "Rules", icon: PencilIcon },
+  { id: "docs", tooltip: "Docs", icon: BookOpenIcon },
+  { id: "prompts", tooltip: "Prompts", icon: ChatBubbleLeftIcon },
+  { id: "tools", tooltip: "Tools", icon: WrenchScrewdriverIcon },
+  { id: "mcp", tooltip: "MCP", icon: Squares2X2Icon },
+];
+
 function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
   return (
-    <HoverItem className="px-0" onClick={props.onClick}>
+    <HoverItem px={0} onClick={props.onClick}>
       <div
         role="button"
         tabIndex={0}
@@ -70,76 +85,19 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
   return (
     <div className="flex w-full items-center justify-between">
       <div className="xs:flex hidden items-center justify-center text-gray-400">
-        <BlockSettingsToolbarIcon
-          icon={CubeIcon}
-          tooltip="Models"
-          isSelected={props.selectedSection === "models"}
-          onClick={() =>
-            props.setSelectedSection(
-              props.selectedSection === "models" ? null : "models",
-            )
-          }
-        />
-        <BlockSettingsToolbarIcon
-          icon={PencilIcon}
-          tooltip="Rules"
-          isSelected={props.selectedSection === "rules"}
-          onClick={() =>
-            props.setSelectedSection(
-              props.selectedSection === "rules" ? null : "rules",
-            )
-          }
-        />
-        <BlockSettingsToolbarIcon
-          icon={BookOpenIcon}
-          tooltip="Docs"
-          isSelected={props.selectedSection === "docs"}
-          onClick={() =>
-            props.setSelectedSection(
-              props.selectedSection === "docs" ? null : "docs",
-            )
-          }
-        />
-        <BlockSettingsToolbarIcon
-          icon={ChatBubbleLeftIcon}
-          tooltip="Prompts"
-          isSelected={props.selectedSection === "prompts"}
-          onClick={() =>
-            props.setSelectedSection(
-              props.selectedSection === "prompts" ? null : "prompts",
-            )
-          }
-        />
-        {/* <TopToolbarIcon
-          icon={FolderIcon}
-          tooltip="Context"
-          isSelected={props.selectedSection === "context"}
-          onClick={() =>
-            props.setSelectedSection(
-              props.selectedSection === "context" ? null : "context",
-            )
-          }
-        /> */}
-        <BlockSettingsToolbarIcon
-          icon={WrenchScrewdriverIcon}
-          tooltip="Tools"
-          isSelected={props.selectedSection === "tools"}
-          onClick={() =>
-            props.setSelectedSection(
-              props.selectedSection === "tools" ? null : "tools",
-            )
-          }
-        />
-        <BlockSettingsToolbarIcon
-          icon={Squares2X2Icon}
-          tooltip="MCP"
-          isSelected={props.selectedSection === "mcp"}
-          onClick={() =>
-            props.setSelectedSection(
-              props.selectedSection === "mcp" ? null : "mcp",
-            )
-          }
-        />
+        {sections.map((section) => (
+          <BlockSettingsToolbarIcon
+            key={section.id}
+            icon={section.icon}
+            tooltip={section.tooltip}
+            isSelected={props.selectedSection === section.id}
+            onClick={() =>
+              props.setSelectedSection(
+                props.selectedSection === section.id ? null : section.id,
+              )
+            }
+          />
+        ))}
       </div>
       <div className="ml-auto">
         <AssistantSelect />
