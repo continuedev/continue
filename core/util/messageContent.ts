@@ -18,13 +18,16 @@ export function stripImages(messageContent: MessageContent): string {
 }
 
 export function renderChatMessage(message: ChatMessage): string {
-  switch (message.role) {
+  switch (message?.role) {
     case "user":
     case "assistant":
+    case "thinking":
     case "system":
       return stripImages(message.content);
     case "tool":
       return message.content;
+    default:
+      return "";
   }
 }
 
@@ -36,6 +39,7 @@ export function normalizeToMessageParts(message: ChatMessage): MessagePart[] {
   switch (message.role) {
     case "user":
     case "assistant":
+    case "thinking":
     case "system":
       return Array.isArray(message.content)
         ? message.content

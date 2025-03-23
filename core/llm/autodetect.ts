@@ -58,6 +58,7 @@ const PROVIDER_HANDLES_TEMPLATING: string[] = [
   "vertexai",
   "watsonx",
   "nebius",
+  "relace",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: string[] = [

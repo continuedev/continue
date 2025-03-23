@@ -200,6 +200,7 @@ export class ConfigHandler {
             this.ideSettingsPromise,
             this.writeLog,
             this.reloadConfig.bind(this),
+            assistant.rawYaml,
           );
 
           return new ProfileLifecycleManager(profileLoader, this.ide);
@@ -354,9 +355,6 @@ export class ConfigHandler {
   }
 
   async setSelectedProfile(profileId: string | null) {
-    console.log(
-      `Changing selected profile from ${this.selectedProfileId} to ${profileId}`,
-    );
     this.selectedProfileId = profileId;
     const result = await this.loadConfig();
     this.notifyConfigListeners(result);
@@ -388,16 +386,6 @@ export class ConfigHandler {
       Promise.resolve(sessionInfo),
       this.ideSettingsPromise,
     );
-
-    // After login, default to the first org as the selected org
-    try {
-      const orgs = await this.controlPlaneClient.listOrganizations();
-      if (orgs.length) {
-        await this.setSelectedOrgId(orgs[0].id);
-      }
-    } catch (e) {
-      console.error("Failed to fetch control plane profiles: ", e);
-    }
 
     this.fetchControlPlaneProfiles().catch(async (e) => {
       console.error("Failed to fetch control plane profiles: ", e);

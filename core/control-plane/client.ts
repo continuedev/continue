@@ -113,6 +113,7 @@ export class ControlPlaneClient {
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;
+      rawYaml: string;
     }[]
   > {
     const userId = await this.userId;

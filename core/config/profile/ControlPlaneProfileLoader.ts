@@ -2,6 +2,7 @@ import { ConfigJson } from "@continuedev/config-types";
 import { ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
+import { PRODUCTION_ENV } from "../../control-plane/env.js";
 import {
   ContinueConfig,
   IDE,
@@ -10,7 +11,6 @@ import {
 } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
-import { PRODUCTION_ENV } from "../../control-plane/env.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -61,7 +61,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       )) as any);
     const serializedConfig: SerializedContinueConfig = settings;
 
-    const results = await doLoadConfig(
+    return await doLoadConfig(
       this.ide,
       this.ideSettingsPromise,
       this.controlPlaneClient,
@@ -72,11 +72,6 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       this.workspaceId,
       undefined,
     );
-
-    return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
-    };
   }
 
   setIsActive(isActive: boolean): void {}

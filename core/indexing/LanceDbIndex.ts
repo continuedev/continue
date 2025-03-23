@@ -12,8 +12,9 @@ import {
 import { getLanceDbPath, migrate } from "../util/paths";
 import { getUriPathBasename } from "../util/uri";
 
-import { chunkDocument, shouldChunk } from "./chunk/chunk";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { basicChunker } from "./chunk/basic.js";
+import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -408,7 +409,25 @@ export class LanceDbIndex implements CodebaseIndex {
     if (!this.embeddingsProvider) {
       return [];
     }
-    const [vector] = await this.embeddingsProvider.embed([query]);
+
+    // Use just the first chunk of the user query in case it is too long
+    const chunks = [];
+    for await (const chunk of basicChunker(
+      query,
+      this.embeddingsProvider.maxEmbeddingChunkSize,
+    )) {
+      chunks.push(chunk);
+    }
+    let vector = null;
+    try {
+      [vector] = await this.embeddingsProvider.embed(
+        chunks.map((c) => c.content),
+      );
+    } catch (err) {
+      // If we fail to chunk, we just use what was happening before.
+      [vector] = await this.embeddingsProvider.embed([query]);
+    }
+
     const db = await lance.connect(getLanceDbPath());
 
     let allResults = [];

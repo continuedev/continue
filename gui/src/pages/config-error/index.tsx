@@ -5,8 +5,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { vscBackground } from "../../components";
-import { ROUTES } from "../../util/navigation";
 import { useAppSelector } from "../../redux/hooks";
+import { ROUTES } from "../../util/navigation";
 
 export default function ConfigErrorPage() {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export default function ConfigErrorPage() {
         <div className="py-5">
           <h3 className="mb-2 mt-0 text-xl">Config Errors</h3>
           <p className="text-md mb-4">
-            Please resolve the following errors in your config.json file.
+            Please resolve the following errors in your assistant configuration.
           </p>
           <div className="flex flex-col gap-5">
             {sortedErrors.length > 0 ? (
@@ -52,7 +52,7 @@ export default function ConfigErrorPage() {
                     ) : (
                       <ExclamationTriangleIcon className="mr-2 h-5 w-5" />
                     )}
-                    <p className="m-0">
+                    <p className="m-0 whitespace-pre-wrap">
                       <strong>
                         {error.fatal ? "Fatal Error:" : "Warning:"}
                       </strong>{" "}

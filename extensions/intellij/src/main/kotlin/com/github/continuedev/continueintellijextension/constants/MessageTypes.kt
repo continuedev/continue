@@ -58,7 +58,6 @@ class MessageTypes {
         // Note: If updating these values, make a corresponding update in
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
-            "configError",
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress", // Codebase
@@ -94,6 +93,7 @@ class MessageTypes {
             "config/openProfile",
             "config/updateSharedConfig",
             "config/updateSelectedModel",
+            "mcp/reloadServer",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -103,10 +103,8 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
-            "command/run",
             "tts/kill",
             "llm/complete",
-            "llm/streamComplete",
             "llm/streamChat",
             "llm/listModels",
             "streamDiffLines",

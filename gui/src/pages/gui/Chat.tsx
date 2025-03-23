@@ -7,7 +7,7 @@ import {
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
 import { streamResponse } from "core/llm/stream";
-import { stripImages } from "core/util/messageContent";
+import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -22,25 +22,19 @@ import {
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
-import { ExploreHubCard } from "../../components/ExploreHubCard";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
-import { TutorialCard } from "../../components/mainInput/TutorialCard";
+import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
 import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
-import {
-  OnboardingCard,
-  useOnboardingCard,
-} from "../../components/OnboardingCard";
-import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform/PlatformOnboardingCard";
+import { useOnboardingCard } from "../../components/OnboardingCard";
 import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
@@ -76,6 +70,7 @@ import {
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
+import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
@@ -143,10 +138,6 @@ export function Chat() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
-  const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const selectedModelTitle = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
@@ -275,6 +266,10 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
+    if (!defaultModel) {
+      console.error("No selected chat model");
+      return;
+    }
     const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
       modifiers: {
@@ -284,7 +279,7 @@ export function Chat() {
       ideMessenger,
       defaultContextProviders: [],
       dispatch,
-      selectedModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     const prompt = [
@@ -295,7 +290,7 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
-      selectedModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     dispatch(submitEdit(prompt));
@@ -319,7 +314,7 @@ export function Chat() {
     [history],
   );
 
-  const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
   useAutoScroll(stepsDivRef, history);
 
@@ -401,6 +396,15 @@ export function Chat() {
                     );
                   })}
                 </div>
+              ) : item.message.role === "thinking" ? (
+                <ThinkingBlockPeek
+                  content={renderChatMessage(item.message)}
+                  redactedThinking={item.message.redactedThinking}
+                  index={index}
+                  prevItem={index > 0 ? history[index - 1] : null}
+                  inProgress={index === history.length - 1}
+                  signature={item.message.signature}
+                />
               ) : (
                 <div className="thread-message">
                   <TimelineItem
@@ -439,8 +443,8 @@ export function Chat() {
           </div>
         ))}
       </StepsDiv>
-      <div className={`relative`}>
-        <div className="absolute -top-8 right-2 z-30">
+      <div className={`relative mt-1`}>
+        <div className="absolute -top-8 right-2 z-30 flex flex-col gap-1">
           {ttsActive && (
             <StopButton
               className=""
@@ -526,29 +530,10 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
 
           {history.length === 0 && (
-            <>
-              {onboardingCard.show && (
-                <div className="mx-2 mt-10">
-                  {useHub ? (
-                    <PlatformOnboardingCard isDialog={false} />
-                  ) : (
-                    <OnboardingCard isDialog={false} />
-                  )}
-                </div>
-              )}
-
-              {showTutorialCard !== false && !onboardingCard.show && (
-                <div className="flex w-full justify-center">
-                  <TutorialCard onClose={closeTutorialCard} />
-                </div>
-              )}
-
-              {!onboardingCard.show && showTutorialCard === false && (
-                <div className="mx-2 mt-10">
-                  <ExploreHubCard />
-                </div>
-              )}
-            </>
+            <EmptyChatBody
+              useHub={useHub}
+              showOnboardingCard={onboardingCard.show}
+            />
           )}
         </div>
       </div>

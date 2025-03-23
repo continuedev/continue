@@ -9,3 +9,4 @@ export enum BuiltInToolNames {
   SearchWeb = "builtin_search_web",
   ViewDiff = "builtin_view_diff",
 }
+export const BUILT_IN_GROUP_NAME = "Built-In";

@@ -44,7 +44,7 @@ describe("E2E Scenarios", () => {
     ): Promise<(SecretResult | undefined)[]> {
       return await Promise.all(
         fqsns.map((fqsn) =>
-          resolveFQSN("test-user", fqsn, platformSecretStore),
+          resolveFQSN("test-user", fqsn, platformSecretStore, "test-org"),
         ),
       );
     },

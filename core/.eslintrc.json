@@ -5,8 +5,18 @@
     "project": "./tsconfig.json"
   },
   "rules": {
-    "quotes": ["warn", "double", {}],
+    "quotes": ["off", "double", {}],
     "@typescript-eslint/naming-convention": "off",
-    "@typescript-eslint/no-floating-promises": "warn"
+    "@typescript-eslint/no-floating-promises": "off",
+    "import/order": "off",
+    "curly": "off",
+    "@typescript-eslint/semi": "off",
+    "eqeqeq": "error",
+    "complexity": ["error", { "max": 38 }],
+    "max-lines-per-function": ["error", { "max": 996 }],
+    "max-statements": ["error", { "max": 112 }],
+    "max-depth": ["error", { "max": 6 }],
+    "max-nested-callbacks": ["error", { "max": 4 }],
+    "max-params": ["error", { "max": 11 }]
   }
 }

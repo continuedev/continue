@@ -1,4 +1,4 @@
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { ConfigResult } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
@@ -16,8 +16,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
-  configError: [ConfigValidationError[] | undefined, void];
-  getDefaultModelTitle: [undefined, string];
+  getDefaultModelTitle: [undefined, string | undefined];
   indexProgress: [IndexingProgressUpdate, void]; // Codebase
   "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
   refreshSubmenuItems: [

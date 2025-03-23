@@ -1,7 +1,9 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
+import { selectDefaultModel } from "../slices/configSlice";
 import {
   acceptToolCall,
+  cancelToolCall,
   setCalling,
   setToolCallOutput,
 } from "../slices/sessionSlice";
@@ -22,7 +24,8 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
 
-    if (!state.config.defaultModelTitle) {
+    const defaultModel = selectDefaultModel(state);
+    if (!defaultModel) {
       throw new Error("No model selected");
     }
 
@@ -30,7 +33,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     const result = await extra.ideMessenger.request("tools/call", {
       toolCall: toolCallState.toolCall,
-      selectedModelTitle: state.config.defaultModelTitle,
+      selectedModelTitle: defaultModel.title,
     });
 
     if (result.status === "success") {
@@ -47,9 +50,23 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       );
       unwrapResult(response);
     } else {
-      throw new Error(
-        `Failed to call tool ${toolCallState.toolCall.function.name}: ${result.error}`,
+      dispatch(cancelToolCall());
+
+      const output = await dispatch(
+        streamResponseAfterToolCall({
+          toolCallId: toolCallState.toolCallId,
+          toolOutput: [
+            {
+              icon: "problems",
+              name: "Tool Call Error",
+              description: "Tool Call Failed",
+              content: `The tool call failed with the message:\n\n${result.error}\n\nPlease try something else or request further instructions.`,
+              hidden: false,
+            },
+          ],
+        }),
       );
+      unwrapResult(output);
     }
   },
 );
