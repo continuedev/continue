@@ -11,7 +11,7 @@ import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
 
-interface TopToolbarIconProps {
+interface BlockSettingsToolbarIcon {
   tooltip: string;
   icon: React.ComponentType<any>;
   itemCount?: number;
@@ -19,7 +19,7 @@ interface TopToolbarIconProps {
   isSelected?: boolean;
 }
 
-function TopToolbarIcon(props: TopToolbarIconProps) {
+function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
   return (
     <HoverItem className="px-0" onClick={props.onClick}>
       <div
@@ -61,16 +61,16 @@ function TopToolbarIcon(props: TopToolbarIconProps) {
   );
 }
 
-interface TopInputProps {
+interface BlockSettingsTopToolbarProps {
   selectedSection: string | null;
   setSelectedSection: (value: string | null) => void;
 }
 
-export function TopInputToolbar(props: TopInputProps) {
+export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
   return (
     <div className="flex w-full items-center justify-between">
       <div className="xs:flex hidden items-center justify-center text-gray-400">
-        <TopToolbarIcon
+        <BlockSettingsToolbarIcon
           icon={CubeIcon}
           tooltip="Models"
           isSelected={props.selectedSection === "models"}
@@ -80,7 +80,7 @@ export function TopInputToolbar(props: TopInputProps) {
             )
           }
         />
-        <TopToolbarIcon
+        <BlockSettingsToolbarIcon
           icon={PencilIcon}
           tooltip="Rules"
           isSelected={props.selectedSection === "rules"}
@@ -90,7 +90,7 @@ export function TopInputToolbar(props: TopInputProps) {
             )
           }
         />
-        <TopToolbarIcon
+        <BlockSettingsToolbarIcon
           icon={BookOpenIcon}
           tooltip="Docs"
           isSelected={props.selectedSection === "docs"}
@@ -100,7 +100,7 @@ export function TopInputToolbar(props: TopInputProps) {
             )
           }
         />
-        <TopToolbarIcon
+        <BlockSettingsToolbarIcon
           icon={ChatBubbleLeftIcon}
           tooltip="Prompts"
           isSelected={props.selectedSection === "prompts"}
@@ -120,7 +120,7 @@ export function TopInputToolbar(props: TopInputProps) {
             )
           }
         /> */}
-        <TopToolbarIcon
+        <BlockSettingsToolbarIcon
           icon={WrenchScrewdriverIcon}
           tooltip="Tools"
           isSelected={props.selectedSection === "tools"}
@@ -130,7 +130,7 @@ export function TopInputToolbar(props: TopInputProps) {
             )
           }
         />
-        <TopToolbarIcon
+        <BlockSettingsToolbarIcon
           icon={Squares2X2Icon}
           tooltip="MCP"
           isSelected={props.selectedSection === "mcp"}

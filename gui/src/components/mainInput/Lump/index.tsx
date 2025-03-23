@@ -5,8 +5,8 @@ import {
   vscCommandCenterInactiveBorder,
   vscInputBackground,
 } from "../..";
-import { TopInputToolbar } from "./TopInputToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
+import { TopToolbar } from "./TopToolbar";
 
 interface LumpProps {
   open: boolean;
@@ -61,7 +61,7 @@ export function Lump(props: LumpProps) {
   return (
     <LumpDiv open={open}>
       <div className="mt-0.5 px-2">
-        <TopInputToolbar
+        <TopToolbar
           selectedSection={selectedSection}
           setSelectedSection={setSelectedSection}
         />
