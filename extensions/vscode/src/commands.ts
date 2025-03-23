@@ -284,6 +284,9 @@ async function processDiff(
   }
 
   await sidebar.webviewProtocol.request("exitEditMode", undefined);
+
+  // Save the file
+  await ide.saveFile(newOrCurrentUri);
 }
 
 function waitForSidebarReady(
