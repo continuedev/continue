@@ -186,30 +186,38 @@ class Anthropic extends BaseLLM {
     );
 
     const msgs = this.convertMessages(messages);
+
+    // Merge default headers with custom headers
+    const headers: any = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "anthropic-version": "2023-06-01",
+      "x-api-key": this.apiKey as string,
+      ...this.requestOptions?.headers,
+    };
+
+    // Handle the special case for anthropic-beta
+    this.setBetaHeaders(headers, shouldCacheSystemMessage);
+
+    // Create the request body
+    const requestBody = {
+      ...this.convertArgs(options),
+      messages: msgs,
+      system: shouldCacheSystemMessage
+        ? [
+          {
+            type: "text",
+            text: this.systemMessage,
+            cache_control: { type: "ephemeral" },
+          },
+        ]
+        : systemMessage,
+    };
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
-          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
-          : {}),
-      },
-      body: JSON.stringify({
-        ...this.convertArgs(options),
-        messages: msgs,
-        system: shouldCacheSystemMessage
-          ? [
-              {
-                type: "text",
-                text: systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
-          : systemMessage,
-      }),
+      headers,
+      body: JSON.stringify(requestBody),
       signal,
     });
 
@@ -298,6 +306,32 @@ class Anthropic extends BaseLLM {
         default:
           break;
       }
+    }
+  }
+
+  private setBetaHeaders(
+    headers: any,
+    shouldCacheSystemMessage: boolean | undefined,
+  ) {
+    const betaValues = new Set<string>();
+
+    // Add from existing header if present
+    const existingBeta = headers["anthropic-beta"];
+    if (existingBeta && typeof existingBeta === "string") {
+      existingBeta
+        .split(",")
+        .map((v) => v.trim())
+        .forEach((v) => betaValues.add(v));
+    }
+
+    // Add caching header if we should
+    if (shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation) {
+      betaValues.add("prompt-caching-2024-07-31");
+    }
+
+    // Update the header if we have values
+    if (betaValues.size > 0) {
+      headers["anthropic-beta"] = Array.from(betaValues).join(",");
     }
   }
 }
