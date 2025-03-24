@@ -1,4 +1,9 @@
-import { Listbox } from "@headlessui/react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "@headlessui/react";
 import {
   BuildingOfficeIcon,
   ChevronUpDownIcon,
@@ -36,7 +41,7 @@ export function ScopeSelect() {
   return (
     <Listbox value={selectedOrgId} onChange={handleChange}>
       <div className="relative">
-        <Listbox.Button className="border-vsc-input-border hover:bg-vsc-input-background text-vsc-foreground bg-vsc-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border border-solid p-2 hover:opacity-90">
+        <ListboxButton className="border-vsc-input-border hover:bg-vsc-input-background text-vsc-foreground bg-vsc-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border border-solid p-2 hover:opacity-90">
           <div className="flex w-full items-center justify-between">
             <div className="flex items-center gap-2">
               {selectedDisplay?.iconUrl ? (
@@ -50,16 +55,16 @@ export function ScopeSelect() {
             </div>
             <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
           </div>
-        </Listbox.Button>
+        </ListboxButton>
 
-        <Listbox.Options className="bg-vsc-input-background absolute z-50 mt-1 w-full max-w-[400px] list-none overflow-auto rounded p-0 shadow-lg">
+        <ListboxOptions className="bg-vsc-input-background absolute z-50 mt-1 w-full max-w-[400px] list-none overflow-auto rounded p-0 shadow-lg">
           {organizations.length > 0 && (
             <>
               <div className="text-vsc-foreground p-2 font-semibold">
                 Organizations
               </div>
               {organizations.map((org) => (
-                <Listbox.Option
+                <ListboxOption
                   key={org.id}
                   value={org.id}
                   className="text-vsc-foreground hover:bg-list-active cursor-pointer rounded p-2 text-sm hover:opacity-90"
@@ -72,14 +77,14 @@ export function ScopeSelect() {
                     )}
                     <span>{org.name}</span>
                   </div>
-                </Listbox.Option>
+                </ListboxOption>
               ))}
 
               <div className="bg-lightgray mx-1 my-1 h-px" />
             </>
           )}
 
-          <Listbox.Option
+          <ListboxOption
             value={null}
             className="text-vsc-foreground hover:bg-list-active cursor-pointer rounded p-2 hover:opacity-90"
           >
@@ -87,8 +92,8 @@ export function ScopeSelect() {
               <UserCircleIcon className="h-5 w-5" />
               <span>Personal</span>
             </div>
-          </Listbox.Option>
-        </Listbox.Options>
+          </ListboxOption>
+        </ListboxOptions>
       </div>
     </Listbox>
   );

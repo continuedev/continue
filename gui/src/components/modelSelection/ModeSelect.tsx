@@ -1,5 +1,10 @@
 // A dropdown menu for selecting between Chat, Edit, and Agent modes with keyboard shortcuts
-import { Listbox } from "@headlessui/react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "@headlessui/react";
 import {
   ChatBubbleLeftIcon,
   CheckIcon,
@@ -26,7 +31,7 @@ import {
   isJetBrains,
 } from "../../util";
 
-const StyledListboxButton = styled(Listbox.Button)`
+const StyledListboxButton = styled(ListboxButton)`
   font-family: inherit;
   display: flex;
   align-items: center;
@@ -41,7 +46,7 @@ const StyledListboxButton = styled(Listbox.Button)`
   }
 `;
 
-const StyledListboxOptions = styled(Listbox.Options)`
+const StyledListboxOptions = styled(ListboxOptions)`
   margin-top: 4px;
   position: absolute;
   list-style: none;
@@ -55,7 +60,7 @@ const StyledListboxOptions = styled(Listbox.Options)`
   background-color: ${vscInputBackground};
 `;
 
-const StyledListboxOption = styled(Listbox.Option)`
+const StyledListboxOption = styled(ListboxOption)`
   border-radius: ${defaultBorderRadius};
   padding: 6px 12px;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};

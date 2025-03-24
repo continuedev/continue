@@ -1,4 +1,9 @@
-import { Popover, Transition } from "@headlessui/react";
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from "@headlessui/react";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { Fragment } from "react";
 
@@ -17,9 +22,9 @@ export function AccountButton() {
 
   return (
     <Popover className="relative">
-      <Popover.Button className="bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground mr-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none">
+      <PopoverButton className="bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground mr-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none">
         <UserCircleIcon className="h-6 w-6" />
-      </Popover.Button>
+      </PopoverButton>
 
       <Transition
         as={Fragment}
@@ -30,7 +35,7 @@ export function AccountButton() {
         leaveFrom="opacity-100 translate-y-0"
         leaveTo="opacity-0 translate-y-1"
       >
-        <Popover.Panel className="bg-vsc-input-background absolute right-0 z-10 mt-2 w-[250px] rounded-md border border-zinc-700 p-4 shadow-lg">
+        <PopoverPanel className="bg-vsc-input-background absolute right-0 z-10 mt-2 w-[250px] rounded-md border border-zinc-700 p-4 shadow-lg">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col">
               <span className="font-medium">{session.account.label}</span>
@@ -50,7 +55,7 @@ export function AccountButton() {
               Sign out
             </SecondaryButton>
           </div>
-        </Popover.Panel>
+        </PopoverPanel>
       </Transition>
     </Popover>
   );

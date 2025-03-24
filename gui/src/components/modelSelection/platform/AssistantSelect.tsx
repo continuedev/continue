@@ -1,4 +1,4 @@
-import { Popover } from "@headlessui/react";
+import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext, useEffect, useRef } from "react";
@@ -79,17 +79,17 @@ export default function AssistantSelect() {
   return (
     <Popover>
       <div className="relative">
-        <Popover.Button
+        <PopoverButton
           data-testid="assistant-select-button"
           ref={buttonRef}
           className="mt-0.5 cursor-pointer border-none bg-transparent text-gray-400 hover:brightness-125"
           style={{ fontSize: fontSize(-3) }}
         >
           <AssistantSelectButton selectedProfile={selectedProfile} />
-        </Popover.Button>
+        </PopoverButton>
 
         <PopoverTransition>
-          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex min-w-[200px] max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border-2 border-zinc-600 p-0">
+          <PopoverPanel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex min-w-[200px] max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border-2 border-zinc-600 p-0">
             <AssistantSelectOptions
               onClose={() => {
                 if (buttonRef.current) {
@@ -97,7 +97,7 @@ export default function AssistantSelect() {
                 }
               }}
             />
-          </Popover.Panel>
+          </PopoverPanel>
         </PopoverTransition>
       </div>
     </Popover>
