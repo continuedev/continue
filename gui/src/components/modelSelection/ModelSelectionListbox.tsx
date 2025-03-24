@@ -1,11 +1,4 @@
 import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-  Transition,
-} from "@headlessui/react";
-import {
   CheckIcon,
   ChevronUpDownIcon,
   CubeIcon,
@@ -21,8 +14,14 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from "..";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../components/ui";
 import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
-
 export const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
 `;

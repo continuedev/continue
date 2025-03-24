@@ -1,14 +1,14 @@
 import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "@headlessui/react";
-import {
   BuildingOfficeIcon,
   ChevronUpDownIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../../components/ui/Listbox";
 import { useAuth } from "../../context/Auth";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectOrgThunk } from "../../redux";

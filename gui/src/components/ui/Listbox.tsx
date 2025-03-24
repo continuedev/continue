@@ -3,104 +3,83 @@ import {
   ListboxOption as HLOption,
   ListboxOptions as HLOptions,
   Listbox,
-  Transition,
 } from "@headlessui/react";
 import * as React from "react";
-import { useState } from "react";
 import { cn } from "../../util/cn";
+import { FontSizeModifier, useFontSize } from "./font";
 
-type ListboxButtonProps = React.ComponentProps<typeof HLButton>;
-const ListboxButton = React.forwardRef<HTMLButtonElement, ListboxButtonProps>(
-  ({ className, ...props }, ref) => (
-    <ListboxButton
-      ref={ref}
-      className={cn(
-        "border-input bg-background ring-offset-background placeholder:text-muted-foreground focus:ring-ring flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className,
-      )}
-      {...props}
-    />
-  ),
-);
-
-type ListboxOptionsProps = React.ComponentProps<typeof HLOptions>;
-const ListboxOptions = React.forwardRef<HTMLUListElement, ListboxOptionsProps>(
-  ({ className, ...props }, ref) => (
-    <HLOptions
-      ref={ref}
-      className={cn(
-        "bg-popover text-popover-foreground absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border p-1 shadow-md",
-        className,
-      )}
-      {...props}
-    />
-  ),
-);
-
-type ListboxOptionProps = React.ComponentProps<typeof HLOption>;
-const ListboxOption = React.forwardRef<HTMLLIElement, ListboxOptionProps>(
-  ({ className, ...props }, ref) => (
-    <HLOption
-      ref={ref}
-      className={cn(
-        "hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground relative flex cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none transition-colors",
-        className,
-      )}
-      {...props}
-    />
-  ),
-);
-
-type ListboxTransitionProps = React.ComponentProps<typeof Transition>;
-function ListboxTransition(props: ListboxTransitionProps) {
-  return (
-    <Transition
-      enter="transition duration-100 ease-out"
-      enterFrom="transform scale-95 opacity-0"
-      enterTo="transform scale-100 opacity-100"
-      leave="transition duration-75 ease-out"
-      leaveFrom="transform scale-100 opacity-100"
-      leaveTo="transform scale-95 opacity-0"
-      {...props}
-    />
-  );
-}
-
-const people = [
-  { id: 1, name: "Durward Reynolds" },
-  { id: 2, name: "Kenton Towne" },
-  { id: 3, name: "Therese Wunsch" },
-  { id: 4, name: "Benedict Kessler" },
-  { id: 5, name: "Katelyn Rohan" },
-];
-
-function ExampleListbox() {
-  const [selectedPerson, setSelectedPerson] = useState(people[0]);
-
-  return (
-    <Listbox value={selectedPerson} onChange={setSelectedPerson}>
-      <ListboxButton>{selectedPerson.name}</ListboxButton>
-      <ListboxTransition>
-        <ListboxOptions anchor="bottom">
-          {people.map((person) => (
-            <ListboxOption
-              key={person.id}
-              value={person}
-              className="data-[focus]:bg-blue-100"
-            >
-              {person.name}
-            </ListboxOption>
-          ))}
-        </ListboxOptions>
-      </ListboxTransition>
-    </Listbox>
-  );
-}
-
-export {
-  ExampleListbox,
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
+type ListboxButtonProps = React.ComponentProps<typeof HLButton> & {
+  fontSizeModifier?: FontSizeModifier;
 };
+
+const ListboxButton = React.forwardRef<HTMLButtonElement, ListboxButtonProps>(
+  ({ fontSizeModifier = -3, ...props }, ref) => {
+    const fontSize = useFontSize(fontSizeModifier);
+    return (
+      <HLButton
+        ref={ref}
+        {...props}
+        className={cn(
+          "border-vsc-input-border bg-vsc-input-background text-vsc-foreground m-0 flex flex-1 cursor-pointer flex-row items-center rounded-sm border border-solid px-1 py-0.5",
+          props.className,
+        )}
+        style={{
+          fontSize,
+          ...props.style,
+        }}
+      />
+    );
+  },
+);
+
+type ListboxOptionsProps = React.ComponentProps<typeof HLOptions> & {
+  fontSizeModifier?: FontSizeModifier;
+};
+const ListboxOptions = React.forwardRef<HTMLUListElement, ListboxOptionsProps>(
+  ({ fontSizeModifier = -3, ...props }, ref) => {
+    const fontSize = useFontSize(fontSizeModifier);
+    return (
+      <HLOptions
+        ref={ref}
+        anchor={"top start"}
+        {...props}
+        className={cn(
+          "bg-vsc-input-background border-vsc-input-border no-scrollbar max-h-[90vh] overflow-auto border border-solid p-0 shadow-lg",
+          props.className,
+        )}
+        style={{
+          fontSize,
+          ...props.style,
+        }}
+      />
+    );
+  },
+);
+
+type ListboxOptionProps = React.ComponentProps<typeof HLOption> & {
+  fontSizeModifier?: FontSizeModifier;
+};
+const ListboxOption = React.forwardRef<HTMLLIElement, ListboxOptionProps>(
+  ({ fontSizeModifier = -3, ...props }, ref) => {
+    const fontSize = useFontSize(fontSizeModifier);
+    return (
+      <HLOption
+        ref={ref}
+        {...props}
+        className={cn(
+          "text-vsc-foreground flex flex-row items-center justify-between px-2 py-1",
+          props.disabled
+            ? "bg-lightgray cursor-not-allowed opacity-50"
+            : "background-transparent hover:bg-list-active hover:text-list-active-foreground cursor-pointer opacity-100",
+          props.className,
+        )}
+        style={{
+          fontSize,
+          ...props.style,
+        }}
+      />
+    );
+  },
+);
+
+export { Listbox, ListboxButton, ListboxOption, ListboxOptions };

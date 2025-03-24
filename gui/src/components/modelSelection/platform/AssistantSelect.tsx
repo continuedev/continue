@@ -1,4 +1,3 @@
-import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { useContext, useEffect, useRef } from "react";
@@ -7,7 +6,8 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile } from "../../../redux";
 import { useAppDispatch } from "../../../redux/hooks";
 import { fontSize, isMetaEquivalentKeyPressed } from "../../../util";
-import PopoverTransition from "../../mainInput/InputToolbar/bottom/PopoverTransition";
+import { Popover, PopoverButton, PopoverPanel, Transition } from "../../ui";
+
 import AssistantIcon from "./AssistantIcon";
 import { AssistantSelectOptions } from "./AssistantSelectOptions";
 
@@ -88,7 +88,7 @@ export default function AssistantSelect() {
           <AssistantSelectButton selectedProfile={selectedProfile} />
         </PopoverButton>
 
-        <PopoverTransition>
+        <Transition>
           <PopoverPanel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex min-w-[200px] max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border-2 border-zinc-600 p-0">
             <AssistantSelectOptions
               onClose={() => {
@@ -98,7 +98,7 @@ export default function AssistantSelect() {
               }}
             />
           </PopoverPanel>
-        </PopoverTransition>
+        </Transition>
       </div>
     </Popover>
   );

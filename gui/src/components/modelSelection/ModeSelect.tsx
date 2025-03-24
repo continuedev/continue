@@ -1,11 +1,5 @@
 // A dropdown menu for selecting between Chat, Edit, and Agent modes with keyboard shortcuts
 import {
-  Listbox,
-  ListboxButton,
-  ListboxOption,
-  ListboxOptions,
-} from "@headlessui/react";
-import {
   ChatBubbleLeftIcon,
   CheckIcon,
   ChevronDownIcon,
@@ -24,12 +18,13 @@ import {
   selectCurrentMode,
   setMode,
 } from "../../redux/slices/sessionSlice";
+import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
 import {
-  fontSize,
-  getFontSize,
-  getMetaKeyLabel,
-  isJetBrains,
-} from "../../util";
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../ui/Listbox";
 
 const StyledListboxButton = styled(ListboxButton)`
   font-family: inherit;
@@ -58,21 +53,6 @@ const StyledListboxOptions = styled(ListboxOptions)`
   border-radius: ${defaultBorderRadius};
   border: 0.5px solid ${lightGray};
   background-color: ${vscInputBackground};
-`;
-
-const StyledListboxOption = styled(ListboxOption)`
-  border-radius: ${defaultBorderRadius};
-  padding: 6px 12px;
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
-
-  &:hover {
-    background: ${(props) =>
-      props.disabled ? "transparent" : `${lightGray}33`};
-  }
 `;
 
 const ShortcutText = styled.span`
@@ -126,60 +106,55 @@ function ModeSelect() {
       }}
     >
       <div className="relative">
-        <StyledListboxButton
+        <ListboxButton
           data-testid="mode-select-button"
-          className="h-[18px] overflow-hidden"
-          style={{ padding: 0, fontSize: fontSize(-3) }}
-        >
-          <div
-            style={{
-              backgroundColor: `${lightGray}33`,
-            }}
-            className="flex items-center gap-1 rounded-full px-2 py-0.5 text-gray-400 transition-colors duration-200"
-          >
-            {getModeIcon(mode)}
-            <span>{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
-            <ChevronDownIcon
-              className="h-2 w-2 flex-shrink-0"
-              aria-hidden="true"
-            />
-          </div>
-        </StyledListboxButton>
-        <StyledListboxOptions
-          className="z-50"
+          className="gap-1 rounded-full px-2 py-0.5 text-gray-400 transition-colors duration-200"
           style={{
-            fontSize: fontSize(-3),
+            backgroundColor: `${lightGray}33`,
           }}
         >
-          <StyledListboxOption value="agent" disabled={!agentModeSupported}>
-            <SparklesIcon className="h-3 w-3" />
-            <span className="font-semibold">Agent</span>
-            {/* <ShortcutText></ShortcutText> */}
+          {getModeIcon(mode)}
+          <span>{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+          <ChevronDownIcon
+            className="h-2 w-2 flex-shrink-0"
+            aria-hidden="true"
+          />
+        </ListboxButton>
+        <ListboxOptions className="min-w-32 max-w-48">
+          <ListboxOption value="agent" disabled={!agentModeSupported}>
+            <div className="flex flex-row items-center gap-1.5">
+              <SparklesIcon className="h-3 w-3" />
+              <span className="font-semibold">Agent</span>
+            </div>
             {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
             {!agentModeSupported && <span>(Not supported)</span>}
-          </StyledListboxOption>
+          </ListboxOption>
 
-          <StyledListboxOption value="chat">
-            <ChatBubbleLeftIcon className="h-3 w-3" />
-            <span className="font-semibold">Chat</span>
-            <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
+          <ListboxOption value="chat">
+            <div className="flex flex-row items-center gap-1.5">
+              <ChatBubbleLeftIcon className="h-3 w-3" />
+              <span className="font-semibold">Chat</span>
+              <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
+            </div>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
-          </StyledListboxOption>
+          </ListboxOption>
 
           {!jetbrains && (
-            <StyledListboxOption value="edit">
-              <PencilIcon className="h-3 w-3" />
-              <span className="font-semibold">Edit</span>
-              <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
+            <ListboxOption value="edit">
+              <div className="flex flex-row items-center gap-1.5">
+                <PencilIcon className="h-3 w-3" />
+                <span className="font-semibold">Edit</span>
+                <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
+              </div>
               {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
-            </StyledListboxOption>
+            </ListboxOption>
           )}
 
           <div className="text-lightgray px-2 py-1">
             {getMetaKeyLabel()}
             <span>.</span> for next mode
           </div>
-        </StyledListboxOptions>
+        </ListboxOptions>
       </div>
     </Listbox>
   );

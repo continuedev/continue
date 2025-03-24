@@ -1,4 +1,3 @@
-import { Listbox } from "@headlessui/react";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -21,6 +20,7 @@ import {
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { fontSize, isMetaEquivalentKeyPressed } from "../../util";
 import Shortcut from "../gui/Shortcut";
+import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 import { Divider } from "./platform/shared";
 
 interface ModelOptionProps {
@@ -35,8 +35,6 @@ interface Option {
   title: string;
   apiKey?: string;
 }
-
-const MAX_HEIGHT_PX = 300;
 
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
@@ -68,35 +66,28 @@ const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
   border-radius: ${defaultBorderRadius};
   border: 0.5px solid ${lightGray};
   background-color: ${vscInputBackground};
-
-  max-height: ${MAX_HEIGHT_PX}px;
-  overflow-y: scroll;
-
-  scrollbar-width: none;
-
-  ${(props) => (props.$showabove ? "bottom: 100%;" : "top: 100%;")}
 `;
 
-const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
-  border-radius: ${defaultBorderRadius};
-  padding: 4px 12px;
+// const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
+//   border-radius: ${defaultBorderRadius};
+//   padding: 4px 12px;
 
-  ${({ isDisabled }) =>
-    !isDisabled &&
-    `
-    cursor: pointer;
+//   ${({ isDisabled }) =>
+//     !isDisabled &&
+//     `
+//     cursor: pointer;
 
-    &:hover {
-      background: ${lightGray}33;
-    }
-  `}
+//     &:hover {
+//       background: ${lightGray}33;
+//     }
+//   `}
 
-  ${({ isDisabled }) =>
-    isDisabled &&
-    `
-    opacity: 0.5;
-  `}
-`;
+//   ${({ isDisabled }) =>
+//     isDisabled &&
+//     `
+//     opacity: 0.5;
+//   `}
+// `;
 
 const IconBase = styled.div<{ $hovered: boolean }>`
   width: 1.2em;
@@ -151,16 +142,16 @@ function ModelOption({
   }
 
   return (
-    <StyledListboxOption
+    <ListboxOption
       key={idx}
+      disabled={showMissingApiKeyMsg}
       value={option.value}
-      isDisabled={showMissingApiKeyMsg}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onClick={handleOptionClick}
     >
-      <div className="flex w-full flex-col gap-0.5">
-        <div className="flex w-full items-center justify-between">
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center justify-between">
           <div className="flex flex-grow items-center">
             <CubeIcon className="mr-2 h-3 w-3 flex-shrink-0" />
             <span className="flex-grow">
@@ -178,7 +169,7 @@ function ModelOption({
           </div>
         </div>
       </div>
-    </StyledListboxOption>
+    </ListboxOption>
   );
 }
 
@@ -186,7 +177,6 @@ function ModelSelect() {
   const dispatch = useDispatch();
   const defaultModel = useAppSelector(selectDefaultModel);
   const allModels = useAppSelector((state) => state.config.config.models);
-  const [showAbove, setShowAbove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -217,12 +207,6 @@ function ModelSelect() {
   }, [allModels]);
 
   useEffect(() => {
-    const handleResize = () => calculatePosition();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "'" && isMetaEquivalentKeyPressed(event as any)) {
         const direction = event.shiftKey ? -1 : 1;
@@ -241,18 +225,6 @@ function ModelSelect() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [options, defaultModel]);
-
-  function calculatePosition() {
-    if (!buttonRef.current) {
-      return;
-    }
-    const rect = buttonRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const dropdownHeight = MAX_HEIGHT_PX;
-
-    setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
-  }
 
   function onClickAddModel(e: MouseEvent) {
     e.stopPropagation();
@@ -282,30 +254,23 @@ function ModelSelect() {
       }}
     >
       <div className="relative">
-        <StyledListboxButton
+        <ListboxButton
           data-testid="model-select-button"
           ref={buttonRef}
           className="h-[18px] overflow-hidden"
-          style={{ padding: 0 }}
-          onClick={calculatePosition}
         >
-          <div className="flex max-w-[33vw] items-center gap-0.5 text-gray-400 transition-colors duration-200">
+          <div className="flex items-center gap-0.5 text-gray-400 transition-colors duration-200">
             <span className="truncate">
               {modelSelectTitle(defaultModel) || "Select model"}{" "}
             </span>
             <ChevronDownIcon
-              className="h-3 w-3 flex-shrink-0"
+              className="h-2 w-2 flex-shrink-0"
               aria-hidden="true"
             />
           </div>
-        </StyledListboxButton>
-        <StyledListboxOptions
-          $showabove={showAbove}
-          className="z-50 max-w-[90vw]"
-        >
-          <div
-            className={`max-h-[${MAX_HEIGHT_PX}px] no-scrollbar overflow-y-scroll`}
-          >
+        </ListboxButton>
+        <ListboxOptions>
+          <div className={`no-scrollbar max-h-[300px] overflow-y-scroll`}>
             {sortedOptions.map((option, idx) => (
               <ModelOption
                 option={option}
@@ -322,7 +287,7 @@ function ModelSelect() {
 
             {selectedProfile?.profileType === "local" && (
               <>
-                <StyledListboxOption
+                <ListboxOption
                   key={options.length}
                   onClick={onClickAddModel}
                   value={"addModel" as any}
@@ -331,7 +296,7 @@ function ModelSelect() {
                     <PlusIcon className="mr-2 h-3 w-3" />
                     Add Chat model
                   </div>
-                </StyledListboxOption>
+                </ListboxOption>
               </>
             )}
 
@@ -341,7 +306,7 @@ function ModelSelect() {
               <Shortcut>meta '</Shortcut> to toggle model
             </span>
           </div>
-        </StyledListboxOptions>
+        </ListboxOptions>
       </div>
     </Listbox>
   );

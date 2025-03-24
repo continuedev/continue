@@ -1,13 +1,12 @@
+import { UserCircleIcon } from "@heroicons/react/24/outline";
+
+import { SecondaryButton } from "../../components";
 import {
   Popover,
   PopoverButton,
   PopoverPanel,
   Transition,
-} from "@headlessui/react";
-import { UserCircleIcon } from "@heroicons/react/24/outline";
-import { Fragment } from "react";
-
-import { SecondaryButton } from "../../components";
+} from "../../components/ui";
 import { useAuth } from "../../context/Auth";
 import { ScopeSelect } from "./ScopeSelect";
 
@@ -26,16 +25,8 @@ export function AccountButton() {
         <UserCircleIcon className="h-6 w-6" />
       </PopoverButton>
 
-      <Transition
-        as={Fragment}
-        enter="transition ease-out duration-200"
-        enterFrom="opacity-0 translate-y-1"
-        enterTo="opacity-100 translate-y-0"
-        leave="transition ease-in duration-150"
-        leaveFrom="opacity-100 translate-y-0"
-        leaveTo="opacity-0 translate-y-1"
-      >
-        <PopoverPanel className="bg-vsc-input-background absolute right-0 z-10 mt-2 w-[250px] rounded-md border border-zinc-700 p-4 shadow-lg">
+      <Transition>
+        <PopoverPanel className="bg-vsc-input-background absolute right-0 z-10 mt-1 w-[250px] rounded-md border border-zinc-700 p-4 shadow-lg">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col">
               <span className="font-medium">{session.account.label}</span>

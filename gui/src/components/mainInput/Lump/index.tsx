@@ -66,7 +66,11 @@ export function Lump(props: LumpProps) {
           setSelectedSection={setSelectedSection}
         />
 
-        <ContentDiv hasSection={!!selectedSection} isVisible={isVisible}>
+        <ContentDiv
+          className="thin-scrollbar pr-0.5"
+          hasSection={!!selectedSection}
+          isVisible={isVisible}
+        >
           <SelectedSection selectedSection={displayedSection} />
         </ContentDiv>
       </div>

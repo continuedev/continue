@@ -1,10 +1,15 @@
-import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { type ModelDescription } from "core";
-import { Fragment } from "react";
 import { defaultBorderRadius } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
 import InfoHover from "../../components/InfoHover";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../components/ui";
 import { fontSize } from "../../util";
 
 interface ModelRoleSelectorProps {
@@ -44,9 +49,9 @@ const ModelRoleSelector = ({
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>
         {({ open }) => (
           <div className="relative">
-            <Listbox.Button
+            <ListboxButton
               aria-disabled={models.length === 0}
-              className={`border-vsc-input-border bg-vsc-background ${models.length > 0 ? "hover:bg-vsc-input-background cursor-pointer" : "cursor-not-allowed opacity-50"} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-1.5 py-0.5 text-left text-sm`}
+              className={`${models.length === 0 ? "cursor-not-allowed opacity-50" : ""} `}
             >
               {models.length === 0 ? (
                 <span
@@ -66,28 +71,15 @@ const ModelRoleSelector = ({
                   <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
                 </div>
               ) : null}
-            </Listbox.Button>
+            </ListboxButton>
 
-            <Transition
-              as={Fragment}
-              show={open}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
-            >
-              <Listbox.Options
+            <Transition>
+              <ListboxOptions
                 style={{ borderRadius: defaultBorderRadius }}
-                className="bg-vsc-input-background border-vsc-input-border fixed z-[800] mt-0.5 min-w-40 overflow-auto border border-solid p-0 shadow-lg"
+                className="min-w-40"
               >
                 {models.map((option, idx) => (
-                  <Listbox.Option
-                    key={idx}
-                    value={option.title}
-                    className={`text-vsc-foreground hover:bg-list-active hover:text-list-active-foreground flex cursor-pointer flex-row items-center justify-between px-1 py-0.5`}
-                  >
+                  <ListboxOption key={idx} value={option.title}>
                     <span
                       className="lines lines-1 relative flex h-4 items-center gap-2"
                       style={{ fontSize: fontSize(-3) }}
@@ -97,9 +89,9 @@ const ModelRoleSelector = ({
                     {option.title === selectedModel?.title && (
                       <CheckIcon className="h-3 w-3" aria-hidden="true" />
                     )}
-                  </Listbox.Option>
+                  </ListboxOption>
                 ))}
-              </Listbox.Options>
+              </ListboxOptions>
             </Transition>
           </div>
         )}

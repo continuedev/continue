@@ -30,8 +30,6 @@ import {
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
-// import { ExampleListbox } from "../ui/Listbox2";
-import { ExampleListbox } from "../ui/Listbox";
 import HoverItem from "./InputToolbar/bottom/HoverItem";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
@@ -118,7 +116,6 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
           <ModeSelect />
-          <ExampleListbox />
           <ModelSelect />
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
