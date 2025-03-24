@@ -460,7 +460,7 @@ export default class DocsService {
     // This particular failure will not mark as a failed config in global context
     // Since SiteIndexingConfig is likely to be valid
     try {
-      await provider.embed(["continue-test-run"]);
+      await provider.embed(["continue-test-run"], "chunk");
     } catch (e) {
       console.error("Failed to test embeddings connection", e);
       return;
@@ -596,7 +596,7 @@ export default class DocsService {
         try {
           const subpathEmbeddings =
             article.chunks.length > 0
-              ? await provider.embed(article.chunks.map((c) => c.content))
+              ? await provider.embed(article.chunks.map((c) => c.content), "chunk")
               : [];
           chunks.push(...article.chunks);
           embeddings.push(...subpathEmbeddings);
@@ -761,7 +761,7 @@ export default class DocsService {
       });
     }
 
-    const [vector] = await provider.embed([query]);
+    const [vector] = await provider.embed([query], "query");
 
     return await this.retrieveChunks(startUrl, vector, nRetrieve, isPreindexed);
   }

@@ -139,7 +139,7 @@ export interface ILLM extends LLMOptions {
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
 
-  embed(chunks: string[]): Promise<number[][]>;
+  embed(chunks: string[], embedding_task: EmbeddingTasks): Promise<number[][]>;
 
   rerank(query: string, chunks: Chunk[]): Promise<number[]>;
 
@@ -484,6 +484,9 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
 export type ToastType = "info" | "error" | "warning";
 
+export type EmbeddingTasks = "chunk" | "query";
+export type EmbeddingPrefixes = Partial<Record<EmbeddingTasks, string>>;
+
 export interface LLMOptions {
   model: string;
 
@@ -519,6 +522,7 @@ export interface LLMOptions {
   embeddingId?: string;
   maxEmbeddingChunkSize?: number;
   maxEmbeddingBatchSize?: number;
+  embeddingPrefixes?: EmbeddingPrefixes;
 
   // Cloudflare options
   accountId?: string;
@@ -981,6 +985,7 @@ export interface EmbedOptions {
   requestOptions?: RequestOptions;
   maxEmbeddingChunkSize?: number;
   maxEmbeddingBatchSize?: number;
+  embeddingPrefixes?: EmbeddingPrefixes;
 
   // AWS options
   profile?: string;
