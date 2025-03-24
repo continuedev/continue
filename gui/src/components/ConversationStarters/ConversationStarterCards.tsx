@@ -21,8 +21,6 @@ export function ConversationStarterCards() {
   );
 
   function onClick(command: SlashCommandDescription) {
-    debugger;
-
     if (command.prompt) {
       dispatch(
         setMainEditorContentTrigger(getParagraphNodeFromString(command.prompt)),
