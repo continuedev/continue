@@ -28,7 +28,11 @@ export class DocsCache {
     // Use normalized embedding ID for the cache key
     const normalizedEmbeddingId = DocsCache.normalizeEmbeddingId(embeddingId);
     const normalizedUrl = encodeURIComponent(url.replace(/\//g, "_"));
-    return `${DocsCache.DIR_PREFIX}/${normalizedEmbeddingId}/${normalizedUrl}`;
+
+    // Organize by URL -> embedding ID for easier bulk deletion of a site
+    const filepath = `${DocsCache.DIR_PREFIX}/${normalizedUrl}/${normalizedEmbeddingId}`;
+
+    return filepath;
   }
 
   /**
