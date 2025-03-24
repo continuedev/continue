@@ -28,7 +28,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
-import ModelSelect from "../modelSelection/ModelSelect";
+import ExampleListbox from "../Listbox";
 import ModeSelect from "../modelSelection/ModeSelect";
 import HoverItem from "./InputToolbar/bottom/HoverItem";
 
@@ -116,7 +116,11 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
           <ModeSelect />
-          <ModelSelect />
+          <ExampleListbox />
+          {/* <div className="flex-shrink-1 flex min-w-0 flex-1">
+            <ModelSelect />
+
+          </div> */}
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
               (supportsImages && (

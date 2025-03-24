@@ -1,4 +1,4 @@
-import { Listbox } from "@headlessui/react";
+import { Listbox, Transition } from "@headlessui/react";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -9,7 +9,7 @@ import {
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import { defaultBorderRadius, lightGray } from "..";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
@@ -36,8 +36,6 @@ interface Option {
   apiKey?: string;
 }
 
-const MAX_HEIGHT_PX = 300;
-
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
   display: flex;
@@ -51,30 +49,6 @@ const StyledListboxButton = styled(Listbox.Button)`
   &:focus {
     outline: none;
   }
-`;
-
-const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
-  margin-top: 4px;
-  position: absolute;
-  list-style: none;
-  padding: 0px;
-  white-space: nowrap;
-  cursor: default;
-
-  display: flex;
-  flex-direction: column;
-
-  font-size: ${fontSize(-3)};
-  border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${lightGray};
-  background-color: ${vscInputBackground};
-
-  max-height: ${MAX_HEIGHT_PX}px;
-  overflow-y: scroll;
-
-  scrollbar-width: none;
-
-  ${(props) => (props.$showabove ? "bottom: 100%;" : "top: 100%;")}
 `;
 
 const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
@@ -217,12 +191,6 @@ function ModelSelect() {
   }, [allModels]);
 
   useEffect(() => {
-    const handleResize = () => calculatePosition();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "'" && isMetaEquivalentKeyPressed(event as any)) {
         const direction = event.shiftKey ? -1 : 1;
@@ -241,18 +209,6 @@ function ModelSelect() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [options, defaultModel]);
-
-  function calculatePosition() {
-    if (!buttonRef.current) {
-      return;
-    }
-    const rect = buttonRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const spaceAbove = rect.top;
-    const dropdownHeight = MAX_HEIGHT_PX;
-
-    setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
-  }
 
   function onClickAddModel(e: MouseEvent) {
     e.stopPropagation();
@@ -281,68 +237,83 @@ function ModelSelect() {
         dispatch(setDefaultModel({ title: val }));
       }}
     >
-      <div className="relative">
-        <StyledListboxButton
-          data-testid="model-select-button"
-          ref={buttonRef}
-          className="h-[18px] overflow-hidden"
-          style={{ padding: 0 }}
-          onClick={calculatePosition}
-        >
-          <div className="flex max-w-[33vw] items-center gap-0.5 text-gray-400 transition-colors duration-200">
-            <span className="truncate">
-              {modelSelectTitle(defaultModel) || "Select model"}{" "}
-            </span>
-            <ChevronDownIcon
-              className="h-3 w-3 flex-shrink-0"
-              aria-hidden="true"
-            />
-          </div>
-        </StyledListboxButton>
-        <StyledListboxOptions
-          $showabove={showAbove}
-          className="z-50 max-w-[90vw]"
-        >
-          <div
-            className={`max-h-[${MAX_HEIGHT_PX}px] no-scrollbar overflow-y-scroll`}
+      {({ open }) => (
+        <div className="relative">
+          <StyledListboxButton
+            data-testid="model-select-button"
+            ref={buttonRef}
+            className="h-[18px] overflow-hidden p-0"
+            style={{ padding: 0 }}
+            // onClick={reCalculate}
           >
-            {sortedOptions.map((option, idx) => (
-              <ModelOption
-                option={option}
-                idx={idx}
-                key={idx}
-                showMissingApiKeyMsg={option.apiKey === ""}
-                isSelected={option.value === defaultModel?.title}
+            <div className="flex items-center gap-0.5 text-gray-400 transition-colors duration-200">
+              <span className="truncate">
+                {modelSelectTitle(defaultModel) || "Select model"}{" "}
+              </span>
+              <ChevronDownIcon
+                className="h-3 w-3 flex-shrink-0"
+                aria-hidden="true"
               />
-            ))}
-          </div>
+            </div>
+          </StyledListboxButton>
+          <Transition
+            show={open}
+            enter="transition duration-100 ease-out"
+            enterFrom="transform scale-95 opacity-0"
+            enterTo="transform scale-100 opacity-100"
+            leave="transition duration-75 ease-out"
+            leaveFrom="transform scale-100 opacity-100"
+            leaveTo="transform scale-95 opacity-0"
+            // afterLeave={afterLeave}
+          >
+            <Listbox.Options
+              className={
+                "no-scrollbar border-lightgray bg-vsc-input-background absolute z-50 mt-1 flex cursor-default list-none flex-col overflow-auto whitespace-nowrap rounded-sm border-[0.5px] border-solid p-0"
+              }
+              style={{
+                fontSize: fontSize(-3),
+              }}
+            >
+              <div className={`no-scrollbar max-h-[300px] overflow-y-scroll`}>
+                {sortedOptions.map((option, idx) => (
+                  <ModelOption
+                    option={option}
+                    idx={idx}
+                    key={idx}
+                    showMissingApiKeyMsg={option.apiKey === ""}
+                    isSelected={option.value === defaultModel?.title}
+                  />
+                ))}
+              </div>
 
-          <div className="mt-auto">
-            <Divider className="!my-0" />
+              <div className="mt-auto">
+                <Divider className="!my-0" />
 
-            {selectedProfile?.profileType === "local" && (
-              <>
-                <StyledListboxOption
-                  key={options.length}
-                  onClick={onClickAddModel}
-                  value={"addModel" as any}
-                >
-                  <div className="flex items-center py-0.5">
-                    <PlusIcon className="mr-2 h-3 w-3" />
-                    Add Chat model
-                  </div>
-                </StyledListboxOption>
-              </>
-            )}
+                {selectedProfile?.profileType === "local" && (
+                  <>
+                    <StyledListboxOption
+                      key={options.length}
+                      onClick={onClickAddModel}
+                      value={"addModel" as any}
+                    >
+                      <div className="flex items-center py-0.5">
+                        <PlusIcon className="mr-2 h-3 w-3" />
+                        Add Chat model
+                      </div>
+                    </StyledListboxOption>
+                  </>
+                )}
 
-            <Divider className="!my-0" />
+                <Divider className="!my-0" />
 
-            <span className="block px-3 py-2" style={{ color: lightGray }}>
-              <Shortcut>meta '</Shortcut> to toggle model
-            </span>
-          </div>
-        </StyledListboxOptions>
-      </div>
+                <span className="block px-3 py-2" style={{ color: lightGray }}>
+                  <Shortcut>meta '</Shortcut> to toggle model
+                </span>
+              </div>
+            </Listbox.Options>
+          </Transition>
+        </div>
+      )}
     </Listbox>
   );
 }
