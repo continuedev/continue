@@ -11,6 +11,7 @@ import {
   updateConfig,
 } from "../../../../redux/slices/configSlice";
 import { isJetBrains } from "../../../../util";
+import { AddBlockButton } from "./AddBlockButton";
 
 export function ModelsSection() {
   const { selectedProfile } = useAuth();
@@ -51,60 +52,63 @@ export function ModelsSection() {
   }
 
   return (
-    <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 sm:grid-cols-[auto_1fr]">
-      <ModelRoleSelector
-        displayName="Chat"
-        description="Used in the chat interface"
-        models={config.modelsByRole.chat}
-        selectedModel={
-          selectedChatModel
-            ? {
-                title: selectedChatModel.title,
-                provider: selectedChatModel.provider,
-                model: selectedChatModel.model,
-              }
-            : null
-        }
-        onSelect={(model) => handleChatModelSelection(model)}
-      />
-      <ModelRoleSelector
-        displayName="Autocomplete"
-        description="Used to generate code completion suggestions"
-        models={config.modelsByRole.autocomplete}
-        selectedModel={config.selectedModelByRole.autocomplete}
-        onSelect={(model) => handleRoleUpdate("autocomplete", model)}
-      />
-      {/* Jetbrains has a model selector inline */}
-      {!jetbrains && (
+    <>
+      <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 pb-2 sm:grid-cols-[auto_1fr]">
         <ModelRoleSelector
-          displayName="Edit"
-          description="Used for inline edits"
-          models={config.modelsByRole.edit}
-          selectedModel={config.selectedModelByRole.edit}
-          onSelect={(model) => handleRoleUpdate("edit", model)}
+          displayName="Chat"
+          description="Used in the chat interface"
+          models={config.modelsByRole.chat}
+          selectedModel={
+            selectedChatModel
+              ? {
+                  title: selectedChatModel.title,
+                  provider: selectedChatModel.provider,
+                  model: selectedChatModel.model,
+                }
+              : null
+          }
+          onSelect={(model) => handleChatModelSelection(model)}
         />
-      )}
-      <ModelRoleSelector
-        displayName="Apply"
-        description="Used to apply generated codeblocks to files"
-        models={config.modelsByRole.apply}
-        selectedModel={config.selectedModelByRole.apply}
-        onSelect={(model) => handleRoleUpdate("apply", model)}
-      />
-      <ModelRoleSelector
-        displayName="Embed"
-        description="Used to generate and query embeddings for the @codebase and @docs context providers"
-        models={config.modelsByRole.embed}
-        selectedModel={config.selectedModelByRole.embed}
-        onSelect={(model) => handleRoleUpdate("embed", model)}
-      />
-      <ModelRoleSelector
-        displayName="Rerank"
-        description="Used for reranking results from the @codebase and @docs context providers"
-        models={config.modelsByRole.rerank}
-        selectedModel={config.selectedModelByRole.rerank}
-        onSelect={(model) => handleRoleUpdate("rerank", model)}
-      />
-    </div>
+        <ModelRoleSelector
+          displayName="Autocomplete"
+          description="Used to generate code completion suggestions"
+          models={config.modelsByRole.autocomplete}
+          selectedModel={config.selectedModelByRole.autocomplete}
+          onSelect={(model) => handleRoleUpdate("autocomplete", model)}
+        />
+        {/* Jetbrains has a model selector inline */}
+        {!jetbrains && (
+          <ModelRoleSelector
+            displayName="Edit"
+            description="Used for inline edits"
+            models={config.modelsByRole.edit}
+            selectedModel={config.selectedModelByRole.edit}
+            onSelect={(model) => handleRoleUpdate("edit", model)}
+          />
+        )}
+        <ModelRoleSelector
+          displayName="Apply"
+          description="Used to apply generated codeblocks to files"
+          models={config.modelsByRole.apply}
+          selectedModel={config.selectedModelByRole.apply}
+          onSelect={(model) => handleRoleUpdate("apply", model)}
+        />
+        <ModelRoleSelector
+          displayName="Embed"
+          description="Used to generate and query embeddings for the @codebase and @docs context providers"
+          models={config.modelsByRole.embed}
+          selectedModel={config.selectedModelByRole.embed}
+          onSelect={(model) => handleRoleUpdate("embed", model)}
+        />
+        <ModelRoleSelector
+          displayName="Rerank"
+          description="Used for reranking results from the @codebase and @docs context providers"
+          models={config.modelsByRole.rerank}
+          selectedModel={config.selectedModelByRole.rerank}
+          onSelect={(model) => handleRoleUpdate("rerank", model)}
+        />
+      </div>
+      <AddBlockButton blockType="models" />
+    </>
   );
 }

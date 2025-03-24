@@ -138,6 +138,8 @@ function DocsIndexingStatus({
               />
             )}
 
+            <EditBlockButton blockType="docs" block={docFromYaml} />
+
             {["aborted", "complete", "failed"].includes(
               status?.status ?? "",
             ) && (
@@ -146,8 +148,6 @@ function DocsIndexingStatus({
                 onClick={reIndex}
               />
             )}
-
-            <EditBlockButton blockType="docs" block={docFromYaml} />
 
             {/* Removed StatusIndicator from here */}
           </div>
