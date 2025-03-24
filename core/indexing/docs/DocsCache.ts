@@ -1,5 +1,5 @@
+import request from "request";
 import { Chunk } from "../..";
-import { CdnClient } from "../../util/CDNClient";
 
 export interface SiteIndexingResults {
   chunks: (Chunk & { embedding: number[] })[];
@@ -8,7 +8,8 @@ export interface SiteIndexingResults {
 }
 
 export class DocsCache {
-  static readonly DIR_PREFIX: string = "docs-cache";
+  static readonly AWS_REGION: string = "us-west-1";
+  static readonly BUCKET_NAME: string = "continue-indexed-docs";
 
   /**
    * Normalizes an embedding ID by stripping the constructor name part.
@@ -24,19 +25,27 @@ export class DocsCache {
     return parts.slice(1).join("::");
   }
 
-  static getFilepathForEmbeddingId(embeddingId: string, url: string): string {
-    // Use normalized embedding ID for the cache key
+  /**
+   * Gets the filepath for a given embedding ID and URL
+   */
+  static getFilepathForEmbeddingIdAndUrl(
+    embeddingId: string,
+    url: string,
+  ): string {
     const normalizedEmbeddingId = DocsCache.normalizeEmbeddingId(embeddingId);
     const normalizedUrl = encodeURIComponent(url.replace(/\//g, "_"));
-
-    // Organize by URL -> embedding ID for easier bulk deletion of a site
-    const filepath = `${DocsCache.DIR_PREFIX}/${normalizedUrl}/${normalizedEmbeddingId}`;
-
-    return filepath;
+    return normalizedEmbeddingId + "/" + normalizedUrl;
   }
 
   /**
-   * Downloads cached site indexing results for a given embedding ID and URL
+   * Gets the fully qualified S3 URL for a given filepath
+   */
+  private static getS3Url(filepath: string): string {
+    return `https://${this.BUCKET_NAME}.s3.${this.AWS_REGION}.amazonaws.com/${filepath}`;
+  }
+
+  /**
+   * Downloads cached site indexing results from S3 for a given embedding ID and URL
    * @param embeddingId The embedding ID
    * @param url The URL of the document
    * @returns The downloaded data as a string
@@ -45,7 +54,28 @@ export class DocsCache {
     embeddingId: string,
     url: string,
   ): Promise<string> {
-    const filepath = this.getFilepathForEmbeddingId(embeddingId, url);
-    return await CdnClient.downloadFromCdn(filepath);
+    const filepath = DocsCache.getFilepathForEmbeddingIdAndUrl(
+      embeddingId,
+      url,
+    );
+
+    return new Promise<string>((resolve, reject) => {
+      let data = "";
+      const download = request({
+        url: this.getS3Url(filepath),
+      });
+
+      download.on("response", (response: any) => {
+        if (response.statusCode !== 200) {
+          reject(
+            new Error("There was an error retrieving the pre-indexed doc"),
+          );
+        }
+      });
+
+      download.on("error", (err: any) => reject(err));
+      download.on("data", (chunk: any) => (data += chunk));
+      download.on("end", () => resolve(data));
+    });
   }
 }
