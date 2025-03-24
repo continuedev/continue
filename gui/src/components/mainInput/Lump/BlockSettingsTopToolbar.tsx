@@ -102,6 +102,7 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
     <div className="flex w-full items-center justify-between">
       <div className="xs:flex hidden items-center justify-center text-gray-400">
         <BlockSettingsToolbarIcon
+          className="-ml-1.5"
           icon={isExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
           tooltip={isExpanded ? "Collapse sections" : "Expand sections"}
           isSelected={false}
