@@ -21,7 +21,6 @@ import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { fontSize, isMetaEquivalentKeyPressed } from "../../util";
 import Shortcut from "../gui/Shortcut";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
-import { Divider } from "./platform/shared";
 
 interface ModelOptionProps {
   option: Option;
@@ -283,8 +282,7 @@ function ModelSelect() {
           </div>
 
           <div className="mt-auto">
-            <Divider className="!my-0" />
-
+            <div className="bg-lightgray my-0 h-[0.5px]" />
             {selectedProfile?.profileType === "local" && (
               <>
                 <ListboxOption
@@ -300,8 +298,7 @@ function ModelSelect() {
               </>
             )}
 
-            <Divider className="!my-0" />
-
+            <div className="bg-lightgray my-0 h-[0.5px]" />
             <span className="block px-3 py-2" style={{ color: lightGray }}>
               <Shortcut>meta '</Shortcut> to toggle model
             </span>

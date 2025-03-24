@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -19,6 +19,7 @@ import {
   setMode,
 } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
+import Shortcut from "../gui/Shortcut";
 import {
   Listbox,
   ListboxButton,
@@ -66,7 +67,13 @@ function ModeSelect() {
   const mode = useAppSelector(selectCurrentMode);
   const selectedModel = useAppSelector(selectDefaultModel);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
-  const jetbrains = isJetBrains();
+
+  const jetbrains = useMemo(() => {
+    return isJetBrains();
+  }, []);
+  const metaKeyLabel = useMemo(() => {
+    return getMetaKeyLabel();
+  }, []);
 
   const getModeIcon = (mode: MessageModes) => {
     switch (mode) {
@@ -151,8 +158,8 @@ function ModeSelect() {
           )}
 
           <div className="text-lightgray px-2 py-1">
-            {getMetaKeyLabel()}
-            <span>.</span> for next mode
+            <Shortcut>{metaKeyLabel}</Shortcut>
+            <Shortcut>.</Shortcut> for next mode
           </div>
         </ListboxOptions>
       </div>
