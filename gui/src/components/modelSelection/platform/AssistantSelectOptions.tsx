@@ -48,7 +48,7 @@ export function AssistantSelectOptions({
   }
 
   return (
-    <div className="border-lightgray flex flex-col">
+    <div className="border-lightgray flex w-full flex-col overflow-x-hidden pt-0">
       <div className={`max-h-[300px] w-full`}>
         {profiles.map((profile, idx) => {
           return (
@@ -68,13 +68,13 @@ export function AssistantSelectOptions({
                 onClose();
               }}
             >
-              <div className="flex flex-row items-center gap-2">
-                <div className="h-3 w-3 sm:h-4 sm:w-4">
+              <div className="flex w-full items-center">
+                <div className="mr-2 h-4 w-4 flex-shrink-0">
                   <AssistantIcon assistant={profile} />
                 </div>
                 <span
-                  className="lines lines-1 flex-1 text-xs"
-                  style={{ fontSize: getFontSize() - 5 }}
+                  className="flex-1 truncate"
+                  style={{ fontSize: getFontSize() - 2 }}
                 >
                   {profile.title}
                 </span>
@@ -90,10 +90,10 @@ export function AssistantSelectOptions({
           onClick={session ? onNewAssistant : () => login(false)}
         >
           <div
-            className="flex items-center gap-2 py-0.5"
+            className="flex items-center py-0.5"
             style={{ fontSize: getFontSize() - 2 }}
           >
-            <PlusIcon className="h-3 w-3 flex-shrink-0 sm:h-4 sm:w-4" />
+            <PlusIcon className="mr-2 h-4 w-4 flex-shrink-0" />
             New Assistant
           </div>
         </OptionDiv>
