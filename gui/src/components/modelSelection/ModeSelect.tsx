@@ -9,7 +9,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -25,6 +25,7 @@ import {
   getMetaKeyLabel,
   isJetBrains,
 } from "../../util";
+import Shortcut from "../gui/Shortcut";
 
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
@@ -81,7 +82,13 @@ function ModeSelect() {
   const mode = useAppSelector(selectCurrentMode);
   const selectedModel = useAppSelector(selectDefaultModel);
   const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
-  const jetbrains = isJetBrains();
+
+  const jetbrains = useMemo(() => {
+    return isJetBrains();
+  }, []);
+  const metaKeyLabel = useMemo(() => {
+    return getMetaKeyLabel();
+  }, []);
 
   const getModeIcon = (mode: MessageModes) => {
     switch (mode) {
@@ -133,7 +140,9 @@ function ModeSelect() {
             className="flex items-center gap-1 rounded-full px-2 py-0.5 text-gray-400 transition-colors duration-200"
           >
             {getModeIcon(mode)}
-            <span>{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+            <span className="hidden sm:block">
+              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+            </span>
             <ChevronDownIcon
               className="h-2 w-2 flex-shrink-0"
               aria-hidden="true"
@@ -157,7 +166,7 @@ function ModeSelect() {
           <StyledListboxOption value="chat">
             <ChatBubbleLeftIcon className="h-3 w-3" />
             <span className="font-semibold">Chat</span>
-            <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
+            <ShortcutText>{metaKeyLabel}L</ShortcutText>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
           </StyledListboxOption>
 
@@ -165,14 +174,14 @@ function ModeSelect() {
             <StyledListboxOption value="edit">
               <PencilIcon className="h-3 w-3" />
               <span className="font-semibold">Edit</span>
-              <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
+              <ShortcutText>{metaKeyLabel}I</ShortcutText>
               {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
             </StyledListboxOption>
           )}
 
           <div className="text-lightgray px-2 py-1">
-            {getMetaKeyLabel()}
-            <span>.</span> for next mode
+            <Shortcut>{metaKeyLabel}</Shortcut>
+            <Shortcut>.</Shortcut> for next mode
           </div>
         </StyledListboxOptions>
       </div>
