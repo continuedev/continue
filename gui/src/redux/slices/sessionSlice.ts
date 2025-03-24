@@ -432,6 +432,13 @@ export const sessionSlice = createSlice({
         }
       }
     },
+    streamComplete: (state) => {
+      const lastItem = state.history[state.history.length - 1];
+      if (lastItem.reasoning?.active) {
+        lastItem.reasoning.active = false;
+        lastItem.reasoning.endAt = Date.now();
+      }
+    },
     newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
       state.lastSessionId = state.id;
 
@@ -723,6 +730,7 @@ export const {
   addContextItemsAtIndex,
   setInactive,
   streamUpdate,
+  streamComplete,
   newSession,
   updateSessionTitle,
   addHighlightedCode,
