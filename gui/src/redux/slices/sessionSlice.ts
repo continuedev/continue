@@ -21,8 +21,6 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
-import { ProfileDescription } from "core/config/ConfigHandler";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -45,11 +43,6 @@ type SessionState = {
   isStreaming: boolean;
   title: string;
   id: string;
-  /** null indicates loading state */
-  availableProfiles: ProfileDescription[] | null;
-  selectedProfileId: string | null;
-  organizations: OrganizationDescription[];
-  selectedOrganizationId: string | null;
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
@@ -88,10 +81,6 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfileId: null,
-  availableProfiles: null,
-  organizations: [],
-  selectedOrganizationId: "",
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   codeToEdit: [],
@@ -294,7 +283,6 @@ export const sessionSlice = createSlice({
       state.streamAborter = new AbortController();
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
-
       if (state.history.length) {
         function toolCallDeltaToState(
           toolCallDelta: ToolCallDelta,
@@ -332,7 +320,7 @@ export const sessionSlice = createSlice({
                 id: uuidv4(),
               },
               contextItems: [],
-            })
+            });
             continue;
           }
 
@@ -554,30 +542,6 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    // Important: these reducers don't handle selected profile/organization fallback logic
-    // That is done in thunks
-    setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
-      state.selectedProfileId = payload;
-    },
-    setAvailableProfiles: (
-      state,
-      { payload }: PayloadAction<ProfileDescription[] | null>,
-    ) => {
-      state.availableProfiles = payload;
-    },
-    setOrganizations: (
-      state,
-      { payload }: PayloadAction<OrganizationDescription[]>,
-    ) => {
-      state.organizations = payload;
-    },
-    setSelectedOrganizationId: (
-      state,
-      { payload }: PayloadAction<string | null>,
-    ) => {
-      state.selectedOrganizationId = payload;
-    },
-    ///////////////
 
     updateCurCheckpoint: (
       state,
@@ -670,6 +634,14 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
+    cycleMode: (state, action: PayloadAction<{ isJetBrains: boolean }>) => {
+      const modes = action.payload.isJetBrains
+        ? ["chat", "edit", "agent"]
+        : ["chat", "agent"];
+      const currentIndex = modes.indexOf(state.mode);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      state.mode = modes[nextIndex] as MessageModes;
+    },
     setNewestCodeblocksForInput: (
       state,
       {
@@ -690,14 +662,8 @@ export const sessionSlice = createSlice({
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
     },
-    selectSelectedProfile: (state) => {
-      // state.session.availableProfiles.find((p) => p.id === newId) ?? null,
-
-      return (
-        state.availableProfiles?.find(
-          (profile) => profile.id === state.selectedProfileId,
-        ) ?? null
-      );
+    selectCurrentMode: (state) => {
+      return state.mode;
     },
     selectIsSingleRangeEditOrInsertion: (state) => {
       if (state.mode !== "edit") {
@@ -712,6 +678,9 @@ export const sessionSlice = createSlice({
     },
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
+    },
+    selectUseTools: (state) => {
+      return state.mode === "agent";
     },
   },
   extraReducers: (builder) => {
@@ -784,19 +753,16 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
-
-  setAvailableProfiles,
-  setSelectedProfile,
-  setOrganizations,
-  setSelectedOrganizationId,
+  cycleMode,
 } = sessionSlice.actions;
 
 export const {
   selectIsGatheringContext,
   selectIsInEditMode,
-  selectSelectedProfile,
+  selectCurrentMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
+  selectUseTools,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

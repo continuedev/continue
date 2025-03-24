@@ -13,36 +13,22 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import {
-  Button,
-  defaultBorderRadius,
-  lightGray,
-  vscBackground,
-} from "../../components";
+import { Button, lightGray, vscBackground } from "../../components";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
-import { ExploreHubCard } from "../../components/ExploreHubCard";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
+import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
+import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
-import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
-import { TutorialCard } from "../../components/mainInput/TutorialCard";
-import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
-import {
-  OnboardingCard,
-  useOnboardingCard,
-} from "../../components/OnboardingCard";
-import { PlatformOnboardingCard } from "../../components/OnboardingCard/platform/PlatformOnboardingCard";
-import PageHeader from "../../components/PageHeader";
+import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
+import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
@@ -50,11 +36,9 @@ import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCa
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
-  clearLastEmptyResponse,
   newSession,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
-  setInactive,
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
@@ -66,11 +50,7 @@ import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
-import {
-  getFontSize,
-  getMetaKeyLabel,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
@@ -78,34 +58,12 @@ import {
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
+import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { useAutoScroll } from "./useAutoScroll";
-
-const StopButton = styled.div`
-  background-color: ${vscBackground};
-  width: fit-content;
-  margin-right: auto;
-  margin-left: auto;
-  font-size: ${getFontSize() - 2}px;
-  border: 0.5px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  padding: 4px 8px;
-  color: ${lightGray};
-  cursor: pointer;
-  box-shadow:
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
-
-  &:hover {
-    box-shadow:
-      0 6px 8px rgba(0, 0, 0, 0.15),
-      0 3px 6px rgba(0, 0, 0, 0.1);
-  }
-`;
 
 const StepsDiv = styled.div`
   position: relative;
@@ -145,12 +103,10 @@ export function Chat() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
-  const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
   const defaultModel = useAppSelector(selectDefaultModel);
-  const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -322,7 +278,7 @@ export function Chat() {
     [history],
   );
 
-  const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar ?? window.innerHeight > 5000;
 
   useAutoScroll(stepsDivRef, history);
 
@@ -330,23 +286,6 @@ export function Chat() {
 
   return (
     <>
-      {showPageHeader && (
-        <PageHeader
-          title={isInEditMode ? "Edit Mode" : ""}
-          onTitleClick={
-            isInEditMode
-              ? async () => {
-                  await dispatch(
-                    loadLastSession({ saveCurrentSession: false }),
-                  );
-                  dispatch(exitEditMode());
-                }
-              : undefined
-          }
-          rightContent={useHub && <AssistantSelect />}
-        />
-      )}
-
       {widget}
 
       {!!showSessionTabs && <TabBar />}
@@ -451,30 +390,7 @@ export function Chat() {
           </div>
         ))}
       </StepsDiv>
-      <div className={`relative`}>
-        <div className="absolute -top-8 right-2 z-30">
-          {ttsActive && (
-            <StopButton
-              className=""
-              onClick={() => {
-                ideMessenger.post("tts/kill", undefined);
-              }}
-            >
-              ■ Stop TTS
-            </StopButton>
-          )}
-          {isStreaming && (
-            <StopButton
-              onClick={() => {
-                dispatch(setInactive());
-                dispatch(clearLastEmptyResponse());
-              }}
-            >
-              {getMetaKeyLabel()} ⌫ Cancel
-            </StopButton>
-          )}
-        </div>
-
+      <div className={"relative"}>
         {toolCallState?.status === "generated" && <ToolCallButtons />}
 
         {isInEditMode && history.length === 0 && <CodeToEditCard />}
@@ -538,29 +454,10 @@ export function Chat() {
           {!hasDismissedExploreDialog && <ExploreDialogWatcher />}
 
           {history.length === 0 && (
-            <>
-              {onboardingCard.show && (
-                <div className="mx-2 mt-10">
-                  {useHub ? (
-                    <PlatformOnboardingCard isDialog={false} />
-                  ) : (
-                    <OnboardingCard isDialog={false} />
-                  )}
-                </div>
-              )}
-
-              {showTutorialCard !== false && !onboardingCard.show && (
-                <div className="flex w-full justify-center">
-                  <TutorialCard onClose={closeTutorialCard} />
-                </div>
-              )}
-
-              {!onboardingCard.show && showTutorialCard === false && (
-                <div className="mx-2 mt-10">
-                  <ExploreHubCard />
-                </div>
-              )}
-            </>
+            <EmptyChatBody
+              useHub={useHub}
+              showOnboardingCard={onboardingCard.show}
+            />
           )}
         </div>
       </div>

@@ -4,19 +4,18 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
+import { selectProfileThunk } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   selectDefaultModel,
   setConfigResult,
 } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
-import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
   addContextItemsAtIndex,
   setInactive,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
-import { selectProfileThunk } from "../redux/thunks/profileAndOrg";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
@@ -77,7 +76,6 @@ function useSetup() {
     const interval = setInterval(() => {
       if (hasLoadedConfig.current) {
         // Init to run on initial config load
-        ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
         dispatch(updateFileSymbolsFromHistory());
         dispatch(refreshSessionMetadata({}));
@@ -180,10 +178,6 @@ function useSetup() {
     },
     [],
   );
-
-  useWebviewListener("docs/suggestions", async (data) => {
-    dispatch(updateDocsSuggestions(data));
-  });
 
   // IDE event listeners
   useWebviewListener(

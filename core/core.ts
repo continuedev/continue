@@ -22,7 +22,6 @@ import { DataLogger } from "./data/log";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
-import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -43,6 +42,7 @@ import {
 } from ".";
 
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { MCPManagerSingleton } from "./context/mcp";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
 import { llmStreamChat } from "./llm/streamChat";
@@ -119,6 +119,13 @@ export class Core {
       this.ide,
       this.messenger,
     );
+
+    const mcpManager = MCPManagerSingleton.getInstance();
+    mcpManager.onConnectionsRefreshed = async () => {
+      // This ensures that it triggers a NEW load after waiting for config promise to finish
+      await this.configHandler.loadConfig();
+      await this.configHandler.reloadConfig();
+    };
 
     this.configHandler.onConfigUpdate(async (result) => {
       const serializedResult = await this.configHandler.getSerializedConfig();
@@ -344,6 +351,9 @@ export class Core {
       return await this.configHandler.listOrganizations();
     });
 
+    on("mcp/reloadServer", async (msg) => {
+      mcpManager.refreshConnection(msg.data.id);
+    });
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);
@@ -796,14 +806,6 @@ export class Core {
         // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
     });
-    on("docs/getSuggestedDocs", async (msg) => {
-      if (hasRequestedDocs) {
-        return;
-      } // TODO, remove, hack because of rerendering
-      hasRequestedDocs = true;
-      const suggestedDocs = await getAllSuggestedDocs(this.ide);
-      this.messenger.send("docs/suggestions", suggestedDocs);
-    });
     on("docs/initStatuses", async (msg) => {
       void this.docsService.initStatuses();
     });
@@ -978,4 +980,3 @@ export class Core {
   // private
 }
 
-let hasRequestedDocs = false;

@@ -69,7 +69,6 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
-            "docs/suggestions",
             "didCloseFiles",
             "didSelectOrganization"
         )
@@ -94,6 +93,7 @@ class MessageTypes {
             "config/openProfile",
             "config/updateSharedConfig",
             "config/updateSelectedModel",
+            "mcp/reloadServer",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -120,7 +120,6 @@ class MessageTypes {
             "indexing/reindex",
             "indexing/abort",
             "indexing/setPaused",
-            "docs/getSuggestedDocs",
             "docs/initStatuses",
             "docs/getDetails",
             //

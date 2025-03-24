@@ -53,16 +53,15 @@ export function slashCommandFromPromptFileV1(
   path: string,
   content: string,
 ): SlashCommand | null {
-  const { name, description, systemMessage, prompt, version } =
-    parsePromptFileV1V2(path, content);
-
-  if (version !== 1) {
-    return null;
-  }
+  const { name, description, systemMessage, prompt } = parsePromptFileV1V2(
+    path,
+    content,
+  );
 
   return {
     name,
     description,
+    prompt,
     run: async function* (context) {
       const originalSystemMessage = context.llm.systemMessage;
       context.llm.systemMessage = systemMessage;

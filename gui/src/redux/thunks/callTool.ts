@@ -57,10 +57,11 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
           toolCallId: toolCallState.toolCallId,
           toolOutput: [
             {
-              name: "Tool Call Failed",
+              icon: "problems",
+              name: "Tool Call Error",
               description: "Tool Call Failed",
               content: `The tool call failed with the message:\n\n${result.error}\n\nPlease try something else or request further instructions.`,
-              hidden: true,
+              hidden: false,
             },
           ],
         }),

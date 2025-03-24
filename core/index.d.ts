@@ -43,13 +43,13 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status:
-  | "loading"
-  | "indexing"
-  | "done"
-  | "failed"
-  | "paused"
-  | "disabled"
-  | "cancelled";
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
@@ -316,7 +316,12 @@ export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
 }
 
-export type ChatMessageRole = "user" | "assistant" | "thinking" | "system" | "tool";
+export type ChatMessageRole =
+  | "user"
+  | "assistant"
+  | "thinking"
+  | "system"
+  | "tool";
 
 export type TextMessagePart = {
   type: "text";
@@ -434,7 +439,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "edit";
+export type MessageModes = "chat" | "edit" | "agent";
 
 export type ToolStatus =
   | "generating"
@@ -692,10 +697,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-      isUntitled: boolean;
-      path: string;
-      contents: string;
-    }
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
   >;
 
   getLastFileSaveTimestamp?(): number;
@@ -761,6 +766,7 @@ export interface ContinueSDK {
 export interface SlashCommand {
   name: string;
   description: string;
+  prompt?: string;
   params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
@@ -864,11 +870,7 @@ export interface ContextProviderWithParams {
   params: { [key: string]: any };
 }
 
-export interface SlashCommandDescription {
-  name: string;
-  description: string;
-  params?: { [key: string]: any };
-}
+export type SlashCommandDescription = Omit<SlashCommand, "run">;
 
 export interface CustomCommand {
   name: string;
@@ -879,11 +881,11 @@ export interface CustomCommand {
 export interface Prediction {
   type: "content";
   content:
-  | string
-  | {
-    type: "text";
-    text: string;
-  }[];
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 export interface ToolExtras {
@@ -907,6 +909,7 @@ export interface Tool {
   readonly: boolean;
   uri?: string;
   faviconUrl?: string;
+  group: string;
 }
 
 interface ToolChoice {
@@ -1043,8 +1046,54 @@ export interface SSEOptions {
 export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
 
 export interface MCPOptions {
+  name: string;
+  id: string;
   transport: TransportOptions;
   faviconUrl?: string;
+  timeout?: number;
+}
+
+export type MCPConnectionStatus =
+  | "connecting"
+  | "connected"
+  | "error"
+  | "not-connected";
+
+export interface MCPPrompt {
+  name: string;
+  description?: string;
+  arguments?: {
+    name: string;
+    description?: string;
+    required?: boolean;
+  }[];
+}
+
+// Leaving here to ideate on
+// export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
+
+export interface MCPResource {
+  name: string;
+  uri: string;
+  description?: string;
+  mimeType?: string;
+}
+export interface MCPTool {
+  name: string;
+  description?: string;
+  inputSchema: {
+    type: "object";
+    properties?: Record<string, any>;
+  };
+}
+
+export interface MCPServerStatus extends MCPOptions {
+  status: MCPConnectionStatus;
+  errors: string[];
+
+  prompts: MCPPrompt[];
+  tools: MCPTool[];
+  resources: MCPResource[];
 }
 
 export interface ContinueUIConfig {
@@ -1068,6 +1117,11 @@ export interface ExperimentalModelRoles {
   repoMapFileSelection?: string;
   inlineEdit?: string;
   applyCodeBlock?: string;
+}
+
+export interface ExperimentalMCPOptions {
+  transport: TransportOptions;
+  faviconUrl?: string;
 }
 
 export type EditStatus =
@@ -1153,7 +1207,7 @@ export interface ExperimentalConfig {
    * This is needed to crawl a large number of documentation sites that are dynamically rendered.
    */
   useChromiumForDocsCrawling?: boolean;
-  modelContextProtocolServers?: MCPOptions[];
+  modelContextProtocolServers?: ExperimentalMCPOptions[];
 }
 
 export interface AnalyticsConfig {
@@ -1224,9 +1278,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1247,8 +1301,8 @@ export interface ContinueConfig {
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
-  slashCommands?: SlashCommand[];
-  contextProviders?: IContextProvider[];
+  slashCommands: SlashCommand[];
+  contextProviders: IContextProvider[];
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
@@ -1258,6 +1312,7 @@ export interface ContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  mcpServerStatuses: MCPServerStatus[];
   rules?: string[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
@@ -1270,8 +1325,8 @@ export interface BrowserSerializedContinueConfig {
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
-  slashCommands?: SlashCommandDescription[];
-  contextProviders?: ContextProviderDescription[];
+  slashCommands: SlashCommandDescription[];
+  contextProviders: ContextProviderDescription[];
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
@@ -1280,6 +1335,7 @@ export interface BrowserSerializedContinueConfig {
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  mcpServerStatuses: MCPServerStatus[];
   rules?: string[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
@@ -1320,9 +1376,9 @@ export type PackageDetailsSuccess = PackageDetails & {
 export type PackageDocsResult = {
   packageInfo: ParsedPackageInfo;
 } & (
-    | { error: string; details?: never }
-    | { details: PackageDetailsSuccess; error?: never }
-  );
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
 
 export interface TerminalOptions {
   reuseTerminal?: boolean;

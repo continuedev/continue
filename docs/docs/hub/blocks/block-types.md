@@ -43,8 +43,8 @@ Prompts blocks are pre-written, reusable prompts that can be referenced at any t
 
 Prompt blocks have the same syntax as [prompt files](../../customize/deep-dives/prompt-files.md). There are two important differences between prompt blocks and prompt files:
 
-1. Prompt blocks are stored within `config.yaml` rather than `.continue/prompts` in project directory and
-2. Prompt blocks only show up as slash commands in Chat, not under the `@Prompt Files` context provider
+1. Currently, prompt blocks cannot use context providers
+2. Prompt blocks are stored within `config.yaml` rather than `.continue/prompts` in project directory and
 
 The `config.yaml` spec for `prompts` can be found [here](../../yaml-reference.md#prompts).
 
@@ -52,4 +52,4 @@ The `config.yaml` spec for `prompts` can be found [here](../../yaml-reference.md
 
 Data blocks allow you send your development data to custom destinations of your choice. Development data can be used for a variety of purposes, including analyzing usage, gathering insights, or fine-tuning models. You can read more about development data [here](../../customize/deep-dives/development-data.md). Explore data block examples [here](https://hub.continue.dev/explore/data).
 
-Data destinations are configured in the[`data`](../../yaml-reference.md#data) section of `config.yaml`.
+Data destinations are configured in the [`data`](../../yaml-reference.md#data) section of `config.yaml`.

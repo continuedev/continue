@@ -1,11 +1,12 @@
 import { Tool } from "../..";
-import { BuiltInToolNames } from "../builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const runTerminalCommandTool: Tool = {
   type: "function",
   displayTitle: "Run Terminal Command",
   wouldLikeTo: "run a terminal command",
   readonly: false,
+  group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.RunTerminalCommand,
     description:

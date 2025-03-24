@@ -21,6 +21,7 @@ import {
 import { exitEditMode } from "../../redux/thunks";
 import { loadLastSession } from "../../redux/thunks/session";
 import {
+  fontSize,
   getAltKeyLabel,
   getFontSize,
   getMetaKeyLabel,
@@ -28,8 +29,8 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
-import HoverItem from "./InputToolbar/HoverItem";
-import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
+import ModeSelect from "../modelSelection/ModeSelect";
+import HoverItem from "./InputToolbar/bottom/HoverItem";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -75,7 +76,6 @@ export interface ToolbarOptions {
 interface InputToolbarProps {
   onEnter?: (modifiers: InputModifiers) => void;
   onAddContextItem?: () => void;
-  onAddSlashCommand?: () => void;
   onClick?: () => void;
   onImageFileSelected?: (file: File) => void;
   hidden?: boolean;
@@ -83,6 +83,8 @@ interface InputToolbarProps {
   toolbarOptions?: ToolbarOptions;
   disabled?: boolean;
   isMainInput?: boolean;
+  lumpOpen: boolean;
+  setLumpOpen: (open: boolean) => void;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -113,6 +115,7 @@ function InputToolbar(props: InputToolbarProps) {
         className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
+          <ModeSelect />
           <ModelSelect />
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
@@ -132,7 +135,7 @@ function InputToolbar(props: InputToolbarProps) {
                   />
                   <HoverItem className="">
                     <PhotoIcon
-                      className="h-4 w-4 hover:brightness-125"
+                      className="h-3 w-3 hover:brightness-125"
                       data-tooltip-id="image-tooltip"
                       onClick={(e) => {
                         fileInputRef.current?.click();
@@ -148,7 +151,7 @@ function InputToolbar(props: InputToolbarProps) {
               <HoverItem onClick={props.onAddContextItem}>
                 <AtSymbolIcon
                   data-tooltip-id="add-context-item-tooltip"
-                  className="h-4 w-4 hover:brightness-125"
+                  className="h-3 w-3 hover:brightness-125"
                 />
 
                 <ToolTip id="add-context-item-tooltip" place="top-middle">
@@ -156,12 +159,15 @@ function InputToolbar(props: InputToolbarProps) {
                 </ToolTip>
               </HoverItem>
             )}
-
-            <ToggleToolsButton disabled={!toolsSupported} />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
+        <div
+          className="flex items-center gap-2 whitespace-nowrap text-gray-400"
+          style={{
+            fontSize: fontSize(-3),
+          }}
+        >
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
