@@ -23,6 +23,7 @@ export function renderChatMessage(message: ChatMessage): string {
     case "assistant":
     case "thinking":
     case "system":
+    case "warning":
       return stripImages(message.content);
     case "tool":
       return message.content;
@@ -41,6 +42,7 @@ export function normalizeToMessageParts(message: ChatMessage): MessagePart[] {
     case "assistant":
     case "thinking":
     case "system":
+    case "warning":
       return Array.isArray(message.content)
         ? message.content
         : [{ type: "text", text: message.content }];

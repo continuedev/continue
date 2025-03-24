@@ -3,7 +3,7 @@ import {
   ContentBlock,
   ConverseStreamCommand,
   InvokeModelCommand,
-  Message
+  Message,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
@@ -11,7 +11,7 @@ import {
   ChatMessage,
   Chunk,
   CompletionOptions,
-  LLMOptions
+  LLMOptions,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -42,7 +42,11 @@ class Bedrock extends BaseLLM {
 
   private _currentToolResponse: Partial<ToolUseState> | null = null;
 
-  public requestOptions: { region?: string; credentials?: any; headers?: Record<string, string> };
+  public requestOptions: {
+    region?: string;
+    credentials?: any;
+    headers?: Record<string, string>;
+  };
 
   constructor(options: LLMOptions) {
     super(options);
@@ -108,7 +112,10 @@ class Bedrock extends BaseLLM {
       },
     );
 
-    const input = this._generateConverseInput(messages, { ...options, stream: true });
+    const input = this._generateConverseInput(messages, {
+      ...options,
+      stream: true,
+    });
     const command = new ConverseStreamCommand(input);
 
     let response;
@@ -126,49 +133,70 @@ class Bedrock extends BaseLLM {
 
     try {
       for await (const chunk of response.stream) {
-
         if (chunk.contentBlockDelta?.delta) {
-
-          const delta: any = chunk.contentBlockDelta.delta
+          const delta: any = chunk.contentBlockDelta.delta;
 
           // Handle text content
           if (chunk.contentBlockDelta.delta.text) {
-            yield { role: "assistant", content: chunk.contentBlockDelta.delta.text };
+            yield {
+              role: "assistant",
+              content: chunk.contentBlockDelta.delta.text,
+            };
             continue;
           }
 
           // Handle text content
           if ((chunk.contentBlockDelta.delta as any).reasoningContent?.text) {
-            yield { role: "thinking", content: (chunk.contentBlockDelta.delta as any).reasoningContent.text };
+            yield {
+              role: "thinking",
+              content: (chunk.contentBlockDelta.delta as any).reasoningContent
+                .text,
+            };
             continue;
           }
 
           // Handle signature for thinking
           if (delta.reasoningContent?.signature) {
-            yield { role: "thinking", content: "", signature: delta.reasoningContent.signature };
+            yield {
+              role: "thinking",
+              content: "",
+              signature: delta.reasoningContent.signature,
+            };
             continue;
           }
 
           // Handle redacted thinking
           if (delta.redactedReasoning?.data) {
-            yield { role: "thinking", content: "", redactedThinking: delta.redactedReasoning.data };
+            yield {
+              role: "thinking",
+              content: "",
+              redactedThinking: delta.redactedReasoning.data,
+            };
             continue;
           }
 
-          if (chunk.contentBlockDelta.delta.toolUse?.input && this._currentToolResponse) {
+          if (
+            chunk.contentBlockDelta.delta.toolUse?.input &&
+            this._currentToolResponse
+          ) {
             // Append the new input to the existing string
             if (this._currentToolResponse.input === undefined) {
               this._currentToolResponse.input = "";
             }
-            this._currentToolResponse.input += chunk.contentBlockDelta.delta.toolUse.input;
+            this._currentToolResponse.input +=
+              chunk.contentBlockDelta.delta.toolUse.input;
             continue;
           }
         }
 
         if (chunk.contentBlockStart?.start) {
-          const start: any = chunk.contentBlockStart.start
+          const start: any = chunk.contentBlockStart.start;
           if (start.redactedReasoning) {
-            yield { role: "thinking", content: "", redactedThinking: start.redactedReasoning.data };
+            yield {
+              role: "thinking",
+              content: "",
+              redactedThinking: start.redactedReasoning.data,
+            };
             continue;
           }
 
@@ -177,7 +205,7 @@ class Bedrock extends BaseLLM {
             this._currentToolResponse = {
               toolUseId: toolUse.toolUseId,
               name: toolUse.name,
-              input: ""
+              input: "",
             };
           }
           continue;
@@ -188,14 +216,16 @@ class Bedrock extends BaseLLM {
             yield {
               role: "assistant",
               content: "",
-              toolCalls: [{
-                id: this._currentToolResponse.toolUseId,
-                type: "function",
-                function: {
-                  name: this._currentToolResponse.name,
-                  arguments: this._currentToolResponse.input
-                }
-              }],
+              toolCalls: [
+                {
+                  id: this._currentToolResponse.toolUseId,
+                  type: "function",
+                  function: {
+                    name: this._currentToolResponse.name,
+                    arguments: this._currentToolResponse.input,
+                  },
+                },
+              ],
             };
             this._currentToolResponse = null;
           }
@@ -207,13 +237,16 @@ class Bedrock extends BaseLLM {
       if (error instanceof Error) {
         if ("code" in error) {
           // AWS SDK specific errors
-          throw new Error(`AWS Bedrock stream error (${(error as any).code}): ${error.message}`);
+          throw new Error(
+            `AWS Bedrock stream error (${(error as any).code}): ${error.message}`,
+          );
         }
         throw new Error(`Error processing Bedrock stream: ${error.message}`);
       }
-      throw new Error("Error processing Bedrock stream: Unknown error occurred");
+      throw new Error(
+        "Error processing Bedrock stream: Unknown error occurred",
+      );
     }
-
   }
 
   /**
@@ -228,22 +261,26 @@ class Bedrock extends BaseLLM {
   ): any {
     const convertedMessages = this._convertMessages(messages);
 
-    const supportsTools = PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
+    const supportsTools =
+      PROVIDER_TOOL_SUPPORT.bedrock?.(options.model || "") ?? false;
     return {
       modelId: options.model,
       messages: convertedMessages,
       system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
-      toolConfig: supportsTools && options.tools ? {
-        tools: options.tools.map(tool => ({
-          toolSpec: {
-            name: tool.function.name,
-            description: tool.function.description,
-            inputSchema: {
-              json: tool.function.parameters
+      toolConfig:
+        supportsTools && options.tools
+          ? {
+              tools: options.tools.map((tool) => ({
+                toolSpec: {
+                  name: tool.function.name,
+                  description: tool.function.description,
+                  inputSchema: {
+                    json: tool.function.parameters,
+                  },
+                },
+              })),
             }
-          }
-        }))
-      } : undefined,
+          : undefined,
       inferenceConfig: {
         maxTokens: options.maxTokens,
         temperature: options.temperature,
@@ -261,17 +298,23 @@ class Bedrock extends BaseLLM {
           .slice(0, 4),
       },
       additionalModelRequestFields: {
-        "thinking": options.reasoning ? {
-          "type": "enabled",
-          "budget_tokens": options.reasoningBudgetTokens
-        } : undefined,
-      }
+        thinking: options.reasoning
+          ? {
+              type: "enabled",
+              budget_tokens: options.reasoningBudgetTokens,
+            }
+          : undefined,
+      },
     };
   }
 
   private _convertMessage(message: ChatMessage): Message | null {
     // Handle system messages explicitly
     if (message.role === "system") {
+      return null;
+    }
+
+    if (message.role === "warning") {
       return null;
     }
 
@@ -285,12 +328,12 @@ class Bedrock extends BaseLLM {
               toolUseId: message.toolCallId,
               content: [
                 {
-                  text: message.content || ""
-                }
-              ]
-            }
-          }
-        ]
+                  text: message.content || "",
+                },
+              ],
+            },
+          },
+        ],
       };
     }
 
@@ -303,8 +346,8 @@ class Bedrock extends BaseLLM {
             toolUseId: toolCall.id,
             name: toolCall.function?.name,
             input: JSON.parse(toolCall.function?.arguments || "{}"),
-          }
-        }))
+          },
+        })),
       };
     }
 
@@ -312,26 +355,27 @@ class Bedrock extends BaseLLM {
       if (message.redactedThinking) {
         const content: ContentBlock.ReasoningContentMember = {
           reasoningContent: {
-            redactedContent: new Uint8Array(Buffer.from(message.redactedThinking))
-          }
+            redactedContent: new Uint8Array(
+              Buffer.from(message.redactedThinking),
+            ),
+          },
         };
         return {
           role: "assistant",
-          content: [content]
+          content: [content],
         };
       } else {
         const content: ContentBlock.ReasoningContentMember = {
           reasoningContent: {
             reasoningText: {
               text: (message.content as string) || "",
-              signature: message.signature
-            }
-
-          }
+              signature: message.signature,
+            },
+          },
         };
         return {
           role: "assistant",
-          content: [content]
+          content: [content],
         };
       }
     }
@@ -340,7 +384,7 @@ class Bedrock extends BaseLLM {
     if (typeof message.content === "string") {
       return {
         role: message.role,
-        content: [{ text: message.content }]
+        content: [{ text: message.content }],
       };
     }
 
@@ -348,36 +392,37 @@ class Bedrock extends BaseLLM {
     if (Array.isArray(message.content)) {
       return {
         role: message.role,
-        content: message.content.map(part => {
-          if (part.type === "text") {
-            return { text: part.text };
-          }
-          if (part.type === "imageUrl" && part.imageUrl) {
-            try {
-              const [mimeType, base64Data] = part.imageUrl.url.split(",");
-              const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
-              return {
-                image: {
-                  format,
-                  source: {
-                    bytes: Buffer.from(base64Data, "base64")
-                  }
-                }
-              };
-            } catch (error) {
-              console.warn(`Failed to process image: ${error}`);
-              return null;
+        content: message.content
+          .map((part) => {
+            if (part.type === "text") {
+              return { text: part.text };
             }
-          }
-          return null;
-        }).filter(Boolean)
+            if (part.type === "imageUrl" && part.imageUrl) {
+              try {
+                const [mimeType, base64Data] = part.imageUrl.url.split(",");
+                const format = mimeType.split("/")[1]?.split(";")[0] || "jpeg";
+                return {
+                  image: {
+                    format,
+                    source: {
+                      bytes: Buffer.from(base64Data, "base64"),
+                    },
+                  },
+                };
+              } catch (error) {
+                console.warn(`Failed to process image: ${error}`);
+                return null;
+              }
+            }
+            return null;
+          })
+          .filter(Boolean),
       } as Message;
     }
     return null;
   }
 
   private _convertMessages(messages: ChatMessage[]): any[] {
-
     const converted = messages
       .map((message) => {
         try {
@@ -389,7 +434,6 @@ class Bedrock extends BaseLLM {
       })
       .filter(Boolean);
     return converted;
-
   }
 
   private async _getCredentials() {
@@ -452,7 +496,6 @@ class Bedrock extends BaseLLM {
     const modelConfig = this._getModelConfig();
     return modelConfig.extractEmbeddings(responseBody);
   }
-
 
   private _getModelConfig() {
     const modelConfigs: { [key: string]: ModelConfig } = {
@@ -530,11 +573,15 @@ class Bedrock extends BaseLLM {
       if (error instanceof Error) {
         if ("code" in error) {
           // AWS SDK specific errors
-          throw new Error(`AWS Bedrock rerank error (${(error as any).code}): ${error.message}`);
+          throw new Error(
+            `AWS Bedrock rerank error (${(error as any).code}): ${error.message}`,
+          );
         }
         throw new Error(`Error in BedrockReranker.rerank: ${error.message}`);
       }
-      throw new Error("Error in BedrockReranker.rerank: Unknown error occurred");
+      throw new Error(
+        "Error in BedrockReranker.rerank: Unknown error occurred",
+      );
     }
   }
 }

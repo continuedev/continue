@@ -9,6 +9,7 @@ import {
   addPromptCompletionPair,
   selectUseTools,
   setToolGenerated,
+  setWarning,
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -60,6 +61,7 @@ export const streamNormalInput = createAsyncThunk<
     );
 
     // Stream response
+    let warningMessage = "";
     let next = await gen.next();
     while (!next.done) {
       if (!getState().session.isStreaming) {
@@ -67,9 +69,21 @@ export const streamNormalInput = createAsyncThunk<
         break;
       }
 
-      dispatch(streamUpdate(next.value));
+      const filteredMessages: ChatMessage[] = [];
+
+      next.value.forEach((msg) => {
+        if (msg.role === "warning") {
+          warningMessage += msg.content;
+        } else {
+          filteredMessages.push(msg);
+        }
+      });
+
+      dispatch(streamUpdate(filteredMessages));
       next = await gen.next();
     }
+
+    dispatch(setWarning(warningMessage));
 
     // Attach prompt log
     if (next.done && next.value) {

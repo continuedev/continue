@@ -195,11 +195,11 @@ export abstract class BaseLLM implements ILLM {
         options.completionOptions?.maxTokens ??
         (llmInfo?.maxCompletionTokens
           ? Math.min(
-            llmInfo.maxCompletionTokens,
-            // Even if the model has a large maxTokens, we don't want to use that every time,
-            // because it takes away from the context length
-            this.contextLength / 4,
-          )
+              llmInfo.maxCompletionTokens,
+              // Even if the model has a large maxTokens, we don't want to use that every time,
+              // because it takes away from the context length
+              this.contextLength / 4,
+            )
           : DEFAULT_MAX_TOKENS),
     };
     this.requestOptions = options.requestOptions;
@@ -766,7 +766,18 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = this._compileChatMessages(completionOptions, _messages);
+    const [messages, shouldWarn] = this._compileChatMessages(
+      completionOptions,
+      _messages,
+    );
+
+    if (shouldWarn) {
+      yield {
+        role: "warning",
+        content:
+          "The context has reached its limit. This may lead to less accurate or incomplete answers.",
+      };
+    }
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)
@@ -840,7 +851,6 @@ export abstract class BaseLLM implements ILLM {
             signal,
             completionOptions,
           )) {
-
             if (chunk.role === "assistant") {
               completion += chunk.content;
               yield chunk;
@@ -948,7 +958,7 @@ export abstract class BaseLLM implements ILLM {
     );
   }
 
-  protected async * _streamComplete(
+  protected async *_streamComplete(
     prompt: string,
     signal: AbortSignal,
     options: CompletionOptions,
@@ -956,7 +966,7 @@ export abstract class BaseLLM implements ILLM {
     throw new Error("Not implemented");
   }
 
-  protected async * _streamChat(
+  protected async *_streamChat(
     messages: ChatMessage[],
     signal: AbortSignal,
     options: CompletionOptions,

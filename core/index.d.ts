@@ -321,7 +321,8 @@ export type ChatMessageRole =
   | "assistant"
   | "thinking"
   | "system"
-  | "tool";
+  | "tool"
+  | "warning";
 
 export type TextMessagePart = {
   type: "text";
@@ -385,12 +386,18 @@ export interface SystemChatMessage {
   content: string;
 }
 
+export interface WarningChatMessage {
+  role: "warning";
+  content: string;
+}
+
 export type ChatMessage =
   | UserChatMessage
   | AssistantChatMessage
   | ThinkingChatMessage
   | SystemChatMessage
-  | ToolResultChatMessage;
+  | ToolResultChatMessage
+  | WarningChatMessage;
 
 export interface ContextItemId {
   providerTitle: string;

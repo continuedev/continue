@@ -135,6 +135,7 @@ export function Chat() {
   const hasDismissedExploreDialog = useAppSelector(
     (state) => state.ui.hasDismissedExploreDialog,
   );
+  const warningMessage = useAppSelector((state) => state.session.warning);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -389,6 +390,13 @@ export function Chat() {
             </ErrorBoundary>
           </div>
         ))}
+        {warningMessage.length > 0 && (
+          <div className="relative m-2 flex justify-center rounded-md border border-solid border-red-600 bg-transparent p-4">
+            <p className="thread-message text-red-500">
+              {`Warning: ${warningMessage}`}
+            </p>
+          </div>
+        )}
       </StepsDiv>
       <div className={"relative"}>
         {toolCallState?.status === "generated" && <ToolCallButtons />}
