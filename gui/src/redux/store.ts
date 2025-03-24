@@ -62,12 +62,8 @@ const saveSubsetFilters = [
   createFilter("ui", ["toolSettings", "toolGroupSettings"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
-  // Add this new filter for the profiles slice
-  createFilter("profiles", [
-    "preferencesByProfileId",
-    "selectedOrganizationId",
-    "selectedProfileId",
-  ]),
+  createFilter("organizations", ["selectedOrganizationId"]),
+  createFilter("profiles", ["preferencesByProfileId", "selectedProfileId"]),
 ];
 
 const migrations: MigrationManifest = {

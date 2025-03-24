@@ -1,7 +1,12 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ProfileDescription } from "core/config/ConfigHandler";
+import { isDeprecatedCommandName } from "../../../components/ConversationStarters/utils";
 import { ThunkApiType } from "../../store";
-import { setAvailableProfiles, setSelectedProfile } from "./slice";
+import {
+  initializeProfilePreferences,
+  setAvailableProfiles,
+  setSelectedProfile,
+} from "./slice";
 
 export const selectProfileThunk = createAsyncThunk<
   void,
@@ -39,6 +44,7 @@ export const selectProfileThunk = createAsyncThunk<
   // Only update if there's a change
   if ((newId ?? null) !== (initialId ?? null)) {
     dispatch(setSelectedProfile(newId));
+
     extra.ideMessenger.post("didChangeSelectedProfile", {
       id: newId,
     });
@@ -83,3 +89,26 @@ export const updateProfilesThunk = createAsyncThunk<
   // This will trigger reselection if needed
   dispatch(selectProfileThunk(selectedProfileId));
 });
+
+export const initializeProfilePreferencesThunk = createAsyncThunk<
+  void,
+  { profileId: string },
+  ThunkApiType
+>(
+  "profiles/initializeProfilePreferences",
+  async (data, { getState, dispatch }) => {
+    const { profileId } = data;
+    const state = getState();
+
+    // Get slash commands from config
+    const defaultSlashCommands =
+      state.config.config.slashCommands.filter(isDeprecatedCommandName) ?? [];
+
+    dispatch(
+      initializeProfilePreferences({
+        defaultSlashCommands,
+        profileId,
+      }),
+    );
+  },
+);

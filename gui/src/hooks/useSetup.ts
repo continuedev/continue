@@ -4,7 +4,10 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
-import { selectProfileThunk } from "../redux";
+import {
+  initializeProfilePreferencesThunk,
+  selectProfileThunk,
+} from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
   selectDefaultModel,
@@ -46,6 +49,10 @@ function useSetup() {
       hasLoadedConfig.current = true;
       dispatch(setConfigResult(configResult));
       dispatch(selectProfileThunk(profileId));
+
+      if (profileId) {
+        dispatch(initializeProfilePreferencesThunk({ profileId }));
+      }
 
       // Perform any actions needed with the config
       if (configResult.config?.ui?.fontSize) {
