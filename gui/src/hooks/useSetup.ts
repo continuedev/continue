@@ -7,6 +7,7 @@ import { BrowserSerializedContinueConfig } from "core";
 import {
   initializeProfilePreferencesThunk,
   selectProfileThunk,
+  selectSelectedProfileId,
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
@@ -31,6 +32,7 @@ function useSetup() {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
   const defaultModel = useAppSelector(selectDefaultModel);
+  const selectedProfileId = useAppSelector(selectSelectedProfileId);
 
   const hasLoadedConfig = useRef(false);
 
@@ -50,7 +52,9 @@ function useSetup() {
       dispatch(setConfigResult(configResult));
       dispatch(selectProfileThunk(profileId));
 
-      if (profileId) {
+      const isNewProfileId = profileId && profileId !== selectedProfileId;
+
+      if (isNewProfileId) {
         dispatch(initializeProfilePreferencesThunk({ profileId }));
       }
 
