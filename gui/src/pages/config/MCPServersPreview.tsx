@@ -85,7 +85,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
                 <code key={idx}>{tool.name}</code>
               ))}
               {server.tools.length === 0 && (
-                <span className="text-stone-500">No tools</span>
+                <span className="text-lightgray">No tools</span>
               )}
             </ToolTip>
           </div>
@@ -100,7 +100,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
                 <code key={idx}>{prompt.name}</code>
               ))}
               {server.prompts.length === 0 && (
-                <span className="text-stone-500">No prompts</span>
+                <span className="text-lightgray">No prompts</span>
               )}
             </ToolTip>
           </div>
@@ -115,7 +115,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
                 <code key={idx}>{resource.name}</code>
               ))}
               {server.resources.length === 0 && (
-                <span className="text-stone-500">No resources</span>
+                <span className="text-lightgray">No resources</span>
               )}
             </ToolTip>
           </div>

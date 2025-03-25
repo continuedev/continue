@@ -1,10 +1,10 @@
-import { IndexingProgressUpdate } from "core";
-import { getProgressPercentage } from "./IndexingProgress";
 import {
   ArrowPathIcon,
-  PauseCircleIcon,
   CheckCircleIcon,
+  PauseCircleIcon,
 } from "@heroicons/react/24/outline";
+import { IndexingProgressUpdate } from "core";
+import { getProgressPercentage } from "./IndexingProgress";
 
 export interface IndexingProgressIndicatorProps {
   update: IndexingProgressUpdate;
@@ -28,13 +28,13 @@ function IndexingProgressIndicator({ update }: IndexingProgressIndicatorProps) {
     update.status !== "disabled" && progressPercentage !== "100";
 
   return (
-    <div className="flex items-center justify-between gap-1 text-stone-500">
+    <div className="text-lightgray flex items-center justify-between gap-1">
       {showProgress && <span className="text-xs">{progressPercentage}%</span>}
 
       {Icon && (
         <div className="flex items-center">
           <Icon
-            className={`inline-block h-4 w-4 align-top text-stone-500 ${
+            className={`text-lightgray inline-block h-4 w-4 align-top ${
               animateIcon ? "animate-spin-slow" : ""
             }`}
           ></Icon>

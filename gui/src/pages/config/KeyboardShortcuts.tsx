@@ -198,7 +198,7 @@ function KeyboardShortcuts() {
 
   return (
     <div className="flex max-w-[400px] flex-col">
-      <h3 className="mx-auto mb-1 text-xl">Keyboard shortcuts</h3>
+      <h3 className="mb-2 text-xl">Keyboard shortcuts</h3>
       <div className="flex flex-col items-center justify-center gap-x-3 gap-y-3 p-1">
         {shortcuts.map((shortcut, i) => {
           return (
