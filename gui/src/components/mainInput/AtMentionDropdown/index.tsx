@@ -175,7 +175,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
             tr.delete(start, tr.selection.from).scrollIntoView(),
           );
         },
-        description: "Add a new documentation source",
+        description: "",
       });
     } else if (subMenuTitle === ".prompt files") {
       items.push({
