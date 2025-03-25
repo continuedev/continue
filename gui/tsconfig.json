@@ -19,10 +19,6 @@
     "types": ["vitest/globals"]
     // Disabled for now since it's causing too many errors
   },
-  "include": [
-    "src",
-    "../src/util/messenger.ts",
-    "src/components/ui/DELETE_ME/.tsx"
-  ],
+  "include": ["src", "../src/util/messenger.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
