@@ -132,7 +132,6 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
       <div className="ml-auto">
         <AssistantSelect />
       </div>
-      <AssistantSelect />
     </div>
   );
 }
