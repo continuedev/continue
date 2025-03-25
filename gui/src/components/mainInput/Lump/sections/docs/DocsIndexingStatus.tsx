@@ -1,7 +1,6 @@
 import { ConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
   PencilIcon,
   StopIcon,
 } from "@heroicons/react/24/outline";
@@ -140,7 +139,6 @@ function DocsIndexingStatus({
           >
             {docConfig.title ?? docConfig.startUrl}
           </p>
-          <ArrowTopRightOnSquareIcon className="h-2 w-2 text-gray-400" />
         </div>
 
         <div className="flex flex-row items-center gap-2">
