@@ -153,7 +153,7 @@ function ModeSelect() {
           )}
 
           <div className="text-lightgray px-2 py-1">
-            {metaKeyLabel}. or next mode
+            {metaKeyLabel}. for next mode
           </div>
         </ListboxOptions>
       </div>

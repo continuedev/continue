@@ -1,14 +1,13 @@
 import {
   CheckIcon,
   ChevronDownIcon,
-  Cog6ToothIcon,
   CubeIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import { defaultBorderRadius, lightGray } from "..";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
@@ -18,11 +17,7 @@ import {
   setDefaultModel,
 } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import {
-  fontSize,
-  getMetaKeyLabel,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 
 interface ModelOptionProps {
@@ -38,59 +33,6 @@ interface Option {
   apiKey?: string;
 }
 
-const StyledListboxButton = styled(Listbox.Button)`
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  border: none;
-  cursor: pointer;
-  font-size: ${fontSize(-3)};
-  background: transparent;
-  color: ${lightGray};
-  &:focus {
-    outline: none;
-  }
-`;
-
-const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
-  margin-top: 4px;
-  position: absolute;
-  list-style: none;
-  padding: 0px;
-  white-space: nowrap;
-  cursor: default;
-
-  display: flex;
-  flex-direction: column;
-
-  font-size: ${fontSize(-3)};
-  border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${lightGray};
-  background-color: ${vscInputBackground};
-`;
-
-// const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
-//   border-radius: ${defaultBorderRadius};
-//   padding: 4px 12px;
-
-//   ${({ isDisabled }) =>
-//     !isDisabled &&
-//     `
-//     cursor: pointer;
-
-//     &:hover {
-//       background: ${lightGray}33;
-//     }
-//   `}
-
-//   ${({ isDisabled }) =>
-//     isDisabled &&
-//     `
-//     opacity: 0.5;
-//   `}
-// `;
-
 const IconBase = styled.div<{ $hovered: boolean }>`
   width: 1.2em;
   height: 1.2em;
@@ -105,8 +47,6 @@ const IconBase = styled.div<{ $hovered: boolean }>`
     background-color: ${lightGray}33;
   }
 `;
-
-const StyledCog6ToothIcon = styled(IconBase).attrs({ as: Cog6ToothIcon })``;
 
 function modelSelectTitle(model: any): string {
   if (model?.title) return model?.title;
@@ -249,6 +189,7 @@ function ModelSelect() {
   }
 
   return (
+    // <span className="line-clamp-1">Hiad sfasdfasdf asdfasdf</span>
     <Listbox
       onChange={async (val: string) => {
         if (val === defaultModel?.title) return;
@@ -259,17 +200,15 @@ function ModelSelect() {
         <ListboxButton
           data-testid="model-select-button"
           ref={buttonRef}
-          className="h-[18px] border-none"
+          className="h-[18px] gap-1 border-none text-gray-400"
         >
-          <div className="flex items-center gap-1 text-gray-400 transition-colors duration-200">
-            <span className="line-clamp-1">
-              {modelSelectTitle(defaultModel) || "Select model"}{" "}
-            </span>
-            <ChevronDownIcon
-              className="h-2 w-2 flex-shrink-0"
-              aria-hidden="true"
-            />
-          </div>
+          <span className="line-clamp-1 hover:brightness-110">
+            {modelSelectTitle(defaultModel) || "Select model"}
+          </span>
+          <ChevronDownIcon
+            className="h-2 w-2 flex-shrink-0 hover:brightness-110"
+            aria-hidden="true"
+          />
         </ListboxButton>
         <ListboxOptions className={"min-w-[160px]"}>
           <div className={`no-scrollbar max-h-[300px] overflow-y-auto`}>
