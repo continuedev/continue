@@ -90,12 +90,6 @@ function DocsIndexingStatus({
             }
           }}
         >
-          <StatusIndicator
-            status={status?.status}
-            hoverMessage={
-              status?.status === "failed" ? status?.debugInfo : undefined
-            }
-          />
           {docConfig.faviconUrl ? (
             <img
               src={docConfig.faviconUrl}
@@ -114,7 +108,7 @@ function DocsIndexingStatus({
         </div>
 
         <div className="flex flex-row items-center gap-2">
-          <div className="flex flex-row items-center gap-1 text-gray-400">
+          <div className="flex flex-row items-center gap-2 text-gray-400">
             {status?.status === "indexing" && (
               <span
                 className="text-xs"
@@ -144,7 +138,12 @@ function DocsIndexingStatus({
               />
             )}
 
-            {/* Removed StatusIndicator from here */}
+            <StatusIndicator
+              status={status?.status}
+              hoverMessage={
+                status?.status === "failed" ? status?.debugInfo : undefined
+              }
+            />
           </div>
         </div>
       </div>

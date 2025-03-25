@@ -1,4 +1,4 @@
-import { UserCircleIcon } from "@heroicons/react/24/outline";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
 
 import { SecondaryButton } from "../../components";
 import {
@@ -8,10 +8,13 @@ import {
   Transition,
 } from "../../components/ui";
 import { useAuth } from "../../context/Auth";
+import { selectSelectedOrganization } from "../../redux";
+import { useAppSelector } from "../../redux/hooks";
 import { ScopeSelect } from "./ScopeSelect";
 
 export function AccountButton() {
   const { session, logout, login, organizations } = useAuth();
+  const selectedOrg = useAppSelector(selectSelectedOrganization);
 
   if (!session) {
     return (
@@ -26,8 +29,13 @@ export function AccountButton() {
 
   return (
     <Popover className="relative">
-      <PopoverButton className="bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none">
-        <UserCircleIcon className="h-6 w-6" />
+      <PopoverButton className="bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground my-0.5 flex cursor-pointer rounded-md border-none px-2">
+        <div className="flex items-center gap-1.5">
+          <span className="font-medium">
+            {selectedOrg === null ? "Personal" : selectedOrg.name}
+          </span>
+          <UserCircleIcon className="h-6 w-6" />{" "}
+        </div>
       </PopoverButton>
 
       <Transition>
@@ -39,15 +47,17 @@ export function AccountButton() {
                 {session.account.id}
               </span>
             </div>
+
             {organizations.length > 0 && (
               <div className="flex flex-col gap-1">
-                <label className="text-vsc-foreground text-sm">
+                <label className="text-vsc-foreground text-xs">
                   Organization
                 </label>
                 <ScopeSelect />
               </div>
             )}
-            <SecondaryButton onClick={logout} className="">
+
+            <SecondaryButton onClick={logout} className="!mx-0 w-full">
               Sign out
             </SecondaryButton>
           </div>

@@ -65,7 +65,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
               {rule}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
               <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
             </HeaderButtonWithToolTip>{" "}
