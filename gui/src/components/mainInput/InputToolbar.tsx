@@ -13,6 +13,7 @@ import {
 } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
+import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
@@ -49,15 +50,21 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
   }
 `;
 
-const EnterButton = styled.button<{ isPrimary?: boolean }>`
+const EnterButton = styled.button<{
+  isPrimary?: boolean;
+  disabled?: boolean;
+}>`
   all: unset;
   padding: 2px 4px;
   display: flex;
   align-items: center;
   background-color: ${(props) =>
-    props.isPrimary ? vscButtonBackground : lightGray + "33"};
+    !props.disabled && props.isPrimary
+      ? vscButtonBackground
+      : lightGray + "33"};
   border-radius: ${defaultBorderRadius};
-  color: ${(props) => (props.isPrimary ? vscButtonForeground : vscForeground)};
+  color: ${(props) =>
+    !props.disabled && props.isPrimary ? vscButtonForeground : vscForeground};
   cursor: pointer;
 
   :disabled {
@@ -94,8 +101,13 @@ function InputToolbar(props: InputToolbarProps) {
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const toolCallState = useAppSelector(selectCurrentToolCall);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-  const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
+
+  const isEnterDisabled =
+    props.disabled ||
+    isEditModeAndNoCodeToEdit ||
+    toolCallState?.status === "generated";
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =
