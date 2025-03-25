@@ -26,7 +26,7 @@ export function AccountButton() {
       </PopoverButton>
 
       <Transition>
-        <PopoverPanel className="bg-vsc-input-background absolute right-0 z-10 mt-1 w-[250px] rounded-md border border-zinc-700 p-4 shadow-lg">
+        <PopoverPanel className="bg-vsc-input-background xs:p-4 absolute right-0 mt-1 rounded-md border border-zinc-700 p-2 shadow-lg">
           <div className="flex flex-col gap-3">
             <div className="flex flex-col">
               <span className="font-medium">{session.account.label}</span>
@@ -42,7 +42,7 @@ export function AccountButton() {
                 <ScopeSelect />
               </div>
             )}
-            <SecondaryButton onClick={logout} className="w-full justify-center">
+            <SecondaryButton onClick={logout} className="">
               Sign out
             </SecondaryButton>
           </div>

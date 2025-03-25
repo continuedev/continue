@@ -18,6 +18,11 @@ import {
   selectCurrentMode,
   setMode,
 } from "../../redux/slices/sessionSlice";
+import { exitEditMode } from "../../redux/thunks";
+import {
+  loadLastSession,
+  saveCurrentSession,
+} from "../../redux/thunks/session";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
 import {
   Listbox,
@@ -78,8 +83,26 @@ function ModeSelect() {
   return (
     <Listbox
       value={mode}
-      onChange={(newMode) => {
+      onChange={async (newMode) => {
+        if (newMode === mode) {
+          return;
+        }
         dispatch(setMode(newMode));
+        if (newMode === "edit") {
+          await dispatch(
+            saveCurrentSession({
+              generateTitle: false,
+              openNewSession: true,
+            }),
+          );
+        } else if (mode === "edit") {
+          await dispatch(
+            loadLastSession({
+              saveCurrentSession: false,
+            }),
+          );
+          dispatch(exitEditMode());
+        }
       }}
     >
       <div className="relative">
@@ -91,7 +114,9 @@ function ModeSelect() {
           }}
         >
           {getModeIcon(mode)}
-          <span>{mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+          <span className="hidden sm:block">
+            {mode.charAt(0).toUpperCase() + mode.slice(1)}
+          </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0"
             aria-hidden="true"

@@ -70,7 +70,7 @@ export default function AddFileCombobox({
               onFocus={() => {
                 buttonRef.current?.click();
               }}
-              className="bg-vsc-background border-lightgray text-vsc-foreground box-border w-full rounded border border-solid py-0.5 pl-2 focus:outline-none"
+              className="bg-vsc-background border-lightgray text-vsc-foreground box-border w-full rounded border border-solid py-0.5 pl-2 text-xs focus:outline-none"
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Type to search files..."
               onKeyDown={(e) => {

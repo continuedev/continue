@@ -36,7 +36,7 @@ export default function AddFileButton({ onClick }: AddFileButtonProps) {
       <div className="relative">
         <ListboxButton
           ref={buttonRef}
-          className="bg-vsc-editor-background border-lightgray/50 flex h-5 cursor-pointer items-center justify-between rounded-md border border-solid px-0 shadow-sm transition-colors"
+          className="bg-vsc-editor-background m-0 rounded-md p-0"
         >
           <div
             className="flex h-5 w-14 items-center justify-center gap-1 hover:brightness-125"
@@ -57,13 +57,8 @@ export default function AddFileButton({ onClick }: AddFileButtonProps) {
           <ChevronDownIcon className="text-vsc-foreground h-2.5 w-2.5 cursor-pointer px-1 brightness-75 hover:brightness-125" />
         </ListboxButton>
 
-        <ListboxOptions className="bg-vsc-editor-background border-lightgray/50 absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg">
-          <ListboxOption
-            value="addAllFiles"
-            className="text-vsc-foreground block w-full cursor-pointer px-2 py-1 text-left text-[10px] brightness-75 hover:brightness-125"
-          >
-            Add all open files
-          </ListboxOption>
+        <ListboxOptions className="bg-vsc-editor-background" anchor="top end">
+          <ListboxOption value="addAllFiles">Add all open files</ListboxOption>
         </ListboxOptions>
       </div>
     </Listbox>

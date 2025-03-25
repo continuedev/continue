@@ -41,53 +41,39 @@ export function ScopeSelect() {
   return (
     <Listbox value={selectedOrgId} onChange={handleChange}>
       <div className="relative">
-        <ListboxButton className="border-vsc-input-border hover:bg-vsc-input-background text-vsc-foreground bg-vsc-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border border-solid p-2 hover:opacity-90">
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-2">
-              {selectedDisplay?.iconUrl ? (
-                <img src={selectedDisplay.iconUrl} alt="" className="h-5 w-5" />
-              ) : (
-                <CurScopeEntityFallBackIcon className="h-5 w-5" />
-              )}
-              <span className="truncate">
-                {selectedDisplay?.name || "Select Organization"}
-              </span>
-            </div>
-            <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
+        <ListboxButton className="min-w-[140px] justify-between px-4 py-2 sm:min-w-[200px]">
+          <div className="flex items-center gap-2">
+            {selectedDisplay?.iconUrl ? (
+              <img src={selectedDisplay.iconUrl} alt="" className="h-5 w-5" />
+            ) : (
+              <CurScopeEntityFallBackIcon className="h-5 w-5" />
+            )}
+            <span className="truncate">
+              {selectedDisplay?.name || "Select Organization"}
+            </span>
           </div>
+          <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
         </ListboxButton>
 
-        <ListboxOptions className="bg-vsc-input-background absolute z-50 mt-1 w-full max-w-[400px] list-none overflow-auto rounded p-0 shadow-lg">
-          {organizations.length > 0 && (
-            <>
-              <div className="text-vsc-foreground p-2 font-semibold">
-                Organizations
+        <ListboxOptions className="z-[1000] min-w-[140px] pt-0.5 sm:min-w-[200px]">
+          {organizations.map((org) => (
+            <ListboxOption key={org.id} value={org.id} className="py-2">
+              <div className="flex items-center gap-2">
+                {org.iconUrl ? (
+                  <img src={org.iconUrl} alt="" className="h-5 w-5" />
+                ) : (
+                  <BuildingOfficeIcon className="h-5 w-5" />
+                )}
+                <span>{org.name}</span>
               </div>
-              {organizations.map((org) => (
-                <ListboxOption
-                  key={org.id}
-                  value={org.id}
-                  className="text-vsc-foreground hover:bg-list-active cursor-pointer rounded p-2 text-sm hover:opacity-90"
-                >
-                  <div className="flex items-center gap-2">
-                    {org.iconUrl ? (
-                      <img src={org.iconUrl} alt="" className="h-5 w-5" />
-                    ) : (
-                      <BuildingOfficeIcon className="h-5 w-5" />
-                    )}
-                    <span>{org.name}</span>
-                  </div>
-                </ListboxOption>
-              ))}
+            </ListboxOption>
+          ))}
 
-              <div className="bg-lightgray mx-1 my-1 h-px" />
-            </>
+          {!!organizations.length && (
+            <div className="bg-lightgray mx-1 my-1 h-px" />
           )}
 
-          <ListboxOption
-            value={null}
-            className="text-vsc-foreground hover:bg-list-active cursor-pointer rounded p-2 hover:opacity-90"
-          >
+          <ListboxOption value={null}>
             <div className="flex items-center gap-2">
               <UserCircleIcon className="h-5 w-5" />
               <span>Personal</span>
