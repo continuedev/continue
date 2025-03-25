@@ -8,7 +8,7 @@ import {
 import { MCPServerStatus } from "core";
 import { useContext } from "react";
 import { ToolTip } from "../../components/gui/Tooltip";
-import { AddBlockButton } from "../../components/mainInput/Lump/sections/AddBlockButton";
+import { ExploreBlocksButton } from "../../components/mainInput/Lump/sections/ExploreBlocksButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
@@ -55,7 +55,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
     >
       <div className="flex flex-row items-center gap-3">
         {/* Name and Status */}
-        <h3 className="m-0">{server.name}</h3>
+        <span className="m-0 font-semibold">{server.name}</span>
 
         {/* Error indicator if any */}
         {server.errors.length ? (
@@ -153,7 +153,6 @@ function MCPServersPreview() {
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
-  const ideMessenger = useContext(IdeMessengerContext);
 
   return (
     <div className="flex flex-col gap-1">
@@ -162,7 +161,7 @@ function MCPServersPreview() {
           <MCPServerPreview key={idx} server={server} />
         ))}
       </div>
-      <AddBlockButton blockType="mcpServers" />
+      <ExploreBlocksButton blockType="mcpServers" />
     </div>
   );
 }

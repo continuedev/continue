@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useAuth } from "../../../../../context/Auth";
 import { useAppSelector } from "../../../../../redux/hooks";
-import { AddBlockButton } from "../AddBlockButton";
+import { ExploreBlocksButton } from "../ExploreBlocksButton";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
 function DocsIndexingStatuses() {
@@ -70,7 +70,7 @@ function DocsIndexingStatuses() {
           );
         })}
       </div>
-      <AddBlockButton blockType="docs" />
+      <ExploreBlocksButton blockType="docs" />
     </div>
   );
 }
