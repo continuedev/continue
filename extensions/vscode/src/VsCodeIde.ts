@@ -4,7 +4,7 @@ import { exec } from "node:child_process";
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigJson, getConfigJsonPath } from "core/util/paths";
+import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
@@ -155,26 +155,39 @@ class VsCodeIde implements IDE {
               );
 
               // Remove free trial models
-              editConfigJson((config) => {
-                let tabAutocompleteModel = undefined;
-                if (Array.isArray(config.tabAutocompleteModel)) {
-                  tabAutocompleteModel = config.tabAutocompleteModel.filter(
-                    (model) => model.provider !== "free-trial",
-                  );
-                } else if (
-                  config.tabAutocompleteModel?.provider === "free-trial"
-                ) {
-                  tabAutocompleteModel = undefined;
-                }
+              editConfigFile(
+                (config) => {
+                  let tabAutocompleteModel = undefined;
+                  if (Array.isArray(config.tabAutocompleteModel)) {
+                    tabAutocompleteModel = config.tabAutocompleteModel.filter(
+                      (model) => model.provider !== "free-trial",
+                    );
+                  } else if (
+                    config.tabAutocompleteModel?.provider === "free-trial"
+                  ) {
+                    tabAutocompleteModel = undefined;
+                  }
 
-                return {
-                  ...config,
-                  models: config.models.filter(
-                    (model) => model.provider !== "free-trial",
-                  ),
-                  tabAutocompleteModel,
-                };
-              });
+                  return {
+                    ...config,
+                    models: config.models.filter(
+                      (model) => model.provider !== "free-trial",
+                    ),
+                    tabAutocompleteModel,
+                  };
+                },
+                (config) => {
+                  return {
+                    ...config,
+                    models: config.models?.filter(
+                      (model) =>
+                        !(
+                          "provider" in model && model.provider === "free-trial"
+                        ),
+                    ),
+                  };
+                },
+              );
             } else if (selection === "Learn more") {
               vscode.env.openExternal(
                 vscode.Uri.parse(
@@ -216,13 +229,22 @@ class VsCodeIde implements IDE {
           )
           .then((selection) => {
             if (selection === "Remove for me") {
-              editConfigJson((configJson) => {
-                configJson.models = configJson.models.filter(
-                  (model) => model.provider !== "free-trial",
-                );
-                configJson.tabAutocompleteModel = undefined;
-                return configJson;
-              });
+              editConfigFile(
+                (configJson) => {
+                  configJson.models = configJson.models.filter(
+                    (model) => model.provider !== "free-trial",
+                  );
+                  configJson.tabAutocompleteModel = undefined;
+                  return configJson;
+                },
+                (config) => {
+                  config.models = config.models?.filter(
+                    (model) =>
+                      !("provider" in model && model.provider === "free-trial"),
+                  );
+                  return config;
+                },
+              );
             } else if (selection === "Open Assistant configuration") {
               this.openFile(getConfigJsonPath());
             }
