@@ -70,12 +70,6 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import {
-  defaultContextProvidersJetBrains,
-  defaultContextProvidersVsCode,
-  defaultSlashCommandsJetBrains,
-  defaultSlashCommandsVscode,
-} from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
@@ -122,7 +116,7 @@ function loadSerializedConfig(
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
     try {
-      config = resolveSerializedConfig(getConfigJsonPath(ideType));
+      config = resolveSerializedConfig(getConfigJsonPath());
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
@@ -161,16 +155,6 @@ function loadSerializedConfig(
       configMergeKeys,
     );
   }
-
-  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
-  config.contextProviders ??=
-    ideType === "vscode"
-      ? [...defaultContextProvidersVsCode]
-      : [...defaultContextProvidersJetBrains];
-  config.slashCommands ??=
-    ideType === "vscode"
-      ? [...defaultSlashCommandsVscode]
-      : [...defaultSlashCommandsJetBrains];
 
   if (os.platform() === "linux" && !isSupportedLanceDbCpuTargetForLinux(ide)) {
     config.disableIndexing = true;

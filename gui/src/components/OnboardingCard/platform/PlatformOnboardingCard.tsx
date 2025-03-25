@@ -41,9 +41,9 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
           <div className="mt-4 flex flex-col">
             <Alert type="info">
               By choosing this option, Continue will be configured by a local{" "}
-              <code>config.yaml</code> file. If you're just looking to use
-              Ollama and still want to manage your configuration through
-              Continue, click{" "}
+              <code className="text-vsc-background">config.yaml</code> file. If
+              you're just looking to use Ollama and still want to manage your
+              configuration through Continue, click{" "}
               <a href="#" onClick={() => setCurrentTab("main")}>
                 here
               </a>

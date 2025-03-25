@@ -165,7 +165,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       const currentTarget = e.currentTarget;
       const relatedTarget = e.relatedTarget as Node | null;
 
-      if (relatedTarget && currentTarget.contains(relatedTarget)) {
+      if (relatedTarget && currentTarget?.contains(relatedTarget)) {
         return;
       }
 

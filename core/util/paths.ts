@@ -1,8 +1,9 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import * as YAML from "yaml";
 
-import { DevEventName } from "@continuedev/config-yaml";
+import { ConfigYaml, DevEventName } from "@continuedev/config-yaml";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 
@@ -91,27 +92,20 @@ export function getSessionsListPath(): string {
   return filepath;
 }
 
-export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
+export function getConfigJsonPath(): string {
   const p = path.join(getContinueGlobalPath(), "config.json");
-  if (!fs.existsSync(p)) {
-    if (ideType === "jetbrains") {
-      fs.writeFileSync(p, JSON.stringify(defaultConfigJetBrains, null, 2));
-    } else {
-      fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
-    }
-  }
   return p;
 }
 
 export function getConfigYamlPath(ideType?: IdeType): string {
   const p = path.join(getContinueGlobalPath(), "config.yaml");
-  // if (!fs.existsSync(p)) {
-  //   if (ideType === "jetbrains") {
-  //     fs.writeFileSync(p, YAML.stringify(defaultConfigYamlJetBrains));
-  //   } else {
-  //     fs.writeFileSync(p, YAML.stringify(defaultConfigYaml));
-  //   }
-  // }
+  if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
+    if (ideType === "jetbrains") {
+      fs.writeFileSync(p, YAML.stringify(defaultConfigJetBrains));
+    } else {
+      fs.writeFileSync(p, YAML.stringify(defaultConfig));
+    }
+  }
   return p;
 }
 
@@ -245,6 +239,20 @@ export function editConfigJson(
     fs.writeFileSync(getConfigJsonPath(), JSONC.stringify(configJson, null, 2));
   } else {
     console.warn("config.json is not a valid object");
+  }
+}
+
+export function editConfigYaml(
+  callback: (config: ConfigYaml) => ConfigYaml,
+): void {
+  const config = fs.readFileSync(getConfigYamlPath(), "utf8");
+  let configYaml = YAML.parse(config);
+  // Check if it's an object
+  if (typeof configYaml === "object" && configYaml !== null) {
+    configYaml = callback(configYaml as any) as any;
+    fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml));
+  } else {
+    console.warn("config.yaml is not a valid object");
   }
 }
 

@@ -55,7 +55,7 @@ export default async function doLoadConfig(
 
   // Migrations for old config files
   // Removes
-  const configJsonPath = getConfigJsonPath(ideInfo.ideType);
+  const configJsonPath = getConfigJsonPath();
   if (fs.existsSync(configJsonPath)) {
     migrateJsonSharedConfig(configJsonPath, ide);
   }

@@ -29,7 +29,11 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
+import {
+  editConfigJson,
+  editConfigYaml,
+  migrateV1DevDataFiles,
+} from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -607,27 +611,27 @@ export class Core {
         return;
       }
 
-      let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
+      let editConfigYamlCallback: Parameters<typeof editConfigYaml>[0];
 
       switch (mode) {
         case "Local":
-          editConfigJsonCallback = setupLocalConfig;
+          editConfigYamlCallback = setupLocalConfig;
           break;
 
         case "Quickstart":
-          editConfigJsonCallback = setupQuickstartConfig;
+          editConfigYamlCallback = setupQuickstartConfig;
           break;
 
         case "Best":
-          editConfigJsonCallback = setupBestConfig;
+          editConfigYamlCallback = setupBestConfig;
           break;
 
         default:
           console.error(`Invalid mode: ${mode}`);
-          editConfigJsonCallback = (config) => config;
+          editConfigYamlCallback = (config) => config;
       }
 
-      editConfigJson(editConfigJsonCallback);
+      editConfigYaml(editConfigYamlCallback);
 
       void this.configHandler.reloadConfig();
     });
@@ -979,4 +983,3 @@ export class Core {
 
   // private
 }
-
