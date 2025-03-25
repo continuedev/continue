@@ -75,6 +75,9 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, [editor, props.placeholder, historyLength]);
 
   useEffect(() => {
+    if (isInEditMode) {
+      setShouldHideToolbar(false);
+    }
     if (props.isMainInput) {
       editor?.commands.clearContent(true);
     }
@@ -155,14 +158,19 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const handleBlur = (e: React.FocusEvent) => {
     // Check if the new focus target is within our InputBoxDiv
-    const currentTarget = e.currentTarget;
-    const relatedTarget = e.relatedTarget as Node | null;
+    queueMicrotask(() => {
+      if (isInEditMode) {
+        return;
+      }
+      const currentTarget = e.currentTarget;
+      const relatedTarget = e.relatedTarget as Node | null;
 
-    if (relatedTarget && currentTarget.contains(relatedTarget)) {
-      return;
-    }
+      if (relatedTarget && currentTarget.contains(relatedTarget)) {
+        return;
+      }
 
-    setShouldHideToolbar(true);
+      setShouldHideToolbar(true);
+    });
   };
 
   return (

@@ -1,4 +1,3 @@
-import { Listbox, Transition } from "@headlessui/react";
 import {
   CheckIcon,
   ChevronUpDownIcon,
@@ -15,13 +14,19 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from "..";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../components/ui";
 import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
-
 export const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
 `;
 
-export const StyledListboxButton = styled(Listbox.Button)`
+export const StyledListboxButton = styled(ListboxButton)`
   cursor: pointer;
   background-color: ${vscBackground};
   text-align: left;
@@ -55,7 +60,7 @@ export const StyledListboxButton = styled(Listbox.Button)`
   }
 `;
 
-export const StyledListboxOptions = styled(Listbox.Options)`
+export const StyledListboxOptions = styled(ListboxOptions)`
   background-color: ${vscInputBackground};
   padding: 0;
 
@@ -78,7 +83,7 @@ export const StyledListboxOptions = styled(Listbox.Options)`
   }
 `;
 
-export const StyledListboxOption = styled(Listbox.Option)<{
+export const StyledListboxOption = styled(ListboxOption)<{
   selected: boolean;
 }>`
   background-color: ${({ selected }) =>

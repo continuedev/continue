@@ -1,3 +1,4 @@
+import { ConfigYaml, parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowPathIcon,
   CircleStackIcon,
@@ -6,9 +7,11 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { MCPServerStatus } from "core";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { ToolTip } from "../../components/gui/Tooltip";
+import EditBlockButton from "../../components/mainInput/Lump/EditBlockButton";
 import { ExploreBlocksButton } from "../../components/mainInput/Lump/sections/ExploreBlocksButton";
+import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateConfig } from "../../redux/slices/configSlice";
@@ -16,8 +19,9 @@ import { fontSize } from "../../util";
 
 interface MCPServerStatusProps {
   server: MCPServerStatus;
+  serverFromYaml?: NonNullable<ConfigYaml["mcpServers"]>[number];
 }
-function MCPServerPreview({ server }: MCPServerStatusProps) {
+function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((store) => store.config.config);
   const dispatch = useAppDispatch();
@@ -124,6 +128,7 @@ function MCPServerPreview({ server }: MCPServerStatusProps) {
 
       {/* Refresh button */}
       <div className="flex items-center gap-2">
+        <EditBlockButton blockType={"mcpServers"} block={serverFromYaml} />
         <div
           className="text-lightgray flex cursor-pointer items-center hover:opacity-80"
           onClick={onRefresh}
@@ -153,12 +158,27 @@ function MCPServersPreview() {
   const servers = useAppSelector(
     (store) => store.config.config.mcpServerStatuses,
   );
+  const { selectedProfile } = useAuth();
+
+  const mergedBlocks = useMemo(() => {
+    const parsed = selectedProfile?.rawYaml
+      ? parseConfigYaml(selectedProfile?.rawYaml ?? "")
+      : undefined;
+    return (servers ?? []).map((doc, index) => ({
+      block: doc,
+      blockFromYaml: parsed?.mcpServers?.[index],
+    }));
+  }, [servers, selectedProfile]);
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex max-h-[170px] flex-col gap-1 overflow-y-auto overflow-x-hidden pr-2">
-        {servers.map((server, idx) => (
-          <MCPServerPreview key={idx} server={server} />
+        {mergedBlocks.map(({ block, blockFromYaml }, idx) => (
+          <MCPServerPreview
+            key={idx}
+            server={block}
+            serverFromYaml={blockFromYaml}
+          />
         ))}
       </div>
       <ExploreBlocksButton blockType="mcpServers" />
