@@ -95,6 +95,13 @@ const config = {
           },
           {
             type: "docSidebar",
+            sidebarId: "hubSidebar",
+            position: "left",
+            label: "Hub",
+            href: "/hub/introduction",
+          },
+          {
+            type: "docSidebar",
             sidebarId: "customizingSidebar",
             position: "left",
             label: "Customize",
@@ -107,13 +114,7 @@ const config = {
             label: "Reference",
             href: "/reference",
           },
-          {
-            type: "docSidebar",
-            sidebarId: "hubSidebar",
-            position: "left",
-            label: "Hub",
-            href: "/hub/introduction",
-          },
+
           {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
