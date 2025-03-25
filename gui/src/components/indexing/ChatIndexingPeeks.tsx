@@ -35,7 +35,7 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
     <div className="flex flex-row items-center border-0 border-t border-solid border-t-zinc-700 px-3 py-0.5">
       <div className="group flex flex-1 cursor-pointer flex-row items-center gap-2">
         <div className={`flex flex-row items-center gap-2`}>
-          <p className="m-0 p-0 text-xs text-stone-500 group-hover:underline">
+          <p className="text-lightgray m-0 p-0 text-xs group-hover:underline">
             {state.displayName}
           </p>
         </div>
@@ -47,17 +47,17 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
             }}
           />
         </div>
-        <div className="xs:flex hidden flex-row items-center gap-1 text-stone-500">
+        <div className="xs:flex text-lightgray hidden flex-row items-center gap-1">
           <span className="text-xs no-underline">
             {state.progressPercentage.toFixed(0)}%
           </span>
           <ArrowPathIcon
-            className={`animate-spin-slow inline-block h-4 w-4 text-stone-500`}
+            className={`animate-spin-slow text-lightgray inline-block h-4 w-4`}
           ></ArrowPathIcon>
         </div>
       </div>
       <EyeSlashIcon
-        className="ml-6 h-4 w-4 cursor-pointer text-stone-500 hover:opacity-80"
+        className="text-lightgray ml-6 h-4 w-4 cursor-pointer hover:opacity-80"
         onClick={(e) => {
           dispatch(
             setIndexingChatPeekHidden({ type: state.type, hidden: true }),
