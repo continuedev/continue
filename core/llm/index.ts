@@ -784,7 +784,6 @@ export abstract class BaseLLM implements ILLM {
 
     let thinking = "";
     let completion = "";
-    let citations: null | string[] = null;
 
     try {
       if (this.templateMessages) {
@@ -824,13 +823,6 @@ export abstract class BaseLLM implements ILLM {
               if (result) {
                 completion += result.content;
                 yield result;
-              }
-              if (
-                !citations &&
-                (chunk as any).citations &&
-                Array.isArray((chunk as any).citations)
-              ) {
-                citations = (chunk as any).citations;
               }
             }
           }
@@ -873,12 +865,6 @@ export abstract class BaseLLM implements ILLM {
       requests when not using tools, so it's the simplest option to always add to history.
       */
       await this.writeLog(`Completion:\n${completion}\n\n`);
-
-      if (citations) {
-        await this.writeLog(
-          `Citations:\n${citations.map((c, i) => `${i + 1}: ${c}`).join("\n")}\n\n`,
-        );
-      }
     }
 
     return {
