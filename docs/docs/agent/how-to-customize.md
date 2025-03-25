@@ -5,11 +5,26 @@ keywords: [customize, chat]
 sidebar_position: 5
 ---
 
-There are a number of different ways to customize Chat:
+## Tool Policies
 
-- You can add a [`rules` block](../hub/blocks/block-types.md#rules) to your assistant to give the model persistent instructions through the system prompt. See the [rules deep dive](../customize/deep-dives/rules.md) for more information.
-- You can configure [`@Codebase`](../customize/deep-dives/codebase.mdx)
-- You can configure [`@Docs`](../customize/deep-dives/docs.mdx)
-- You can configure and create custom [tools](../customize/tools.mdx)
-- You can [build your own context provider](../customize/tutorials/build-your-own-context-provider.mdx)
-- You can create your own [custom code RAG](../customize/tutorials/custom-code-rag.mdx)
+You can adjust Agent's usage behavior for each tool in your assistant to one of these options:
+
+- **Ask First (default)** - request permission from the user; show the `Cancel` and `Continue` buttons
+- **Automatic** - do not request permission, automatically call the tool and feed the response back to the model
+- **Excluded** - do not send this tool to the model
+
+:::warning
+Be careful setting any tools to `automatic` if their behavior is not read-only.
+:::
+
+First, open Tool Policies by clicking the Tools icon in the input toolbar
+
+![Input Toolbar](/img/lump-toolbar.png)
+
+Then, you can view and change tool policies. To change a policy, click on the policy text ("Excluded", etc.) to toggle it. You can also turn groups of tools (e.g. all Built-in tools or all tools from a specific MCP server) off using the section toggles.
+
+![Tool Policies](/img/tool-policies.png)
+
+## Adding tools
+
+You can add MCP servers to your assistant to give Agent more tools. [Explore MCP Servers on the Hub](https://hub.continue.dev/explore/mcp) and see the [Tools guide](../customize/tools.mdx) for more details.

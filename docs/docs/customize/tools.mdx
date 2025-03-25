@@ -7,6 +7,8 @@ keywords: [tool, use, function calling, claude, automatic]
 import TabItem from "@theme/TabItem";
 import Tabs from "@theme/Tabs";
 
+### Tool support
+
 Tools allow Continue to take action in your IDE and beyond (when you give permission). Currently, they are only supported for the following providers:
 
 - [Anthropic](./model-providers/top-level/anthropic.mdx) - see recommended models [here](https://docs.anthropic.com/en/docs/build-with-claude/tool-use#choosing-a-model).
@@ -23,6 +25,8 @@ To let you balance speed and safety, each tool can be set to 1 of 3 modes:
 - `Automatic`: When the LLM requests to use the tool, Continue will automatically call it and send the response to the LLM.
 - `Allowed`: When the LLM requests to use the tool, Continue will first give you the opportunity to "Cancel" or "Continue" with the tool.
 - `Disabled`: The LLM will not know about or be able to use the tool.
+
+Tool policies are stored locally per-IDE.
 
 ### Custom tools
 

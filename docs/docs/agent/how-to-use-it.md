@@ -10,36 +10,40 @@ sidebar_position: 1
 
 ## How to use it
 
-To enable Agent, click the Mode selector below the chat input and select `Agent`
+Agent uses tools to unlock the power of the IDE for your model, allowing the model to make decisions and save you the work of manually finding context and performing actions.
 
-![selecting agent mode](/img/mode-select-agent-not-supported.png)
+## Enable Agent
 
-s
+To enable Agent, use the Mode selector below the chat input to select `Agent`.
 
-Chat makes it easy to ask for help from an LLM without needing to leave the IDE. You send it a task, including any relevant information, and it replies with the text / code most likely to complete the task. If it does not give you what you want, then you can send follow up messages to clarify and adjust its approach until the task is completed.
+![selecting agent mode](/img/mode-select-agent.png)
 
-Chat is best used to understand and iterate on code or as a replacement for search engine queries.
+:::info
+If Agent is disabled with a `Not Supported` message, the selected model/provider doesn't support tools, or Continue doesn't yet support tools with it. See [Tool Support](../customize/tools.mdx#tool-support)
+:::
 
-## Type a request and press enter
+## Chat with Agent
 
-You send it a question, and it replies with an answer. You tell it to solve a problem, and it provides you a solution. You ask for some code, and it generates it.
+Agent lives within the same interface as [Chat](../chat/how-it-works.md), so the same [input](../chat/how-to-use-it.md#type-a-request-and-press-enter) is used to send messages and you can still use the same manual methods of providing context, such as [`@` context providers](../chat/how-to-use-it.md#reference-context-with-the--symbol) or adding [highlighted code from the editor](../chat/how-to-use-it.md#highlight-a-code-section-to-include-as-context).
 
-## Highlight a code section to include as context
+### Use natural language
 
-You select a code section with your mouse, press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) to send it to the LLM, and then ask for it to be explained to you or request it to be refactored in some way.
+With Agent, you can use more natural language and let the model do the work. As an example, you might say:
 
-## Reference context with the @ symbol
+> Set the @typescript-eslint/naming-convention rule to "off" for all eslint configurations in this project
 
-If there is information from the codebase, documentation, IDE, or other tools that you want to include as context, you can type @ to select and include it as context. You can learn more about how to use this in [Chat context selection](context-selection.md).
+Then, Agent can decide which tools to use to get the job done.
 
-## Apply generated code to your file
+## Give Agent Permission
 
-When the LLM replies with edits to a file, you can click the “Apply” button. This will update the existing code in the editor to reflect the suggested changes.
+By default, Agent will ask permission when it wants to use a tool. Click `Continue` to allow Agent to proceed with the tool call, or `Cancel` to reject it.
 
-## Start a fresh session for a new task
+![agent requesting permission](/img/agent-permission.png)
 
-Once you complete a task and want to start a new one, press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) to begin a new session, ensuring only relevant context for the next task is provided to the LLM.
+You can use tool policies to exclude or make usage automatic for specific tools. See [How to Customize](./how-to-customize.md).
 
-## Switch between different models
+## View Tool Responses
 
-you have configured multiple models, you can switch between models using the dropdown or by pressing <kbd>cmd/ctrl</kbd> + <kbd>’</kbd>
+Data returned from tools calls is fed back to the model as context item(s). Most errors are also caught and returned to Agent so that it can decide how to proceed.
+
+![agent response](/img/agent-response.png)
