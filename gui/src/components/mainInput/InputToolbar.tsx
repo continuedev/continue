@@ -9,7 +9,6 @@ import {
   vscButtonBackground,
   vscButtonForeground,
   vscForeground,
-  vscInputBackground,
 } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
@@ -21,33 +20,15 @@ import {
 import { exitEditMode } from "../../redux/thunks";
 import { loadLastSession } from "../../redux/thunks/session";
 import {
-  fontSize,
   getAltKeyLabel,
-  getFontSize,
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
+import { useFontSize } from "../ui/font";
 import HoverItem from "./InputToolbar/bottom/HoverItem";
-
-const StyledDiv = styled.div<{ isHidden?: boolean }>`
-  padding-top: 4px;
-  justify-content: space-between;
-  gap: 1px;
-  background-color: ${vscInputBackground};
-  align-items: center;
-  font-size: ${getFontSize() - 2}px;
-  cursor: ${(props) => (props.isHidden ? "default" : "text")};
-  opacity: ${(props) => (props.isHidden ? 0 : 1)};
-  pointer-events: ${(props) => (props.isHidden ? "none" : "auto")};
-  user-select: none;
-
-  & > * {
-    flex: 0 0 auto;
-  }
-`;
 
 const EnterButton = styled.button<{ isPrimary?: boolean }>`
   all: unset;
@@ -107,14 +88,19 @@ function InputToolbar(props: InputToolbarProps) {
       defaultModel.capabilities,
     );
 
+  const smallFont = useFontSize(-2);
+  const tinyFont = useFontSize(-3);
+
   return (
     <>
-      <StyledDiv
-        isHidden={props.hidden}
+      <div
         onClick={props.onClick}
-        className="find-widget-skip flex"
+        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none cursor-default opacity-0" : "pointer-events-auto cursor-text opacity-100"}`}
+        style={{
+          fontSize: smallFont,
+        }}
       >
-        <div className="flex items-center justify-start gap-2 whitespace-nowrap">
+        <div className="xs:gap-1.5 flex flex-row items-center gap-1">
           <ModeSelect />
           <ModelSelect />
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
@@ -165,7 +151,7 @@ function InputToolbar(props: InputToolbarProps) {
         <div
           className="flex items-center gap-2 whitespace-nowrap text-gray-400"
           style={{
-            fontSize: fontSize(-3),
+            fontSize: tinyFont,
           }}
         >
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
@@ -235,7 +221,7 @@ function InputToolbar(props: InputToolbarProps) {
             <span className="md:hidden">⏎</span>
           </EnterButton>
         </div>
-      </StyledDiv>
+      </div>
     </>
   );
 }

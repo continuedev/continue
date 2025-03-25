@@ -116,7 +116,7 @@ function AddDocsDialog() {
 
               <label className="flex w-full flex-col gap-1">
                 <div className="flex flex-row items-center gap-1">
-                  <span className="lines lines-1 whitespace-nowrap">
+                  <span className="line-clamp-1 whitespace-nowrap">
                     Start URL
                   </span>
                   <div>

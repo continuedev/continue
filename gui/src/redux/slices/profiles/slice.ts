@@ -1,9 +1,15 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { SlashCommandDescription } from "core";
 import { ProfileDescription } from "core/config/ConfigHandler";
-import { ensureProfilePreferences } from "./utils";
+
+const DEFAULT_SLASH_COMMANDS_BOOKMARKS_COUNT = 5;
+
+const INITIAL_PREFERENCES_STATE: PreferencesState = {
+  bookmarkedSlashCommands: [],
+};
 
 export interface PreferencesState {
-  bookmarksByName: string[];
+  bookmarkedSlashCommands: string[];
 }
 
 export interface ProfilesState {
@@ -24,21 +30,42 @@ export const profilesSlice = createSlice({
   reducers: {
     setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedProfileId = payload;
-
-      if (payload) {
-        ensureProfilePreferences(state, payload);
-      }
     },
     setAvailableProfiles: (
       state,
       { payload }: PayloadAction<ProfileDescription[] | null>,
     ) => {
       state.availableProfiles = payload;
+    },
+    initializeProfilePreferences: (
+      state,
+      action: PayloadAction<{
+        profileId: string;
+        defaultSlashCommands?: SlashCommandDescription[];
+      }>,
+    ) => {
+      const { profileId, defaultSlashCommands = [] } = action.payload;
+      const defaultSlashCommandNames = defaultSlashCommands.map(
+        (cmd) => cmd.name,
+      );
 
-      if (payload) {
-        for (const profile of payload) {
-          ensureProfilePreferences(state, profile.id);
-        }
+      // First ensure all profile preferences are complete to handle
+      // the case where a new preference has been added since last load
+      Object.keys(state.preferencesByProfileId).forEach((pid) => {
+        state.preferencesByProfileId[pid] = {
+          ...INITIAL_PREFERENCES_STATE,
+          ...state.preferencesByProfileId[pid],
+        };
+      });
+
+      // Then initialize preferences for the new profile if needed
+      if (!state.preferencesByProfileId[profileId]) {
+        state.preferencesByProfileId[profileId] = {
+          bookmarkedSlashCommands: defaultSlashCommandNames.slice(
+            0,
+            DEFAULT_SLASH_COMMANDS_BOOKMARKS_COUNT,
+          ),
+        };
       }
     },
     bookmarkSlashCommand: (
@@ -46,16 +73,15 @@ export const profilesSlice = createSlice({
       action: PayloadAction<{ commandName: string }>,
     ) => {
       const { commandName } = action.payload;
-      const profileId = state.selectedProfileId;
+      const preferences =
+        state.preferencesByProfileId[state.selectedProfileId ?? ""];
 
-      if (!profileId) return;
+      if (!preferences) return;
 
-      const bookmarks = state.preferencesByProfileId[profileId].bookmarksByName;
-      if (!bookmarks.includes(commandName)) {
-        bookmarks.push(commandName);
+      if (!preferences.bookmarkedSlashCommands.includes(commandName)) {
+        preferences.bookmarkedSlashCommands.push(commandName);
       }
     },
-
     unbookmarkSlashCommand: (
       state,
       action: PayloadAction<{ commandName: string }>,
@@ -66,9 +92,12 @@ export const profilesSlice = createSlice({
       if (!profileId) return;
 
       const preferences = state.preferencesByProfileId[profileId];
-      preferences.bookmarksByName = preferences.bookmarksByName.filter(
-        (cmd) => cmd !== commandName,
-      );
+      if (!preferences) return;
+
+      preferences.bookmarkedSlashCommands =
+        preferences.bookmarkedSlashCommands.filter(
+          (cmd) => cmd !== commandName,
+        );
     },
   },
   selectors: {
@@ -85,7 +114,7 @@ export const profilesSlice = createSlice({
     selectBookmarkedSlashCommands: (state) => {
       if (!state.selectedProfileId) return [];
       const preferences = state.preferencesByProfileId[state.selectedProfileId];
-      return preferences?.bookmarksByName || [];
+      return preferences?.bookmarkedSlashCommands || [];
     },
 
     selectPreferencesByProfileId: (state) => state.preferencesByProfileId,
@@ -97,6 +126,7 @@ export const {
   setSelectedProfile,
   bookmarkSlashCommand,
   unbookmarkSlashCommand,
+  initializeProfilePreferences,
 } = profilesSlice.actions;
 
 export const {

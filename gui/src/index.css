@@ -81,26 +81,6 @@ body {
   scrollbar-width: none; /* Firefox */
 }
 
-.lines {
-  /* white-space: pre-wrap; */
-  word-break: break-word;
-  overflow: hidden;
-  line-height: 1.375;
-  text-overflow: ellipsis;
-}
-
-.lines-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
-.lines-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-}
-
 .truncate-start {
   display: inline-block;
   vertical-align: middle;

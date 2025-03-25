@@ -99,7 +99,7 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
                             data-tooltip-id={contentToolTipId}
                             data-tooltip-delay-show={500}
                           >
-                            <span className="lines lines-1">
+                            <span className="line-clamp-1">
                               {chunk.content}
                             </span>
                           </td>
