@@ -13,10 +13,7 @@ import {
   SiteIndexingConfig,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
-import {
-  addContextProvider,
-  isSupportedLanceDbCpuTargetForLinux,
-} from "../../config/util";
+import { isSupportedLanceDbCpuTargetForLinux } from "../../config/util";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
@@ -24,7 +21,7 @@ import { IMessenger } from "../../protocol/messenger";
 import { fetchFavicon } from "../../util/fetchFavicon";
 import { GlobalContext } from "../../util/GlobalContext";
 import {
-  editConfigJson,
+  editConfigFile,
   getDocsSqlitePath,
   getLanceDbPath,
 } from "../../util/paths";
@@ -299,29 +296,6 @@ export default class DocsService {
   }
 
   async syncDocsWithPrompt(reIndex: boolean = false) {
-    if (!this.hasDocsContextProvider()) {
-      const actionMsg = "Add 'docs' context provider";
-      const res = await this.ide.showToast(
-        "info",
-        "Starting docs indexing",
-        actionMsg,
-      );
-
-      if (res === actionMsg) {
-        addContextProvider({
-          name: DocsContextProvider.description.title,
-          params: {},
-        });
-
-        void this.ide.showToast(
-          "info",
-          "Successfuly added docs context provider",
-        );
-      } else {
-        return;
-      }
-    }
-
     await this.syncDocs(undefined, this.config, reIndex);
 
     void this.ide.showToast("info", "Docs indexing completed");
@@ -655,7 +629,7 @@ export default class DocsService {
           progress: 1,
         });
 
-        void this.ide.showToast("info", `Failed to index ${startUrl}`);
+        // void this.ide.showToast("info", `Failed to index ${startUrl}`);
         markFailedInGlobalContext();
         return;
       }
@@ -1210,15 +1184,30 @@ export default class DocsService {
     );
 
     if (!doesEquivalentDocExist) {
-      editConfigJson((config) => ({
-        ...config,
-        docs: [
-          ...(config.docs?.filter(
-            (doc) => doc.startUrl !== siteIndexingConfig.startUrl,
-          ) ?? []),
-          siteIndexingConfig,
-        ],
-      }));
+      editConfigFile(
+        (config) => ({
+          ...config,
+          docs: [
+            ...(config.docs?.filter(
+              (doc) => doc.startUrl !== siteIndexingConfig.startUrl,
+            ) ?? []),
+            siteIndexingConfig,
+          ],
+        }),
+        (config) => ({
+          ...config,
+          docs: [
+            ...(config.docs?.filter(
+              (doc) => (doc as any).startUrl !== siteIndexingConfig.startUrl,
+            ) ?? []),
+            {
+              name: siteIndexingConfig.title,
+              faviconUrl: siteIndexingConfig.faviconUrl,
+              startUrl: siteIndexingConfig.startUrl,
+            },
+          ],
+        }),
+      );
     }
   }
 
@@ -1262,10 +1251,19 @@ export default class DocsService {
       (doc) => doc.startUrl === startUrl,
     );
     if (doesDocExist) {
-      editConfigJson((config) => ({
-        ...config,
-        docs: config.docs?.filter((doc) => doc.startUrl !== startUrl) || [],
-      }));
+      editConfigFile(
+        (config) => ({
+          ...config,
+          docs: config.docs?.filter((doc) => doc.startUrl !== startUrl) || [],
+        }),
+        (config) => ({
+          ...config,
+          docs:
+            config.docs?.filter(
+              (doc) => "startUrl" in doc && doc.startUrl !== startUrl,
+            ) || [],
+        }),
+      );
     }
   }
 

@@ -83,7 +83,6 @@ class MessageTypes {
             "history/save",
             "devdata/log",
             "config/addModel",
-            "config/addContextProvider",
             "config/newPromptFile",
             "config/ideSettingsUpdate",
             "config/getSerializedProfileInfo",

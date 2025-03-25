@@ -67,22 +67,21 @@ export const StyledListboxOptions = styled(ListboxOptions)`
   position: absolute;
   top: 100%;
   left: 0;
-  right: 0;
 
   margin-top: 0.25rem;
 
+  height: fit-content;
   max-height: 15rem;
-  overflow: auto;
+  width: 60%;
 
   border-radius: ${defaultBorderRadius};
-  overflow-y: scroll;
+  overflow-y: auto;
   z-index: 10;
 
   &:focus {
     outline: none;
   }
 `;
-
 export const StyledListboxOption = styled(ListboxOption)<{
   selected: boolean;
 }>`

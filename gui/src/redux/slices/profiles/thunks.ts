@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ProfileDescription } from "core/config/ConfigHandler";
-import { isDeprecatedCommandName } from "../../../components/ConversationStarters/utils";
 import { ThunkApiType } from "../../store";
 import {
   initializeProfilePreferences,
@@ -98,15 +97,10 @@ export const initializeProfilePreferencesThunk = createAsyncThunk<
   "profiles/initializeProfilePreferences",
   async (data, { getState, dispatch }) => {
     const { profileId } = data;
-    const state = getState();
-
-    // Get slash commands from config
-    const defaultSlashCommands =
-      state.config.config.slashCommands.filter(isDeprecatedCommandName) ?? [];
 
     dispatch(
       initializeProfilePreferences({
-        defaultSlashCommands,
+        defaultSlashCommands: [],
         profileId,
       }),
     );

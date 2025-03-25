@@ -130,7 +130,7 @@ function ModeSelect() {
               <span className="">Agent</span>
             </div>
             {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
-            {!agentModeSupported && <span>(Not supported)</span>}
+            {!agentModeSupported && <span> (Not supported)</span>}
           </ListboxOption>
 
           <ListboxOption value="chat">

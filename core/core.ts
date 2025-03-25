@@ -10,7 +10,7 @@ import {
   setupLocalConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { addContextProvider, addModel, deleteModel } from "./config/util";
+import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
@@ -29,7 +29,7 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
+import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -41,6 +41,7 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import { ConfigYaml } from "@continuedev/config-yaml";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import { MCPManagerSingleton } from "./context/mcp";
 import { shouldIgnore } from "./indexing/shouldIgnore";
@@ -316,10 +317,6 @@ export class Core {
 
     on("config/refreshProfiles", async (msg) => {
       await this.configHandler.loadAssistantsForSelectedOrg();
-    });
-
-    on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data, this.configHandler);
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -607,38 +604,55 @@ export class Core {
         return;
       }
 
-      let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
+      let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
       switch (mode) {
         case "Local":
-          editConfigJsonCallback = setupLocalConfig;
+          editConfigYamlCallback = setupLocalConfig;
           break;
 
         case "Quickstart":
-          editConfigJsonCallback = setupQuickstartConfig;
+          editConfigYamlCallback = setupQuickstartConfig;
           break;
 
         case "Best":
-          editConfigJsonCallback = setupBestConfig;
+          editConfigYamlCallback = setupBestConfig;
           break;
 
         default:
           console.error(`Invalid mode: ${mode}`);
-          editConfigJsonCallback = (config) => config;
+          editConfigYamlCallback = (config) => config;
       }
 
-      editConfigJson(editConfigJsonCallback);
+      editConfigFile((c) => c, editConfigYamlCallback);
 
       void this.configHandler.reloadConfig();
     });
 
     on("addAutocompleteModel", (msg) => {
-      editConfigJson((config) => {
-        return {
+      const model = msg.data.model;
+      editConfigFile(
+        (config) => {
+          return {
+            ...config,
+            tabAutocompleteModel: model,
+          };
+        },
+        (config) => ({
           ...config,
-          tabAutocompleteModel: msg.data.model,
-        };
-      });
+          models: [
+            ...(config.models ?? []),
+            {
+              name: model.title,
+              provider: model.provider,
+              model: model.model,
+              apiKey: model.apiKey,
+              roles: ["autocomplete"],
+              apiBase: model.apiBase,
+            },
+          ],
+        }),
+      );
       void this.configHandler.reloadConfig();
     });
 
@@ -979,4 +993,3 @@ export class Core {
 
   // private
 }
-
