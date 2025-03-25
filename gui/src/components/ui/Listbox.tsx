@@ -5,6 +5,7 @@ import {
   Listbox,
 } from "@headlessui/react";
 import * as React from "react";
+import { vscCommandCenterInactiveBorder } from "..";
 import { cn } from "../../util/cn";
 import { FontSizeModifier, useFontSize } from "./font";
 
@@ -20,7 +21,7 @@ const ListboxButton = React.forwardRef<HTMLButtonElement, ListboxButtonProps>(
         ref={ref}
         {...props}
         className={cn(
-          "border-vsc-input-border bg-vsc-input-background text-vsc-foreground m-0 flex flex-1 cursor-pointer flex-row items-center rounded-sm border border-solid px-1 py-0.5",
+          "border-vsc-input-border bg-vsc-background text-vsc-foreground m-0 flex flex-1 cursor-pointer flex-row items-center gap-1 rounded-sm border border-solid px-1 py-0.5 text-left",
           props.className,
         )}
         style={{
@@ -41,13 +42,14 @@ const ListboxOptions = React.forwardRef<HTMLUListElement, ListboxOptionsProps>(
     return (
       <HLOptions
         ref={ref}
-        anchor={"top start"}
+        anchor={"bottom start"}
         {...props}
         className={cn(
-          "bg-vsc-input-background border-vsc-input-border no-scrollbar max-h-[90vh] overflow-auto border border-solid p-0 shadow-lg",
+          "bg-vsc-input-background flex flex-col overflow-auto rounded-sm px-0 shadow-md",
           props.className,
         )}
         style={{
+          border: `1px solid ${vscCommandCenterInactiveBorder}`,
           fontSize,
           ...props.style,
         }}

@@ -18,8 +18,11 @@ import {
   setDefaultModel,
 } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-import { fontSize, isMetaEquivalentKeyPressed } from "../../util";
-import Shortcut from "../gui/Shortcut";
+import {
+  fontSize,
+  getMetaKeyLabel,
+  isMetaEquivalentKeyPressed,
+} from "../../util";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 
 interface ModelOptionProps {
@@ -150,10 +153,10 @@ function ModelOption({
       onClick={handleOptionClick}
     >
       <div className="flex flex-col gap-0.5">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-grow items-center">
-            <CubeIcon className="mr-2 h-3 w-3 flex-shrink-0" />
-            <span className="flex-grow">
+        <div className="flex flex-1 flex-row items-center justify-between gap-2">
+          <div className="flex flex-1 flex-row items-center gap-2">
+            <CubeIcon className="h-3 w-3 flex-shrink-0" />
+            <span className="line-clamp-1 flex-1">
               {option.title}
               {showMissingApiKeyMsg && (
                 <span className="ml-2 text-[10px] italic">
@@ -162,9 +165,9 @@ function ModelOption({
               )}
             </span>
           </div>
-          <div className="ml-5 flex items-center">
-            <StyledCog6ToothIcon $hovered={hovered} onClick={onClickGear} />
-            {isSelected && <CheckIcon className="ml-1 h-3 w-3" />}
+          <div className="flex flex-shrink-0 flex-row items-center">
+            {/* <StyledCog6ToothIcon $hovered={hovered} onClick={onClickGear} /> */}
+            {isSelected && <CheckIcon className="h-3 w-3" />}
           </div>
         </div>
       </div>
@@ -252,14 +255,14 @@ function ModelSelect() {
         dispatch(setDefaultModel({ title: val }));
       }}
     >
-      <div className="relative">
+      <div className="relative flex">
         <ListboxButton
           data-testid="model-select-button"
           ref={buttonRef}
-          className="h-[18px] overflow-hidden"
+          className="h-[18px] border-none"
         >
-          <div className="flex items-center gap-0.5 text-gray-400 transition-colors duration-200">
-            <span className="truncate">
+          <div className="flex items-center gap-1 text-gray-400 transition-colors duration-200">
+            <span className="line-clamp-1">
               {modelSelectTitle(defaultModel) || "Select model"}{" "}
             </span>
             <ChevronDownIcon
@@ -268,8 +271,8 @@ function ModelSelect() {
             />
           </div>
         </ListboxButton>
-        <ListboxOptions>
-          <div className={`no-scrollbar max-h-[300px] overflow-y-scroll`}>
+        <ListboxOptions className={"min-w-[160px]"}>
+          <div className={`no-scrollbar max-h-[300px] overflow-y-auto`}>
             {sortedOptions.map((option, idx) => (
               <ModelOption
                 option={option}
@@ -281,8 +284,7 @@ function ModelSelect() {
             ))}
           </div>
 
-          <div className="mt-auto">
-            <div className="bg-lightgray my-0 h-[0.5px]" />
+          <div className="">
             {selectedProfile?.profileType === "local" && (
               <>
                 <ListboxOption
@@ -298,9 +300,8 @@ function ModelSelect() {
               </>
             )}
 
-            <div className="bg-lightgray my-0 h-[0.5px]" />
-            <span className="block px-3 py-2" style={{ color: lightGray }}>
-              <Shortcut>meta '</Shortcut> to toggle model
+            <span className="block px-2 py-1" style={{ color: lightGray }}>
+              {getMetaKeyLabel()}' to toggle model
             </span>
           </div>
         </ListboxOptions>

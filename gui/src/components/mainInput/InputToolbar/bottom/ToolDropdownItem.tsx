@@ -66,7 +66,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
             </ToolTip>
           </>
         ) : null}
-        <span className="lines lines-1 flex items-center gap-1">
+        <span className="line-clamp-1 flex items-center gap-1">
           {props.tool.faviconUrl && (
             <img
               src={props.tool.faviconUrl}

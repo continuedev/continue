@@ -10,7 +10,7 @@ import { MessageModes } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { useEffect, useMemo } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import { lightGray } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
@@ -19,42 +19,12 @@ import {
   setMode,
 } from "../../redux/slices/sessionSlice";
 import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
-import Shortcut from "../gui/Shortcut";
 import {
   Listbox,
   ListboxButton,
   ListboxOption,
   ListboxOptions,
 } from "../ui/Listbox";
-
-const StyledListboxButton = styled(ListboxButton)`
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  border: none;
-  cursor: pointer;
-  font-size: ${getFontSize() - 2}px;
-  background: transparent;
-  color: ${lightGray};
-  &:focus {
-    outline: none;
-  }
-`;
-
-const StyledListboxOptions = styled(ListboxOptions)`
-  margin-top: 4px;
-  position: absolute;
-  list-style: none;
-  padding: 0px;
-  min-width: 180px;
-  cursor: default;
-  display: flex;
-  flex-direction: column;
-  border-radius: ${defaultBorderRadius};
-  border: 0.5px solid ${lightGray};
-  background-color: ${vscInputBackground};
-`;
 
 const ShortcutText = styled.span`
   color: ${lightGray};
@@ -131,7 +101,7 @@ function ModeSelect() {
           <ListboxOption value="agent" disabled={!agentModeSupported}>
             <div className="flex flex-row items-center gap-1.5">
               <SparklesIcon className="h-3 w-3" />
-              <span className="font-semibold">Agent</span>
+              <span className="">Agent</span>
             </div>
             {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
             {!agentModeSupported && <span>(Not supported)</span>}
@@ -140,7 +110,7 @@ function ModeSelect() {
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">
               <ChatBubbleLeftIcon className="h-3 w-3" />
-              <span className="font-semibold">Chat</span>
+              <span className="">Chat</span>
               <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
             </div>
             {mode === "chat" && <CheckIcon className="ml-auto h-3 w-3" />}
@@ -150,7 +120,7 @@ function ModeSelect() {
             <ListboxOption value="edit">
               <div className="flex flex-row items-center gap-1.5">
                 <PencilIcon className="h-3 w-3" />
-                <span className="font-semibold">Edit</span>
+                <span className="">Edit</span>
                 <ShortcutText>{getMetaKeyLabel()}I</ShortcutText>
               </div>
               {mode === "edit" && <CheckIcon className="ml-auto h-3 w-3" />}
@@ -158,8 +128,7 @@ function ModeSelect() {
           )}
 
           <div className="text-lightgray px-2 py-1">
-            <Shortcut>{metaKeyLabel}</Shortcut>
-            <Shortcut>.</Shortcut> for next mode
+            {metaKeyLabel}. or next mode
           </div>
         </ListboxOptions>
       </div>

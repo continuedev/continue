@@ -12,7 +12,7 @@ function Transition(props: TransitionProps) {
       leaveFrom="transform scale-100 opacity-100"
       leaveTo="transform scale-95 opacity-0"
       {...props}
-      className={cn("", props.className)}
+      className={cn("flex flex-col", props.className)}
     />
   );
 }

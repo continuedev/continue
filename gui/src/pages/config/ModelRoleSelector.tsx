@@ -50,17 +50,17 @@ const ModelRoleSelector = ({
         {({ open }) => (
           <div className="relative">
             <ListboxButton
-              aria-disabled={models.length === 0}
-              className={`${models.length === 0 ? "cursor-not-allowed opacity-50" : ""} `}
+              disabled={models.length === 0}
+              className={`bg-vsc-input-background`}
             >
               {models.length === 0 ? (
                 <span
-                  className="text-lightgray lines lines-1 italic"
+                  className="text-lightgray line-clamp-1 italic"
                   style={{ fontSize: fontSize(-3) }}
                 >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
               ) : (
                 <span
-                  className="lines lines-1"
+                  className="line-clamp-1"
                   style={{ fontSize: fontSize(-3) }}
                 >
                   {selectedModel?.title ?? `Select ${displayName} model`}
@@ -79,9 +79,9 @@ const ModelRoleSelector = ({
                 className="min-w-40"
               >
                 {models.map((option, idx) => (
-                  <ListboxOption key={idx} value={option.title}>
+                  <ListboxOption key={idx} value={option.title} className={""}>
                     <span
-                      className="lines lines-1 relative flex h-4 items-center gap-2"
+                      className="line-clamp-1 flex h-4 items-center gap-2"
                       style={{ fontSize: fontSize(-3) }}
                     >
                       {option.title}
