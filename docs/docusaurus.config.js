@@ -301,7 +301,7 @@ const config = {
             from: [
               "/customization/code-config",
               "/reference/config",
-              "yaml-reference",
+              "/yaml-reference",
             ],
           },
           {
