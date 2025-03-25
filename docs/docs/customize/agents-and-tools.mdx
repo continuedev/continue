@@ -1,7 +1,7 @@
 ---
-title: Tools
+title: Agents and Tools
 description: Tool use and customization
-keywords: [tool, use, function calling, claude, automatic]
+keywords: [agent, tool, use, function calling, claude, automatic]
 ---
 
 import TabItem from "@theme/TabItem";
@@ -14,19 +14,23 @@ Tools allow Continue to take action in your IDE and beyond (when you give permis
 - [OpenAI](./model-providers/top-level/openai.mdx)
 - [Gemini](./model-providers/top-level/gemini.mdx)
 
-To use tools, click on the icon in the input toolbar like below.
+### Using Tools
+
+To use tools, select the "Agent" mode from the dropdown menu in the input toolbar. This activates the tool-calling functionality.
 
 ![tools](/img/tool-use-example.png)
 
-To let you balance speed and safety, each tool can be set to 1 of 3 modes:
+To balance speed and safety, each tool can be set to 1 of 3 modes:
 
 - `Automatic`: When the LLM requests to use the tool, Continue will automatically call it and send the response to the LLM.
-- `Allowed`: When the LLM requests to use the tool, Continue will first give you the opportunity to "Cancel" or "Continue" with the tool.
-- `Disabled`: The LLM will not know about or be able to use the tool.
+- `Ask First`: When the LLM requests to use the tool, Continue will first give you the opportunity to "Cancel" or "Continue" with the tool.
+- `Excluded`: The LLM will not know about or be able to use the tool.
+
+You can configure these settings in the Tools panel, which can be accessed by clicking on the tools icon in the interface.
 
 ### Custom tools
 
-Currently custom tools can be configured using the [Model Context Protocol](https://modelcontextprotocol.io/introduction), a standard proposed by Anthropic to unify prompts, context, and tool use.
+Currently custom tools can be configured using the [Model Context Protocol](https://modelcontextprotocol.io/introduction),a standard proposed by Anthropic to unify prompts, context, and tool use.
 
 MCP Servers can be added to hub Assistants using `mcpServers` blocks. You can explore available MCP server blocks [here](https://hub.continue.dev/explore/mcp).
 
@@ -42,23 +46,6 @@ To set up your own MCP server, read the [MCP quickstart](https://modelcontextpro
         - mcp-server-sqlite
         - --db-path
         - /Users/NAME/test.db
-  ```
-  </TabItem>
-  <TabItem value="json" label="JSON">
-  ```json title="config.json"
-  {
-    "experimental": {
-      "modelContextProtocolServers": [
-        {
-          "transport": {
-            "type": "stdio",
-            "command": "uvx",
-            "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
-          }  
-        }
-      ]
-    }
-  }
   ```
   </TabItem>
 </Tabs>

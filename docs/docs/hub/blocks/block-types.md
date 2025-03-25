@@ -29,7 +29,7 @@ Learn more in the [@Docs deep dive](../../customize/deep-dives/docs.mdx), and vi
 
 Model Context Protocol (MCP) is a standard way of building and sharing tools for language models. MCP Servers can be defined in `mcpServers` blocks. [Explore MCP Servers](https://hub.continue.dev/explore/mcp) on the hub.
 
-Learn more in the [Tools deep dive](../../customize/tools.mdx), and view [`mcpServers`](../../yaml-reference.md#mcpservers) in the YAML Reference for more details.
+Learn more in the [Tools deep dive](../../customize/agents-and-tools.mdx), and view [`mcpServers`](../../yaml-reference.md#mcpservers) in the YAML Reference for more details.
 
 ## Rules
 
