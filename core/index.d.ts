@@ -1005,6 +1005,7 @@ export interface TabAutocompleteOptions {
   disable: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
+  modelTimeout: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
   transform?: boolean;
