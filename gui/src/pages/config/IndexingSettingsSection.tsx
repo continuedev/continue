@@ -7,7 +7,7 @@ export function IndexingSettingsSection() {
     <div className="py-5">
       <div>
         <h3 className="mx-auto mb-1 mt-0 text-xl">@codebase index</h3>
-        <span className="w-3/4 text-xs text-stone-500">
+        <span className="text-lightgray w-3/4 text-xs">
           Local embeddings of your codebase
         </span>
       </div>

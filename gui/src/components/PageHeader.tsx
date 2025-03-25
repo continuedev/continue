@@ -8,7 +8,7 @@ export interface PageHeaderProps {
   showBorder?: boolean;
 }
 
-export default function PageHeader({
+export function PageHeader({
   onTitleClick,
   title,
   rightContent,
@@ -22,27 +22,26 @@ export default function PageHeader({
           : ""
       }`}
     >
-      <div className="flex w-full items-center justify-between pr-4">
-        {title && (
-          <>
-            <div
-              className="flex cursor-pointer items-center transition-colors duration-200 hover:text-zinc-100"
-              onClick={onTitleClick}
-            >
-              <ArrowLeftIcon className="ml-3 inline-block h-3 w-3" />
-              <span
-                className="mx-2 inline-block text-base font-bold"
-                style={{
-                  fontSize: fontSize(-2),
-                }}
-              >
-                {title}
-              </span>
-            </div>
-          </>
-        )}
-      </div>
-      <div className="ml-auto">{rightContent}</div>
+      {title ? (
+        <div
+          className="flex cursor-pointer items-center transition-colors duration-200 hover:text-zinc-100"
+          onClick={onTitleClick}
+        >
+          <ArrowLeftIcon className="ml-3 inline-block h-3 w-3" />
+          <span
+            className="mx-2 inline-block text-base font-bold"
+            style={{
+              fontSize: fontSize(-2),
+            }}
+          >
+            {title}
+          </span>
+        </div>
+      ) : (
+        <div />
+      )}
+
+      {rightContent && <div className="pr-2">{rightContent}</div>}
     </div>
   );
 }
