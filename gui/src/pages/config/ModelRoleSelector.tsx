@@ -1,10 +1,15 @@
-import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { type ModelDescription } from "core";
-import { Fragment } from "react";
 import { defaultBorderRadius } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
 import InfoHover from "../../components/InfoHover";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../components/ui";
 import { fontSize } from "../../util";
 
 interface ModelRoleSelectorProps {
@@ -42,67 +47,46 @@ const ModelRoleSelector = ({
         </ToolTip>
       </div>
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>
-        {({ open }) => (
-          <div className="relative">
-            <Listbox.Button
-              aria-disabled={models.length === 0}
-              className={`border-vsc-input-border bg-vsc-background ${models.length > 0 ? "hover:bg-vsc-input-background cursor-pointer" : "cursor-not-allowed opacity-50"} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-1.5 py-0.5 text-left text-sm`}
-            >
-              {models.length === 0 ? (
-                <span
-                  className="text-lightgray lines lines-1 italic"
-                  style={{ fontSize: fontSize(-3) }}
-                >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
-              ) : (
-                <span
-                  className="lines lines-1"
-                  style={{ fontSize: fontSize(-3) }}
-                >
-                  {selectedModel?.title ?? `Select ${displayName} model`}
-                </span>
-              )}
-              {models.length ? (
-                <div className="pointer-events-none flex items-center">
-                  <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
-                </div>
-              ) : null}
-            </Listbox.Button>
+        <div className="relative">
+          <ListboxButton
+            disabled={models.length === 0}
+            className={`bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-full justify-between`}
+          >
+            {models.length === 0 ? (
+              <span className="text-lightgray line-clamp-1 italic">{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
+            ) : (
+              <span className="line-clamp-1">
+                {selectedModel?.title ?? `Select ${displayName} model`}
+              </span>
+            )}
+            {models.length ? (
+              <div className="pointer-events-none flex items-center">
+                <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
+              </div>
+            ) : null}
+          </ListboxButton>
 
-            <Transition
-              as={Fragment}
-              show={open}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
+          <Transition>
+            <ListboxOptions
+              style={{ borderRadius: defaultBorderRadius }}
+              className="min-w-40"
             >
-              <Listbox.Options
-                style={{ borderRadius: defaultBorderRadius }}
-                className="bg-vsc-input-background border-vsc-input-border fixed z-[800] mt-0.5 min-w-40 overflow-auto border border-solid p-0 shadow-lg"
-              >
-                {models.map((option, idx) => (
-                  <Listbox.Option
-                    key={idx}
-                    value={option.title}
-                    className={`text-vsc-foreground hover:bg-list-active hover:text-list-active-foreground flex cursor-pointer flex-row items-center justify-between px-1 py-0.5`}
+              {models.map((option, idx) => (
+                <ListboxOption key={idx} value={option.title} className={""}>
+                  <span
+                    className="line-clamp-1 flex h-4 items-center gap-2"
+                    style={{ fontSize: fontSize(-3) }}
                   >
-                    <span
-                      className="lines lines-1 relative flex h-4 items-center gap-2"
-                      style={{ fontSize: fontSize(-3) }}
-                    >
-                      {option.title}
-                    </span>
-                    {option.title === selectedModel?.title && (
-                      <CheckIcon className="h-3 w-3" aria-hidden="true" />
-                    )}
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </Transition>
-          </div>
-        )}
+                    {option.title}
+                  </span>
+                  {option.title === selectedModel?.title && (
+                    <CheckIcon className="h-3 w-3" aria-hidden="true" />
+                  )}
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </Transition>
+        </div>
       </Listbox>
     </>
   );

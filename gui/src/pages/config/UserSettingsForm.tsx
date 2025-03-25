@@ -104,7 +104,7 @@ export function UserSettingsForm() {
     <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700">
       {!controlServerBetaEnabled || hubEnabled ? (
         <div className="flex flex-col">
-          <div className="flex max-w-[400px] flex-col">
+          <div className="flex flex-col">
             <div className="flex flex-col gap-4 py-6">
               <div>
                 <h2 className="mb-2 mt-0">User settings</h2>
@@ -208,7 +208,7 @@ export function UserSettingsForm() {
                   /> */}
 
                 <label className="flex items-center justify-between gap-3">
-                  <span className="lines lines-1 text-left">
+                  <span className="line-clamp-1 text-left">
                     Multiline Autocompletions
                   </span>
                   <Select
