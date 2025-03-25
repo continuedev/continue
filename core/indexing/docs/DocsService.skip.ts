@@ -4,7 +4,7 @@
 import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { SiteIndexingConfig } from "../../index.js";
 import FileSystemIde from "../../util/filesystem.js";
-import { editConfigJson } from "../../util/paths.js";
+import { editConfigFile } from "../../util/paths.js";
 
 import DocsService from "./DocsService.js";
 import preIndexedDocs from "./preIndexedDocs.js";
@@ -132,10 +132,16 @@ describe.skip("DocsService Integration Tests", () => {
 
     expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(true);
 
-    editConfigJson((config) => {
-      const { docs, ...restConfig } = config;
-      return restConfig;
-    });
+    editConfigFile(
+      (config) => {
+        const { docs, ...restConfig } = config;
+        return restConfig;
+      },
+      (config) => {
+        const { docs, ...restConfig } = config;
+        return restConfig;
+      },
+    );
 
     await getReloadedConfig();
 

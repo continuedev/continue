@@ -9,7 +9,7 @@ import PCR from "puppeteer-chromium-resolver";
 
 import { ContinueConfig, IDE } from "../../..";
 import {
-  editConfigJson,
+  editConfigFile,
   getChromiumPath,
   getContinueUtilsPath,
 } from "../../../util/paths";
@@ -26,13 +26,16 @@ export class ChromiumCrawler {
   ) {}
 
   static setUseChromiumForDocsCrawling(useChromiumForDocsCrawling: boolean) {
-    editConfigJson((config) => ({
-      ...config,
-      experimental: {
-        ...config.experimental,
-        useChromiumForDocsCrawling,
-      },
-    }));
+    editConfigFile(
+      (config) => ({
+        ...config,
+        experimental: {
+          ...config.experimental,
+          useChromiumForDocsCrawling,
+        },
+      }),
+      (config) => config, // Not used in config.yaml
+    );
   }
 
   async *crawl(): AsyncGenerator<PageData> {

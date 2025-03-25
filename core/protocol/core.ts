@@ -15,7 +15,6 @@ import type {
   ChatMessage,
   ContextItem,
   ContextItemWithId,
-  ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
   DocsIndexingDetails,
@@ -70,7 +69,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [
     undefined,

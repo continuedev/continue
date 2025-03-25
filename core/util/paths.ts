@@ -228,7 +228,7 @@ export function getDevDataFilePath(
   return path.join(versionPath, `${String(eventName)}.jsonl`);
 }
 
-export function editConfigJson(
+function editConfigJson(
   callback: (config: SerializedContinueConfig) => SerializedContinueConfig,
 ): void {
   const config = fs.readFileSync(getConfigJsonPath(), "utf8");
@@ -242,9 +242,7 @@ export function editConfigJson(
   }
 }
 
-export function editConfigYaml(
-  callback: (config: ConfigYaml) => ConfigYaml,
-): void {
+function editConfigYaml(callback: (config: ConfigYaml) => ConfigYaml): void {
   const config = fs.readFileSync(getConfigYamlPath(), "utf8");
   let configYaml = YAML.parse(config);
   // Check if it's an object
@@ -253,6 +251,19 @@ export function editConfigYaml(
     fs.writeFileSync(getConfigYamlPath(), YAML.stringify(configYaml));
   } else {
     console.warn("config.yaml is not a valid object");
+  }
+}
+
+export function editConfigFile(
+  configJsonCallback: (
+    config: SerializedContinueConfig,
+  ) => SerializedContinueConfig,
+  configYamlCallback: (config: ConfigYaml) => ConfigYaml,
+): void {
+  if (fs.existsSync(getConfigYamlPath())) {
+    editConfigYaml(configYamlCallback);
+  } else if (fs.existsSync(getConfigJsonPath())) {
+    editConfigJson(configJsonCallback);
   }
 }
 
