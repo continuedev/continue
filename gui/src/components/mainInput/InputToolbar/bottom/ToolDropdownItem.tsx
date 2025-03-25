@@ -31,7 +31,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
 
   return (
     <div
-      className="flex items-center justify-between gap-2 px-2 py-0.5"
+      className="hover:bg-list-active hover:text-list-active-foreground -mx-2 flex cursor-pointer items-center justify-between gap-2 rounded-md px-2 py-0.5"
       style={{
         fontSize: fontSize(-3),
       }}
@@ -74,7 +74,7 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
               className="h-4 w-4"
             />
           )}
-          {props.tool.function.name}{" "}
+          <pre className="my-0.5 text-[11px]">{props.tool.function.name}</pre>
         </span>
       </div>
       {props.excluded ? (

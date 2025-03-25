@@ -43,7 +43,7 @@ export const ToolPermissionsDialog = () => {
     <>
       {toolsByGroup.map(([groupName, tools]) => (
         <div key={groupName} className="mt-2 flex flex-col pr-1">
-          <div className="flex flex-row items-center justify-between px-1 pr-3">
+          <div className="flex flex-row items-center justify-between px-1">
             <h3
               className="m-0 p-0 font-bold"
               style={{

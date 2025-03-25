@@ -69,7 +69,7 @@ export function Lump(props: LumpProps) {
         />
 
         <ContentDiv
-          className="thin-scrollbar pr-0.5"
+          className="no-scrollbar pr-0.5"
           hasSection={!!selectedSection}
           isVisible={isVisible}
         >
