@@ -1,5 +1,9 @@
-import { PlusIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowTopRightOnSquareIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 import { useContext } from "react";
+import { GhostButton } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch } from "../../../../redux/hooks";
@@ -10,13 +14,22 @@ import {
 import { fontSize } from "../../../../util";
 import AddDocsDialog from "../../../dialogs/AddDocsDialog";
 
-export function AddBlockButton(props: { blockType: string }) {
+export function ExploreBlocksButton(props: { blockType: string }) {
   const { selectedProfile } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
 
+  const isLocal = selectedProfile?.profileType === "local";
+
+  const Icon = isLocal ? PlusIcon : ArrowTopRightOnSquareIcon;
+  const text = `${isLocal ? "Add" : "Explore"} ${
+    props.blockType === "mcpServers"
+      ? "MCP Servers"
+      : props.blockType.charAt(0).toUpperCase() + props.blockType.slice(1)
+  }`;
+
   const handleClick = () => {
-    if (selectedProfile?.profileType === "local") {
+    if (isLocal) {
       switch (props.blockType) {
         case "docs":
           dispatch(setShowDialog(true));
@@ -36,8 +49,8 @@ export function AddBlockButton(props: { blockType: string }) {
   };
 
   return (
-    <div
-      className="cursor-pointer rounded px-2 pb-1 text-center text-gray-400 hover:text-gray-300"
+    <GhostButton
+      className="w-full cursor-pointer rounded px-2 text-center text-gray-400 hover:text-gray-300"
       style={{
         fontSize: fontSize(-3),
       }}
@@ -47,8 +60,8 @@ export function AddBlockButton(props: { blockType: string }) {
       }}
     >
       <div className="flex items-center justify-center gap-1">
-        <PlusIcon className="h-3 w-3" /> Add
+        <Icon className="h-3 w-3" /> {text}
       </div>
-    </div>
+    </GhostButton>
   );
 }
