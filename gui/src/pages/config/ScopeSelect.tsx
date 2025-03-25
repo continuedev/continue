@@ -41,7 +41,7 @@ export function ScopeSelect() {
   return (
     <Listbox value={selectedOrgId} onChange={handleChange}>
       <div className="relative">
-        <ListboxButton className="min-w-[140px] justify-between px-4 py-2 sm:min-w-[200px]">
+        <ListboxButton className="hover:bg-list-active hover:text-list-active-foreground min-w-[140px] justify-between px-4 py-2 sm:min-w-[200px]">
           <div className="flex items-center gap-2">
             {selectedDisplay?.iconUrl ? (
               <img src={selectedDisplay.iconUrl} alt="" className="h-5 w-5" />

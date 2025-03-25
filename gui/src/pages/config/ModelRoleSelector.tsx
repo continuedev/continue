@@ -47,54 +47,49 @@ const ModelRoleSelector = ({
         </ToolTip>
       </div>
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>
-        {({ open }) => (
-          <div className="relative">
-            <ListboxButton
-              disabled={models.length === 0}
-              className={`bg-vsc-input-background`}
-            >
-              {models.length === 0 ? (
-                <span
-                  className="text-lightgray line-clamp-1 italic"
-                  style={{ fontSize: fontSize(-3) }}
-                >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
-              ) : (
-                <span
-                  className="line-clamp-1"
-                  style={{ fontSize: fontSize(-3) }}
-                >
-                  {selectedModel?.title ?? `Select ${displayName} model`}
-                </span>
-              )}
-              {models.length ? (
-                <div className="pointer-events-none flex items-center">
-                  <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
-                </div>
-              ) : null}
-            </ListboxButton>
+        <div className="relative">
+          <ListboxButton
+            disabled={models.length === 0}
+            className={`bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-full justify-between`}
+          >
+            {models.length === 0 ? (
+              <span
+                className="text-lightgray line-clamp-1 italic"
+                style={{ fontSize: fontSize(-3) }}
+              >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
+            ) : (
+              <span className="line-clamp-1">
+                {selectedModel?.title ?? `Select ${displayName} model`}
+              </span>
+            )}
+            {models.length ? (
+              <div className="pointer-events-none flex items-center">
+                <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
+              </div>
+            ) : null}
+          </ListboxButton>
 
-            <Transition>
-              <ListboxOptions
-                style={{ borderRadius: defaultBorderRadius }}
-                className="min-w-40"
-              >
-                {models.map((option, idx) => (
-                  <ListboxOption key={idx} value={option.title} className={""}>
-                    <span
-                      className="line-clamp-1 flex h-4 items-center gap-2"
-                      style={{ fontSize: fontSize(-3) }}
-                    >
-                      {option.title}
-                    </span>
-                    {option.title === selectedModel?.title && (
-                      <CheckIcon className="h-3 w-3" aria-hidden="true" />
-                    )}
-                  </ListboxOption>
-                ))}
-              </ListboxOptions>
-            </Transition>
-          </div>
-        )}
+          <Transition>
+            <ListboxOptions
+              style={{ borderRadius: defaultBorderRadius }}
+              className="min-w-40"
+            >
+              {models.map((option, idx) => (
+                <ListboxOption key={idx} value={option.title} className={""}>
+                  <span
+                    className="line-clamp-1 flex h-4 items-center gap-2"
+                    style={{ fontSize: fontSize(-3) }}
+                  >
+                    {option.title}
+                  </span>
+                  {option.title === selectedModel?.title && (
+                    <CheckIcon className="h-3 w-3" aria-hidden="true" />
+                  )}
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </Transition>
+        </div>
       </Listbox>
     </>
   );
