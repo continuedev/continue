@@ -1,6 +1,7 @@
 import {
   CheckIcon,
   ChevronDownIcon,
+  Cog6ToothIcon,
   CubeIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
@@ -105,9 +106,14 @@ function ModelOption({
               )}
             </span>
           </div>
-          <div className="flex flex-shrink-0 flex-row items-center">
-            {/* <StyledCog6ToothIcon $hovered={hovered} onClick={onClickGear} /> */}
-            {isSelected && <CheckIcon className="h-3 w-3" />}
+          <div className="flex flex-shrink-0 flex-row items-center gap-1">
+            {isSelected && <CheckIcon className="h-3 w-3 flex-shrink-0" />}
+            {hovered && (
+              <Cog6ToothIcon
+                className="h-3 w-3 flex-shrink-0"
+                onClick={onClickGear}
+              />
+            )}
           </div>
         </div>
       </div>

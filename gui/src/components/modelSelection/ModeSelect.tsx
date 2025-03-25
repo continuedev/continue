@@ -53,11 +53,11 @@ function ModeSelect() {
   const getModeIcon = (mode: MessageModes) => {
     switch (mode) {
       case "agent":
-        return <SparklesIcon className="h-3 w-3" />;
+        return <SparklesIcon className="xs:h-3 xs:w-3 h-3 w-3" />;
       case "chat":
-        return <ChatBubbleLeftIcon className="h-3 w-3" />;
+        return <ChatBubbleLeftIcon className="xs:h-3 xs:w-3 h-3 w-3" />;
       case "edit":
-        return <PencilIcon className="h-3 w-3" />;
+        return <PencilIcon className="xs:h-3 xs:w-3 h-3 w-3" />;
     }
   };
 
@@ -134,7 +134,7 @@ function ModeSelect() {
 
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">
-              <ChatBubbleLeftIcon className="h-3 w-3" />
+              <ChatBubbleLeftIcon className="h-2.5 w-2.5" />
               <span className="">Chat</span>
               <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
             </div>

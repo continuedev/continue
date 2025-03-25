@@ -6,7 +6,7 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile, selectProfileThunk } from "../../../redux";
@@ -41,35 +41,42 @@ const AssistantSelectOption = ({
   profile,
   onClick,
 }: AssistantSelectOptionProps) => {
-  const disabled = !!profile.errors?.length;
+  const navigate = useNavigate();
+  const [hovered, setHovered] = useState(false);
+
+  const hasFatalErrors = useMemo(() => {
+    return !!profile.errors?.find((error) => error.fatal);
+  }, [profile.errors]);
+
   const dispatch = useAppDispatch();
-  const showConfigure = isLocalProfile(profile);
   const ideMessenger = useContext(IdeMessengerContext);
 
-  function handleOptionClick(e: any) {
-    if (disabled) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  function handleOptionClick() {
     dispatch(selectProfileThunk(profile.id));
     onClick();
   }
 
   function handleConfigure() {
     ideMessenger.post("config/openProfile", { profileId: profile.id });
-    close();
+    onClick();
   }
 
   function handleClickError() {
-    ideMessenger.post("config/openProfile", { profileId: profile.id });
-    close();
+    if (profile.id === "local") {
+      navigate(ROUTES.CONFIG_ERROR);
+    } else {
+      ideMessenger.post("config/openProfile", { profileId: profile.id });
+    }
+    onClick();
   }
 
   return (
     <ListboxOption
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       value={profile.id}
-      disabled={disabled}
-      onClick={!disabled ? handleOptionClick : undefined}
+      disabled={hasFatalErrors}
+      onClick={!hasFatalErrors ? handleOptionClick : undefined}
       fontSizeModifier={-2}
     >
       <div className="flex w-full flex-col gap-0.5">
@@ -82,8 +89,12 @@ const AssistantSelectOption = ({
           </div>
           <div className="ml-2 flex items-center">
             {!profile.errors?.length ? (
-              showConfigure ? (
+              isLocalProfile(profile) ? (
                 <Cog6ToothIcon
+                  className="h-4 w-4 flex-shrink-0 cursor-pointer"
+                  style={{
+                    opacity: hovered ? 1 : 0,
+                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -92,6 +103,10 @@ const AssistantSelectOption = ({
                 />
               ) : (
                 <ArrowTopRightOnSquareIcon
+                  style={{
+                    opacity: hovered ? 1 : 0,
+                  }}
+                  className="h-4 w-4 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -103,8 +118,12 @@ const AssistantSelectOption = ({
               <>
                 <ExclamationTriangleIcon
                   data-tooltip-id={`${profile.id}-errors-tooltip`}
-                  className="cursor-pointer text-red-500"
-                  onClick={() => handleClickError()}
+                  className="h-4 w-4 flex-shrink-0 cursor-pointer text-red-500"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleClickError();
+                  }}
                 />
                 <ToolTip id={`${profile.id}-errors-tooltip`}>
                   <div className="font-semibold">Errors</div>
@@ -196,7 +215,7 @@ export default function AssistantSelect() {
 
   return (
     <Listbox>
-      <div className="relative flex">
+      <div className="sm:max-w-4/5 relative flex">
         <ListboxButton
           data-testid="assistant-select-button"
           ref={buttonRef}
@@ -226,7 +245,11 @@ export default function AssistantSelect() {
             >
               {profiles?.map((profile, idx) => {
                 return (
-                  <AssistantSelectOption profile={profile} onClick={close} />
+                  <AssistantSelectOption
+                    key={idx}
+                    profile={profile}
+                    onClick={close}
+                  />
                 );
               })}
             </div>
