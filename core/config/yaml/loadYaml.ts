@@ -41,22 +41,31 @@ import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
+import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { llmsFromModelConfig } from "./models";
 
 export class LocalPlatformClient implements PlatformClient {
+  constructor(
+    private orgScopeId: string | null,
+    private readonly client: ControlPlaneClient,
+  ) {}
+
   async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
-    return fqsns.map((fqsn) => {
-      return undefined;
-    });
+    if (fqsns.length === 0) {
+      return [];
+    }
+
+    const response = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
+    return response;
   }
 }
 
 async function loadConfigYaml(
-  workspaceConfigs: string[],
   rawYaml: string,
   overrideConfigYaml: AssistantUnrolled | undefined,
-  ide: IDE,
   controlPlaneClient: ControlPlaneClient,
+  orgScopeId: string | null,
+  ideSettings: IdeSettings,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   let config =
     overrideConfigYaml ??
@@ -68,12 +77,18 @@ async function loadConfigYaml(
         versionSlug: "",
       },
       rawYaml,
-      new RegistryClient(),
+      new RegistryClient(
+        await controlPlaneClient.getAccessToken(),
+        getControlPlaneEnvSync(
+          ideSettings.continueTestEnvironment,
+          ideSettings.enableControlServerBeta,
+        ).CONTROL_PLANE_URL,
+      ),
       {
         currentUserSlug: "",
         onPremProxyUrl: null,
-        orgScopeId: null,
-        platformClient: new LocalPlatformClient(),
+        orgScopeId,
+        platformClient: new LocalPlatformClient(orgScopeId, controlPlaneClient),
         renderSecrets: true,
       },
     ));
@@ -394,7 +409,6 @@ async function configYamlToContinueConfig(
 
 export async function loadContinueConfigFromYaml(
   ide: IDE,
-  workspaceConfigs: string[],
   ideSettings: IdeSettings,
   ideInfo: IdeInfo,
   uniqueId: string,
@@ -404,6 +418,7 @@ export async function loadContinueConfigFromYaml(
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
   configYamlPath: string | undefined,
+  orgScopeId: string | null,
 ): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
@@ -414,11 +429,11 @@ export async function loadContinueConfigFromYaml(
       : "";
 
   const configYamlResult = await loadConfigYaml(
-    workspaceConfigs,
     rawYaml,
     overrideConfigYaml,
-    ide,
     controlPlaneClient,
+    orgScopeId,
+    ideSettings,
   );
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {

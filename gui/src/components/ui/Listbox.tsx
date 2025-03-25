@@ -5,7 +5,7 @@ import {
   Listbox,
 } from "@headlessui/react";
 import * as React from "react";
-import { vscCommandCenterInactiveBorder } from "..";
+import { defaultBorderRadius, vscCommandCenterInactiveBorder } from "..";
 import { cn } from "../../util/cn";
 import { FontSizeModifier, useFontSize } from "./font";
 
@@ -21,11 +21,12 @@ const ListboxButton = React.forwardRef<HTMLButtonElement, ListboxButtonProps>(
         ref={ref}
         {...props}
         className={cn(
-          "border-vsc-input-border bg-vsc-input-background text-vsc-foreground m-0 flex flex-1 cursor-pointer flex-row items-center gap-1 rounded-sm border border-solid px-1 py-0.5 text-left transition-colors duration-200",
+          "border-vsc-input-border bg-vsc-input-background text-vsc-foreground m-0 flex flex-1 cursor-pointer flex-row items-center gap-1 border border-solid px-1 py-0.5 text-left transition-colors duration-200",
           props.className,
         )}
         style={{
           fontSize,
+          borderRadius: defaultBorderRadius,
           ...props.style,
         }}
       />
@@ -45,12 +46,13 @@ const ListboxOptions = React.forwardRef<HTMLUListElement, ListboxOptionsProps>(
         anchor={"bottom start"}
         {...props}
         className={cn(
-          "bg-vsc-input-background flex flex-col overflow-auto rounded-sm px-0 shadow-md",
+          "bg-vsc-input-background flex flex-col overflow-auto px-0 shadow-md",
           props.className,
         )}
         style={{
           border: `1px solid ${vscCommandCenterInactiveBorder}`,
           fontSize,
+          borderRadius: defaultBorderRadius,
           ...props.style,
         }}
       />

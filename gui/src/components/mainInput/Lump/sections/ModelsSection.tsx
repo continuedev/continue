@@ -52,7 +52,7 @@ export function ModelsSection() {
   }
 
   return (
-    <>
+    <div>
       <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 pb-2 sm:grid-cols-[auto_1fr]">
         <ModelRoleSelector
           displayName="Chat"
@@ -108,7 +108,7 @@ export function ModelsSection() {
           onSelect={(model) => handleRoleUpdate("rerank", model)}
         />
       </div>
-      <ExploreBlocksButton blockType="models" />
-    </>
+      <ExploreBlocksButton blockType={"models"} />
+    </div>
   );
 }

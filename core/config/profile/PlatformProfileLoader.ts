@@ -31,8 +31,8 @@ export default class PlatformProfileLoader implements IProfileLoader {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private writeLog: (message: string) => Promise<void>,
-    private readonly onReload: () => void,
     readonly description: ProfileDescription,
+    private readonly orgScopeId: string | null,
   ) {}
 
   static async create(
@@ -45,8 +45,8 @@ export default class PlatformProfileLoader implements IProfileLoader {
     ide: IDE,
     ideSettingsPromise: Promise<IdeSettings>,
     writeLog: (message: string) => Promise<void>,
-    onReload: () => void,
     rawYaml: string,
+    orgScopeId: string | null,
   ): Promise<PlatformProfileLoader> {
     const controlPlaneEnv = await getControlPlaneEnv(ideSettingsPromise);
 
@@ -75,8 +75,8 @@ export default class PlatformProfileLoader implements IProfileLoader {
       ide,
       ideSettingsPromise,
       writeLog,
-      onReload,
       description,
+      orgScopeId,
     );
   }
 
@@ -102,6 +102,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       },
       this.description.id,
       undefined,
+      this.orgScopeId,
     );
 
     return {

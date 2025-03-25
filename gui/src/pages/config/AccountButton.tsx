@@ -15,7 +15,12 @@ export function AccountButton() {
 
   if (!session) {
     return (
-      <SecondaryButton onClick={() => login(false)}>Sign in</SecondaryButton>
+      <SecondaryButton
+        className="whitespace-nowrap"
+        onClick={() => login(false)}
+      >
+        Sign in
+      </SecondaryButton>
     );
   }
 

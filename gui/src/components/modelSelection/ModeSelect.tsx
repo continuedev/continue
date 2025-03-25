@@ -108,9 +108,10 @@ function ModeSelect() {
       <div className="relative">
         <ListboxButton
           data-testid="mode-select-button"
-          className="gap-1 rounded-full px-2 py-0.5 text-gray-400 transition-colors duration-200"
+          className="gap-1 border-none px-2 py-0.5 text-gray-400 transition-colors duration-200"
           style={{
             backgroundColor: `${lightGray}33`,
+            borderRadius: "9999px",
           }}
         >
           {getModeIcon(mode)}
@@ -134,7 +135,7 @@ function ModeSelect() {
 
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">
-              <ChatBubbleLeftIcon className="h-2.5 w-2.5" />
+              <ChatBubbleLeftIcon className="h-3 w-3" />
               <span className="">Chat</span>
               <ShortcutText>{getMetaKeyLabel()}L</ShortcutText>
             </div>
