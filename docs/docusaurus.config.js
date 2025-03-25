@@ -298,7 +298,11 @@ const config = {
           },
           {
             to: "/reference",
-            from: ["/customization/code-config", "/reference/config"],
+            from: [
+              "/customization/code-config",
+              "/reference/config",
+              "yaml-reference",
+            ],
           },
           {
             to: "/customize/context-providers",

@@ -16,6 +16,6 @@ You can also configure custom destinations for your data, including remote HTTP 
 
 For hub assistants, data destinations are configured in `data` blocks. Visit the hub to [explore example data blocks](https://hub.continue.dev/explore/data) or [create your own](https://hub.continue.dev/new?type=block&blockType=data).
 
-See more details about adding `data` blocks to your configuration files in the [YAML specification](../../yaml-reference.md#data)
+See more details about adding `data` blocks to your configuration files in the [YAML specification](../../reference.md#data)
 
 When sending development data to your own HTTP endpoint, it will receive an event JSON blob at the given `schema` version. You can view event names, schema versions, and fields [here in the source code](https://github.com/continuedev/continue/tree/main/packages/config-yaml/src/schemas/data).
