@@ -395,10 +395,6 @@ export default class DocsService {
           status: "complete",
         });
 
-        this.messenger?.send("refreshSubmenuItems", {
-          providers: ["docs"],
-        });
-
         return true;
       }
     } catch (e) {
