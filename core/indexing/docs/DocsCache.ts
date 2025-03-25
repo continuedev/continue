@@ -9,7 +9,7 @@ export interface SiteIndexingResults {
 
 export class DocsCache {
   static readonly AWS_REGION: string = "us-west-1";
-  static readonly BUCKET_NAME: string = "continue-indexed-docs";
+  static readonly BUCKET_NAME: string = "continue-preindexed-docs";
 
   /**
    * Normalizes an embedding ID by stripping the constructor name part.
@@ -41,7 +41,8 @@ export class DocsCache {
    * Gets the fully qualified S3 URL for a given filepath
    */
   private static getS3Url(filepath: string): string {
-    return `https://${this.BUCKET_NAME}.s3.${this.AWS_REGION}.amazonaws.com/${filepath}`;
+    const pathname = filepath.split("/").map(encodeURIComponent).join("/");
+    return `https://${this.BUCKET_NAME}.s3.${this.AWS_REGION}.amazonaws.com/${pathname}`;
   }
 
   /**
@@ -61,8 +62,9 @@ export class DocsCache {
 
     return new Promise<string>((resolve, reject) => {
       let data = "";
+      const url = this.getS3Url(filepath);
       const download = request({
-        url: this.getS3Url(filepath),
+        url,
       });
 
       download.on("response", (response: any) => {
