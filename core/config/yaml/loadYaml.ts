@@ -206,7 +206,6 @@ async function configYamlToContinueConfig(
         continueConfig.systemMessage,
       );
 
-      //
       if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
         continueConfig.models.push(...llms);
       }
@@ -244,7 +243,10 @@ async function configYamlToContinueConfig(
           } else {
             continueConfig.modelsByRole.embed.push(
               new embeddingsProviderClass(
-                options,
+                {
+                  ...options,
+                  title: options.name,
+                },
                 (url: string | URL, init: any) =>
                   fetchwithRequestOptions(url, init, {
                     ...options.requestOptions,
@@ -265,10 +267,15 @@ async function configYamlToContinueConfig(
         const rerankerClass = AllRerankers[provider];
         if (rerankerClass) {
           continueConfig.modelsByRole.rerank.push(
-            new rerankerClass(options, (url: string | URL, init: any) =>
-              fetchwithRequestOptions(url, init, {
-                ...options.requestOptions,
-              }),
+            new rerankerClass(
+              {
+                ...options,
+                title: options.name,
+              },
+              (url: string | URL, init: any) =>
+                fetchwithRequestOptions(url, init, {
+                  ...options.requestOptions,
+                }),
             ),
           );
         } else {
