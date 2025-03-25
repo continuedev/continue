@@ -3,7 +3,7 @@ import { Chat } from "./Chat";
 
 export default function GUI() {
   return (
-    <div className="flex overflow-hidden">
+    <div className="flex w-screen flex-col overflow-hidden">
       <aside className="4xl:block border-vsc-input-border no-scrollbar hidden w-96 overflow-y-auto border-0 border-r border-solid">
         <History />
       </aside>

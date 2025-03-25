@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -6,16 +7,6 @@ import {
 } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
 import { getPlatform, isJetBrains } from "../../util";
-
-const GridDiv = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  grid-gap: 1rem;
-  padding: 1rem 0;
-  justify-items: center;
-  align-items: center;
-  overflow-x: hidden;
-`;
 
 const StyledKeyDiv = styled.div`
   border: 0.5px solid ${lightGray};
@@ -64,9 +55,9 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   const shortcut = getPlatform() === "mac" ? props.mac : props.windows;
   return (
-    <div className="flex w-full items-center justify-between gap-x-4">
-      <span className="text-xs">{props.description}</span>
-      <div className="float-right flex gap-2">
+    <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1">
+      <span className="max-w-60 text-xs">{props.description}:</span>
+      <div className="flex flex-1 flex-row items-center justify-end gap-1.5">
         {shortcut.split(" ").map((key, i) => {
           return <KeyDiv key={i} text={key}></KeyDiv>;
         })}
@@ -201,23 +192,25 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
 ];
 
 function KeyboardShortcuts() {
+  const shortcuts = useMemo(() => {
+    return isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts;
+  }, []);
+
   return (
-    <div>
-      <h3 className="mx-auto mb-1 text-xl">Keyboard shortcuts</h3>
-      <GridDiv>
-        {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
-          (shortcut, i) => {
-            return (
-              <KeyboardShortcut
-                key={i}
-                mac={shortcut.mac}
-                windows={shortcut.windows}
-                description={shortcut.description}
-              />
-            );
-          },
-        )}
-      </GridDiv>
+    <div className="flex max-w-[400px] flex-col">
+      <h3 className="mb-2 text-xl">Keyboard shortcuts</h3>
+      <div className="flex flex-col items-center justify-center gap-x-3 gap-y-3 p-1">
+        {shortcuts.map((shortcut, i) => {
+          return (
+            <KeyboardShortcut
+              key={i}
+              mac={shortcut.mac}
+              windows={shortcut.windows}
+              description={shortcut.description}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

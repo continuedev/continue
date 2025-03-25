@@ -153,13 +153,12 @@ export const SecondaryButton = styled.button`
 
 export const GhostButton = styled.button`
   padding: 6px 8px;
-  margin: 8px 0;
+  margin: 6px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
   color: ${vscForeground};
-  background-color: transparent;
-
+  background-color: rgba(255, 255, 255, 0.08);
   &:disabled {
     color: gray;
     pointer-events: none;
@@ -167,7 +166,7 @@ export const GhostButton = styled.button`
 
   &:hover:enabled {
     cursor: pointer;
-    background-color: rgba(255, 255, 255, 0.08); /* Subtle hover effect */
+    filter: brightness(125%);
   }
 `;
 

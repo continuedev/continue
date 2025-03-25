@@ -21,6 +21,7 @@ interface BlockSettingsToolbarIcon {
   itemCount?: number;
   onClick: () => void;
   isSelected?: boolean;
+  className?: string;
 }
 
 interface Section {
@@ -53,7 +54,7 @@ function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
         style={{
           backgroundColor: props.isSelected ? vscBadgeBackground : undefined,
         }}
-        className={`relative flex select-none items-center rounded-full px-1 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50`}
+        className={`relative flex select-none items-center rounded-full px-1 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${props.className || ""}`}
       >
         <props.icon
           className="h-3 w-3 hover:brightness-125"
@@ -101,6 +102,7 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
     <div className="flex w-full items-center justify-between">
       <div className="xs:flex hidden items-center justify-center text-gray-400">
         <BlockSettingsToolbarIcon
+          className="-ml-1.5"
           icon={isExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
           tooltip={isExpanded ? "Collapse sections" : "Expand sections"}
           isSelected={false}
@@ -130,6 +132,7 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
       <div className="ml-auto">
         <AssistantSelect />
       </div>
+      <AssistantSelect />
     </div>
   );
 }
