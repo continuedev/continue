@@ -53,10 +53,7 @@ const ModelRoleSelector = ({
             className={`bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-full justify-between`}
           >
             {models.length === 0 ? (
-              <span
-                className="text-lightgray line-clamp-1 italic"
-                style={{ fontSize: fontSize(-3) }}
-              >{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
+              <span className="text-lightgray line-clamp-1 italic">{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
             ) : (
               <span className="line-clamp-1">
                 {selectedModel?.title ?? `Select ${displayName} model`}
