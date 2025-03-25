@@ -2,12 +2,12 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
-import { useState, useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
+import { StyledActionButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import { StyledActionButton } from "../..";
-import OllamaCompletedStep from "./OllamaCompletedStep";
 import { OllamaConnectionStatuses } from "../utils";
+import OllamaCompletedStep from "./OllamaCompletedStep";
 
 interface OllamaStatusProps {
   isOllamaConnected: boolean;
@@ -38,7 +38,7 @@ export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
     case OllamaConnectionStatuses.WaitingToDownload:
       return (
         <StyledActionButton onClick={onClickDownload}>
-          <p className="lines lines-1 mr-1 text-sm underline">{downloadUrl}</p>
+          <p className="mr-1 line-clamp-1 text-sm underline">{downloadUrl}</p>
           <ArrowTopRightOnSquareIcon width={24} height={24} />
         </StyledActionButton>
       );

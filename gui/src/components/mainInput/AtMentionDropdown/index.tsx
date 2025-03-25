@@ -25,6 +25,7 @@ import {
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
+import { fontSize } from "../../../util";
 import FileIcon from "../../FileIcon";
 import SafeImg from "../../SafeImg";
 import AddDocsDialog from "../../dialogs/AddDocsDialog";
@@ -43,9 +44,7 @@ export function getIconFromDropdownItem(
 
 function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
   if (props.item.type === "action") {
-    return (
-      <PlusIcon className={props.className} height="1.2em" width="1.2em" />
-    );
+    return <PlusIcon className={props.className + " h-3 w-3"} />;
   }
 
   const provider =
@@ -83,7 +82,7 @@ const ItemsDiv = styled.div`
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.05),
     0px 10px 20px rgba(0, 0, 0, 0.1);
-  font-size: 0.9rem;
+  font-size: ${fontSize(-2)};
   overflow-x: hidden;
   overflow-y: auto;
   max-height: 330px;
@@ -100,10 +99,11 @@ const ItemDiv = styled.div`
   border-radius: 0.4rem;
   display: block;
   margin: 0;
-  padding: 0.2rem 0.4rem;
+  padding: 2px 4px;
   text-align: left;
   width: 100%;
   color: ${vscForeground};
+  font-size: ${fontSize(-2)};
 
   &.is-selected {
     background-color: ${vscListActiveBackground};
@@ -372,7 +372,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
                     textAlign: "right",
                     minWidth: "30px",
                   }}
-                  className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap text-xs"
+                  className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap"
                 >
                   {loadingSubmenuItem.description}
                 </span>
@@ -417,7 +417,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
                         opacity: isSelected ? 1 : 0,
                         minWidth: "30px",
                       }}
-                      className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap text-xs"
+                      className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap"
                     >
                       {item.description}
                       {item.type === "contextProvider" &&

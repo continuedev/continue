@@ -3,9 +3,10 @@ import {
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
+import { useBookmarkedSlashCommands } from "../../../../hooks/useBookmarkedSlashCommands";
+import { useAppSelector } from "../../../../redux/hooks";
 import { fontSize } from "../../../../util";
-import { useBookmarkedSlashCommands } from "../../../ConversationStarters/useBookmarkedSlashCommands";
-import { AddBlockButton } from "./AddBlockButton";
+import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 interface PromptRowProps {
   command: string;
@@ -24,7 +25,7 @@ function PromptRow({
 }: PromptRowProps) {
   return (
     <div
-      className="flex items-center justify-between"
+      className="flex items-center justify-between gap-3"
       style={{
         fontSize: fontSize(-3),
       }}
@@ -40,7 +41,7 @@ function PromptRow({
         />
         <div
           onClick={() => setIsBookmarked(!isBookmarked)}
-          className="cursor-pointer pt-0.5 text-gray-400"
+          className="cursor-pointer pt-0.5 text-gray-400 hover:brightness-125"
         >
           {isBookmarked ? (
             <BookmarkSolid className="h-3 w-3" />
@@ -54,27 +55,37 @@ function PromptRow({
 }
 
 export function PromptsSection() {
-  const { cmdsSortedByBookmark, bookmarkStatuses, toggleBookmark } =
-    useBookmarkedSlashCommands();
+  const { isCommandBookmarked, toggleBookmark } = useBookmarkedSlashCommands();
+  const slashCommands = useAppSelector(
+    (state) => state.config.config.slashCommands ?? [],
+  );
 
   const handleEdit = (prompt: any) => {
     // Handle edit action here
     console.log("Editing prompt:", prompt);
   };
 
+  const sortedCommands = [...slashCommands].sort((a, b) => {
+    const aBookmarked = isCommandBookmarked(a.name);
+    const bBookmarked = isCommandBookmarked(b.name);
+    if (aBookmarked && !bBookmarked) return -1;
+    if (!aBookmarked && bBookmarked) return 1;
+    return 0;
+  });
+
   return (
     <div className="flex flex-col gap-1">
-      {cmdsSortedByBookmark?.map((prompt, i) => (
+      {sortedCommands.map((prompt) => (
         <PromptRow
           key={prompt.name}
           command={prompt.name}
           description={prompt.description}
-          isBookmarked={bookmarkStatuses[prompt.name]}
+          isBookmarked={isCommandBookmarked(prompt.name)}
           setIsBookmarked={() => toggleBookmark(prompt)}
           onEdit={() => handleEdit(prompt)}
         />
       ))}
-      <AddBlockButton blockType="prompts" />
+      <ExploreBlocksButton blockType="prompts" />
     </div>
   );
 }

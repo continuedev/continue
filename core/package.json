@@ -39,14 +39,15 @@
     "myers-diff": "^2.1.0",
     "onnxruntime-common": "1.14.0",
     "onnxruntime-web": "1.14.0",
-    "ts-jest": "^29.1.1"
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.6.3"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.758.0",
     "@aws-sdk/client-sagemaker-runtime": "^3.758.0",
     "@aws-sdk/credential-providers": "^3.758.0",
     "@continuedev/config-types": "^1.0.13",
-    "@continuedev/config-yaml": "^1.0.63",
+    "@continuedev/config-yaml": "^1.0.67",
     "@continuedev/fetch": "^1.0.4",
     "@continuedev/llm-info": "^1.0.2",
     "@continuedev/openai-adapters": "^1.0.18",
