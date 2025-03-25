@@ -10,7 +10,7 @@ import { MCPServerStatus } from "core";
 import { useContext, useMemo } from "react";
 import { ToolTip } from "../../components/gui/Tooltip";
 import EditBlockButton from "../../components/mainInput/Lump/EditBlockButton";
-import { AddBlockButton } from "../../components/mainInput/Lump/sections/AddBlockButton";
+import { ExploreBlocksButton } from "../../components/mainInput/Lump/sections/ExploreBlocksButton";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
@@ -59,7 +59,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
     >
       <div className="flex flex-row items-center gap-3">
         {/* Name and Status */}
-        <h3 className="m-0">{server.name}</h3>
+        <span className="m-0 font-semibold">{server.name}</span>
 
         {/* Error indicator if any */}
         {server.errors.length ? (
@@ -89,7 +89,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                 <code key={idx}>{tool.name}</code>
               ))}
               {server.tools.length === 0 && (
-                <span className="text-stone-500">No tools</span>
+                <span className="text-lightgray">No tools</span>
               )}
             </ToolTip>
           </div>
@@ -104,7 +104,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                 <code key={idx}>{prompt.name}</code>
               ))}
               {server.prompts.length === 0 && (
-                <span className="text-stone-500">No prompts</span>
+                <span className="text-lightgray">No prompts</span>
               )}
             </ToolTip>
           </div>
@@ -119,7 +119,7 @@ function MCPServerPreview({ server, serverFromYaml }: MCPServerStatusProps) {
                 <code key={idx}>{resource.name}</code>
               ))}
               {server.resources.length === 0 && (
-                <span className="text-stone-500">No resources</span>
+                <span className="text-lightgray">No resources</span>
               )}
             </ToolTip>
           </div>
@@ -181,7 +181,7 @@ function MCPServersPreview() {
           />
         ))}
       </div>
-      <AddBlockButton blockType="mcpServers" />
+      <ExploreBlocksButton blockType="mcpServers" />
     </div>
   );
 }

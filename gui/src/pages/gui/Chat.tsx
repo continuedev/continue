@@ -292,7 +292,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`mt-[2px] overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (

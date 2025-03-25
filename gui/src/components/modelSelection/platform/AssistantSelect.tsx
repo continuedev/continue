@@ -5,19 +5,24 @@ import { useContext, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile } from "../../../redux";
-import { useAppDispatch } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { fontSize, isMetaEquivalentKeyPressed } from "../../../util";
 import PopoverTransition from "../../mainInput/InputToolbar/bottom/PopoverTransition";
 import AssistantIcon from "./AssistantIcon";
 import { AssistantSelectOptions } from "./AssistantSelectOptions";
 
 function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
+  const isLumpToolbarExpanded = useAppSelector(
+    (state) => state.ui.isBlockSettingsToolbarExpanded,
+  );
   return (
     <div className="flex max-w-[50vw] items-center gap-0.5">
       <div className="mr-1 h-3 w-3 flex-shrink-0 select-none">
-        <AssistantIcon size={3} assistant={props.selectedProfile} />
+        <AssistantIcon assistant={props.selectedProfile} />
       </div>
-      <span className="select-none truncate">
+      <span
+        className={`select-none truncate ${isLumpToolbarExpanded ? "xs:hidden sm:block" : ""}`}
+      >
         {props.selectedProfile.title}
       </span>
       <ChevronDownIcon
@@ -68,7 +73,7 @@ export default function AssistantSelect() {
             orgSlug: selectedOrganization?.slug,
           });
         }}
-        className="hover:bg flex cursor-pointer select-none items-center gap-1 whitespace-nowrap text-gray-400"
+        className="flex cursor-pointer select-none items-center gap-1 whitespace-nowrap text-gray-400"
         style={{ fontSize: fontSize(-3) }}
       >
         <PlusIcon className="h-3 w-3 select-none" /> Create your first assistant
@@ -89,7 +94,14 @@ export default function AssistantSelect() {
         </Popover.Button>
 
         <PopoverTransition>
-          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex min-w-[200px] max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border-2 border-zinc-600 p-0">
+          <Popover.Panel
+            className="bg-vsc-input-background flex min-w-[200px] max-w-[90vw] cursor-default flex-row rounded-md border-[0.5px] border-solid border-zinc-600 p-0"
+            style={{
+              position: "absolute",
+              right: 0,
+              zIndex: 1000,
+            }}
+          >
             <AssistantSelectOptions
               onClose={() => {
                 if (buttonRef.current) {

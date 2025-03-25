@@ -1,9 +1,5 @@
 import { ConfigYaml } from "@continuedev/config-yaml";
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-  StopIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowPathIcon, StopIcon } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { useContext, useMemo, useState } from "react";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
@@ -115,7 +111,6 @@ function DocsIndexingStatus({
           >
             {docConfig.title ?? docConfig.startUrl}
           </p>
-          <ArrowTopRightOnSquareIcon className="h-2 w-2 text-gray-400" />
         </div>
 
         <div className="flex flex-row items-center gap-2">

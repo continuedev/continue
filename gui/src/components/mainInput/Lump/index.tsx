@@ -5,6 +5,7 @@ import {
   vscCommandCenterInactiveBorder,
   vscInputBackground,
 } from "../..";
+import { useAppSelector } from "../../../redux/hooks";
 import { LumpToolbar } from "./LumpToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
 
@@ -39,6 +40,7 @@ export function Lump(props: LumpProps) {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [displayedSection, setDisplayedSection] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   useEffect(() => {
     if (selectedSection) {
@@ -67,7 +69,9 @@ export function Lump(props: LumpProps) {
         />
 
         <ContentDiv hasSection={!!selectedSection} isVisible={isVisible}>
-          <SelectedSection selectedSection={displayedSection} />
+          {!isStreaming && (
+            <SelectedSection selectedSection={displayedSection} />
+          )}
         </ContentDiv>
       </div>
     </LumpDiv>

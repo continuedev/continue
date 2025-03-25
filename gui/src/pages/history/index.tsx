@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { History } from "../../components/History";
-import PageHeader from "../../components/PageHeader";
+import { PageHeader } from "../../components/PageHeader";
 import { getFontSize } from "../../util";
 import { AccountButton } from "../config/AccountButton";
 

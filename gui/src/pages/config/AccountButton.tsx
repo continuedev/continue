@@ -17,7 +17,7 @@ export function AccountButton() {
 
   return (
     <Popover className="relative">
-      <Popover.Button className="bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground mr-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none">
+      <Popover.Button className="bg-vsc-background hover:bg-vsc-input-background text-vsc-foreground flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-none">
         <UserCircleIcon className="h-6 w-6" />
       </Popover.Button>
 
