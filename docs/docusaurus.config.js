@@ -463,6 +463,10 @@ const config = {
             from: "/chat",
           },
           {
+            to: "/agent/how-to-use-it",
+            from: "/agent",
+          },
+          {
             to: "/edit/how-to-use-it",
             from: "/edit",
           },
