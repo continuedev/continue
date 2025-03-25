@@ -53,9 +53,7 @@ export default function AddFileCombobox({
         value={selectedFiles}
         onChange={(files) => {
           setSelectedFiles(files);
-          void onSelect(
-            files.map((file) => (file as ContextSubmenuItemWithProvider).id),
-          );
+          void onSelect(files.map((file) => file.id));
           buttonRef.current?.click();
         }}
       >
