@@ -236,7 +236,6 @@ export interface SiteIndexingConfig {
   maxDepth?: number;
   faviconUrl?: string;
   useLocalCrawling?: boolean;
-  rootUrl?: string; // Currently only used by preindexed docs
 }
 
 export interface DocsIndexingDetails {
@@ -244,7 +243,6 @@ export interface DocsIndexingDetails {
   config: SiteIndexingConfig;
   indexingStatus: IndexingStatus | undefined;
   chunks: Chunk[];
-  isPreIndexedDoc: boolean;
 }
 
 export interface IContextProvider {

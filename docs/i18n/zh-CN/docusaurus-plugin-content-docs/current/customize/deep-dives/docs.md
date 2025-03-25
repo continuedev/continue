@@ -31,12 +31,6 @@ toc_max_heading_level: 5
 3. 本地保存嵌入在你的机器上
 4. 通过 `@Docs` 上下文提供者提供访问索引内容
 
-## 预先索引文档网站
-
-我们提供一个流行的框架和库的预先索引文档网站的选择。你可以 [在这里查看可用的预先索引网站和请求附加内容](https://github.com/continuedev/continue/blob/main/core/indexing/docs/preIndexedDocs.ts) 列表。
-
-## 索引你自己的文档
-
 ### 通过 `@Docs` 上下文提供者
 
 为了添加一个单独的文档网站，我们推荐使用 `@Docs` 上下文提供者。

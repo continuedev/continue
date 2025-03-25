@@ -65,8 +65,7 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
     if (data) {
       comp = (
         <div className="flex flex-col gap-0.5">
-          <p className="text-lightgray m-0 mt-2 p-0">{`Title: ${data.config.title}`}</p>
-          <p className="text-lightgray m-0 p-0">{`Pre-indexed doc: ${data.isPreIndexedDoc}`}</p>
+          <p className="m-0 mt-2 p-0 text-stone-500">{`Title: ${data.config.title}`}</p>
           {!data.chunks?.length ? (
             <div>No article chunks</div>
           ) : (

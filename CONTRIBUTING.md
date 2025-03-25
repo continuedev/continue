@@ -26,7 +26,6 @@
     - [Writing Context Providers](#writing-context-providers)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
-    - [Adding Pre-indexed Documentation](#adding-pre-indexed-documentation)
   - [📐 Continue Architecture](#-continue-architecture)
     - [Continue VS Code Extension](#continue-vs-code-extension)
     - [Continue JetBrains Extension](#continue-jetbrains-extension)
@@ -211,10 +210,6 @@ While any model that works with a supported provider can be used with Continue, 
 - [index.d.ts](./core/index.d.ts) - This file defines the TypeScript types used throughout Continue. You'll find a `ModelName` type. Be sure to add the name of your model to this.
 - LLM Providers: Since many providers use their own custom strings to identify models, you'll have to add the translation from Continue's model name (the one you added to `index.d.ts`) and the model string for each of these providers: [Ollama](./core/llm/llms/Ollama.ts), [Together](./core/llm/llms/Together.ts), and [Replicate](./core/llm/llms/Replicate.ts). You can find their full model lists here: [Ollama](https://ollama.ai/library), [Together](https://docs.together.ai/docs/inference-models), [Replicate](https://replicate.com/collections/streaming-language-models).
 - [Prompt Templates](./core/llm/index.ts) - In this file you'll find the `autodetectTemplateType` function. Make sure that for the model name you just added, this function returns the correct template type. This is assuming that the chat template for that model is already built in Continue. If not, you will have to add the template type and corresponding edit and chat templates.
-
-### Adding Pre-indexed Documentation
-
-Continue's @docs context provider lets you easily reference entire documentation sites and then uses embeddings to add the most relevant pages to context. To make the experience as smooth as possible, we pre-index many of the most popular documentation sites. If you'd like to add new documentation to this list, just add an object to the list in [preIndexedDocs.ts](./core/indexing/docs/preIndexedDocs.ts). `startUrl` is where the crawler will start and `rootUrl` will filter out any pages not on that site and under the path of `rootUrl`.
 
 ## 📐 Continue Architecture
 
