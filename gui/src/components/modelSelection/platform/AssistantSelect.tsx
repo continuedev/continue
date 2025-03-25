@@ -91,7 +91,7 @@ const AssistantSelectOption = ({
             {!profile.errors?.length ? (
               isLocalProfile(profile) ? (
                 <Cog6ToothIcon
-                  className="h-4 w-4 flex-shrink-0 cursor-pointer"
+                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
                   style={{
                     opacity: hovered ? 1 : 0,
                   }}
@@ -106,7 +106,7 @@ const AssistantSelectOption = ({
                   style={{
                     opacity: hovered ? 1 : 0,
                   }}
-                  className="h-4 w-4 flex-shrink-0 cursor-pointer"
+                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -118,7 +118,7 @@ const AssistantSelectOption = ({
               <>
                 <ExclamationTriangleIcon
                   data-tooltip-id={`${profile.id}-errors-tooltip`}
-                  className="h-4 w-4 flex-shrink-0 cursor-pointer text-red-500"
+                  className="h-3 w-3 flex-shrink-0 cursor-pointer text-red-500"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
