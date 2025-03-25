@@ -622,7 +622,7 @@ export default class DocsService {
           progress: 1,
         });
 
-        void this.ide.showToast("info", `Failed to index ${startUrl}`);
+        // void this.ide.showToast("info", `Failed to index ${startUrl}`);
         markFailedInGlobalContext();
         return;
       }
@@ -672,7 +672,7 @@ export default class DocsService {
         progress: 1,
       });
 
-      void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
+      // void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
 
       this.messenger?.send("refreshSubmenuItems", {
         providers: ["docs"],
