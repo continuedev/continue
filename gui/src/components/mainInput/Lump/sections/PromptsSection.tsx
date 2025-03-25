@@ -6,7 +6,7 @@ import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
 import { useBookmarkedSlashCommands } from "../../../../hooks/useBookmarkedSlashCommands";
 import { useAppSelector } from "../../../../redux/hooks";
 import { fontSize } from "../../../../util";
-import { AddBlockButton } from "./AddBlockButton";
+import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 interface PromptRowProps {
   command: string;
@@ -25,7 +25,7 @@ function PromptRow({
 }: PromptRowProps) {
   return (
     <div
-      className="flex items-center justify-between"
+      className="flex items-center justify-between gap-3"
       style={{
         fontSize: fontSize(-3),
       }}
@@ -41,7 +41,7 @@ function PromptRow({
         />
         <div
           onClick={() => setIsBookmarked(!isBookmarked)}
-          className="cursor-pointer pt-0.5 text-gray-400"
+          className="cursor-pointer pt-0.5 text-gray-400 hover:brightness-125"
         >
           {isBookmarked ? (
             <BookmarkSolid className="h-3 w-3" />
@@ -85,7 +85,7 @@ export function PromptsSection() {
           onEdit={() => handleEdit(prompt)}
         />
       ))}
-      <AddBlockButton blockType="prompts" />
+      <ExploreBlocksButton blockType="prompts" />
     </div>
   );
 }

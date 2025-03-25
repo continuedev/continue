@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import PageHeader from "../../components/PageHeader";
+import { PageHeader } from "../../components/PageHeader";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { fontSize } from "../../util";
 import { AccountButton } from "./AccountButton";
