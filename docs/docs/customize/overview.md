@@ -10,7 +10,7 @@ Continue can be deeply customized. For example you might:
 - **Select different model providers for each Compose feature**. Different Continue features can use different model providers. We call these _model types_. For example, you can use a different model provider for chat than you do for autocomplete. Learn more about [model types](../customize/model-roles/) .
 - **Add a Context Provider**. Context providers allow you to add information to your prompts, giving your LLM additional context to work with. Context providers allow you to reference snippets from your codebase, or lookup relevant documentation, or use a search engine to find information and much more. Learn more about [context providers](/customize/context-providers).
 - **Create a Slash Command**. Slash commands allow you to easily add custom functionality to Continue. You can use a slash command that allows you to generate a shell command from natural language, or perhaps generate a commit message, or create your own custom command to do whatever you want. Learn more about [slash commands](/customize/slash-commands).
-- **Call external tools and functions**. Unchain your LLM with the power of _Tools_. You can call any external tool or function from your prompts. Currently only available with Anthropic. Learn more about [Tools](/customize/tools).
+- **Call external tools and functions**. Unchain your LLM with the power of tools using [Agent](../agent/how-to-use-it.md). Add custom tools using [MCP Servers](../customize/deep-dives/mcp.mdx)
 
 Whatever you choose, you'll probably start by editing `config.yaml`.
 

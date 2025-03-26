@@ -223,11 +223,11 @@ const config = {
           },
           {
             to: "/customize/overview",
-            from: "/customize",
+            from: ["/customize", "/customization"],
           },
           {
-            to: "/customize/overview",
-            from: "/customization",
+            to: "/customize/deep-dives/mcp",
+            from: "/customize/tools",
           },
           {
             to: "/getting-started/install",

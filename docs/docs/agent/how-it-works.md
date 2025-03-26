@@ -11,7 +11,7 @@ Agent offers all the functionality of chat, while also including tools in the re
 
 Tools provider a flexible, powerful way for models to interface with custom/external functionality. They are sent to the model as a JSON object with a name and arguments schema. For example, a `read_file` tool with a `filepath` argument will give the model the ability to request the contents of a specific file. The following handshake describes how Agent uses tools.
 
-1. In Agent mode, available tools are sent along with `user` chat requests.
+1. In Agent mode, available tools are sent along with `user` chat requests
 2. The model can choose to include a Tool Call in its response
 3. The user gives permission. This step is skipped if the tool's policy is set to `automatic`, see [How to Customize](./how-to-customize.md)
 4. Continue calls the tool using built-in functionality or the MCP server it came from

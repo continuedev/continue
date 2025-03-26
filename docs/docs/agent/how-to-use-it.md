@@ -12,15 +12,24 @@ sidebar_position: 1
 
 Agent uses tools to unlock the power of the IDE for your model, allowing the model to make decisions and save you the work of manually finding context and performing actions.
 
+## Use a Supported Model
+
+Agent can be used with models that support tool use through Continue. Currently the following providers are supported:
+
+- [Anthropic](../customize/model-providers/top-level/anthropic.mdx) - we recommend [Claude Sonnet 3.7](https://hub.continue.dev/anthropic/claude-3-7-sonnet)
+- [Ollama](../customize/model-providers/top-level/ollama.mdx) - we recommend [Qwen 2.5 Coder 7b](https://hub.continue.dev/ollama/qwen2.5-coder-7b). Also see all Ollama models that support tools [here](https://ollama.com/search?c=tools).
+- [OpenAI](../customize/model-providers/top-level/openai.mdx) - we recommend [GPT-4o](https://hub.continue.dev/openai/gpt-4o)
+- [Gemini](../customize/model-providers/top-level/gemini.mdx) - we recommend [Gemini 2.0 Flash](https://hub.continue.dev/google/gemini-2.0-flash)
+
+:::info
+If Agent is disabled with a `Not Supported` message, the selected model/provider doesn't support tools, or Continue doesn't yet support tools with it
+:::
+
 ## Enable Agent
 
 To enable Agent, use the Mode selector below the chat input to select `Agent`.
 
 ![selecting agent mode](/img/mode-select-agent.png)
-
-:::info
-If Agent is disabled with a `Not Supported` message, the selected model/provider doesn't support tools, or Continue doesn't yet support tools with it. See [Tool Support](../customize/tools.mdx#tool-support)
-:::
 
 ## Chat with Agent
 

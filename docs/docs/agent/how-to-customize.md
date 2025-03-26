@@ -25,6 +25,8 @@ Then, you can view and change tool policies. To change a policy, click on the po
 
 ![Tool Policies](/img/tool-policies.png)
 
-## Adding tools
+Tool policies are stored locally per user.
 
-You can add MCP servers to your assistant to give Agent more tools. [Explore MCP Servers on the Hub](https://hub.continue.dev/explore/mcp) and see the [Tools guide](../customize/tools.mdx) for more details.
+## Add tools
+
+You can add MCP servers to your assistant to give Agent access to more tools. [Explore MCP Servers on the Hub](https://hub.continue.dev/explore/mcp) and see the [MCP guide](../customize/deep-dives/mcp.mdx) for more details.
