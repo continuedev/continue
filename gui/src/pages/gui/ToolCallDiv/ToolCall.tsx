@@ -1,7 +1,7 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { ToolCallDelta, ToolCallState } from "core";
 import Mustache from "mustache";
-import { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { useAppSelector } from "../../../redux/hooks";
 
@@ -22,14 +22,59 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
     );
   }, [availableTools, props.toolCall]);
 
-  const wouldLikeToMessage = useMemo(() => {
-    if (!tool) return "";
+  const statusMessage = useMemo(() => {
+    if (!tool) return "Agent tool use";
 
-    const rendered = Mustache.render(
-      tool.wouldLikeTo,
-      props.toolCallState.parsedArgs,
+    const defaultToolDescription = (
+      <>
+        <code>{tool.displayTitle ?? tool.function.name}</code> <span>tool</span>
+      </>
     );
-    return rendered.trim();
+
+    const futureMessage = tool.wouldLikeTo ? (
+      Mustache.render(tool.wouldLikeTo, props.toolCallState.parsedArgs)
+    ) : (
+      <>
+        <span>use the</span> {defaultToolDescription}
+      </>
+    );
+
+    let intro = "";
+    let message: ReactNode = "";
+
+    if (props.toolCallState.status === "generating") {
+      intro = "is generating output to";
+      message = futureMessage;
+    } else if (props.toolCallState.status === "generated") {
+      intro = "wants to";
+      message = futureMessage;
+    } else if (props.toolCallState.status === "calling") {
+      intro = "is";
+      message = tool.isCurrently ? (
+        Mustache.render(tool.isCurrently, props.toolCallState.parsedArgs)
+      ) : (
+        <>
+          <span>using the</span> {defaultToolDescription}
+        </>
+      );
+    } else if (props.toolCallState.status === "done") {
+      intro = "";
+      message = tool.hasAlready ? (
+        Mustache.render(tool.hasAlready, props.toolCallState.parsedArgs)
+      ) : (
+        <>
+          <span>used the</span> {defaultToolDescription}
+        </>
+      );
+    } else if (props.toolCallState.status === "canceled") {
+      intro = "tried to";
+      message = futureMessage;
+    }
+    return (
+      <div className="block">
+        <span>Continue</span> {intro} {message}
+      </div>
+    );
   }, [props.toolCallState, tool]);
 
   const args: [string, any][] = useMemo(() => {
@@ -60,17 +105,7 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
               {tool?.faviconUrl && (
                 <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
               )}
-              <div className="">
-                Continue wants to{" "}
-                {wouldLikeToMessage ? (
-                  <span>{wouldLikeToMessage}</span>
-                ) : (
-                  <>
-                    <span>use the</span> <code>{tool?.displayTitle}</code>{" "}
-                    <span>tool</span>
-                  </>
-                )}
-              </div>
+              <div className="flex">{statusMessage}</div>
             </div>
             {!!args.length ? (
               <div

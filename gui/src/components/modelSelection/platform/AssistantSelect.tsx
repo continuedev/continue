@@ -224,7 +224,7 @@ export default function AssistantSelect() {
         >
           <div className="flex flex-row items-center gap-1.5">
             <div className="h-3 w-3 flex-shrink-0 select-none">
-              <AssistantIcon assistant={selectedProfile} />
+              <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
             <span
               className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}

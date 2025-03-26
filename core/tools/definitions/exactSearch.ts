@@ -5,6 +5,8 @@ export const exactSearchTool: Tool = {
   type: "function",
   displayTitle: "Exact Search",
   wouldLikeTo: 'search for "{{{ query }}}" in the repository',
+  isCurrently: 'getting search results for "{{{ query }}}"',
+  hasAlready: 'retreived search results for "{{{ query }}}"',
   readonly: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
