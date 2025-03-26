@@ -500,7 +500,7 @@ async function intermediateToFinalConfig(
     ...config,
     contextProviders,
     models,
-    tools: allTools,
+    tools: [...allTools],
     mcpServerStatuses: [],
     slashCommands: config.slashCommands ?? [],
     modelsByRole: {
