@@ -123,7 +123,7 @@ function InputToolbar(props: InputToolbarProps) {
     <>
       <div
         onClick={props.onClick}
-        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none cursor-default opacity-0" : "pointer-events-auto cursor-text opacity-100"}`}
+        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto cursor-text opacity-100"}`}
         style={{
           fontSize: smallFont,
         }}

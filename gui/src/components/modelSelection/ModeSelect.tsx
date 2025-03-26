@@ -63,10 +63,13 @@ function ModeSelect() {
 
   // Switch to chat mode if agent mode is selected but not supported
   useEffect(() => {
+    if (!selectedModel) {
+      return;
+    }
     if (mode === "agent" && !agentModeSupported) {
       dispatch(setMode("chat"));
     }
-  }, [mode, agentModeSupported, dispatch]);
+  }, [mode, agentModeSupported, dispatch, selectedModel]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
