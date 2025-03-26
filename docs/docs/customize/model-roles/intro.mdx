@@ -22,10 +22,10 @@ These roles can be specified for a `config.yaml` model block using `roles`. See 
 
 ## Selecting model roles
 
-You can control which of the models in your assistant for a given role will be currently used for that role. Visit the [Settings page](../settings.md) and go to the **Active Models** section.
+You can control which of the models in your assistant for a given role will be currently used for that role. Above the main input, click the 3 dots and then the cube icon to expand the `Models` section. Then you can use the dropdowns to select an active model for each role.
 
 ![Settings Active Models Section](/img/settings-model-roles.png)
 
 :::info
-`roles` do not exist within `config.json` (deprecated) - they are infered by the top level keys like `embeddingsProvider`
+`roles` are not explicitly defined within `config.json` (deprecated) - they are infered by the top level keys like `embeddingsProvider`
 :::

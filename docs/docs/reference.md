@@ -477,28 +477,3 @@ models:
     roles:
       - autocomplete
 ```
-
-### Fully deprecated settings
-
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
-
-- `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
-- `promptPath`: This value will override during migration.
-- `disableIndexing`: This value will be migrated to the safest merged value (`true` if either are `true`).
-- `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
-- `tabAutocompleteOptions`
-  - `useCache`: This value will override during migration.
-  - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
-  - `multilineCompletions`: This value will override during migration.
-- `experimental`
-  - `useChromiumForDocsCrawling`: This value will override during migration.
-  - `readResponseTTS`: This value will override during migration.
-- `ui` - all will override during migration
-
-  - `codeBlockToolbarPosition`
-  - `fontSize`
-  - `codeWrap`
-  - `displayRawMarkdown`
-  - `showChatScrollbar`
-
-  See [User Settings Page](./customize/settings.md) for more information about each option.

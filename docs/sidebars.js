@@ -128,7 +128,6 @@ const sidebars = {
         },
       ],
     },
-    "customize/settings",
     {
       type: "link",
       label: "Reference",
