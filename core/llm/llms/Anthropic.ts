@@ -187,17 +187,8 @@ class Anthropic extends BaseLLM {
 
     const msgs = this.convertMessages(messages);
 
-    // Merge default headers with custom headers
-    const headers: any = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "anthropic-version": "2023-06-01",
-      "x-api-key": this.apiKey as string,
-      ...this.requestOptions?.headers,
-    };
-
-    // Handle the special case for anthropic-beta
-    this.setBetaHeaders(headers, shouldCacheSystemMessage);
+    // Set anthropic-beta headers directly into this.requestOptions
+    this.setBetaHeaders(shouldCacheSystemMessage);
 
     // Create the request body
     const requestBody = {
@@ -216,7 +207,12 @@ class Anthropic extends BaseLLM {
 
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "anthropic-version": "2023-06-01",
+        "x-api-key": this.apiKey as string
+      },
       body: JSON.stringify(requestBody),
       signal,
     });
@@ -309,29 +305,26 @@ class Anthropic extends BaseLLM {
     }
   }
 
-  private setBetaHeaders(
-    headers: any,
-    shouldCacheSystemMessage: boolean | undefined,
-  ) {
+  private setBetaHeaders(shouldCacheSystemMessage: boolean | undefined) {
+    if (!this.requestOptions) this.requestOptions = {};
+    if (!this.requestOptions.headers) this.requestOptions.headers = {};
+
     const betaValues = new Set<string>();
 
-    // Add from existing header if present
-    const existingBeta = headers["anthropic-beta"];
-    if (existingBeta && typeof existingBeta === "string") {
-      existingBeta
+    const existingBetaHeaders = this.requestOptions.headers["anthropic-beta"];
+    if (existingBetaHeaders) {
+      existingBetaHeaders
         .split(",")
         .map((v) => v.trim())
         .forEach((v) => betaValues.add(v));
     }
 
-    // Add caching header if we should
     if (shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation) {
       betaValues.add("prompt-caching-2024-07-31");
     }
 
-    // Update the header if we have values
     if (betaValues.size > 0) {
-      headers["anthropic-beta"] = Array.from(betaValues).join(",");
+      this.requestOptions.headers["anthropic-beta"] = Array.from(betaValues).join(",");
     }
   }
 }
