@@ -529,7 +529,7 @@ async function intermediateToFinalConfig(
     (config.experimental?.modelContextProtocolServers ?? []).map(
       (server, index) => ({
         id: `continue-mcp-server-${index + 1}`,
-        name: `MCP Server ${index + 1}`,
+        name: `MCP Server`,
         ...server,
       }),
     ),
