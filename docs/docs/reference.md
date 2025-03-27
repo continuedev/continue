@@ -8,10 +8,15 @@ keywords: [config, yaml, configuration, customize, customization]
 
 ## Introduction
 
-Continue hub assistants are defined using the `config.yaml` specification. Local assistants can also be configured using a YAML file `config.yaml` placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
+Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from [the Hub](https://hub.continue.dev/explore/assistants) or locally
+
+- [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to the extension
+- Locally
+  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
+  - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces [`config.json`](./json-reference.md). View the **[Migration Guide](./yaml-migration.md)**.
+Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the **[Migration Guide](./yaml-migration.md)**.
 :::
 
 An assistant is made up of:
@@ -32,7 +37,7 @@ Hub blocks and assistants are identified with a slug in the format `owner-slug/b
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
 
 :::info
-Note that `uses` blocks cannot be used with a local `config.yaml`
+Note that local assistants cannot use blocks that require organization-level secrets.
 :::
 
 For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
@@ -473,28 +478,3 @@ models:
     roles:
       - autocomplete
 ```
-
-### Fully deprecated settings
-
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/deep-dives/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/deep-dives/settings.md) and removed from `config.json`.
-
-- `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
-- `promptPath`: This value will override during migration.
-- `disableIndexing`: This value will be migrated to the safest merged value (`true` if either are `true`).
-- `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
-- `tabAutocompleteOptions`
-  - `useCache`: This value will override during migration.
-  - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
-  - `multilineCompletions`: This value will override during migration.
-- `experimental`
-  - `useChromiumForDocsCrawling`: This value will override during migration.
-  - `readResponseTTS`: This value will override during migration.
-- `ui` - all will override during migration
-
-  - `codeBlockToolbarPosition`
-  - `fontSize`
-  - `codeWrap`
-  - `displayRawMarkdown`
-  - `showChatScrollbar`
-
-  See [User Settings Page](./customize/deep-dives/settings.md) for more information about each option.
