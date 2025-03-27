@@ -1,11 +1,11 @@
 import { SlashCommand } from "../../index.js";
-import { streamResponse } from "../../llm/stream.js";
 import { removeQuotesAndEscapes } from "../../util/index.js";
+import { streamResponse } from "../../llm/stream.js";
 
 const HttpSlashCommand: SlashCommand = {
   name: "http",
   description: "Call an HTTP endpoint to serve response",
-  run: async function* ({ input, params, fetch }) {
+  run: async function* ({ ide, llm, input, params, fetch }) {
     const url = params?.url;
     if (!url) {
       throw new Error("URL is not defined in params");
