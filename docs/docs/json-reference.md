@@ -5,7 +5,7 @@ keywords: [config, config_schema.json, json]
 ---
 
 :::info
-`config.json` is the original Continue configuration format. The newer and preferred format is [`YAML Config`](./reference). See the [migration guide](./yaml-migration).
+We recently introduced a new configuration format, `config.yaml`, to replace `config.json`. See the `config.yaml` reference and migration guide [here](./reference.md).
 :::
 
 Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
@@ -14,7 +14,7 @@ Below are details for each property that can be set in `config.json`. The config
 
 ### `models`
 
-Your **chat** models are defined here, which are used for [Chat](./chat/how-to-use-it), [Edit](./edit/how-to-use-it), and [Actions](./actions/how-to-use-it).
+Your **chat** models are defined here, which are used for [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Actions](./actions/how-to-use-it.md).
 Each model has specific configuration options tailored to its provider and functionality, which can be seen as suggestions while editing the json.
 
 **Properties:**
@@ -36,7 +36,7 @@ Each model has specific configuration options tailored to its provider and funct
 - `engine`: Engine for Azure OpenAI requests.
 - `capabilities`: Override auto-detected capabilities:
   - `uploadImage`: Boolean indicating if the model supports image uploads.
-  - `tools`: Boolean indicating if the model supports tool calls.
+  - `tools`: Boolean indicating if the model supports tool use.
 
 _(AWS Only)_
 
@@ -59,7 +59,7 @@ Example:
       "contextLength": 128000,
       "title": "GPT-4o",
       "provider": "openai",
-      "apiKey": "<YOUR_OPENAI_API_KEY>"
+      "apiKey": "YOUR_API_KEY"
     }
   ]
 }
@@ -97,7 +97,7 @@ Specifies options for tab autocompletion behavior.
 
 Example
 
-````json title="config.json"
+```json title="config.json"
 {
   "tabAutocompleteOptions": {
     "debounceDelay": 500,
@@ -105,6 +105,7 @@ Example
     "disableInFiles": ["*.md"]
   }
 }
+```
 
 ### `embeddingsProvider`
 
@@ -117,8 +118,8 @@ Embeddings model settings - the model used for @Codebase and @docs.
 - `apiKey`: API key for the provider.
 - `apiBase`: Base URL for API requests.
 - `requestOptions`: Additional HTTP request settings specific to the embeddings provider.
-- `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
-- `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+- `maxEmbeddingChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+- `maxEmbeddingBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
 
 (AWS ONLY)
 
@@ -132,12 +133,12 @@ Example:
   "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-ada-002",
-    "apiKey": "<YOUR_OPENAI_API_KEY>",
-    "maxChunkSize": 256,
-    "maxBatchSize": 5
+    "apiKey": "<API_KEY>",
+    "maxEmbeddingChunkSize": 256,
+    "maxEmbeddingBatchSize": 5
   }
 }
-````
+```
 
 ### `completionOptions`
 
@@ -150,7 +151,7 @@ Parameters that control the behavior of text generation and completion settings.
 - `topP`: The cumulative probability for nucleus sampling. Lower values limit responses to tokens within the top probability mass.
 - `topK`: The maximum number of tokens considered at each step. Limits the generated text to tokens within this probability.
 - `presencePenalty`: Discourages the model from generating tokens that have already appeared in the output.
-- `frequencePenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
+- `frequencyPenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
 - `mirostat`: Enables Mirostat sampling, which controls the perplexity during text generation. Supported by Ollama, LM Studio, and llama.cpp providers (default: `0`, where `0` = disabled, `1` = Mirostat, and `2` = Mirostat 2.0).
 - `stop`: An array of stop tokens that, when encountered, will terminate the completion. Allows specifying multiple end conditions.
 - `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
@@ -220,7 +221,7 @@ Example
     "name": "voyage",
     "params": {
       "model": "rerank-2",
-      "apiKey": "<YOUR_VOYAGE_API_KEY>"
+      "apiKey": "<VOYAGE_API_KEY>"
     }
   }
 }
@@ -234,23 +235,21 @@ List of documentation sites to index.
 
 - `title` (**required**): Title of the documentation site, displayed in dropdowns, etc.
 - `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
-- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
-- `maxDepth`: Maximum depth for crawling. Default `3`
+<!-- - `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL -->
+- `maxDepth`: Maximum link depth for crawling. Default `4`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+- `useLocalCrawling`: Skip the default crawler and only crawl using a local crawler.
 
 Example
 
 ```json title="config.json"
-{
-  "docs": [
+"docs": [
     {
-      "title": "Continue",
-      "startUrl": "https://docs.continue.dev/intro",
-      "rootUrl": "https://docs.continue.dev",
-      "faviconUrl": "https://docs.continue.dev/favicon.ico"
-    }
-  ]
-}
+    "title": "Continue",
+    "startUrl": "https://docs.continue.dev/intro",
+    "faviconUrl": "https://docs.continue.dev/favicon.ico",
+  }
+]
 ```
 
 ### `slashCommands`
@@ -261,7 +260,7 @@ Custom commands initiated by typing "/" in the sidebar. Commands include predefi
 
 - `name`: The command name. Options include "issue", "share", "cmd", "http", "commit", and "review".
 - `description`: Brief description of the command.
-- `step`: Used for built-in commands; set the name for pre-configured options.
+- `step`: (Deprecated) Used for built-in commands; set the name for pre-configured options.
 - `params`: Additional parameters to configure command behavior (command-specific - see code for command)
 
 Example:
@@ -343,40 +342,6 @@ Example
 }
 ```
 
-### `disableSessionTitles`
-
-Prevents generating summary titles for each chat session when set to `true`.
-
-### `ui`
-
-Customizable UI settings to control interface appearance and behavior.
-
-**Properties:**
-
-- `codeBlockToolbarPosition`: Sets the toolbar position within code blocks, either `top` (default) or `bottom`.
-- `fontSize`: Specifies font size for UI elements.
-- `displayRawMarkdown`: If `true`, shows raw markdown in responses.
-- `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
-- `codeWrap`: If `true`, enables text wrapping in code blocks.
-
-Example:
-
-```json title="config.json"
-{
-  "ui": {
-    "codeBlockToolbarPosition": "bottom",
-    "fontSize": 14,
-    "displayRawMarkdown": false,
-    "showChatScrollbar": false,
-    "codeWrap": false
-  }
-}
-```
-
-### `allowAnonymousTelemetry`
-
-When `true`, anonymous usage data is collected using Posthog, to improve features. Default is `true`.
-
 ### `userToken`
 
 An optional token that identifies the user, primarily for authenticated services.
@@ -437,3 +402,28 @@ Example
   }
 }
 ```
+
+### Fully deprecated settings
+
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/deep-dives/settings.md). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/deep-dives/settings.md) and removed from `config.json`.
+
+- `allowAnonymousTelemetry`: This value will be migrated to the safest merged value (`false` if either are `false`).
+- `promptPath`: This value will override during migration.
+- `disableIndexing`: This value will be migrated to the safest merged value (`true` if either are `true`).
+- `disableSessionTitles`/`ui.getChatTitles`: This value will be migrated to the safest merged value (`true` if either are `true`). `getChatTitles` takes precedence if set to false
+- `tabAutocompleteOptions`
+  - `useCache`: This value will override during migration.
+  - `disableInFiles`: This value will be migrated to the safest merged value (arrays of file matches merged/deduplicated)
+  - `multilineCompletions`: This value will override during migration.
+- `experimental`
+  - `useChromiumForDocsCrawling`: This value will override during migration.
+  - `readResponseTTS`: This value will override during migration.
+- `ui` - all will override during migration
+
+  - `codeBlockToolbarPosition`
+  - `fontSize`
+  - `codeWrap`
+  - `displayRawMarkdown`
+  - `showChatScrollbar`
+
+  See [User Settings Page](./customize/deep-dives/settings.md) for more information about each option.
