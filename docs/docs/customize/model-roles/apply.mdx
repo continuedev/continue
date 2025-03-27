@@ -12,4 +12,35 @@ When editing code, Chat and Edit model output often doesn't clearly align with e
 
 Generally speaking, models proficient in chat and edit can also be used for applying code.
 
+## Recommended Apply Models
+
+### Morph Fast Apply
+
+[Morph](https://morphllm.com) is a specialized model designed for fast and accurate code application. It's optimized to take original code and generated code, then create a precise diff that can be applied to your file.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Morph Fast Apply
+      provider: openai
+      model: morph-v0
+      apiKey: YOUR_MORPH_API_KEY
+      apiBase: https://api.morphllm.com/v1/
+      roles:
+        - apply
+      promptTemplates:
+        apply: "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
+  ```
+  </TabItem>
+</Tabs>
+
+You can sign up for a free Morph API key at [https://morphllm.com/dashboard](https://morphllm.com/dashboard).
+
+### Other Models
+
+You can also use general-purpose models like GPT-4o or Claude for the Apply role, though specialized models like Morph are optimized for this specific task.
+
+For more detailed information about the Apply feature, see the [Apply documentation](../../apply/how-it-works.md).
+
 Explore apply models in [the hub](https://hub.continue.dev/explore/models?roles=apply).
