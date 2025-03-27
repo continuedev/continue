@@ -16,6 +16,12 @@ export const gatherContext = createAsyncThunk<
     selectedContextItems: ContextItemWithId[];
     selectedCode: RangeInFile[];
     content: MessageContent;
+    slashCommandWithInput:
+      | {
+          name: string;
+          input: string;
+        }
+      | undefined;
   },
   {
     editorState: JSONContent;
@@ -42,12 +48,13 @@ export const gatherContext = createAsyncThunk<
     }
 
     // Resolve context providers and construct new history
-    let [selectedContextItems, selectedCode, content] =
+    let [selectedContextItems, selectedCode, content, slashCommandWithInput] =
       await resolveEditorContent({
         editorState,
         modifiers,
         ideMessenger: extra.ideMessenger,
         defaultContextProviders,
+        availableSlashCommands: state.config.config.slashCommands,
         dispatch,
         selectedModelTitle: defaultModel.title,
       });
@@ -107,7 +114,11 @@ export const gatherContext = createAsyncThunk<
       }
     }
 
-    // dispatch(addContextItems(contextItems));
-    return { selectedContextItems, selectedCode, content };
+    return {
+      selectedContextItems,
+      selectedCode,
+      content,
+      slashCommandWithInput,
+    };
   },
 );

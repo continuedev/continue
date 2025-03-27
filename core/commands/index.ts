@@ -7,19 +7,21 @@ import SlashCommands from "./slash";
 export function slashFromCustomCommand(
   customCommand: CustomCommand,
 ): SlashCommand {
+  const commandName = customCommand.name.startsWith("/")
+    ? customCommand.name.substring(1)
+    : customCommand.name;
   return {
-    name: customCommand.name,
+    name: commandName,
     description: customCommand.description ?? "",
     prompt: customCommand.prompt,
     run: async function* ({ input, llm, history, ide, completionOptions }) {
+      console.log("SLASH COMMAND RUN", input, prompt, commandName);
       // Remove slash command prefix from input
       let userInput = input;
-      if (userInput.startsWith(`/${customCommand.name}`)) {
-        userInput = userInput
-          .slice(customCommand.name.length + 1, userInput.length)
-          .trimStart();
+      if (userInput.startsWith(commandName)) {
+        userInput = userInput.substring(commandName.length).trimStart();
       }
-      debugger;
+
       // Render prompt template
       let promptUserInput: string;
       if (customCommand.prompt.includes("{{{ input }}}")) {
@@ -44,17 +46,13 @@ export function slashFromCustomCommand(
         if (
           Array.isArray(content) &&
           content.some(
-            (part) =>
-              "text" in part && part.text?.startsWith(`/${customCommand.name}`),
+            (part) => "text" in part && part.text?.startsWith(commandName),
           )
         ) {
           messages[i] = {
             ...message,
             content: content.map((part) => {
-              if (
-                "text" in part &&
-                part.text.startsWith(`/${customCommand.name}`)
-              ) {
+              if ("text" in part && part.text.startsWith(commandName)) {
                 return { type: "text", text: promptUserInput };
               }
               return part;
@@ -63,7 +61,7 @@ export function slashFromCustomCommand(
           break;
         } else if (
           typeof content === "string" &&
-          content.startsWith(`/${customCommand.name}`)
+          content.startsWith(commandName)
         ) {
           messages[i] = { ...message, content: promptUserInput };
           break;

@@ -7,6 +7,7 @@ import {
   MessageContent,
   MessagePart,
   RangeInFile,
+  SlashCommandDescription,
   TextMessagePart,
 } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
@@ -27,6 +28,7 @@ interface ResolveEditorContentInput {
   modifiers: InputModifiers;
   ideMessenger: IIdeMessenger;
   defaultContextProviders: DefaultContextProvider[];
+  availableSlashCommands: SlashCommandDescription[];
   selectedModelTitle: string;
   dispatch: Dispatch;
 }
@@ -40,22 +42,36 @@ async function resolveEditorContent({
   modifiers,
   ideMessenger,
   defaultContextProviders,
+  availableSlashCommands,
   selectedModelTitle,
   dispatch,
 }: ResolveEditorContentInput): Promise<
-  [ContextItemWithId[], RangeInFile[], MessageContent]
+  [
+    ContextItemWithId[],
+    RangeInFile[],
+    MessageContent,
+    (
+      | {
+          name: string;
+          input: string;
+        }
+      | undefined
+    ),
+  ]
 > {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
-  let slashCommand: string | undefined = undefined;
+  let slashCommandName: string | undefined = undefined;
+  let slashCommandWithInput: { name: string; input: string } | undefined =
+    undefined;
   if (editorState?.content) {
     for (const p of editorState.content) {
       if (p.type === "paragraph") {
         const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
-        // Only take the first slash command\
-        if (foundSlashCommand && typeof slashCommand === "undefined") {
-          slashCommand = foundSlashCommand;
+        // Only take the first slash command
+        if (foundSlashCommand && typeof slashCommandName === "undefined") {
+          slashCommandName = foundSlashCommand;
         }
 
         contextItemAttrs.push(...ctxItems);
@@ -113,7 +129,60 @@ async function resolveEditorContent({
     }
   }
 
-  const shouldGatherContext = modifiers.useCodebase || slashCommand;
+  // Add slash command text back in (this could be removed)
+  if (slashCommandName) {
+    const command = availableSlashCommands.find(
+      (c) => c.name === slashCommandWithName,
+    );
+    if (command) {
+      slashCommandWithInput = {
+        name: command.name,
+        input: "TODO INPUT",
+      };
+    }
+  }
+  const getSlashCommandForInput = (
+    input: MessageContent,
+    slashCommands: SlashCommandDescription[],
+  ): [SlashCommandDescription, string] | undefined => {
+    let slashCommand: SlashCommandDescription | undefined;
+    let slashCommandName: string | undefined;
+
+    let lastText =
+      typeof input === "string"
+        ? input
+        : (
+            input.filter((part) => part.type === "text").slice(-1)[0] as
+              | TextMessagePart
+              | undefined
+          )?.text || "";
+
+    if (lastText.startsWith("/")) {
+      slashCommandName = lastText.split(" ")[0].substring(1);
+      slashCommand = slashCommands.find((command) =>
+        lastText.startsWith(command),
+      );
+    }
+    if (!slashCommand || !slashCommandName) {
+      return undefined;
+    }
+
+    // Convert to actual slash command object with runnable function
+    return [slashCommand, renderChatMessage({ role: "user", content: input })];
+  };
+
+  if (slashCommand) {
+    let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
+    const lastTextPart = parts[lastTextIndex] as TextMessagePart;
+    const lastPart = `/${slashCommand} ${lastTextPart?.text || ""}`;
+    if (parts.length > 0) {
+      lastTextPart.text = lastPart;
+    } else {
+      parts = [{ type: "text", text: lastPart }];
+    }
+  }
+
+  const shouldGatherContext = modifiers.useCodebase || slashCommandWithInput;
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(true));
   }
@@ -179,21 +248,11 @@ async function resolveEditorContent({
     contextItemsText += "\n";
   }
 
-  if (slashCommand) {
-    let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
-    const lastTextPart = parts[lastTextIndex] as TextMessagePart;
-    const lastPart = `${slashCommand} ${lastTextPart?.text || ""}`;
-    if (parts.length > 0) {
-      lastTextPart.text = lastPart;
-    } else {
-      parts = [{ type: "text", text: lastPart }];
-    }
-  }
   if (shouldGatherContext) {
     dispatch(setIsGatheringContext(false));
   }
 
-  return [contextItems, selectedCode, parts];
+  return [contextItems, selectedCode, parts, slashCommandWithInput];
 }
 
 function findLastIndex<T>(
@@ -234,32 +293,6 @@ function resolveParagraph(
     }
   }
   return [text, contextItems, slashCommand];
-}
-
-export function hasSlashCommandOrContextProvider(
-  editorState: JSONContent,
-): boolean {
-  if (!editorState?.content) {
-    return false;
-  }
-
-  for (const p of editorState.content) {
-    if (p.type === "paragraph" && p.content) {
-      for (const child of p.content) {
-        if (child.type === "slashcommand") {
-          return true;
-        }
-        if (
-          child.type === "mention" &&
-          child.attrs?.itemType === "contextProvider"
-        ) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
 }
 
 export default resolveEditorContent;
