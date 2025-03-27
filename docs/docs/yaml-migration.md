@@ -327,7 +327,7 @@ mcpServers:
 
 ## Deprecated configuration options
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md) (Gear Icon). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/deep-dives/settings.md) (Gear Icon). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/deep-dives/settings.md) and removed from `config.json`.
 
 See the [JSON Config Reference](./json-reference#fully-deprecated-settings) for more information on fully deprecated options.
 

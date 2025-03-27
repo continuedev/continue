@@ -238,6 +238,10 @@ const config = {
           //   from: "/getting-started",
           // },
           {
+            to: "/customize/deep-dives/settings",
+            from: "/customize/settings",
+          },
+          {
             to: "/customize/model-roles",
             from: ["/customize/model-types", "/setup/overview"],
           },
