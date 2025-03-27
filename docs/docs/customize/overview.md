@@ -16,35 +16,9 @@ Whatever you choose, you'll probably start by editing your Assistant.
 
 ## Editing your assistant
 
-Most custom configuration is done by editing `config.yaml` (or the deprecated `config.json`). This is a YAML file that allows you to customize Continue to your liking. It is found at:
+You can easily access your assistant configuration from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Assistant selector above the main chat input. Then, you can hover over an assistant and click the `new window` (hub assistants) or `gear` (local assistants) icon.
 
-- MacOS and Linux: `~/.continue/config.yaml`
-- Windows: `%USERPROFILE%\.continue\config.yaml`
+![configure an assistant](/img/configure-continue.png)
 
-You can easily access config file from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the "gear" icon in header to open the Settings page. Then click the button labeled `Open Assistant configuration`.
-
-![configure-continue](/img/configure-continue.png)
-
-When editing this file, you can see the available options suggested as you type, or you can check the [full reference](./deep-dives/configuration.md).
-
-:::info
-
-A configuration file is created the first time you use Continue. If you'd like to reset your configuration to the default, you can delete this file and Continue will automatically recreate it with the default settings.
-
-:::
-
-:::info
-
-When you save a configuration file from the IDE, Continue will automatically refresh to take into account your changes.
-
-:::
-
-## Per-workspace configuration
-
-If you'd like to scope certain settings to a particular workspace, you can add a `.continuerc.json` to the root of your project. It has the same [definition](./deep-dives/configuration.md) as `config.json`, and will automatically be applied on top of the local config.json.
-
-## Programmatic configuration
-
-`config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically configure Continue, you can use `config.ts`, which is located at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
-
-For examples of how to use `config.ts`, see [writing custom slash commands](./tutorials/build-your-own-slash-command.md#custom-slash-commands) or [writing custom context providers](./tutorials/build-your-own-context-provider.mdx).
+- See [Editing Hub Assistants](../hub/assistants/edit-an-assistant.md) for more details on managing your hug assistant
+- See the [Config Deep Dive](./deep-dives/configuration.md) for more details on configuring local assistants.
