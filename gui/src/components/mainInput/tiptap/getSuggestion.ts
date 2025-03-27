@@ -203,7 +203,7 @@ export function getSlashCommandDropdownOptions(
     const filteredCommands =
       query.length > 0
         ? options.filter((slashCommand) => {
-            const sc = slashCommand.title.toLowerCase();
+            const sc = slashCommand.title.substring(1).toLowerCase();
             const iv = query.toLowerCase();
             return sc.startsWith(iv);
           })
@@ -219,7 +219,7 @@ export function getSlashCommandDropdownOptions(
       action: provider.action,
     }));
 
-    if (query.length === 0 && commandItems.length === 0) {
+    if (query.length === 0 && commandItems.length > 0) {
       commandItems.push({
         title: "Explore prompts",
         type: "action",

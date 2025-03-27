@@ -19,7 +19,7 @@ export function slashFromCustomCommand(
           .slice(customCommand.name.length + 1, userInput.length)
           .trimStart();
       }
-      debugger;
+
       // Render prompt template
       let promptUserInput: string;
       if (customCommand.prompt.includes("{{{ input }}}")) {
