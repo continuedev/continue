@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { writeBuildTimestamp } = require("./utils");
 
 const esbuild = require("esbuild");
 
@@ -49,6 +50,8 @@ const esbuildConfig = {
 };
 
 (async () => {
+  // Create .buildTimestamp.js before starting the first build
+  writeBuildTimestamp();
   // Bundles the extension into one file
   if (flags.includes("--watch")) {
     const ctx = await esbuild.context(esbuildConfig);
@@ -74,7 +77,7 @@ const esbuildConfig = {
     });
 
     console.log("Triggering VS Code Extension esbuild rebuild...");
-    fs.utimesSync(inFile, new Date(), new Date());
+    writeBuildTimestamp();
   } else {
     await esbuild.build(esbuildConfig);
   }
