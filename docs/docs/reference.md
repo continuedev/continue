@@ -8,23 +8,16 @@ keywords: [config, yaml, configuration, customize, customization]
 
 ## Introduction
 
-<<<<<<< HEAD
-Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from 3 places:
+Continue hub assistants are defined using the `config.yaml` specification. Assistants can be loaded from [the Hub](https://hub.continue.dev/explore/assistants) or locally
 
-- [The Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to the extension
-- Locally in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
-- Locally in your workspace in a `/.continue/assistants` folder, with the same naming convention
+- [Continue Hub](https://hub.continue.dev/explore/assistants) - YAML is stored on the hub and automatically synced to the extension
+- Locally
+  - in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`) within `.continue/assistants`. The name of the file will be used as the display name of the assistant, e.g. `My Assistant.yaml`
+  - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
 Config YAML replaces `config.json`, which is deprecated. View the **[Migration Guide](/yaml-migration)**.
-=======
-Continue hub assistants are defined using the `config.yaml` specification. Local assistants can also be configured using a YAML file `config.yaml` placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
-
-:::info
-Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**.
-
-> > > > > > > df2fd3ee529a93e79f8ef152bcb78a91c6a48181
-> > > > > > > :::
+:::
 
 An assistant is made up of:
 
@@ -44,13 +37,8 @@ Hub blocks and assistants are identified with a slug in the format `owner-slug/b
 Blocks can be imported into an assistant by adding a `uses` clause under the block type. This can be alongside other `uses` clauses or explicit blocks of that type.
 
 :::info
-<<<<<<< HEAD
 Note that local assistants cannot use blocks that require organization-level secrets.
-=======
-Note that `uses` blocks cannot be used with a local `config.yaml`
-
-> > > > > > > df2fd3ee529a93e79f8ef152bcb78a91c6a48181
-> > > > > > > :::
+:::
 
 For example, the following assistant imports an Anthropic model and defines an Ollama DeepSeek one.
 
