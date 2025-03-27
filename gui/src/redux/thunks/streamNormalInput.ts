@@ -37,7 +37,7 @@ export const streamNormalInput = createAsyncThunk<
     if (!defaultModel) {
       throw new Error("Default model not defined");
     }
-
+    // debugger;
     const includeTools = useTools && modelSupportsTools(defaultModel);
 
     // Send request
@@ -76,7 +76,7 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(addPromptCompletionPair([next.value]));
 
       try {
-        if (state.session.mode === "chat") {
+        if (state.session.mode === "chat" || state.session.mode === "agent") {
           extra.ideMessenger.post("devdata/log", {
             name: "chatInteraction",
             data: {
@@ -103,7 +103,11 @@ export const streamNormalInput = createAsyncThunk<
         console.error("Failed to send dev data interaction log", e);
       }
     }
-
+    // await new Promise((resolve) =>
+    //   setTimeout(() => {
+    //     resolve(undefined);
+    //   }, 200),
+    // );
     // If it's a tool call that is automatically accepted, we should call it
     const toolCallState = selectCurrentToolCall(getState());
     if (toolCallState) {

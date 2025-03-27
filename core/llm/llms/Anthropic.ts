@@ -1,6 +1,7 @@
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
+import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { streamSse } from "../stream.js";
 
 class Anthropic extends BaseLLM {
@@ -14,6 +15,11 @@ class Anthropic extends BaseLLM {
     },
     apiBase: "https://api.anthropic.com/v1/",
   };
+
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
+    "streamChat",
+    "chat",
+  ];
 
   public convertArgs(options: CompletionOptions) {
     // should be public for use within VertexAI
