@@ -171,7 +171,7 @@ const sidebars = {
       type: "link",
       label: "Customize",
       href: "/customize/overview",
-    }
+    },
   ],
 };
 

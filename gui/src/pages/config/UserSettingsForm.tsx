@@ -146,7 +146,7 @@ export function UserSettingsForm() {
                       readResponseTTS: !readResponseTTS,
                     })
                   }
-                  text="Text to Speech Output"
+                  text="Text-to-Speech Output"
                 />
 
                 {/* <ToggleSwitch
@@ -208,6 +208,20 @@ export function UserSettingsForm() {
                   /> */}
 
                 <label className="flex items-center justify-between gap-3">
+                  <span className="text-left">Font Size</span>
+                  <NumberInput
+                    value={fontSize}
+                    onChange={(val) =>
+                      handleUpdate({
+                        fontSize: val,
+                      })
+                    }
+                    min={7}
+                    max={50}
+                  />
+                </label>
+
+                <label className="flex items-center justify-between gap-3">
                   <span className="line-clamp-1 text-left">
                     Multiline Autocompletions
                   </span>
@@ -226,20 +240,6 @@ export function UserSettingsForm() {
                     <option value="always">Always</option>
                     <option value="never">Never</option>
                   </Select>
-                </label>
-
-                <label className="flex items-center justify-between gap-3">
-                  <span className="text-left">Font Size</span>
-                  <NumberInput
-                    value={fontSize}
-                    onChange={(val) =>
-                      handleUpdate({
-                        fontSize: val,
-                      })
-                    }
-                    min={7}
-                    max={50}
-                  />
                 </label>
 
                 <form

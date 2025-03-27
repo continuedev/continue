@@ -9,10 +9,10 @@ keywords: [edit, cmd i, works]
 
 The input you provide is included in the prompt.
 
-## Highlighted code
+## Code to Edit
 
-The highlighted code you’ve selected is included in the prompt. This is the only section of code that the model will attempt to edit.
+The **entire contents** of each file (the current file for Jetbrains inline Edit, each `Code to Edit` item for VS Code Edit mode) are included in the prompt for context. The model will only attempt to edit the highlighted/specified ranges.
 
-## Current file
+## Context Providers
 
-The entire contents of the file containing your highlighted code selection are included as additional context. This gives the model a broader understanding of the code's environment. If the file is too large to fit within the context window, we will trim the file's contents to fit.
+In VS Code Edit mode, you can use `@` to add context using [Context Providers](../customize/context-providers.mdx), similar to [Chat](../chat/context-selection.md). Some context providers may be disabled in Edit mode.
