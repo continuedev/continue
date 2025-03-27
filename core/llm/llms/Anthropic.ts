@@ -1,7 +1,6 @@
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
-import { LlmApiRequestType } from "../openaiTypeConverters.js";
 import { streamSse } from "../stream.js";
 
 class Anthropic extends BaseLLM {
@@ -15,11 +14,6 @@ class Anthropic extends BaseLLM {
     },
     apiBase: "https://api.anthropic.com/v1/",
   };
-
-  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
-    "streamChat",
-    "chat",
-  ];
 
   public convertArgs(options: CompletionOptions) {
     // should be public for use within VertexAI
@@ -36,17 +30,15 @@ class Anthropic extends BaseLLM {
         description: tool.function.description,
         input_schema: tool.function.parameters,
       })),
-      thinking: options.reasoning
-        ? {
-            type: "enabled",
-            budget_tokens: options.reasoningBudgetTokens,
-          }
-        : undefined,
+      thinking: options.reasoning ? {
+        type: "enabled",
+        budget_tokens: options.reasoningBudgetTokens,
+      } : undefined,
       tool_choice: options.toolChoice
         ? {
-            type: "tool",
-            name: options.toolChoice.function.name,
-          }
+          type: "tool",
+          name: options.toolChoice.function.name,
+        }
         : undefined,
     };
 
@@ -78,23 +70,19 @@ class Anthropic extends BaseLLM {
     } else if (message.role === "thinking" && !message.redactedThinking) {
       return {
         role: "assistant",
-        content: [
-          {
-            type: "thinking",
-            thinking: message.content,
-            signature: message.signature,
-          },
-        ],
+        content: [{
+          type: "thinking",
+          thinking: message.content,
+          signature: message.signature
+        }]
       };
     } else if (message.role === "thinking" && message.redactedThinking) {
       return {
         role: "assistant",
-        content: [
-          {
-            type: "redacted_thinking",
-            data: message.redactedThinking,
-          },
-        ],
+        content: [{
+          type: "redacted_thinking",
+          data: message.redactedThinking
+        }]
       };
     }
 
@@ -207,12 +195,12 @@ class Anthropic extends BaseLLM {
         messages: msgs,
         system: shouldCacheSystemMessage
           ? [
-              {
-                type: "text",
-                text: this.systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
+            {
+              type: "text",
+              text: this.systemMessage,
+              cache_control: { type: "ephemeral" },
+            },
+          ]
           : systemMessage,
       }),
       signal,
@@ -252,11 +240,7 @@ class Anthropic extends BaseLLM {
           // handle redacted thinking
           if (value.content_block.type === "redacted_thinking") {
             console.log("redacted thinking", value.content_block.data);
-            yield {
-              role: "thinking",
-              content: "",
-              redactedThinking: value.content_block.data,
-            };
+            yield { role: "thinking", content: "", redactedThinking: value.content_block.data };
           }
           break;
         case "content_block_delta":
@@ -269,11 +253,7 @@ class Anthropic extends BaseLLM {
               yield { role: "thinking", content: value.delta.thinking };
               break;
             case "signature_delta":
-              yield {
-                role: "thinking",
-                content: "",
-                signature: value.delta.signature,
-              };
+              yield { role: "thinking", content: "", signature: value.delta.signature };
               break;
             case "input_json_delta":
               if (!lastToolUseId || !lastToolUseName) {
