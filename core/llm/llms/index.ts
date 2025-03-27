@@ -113,7 +113,7 @@ export async function llmFromDescription(
   ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
-  systemMessage?: string,
+  systemMessage?: string
 ): Promise<BaseLLM | undefined> {
   const cls = LLMClasses.find((llm) => llm.providerName === desc.provider);
 
@@ -139,6 +139,11 @@ export async function llmFromDescription(
       maxTokens:
         finalCompletionOptions.maxTokens ??
         cls.defaultOptions?.completionOptions?.maxTokens,
+      autoCompleteMaxTokens:
+        finalCompletionOptions.autoCompleteMaxTokens ??
+        finalCompletionOptions.maxTokens ??
+        cls.defaultOptions?.completionOptions?.autoCompleteMaxTokens ??
+        256
     },
     systemMessage,
     writeLog,
