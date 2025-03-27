@@ -30,7 +30,6 @@ import { getFontSize } from "../../../util";
 import { AddCodeToEdit } from "./extensions/AddCodeToEditExtension";
 import { CodeBlockExtension } from "./extensions/CodeBlockExtension";
 import { SlashCommand } from "./extensions/CommandsExtension";
-import { MockExtension } from "./extensions/FillerExtension";
 import { Mention } from "./extensions/MentionExtension";
 import {
   getContextProviderDropdownOptions,
@@ -352,22 +351,20 @@ export function createEditorConfig(options: {
           },
         },
       }),
-      props.availableSlashCommands.length
-        ? SlashCommand.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getSlashCommandDropdownOptions(
-              availableSlashCommandsRef,
-              onClose,
-              onOpen,
-              ideMessenger,
-            ),
-            renderText: (props) => {
-              return props.node.attrs.label;
-            },
-          })
-        : MockExtension,
+      SlashCommand.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: getSlashCommandDropdownOptions(
+          availableSlashCommandsRef,
+          onClose,
+          onOpen,
+          ideMessenger,
+        ),
+        renderText: (props) => {
+          return props.node.attrs.label;
+        },
+      }),
       CodeBlockExtension,
     ],
     editorProps: {
