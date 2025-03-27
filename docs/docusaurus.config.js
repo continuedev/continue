@@ -233,10 +233,6 @@ const config = {
             to: "/getting-started/install",
             from: ["/install/vscode", "/install/jetbrains"],
           },
-          // {
-          //   to: "/getting-started/install",
-          //   from: "/getting-started",
-          // },
           {
             to: "/customize/deep-dives/settings",
             from: "/customize/settings",
@@ -293,9 +289,24 @@ const config = {
             to: "/customize/deep-dives/prompt-files",
             from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
+          // TODO - actions redirects
           {
-            to: "/actions/how-to-use-it#quick-actions",
-            from: "/walkthroughs/quick-actions",
+            to: "/customize/deep-dives/slash-commands",
+            from: [
+              "/actions/how-to-use-it",
+              "/actions/how-to-customize",
+              "/actions",
+              "/actions/model-setup",
+              "/actions/context-selection",
+              "/actions/how-it-works",
+              "/customize/slash-commands",
+              "/customization/slash-commands",
+            ],
+          },
+
+          {
+            to: "/customize/deep-dives/vscode-actions",
+            from: ["/walkthroughs/quick-actions"],
           },
           {
             to: "/customize/changelog",
@@ -356,10 +367,6 @@ const config = {
           {
             to: "/customize/model-providers/openai",
             from: "/reference/Model Providers/openai",
-          },
-          {
-            to: "/customize/slash-commands",
-            from: "/customization/slash-commands",
           },
           {
             to: "/customize/tutorials/custom-code-rag",
@@ -473,10 +480,6 @@ const config = {
           {
             to: "/edit/how-to-use-it",
             from: "/edit",
-          },
-          {
-            to: "/actions/how-to-use-it",
-            from: "/actions",
           },
           {
             to: "/autocomplete/how-to-use-it",

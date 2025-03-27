@@ -16,7 +16,7 @@ Continue hub assistants are defined using the `config.yaml` specification. Assis
   - in your workspace in a `/.continue/assistants` folder, with the same naming convention
 
 :::info
-Config YAML replaces `config.json`, which is deprecated. View the **[Migration Guide](/yaml-migration)**.
+Config YAML replaces [`config.json`](./json-reference.md), which is deprecated. View the **[Migration Guide](./yaml-migration.md)**.
 :::
 
 An assistant is made up of:

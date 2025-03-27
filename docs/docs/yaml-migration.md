@@ -38,9 +38,9 @@ Add all model configurations in `config.json`, including models in `models`, `ta
   - `inlineEdit` -> e.g. `roles: [chat, edit]`
   - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
 
-Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/reference#requestoptions)
+Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](./reference.md#models)
 
-Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/reference#completionoptions)
+Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](./reference.md#models)
 
 <!-- TODO - ollama autodetect supported? -->
 
