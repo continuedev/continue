@@ -11,7 +11,7 @@ keywords: [config, yaml, configuration, customize, customization]
 Continue hub assistants are defined using the `config.yaml` specification. Local assistants can also be configured using a YAML file `config.yaml` placed in your global `.continue` folder (`~/.continue` on Mac, `%USERPROFILE%\.continue`)
 
 :::info
-Config YAML replaces `config.json`. View the **[Migration Guide](/yaml-migration)**.
+Config YAML replaces [`config.json`](./json-reference.md). View the **[Migration Guide](./yaml-migration.md)**.
 :::
 
 An assistant is made up of:

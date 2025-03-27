@@ -12,11 +12,11 @@ Continue can be deeply customized. For example you might:
 - **Create a Slash Command**. Slash commands allow you to easily add custom functionality to Continue. You can use a slash command that allows you to generate a shell command from natural language, or perhaps generate a commit message, or create your own custom command to do whatever you want. Learn more about [slash commands](/customize/slash-commands).
 - **Call external tools and functions**. Unchain your LLM with the power of tools using [Agent](../agent/how-to-use-it.md). Add custom tools using [MCP Servers](../customize/deep-dives/mcp.mdx)
 
-Whatever you choose, you'll probably start by editing `config.yaml`.
+Whatever you choose, you'll probably start by editing your Assistant.
 
-## Editing config.json
+## Editing your assistant
 
-Most custom configuration is done by editing `config.yaml` (or the older `config.json`). This is a YAML file that allows you to customize Continue to your liking. It is found at:
+Most custom configuration is done by editing `config.yaml` (or the deprecated `config.json`). This is a YAML file that allows you to customize Continue to your liking. It is found at:
 
 - MacOS and Linux: `~/.continue/config.yaml`
 - Windows: `%USERPROFILE%\.continue\config.yaml`

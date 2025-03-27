@@ -1,37 +1,3 @@
----
-title: Actions
-description: How to use Actions
-sidebar_label: How to use it
-keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
-sidebar_position: 1
----
-
-![actions](/img/actions.gif)
-
-## How to use it
-
-Actions are shortcuts for common use cases. For example, you might want to review code, write tests, or add a docstring.
-
-### Slash commands
-
-The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' in a chat session (press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)), and selecting from the dropdown.
-
-![slash-commands](/img/slash-commands.png)
-
-In YAML assistants, slash commands are generated from [`prompts` blocks](../hub/blocks/block-types.md#prompts).
-
-Learn more about slash commands [here](../customize/slash-commands.mdx).
-
-:::info
-Important: For assistants, slash commands only come from `prompts` blocks. When using older `config.json` configuration, other slash commands like `/share` and `/cmd` are included by default.
-:::
-
-### Prompt files
-
-It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
-
-Learn more about prompt files [here](../customize/deep-dives/prompt-files.md)
-
 ### Other triggers for Actions (VS Code)
 
 :::info
@@ -63,3 +29,27 @@ The debug action is a special built-in keyboard shortcut in the VS Code extensio
 Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> again and Continue will attempt to help solve the problem.
 
 ![ask-continue](/img/ask-continue.png)
+
+## Quick actions
+
+Quick actions are always displayed above a class or function and will edit that class or function, but nothing outside of it.
+
+## Right click actions
+
+The highlighted code you’ve selected will be included in your prompt alongside a pre-written set of instructions depending on the selected action. This is the only section of code that the model will attempt to edit.
+
+## Debug action
+
+The debug action selects the most recently run terminal command and its output and then injects the following prompt into the chat window. There is no additional, non-visible information sent to the language model.
+
+```
+I got the following error, can you please help explain how to fix it?
+
+[ERROR_MESSAGE]
+```
+
+## Quick fixes
+
+Similarly to the debug action, quick actions transparently inject a prompt into the chat window. When you select “Ask Continue”, the 3 lines above and below the error are sent to the chat followed by the question “How do I fix the following problem in the above code?: [ERROR_MESSAGE]”.
+
+Right click actions that generate inline diffs, use the same prompt and response processing logic as [Edit](../edit/how-it-works.md).
