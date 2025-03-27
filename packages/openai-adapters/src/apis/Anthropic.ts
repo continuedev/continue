@@ -175,7 +175,6 @@ export class AnthropicApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    body.messages;
     const response = await customFetch(this.config.requestOptions)(
       new URL("messages", this.apiBase),
       {

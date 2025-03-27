@@ -6,7 +6,7 @@ export const readFileTool: Tool = {
   displayTitle: "Read File",
   wouldLikeTo: "read {{{ filepath }}}",
   isCurrently: "reading {{{ filepath }}}",
-  hasAlready: "read {{{ filepath }}}",
+  hasAlready: "viewed {{{ filepath }}}",
   readonly: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
