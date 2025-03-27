@@ -14,7 +14,8 @@ Below are details for each property that can be set in `config.json`. The config
 
 ### `models`
 
-Your **chat** models are defined here, which are used for [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Actions](./actions/how-to-use-it.md).
+Your **chat** models are defined here, which are used for [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md) and [VS Code actions](./customize/deep-dives/vscode-actions.md).
+
 Each model has specific configuration options tailored to its provider and functionality, which can be seen as suggestions while editing the json.
 
 **Properties:**

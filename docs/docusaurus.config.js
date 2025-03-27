@@ -305,7 +305,7 @@ const config = {
           },
 
           {
-            to: "/customize/deep-dives/vscode-quick-actions",
+            to: "/customize/deep-dives/vscode-actions",
             from: ["/walkthroughs/quick-actions"],
           },
           {
