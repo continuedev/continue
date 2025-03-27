@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import styled from "styled-components";
+import { AnimatedEllipsis } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
@@ -11,7 +12,8 @@ import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 
 const Container = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   width: 100%;
 `;
 
@@ -27,6 +29,15 @@ interface TopToolbarProps {
   setSelectedSection: (value: string | null) => void;
 }
 
+function GeneratingIndicator() {
+  return (
+    <div className="text-xs text-gray-400">
+      <span>Generating</span>
+      <AnimatedEllipsis />
+    </div>
+  );
+}
+
 export function LumpToolbar(props: TopToolbarProps) {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -36,6 +47,7 @@ export function LumpToolbar(props: TopToolbarProps) {
   if (ttsActive) {
     return (
       <Container>
+        <GeneratingIndicator />
         <StopButton
           className="text-gray-400"
           onClick={() => {
@@ -51,6 +63,7 @@ export function LumpToolbar(props: TopToolbarProps) {
   if (isStreaming) {
     return (
       <Container>
+        <GeneratingIndicator />
         <StopButton
           className="text-gray-400"
           onClick={() => {
