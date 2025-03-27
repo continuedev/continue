@@ -95,6 +95,13 @@ const config = {
           },
           {
             type: "docSidebar",
+            sidebarId: "hubSidebar",
+            position: "left",
+            label: "Hub",
+            href: "/hub/introduction",
+          },
+          {
+            type: "docSidebar",
             sidebarId: "customizingSidebar",
             position: "left",
             label: "Customize",
@@ -107,13 +114,7 @@ const config = {
             label: "Reference",
             href: "/reference",
           },
-          {
-            type: "docSidebar",
-            sidebarId: "hubSidebar",
-            position: "left",
-            label: "Hub",
-            href: "/hub/introduction",
-          },
+
           {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
@@ -222,11 +223,11 @@ const config = {
           },
           {
             to: "/customize/overview",
-            from: "/customize",
+            from: ["/customize", "/customization"],
           },
           {
-            to: "/customize/overview",
-            from: "/customization",
+            to: "/customize/deep-dives/mcp",
+            from: "/customize/tools",
           },
           {
             to: "/getting-started/install",
@@ -236,6 +237,10 @@ const config = {
           //   to: "/getting-started/install",
           //   from: "/getting-started",
           // },
+          {
+            to: "/customize/deep-dives/settings",
+            from: "/customize/settings",
+          },
           {
             to: "/customize/model-roles",
             from: ["/customize/model-types", "/setup/overview"],
@@ -460,6 +465,10 @@ const config = {
           {
             to: "/chat/how-to-use-it",
             from: "/chat",
+          },
+          {
+            to: "/agent/how-to-use-it",
+            from: "/agent",
           },
           {
             to: "/edit/how-to-use-it",

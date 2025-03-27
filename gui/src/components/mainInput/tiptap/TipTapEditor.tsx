@@ -1,7 +1,7 @@
 import { Editor, EditorContent, JSONContent } from "@tiptap/react";
 import { ContextProviderDescription, InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
@@ -156,28 +156,45 @@ function TipTapEditor(props: TipTapEditorProps) {
     setActiveKey,
   });
 
-  const handleBlur = (e: React.FocusEvent) => {
-    // Check if the new focus target is within our InputBoxDiv
-    queueMicrotask(() => {
+  const blurTimeout = useRef<NodeJS.Timeout | null>(null);
+  const cancelBlurTimeout = useCallback(() => {
+    if (blurTimeout.current) {
+      clearTimeout(blurTimeout.current);
+      blurTimeout.current = null;
+    }
+  }, [blurTimeout]);
+
+  const handleBlur = useCallback(
+    (e: React.FocusEvent) => {
       if (isInEditMode) {
         return;
       }
+      // Check if the new focus target is within our InputBoxDiv
       const currentTarget = e.currentTarget;
       const relatedTarget = e.relatedTarget as Node | null;
 
       if (relatedTarget && currentTarget?.contains(relatedTarget)) {
         return;
       }
+      // Otherwise give e.g. listboxes a chance to cancel the hiding
+      blurTimeout.current = setTimeout(() => {
+        setShouldHideToolbar(true);
+      }, 100);
+    },
+    [isInEditMode, blurTimeout],
+  );
 
-      setShouldHideToolbar(true);
-    });
-  };
+  const handleFocus = useCallback(() => {
+    cancelBlurTimeout();
+    setShouldHideToolbar(false);
+  }, [cancelBlurTimeout]);
+
+  // TODO pass clear blur timeout to model and mode selectors
+  // Seems like unnecessary for now?
 
   return (
     <InputBoxDiv
-      onFocus={() => {
-        setShouldHideToolbar(false);
-      }}
+      onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
@@ -239,35 +256,33 @@ function TipTapEditor(props: TipTapEditorProps) {
             event.stopPropagation();
           }}
         />
-        {(shouldHideToolbar && !props.isMainInput) || (
-          <InputToolbar
-            isMainInput={props.isMainInput}
-            toolbarOptions={props.toolbarOptions}
-            activeKey={activeKey}
-            hidden={shouldHideToolbar && !props.isMainInput}
-            onAddContextItem={() => insertCharacterWithWhitespace("@")}
-            lumpOpen={props.lumpOpen}
-            setLumpOpen={props.setLumpOpen}
-            onEnter={onEnterRef.current}
-            onImageFileSelected={(file) => {
-              handleImageFile(ideMessenger, file).then((result) => {
-                if (!editor) {
-                  return;
-                }
-                if (result) {
-                  const [_, dataUrl] = result;
-                  const { schema } = editor.state;
-                  const node = schema.nodes.image.create({ src: dataUrl });
-                  editor.commands.command(({ tr }) => {
-                    tr.insert(0, node);
-                    return true;
-                  });
-                }
-              });
-            }}
-            disabled={isStreaming}
-          />
-        )}
+        <InputToolbar
+          isMainInput={props.isMainInput}
+          toolbarOptions={props.toolbarOptions}
+          activeKey={activeKey}
+          hidden={shouldHideToolbar && !props.isMainInput}
+          onAddContextItem={() => insertCharacterWithWhitespace("@")}
+          lumpOpen={props.lumpOpen}
+          setLumpOpen={props.setLumpOpen}
+          onEnter={onEnterRef.current}
+          onImageFileSelected={(file) => {
+            handleImageFile(ideMessenger, file).then((result) => {
+              if (!editor) {
+                return;
+              }
+              if (result) {
+                const [_, dataUrl] = result;
+                const { schema } = editor.state;
+                const node = schema.nodes.image.create({ src: dataUrl });
+                editor.commands.command(({ tr }) => {
+                  tr.insert(0, node);
+                  return true;
+                });
+              }
+            });
+          }}
+          disabled={isStreaming}
+        />
       </div>
 
       {showDragOverMsg &&

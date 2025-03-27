@@ -135,7 +135,6 @@ export default async function doLoadConfig(
         faviconUrl: server.faviconUrl,
         readonly: false,
         type: "function" as const,
-        wouldLikeTo: "",
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
       }));

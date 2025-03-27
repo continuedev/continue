@@ -6,6 +6,8 @@ export const viewRepoMapTool: Tool = {
   type: "function",
   displayTitle: "View Repo Map",
   wouldLikeTo: "view the repository map",
+  isCurrently: "getting the repository map",
+  hasAlready: "viewed the repository map",
   readonly: true,
   group: BUILT_IN_GROUP_NAME,
   function: {

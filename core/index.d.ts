@@ -903,7 +903,9 @@ export interface Tool {
   };
 
   displayTitle: string;
-  wouldLikeTo: string;
+  wouldLikeTo?: string;
+  isCurrently?: string;
+  hasAlready?: string;
   readonly: boolean;
   uri?: string;
   faviconUrl?: string;
