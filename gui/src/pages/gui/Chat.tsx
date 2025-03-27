@@ -235,7 +235,8 @@ export function Chat() {
       console.error("No selected chat model");
       return;
     }
-    const [contextItems, __, userInstructions] = await resolveEditorContent({
+
+    const [contextItems, __, userInstructions, _] = await resolveEditorContent({
       editorState,
       modifiers: {
         noContext: true,
@@ -243,6 +244,7 @@ export function Chat() {
       },
       ideMessenger,
       defaultContextProviders: [],
+      availableSlashCommands: [],
       dispatch,
       selectedModelTitle: defaultModel.title,
     });

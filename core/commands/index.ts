@@ -1,5 +1,6 @@
 import { CustomCommand, SlashCommand, SlashCommandDescription } from "../";
 import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
+import { replaceSlashCommandWithPromptInChatHistory } from "../promptFiles/v1/updateChatHistory";
 import { renderChatMessage } from "../util/messageContent";
 
 import SlashCommands from "./slash";
@@ -15,58 +16,26 @@ export function slashFromCustomCommand(
     description: customCommand.description ?? "",
     prompt: customCommand.prompt,
     run: async function* ({ input, llm, history, ide, completionOptions }) {
-      console.log("SLASH COMMAND RUN", input, prompt, commandName);
-      // Remove slash command prefix from input
-      let userInput = input;
-      if (userInput.startsWith(commandName)) {
-        userInput = userInput.substring(commandName.length).trimStart();
-      }
-
       // Render prompt template
-      let promptUserInput: string;
+      let renderedPrompt: string;
       if (customCommand.prompt.includes("{{{ input }}}")) {
-        promptUserInput = await renderTemplatedString(
+        renderedPrompt = await renderTemplatedString(
           customCommand.prompt,
           ide.readFile.bind(ide),
-          { input: userInput },
+          { input },
         );
       } else {
-        promptUserInput = customCommand.prompt + "\n\n" + userInput;
+        renderedPrompt = customCommand.prompt + "\n\n" + input;
       }
 
-      const messages = [...history];
-      // Find the last chat message with this slash command and replace it with the user input
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const message = messages[i];
-        const { role, content } = message;
-        if (role !== "user") {
-          continue;
-        }
-
-        if (
-          Array.isArray(content) &&
-          content.some(
-            (part) => "text" in part && part.text?.startsWith(commandName),
-          )
-        ) {
-          messages[i] = {
-            ...message,
-            content: content.map((part) => {
-              if ("text" in part && part.text.startsWith(commandName)) {
-                return { type: "text", text: promptUserInput };
-              }
-              return part;
-            }),
-          };
-          break;
-        } else if (
-          typeof content === "string" &&
-          content.startsWith(commandName)
-        ) {
-          messages[i] = { ...message, content: promptUserInput };
-          break;
-        }
-      }
+      // Replaces slash command messages with the rendered prompt
+      // which INCLUDES the input
+      const messages = replaceSlashCommandWithPromptInChatHistory(
+        history,
+        commandName,
+        renderedPrompt,
+        undefined,
+      );
 
       for await (const chunk of llm.streamChat(
         messages,

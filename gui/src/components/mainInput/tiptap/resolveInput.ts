@@ -11,7 +11,7 @@ import {
   TextMessagePart,
 } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { stripImages } from "core/util/messageContent";
+import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../redux/slices/sessionSlice";
@@ -52,7 +52,7 @@ async function resolveEditorContent({
     MessageContent,
     (
       | {
-          name: string;
+          command: SlashCommandDescription;
           input: string;
         }
       | undefined
@@ -63,8 +63,9 @@ async function resolveEditorContent({
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
   let slashCommandName: string | undefined = undefined;
-  let slashCommandWithInput: { name: string; input: string } | undefined =
-    undefined;
+  let slashCommandWithInput:
+    | { command: SlashCommandDescription; input: string }
+    | undefined = undefined;
   if (editorState?.content) {
     for (const p of editorState.content) {
       if (p.type === "paragraph") {
@@ -129,56 +130,34 @@ async function resolveEditorContent({
     }
   }
 
-  // Add slash command text back in (this could be removed)
   if (slashCommandName) {
     const command = availableSlashCommands.find(
-      (c) => c.name === slashCommandWithName,
+      (c) => c.name === slashCommandName,
     );
     if (command) {
-      slashCommandWithInput = {
-        name: command.name,
-        input: "TODO INPUT",
-      };
-    }
-  }
-  const getSlashCommandForInput = (
-    input: MessageContent,
-    slashCommands: SlashCommandDescription[],
-  ): [SlashCommandDescription, string] | undefined => {
-    let slashCommand: SlashCommandDescription | undefined;
-    let slashCommandName: string | undefined;
-
-    let lastText =
-      typeof input === "string"
-        ? input
-        : (
-            input.filter((part) => part.type === "text").slice(-1)[0] as
-              | TextMessagePart
-              | undefined
-          )?.text || "";
-
-    if (lastText.startsWith("/")) {
-      slashCommandName = lastText.split(" ")[0].substring(1);
-      slashCommand = slashCommands.find((command) =>
-        lastText.startsWith(command),
+      const lastTextIndex = findLastIndex(
+        parts,
+        (part) => part.type === "text",
       );
-    }
-    if (!slashCommand || !slashCommandName) {
-      return undefined;
-    }
+      const lastTextPart = parts[lastTextIndex] as TextMessagePart;
 
-    // Convert to actual slash command object with runnable function
-    return [slashCommand, renderChatMessage({ role: "user", content: input })];
-  };
+      let input: string;
+      // Get input and add text of last slash command text back in to last text node
+      if (lastTextPart) {
+        input = renderChatMessage({
+          role: "user",
+          content: lastTextPart.text,
+        }).trimStart();
+        lastTextPart.text = `/${command.name} ${lastTextPart.text}`;
+      } else {
+        input = "";
+        parts.push({ type: "text", text: `/${command.name}` });
+      }
 
-  if (slashCommand) {
-    let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
-    const lastTextPart = parts[lastTextIndex] as TextMessagePart;
-    const lastPart = `/${slashCommand} ${lastTextPart?.text || ""}`;
-    if (parts.length > 0) {
-      lastTextPart.text = lastPart;
-    } else {
-      parts = [{ type: "text", text: lastPart }];
+      slashCommandWithInput = {
+        command,
+        input,
+      };
     }
   }
 

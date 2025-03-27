@@ -1,16 +1,16 @@
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import type { CodeToEdit } from "core";
 import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import CodeToEditListItem from "./CodeToEditListItem";
-import type { CodeToEdit } from "core";
-import AddFileButton from "./AddFileButton";
-import AddFileCombobox from "./AddFileCombobox";
-import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../../redux/hooks";
 import {
   addCodeToEdit,
   removeCodeToEdit,
 } from "../../redux/slices/sessionSlice";
+import AddFileButton from "./AddFileButton";
+import AddFileCombobox from "./AddFileCombobox";
+import CodeToEditListItem from "./CodeToEditListItem";
 
 export default function CodeToEditCard() {
   const dispatch = useDispatch();
@@ -56,7 +56,7 @@ export default function CodeToEditCard() {
 
   return (
     <div className="bg-vsc-editor-background mx-3 flex flex-col rounded-t-lg p-1">
-      <div className="text-lightgray flex items-center justify-between gap-1.5 py-1.5 pl-3 pr-2 text-xs">
+      <div className="text-lightgray flex flex-wrap items-center justify-between gap-1.5 py-1.5 pl-3 pr-2 text-xs">
         <span>{title}</span>
         <AddFileButton onClick={() => setShowAddFileCombobox(true)} />
       </div>

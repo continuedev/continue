@@ -94,36 +94,29 @@ export const streamResponseThunk = createAsyncThunk<
         });
         posthog.capture("userInput", {});
 
-        // Determine if the input is a slash command
-        let commandAndInput = getSlashCommandForInput(content, slashCommands);
-
-        if (!commandAndInput) {
-          unwrapResult(await dispatch(streamNormalInput({ messages })));
-        } else {
-          const [slashCommand, commandInput] = commandAndInput;
-
+        if (slashCommandWithInput) {
           posthog.capture("step run", {
-            step_name: slashCommand.name,
+            step_name: slashCommandWithInput.command.name,
             params: {},
           });
-
-          // TODO - handle non-legacy slash commands, update messages if relevant
-          // Pass around isFromConfigTs
-          unwrapResult(
-            await dispatch(
-              streamNormalInput({
-                messages,
-                legacySlashCommandData: {
-                  command: slashCommand,
-                  contextItems: selectedContextItems,
-                  historyIndex: inputIndex,
-                  input: commandInput,
-                  selectedCode,
-                },
-              }),
-            ),
-          );
         }
+
+        unwrapResult(
+          await dispatch(
+            streamNormalInput({
+              messages,
+              legacySlashCommandData: slashCommandWithInput
+                ? {
+                    command: slashCommandWithInput.command,
+                    contextItems: selectedContextItems,
+                    historyIndex: inputIndex,
+                    input: slashCommandWithInput.input,
+                    selectedCode,
+                  }
+                : undefined,
+            }),
+          ),
+        );
       }),
     );
   },

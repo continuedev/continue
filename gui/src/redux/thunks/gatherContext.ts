@@ -5,6 +5,7 @@ import {
   InputModifiers,
   MessageContent,
   RangeInFile,
+  SlashCommandDescription,
 } from "core";
 import * as URI from "uri-js";
 import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
@@ -18,7 +19,7 @@ export const gatherContext = createAsyncThunk<
     content: MessageContent;
     slashCommandWithInput:
       | {
-          name: string;
+          command: SlashCommandDescription;
           input: string;
         }
       | undefined;

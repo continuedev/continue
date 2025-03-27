@@ -5,7 +5,7 @@ import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
-import { updateChatHistory } from "./updateChatHistory";
+import { replaceSlashCommandWithPromptInChatHistory } from "./updateChatHistory";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
@@ -68,7 +68,7 @@ export function slashCommandFromPromptFileV1(
 
       const userInput = extractUserInput(context.input, name);
       const renderedPrompt = await renderPromptV1(prompt, context, userInput);
-      const messages = updateChatHistory(
+      const messages = replaceSlashCommandWithPromptInChatHistory(
         context.history,
         name,
         renderedPrompt,
