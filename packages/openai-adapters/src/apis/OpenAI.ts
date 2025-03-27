@@ -1,4 +1,5 @@
 import { streamSse } from "@continuedev/fetch";
+import fetch from "node-fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -13,7 +14,7 @@ import {
 } from "openai/resources/index";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
-import { customFetch } from "../util.js";
+import { customFetch, maybeCustomFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
