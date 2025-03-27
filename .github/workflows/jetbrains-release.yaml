@@ -54,7 +54,7 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
 
       - name: Import Apple certificate
-        uses: apple-actions/import-codesign-certs@v3
+        uses: apple-actions/import-codesign-certs@v5
         with:
           keychain: ${{ github.run_id }}
           keychain-password: ${{ github.run_id }}
