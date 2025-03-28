@@ -11,6 +11,8 @@ import {
   MCPResource,
   MCPServerStatus,
   MCPTool,
+  StdioOptions,
+  TransportOptions,
 } from "../..";
 
 export class MCPManagerSingleton {
@@ -58,7 +60,12 @@ export class MCPManagerSingleton {
 
     // Remove any connections that are no longer in config
     Array.from(this.connections.entries()).forEach(([id, connection]) => {
-      if (!servers.find((s) => s.id === id)) {
+      if (
+        !servers.find(
+          // Refresh the connection if TransportOptions changed
+          (s) => s.id === id && this.compareTransportOptions(connection.options.transport, s.transport)
+        )
+      ) {
         refresh = true;
         connection.abortController.abort();
         void connection.client.close();
@@ -71,6 +78,12 @@ export class MCPManagerSingleton {
       if (!this.connections.has(server.id)) {
         refresh = true;
         this.connections.set(server.id, new MCPConnection(server));
+      } else {
+        const conn = this.connections.get(server.id);
+        if (conn) {
+          // We need to update it. Some attributes may have changed, such as name, faviconUrl, etc.
+          conn.options = server;
+        }
       }
     });
 
@@ -78,6 +91,31 @@ export class MCPManagerSingleton {
     if (refresh) {
       void this.refreshConnections(forceRefresh);
     }
+  }
+
+  private compareTransportOptions(a: TransportOptions, b: TransportOptions): boolean {
+    if (a.type !== b.type) {
+      return false;
+    }
+    if (a.type === "stdio" && b.type === "stdio") {
+      return (
+        a.command === b.command &&
+        JSON.stringify(a.args) === JSON.stringify(b.args) &&
+        this.compareEnv(a, b)
+      );
+    } else if (a.type !== "stdio" && b.type !== "stdio") {
+      return a.url === b.url;
+    }
+    return false;
+  }
+
+  private compareEnv(a: StdioOptions, b: StdioOptions): boolean {
+    if (a.env === undefined && b.env === undefined) return true;
+    if (a.env === undefined || b.env === undefined) return false;
+    const aKeys = Object.keys(a.env);
+    const bKeys = Object.keys(b.env);
+
+    return aKeys.length === bKeys.length && aKeys.every((key) => b[key] === a[key]);
   }
 
   async refreshConnection(serverId: string) {
@@ -137,7 +175,7 @@ class MCPConnection {
   public tools: MCPTool[] = [];
   public resources: MCPResource[] = [];
 
-  constructor(private readonly options: MCPOptions) {
+  constructor(public options: MCPOptions) {
     this.transport = this.constructTransport(options);
 
     this.client = new Client(
