@@ -2,6 +2,7 @@ export async function* toAsyncIterable(
   nodeReadable: NodeJS.ReadableStream,
 ): AsyncGenerator<Uint8Array> {
   for await (const chunk of nodeReadable) {
+    // @ts-expect-error
     yield chunk as Uint8Array;
   }
 }
