@@ -20,5 +20,5 @@ You can easily access your assistant configuration from the Continue Chat sideba
 
 ![configure an assistant](/img/configure-continue.png)
 
-- See [Editing Hub Assistants](../hub/assistants/edit-an-assistant.md) for more details on managing your hug assistant
+- See [Editing Hub Assistants](../hub/assistants/edit-an-assistant.md) for more details on managing your hub assistant
 - See the [Config Deep Dive](./deep-dives/configuration.md) for more details on configuring local assistants.
