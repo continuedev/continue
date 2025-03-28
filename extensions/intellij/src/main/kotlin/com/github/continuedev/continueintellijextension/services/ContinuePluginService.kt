@@ -41,4 +41,8 @@ class ContinuePluginService : Disposable, DumbAware {
     ) {
         continuePluginWindow?.browser?.sendToWebview(messageType, data, messageId)
     }
+
+    fun updateLastFileSaveTimestamp() {
+        ideProtocolClient?.updateLastFileSaveTimestamp()
+    }
 }
