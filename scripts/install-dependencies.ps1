@@ -36,7 +36,7 @@ if (Test-Path ".nvmrc") {
 
     if ($requiredVersion -ne $currentVersion) {
         Write-Host "`n⚠️  Warning: Your Node.js version ($currentNodeVersion) does not match the required version ($requiredNodeVersion)" -ForegroundColor Yellow
-        Write-Host "Please consider switching to the correct version using: nvm use" -ForegroundColor Yellow
+        Write-Host "Please consider switching to the correct version using: nvm use 20.11.0" -ForegroundColor Yellow
         
         # Check if running in interactive mode
         if ([Environment]::UserInteractive -and [Environment]::GetCommandLineArgs().Count -eq 0) {

@@ -55,7 +55,7 @@ notes below).
 This project requires Node.js version 20.11.0 (LTS) or higher. You have two options for installation:
 
 1. Download and install directly from [nodejs.org](https://nodejs.org/en/download).
-2. If you're using NVM (Node Version Manager), set the correct Node.js version for this project by running `nvm use` in
+2. If you're using NVM (Node Version Manager), set the correct Node.js version for this project by running `nvm use 20.11.0` in
    the project root.
 
 ### Install all dependencies
