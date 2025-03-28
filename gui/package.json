@@ -34,6 +34,7 @@
     "@tiptap/suggestion": "^2.1.13",
     "@types/uuid": "^10.0.0",
     "@types/vscode-webview": "^1.57.1",
+    "@vscode/codicons": "^0.0.36",
     "clsx": "^2.1.1",
     "core": "file:../core",
     "dompurify": "^3.0.6",

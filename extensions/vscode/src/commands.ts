@@ -39,6 +39,7 @@ import { VsCodeIde } from "./VsCodeIde";
 import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { isModelInstaller } from "core/llm";
 import { startLocalOllama } from "core/util/ollamaHelper";
+import { ContinueLogWebviewViewProvider } from "./ContinueLogWebviewViewProvider";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -316,6 +317,7 @@ const getCommandsMap: (
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  logView: ContinueLogWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -327,6 +329,7 @@ const getCommandsMap: (
   ide,
   extensionContext,
   sidebar,
+  logView,
   configHandler,
   verticalDiffManager,
   continueServerClientPromise,
@@ -679,6 +682,9 @@ const getCommandsMap: (
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
+    },
+    "continue.clearModelLog": async () => {
+      logView.clearLog();
     },
     "continue.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
@@ -1127,6 +1133,7 @@ export function registerAllCommands(
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  logView: ContinueLogWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -1142,6 +1149,7 @@ export function registerAllCommands(
       ide,
       extensionContext,
       sidebar,
+      logView,
       configHandler,
       verticalDiffManager,
       continueServerClientPromise,
