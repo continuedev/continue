@@ -1,10 +1,10 @@
 import ReactDOM from "react-dom";
 import { Tooltip } from "react-tooltip";
 import { vscBackground, vscForeground, vscInputBorder } from "..";
-import { getFontSize } from "../../util";
+import { fontSize } from "../../util";
 
 const TooltipStyles = {
-  fontSize: `${getFontSize() - 2}px`,
+  fontSize: fontSize(-2),
   backgroundColor: vscBackground,
   outline: `0.5px solid ${vscInputBorder}`,
   color: vscForeground,
@@ -25,7 +25,7 @@ export function ToolTip(props: any) {
   return (
     tooltipPortalDiv &&
     ReactDOM.createPortal(
-      <Tooltip {...props} style={combinedStyles} opacity={1} />,
+      <Tooltip {...props} style={combinedStyles} opacity={1} delayShow={200} />,
       tooltipPortalDiv,
     )
   );

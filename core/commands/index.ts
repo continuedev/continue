@@ -10,6 +10,7 @@ export function slashFromCustomCommand(
   return {
     name: customCommand.name,
     description: customCommand.description ?? "",
+    prompt: customCommand.prompt,
     run: async function* ({ input, llm, history, ide, completionOptions }) {
       // Remove slash command prefix from input
       let userInput = input;

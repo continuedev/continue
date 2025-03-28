@@ -1,33 +1,167 @@
-import { Popover } from "@headlessui/react";
-import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { ProfileDescription } from "core/config/ConfigHandler";
-import { useContext, useEffect, useRef } from "react";
+import {
+  ArrowTopRightOnSquareIcon,
+  BuildingOfficeIcon,
+  ChevronDownIcon,
+  Cog6ToothIcon,
+  ExclamationTriangleIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useAppDispatch } from "../../../redux/hooks";
-import { cycleProfile } from "../../../redux/thunks/profileAndOrg";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../../../util";
-import PopoverTransition from "../../mainInput/InputToolbar/PopoverTransition";
-import AssistantIcon from "./AssistantIcon";
-import { AssistantSelectOptions } from "./AssistantSelectOptions";
+import { cycleProfile, selectProfileThunk } from "../../../redux";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import {
+  fontSize,
+  getMetaKeyLabel,
+  isLocalProfile,
+  isMetaEquivalentKeyPressed,
+} from "../../../util";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../ui";
 
-function AssistantSelectButton(props: { selectedProfile: ProfileDescription }) {
-  return (
-    <div className="flex max-w-[50vw] items-center gap-0.5">
-      <div className="mr-1 h-4 w-4 flex-shrink-0">
-        <AssistantIcon assistant={props.selectedProfile} />
-      </div>
-      <span className="truncate">{props.selectedProfile.title}</span>
-      <ChevronDownIcon className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
-    </div>
-  );
+import { ProfileDescription } from "core/config/ConfigHandler";
+import { useNavigate } from "react-router-dom";
+import { vscCommandCenterInactiveBorder } from "../..";
+import { ROUTES } from "../../../util/navigation";
+import { ToolTip } from "../../gui/Tooltip";
+import { useFontSize } from "../../ui/font";
+import AssistantIcon from "./AssistantIcon";
+
+interface AssistantSelectOptionProps {
+  profile: ProfileDescription;
+  onClick: () => void;
 }
+const AssistantSelectOption = ({
+  profile,
+  onClick,
+}: AssistantSelectOptionProps) => {
+  const navigate = useNavigate();
+  const [hovered, setHovered] = useState(false);
+
+  const hasFatalErrors = useMemo(() => {
+    return !!profile.errors?.find((error) => error.fatal);
+  }, [profile.errors]);
+
+  const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+
+  function handleOptionClick() {
+    dispatch(selectProfileThunk(profile.id));
+    onClick();
+  }
+
+  function handleConfigure() {
+    ideMessenger.post("config/openProfile", { profileId: profile.id });
+    onClick();
+  }
+
+  function handleClickError() {
+    if (profile.id === "local") {
+      navigate(ROUTES.CONFIG_ERROR);
+    } else {
+      ideMessenger.post("config/openProfile", { profileId: profile.id });
+    }
+    onClick();
+  }
+
+  return (
+    <ListboxOption
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      value={profile.id}
+      disabled={hasFatalErrors}
+      onClick={!hasFatalErrors ? handleOptionClick : undefined}
+      fontSizeModifier={-2}
+    >
+      <div className="flex w-full flex-col gap-0.5">
+        <div className="flex w-full items-center justify-between">
+          <div className="flex w-full items-center">
+            <div className="mr-2 h-4 w-4 flex-shrink-0">
+              <AssistantIcon assistant={profile} />
+            </div>
+            <span className="line-clamp-1 flex-1">{profile.title}</span>
+          </div>
+          <div className="ml-2 flex items-center">
+            {!profile.errors?.length ? (
+              isLocalProfile(profile) ? (
+                <Cog6ToothIcon
+                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
+                  style={{
+                    opacity: hovered ? 1 : 0,
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleConfigure();
+                  }}
+                />
+              ) : (
+                <ArrowTopRightOnSquareIcon
+                  style={{
+                    opacity: hovered ? 1 : 0,
+                  }}
+                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleConfigure();
+                  }}
+                />
+              )
+            ) : (
+              <>
+                <ExclamationTriangleIcon
+                  data-tooltip-id={`${profile.id}-errors-tooltip`}
+                  className="h-3 w-3 flex-shrink-0 cursor-pointer text-red-500"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleClickError();
+                  }}
+                />
+                <ToolTip id={`${profile.id}-errors-tooltip`}>
+                  <div className="font-semibold">Errors</div>
+                  {JSON.stringify(profile.errors, null, 2)}
+                </ToolTip>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </ListboxOption>
+  );
+};
 
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { selectedProfile, selectedOrganization } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
+  const isLumpToolbarExpanded = useAppSelector(
+    (state) => state.ui.isBlockSettingsToolbarExpanded,
+  );
+
+  const { profiles, session, login } = useAuth();
+  const navigate = useNavigate();
+
+  function close() {
+    if (buttonRef.current) {
+      buttonRef.current.click();
+    }
+  }
+  function onNewAssistant() {
+    ideMessenger.post("controlPlane/openUrl", {
+      path: "new",
+      orgSlug: selectedOrganization?.slug,
+    });
+    close();
+  }
 
   useEffect(() => {
     let lastToggleTime = 0;
@@ -54,6 +188,9 @@ export default function AssistantSelect() {
     };
   }, []);
 
+  const tinyFont = useFontSize(-4);
+  const smallFont = useFontSize(-3);
+
   if (!selectedProfile) {
     return (
       <div
@@ -63,38 +200,116 @@ export default function AssistantSelect() {
             orgSlug: selectedOrganization?.slug,
           });
         }}
-        className="text-lightgray hover:bg mb-1 mr-3 flex cursor-pointer items-center gap-1 whitespace-nowrap"
-        style={{ fontSize: `${getFontSize() - 2}px` }}
+        className="flex cursor-pointer select-none items-center gap-1 text-gray-400"
+        style={{ fontSize: smallFont }}
       >
-        <PlusIcon className="h-4 w-4" /> Create your first assistant
+        <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
+        <span
+          className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+        >
+          Create your first assistant
+        </span>
       </div>
     );
   }
 
   return (
-    <Popover>
-      <div className="relative">
-        <Popover.Button
+    <Listbox>
+      <div className="sm:max-w-4/5 relative flex">
+        <ListboxButton
           data-testid="assistant-select-button"
           ref={buttonRef}
-          className="text-lightgray cursor-pointer border-none bg-transparent hover:brightness-125"
-          style={{ fontSize: `${getFontSize() - 2}px` }}
+          className="border-none bg-transparent text-gray-400 hover:brightness-125"
+          style={{ fontSize: fontSize(-3) }}
         >
-          <AssistantSelectButton selectedProfile={selectedProfile} />
-        </Popover.Button>
+          <div className="flex flex-row items-center gap-1.5">
+            <div className="h-3 w-3 flex-shrink-0 select-none">
+              <AssistantIcon size={3} assistant={selectedProfile} />
+            </div>
+            <span
+              className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+            >
+              {selectedProfile.title}
+            </span>
+          </div>
+          <ChevronDownIcon
+            className="h-2 w-2 flex-shrink-0 select-none"
+            aria-hidden="true"
+          />
+        </ListboxButton>
 
-        <PopoverTransition>
-          <Popover.Panel className="bg-vsc-input-background absolute right-0 top-full z-[1000] mr-1 mt-1 flex min-w-[200px] max-w-[90vw] cursor-default flex-row overflow-hidden rounded-md border-2 border-zinc-600 p-0">
-            <AssistantSelectOptions
-              onClose={() => {
-                if (buttonRef.current) {
-                  buttonRef.current.click();
-                }
-              }}
-            />
-          </Popover.Panel>
-        </PopoverTransition>
+        <Transition>
+          <ListboxOptions className="pb-0">
+            <div
+              className={`thin-scrollbar flex max-h-[300px] flex-col gap-1 overflow-y-auto py-1`}
+            >
+              {profiles?.map((profile, idx) => {
+                return (
+                  <AssistantSelectOption
+                    key={idx}
+                    profile={profile}
+                    onClick={close}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col">
+              <div
+                className="my-0 h-[0.5px]"
+                style={{
+                  backgroundColor: vscCommandCenterInactiveBorder,
+                }}
+              />
+
+              <ListboxOption
+                value={"new-assistant"}
+                fontSizeModifier={-2}
+                onClick={session ? onNewAssistant : () => login(false)}
+              >
+                <div className="flex flex-row items-center gap-2">
+                  <PlusIcon className="h-4 w-4 flex-shrink-0" />
+                  New Assistant
+                </div>
+              </ListboxOption>
+
+              <div
+                className="my-0 h-[0.5px]"
+                style={{
+                  backgroundColor: vscCommandCenterInactiveBorder,
+                }}
+              />
+
+              <div
+                className="text-lightgray flex items-center justify-between px-2 py-1"
+                style={{
+                  fontSize: tinyFont,
+                }}
+              >
+                <span className="block">
+                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
+                </span>
+                <div
+                  className="flex items-center gap-1"
+                  onClick={() => navigate(ROUTES.CONFIG)}
+                >
+                  {selectedOrganization?.iconUrl ? (
+                    <img
+                      src={selectedOrganization.iconUrl}
+                      className="h-4 w-4 rounded-full"
+                    />
+                  ) : (
+                    <BuildingOfficeIcon className="h-4 w-4" />
+                  )}
+                  <span className="hover:cursor-pointer hover:underline">
+                    {selectedOrganization?.name || "Personal"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </ListboxOptions>
+        </Transition>
       </div>
-    </Popover>
+    </Listbox>
   );
 }

@@ -65,6 +65,7 @@ export default class LocalProfileLoader implements IProfileLoader {
       undefined,
       this.description.id,
       this.overrideAssistantFile?.path,
+      null,
     );
 
     this.description.errors = result.errors;

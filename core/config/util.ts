@@ -2,17 +2,14 @@ import fs from "fs";
 import os from "os";
 
 import {
-  ContextProviderWithParams,
   ContinueConfig,
+  ExperimentalModelRoles,
   IDE,
   ILLM,
   ModelDescription,
-  ExperimentalModelRoles,
 } from "../";
 import { GlobalContext } from "../util/GlobalContext";
-import { editConfigJson } from "../util/paths";
-
-import { ConfigHandler } from "./ConfigHandler";
+import { editConfigFile } from "../util/paths";
 
 function stringify(obj: any, indentation?: number): string {
   return JSON.stringify(
@@ -24,78 +21,67 @@ function stringify(obj: any, indentation?: number): string {
   );
 }
 
-export function addContextProvider(provider: ContextProviderWithParams, configHandler?: ConfigHandler) {
-  let isAdded = false;
-  editConfigJson((config) => {
-
-    if (!config.contextProviders) {
-      config.contextProviders = [];
-    }
-    if (!config.contextProviders.some((p) => p.name === provider.name)) {
-      config.contextProviders.push(provider);
-      isAdded = true;
-    }
-
-    return config;
-  });
-
-  if (isAdded && configHandler) {
-    void configHandler.reloadConfig();
-  }
-}
-
 export function addModel(
   model: ModelDescription,
   role?: keyof ExperimentalModelRoles,
 ) {
-  editConfigJson((config) => {
-    if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
-      return config;
-    }
-    if (config.models?.some((m: any) => m?.title === model.title)) {
-      model.title = `${model.title} (1)`;
-    }
-
-    config.models.push(model);
-
-    // Set the role for the model
-    if (role) {
-      if (!config.experimental) {
-        config.experimental = {};
+  editConfigFile(
+    (config) => {
+      if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
+        return config;
       }
-      if (!config.experimental.modelRoles) {
-        config.experimental.modelRoles = {};
+      if (config.models?.some((m: any) => m?.title === model.title)) {
+        model.title = `${model.title} (1)`;
       }
-      config.experimental.modelRoles[role] = model.title;
-    }
 
-    return config;
-  });
-}
+      config.models.push(model);
 
-export function addOpenAIKey(key: string) {
-  editConfigJson((config) => {
-    config.models = config.models
-      .filter(
-        (model) =>
-          model.provider !== "free-trial" || model.model.startsWith("gpt"),
-      )
-      .map((m: ModelDescription) => {
-        if (m.provider === "free-trial") {
-          m.apiKey = key;
-          m.provider = "openai";
+      // Set the role for the model
+      if (role) {
+        if (!config.experimental) {
+          config.experimental = {};
         }
-        return m;
+        if (!config.experimental.modelRoles) {
+          config.experimental.modelRoles = {};
+        }
+        config.experimental.modelRoles[role] = model.title;
+      }
+
+      return config;
+    },
+    (config) => {
+      if (config.models?.some((m: any) => m?.title === model.title)) {
+        model.title = `${model.title} (1)`;
+      }
+
+      if (!config.models) {
+        config.models = [];
+      }
+
+      config.models.push({
+        name: model.title,
+        provider: model.provider,
+        model: model.model,
+        apiKey: model.apiKey,
+        apiBase: model.apiBase,
+        defaultCompletionOptions: model.completionOptions,
       });
-    return config;
-  });
+      return config;
+    },
+  );
 }
 
 export function deleteModel(title: string) {
-  editConfigJson((config) => {
-    config.models = config.models.filter((m: any) => m.title !== title);
-    return config;
-  });
+  editConfigFile(
+    (config) => {
+      config.models = config.models.filter((m: any) => m.title !== title);
+      return config;
+    },
+    (config) => {
+      config.models = config.models?.filter((m: any) => m.name !== title);
+      return config;
+    },
+  );
 }
 
 export function getModelByRole<T extends keyof ExperimentalModelRoles>(

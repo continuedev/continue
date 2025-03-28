@@ -1,17 +1,20 @@
-import { ConfigResult, ModelRole } from "@continuedev/config-yaml";
+import {
+  ConfigResult,
+  DevDataLogEvent,
+  ModelRole,
+} from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
 import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
+import { GlobalContextModelSelections } from "../util/GlobalContext";
 
-import { DevDataLogEvent } from "@continuedev/config-yaml";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
   ContextItem,
   ContextItemWithId,
-  ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
   DocsIndexingDetails,
@@ -29,7 +32,6 @@ import type {
   SlashCommandDescription,
   ToolCall,
 } from "../";
-import { GlobalContextModelSelections } from "../util/GlobalContext";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -67,7 +69,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
   "config/listProfiles": [
     undefined,
@@ -93,6 +94,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       selectedModelTitle: string;
     },
     ContextItemWithId[],
+  ];
+  "mcp/reloadServer": [
+    {
+      id: string;
+    },
+    void,
   ];
   "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];

@@ -140,8 +140,11 @@ function testLLM(
                     },
                   },
                   type: "function",
-                  wouldLikeTo: "Say hello",
+                  wouldLikeTo: "say hello",
+                  isCurrently: "saying hello",
+                  hasAlready: "said hello",
                   readonly: true,
+                  group: "Hello",
                 },
               ],
               toolChoice: {

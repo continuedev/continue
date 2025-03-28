@@ -1,7 +1,6 @@
 import { IDE } from "..";
 import { deduplicateArray } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
-import { editConfigJson } from "../util/paths";
 import { resolveSerializedConfig } from "./load";
 import { SharedConfigSchema } from "./sharedConfig";
 
@@ -196,11 +195,6 @@ export function migrateJsonSharedConfig(filepath: string, ide: IDE): void {
 
     if (effected) {
       new GlobalContext().updateSharedConfig(shareConfigUpdates);
-      editConfigJson(() => config);
-      // void ide.showToast(
-      //   "warning",
-      //   "Migrated deprecated Continue JSON settings. Edit in the Settings Page",
-      // );
     }
   } catch (e) {
     throw new Error(`Migration: Failed to parse config.json: ${e}`);

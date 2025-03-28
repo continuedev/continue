@@ -11,7 +11,7 @@ class ContinueProxy extends OpenAI {
     this.apiKey = value.workOsAccessToken;
     if (!this.onPremProxyUrl) {
       this.apiBase = new URL(
-        "openai/v1/",
+        "model-proxy/v1/",
         value.controlPlaneProxyUrl,
       ).toString();
     }
@@ -29,7 +29,7 @@ class ContinueProxy extends OpenAI {
     this.orgScopeId = options.orgScopeId;
     this.onPremProxyUrl = options.onPremProxyUrl;
     if (this.onPremProxyUrl) {
-      this.apiBase = new URL("openai/v1/", this.onPremProxyUrl).toString();
+      this.apiBase = new URL("model-proxy/v1/", this.onPremProxyUrl).toString();
     }
   }
 

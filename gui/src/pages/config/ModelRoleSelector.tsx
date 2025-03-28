@@ -1,11 +1,16 @@
-import { Fragment } from "react";
-import { Listbox, Transition } from "@headlessui/react";
-import {
-  ChevronUpDownIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/24/outline";
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { type ModelDescription } from "core";
+import { defaultBorderRadius } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
+import InfoHover from "../../components/InfoHover";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../components/ui";
+import { fontSize } from "../../util";
 
 interface ModelRoleSelectorProps {
   models: ModelDescription[];
@@ -29,64 +34,59 @@ const ModelRoleSelector = ({
   return (
     <>
       <div className="mt-2 flex flex-row items-center gap-1 sm:mt-0">
-        <span className="text-sm">{displayName}</span>
-        <InformationCircleIcon
-          className="h-3 w-3"
-          data-tooltip-id={`${displayName}-description`}
-        />
+        <span
+          style={{
+            fontSize: fontSize(-3),
+          }}
+        >
+          {displayName}
+        </span>
+        <InfoHover size="3" id={displayName} msg={description} />
         <ToolTip id={`${displayName}-description`} place={"bottom"}>
           {description}
         </ToolTip>
       </div>
       <Listbox value={selectedModel?.title ?? null} onChange={handleSelect}>
-        {({ open }) => (
-          <div className="relative">
-            <Listbox.Button
-              className={`border-vsc-input-border bg-vsc-background ${!!models.length ? "hover:bg-vsc-input-background cursor-pointer" : ""} text-vsc-foreground relative m-0 flex w-full items-center justify-between rounded-md border border-solid px-2 py-1 text-left`}
-            >
-              {models.length === 0 ? (
-                <span className="text-lightgray italic">{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
-              ) : (
-                <span className="lines lines-1">
-                  {selectedModel?.title ?? `Select ${displayName} model`}
-                </span>
-              )}
-              {models.length ? (
-                <div className="pointer-events-none flex items-center">
-                  <ChevronUpDownIcon
-                    className="h-3.5 w-3.5"
-                    aria-hidden="true"
-                  />
-                </div>
-              ) : null}
-            </Listbox.Button>
+        <div className="relative">
+          <ListboxButton
+            disabled={models.length === 0}
+            className={`bg-vsc-editor-background hover:bg-list-active hover:text-list-active-foreground w-full justify-between`}
+          >
+            {models.length === 0 ? (
+              <span className="text-lightgray line-clamp-1 italic">{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
+            ) : (
+              <span className="line-clamp-1">
+                {selectedModel?.title ?? `Select ${displayName} model`}
+              </span>
+            )}
+            {models.length ? (
+              <div className="pointer-events-none flex items-center">
+                <ChevronUpDownIcon className="h-3 w-3" aria-hidden="true" />
+              </div>
+            ) : null}
+          </ListboxButton>
 
-            <Transition
-              as={Fragment}
-              show={open}
-              enter="transition ease-out duration-100"
-              enterFrom="transform opacity-0 scale-95"
-              enterTo="transform opacity-100 scale-100"
-              leave="transition ease-in duration-75"
-              leaveFrom="transform opacity-100 scale-100"
-              leaveTo="transform opacity-0 scale-95"
+          <Transition>
+            <ListboxOptions
+              style={{ borderRadius: defaultBorderRadius }}
+              className="min-w-40"
             >
-              <Listbox.Options className="bg-vsc-background max-h-80vh absolute z-[800] mt-0.5 w-full overflow-y-scroll rounded-sm p-0">
-                {models.map((option, idx) => (
-                  <Listbox.Option
-                    key={idx}
-                    value={option.title}
-                    className={`text-vsc-foreground hover:text-list-active-foreground flex cursor-pointer flex-row items-center gap-3 px-2 py-1 ${option?.title === selectedModel?.title ? "bg-list-active" : "bg-vsc-input-background"}`}
+              {models.map((option, idx) => (
+                <ListboxOption key={idx} value={option.title} className={""}>
+                  <span
+                    className="line-clamp-1 flex h-4 items-center gap-2"
+                    style={{ fontSize: fontSize(-3) }}
                   >
-                    <span className="lines lines-1 relative flex h-5 items-center justify-between gap-3 pr-2 text-xs">
-                      {option.title}
-                    </span>
-                  </Listbox.Option>
-                ))}
-              </Listbox.Options>
-            </Transition>
-          </div>
-        )}
+                    {option.title}
+                  </span>
+                  {option.title === selectedModel?.title && (
+                    <CheckIcon className="h-3 w-3" aria-hidden="true" />
+                  )}
+                </ListboxOption>
+              ))}
+            </ListboxOptions>
+          </Transition>
+        </div>
       </Listbox>
     </>
   );

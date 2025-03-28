@@ -28,7 +28,6 @@ import {
   IdeType,
   ILLM,
   LLMOptions,
-  MCPOptions,
   ModelDescription,
   RerankerDescription,
   SerializedContinueConfig,
@@ -45,7 +44,6 @@ import ContinueProxyContextProvider from "../context/providers/ContinueProxyCont
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
-import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
 import { useHub } from "../control-plane/env";
 import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
@@ -72,12 +70,6 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import {
-  defaultContextProvidersJetBrains,
-  defaultContextProvidersVsCode,
-  defaultSlashCommandsJetBrains,
-  defaultSlashCommandsVscode,
-} from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
@@ -124,7 +116,7 @@ function loadSerializedConfig(
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
     try {
-      config = resolveSerializedConfig(getConfigJsonPath(ideType));
+      config = resolveSerializedConfig(getConfigJsonPath());
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
@@ -163,16 +155,6 @@ function loadSerializedConfig(
       configMergeKeys,
     );
   }
-
-  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
-  config.contextProviders ??=
-    ideType === "vscode"
-      ? [...defaultContextProvidersVsCode]
-      : [...defaultContextProvidersJetBrains];
-  config.slashCommands ??=
-    ideType === "vscode"
-      ? [...defaultSlashCommandsVscode]
-      : [...defaultSlashCommandsJetBrains];
 
   if (os.platform() === "linux" && !isSupportedLanceDbCpuTargetForLinux(ide)) {
     config.disableIndexing = true;
@@ -401,8 +383,6 @@ async function intermediateToFinalConfig(
     ...(!config.disableIndexing
       ? [new CodebaseContextProvider(codebaseContextParams)]
       : []),
-    // Add prompt files provider if enabled
-    ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
@@ -520,7 +500,9 @@ async function intermediateToFinalConfig(
     ...config,
     contextProviders,
     models,
-    tools: allTools,
+    tools: [...allTools],
+    mcpServerStatuses: [],
+    slashCommands: config.slashCommands ?? [],
     modelsByRole: {
       chat: models,
       edit: models,
@@ -541,53 +523,18 @@ async function intermediateToFinalConfig(
     },
   };
 
-  // Apply MCP if specified
+  // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  function getMcpId(options: MCPOptions) {
-    return JSON.stringify(options);
-  }
-  if (config.experimental?.modelContextProtocolServers) {
-    await mcpManager.removeUnusedConnections(
-      config.experimental.modelContextProtocolServers.map(getMcpId),
-    );
-  }
-
-  if (config.experimental?.modelContextProtocolServers) {
-    const abortController = new AbortController();
-    const mcpConnectionTimeout = setTimeout(
-      () => abortController.abort(),
-      5000,
-    );
-
-    await Promise.allSettled(
-      config.experimental.modelContextProtocolServers?.map(
-        async (server, index) => {
-          try {
-            const mcpId = getMcpId(server);
-            const mcpConnection = mcpManager.createConnection(mcpId, server);
-            await mcpConnection.modifyConfig(
-              continueConfig,
-              mcpId,
-              abortController.signal,
-              "MCP Server",
-              server.faviconUrl,
-            );
-          } catch (e) {
-            let errorMessage = "Failed to load MCP server";
-            if (e instanceof Error) {
-              errorMessage += ": " + e.message;
-            }
-            errors.push({
-              fatal: false,
-              message: errorMessage,
-            });
-          } finally {
-            clearTimeout(mcpConnectionTimeout);
-          }
-        },
-      ) || [],
-    );
-  }
+  mcpManager.setConnections(
+    (config.experimental?.modelContextProtocolServers ?? []).map(
+      (server, index) => ({
+        id: `continue-mcp-server-${index + 1}`,
+        name: `MCP Server`,
+        ...server,
+      }),
+    ),
+    false,
+  );
 
   // Handle experimental modelRole config values for apply and edit
   const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;
@@ -667,11 +614,9 @@ async function finalToBrowserConfig(
     models: final.models.map(llmToSerializedModelDescription),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((s) => ({
-      name: s.name,
-      description: s.description,
-      params: s.params, // TODO: is this why params aren't referenced properly by slash commands?
-    })),
+    slashCommands: final.slashCommands?.map(
+      ({ run, ...slashCommandDescription }) => slashCommandDescription,
+    ),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,
@@ -681,6 +626,7 @@ async function finalToBrowserConfig(
     rules: final.rules,
     docs: final.docs,
     tools: final.tools,
+    mcpServerStatuses: final.mcpServerStatuses,
     tabAutocompleteOptions: final.tabAutocompleteOptions,
     usePlatform: await useHub(ide.getIdeSettings()),
     modelsByRole: Object.fromEntries(

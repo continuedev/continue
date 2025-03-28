@@ -16,7 +16,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "history/save",
     "devdata/log",
     "config/addModel",
-    "config/addContextProvider",
     "config/newPromptFile",
     "config/ideSettingsUpdate",
     "config/getSerializedProfileInfo",
@@ -26,6 +25,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/openProfile",
     "config/updateSharedConfig",
     "config/updateSelectedModel",
+    "mcp/reloadServer",
     "context/getContextItems",
     "context/getSymbolsForFiles",
     "context/loadSubmenuItems",
@@ -51,7 +51,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "indexing/reindex",
     "indexing/abort",
     "indexing/setPaused",
-    "docs/getSuggestedDocs",
     "docs/initStatuses",
     "docs/getDetails",
     //
@@ -80,7 +79,6 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "setTTSActive",
     "getWebviewHistoryLength",
     "getCurrentSessionId",
-    "docs/suggestions",
     "didCloseFiles",
     "didSelectOrganization",
   ];
