@@ -128,7 +128,8 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
-            "controlPlane/listOrganizations"
+            "controlPlane/listOrganizations",
+            "isItemTooBig"
 
         )
     }
