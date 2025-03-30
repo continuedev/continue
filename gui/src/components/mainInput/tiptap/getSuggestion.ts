@@ -203,7 +203,7 @@ export function getSlashCommandDropdownOptions(
     const filteredCommands =
       query.length > 0
         ? options.filter((slashCommand) => {
-            const sc = slashCommand.title.substring(1).toLowerCase();
+            const sc = slashCommand.title.toLowerCase();
             const iv = query.toLowerCase();
             return sc.startsWith(iv);
           })
