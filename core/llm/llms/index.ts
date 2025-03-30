@@ -26,6 +26,7 @@ import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
+import Inception from "./Inception";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
@@ -104,6 +105,7 @@ export const LLMClasses = [
   SiliconFlow,
   Scaleway,
   Relace,
+  Inception,
 ];
 
 export async function llmFromDescription(
