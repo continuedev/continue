@@ -94,9 +94,11 @@ class VertexAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage =
       !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const systemMessage: string = renderChatMessage(
-      messages.filter((m) => m.role === "system")[0],
-    );
+    const filteredSystemMessages : ChatMessage[] = messages.filter((m) => m.role === "system");
+    let systemMessage: string = "";
+    if(filteredSystemMessages.length > 0) {
+      systemMessage = renderChatMessage(filteredSystemMessages[0]);
+    }
     const apiURL = new URL(
       `publishers/anthropic/models/${options.model}:streamRawPredict`,
       this.apiBase,

@@ -5,6 +5,7 @@ import {
   FQSN,
   FullSlug,
   SecretResult,
+  SecretType,
 } from "@continuedev/config-yaml";
 import fetch, { RequestInit, Response } from "node-fetch";
 
@@ -46,7 +47,14 @@ export class ControlPlaneClient {
   ): Promise<(SecretResult | undefined)[]> {
     const userId = await this.userId;
     if (!userId) {
-      throw new Error("No user id");
+      return fqsns.map((fqsn) => ({
+        found: false,
+        fqsn,
+        secretLocation: {
+          secretName: fqsn.secretName,
+          secretType: SecretType.NotFound,
+        },
+      }));
     }
 
     const resp = await this.request("ide/sync-secrets", {
@@ -113,6 +121,7 @@ export class ControlPlaneClient {
       ownerSlug: string;
       packageSlug: string;
       iconUrl: string;
+      rawYaml: string;
     }[]
   > {
     const userId = await this.userId;

@@ -157,11 +157,15 @@ Icon?
 notes.md
 
 manual-testing-sandbox/.idea/**
+manual-testing-sandbox/.continue/**
 extensions/intellij/.idea/**
 
 **/.idea/workspace.xml
 **/.idea/usage.statistics.xml
 **/.idea/shelf/
+**/.idea/inspectionProfiles/Project_Default.xml
+**/.idea/php.xml
+
 
 extensions/intellij/bin
 extensions/.continue-debug/

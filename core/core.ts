@@ -10,7 +10,7 @@ import {
   setupLocalConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { addContextProvider, addModel, deleteModel } from "./config/util";
+import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
@@ -22,7 +22,6 @@ import { DataLogger } from "./data/log";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
-import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
@@ -30,23 +29,24 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
+import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
-  ChatMessage,
   DiffLine,
-  PromptLog,
   type ContextItemId,
   type IDE,
   type IndexingProgressUpdate,
 } from ".";
 
+import { ConfigYaml } from "@continuedev/config-yaml";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
+import { MCPManagerSingleton } from "./context/mcp";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
+import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
 
@@ -120,6 +120,13 @@ export class Core {
       this.ide,
       this.messenger,
     );
+
+    const mcpManager = MCPManagerSingleton.getInstance();
+    mcpManager.onConnectionsRefreshed = async () => {
+      // This ensures that it triggers a NEW load after waiting for config promise to finish
+      await this.configHandler.loadConfig();
+      await this.configHandler.reloadConfig();
+    };
 
     this.configHandler.onConfigUpdate(async (result) => {
       const serializedResult = await this.configHandler.getSerializedConfig();
@@ -315,10 +322,6 @@ export class Core {
       await this.configHandler.loadAssistantsForSelectedOrg();
     });
 
-    on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data, this.configHandler);
-    });
-
     on("config/updateSharedConfig", async (msg) => {
       const newSharedConfig = this.globalContext.updateSharedConfig(msg.data);
       await this.configHandler.reloadConfig();
@@ -348,6 +351,9 @@ export class Core {
       return await this.configHandler.listOrganizations();
     });
 
+    on("mcp/reloadServer", async (msg) => {
+      mcpManager.refreshConnection(msg.data.id);
+    });
     // Context providers
     on("context/addDocs", async (msg) => {
       void this.docsService.indexAndAdd(msg.data);
@@ -489,111 +495,14 @@ export class Core {
       }
     });
 
-    async function* llmStreamChat(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
-    ): AsyncGenerator<ChatMessage, PromptLog> {
-      const { config } = await configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      // Stop TTS on new StreamChat
-      if (config.experimental?.readResponseTTS) {
-        void TTS.kill();
-      }
-
-      const model = await configHandler.llmFromTitle(msg.data.title);
-
-      const gen = model.streamChat(
-        msg.data.messages,
-        new AbortController().signal,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({
-            modelTitle: model.title ?? model.model,
-            completion: "",
-            prompt: "",
-            completionOptions: {
-              ...msg.data.completionOptions,
-              model: model.model,
-            },
-          });
-          break;
-        }
-
-        const chunk = next.value;
-
-        yield chunk;
-        next = await gen.next();
-      }
-
-      if (config.experimental?.readResponseTTS && "completion" in next.value) {
-        void TTS.read(next.value?.completion);
-      }
-
-      void Telemetry.capture(
-        "chat",
-        {
-          model: model.model,
-          provider: model.providerName,
-        },
-        true,
-      );
-
-      if (!next.done) {
-        throw new Error("Will never happen");
-      }
-
-      return next.value;
-    }
-
     on("llm/streamChat", (msg) =>
-      llmStreamChat(this.configHandler, this.abortedMessageIds, msg),
-    );
-
-    async function* llmStreamComplete(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
-    ): AsyncGenerator<string, PromptLog> {
-      const model = await configHandler.llmFromTitle(msg.data.title);
-      const gen = model.streamComplete(
-        msg.data.prompt,
-        new AbortController().signal,
-        msg.data.completionOptions,
-      );
-      let next = await gen.next();
-      while (!next.done) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({
-            modelTitle: model.title ?? model.model,
-            completion: "",
-            prompt: "",
-            completionOptions: {
-              ...msg.data.completionOptions,
-              model: model.model,
-            },
-          });
-          break;
-        }
-        yield next.value;
-        next = await gen.next();
-      }
-      if (!next.done) {
-        throw new Error("This will never happen");
-      }
-      return next.value;
-    }
-
-    on("llm/streamComplete", (msg) =>
-      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg),
+      llmStreamChat(
+        this.configHandler,
+        this.abortedMessageIds,
+        msg,
+        ide,
+        this.messenger,
+      ),
     );
 
     on("llm/complete", async (msg) => {
@@ -645,96 +554,6 @@ export class Core {
       );
       return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
-
-    async function* runNodeJsSlashCommand(
-      configHandler: ConfigHandler,
-      abortedMessageIds: Set<string>,
-      msg: Message<ToCoreProtocol["command/run"][0]>,
-      messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
-    ): AsyncGenerator<string> {
-      const {
-        input,
-        history,
-        modelTitle,
-        slashCommandName,
-        contextItems,
-        params,
-        historyIndex,
-        selectedCode,
-        completionOptions,
-      } = msg.data;
-
-      const { config } = await configHandler.loadConfig();
-      if (!config) {
-        throw new Error("Config not loaded");
-      }
-
-      const llm = await configHandler.llmFromTitle(modelTitle);
-      const slashCommand = config.slashCommands?.find(
-        (sc) => sc.name === slashCommandName,
-      );
-      if (!slashCommand) {
-        throw new Error(`Unknown slash command ${slashCommandName}`);
-      }
-
-      void Telemetry.capture(
-        "useSlashCommand",
-        {
-          name: slashCommandName,
-        },
-        true,
-      );
-
-      const checkActiveInterval = setInterval(() => {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          clearInterval(checkActiveInterval);
-        }
-      }, 100);
-
-      try {
-        for await (const content of slashCommand.run({
-          input,
-          history,
-          llm,
-          contextItems,
-          params,
-          ide,
-          addContextItem: (item) => {
-            void messenger.request("addContextItem", {
-              item,
-              historyIndex,
-            });
-          },
-          selectedCode,
-          config,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-          completionOptions,
-        })) {
-          if (abortedMessageIds.has(msg.messageId)) {
-            abortedMessageIds.delete(msg.messageId);
-            clearInterval(checkActiveInterval);
-            break;
-          }
-          if (content) {
-            yield content;
-          }
-        }
-      } catch (e) {
-        throw e;
-      } finally {
-        clearInterval(checkActiveInterval);
-      }
-    }
-    on("command/run", (msg) =>
-      runNodeJsSlashCommand(
-        this.configHandler,
-        this.abortedMessageIds,
-        msg,
-        this.messenger,
-      ),
-    );
 
     // Autocomplete
     on("autocomplete/complete", async (msg) => {
@@ -788,38 +607,55 @@ export class Core {
         return;
       }
 
-      let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
+      let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
       switch (mode) {
         case "Local":
-          editConfigJsonCallback = setupLocalConfig;
+          editConfigYamlCallback = setupLocalConfig;
           break;
 
         case "Quickstart":
-          editConfigJsonCallback = setupQuickstartConfig;
+          editConfigYamlCallback = setupQuickstartConfig;
           break;
 
         case "Best":
-          editConfigJsonCallback = setupBestConfig;
+          editConfigYamlCallback = setupBestConfig;
           break;
 
         default:
           console.error(`Invalid mode: ${mode}`);
-          editConfigJsonCallback = (config) => config;
+          editConfigYamlCallback = (config) => config;
       }
 
-      editConfigJson(editConfigJsonCallback);
+      editConfigFile((c) => c, editConfigYamlCallback);
 
       void this.configHandler.reloadConfig();
     });
 
     on("addAutocompleteModel", (msg) => {
-      editConfigJson((config) => {
-        return {
+      const model = msg.data.model;
+      editConfigFile(
+        (config) => {
+          return {
+            ...config,
+            tabAutocompleteModel: model,
+          };
+        },
+        (config) => ({
           ...config,
-          tabAutocompleteModel: msg.data.model,
-        };
-      });
+          models: [
+            ...(config.models ?? []),
+            {
+              name: model.title,
+              provider: model.provider,
+              model: model.model,
+              apiKey: model.apiKey,
+              roles: ["autocomplete"],
+              apiBase: model.apiBase,
+            },
+          ],
+        }),
+      );
       void this.configHandler.reloadConfig();
     });
 
@@ -986,14 +822,6 @@ export class Core {
       if (msg.data.type === "docs") {
         // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
-    });
-    on("docs/getSuggestedDocs", async (msg) => {
-      if (hasRequestedDocs) {
-        return;
-      } // TODO, remove, hack because of rerendering
-      hasRequestedDocs = true;
-      const suggestedDocs = await getAllSuggestedDocs(this.ide);
-      this.messenger.send("docs/suggestions", suggestedDocs);
     });
     on("docs/initStatuses", async (msg) => {
       void this.docsService.initStatuses();
@@ -1168,5 +996,3 @@ export class Core {
 
   // private
 }
-
-let hasRequestedDocs = false;

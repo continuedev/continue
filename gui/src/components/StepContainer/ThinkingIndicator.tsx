@@ -1,7 +1,7 @@
+import { ChatHistoryItem } from "core";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
-import { ChatHistoryItem } from "core";
 
 interface ThinkingIndicatorProps {
   historyItem: ChatHistoryItem;
@@ -37,7 +37,7 @@ const ThinkingIndicator = ({ historyItem }: ThinkingIndicatorProps) => {
 
   return (
     <div className="px-2 py-2">
-      <span className="text-stone-500">{`Thinking.${".".repeat(animation)}`}</span>
+      <span className="text-lightgray">{`Thinking.${".".repeat(animation)}`}</span>
     </div>
   );
 };

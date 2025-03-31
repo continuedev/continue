@@ -1,4 +1,5 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import { createLogger } from "redux-logger";
 import {
   createMigrate,
   MigrationManifest,
@@ -9,6 +10,7 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
+import { organizationsReducer, profilesReducer } from "./slices";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
@@ -30,13 +32,13 @@ const rootReducer = combineReducers({
   config: configReducer,
   indexing: indexingReducer,
   tabs: tabsReducer,
+  profiles: profilesReducer,
+  organizations: organizationsReducer,
 });
 
 const saveSubsetFilters = [
   createFilter("session", [
     "history",
-    "selectedOrganizationId",
-    "selectedProfile",
     "id",
     "lastSessionId",
     "title",
@@ -57,9 +59,11 @@ const saveSubsetFilters = [
   // Don't persist any of the edit state for now
   createFilter("editModeState", []),
   createFilter("config", ["defaultModelTitle"]),
-  createFilter("ui", ["toolSettings", "useTools"]),
+  createFilter("ui", ["toolSettings", "toolGroupSettings"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
+  createFilter("organizations", ["selectedOrganizationId"]),
+  createFilter("profiles", ["preferencesByProfileId", "selectedProfileId"]),
 ];
 
 const migrations: MigrationManifest = {
@@ -104,6 +108,13 @@ const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
 );
 
 export function setupStore() {
+  const logger = createLogger({
+    // Customize logger options if needed
+    collapsed: true, // Collapse console groups by default
+    timestamp: false, // Remove timestamps from log
+    diff: true, // Show diff between states
+  });
+
   return configureStore({
     // persistedReducer causes type errors with async thunks
     reducer: persistedReducer as unknown as typeof rootReducer,
@@ -116,7 +127,7 @@ export function setupStore() {
             ideMessenger: new IdeMessenger(),
           },
         },
-      }),
+      }).concat(logger),
   });
 }
 

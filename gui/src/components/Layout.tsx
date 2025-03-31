@@ -3,6 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { AuthProvider } from "../context/Auth";
+import { LocalStorageProvider } from "../context/LocalStorage";
 import GraniteOnboardingCard from "../granite/GraniteOnboardingCard";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
@@ -17,7 +18,7 @@ import {
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
@@ -235,52 +236,51 @@ const Layout = () => {
   return showGraniteOnboardingCard ? (
     <GraniteOnboardingCard />
   ) : (
-    <AuthProvider>
-      <LayoutTopDiv>
-        <OSRContextMenu />
-        <div
-          style={{
-            scrollbarGutter: "stable both-edges",
-            minHeight: "100%",
-            display: "grid",
-            gridTemplateRows: "1fr auto",
-          }}
-        >
-          <TextDialog
-            showDialog={showDialog}
-            onEnter={() => {
-              dispatch(setShowDialog(false));
+    <LocalStorageProvider>
+      <AuthProvider>
+        <LayoutTopDiv>
+          <OSRContextMenu />
+          <div
+            style={{
+              scrollbarGutter: "stable both-edges",
+              minHeight: "100%",
+              display: "grid",
+              gridTemplateRows: "1fr auto",
             }}
-            onClose={() => {
-              dispatch(setShowDialog(false));
-            }}
-            message={dialogMessage}
-          />
+          >
+            <TextDialog
+              showDialog={showDialog}
+              onEnter={() => {
+                dispatch(setShowDialog(false));
+              }}
+              onClose={() => {
+                dispatch(setShowDialog(false));
+              }}
+              message={dialogMessage}
+            />
 
-          <GridDiv className="">
-            <PostHogPageView />
-            <Outlet />
+            <GridDiv className="">
+              <PostHogPageView />
+              <Outlet />
 
-            {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-              <div
-                className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-                role="alert"
-                onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-              >
-                <strong className="font-bold">Error!</strong>{" "}
-                <span className="block sm:inline">Could not load config</span>
-                <div className="mt-2 underline">Learn More</div>
-              </div>
-            )}
-            <Footer />
-          </GridDiv>
-        </div>
-        <div
-          style={{ fontSize: `${getFontSize() - 4}px` }}
-          id="tooltip-portal-div"
-        />
-      </LayoutTopDiv>
-    </AuthProvider>
+              {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
+                <div
+                  className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+                  role="alert"
+                  onClick={() => navigate(ROUTES.CONFIG_ERROR)}
+                >
+                  <strong className="font-bold">Error!</strong>{" "}
+                  <span className="block sm:inline">Could not load config</span>
+                  <div className="mt-2 underline">Learn More</div>
+                </div>
+              )}
+              <Footer />
+            </GridDiv>
+          </div>
+          <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+        </LayoutTopDiv>
+      </AuthProvider>
+    </LocalStorageProvider>
   );
 };
 

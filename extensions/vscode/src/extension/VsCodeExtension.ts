@@ -37,6 +37,7 @@ import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
 import { VsCodeIde } from "../VsCodeIde";
 
+import { ConfigYamlDocumentLinkProvider } from "./ConfigYamlDocumentLinkProvider";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -400,6 +401,12 @@ export class VsCodeExtension {
         documentContentProvider,
       ),
     );
+
+    const linkProvider = vscode.languages.registerDocumentLinkProvider(
+      { language: "yaml" },
+      new ConfigYamlDocumentLinkProvider(),
+    );
+    context.subscriptions.push(linkProvider);
 
     this.ide.onDidChangeActiveTextEditor((filepath) => {
       void this.core.invoke("didChangeActiveTextEditor", { filepath });

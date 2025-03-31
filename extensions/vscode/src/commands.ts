@@ -286,6 +286,9 @@ async function processDiff(
   }
 
   await sidebar.webviewProtocol.request("exitEditMode", undefined);
+
+  // Save the file
+  await ide.saveFile(newOrCurrentUri);
 }
 
 function waitForSidebarReady(
@@ -993,9 +996,6 @@ const getCommandsMap: (
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
           vscode.commands.executeCommand("continue.toggleFullScreen");
-        } else if (selectedOption === "$(question) Open help center") {
-          focusGUI();
-          vscode.commands.executeCommand("continue.navigateTo", "/more", true);
         }
         quickPick.dispose();
       });
@@ -1017,9 +1017,6 @@ const getCommandsMap: (
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);
       }
-    },
-    "continue.openMorePage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/more", true);
     },
     "continue.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });

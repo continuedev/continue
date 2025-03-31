@@ -28,7 +28,6 @@ import CodebaseContextProvider from "../../context/providers/CodebaseContextProv
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
-import PromptFilesContextProvider from "../../context/providers/PromptFilesContextProvider";
 import { ControlPlaneClient } from "../../control-plane/client";
 import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
@@ -42,22 +41,31 @@ import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
+import { getControlPlaneEnvSync } from "../../control-plane/env";
 import { llmsFromModelConfig } from "./models";
 
 export class LocalPlatformClient implements PlatformClient {
+  constructor(
+    private orgScopeId: string | null,
+    private readonly client: ControlPlaneClient,
+  ) {}
+
   async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
-    return fqsns.map((fqsn) => {
-      return undefined;
-    });
+    if (fqsns.length === 0) {
+      return [];
+    }
+
+    const response = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
+    return response;
   }
 }
 
 async function loadConfigYaml(
-  workspaceConfigs: string[],
   rawYaml: string,
   overrideConfigYaml: AssistantUnrolled | undefined,
-  ide: IDE,
   controlPlaneClient: ControlPlaneClient,
+  orgScopeId: string | null,
+  ideSettings: IdeSettings,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   let config =
     overrideConfigYaml ??
@@ -69,12 +77,18 @@ async function loadConfigYaml(
         versionSlug: "",
       },
       rawYaml,
-      new RegistryClient(),
+      new RegistryClient(
+        await controlPlaneClient.getAccessToken(),
+        getControlPlaneEnvSync(
+          ideSettings.continueTestEnvironment,
+          ideSettings.enableControlServerBeta,
+        ).CONTROL_PLANE_URL,
+      ),
       {
         currentUserSlug: "",
         onPremProxyUrl: null,
-        orgScopeId: null,
-        platformClient: new LocalPlatformClient(),
+        orgScopeId,
+        platformClient: new LocalPlatformClient(orgScopeId, controlPlaneClient),
         renderSecrets: true,
       },
     ));
@@ -111,7 +125,8 @@ async function configYamlToContinueConfig(
   const continueConfig: ContinueConfig = {
     slashCommands: [],
     models: [],
-    tools: allTools,
+    tools: [...allTools],
+    mcpServerStatuses: [],
     systemMessage: config.rules?.join("\n"),
     experimental: {
       modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
@@ -129,6 +144,7 @@ async function configYamlToContinueConfig(
       rootUrl: doc.rootUrl,
       faviconUrl: doc.faviconUrl,
     })),
+    rules: config.rules,
     contextProviders: [],
     modelsByRole: {
       chat: [],
@@ -205,7 +221,6 @@ async function configYamlToContinueConfig(
         continueConfig.systemMessage,
       );
 
-      //
       if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
         continueConfig.models.push(...llms);
       }
@@ -243,7 +258,10 @@ async function configYamlToContinueConfig(
           } else {
             continueConfig.modelsByRole.embed.push(
               new embeddingsProviderClass(
-                options,
+                {
+                  ...options,
+                  title: options.name,
+                },
                 (url: string | URL, init: any) =>
                   fetchwithRequestOptions(url, init, {
                     ...options.requestOptions,
@@ -264,10 +282,15 @@ async function configYamlToContinueConfig(
         const rerankerClass = AllRerankers[provider];
         if (rerankerClass) {
           continueConfig.modelsByRole.rerank.push(
-            new rerankerClass(options, (url: string | URL, init: any) =>
-              fetchwithRequestOptions(url, init, {
-                ...options.requestOptions,
-              }),
+            new rerankerClass(
+              {
+                ...options,
+                title: options.name,
+              },
+              (url: string | URL, init: any) =>
+                fetchwithRequestOptions(url, init, {
+                  ...options.requestOptions,
+                }),
             ),
           );
         } else {
@@ -333,7 +356,6 @@ async function configYamlToContinueConfig(
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),
-    new PromptFilesContextProvider({}),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
@@ -367,56 +389,19 @@ async function configYamlToContinueConfig(
     continueConfig.contextProviders.push(new DocsContextProvider({}));
   }
 
-  // Apply MCP if specified
+  // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
-  await Promise.allSettled(
-    config.mcpServers?.map(async (server) => {
-      const abortController = new AbortController();
-      const mcpConnectionTimeout = setTimeout(
-        () => abortController.abort(),
-        4000,
-      );
-
-      try {
-        const mcpId = server.name;
-        const mcpConnection = mcpManager.createConnection(mcpId, {
-          transport: {
-            type: "stdio",
-            args: [],
-            ...server,
-          },
-        });
-        if (!mcpConnection) {
-          return;
-        }
-
-        const mcpError = await mcpConnection.modifyConfig(
-          continueConfig,
-          mcpId,
-          abortController.signal,
-          server.name,
-          server.faviconUrl,
-        );
-        if (mcpError) {
-          localErrors.push(mcpError);
-        }
-      } catch (e) {
-        let errorMessage = `Failed to load MCP server ${server.name}`;
-        if (e instanceof Error) {
-          if (e.name === "AbortError") {
-            errorMessage += ": connection timed out";
-          } else {
-            errorMessage += ": " + e.message;
-          }
-        }
-        localErrors.push({
-          fatal: false,
-          message: errorMessage,
-        });
-      } finally {
-        clearTimeout(mcpConnectionTimeout);
-      }
-    }) ?? [],
+  mcpManager.setConnections(
+    (config.mcpServers ?? []).map((server) => ({
+      id: server.name,
+      name: server.name,
+      transport: {
+        type: "stdio",
+        args: [],
+        ...server,
+      },
+    })),
+    false,
   );
 
   return { config: continueConfig, errors: localErrors };
@@ -424,7 +409,6 @@ async function configYamlToContinueConfig(
 
 export async function loadContinueConfigFromYaml(
   ide: IDE,
-  workspaceConfigs: string[],
   ideSettings: IdeSettings,
   ideInfo: IdeInfo,
   uniqueId: string,
@@ -434,6 +418,7 @@ export async function loadContinueConfigFromYaml(
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   controlPlaneClient: ControlPlaneClient,
   configYamlPath: string | undefined,
+  orgScopeId: string | null,
 ): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
@@ -444,11 +429,11 @@ export async function loadContinueConfigFromYaml(
       : "";
 
   const configYamlResult = await loadConfigYaml(
-    workspaceConfigs,
     rawYaml,
     overrideConfigYaml,
-    ide,
     controlPlaneClient,
+    orgScopeId,
+    ideSettings,
   );
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {

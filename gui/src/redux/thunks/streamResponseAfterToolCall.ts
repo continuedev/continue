@@ -26,7 +26,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const useTools = state.ui.useTools;
         const initialHistory = state.session.history;
         const defaultModel = selectDefaultModel(state);
 
@@ -60,13 +59,8 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         dispatch(setActive());
 
         const updatedHistory = getState().session.history;
-        const messages = constructMessages(
-          [...updatedHistory],
-          defaultModel,
-          useTools,
-        );
-        const output = await dispatch(streamNormalInput(messages));
-        unwrapResult(output);
+        const messages = constructMessages([...updatedHistory]);
+        unwrapResult(await dispatch(streamNormalInput({ messages })));
       }),
     );
   },

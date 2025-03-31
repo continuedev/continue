@@ -3,7 +3,7 @@ import {
   ContextProviderName,
   ContextSubmenuItemWithProvider,
 } from "core";
-import { deduplicateArray } from "core/util";
+import { deduplicateArray, splitCamelCaseAndNonAlphaNumeric } from "core/util";
 import {
   getShortestUniqueRelativeUriPaths,
   getUriPathBasename,
@@ -279,19 +279,28 @@ export const SubmenuContextProvidersProvider = ({
               const itemsWithProvider = submenuItems.map((item) => ({
                 ...item,
                 providerTitle,
-                renderInlineAs
+                renderInlineAs,
               }));
 
               const minisearch = new MiniSearch<ContextSubmenuItemWithProvider>(
                 {
                   fields: ["title", "description"],
                   storeFields: ["id", "title", "description", "providerTitle"],
+                  tokenize: (text) =>
+                    deduplicateArray(
+                      MiniSearch.getDefault("tokenize")(text).concat(
+                        splitCamelCaseAndNonAlphaNumeric(text),
+                      ),
+                      (a, b) => a === b,
+                    ),
                 },
               );
 
-              minisearch.addAll(
+              const deduplicatedItems = deduplicateArray(
                 submenuItems.map((item) => ({ ...item, providerTitle })),
+                (a, b) => a.id === b.id,
               );
+              minisearch.addAll(deduplicatedItems);
 
               setMinisearches((prev) => ({
                 ...prev,

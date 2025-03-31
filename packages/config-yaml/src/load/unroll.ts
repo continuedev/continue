@@ -346,6 +346,12 @@ export async function resolveBlock(
   // Retrieve block raw yaml
   const rawYaml = await registry.getContent(fullSlug);
 
+  if (rawYaml === undefined) {
+    throw new Error(
+      `Block ${fullSlug.ownerSlug}/${fullSlug.packageSlug} not found`,
+    );
+  }
+
   // Convert any input secrets to FQSNs (they get FQSNs as if they are in the block. This is so that we know when to use models add-on / free trial secrets)
   const renderedInputs = inputsToFQSNs(inputs || {}, fullSlug);
 

@@ -5,7 +5,7 @@ import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
-import { updateChatHistory } from "./updateChatHistory";
+import { replaceSlashCommandWithPromptInChatHistory } from "./updateChatHistory";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
@@ -53,23 +53,22 @@ export function slashCommandFromPromptFileV1(
   path: string,
   content: string,
 ): SlashCommand | null {
-  const { name, description, systemMessage, prompt, version } =
-    parsePromptFileV1V2(path, content);
-
-  if (version !== 1) {
-    return null;
-  }
+  const { name, description, systemMessage, prompt } = parsePromptFileV1V2(
+    path,
+    content,
+  );
 
   return {
     name,
     description,
+    prompt,
     run: async function* (context) {
       const originalSystemMessage = context.llm.systemMessage;
       context.llm.systemMessage = systemMessage;
 
       const userInput = extractUserInput(context.input, name);
       const renderedPrompt = await renderPromptV1(prompt, context, userInput);
-      const messages = updateChatHistory(
+      const messages = replaceSlashCommandWithPromptInChatHistory(
         context.history,
         name,
         renderedPrompt,
@@ -79,6 +78,7 @@ export function slashCommandFromPromptFileV1(
       for await (const chunk of context.llm.streamChat(
         messages,
         new AbortController().signal,
+        context.completionOptions,
       )) {
         yield renderChatMessage(chunk);
       }

@@ -11,7 +11,17 @@ export const Anthropic: ModelProvider = {
       maxCompletionTokens: 8192,
       description:
         "Most intelligent model with the highest level of intelligence and capability.",
-      regex: /claude-3\.5-sonnet/i,
+      regex: /claude-3[.-]5-sonnet.*/i,
+      recommendedFor: ["chat"],
+    },
+    {
+      model: "claude-3-7-sonnet-latest",
+      displayName: "Claude 3.7 Sonnet",
+      contextLength: 200000,
+      maxCompletionTokens: 8192,
+      description:
+        "Most intelligent model with the highest level of intelligence and capability.",
+      regex: /claude-3[.-]7-sonnet.*/i,
       recommendedFor: ["chat"],
     },
     {
