@@ -770,7 +770,18 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = this._compileChatMessages(completionOptions, _messages);
+    const [messages, shouldWarn] = this._compileChatMessages(
+      completionOptions,
+      _messages,
+    );
+
+    if (shouldWarn) {
+      yield {
+        role: "warning",
+        content:
+          "The context has reached its limit. This may lead to less accurate or incomplete answers.",
+      };
+    }
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)

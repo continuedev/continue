@@ -54,6 +54,7 @@ type SessionState = {
     curIndex: number;
   };
   newestCodeblockForInput: Record<string, string>;
+  warning: string;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -92,6 +93,7 @@ const initialState: SessionState = {
   },
   lastSessionId: undefined,
   newestCodeblockForInput: {},
+  warning: "",
 };
 
 export const sessionSlice = createSlice({
@@ -226,6 +228,7 @@ export const sessionSlice = createSlice({
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
       state.history.splice(action.payload - 1, 2);
+      state.warning = "";
     },
     updateHistoryItemAtIndex: (
       state,
@@ -653,6 +656,9 @@ export const sessionSlice = createSlice({
     ) => {
       state.newestCodeblockForInput[payload.inputId] = payload.contextItemId;
     },
+    setWarning: (state, action: PayloadAction<string>) => {
+      state.warning = action.payload;
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -754,6 +760,7 @@ export const {
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
   cycleMode,
+  setWarning,
 } = sessionSlice.actions;
 
 export const {

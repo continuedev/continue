@@ -27,9 +27,9 @@ class LlamaEncoding implements Encoding {
 }
 
 class NonWorkerAsyncEncoder implements AsyncEncoder {
-  constructor(private readonly encoding: Encoding) { }
+  constructor(private readonly encoding: Encoding) {}
 
-  async close(): Promise<void> { }
+  async close(): Promise<void> {}
 
   async encode(text: string): Promise<number[]> {
     return this.encoding.encode(text);
@@ -243,12 +243,14 @@ function pruneChatHistory(
   chatHistory: ChatMessage[],
   contextLength: number,
   tokensForCompletion: number,
-): ChatMessage[] {
+): [ChatMessage[], boolean] {
   let totalTokens =
     tokensForCompletion +
     chatHistory.reduce((acc, message) => {
       return acc + countChatMessageTokens(modelName, message);
     }, 0);
+
+  let shouldWarn = false;
 
   // 0. Prune any messages that take up more than 1/3 of the context length
   const longestMessages = [...chatHistory];
@@ -275,6 +277,7 @@ function pruneChatHistory(
       content,
     );
     totalTokens -= delta;
+    shouldWarn = true;
   }
 
   // 1. Replace beyond last 5 messages with summary
@@ -327,9 +330,10 @@ function pruneChatHistory(
       tokensForCompletion,
     );
     totalTokens = contextLength;
+    shouldWarn = true;
   }
 
-  return chatHistory;
+  return [chatHistory, shouldWarn];
 }
 
 function messageIsEmpty(message: ChatMessage): boolean {
@@ -367,6 +371,7 @@ function chatMessageIsEmpty(message: ChatMessage): boolean {
         !message.toolCalls
       );
     case "thinking":
+    case "warning":
     case "tool":
       return false;
   }
@@ -381,11 +386,16 @@ function compileChatMessages(
   prompt: string | undefined = undefined,
   functions: any[] | undefined = undefined,
   systemMessage: string | undefined = undefined,
-): ChatMessage[] {
+): [ChatMessage[], boolean] {
   let msgsCopy = msgs
     ? msgs
-      .map((msg) => ({ ...msg }))
-      .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
+        .map((msg) => ({ ...msg }))
+        .filter(
+          (msg) =>
+            !chatMessageIsEmpty(msg) &&
+            msg.role !== "system" &&
+            msg.role !== "warning",
+        )
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
@@ -445,7 +455,7 @@ function compileChatMessages(
     }
   }
 
-  const history = pruneChatHistory(
+  const [history, shouldWarn] = pruneChatHistory(
     modelName,
     msgsCopy,
     contextLength,
@@ -459,7 +469,7 @@ function compileChatMessages(
 
   const flattenedHistory = flattenMessages(history);
 
-  return flattenedHistory;
+  return [flattenedHistory, shouldWarn];
 }
 
 export {
@@ -470,6 +480,5 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop
+  pruneStringFromTop,
 };
-
