@@ -2889,7 +2889,8 @@
                 "watsonx",
                 "llm",
                 "free-trial",
-                "huggingface-tei"
+                "huggingface-tei",
+                "siliconflow"
               ]
             },
             "params": {
@@ -3054,6 +3055,40 @@
                 },
                 "then": {
                   "required": ["truncation_direction"]
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["siliconflow"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "BAAI/bge-reranker-v2-m3",
+                          "netease-youdao/bce-reranker-base_v1",
+                          "Pro/BAAI/bge-reranker-v2-m3"
+                        ],
+                        "default": "BAAI/bge-reranker-v2-m3"
+                      },
+                      "apiBase": {
+                        "type": "string"
+                      },
+                      "apiKey": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
                 }
               }
             }
