@@ -37,7 +37,6 @@ export const streamNormalInput = createAsyncThunk<
     if (!defaultModel) {
       throw new Error("Default model not defined");
     }
-
     const includeTools = useTools && modelSupportsTools(defaultModel);
 
     // Send request
@@ -76,7 +75,7 @@ export const streamNormalInput = createAsyncThunk<
       dispatch(addPromptCompletionPair([next.value]));
 
       try {
-        if (state.session.mode === "chat") {
+        if (state.session.mode === "chat" || state.session.mode === "agent") {
           extra.ideMessenger.post("devdata/log", {
             name: "chatInteraction",
             data: {

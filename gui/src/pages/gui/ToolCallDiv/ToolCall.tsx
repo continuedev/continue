@@ -54,7 +54,7 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
         Mustache.render(tool.isCurrently, props.toolCallState.parsedArgs)
       ) : (
         <>
-          <span>using the</span> {defaultToolDescription}
+          <span>calling the</span> {defaultToolDescription}
         </>
       );
     } else if (props.toolCallState.status === "done") {

@@ -2,10 +2,7 @@ import { useContext } from "react";
 import styled from "styled-components";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import {
-  clearLastEmptyResponse,
-  setInactive,
-} from "../../../redux/slices/sessionSlice";
+import { cancelStream } from "../../../redux/thunks/cancelStream";
 import { getFontSize, getMetaKeyLabel } from "../../../util";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
 
@@ -54,8 +51,7 @@ export function LumpToolbar(props: TopToolbarProps) {
         <StopButton
           className="text-gray-400"
           onClick={() => {
-            dispatch(setInactive());
-            dispatch(clearLastEmptyResponse());
+            dispatch(cancelStream());
           }}
         >
           {getMetaKeyLabel()} ⌫ Cancel
