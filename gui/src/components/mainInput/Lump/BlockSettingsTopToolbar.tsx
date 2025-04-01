@@ -129,7 +129,7 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
           </div>
         </div>
       </div>
-      <div className="">
+      <div>
         <AssistantSelect />
       </div>
     </div>
