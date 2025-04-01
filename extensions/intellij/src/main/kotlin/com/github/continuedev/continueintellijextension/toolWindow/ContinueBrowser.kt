@@ -1,7 +1,6 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
-import com.github.continuedev.continueintellijextension.constants.MessageTypes
 import com.github.continuedev.continueintellijextension.constants.MessageTypes.Companion.PASS_THROUGH_TO_CORE
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
@@ -10,11 +9,11 @@ import com.github.continuedev.continueintellijextension.utils.uuid
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.*
 import com.intellij.ui.jcef.JBCefClient.Properties
+import com.intellij.util.application
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
@@ -30,8 +29,10 @@ class ContinueBrowser(val project: Project, url: String) {
 
     val browser: JBCefBrowser
 
+    val continuePluginService: ContinuePluginService = project.getService(ContinuePluginService::class.java)
+
     init {
-        val isOSREnabled = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+        val isOSREnabled = application.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
 
         this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build().apply {
             // To avoid using System.setProperty to affect other plugins,
@@ -42,7 +43,6 @@ class ContinueBrowser(val project: Project, url: String) {
         }
 
         registerAppSchemeHandler()
-        browser.loadURL(url)
         Disposer.register(ContinuePluginDisposable.getInstance(project), browser)
 
         // Listen for events sent from browser
@@ -54,11 +54,6 @@ class ContinueBrowser(val project: Project, url: String) {
             val messageType = json.get("messageType").asString
             val data = json.get("data")
             val messageId = json.get("messageId")?.asString
-
-            val continuePluginService = ServiceManager.getService(
-                project,
-                ContinuePluginService::class.java
-            )
 
             val respond = fun(data: Any?) {
                 sendToWebview(messageType, data, messageId ?: uuid())
@@ -100,6 +95,13 @@ class ContinueBrowser(val project: Project, url: String) {
                 }
             }
         }, browser.cefBrowser)
+
+        // Load the url only after the protocolClient is initialized,
+        // otherwise some messages will be lost, which are some configurations when the page is loaded.
+        // Moreover, we should add LoadHandler before loading the url.
+        continuePluginService.onProtocolClientInitialized {
+            browser.loadURL(url)
+        }
 
     }
 
