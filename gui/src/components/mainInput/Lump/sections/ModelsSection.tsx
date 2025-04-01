@@ -1,8 +1,11 @@
 import { ModelRole } from "@continuedev/config-yaml";
+import { PlusIcon } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
 import { useContext } from "react";
+import { GhostButton } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import AddModelForm from "../../../../forms/AddModelForm";
 import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
 import {
@@ -10,8 +13,11 @@ import {
   setDefaultModel,
   updateConfig,
 } from "../../../../redux/slices/configSlice";
-import { isJetBrains } from "../../../../util";
-import { ExploreBlocksButton } from "./ExploreBlocksButton";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../../../redux/slices/uiSlice";
+import { fontSize, isJetBrains } from "../../../../util";
 
 export function ModelsSection() {
   const { selectedProfile } = useAuth();
@@ -49,6 +55,19 @@ export function ModelsSection() {
       return;
     }
     dispatch(setDefaultModel({ title: model.title }));
+  }
+
+  function handleAddModel() {
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddModelForm
+          onDone={() => {
+            dispatch(setShowDialog(false));
+          }}
+        />,
+      ),
+    );
   }
 
   return (
@@ -107,8 +126,21 @@ export function ModelsSection() {
           selectedModel={config.selectedModelByRole.rerank}
           onSelect={(model) => handleRoleUpdate("rerank", model)}
         />
+        <GhostButton
+          className="w-full cursor-pointer rounded px-2 text-center text-gray-400 hover:text-gray-300"
+          style={{
+            fontSize: fontSize(-3),
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            handleAddModel();
+          }}
+        >
+          <div className="flex items-center justify-center gap-1">
+            <PlusIcon className="h-3 w-3" /> Add Models
+          </div>
+        </GhostButton>
       </div>
-      <ExploreBlocksButton blockType={"models"} />
     </div>
   );
 }
