@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { toggleBlockSettingsToolbar } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
-import HoverItem from "../InputToolbar/bottom/HoverItem";
+import HoverItem from "../InputToolbar/HoverItem";
 
 interface BlockSettingsToolbarIcon {
   tooltip: string;
@@ -129,7 +129,7 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
           </div>
         </div>
       </div>
-      <div className="ml-auto">
+      <div className="">
         <AssistantSelect />
       </div>
     </div>

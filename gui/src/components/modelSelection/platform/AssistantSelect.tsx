@@ -1,12 +1,13 @@
 import {
   ArrowTopRightOnSquareIcon,
   BuildingOfficeIcon,
+  CheckIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile, selectProfileThunk } from "../../../redux";
@@ -33,16 +34,24 @@ import { ToolTip } from "../../gui/Tooltip";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
 
+// interface OpenAssistantConfigProps {
+//   profile: ProfileDescription
+// }
+// const OpenAssistantConfigIcon = ({ profile }: Opean) => {
+
+// }
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;
+  selected: boolean;
   onClick: () => void;
 }
+
 const AssistantSelectOption = ({
   profile,
+  selected,
   onClick,
 }: AssistantSelectOptionProps) => {
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
 
   const hasFatalErrors = useMemo(() => {
     return !!profile.errors?.find((error) => error.fatal);
@@ -72,8 +81,6 @@ const AssistantSelectOption = ({
 
   return (
     <ListboxOption
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       value={profile.id}
       disabled={hasFatalErrors}
       onClick={!hasFatalErrors ? handleOptionClick : undefined}
@@ -81,20 +88,22 @@ const AssistantSelectOption = ({
     >
       <div className="flex w-full flex-col gap-0.5">
         <div className="flex w-full items-center justify-between">
-          <div className="flex w-full items-center">
+          <div className="flex w-full items-center gap-2">
             <div className="mr-2 h-4 w-4 flex-shrink-0">
               <AssistantIcon assistant={profile} />
             </div>
-            <span className="line-clamp-1 flex-1">{profile.title}</span>
+            <span
+              className={`line-clamp-1 flex-1 ${selected ? "font-bold" : ""}`}
+            >
+              {profile.title}
+            </span>
           </div>
-          <div className="ml-2 flex items-center">
+          <div className="flex flex-row items-center gap-2">
+            <div>{selected ? <CheckIcon className="h-3 w-3" /> : null}</div>
             {!profile.errors?.length ? (
               isLocalProfile(profile) ? (
                 <Cog6ToothIcon
                   className="h-3 w-3 flex-shrink-0 cursor-pointer"
-                  style={{
-                    opacity: hovered ? 1 : 0,
-                  }}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -103,9 +112,6 @@ const AssistantSelectOption = ({
                 />
               ) : (
                 <ArrowTopRightOnSquareIcon
-                  style={{
-                    opacity: hovered ? 1 : 0,
-                  }}
                   className="h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -215,7 +221,7 @@ export default function AssistantSelect() {
 
   return (
     <Listbox>
-      <div className="sm:max-w-4/5 relative flex">
+      <div className="relative">
         <ListboxButton
           data-testid="assistant-select-button"
           ref={buttonRef}
@@ -249,6 +255,7 @@ export default function AssistantSelect() {
                     key={idx}
                     profile={profile}
                     onClick={close}
+                    selected={profile.id === selectedProfile.id}
                   />
                 );
               })}

@@ -1,4 +1,4 @@
-import { ToolPermissionsDialog } from "../../InputToolbar/bottom/ToolPermissionsDialog";
+import { ToolPermissionsDialog } from "../../InputToolbar/ToolPermissionsDialog";
 
 interface ToolsSectionProps {}
 

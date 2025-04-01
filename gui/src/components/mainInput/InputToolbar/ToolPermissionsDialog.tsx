@@ -1,9 +1,9 @@
 import { Tool } from "core";
 import { useMemo } from "react";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { toggleToolGroupSetting } from "../../../../redux/slices/uiSlice";
-import { fontSize } from "../../../../util";
-import ToggleSwitch from "../../../gui/Switch";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { toggleToolGroupSetting } from "../../../redux/slices/uiSlice";
+import { fontSize } from "../../../util";
+import ToggleSwitch from "../../gui/Switch";
 import ToolDropdownItem from "./ToolDropdownItem";
 
 export const ToolPermissionsDialog = () => {

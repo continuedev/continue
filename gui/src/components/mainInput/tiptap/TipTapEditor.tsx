@@ -32,8 +32,6 @@ export interface TipTapEditorProps {
   ) => void;
   editorState?: JSONContent;
   toolbarOptions?: ToolbarOptions;
-  lumpOpen: boolean;
-  setLumpOpen: (open: boolean) => void;
   placeholder?: string;
   historyKey: string;
   inputId: string;
@@ -262,8 +260,6 @@ function TipTapEditor(props: TipTapEditorProps) {
           activeKey={activeKey}
           hidden={shouldHideToolbar && !props.isMainInput}
           onAddContextItem={() => insertCharacterWithWhitespace("@")}
-          lumpOpen={props.lumpOpen}
-          setLumpOpen={props.setLumpOpen}
           onEnter={onEnterRef.current}
           onImageFileSelected={(file) => {
             handleImageFile(ideMessenger, file).then((result) => {
