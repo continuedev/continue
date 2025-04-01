@@ -29,12 +29,22 @@ interface ToConsoleViewItem {
   item: LLMInteractionItem;
 }
 
+interface ToConsoleViewRemove {
+  type: "remove";
+  uuid: string;
+  interactionId: string;
+}
+
 interface ToConsoleViewClear {
   type: "clear";
   uuid: string;
 }
 
-type ToConsoleView = ToConsoleViewInit | ToConsoleViewItem | ToConsoleViewClear;
+type ToConsoleView =
+  | ToConsoleViewInit
+  | ToConsoleViewItem
+  | ToConsoleViewRemove
+  | ToConsoleViewClear;
 
 /**
  * Represents a linear list of LLMInteractionItem, transformed into
@@ -168,6 +178,21 @@ function appendItemsToLLMLog(
   };
 }
 
+function removeInteractionFromLLMLog(
+  llmLog: LLMLog,
+  interactionId: string,
+): LLMLog {
+  const newInteractions = new Map(llmLog.interactions);
+  newInteractions.delete(interactionId);
+  const newOrder = llmLog.order.filter((id) => id !== interactionId);
+
+  return {
+    loading: false,
+    interactions: newInteractions,
+    order: newOrder,
+  };
+}
+
 /**
  * Hook to accumulate log data structures based on messages passed
  * from the core. Note that each call site will create an independent
@@ -183,6 +208,8 @@ export default function useLLMLog() {
           return appendItemsToLLMLog(llmLog, message.items);
         case "item":
           return appendItemsToLLMLog(llmLog, [message.item]);
+        case "remove":
+          return removeInteractionFromLLMLog(llmLog, message.interactionId);
         case "clear":
           return {
             loading: false,
