@@ -148,17 +148,11 @@ class IntelliJIDE(
     }
 
     override suspend fun getWorkspaceDirs(): List<String> {
-        val dirs = this.continuePluginService.workspacePaths
-
-        if (dirs?.isNotEmpty() == true) {
-            return dirs
-        }
-
-        return listOfNotNull(project.guessProjectDir()?.toUriOrNull()).toTypedArray()
+        return workspaceDirectories().toList()
     }
 
     override suspend fun getWorkspaceConfigs(): List<ContinueRcJson> {
-        val workspaceDirs = gitService.workspaceDirectories()
+        val workspaceDirs = this.getWorkspaceDirs()
 
         val configs = mutableListOf<String>()
 
@@ -407,7 +401,7 @@ class IntelliJIDE(
     }
 
     override suspend fun getTags(artifactId: String): List<IndexTag> {
-        val workspaceDirs = gitService.workspaceDirectories()
+        val workspaceDirs = this.getWorkspaceDirs()
 
         // Collect branches concurrently using Kotlin coroutines
         val branches = withContext(Dispatchers.IO) {
@@ -539,6 +533,16 @@ class IntelliJIDE(
                 }
             }
         }
+    }
+
+    private fun workspaceDirectories(): Array<String> {
+        val dirs = this.continuePluginService.workspacePaths
+
+        if (dirs?.isNotEmpty() == true) {
+            return dirs
+        }
+
+        return listOfNotNull(project.guessProjectDir()?.toUriOrNull()).toTypedArray()
     }
 
 }
