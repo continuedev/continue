@@ -2,8 +2,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
-  CubeIcon,
-  PlusIcon,
+  CubeIcon
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -194,7 +193,7 @@ function ModelSelect() {
     );
   }
 
-  return (
+  return sortedOptions.length > 1 && (
     // <span className="line-clamp-1">Hiad sfasdfasdf asdfasdf</span>
     <Listbox
       onChange={async (val: string) => {
@@ -230,21 +229,6 @@ function ModelSelect() {
           </div>
 
           <div className="">
-            {selectedProfile?.profileType === "local" && (
-              <>
-                <ListboxOption
-                  key={options.length}
-                  onClick={onClickAddModel}
-                  value={"addModel" as any}
-                >
-                  <div className="flex items-center py-0.5">
-                    <PlusIcon className="mr-2 h-3 w-3" />
-                    Add Chat model
-                  </div>
-                </ListboxOption>
-              </>
-            )}
-
             <span className="block px-2 py-1" style={{ color: lightGray }}>
               {getMetaKeyLabel()}' to toggle model
             </span>

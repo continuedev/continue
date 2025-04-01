@@ -213,7 +213,7 @@ export default function AssistantSelect() {
     );
   }
 
-  return (
+  return profiles && profiles.length > 1 && (
     <Listbox>
       <div className="sm:max-w-4/5 relative flex">
         <ListboxButton
@@ -261,17 +261,6 @@ export default function AssistantSelect() {
                   backgroundColor: vscCommandCenterInactiveBorder,
                 }}
               />
-
-              <ListboxOption
-                value={"new-assistant"}
-                fontSizeModifier={-2}
-                onClick={session ? onNewAssistant : () => login(false)}
-              >
-                <div className="flex flex-row items-center gap-2">
-                  <PlusIcon className="h-4 w-4 flex-shrink-0" />
-                  New Assistant
-                </div>
-              </ListboxOption>
 
               <div
                 className="my-0 h-[0.5px]"
