@@ -1,9 +1,10 @@
-import { ConfigYaml } from "@continuedev/config-yaml";
-import { ModelDescription } from "..";
+import {
+  AssistantUnrolled,
+  ConfigYaml,
+  ModelConfig,
+} from "@continuedev/config-yaml";
 
-export const defaultContextProvidersVsCode: NonNullable<
-  ConfigYaml["context"]
->[number][] = [
+export const defaultContextProvidersVsCode = [
   { provider: "code" },
   { provider: "docs" },
   { provider: "diff" },
@@ -13,9 +14,7 @@ export const defaultContextProvidersVsCode: NonNullable<
   { provider: "codebase" },
 ];
 
-export const defaultContextProvidersJetBrains: NonNullable<
-  ConfigYaml["context"]
->[number][] = [
+export const defaultContextProvidersJetBrains = [
   { provider: "diff" },
   { provider: "folder" },
   { provider: "codebase" },
@@ -39,33 +38,46 @@ export const defaultConfigJetBrains: ConfigYaml = {
 
 const DEFAULT_CONTEXT_LENGTH = 8192;
 
-const BASE_GRANITE_CONFIG: Partial<ModelDescription> = {
-  contextLength: DEFAULT_CONTEXT_LENGTH,
-  completionOptions: {
+const BASE_GRANITE_CONFIG: Partial<ModelConfig> = {
+  defaultCompletionOptions: {
+    contextLength: DEFAULT_CONTEXT_LENGTH,
     maxTokens: DEFAULT_CONTEXT_LENGTH / 4,
     temperature: 0,
-    topP: 0.9,
-    topK: 40,
-    presencePenalty: 0.0,
-    frequencyPenalty: 0.1,
   },
-  systemMessage: `\
-You are Granite, an AI language model developed by IBM. \
-You are a cautious assistant. You carefully follow instructions. \
-You are helpful and harmless and you follow ethical guidelines and promote positive behavior.
-`,
+  roles: ["apply", "autocomplete", "chat", "edit", "summarize"],
 };
 
-export const DEFAULT_MODEL_GRANITE_SMALL: ModelDescription = {
-  title: "granite3.2:2b",
+export const DEFAULT_MODEL_GRANITE_SMALL: ModelConfig = {
+  name: "granite3.2:2b",
   provider: "ollama",
   model: "granite3.2:2b",
   ...BASE_GRANITE_CONFIG,
 };
 
-export const DEFAULT_MODEL_GRANITE_LARGE: ModelDescription = {
-  title: "granite3.2:8b",
+export const DEFAULT_MODEL_GRANITE_LARGE: ModelConfig = {
+  name: "granite3.2:8b",
   provider: "ollama",
   model: "granite3.2:8b",
   ...BASE_GRANITE_CONFIG,
+};
+
+export const DEFAULT_GRANITE_EMBEDDING_MODEL: ModelConfig = {
+  name: "nomic-embed-text",
+  provider: "ollama",
+  model: "nomic-embed-text:latest",
+  roles: ["embed"],
+};
+
+export const defaultConfigGraniteLarge: Required<
+  Pick<AssistantUnrolled, "models" | "context">
+> = {
+  models: [DEFAULT_MODEL_GRANITE_LARGE, DEFAULT_GRANITE_EMBEDDING_MODEL],
+  context: defaultContextProvidersVsCode,
+};
+
+export const defaultConfigGraniteSmall: Required<
+  Pick<AssistantUnrolled, "models" | "context">
+> = {
+  models: [DEFAULT_MODEL_GRANITE_SMALL, DEFAULT_GRANITE_EMBEDDING_MODEL],
+  context: defaultContextProvidersVsCode,
 };

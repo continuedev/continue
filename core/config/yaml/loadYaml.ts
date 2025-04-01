@@ -42,6 +42,10 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import {
+  defaultConfigGraniteLarge,
+  defaultConfigGraniteSmall,
+} from "../default";
 import { llmsFromModelConfig } from "./models";
 
 export class LocalPlatformClient implements PlatformClient {
@@ -166,6 +170,10 @@ async function configYamlToContinueConfig(
     },
     data: config.data,
   };
+  const graniteConfigYaml =
+    ideSettings.localModelSize === "large"
+      ? defaultConfigGraniteLarge
+      : defaultConfigGraniteSmall;
 
   // Prompt files -
   try {
@@ -208,7 +216,9 @@ async function configYamlToContinueConfig(
 
   // Models
   const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
-  for (const model of config.models ?? []) {
+  const models = getAllModels(config, graniteConfigYaml);
+
+  for (const model of models) {
     model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
     try {
       const llms = await llmsFromModelConfig(
@@ -362,8 +372,11 @@ async function configYamlToContinueConfig(
     ({ description: { title } }) => title,
   );
 
-  continueConfig.contextProviders = (config.context
-    ?.map((context) => {
+  continueConfig.contextProviders = (getAllContextProviders(
+    config,
+    graniteConfigYaml,
+  )
+    .map((context) => {
       const cls = contextProviderClassFromName(context.provider) as any;
       if (!cls) {
         if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(context.provider)) {
@@ -405,6 +418,34 @@ async function configYamlToContinueConfig(
   );
 
   return { config: continueConfig, errors: localErrors };
+}
+
+function getAllModels(
+  config: AssistantUnrolled,
+  graniteConfigYaml: Required<Pick<AssistantUnrolled, "models">>,
+) {
+  const allModels = [...(config.models ?? [])];
+  for (const model of graniteConfigYaml.models) {
+    if (!allModels.some((m) => m.name === model.name)) {
+      allModels.push(model);
+    }
+  }
+
+  return allModels;
+}
+
+function getAllContextProviders(
+  config: AssistantUnrolled,
+  graniteConfigYaml: Required<Pick<AssistantUnrolled, "context">>,
+) {
+  const allProviders = [...(config.context ?? [])];
+  for (const provider of graniteConfigYaml.context) {
+    if (!allProviders.some((p) => p.provider === provider.provider)) {
+      allProviders.push(provider);
+    }
+  }
+
+  return allProviders;
 }
 
 export async function loadContinueConfigFromYaml(
