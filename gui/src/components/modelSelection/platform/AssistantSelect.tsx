@@ -34,12 +34,6 @@ import { ToolTip } from "../../gui/Tooltip";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
 
-// interface OpenAssistantConfigProps {
-//   profile: ProfileDescription
-// }
-// const OpenAssistantConfigIcon = ({ profile }: Opean) => {
-
-// }
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;
   selected: boolean;
