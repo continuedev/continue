@@ -4,7 +4,7 @@ import {
   modifyAnyConfigWithSharedConfig,
 } from "core/config/sharedConfig";
 import { useContext, useEffect, useState } from "react";
-import { Input, SecondaryButton } from "../../components";
+import { Input } from "../../components";
 import NumberInput from "../../components/gui/NumberInput";
 import { Select } from "../../components/gui/Select";
 import ToggleSwitch from "../../components/gui/Switch";
@@ -102,7 +102,7 @@ export function UserSettingsForm() {
 
   return (
     <div className="flex flex-col pt-3">
-      {selectedProfile ? (
+      {/* {selectedProfile && isLocalProfile(selectedProfile) ? (
         <div className="flex items-center justify-center">
           <SecondaryButton
             className="flex flex-row items-center gap-1"
@@ -113,11 +113,11 @@ export function UserSettingsForm() {
             }}
           >
             <span>Open</span>
-            <span>Assistant</span>
-            <span className="xs:flex hidden">Config</span>
+            <span>Config</span>
+            <span className="xs:flex hidden">File</span>
           </SecondaryButton>
         </div>
-      ) : null}
+      ) : null} */}
       {!controlServerBetaEnabled || hubEnabled ? (
         <div className="flex flex-col gap-4 py-4">
           <div>
