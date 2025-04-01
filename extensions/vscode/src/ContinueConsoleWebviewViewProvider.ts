@@ -10,6 +10,10 @@ interface FromConsoleView {
   uuid: string;
 }
 
+// Maximum interactions we retain; when we exceed this, we drop the
+// oldest and also send a message to the view to do the same.
+const MAX_INTERACTIONS = 50;
+
 export class ContinueConsoleWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
@@ -36,7 +40,7 @@ export class ContinueConsoleWebviewViewProvider
         this._webview?.postMessage({
           type: "init",
           uuid: this._currentUuid,
-          items: this._items,
+          items: this.getAllItems(),
         });
       }
     });
@@ -50,7 +54,8 @@ export class ContinueConsoleWebviewViewProvider
   private _webview?: vscode.Webview;
   private _webviewView?: vscode.WebviewView;
   private _currentUuid?: string;
-  private _items: LLMInteractionItem[] = [];
+  private _currentInteractions = new Map<string, LLMInteractionItem[]>();
+  private _completedInteractions: LLMInteractionItem[][] = [];
   private _saveLog;
 
   constructor(
@@ -71,24 +76,68 @@ export class ContinueConsoleWebviewViewProvider
       }
     });
 
-    llmLogger.onLogItem((item) => {
-      if (!this._saveLog) {
-        return;
-      }
+    llmLogger.onLogItem((item) => this.addItem(item));
+  }
 
-      this._items.push(item);
-      if (this._currentUuid) {
-        this._webview?.postMessage({
-          type: "item",
-          uuid: this._currentUuid,
-          item,
-        });
-      }
-    });
+  private addItem(item: LLMInteractionItem) {
+    if (!this._saveLog) {
+      return;
+    }
+
+    let iteractionItems = this._currentInteractions.get(item.interactionId);
+    if (iteractionItems === undefined) {
+      iteractionItems = [];
+      this._currentInteractions.set(item.interactionId, iteractionItems);
+    }
+
+    iteractionItems.push(item);
+    switch (item.kind) {
+      case "success":
+      case "cancel":
+      case "error":
+        this._completedInteractions.push(iteractionItems);
+        this._currentInteractions.delete(item.interactionId);
+        break;
+      default:
+        break;
+    }
+
+    if (this._currentUuid) {
+      this._webview?.postMessage({
+        type: "item",
+        uuid: this._currentUuid,
+        item,
+      });
+    }
+
+    while (
+      this._completedInteractions.length > 0 &&
+      this._completedInteractions.length + this._currentInteractions.size >
+        MAX_INTERACTIONS
+    ) {
+      let toRemove = this._completedInteractions.shift();
+      this._webview?.postMessage({
+        type: "remove",
+        uuid: this._currentUuid,
+        interactionId: toRemove![0].interactionId,
+      });
+    }
+  }
+
+  private getAllItems() {
+    let items = this._completedInteractions.flat();
+
+    for (const interactionItems of this._currentInteractions.values()) {
+      items.push(...interactionItems);
+    }
+
+    return items;
   }
 
   clearLog() {
-    this._items = [];
+    this._completedInteractions = [];
+    this._currentInteractions = new Map();
+
     if (this._currentUuid) {
       this._webview?.postMessage({
         type: "clear",
