@@ -65,12 +65,10 @@ class MessageTypes {
             "addContextItem",
             "refreshSubmenuItems",
             "isContinueInputFocused",
-            "didChangeAvailableProfiles",
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
             "didCloseFiles",
-            "didSelectOrganization"
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -87,7 +85,6 @@ class MessageTypes {
             "config/ideSettingsUpdate",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
-            "config/listProfiles",
             "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
@@ -128,8 +125,6 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
-            "controlPlane/listOrganizations"
-
         )
     }
 }

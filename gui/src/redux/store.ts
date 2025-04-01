@@ -14,7 +14,6 @@ import { organizationsReducer, profilesReducer } from "./slices";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
-import miscReducer from "./slices/miscSlice";
 import sessionReducer from "./slices/sessionSlice";
 import tabsReducer from "./slices/tabsSlice";
 import uiReducer from "./slices/uiSlice";
@@ -26,7 +25,6 @@ export interface ChatMessage {
 
 const rootReducer = combineReducers({
   session: sessionReducer,
-  misc: miscReducer,
   ui: uiReducer,
   editModeState: editModeStateReducer,
   config: configReducer,
@@ -46,10 +44,6 @@ const saveSubsetFilters = [
     // Persist edit mode in case closes in middle
     "mode",
     "codeToEdit",
-
-    // TODO consider removing persisted profiles/orgs
-    "availableProfiles",
-    "organizations",
 
     // higher risk to persist
     // codeBlockApplyStates

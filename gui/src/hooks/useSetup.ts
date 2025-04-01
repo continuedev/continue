@@ -5,9 +5,9 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { ConfigResult } from "@continuedev/config-yaml";
 import { BrowserSerializedContinueConfig } from "core";
 import {
-  initializeProfilePreferencesThunk,
-  selectProfileThunk,
+  initializeProfilePreferences,
   selectSelectedProfileId,
+  setSelectedProfile,
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
@@ -34,28 +34,33 @@ function useSetup() {
   const defaultModel = useAppSelector(selectDefaultModel);
   const selectedProfileId = useAppSelector(selectSelectedProfileId);
 
-  const hasLoadedConfig = useRef(false);
+  const hasDoneInitialConfigLoad = useRef(false);
 
   const handleConfigUpdate = useCallback(
     async (
-      initial: boolean,
+      isInitial: boolean,
       result: {
         result: ConfigResult<BrowserSerializedContinueConfig>;
         profileId: string | null;
       },
     ) => {
       const { result: configResult, profileId } = result;
-      if (initial && hasLoadedConfig.current) {
+      if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
-      hasLoadedConfig.current = true;
+      hasDoneInitialConfigLoad.current = true;
       dispatch(setConfigResult(configResult));
-      dispatch(selectProfileThunk(profileId));
+      dispatch(setSelectedProfile(profileId));
 
       const isNewProfileId = profileId && profileId !== selectedProfileId;
 
       if (isNewProfileId) {
-        dispatch(initializeProfilePreferencesThunk({ profileId }));
+        dispatch(
+          initializeProfilePreferences({
+            defaultSlashCommands: [],
+            profileId,
+          }),
+        );
       }
 
       // Perform any actions needed with the config
@@ -64,28 +69,31 @@ function useSetup() {
         document.body.style.fontSize = `${configResult.config.ui.fontSize}px`;
       }
     },
-    [dispatch, hasLoadedConfig],
+    [dispatch, hasDoneInitialConfigLoad],
   );
 
-  const loadConfig = useCallback(
+  const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
+      // const authResult = await ideMessenger.request(
+      //   "auth/getState",
+      //   undefined
+      // )
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
       );
-      if (result.status === "error") {
-        return;
+      if (result.status === "success") {
+        await handleConfigUpdate(initial, result.content);
       }
-      await handleConfigUpdate(initial, result.content);
     },
     [ideMessenger, handleConfigUpdate],
   );
 
   // Load config from the IDE
   useEffect(() => {
-    loadConfig(true);
+    initialLoadAuthAndConfig(true);
     const interval = setInterval(() => {
-      if (hasLoadedConfig.current) {
+      if (hasDoneInitialConfigLoad.current) {
         // Init to run on initial config load
         ideMessenger.post("docs/initStatuses", undefined);
         dispatch(updateFileSymbolsFromHistory());
@@ -93,13 +101,13 @@ function useSetup() {
 
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
-        return;
+      } else {
+        initialLoadAuthAndConfig(true);
       }
-      loadConfig(true);
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [hasLoadedConfig, loadConfig, ideMessenger]);
+  }, [hasDoneInitialConfigLoad, initialLoadAuthAndConfig, ideMessenger]);
 
   useWebviewListener(
     "configUpdate",
@@ -109,7 +117,7 @@ function useSetup() {
       }
       await handleConfigUpdate(false, update);
     },
-    [loadConfig],
+    [handleConfigUpdate],
   );
 
   // Load symbols for chat on any session change

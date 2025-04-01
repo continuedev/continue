@@ -102,9 +102,4 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
 export type ToWebviewOrCoreFromIdeProtocol = {
   didChangeActiveTextEditor: [{ filepath: string }, void];
-  didChangeControlPlaneSessionInfo: [
-    { sessionInfo: ControlPlaneSessionInfo | undefined },
-    void,
-  ];
-  didChangeIdeSettings: [{ settings: IdeSettings }, void];
 };

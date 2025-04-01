@@ -9,7 +9,7 @@ import {
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { cycleProfile, selectProfileThunk } from "../../../redux";
+import { setSelectedProfile } from "../../../redux";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   fontSize,
@@ -52,7 +52,12 @@ const AssistantSelectOption = ({
   const ideMessenger = useContext(IdeMessengerContext);
 
   function handleOptionClick() {
-    dispatch(selectProfileThunk(profile.id));
+    // optimistic update
+    dispatch(setSelectedProfile(profile.id));
+    // notify core which will handle actual update
+    ideMessenger.post("didChangeSelectedProfile", {
+      id: profile.id,
+    });
     onClick();
   }
 
@@ -142,6 +147,9 @@ export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { selectedProfile, selectedOrganization } = useAuth();
+  const availableProfiles = useAppSelector(
+    (store) => store.profiles.availableProfiles,
+  );
   const ideMessenger = useContext(IdeMessengerContext);
   const isLumpToolbarExpanded = useAppSelector(
     (state) => state.ui.isBlockSettingsToolbarExpanded,
@@ -176,8 +184,24 @@ export default function AssistantSelect() {
         const now = Date.now();
 
         if (now - lastToggleTime >= DEBOUNCE_MS) {
-          dispatch(cycleProfile());
           lastToggleTime = now;
+
+          const profileIds =
+            availableProfiles?.map((profile) => profile.id) ?? [];
+          // In case of 1 or 0 profiles just does nothing
+          if (profileIds.length < 2) {
+            return;
+          }
+          let nextId = profileIds[0];
+          if (selectedProfile) {
+            const curIndex = profileIds.indexOf(selectedProfile.id);
+            const nextIndex = (curIndex + 1) % profileIds.length;
+            nextId = profileIds[nextIndex];
+          }
+          dispatch(setSelectedProfile(nextId));
+          ideMessenger.post("didChangeSelectedProfile", {
+            id: nextId,
+          });
         }
       }
     };
@@ -186,7 +210,7 @@ export default function AssistantSelect() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [availableProfiles, selectedProfile]);
 
   const tinyFont = useFontSize(-4);
   const smallFont = useFontSize(-3);

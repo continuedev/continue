@@ -108,11 +108,6 @@ export class Core {
       ideSettingsPromise,
       this.onWrite,
       sessionInfoPromise,
-      (orgId: string | null) => {
-        void messenger.request("didSelectOrganization", {
-          orgId,
-        });
-      },
     );
 
     this.docsService = DocsService.createSingleton(
@@ -123,8 +118,6 @@ export class Core {
 
     const mcpManager = MCPManagerSingleton.getInstance();
     mcpManager.onConnectionsRefreshed = async () => {
-      // This ensures that it triggers a NEW load after waiting for config promise to finish
-      await this.configHandler.loadConfig();
       await this.configHandler.reloadConfig();
     };
 
@@ -134,6 +127,9 @@ export class Core {
         result: serializedResult,
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
+        selectedOrgId: this.configHandler.selectedOrgId,
+        availableOrgProfiles: this.configHandler.listProfileDescriptions(),
+        availableOrgs: this.configHandler.organizations,
       });
 
       // update additional submenu context providers registered via VSCode API
@@ -145,14 +141,6 @@ export class Core {
         });
       }
     });
-
-    this.configHandler.onDidChangeAvailableProfiles(
-      (profiles, selectedProfileId) =>
-        this.messenger.send("didChangeAvailableProfiles", {
-          profiles,
-          selectedProfileId,
-        }),
-    );
 
     // Dev Data Logger
     const dataLogger = DataLogger.getInstance();
@@ -308,13 +296,6 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
-    on("config/listProfiles", async (msg) => {
-      const profiles = this.configHandler.listProfiles();
-      const selectedProfileId =
-        this.configHandler.currentProfile?.profileDescription.id ?? null;
-      return { profiles, selectedProfileId };
-    });
-
     on("config/refreshProfiles", async (msg) => {
       await this.configHandler.loadAssistantsForSelectedOrg();
     });
@@ -342,10 +323,6 @@ export class Core {
         url += `?org=${msg.data.orgSlug}`;
       }
       await this.messenger.request("openUrl", url);
-    });
-
-    on("controlPlane/listOrganizations", async (msg) => {
-      return await this.configHandler.listOrganizations();
     });
 
     on("mcp/reloadServer", async (msg) => {
@@ -829,7 +806,7 @@ export class Core {
     //
 
     on("didChangeSelectedProfile", async (msg) => {
-      await this.configHandler.setSelectedProfile(msg.data.id);
+      await this.configHandler.setSelectedProfileId(msg.data.id);
       await this.configHandler.reloadConfig();
     });
 

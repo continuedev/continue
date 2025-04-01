@@ -11,11 +11,8 @@ import React, {
   useState,
 } from "react";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
-import { useWebviewListener } from "../hooks/useWebviewListener";
-import { updateOrgsThunk, updateProfilesThunk } from "../redux";
 import { selectSelectedProfile } from "../redux/";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
 
@@ -100,23 +97,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     );
   };
 
-  useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
-    setSession(data.sessionInfo);
-    // On logout, clear the list of orgs
-    if (!data.sessionInfo) {
-      dispatch(updateOrgsThunk([]));
-    }
-  });
-
   useEffect(() => {
-    ideMessenger
-      .request("getControlPlaneSessionInfo", {
+    async function init() {
+      const result = await ideMessenger.request("getControlPlaneSessionInfo", {
         silent: true,
         useOnboarding: false,
-      })
-      .then(
-        (result) => result.status === "success" && setSession(result.content),
-      );
+      });
+      if (result.status === "success") {
+        setSession(result.content);
+      }
+    }
+    void init();
   }, []);
 
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =
@@ -127,50 +118,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       .getIdeSettings()
       .then(({ enableControlServerBeta, continueTestEnvironment }) => {
         setControlServerBetaEnabled(enableControlServerBeta);
-        dispatch(
-          setLastControlServerBetaEnabledStatus(enableControlServerBeta),
-        );
       });
   }, []);
 
-  useEffect(() => {
-    if (session) {
-      ideMessenger
-        .request("controlPlane/listOrganizations", undefined)
-        .then((result) => {
-          if (result.status === "success") {
-            dispatch(updateOrgsThunk(result.content));
-          } else {
-            dispatch(updateOrgsThunk([]));
-          }
-        });
-    }
-  }, [session]);
-
-  useWebviewListener(
-    "didChangeIdeSettings",
-    async (msg) => {
-      const { settings } = msg;
-      setControlServerBetaEnabled(settings.enableControlServerBeta);
-      dispatch(
-        setLastControlServerBetaEnabledStatus(settings.enableControlServerBeta),
-      );
-    },
-    [],
-  );
-
-  useEffect(() => {
-    ideMessenger.request("config/listProfiles", undefined).then((result) => {
-      if (result.status === "success") {
-        dispatch(
-          updateProfilesThunk({
-            profiles: result.content.profiles,
-            selectedProfileId: result.content.selectedProfileId,
-          }),
-        );
-      }
-    });
-  }, []);
+  // useWebviewListener(
+  //   setControlServerBetaEnabled(settings.enableControlServerBeta);
+  //   "didChangeIdeSettings",
+  //   async (msg) => {
+  //     const { settings } = msg;
+  //     dispatch(
+  //       setLastControlServerBetaEnabledStatus(settings.enableControlServerBeta),
+  //     );
+  //   },
+  //   [],
+  // );
 
   const refreshProfiles = async () => {
     try {
@@ -181,19 +142,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
     }
   };
-
-  useWebviewListener(
-    "didChangeAvailableProfiles",
-    async (data) => {
-      dispatch(
-        updateProfilesThunk({
-          profiles: data.profiles,
-          selectedProfileId: data.selectedProfileId,
-        }),
-      );
-    },
-    [],
-  );
 
   return (
     <AuthContext.Provider

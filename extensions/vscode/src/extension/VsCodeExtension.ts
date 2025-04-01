@@ -334,14 +334,6 @@ export class VsCodeExtension {
         );
 
         const sessionInfo = await getControlPlaneSessionInfo(true, false);
-        this.webviewProtocolPromise.then(async (webviewProtocol) => {
-          void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
-            sessionInfo,
-          });
-
-          // To make sure continue-proxy models and anything else requiring it get updated access token
-          this.configHandler.reloadConfig();
-        });
         void this.core.invoke("didChangeControlPlaneSessionInfo", {
           sessionInfo,
         });
@@ -415,10 +407,7 @@ export class VsCodeExtension {
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
-        const webviewProtocol = await this.webviewProtocolPromise;
-        void webviewProtocol.request("didChangeIdeSettings", {
-          settings,
-        });
+        void this.core.invoke("config/ideSettingsUpdate", settings);
       }
     });
   }

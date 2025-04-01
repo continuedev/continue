@@ -10,7 +10,6 @@ import {
   ListboxOptions,
 } from "../../components/ui/Listbox";
 import { useAuth } from "../../context/Auth";
-import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectOrgThunk } from "../../redux";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 
@@ -24,10 +23,6 @@ export function ScopeSelect() {
   const handleChange = (newValue: string | null) => {
     dispatch(selectOrgThunk(newValue));
   };
-
-  useWebviewListener("didSelectOrganization", async (data) => {
-    handleChange(data.orgId);
-  });
 
   const CurScopeEntityFallBackIcon = selectedOrgId
     ? BuildingOfficeIcon

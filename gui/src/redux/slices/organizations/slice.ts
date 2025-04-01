@@ -21,16 +21,8 @@ export const organizationsSlice = createSlice({
     ) => {
       state.organizations = payload;
     },
-    setSelectedOrganizationId: (
-      state,
-      { payload }: PayloadAction<string | null>,
-    ) => {
-      state.selectedOrganizationId = payload;
-    },
   },
   selectors: {
-    selectOrganizations: (state) => state.organizations,
-    selectSelectedOrganizationId: (state) => state.selectedOrganizationId,
     selectSelectedOrganization: (state) =>
       state.organizations.find(
         (org) => org.id === state.selectedOrganizationId,
@@ -38,13 +30,8 @@ export const organizationsSlice = createSlice({
   },
 });
 
-export const { setOrganizations, setSelectedOrganizationId } =
-  organizationsSlice.actions;
+export const { setOrganizations } = organizationsSlice.actions;
 
-export const {
-  selectOrganizations,
-  selectSelectedOrganizationId,
-  selectSelectedOrganization,
-} = organizationsSlice.selectors;
+export const { selectSelectedOrganization } = organizationsSlice.selectors;
 
 export const { reducer: organizationsReducer } = organizationsSlice;
