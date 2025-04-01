@@ -9,7 +9,7 @@ import {
   addPromptCompletionPair,
   selectUseTools,
   setToolGenerated,
-  streamUpdate,
+  streamUpdate
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
@@ -70,7 +70,7 @@ export const streamNormalInput = createAsyncThunk<
       next = await gen.next();
     }
 
-    // Attach prompt log
+    // Attach prompt log and end thinking for reasoning models
     if (next.done && next.value) {
       dispatch(addPromptCompletionPair([next.value]));
 

@@ -9,7 +9,7 @@
 
 ## Screenshots
 
-[ For visual changes, include screenshots. ]
+[ For visual changes, include screenshots. Screen recordings are particularly helpful, and appreciated! ]
 
 ## Testing instructions
 
