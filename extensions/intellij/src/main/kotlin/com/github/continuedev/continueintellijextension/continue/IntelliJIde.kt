@@ -148,7 +148,13 @@ class IntelliJIDE(
     }
 
     override suspend fun getWorkspaceDirs(): List<String> {
-        return gitService.workspaceDirectories().toList()
+        val dirs = this.continuePluginService.workspacePaths
+
+        if (dirs?.isNotEmpty() == true) {
+            return dirs
+        }
+
+        return listOfNotNull(project.guessProjectDir()?.toUriOrNull()).toTypedArray()
     }
 
     override suspend fun getWorkspaceConfigs(): List<ContinueRcJson> {

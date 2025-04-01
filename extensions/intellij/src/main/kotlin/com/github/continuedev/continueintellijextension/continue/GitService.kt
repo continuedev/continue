@@ -81,7 +81,7 @@ class GitService(
         return diffs
     }
 
-    fun workspaceDirectories(): Array<String> {
+    private fun workspaceDirectories(): Array<String> {
         val dirs = this.continuePluginService.workspacePaths
 
         if (dirs?.isNotEmpty() == true) {
