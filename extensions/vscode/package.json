@@ -150,6 +150,12 @@
           ],
           "default": "large",
           "description": "Whether to use a small or large local model. Small models are faster but less accurate."
+        },
+        "continue.checkModelUpdates": {
+          "type": "boolean",
+          "default": true,
+          "title": "Check For Model Updates",
+          "description": "Controls whether a daily check is performed for Granite.Code model updates"
         }
       }
     },
@@ -661,7 +667,7 @@
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
     "chai": "^4.5.0",
-    "esbuild": "0.17.19",
+    "esbuild": "^0.17.19",
     "esbuild-visualizer": "^0.6.0",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
@@ -690,7 +696,6 @@
     "dbinfoz": "^0.14.0",
     "diff": "^7.0.0",
     "downshift": "^7.6.0",
-    "esbuild": "0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",

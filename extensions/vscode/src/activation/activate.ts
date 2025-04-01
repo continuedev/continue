@@ -1,12 +1,10 @@
-import {
-  isTestMode,
-  SHOW_GRANITE_ONBOARDING_CARD_KEY,
-} from "core/granite/commons/constants";
 import { getContinueRcPath, getTsConfigPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 
 import { VsCodeExtension } from "../extension/VsCodeExtension";
+import { registerModelUpdater } from "../granite/ollama/modelUpdater";
+import { isGraniteOnboardingComplete } from "../granite/utils/extensionUtils";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 
@@ -37,18 +35,17 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);
-  const showOnboarding = context.globalState.get(
-    SHOW_GRANITE_ONBOARDING_CARD_KEY,
-    true,
-  );
+  const showOnboarding = !isGraniteOnboardingComplete(context);
   vscode.commands.executeCommand(
     "setContext",
     "granite.initialized",
-    !showOnboarding || isTestMode,
+    !showOnboarding,
   );
-  if (showOnboarding && !isTestMode) {
+  if (showOnboarding) {
     await vscode.commands.executeCommand("granite.setup");
   }
+
+  registerModelUpdater(context);
 
   const continuePublicApi = {
     registerCustomContextProvider: api.registerCustomContextProvider.bind(api),

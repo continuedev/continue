@@ -1,5 +1,11 @@
+import { LocalModelSize } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import {
+  DEFAULT_MODEL_GRANITE_LARGE,
+  DEFAULT_MODEL_GRANITE_SMALL,
+} from "core/config/default";
 import { EXTENSION_NAME } from "core/control-plane/env";
+import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
 import { DOWNLOADABLE_MODELS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
@@ -22,8 +28,6 @@ import {
   workspace,
 } from "vscode";
 
-import { LocalModelSize } from "core";
-import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 import { OllamaServer } from "../ollama/ollamaServer";
 import { CancellationController } from "../utils/cancellationController";
@@ -386,8 +390,13 @@ export class SetupGranitePage {
     this._disposables.push(this.modelInstallCanceller);
     try {
       this.wizardState.selectedModelSize = modelSize;
+      const graniteModel =
+        modelSize === "large"
+          ? DEFAULT_MODEL_GRANITE_LARGE
+          : DEFAULT_MODEL_GRANITE_SMALL;
+
       const result = await this.server.pullModels(
-        modelSize,
+        [graniteModel.model, "nomic-embed-text:latest"],
         this.modelInstallCanceller.signal,
         reportProgress,
       );
