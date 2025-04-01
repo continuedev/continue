@@ -1,4 +1,7 @@
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowLeftEndOnRectangleIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -12,12 +15,16 @@ import {
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
-import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import {
+  selectDefaultModel,
+  selectUIConfig,
+} from "../../../redux/slices/configSlice";
 import {
   selectApplyStateByStreamId,
   selectIsInEditMode,
 } from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
+import HeaderButtonWithToolTip from "../../gui/HeaderButtonWithToolTip";
 import { childrenToText, isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
@@ -78,6 +85,12 @@ export default function StepContainerPreToolbar(
   const applyState = useAppSelector((state) =>
     selectApplyStateByStreamId(state, streamIdRef.current),
   );
+
+  const uiConfig = useAppSelector(selectUIConfig);
+  const isBottomToolbarPosition =
+    uiConfig?.codeBlockToolbarPosition == "bottom";
+
+  const toolTipPlacement = isBottomToolbarPosition ? "top" : "bottom";
 
   // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
   // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
@@ -221,6 +234,18 @@ export default function StepContainerPreToolbar(
                     onClickReject={onClickRejectApply}
                   />
                 ))}
+              <HeaderButtonWithToolTip
+                text="Insert at cursor"
+                style={{ backgroundColor: vscEditorBackground }}
+                onClick={() =>
+                  ideMessenger.post("insertAtCursor", {
+                    text: codeBlockContent,
+                  })
+                }
+                tooltipPlacement={toolTipPlacement}
+              >
+                <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
+              </HeaderButtonWithToolTip>
             </>
           )}
         </div>
