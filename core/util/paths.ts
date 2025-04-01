@@ -99,7 +99,7 @@ export function getConfigJsonPath(): string {
 
 export function getConfigYamlPath(ideType?: IdeType): string {
   const p = path.join(getContinueGlobalPath(), "config.yaml");
-  if (!fs.existsSync(p) && !fs.existsSync(getConfigJsonPath())) {
+  if (!fs.existsSync(p) /* && !fs.existsSync(getConfigJsonPath()) */) {
     if (ideType === "jetbrains") {
       fs.writeFileSync(p, YAML.stringify(defaultConfigJetBrains));
     } else {
