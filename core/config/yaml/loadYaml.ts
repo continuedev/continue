@@ -31,7 +31,6 @@ import { contextProviderClassFromName } from "../../context/providers/index";
 import { ControlPlaneClient } from "../../control-plane/client";
 import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
-import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { allTools } from "../../tools";
@@ -318,6 +317,8 @@ async function configYamlToContinueConfig(
     }
   }
 
+  /*
+  // Granite.Code: we're using nomic on ollama, not transformers
   // Add transformers js to the embed models in vs code if not already added
   if (
     ideInfo.ideType === "vscode" &&
@@ -329,6 +330,7 @@ async function configYamlToContinueConfig(
       new TransformersJsEmbeddingsProvider(),
     );
   }
+  */
 
   if (allowFreeTrial) {
     // Obtain auth token (iff free trial being used)
