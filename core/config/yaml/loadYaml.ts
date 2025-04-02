@@ -218,7 +218,7 @@ async function configYamlToContinueConfig(
         ideSettings,
         writeLog,
         platformConfigMetadata,
-        systemMessage: continueConfig.systemMessage,
+        config: continueConfig,
       });
 
       if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
