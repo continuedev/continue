@@ -127,7 +127,7 @@ async function configYamlToContinueConfig(
     models: [],
     tools: [...allTools],
     mcpServerStatuses: [],
-    systemMessage: config.rules?.join("\n"),
+    systemMessage: undefined,
     experimental: {
       modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
         transport: {
