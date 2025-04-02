@@ -38,8 +38,6 @@ const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
 export type Rule = z.infer<typeof ruleSchema>;
 
-export type RuleObject = z.infer<typeof ruleObjectSchema>;
-
 export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.object({
     uses: z.string(),
@@ -75,7 +73,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
   rules: z
     .array(
       z.union([
-        z.string(),
+        ruleSchema,
         z.object({
           uses: z.string(),
           with: z.record(z.string()).optional(),

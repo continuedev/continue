@@ -320,7 +320,7 @@ export async function unrollBlocks(
     for (const rule of assistant.rules) {
       if (typeof rule === "string") {
         rules.push(rule);
-      } else {
+      } else if ("uses" in rule) {
         const blockConfigYaml = await resolveBlock(
           decodeFullSlug(rule.uses),
           rule.with,
