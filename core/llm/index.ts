@@ -298,11 +298,6 @@ export abstract class BaseLLM implements ILLM {
     );
   }
 
-  private _getSystemMessage(): string | undefined {
-    // TODO: Merge with config system message
-    return this.systemMessage;
-  }
-
   private _templatePromptLikeMessages(prompt: string): string {
     if (!this.templateMessages) {
       return prompt;
@@ -310,7 +305,7 @@ export abstract class BaseLLM implements ILLM {
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
-    const systemMessage = this._getSystemMessage();
+    const systemMessage = this.systemMessage;
     if (systemMessage) {
       msgs.unshift({ role: "system", content: systemMessage });
     }
@@ -601,6 +596,7 @@ export abstract class BaseLLM implements ILLM {
   ) {
     const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
+    debugger;
 
     let prompt = pruneRawPromptFromTop(
       completionOptions.model,
@@ -765,6 +761,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
+    debugger;
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
 
