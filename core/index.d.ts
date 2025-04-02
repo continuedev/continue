@@ -1,4 +1,4 @@
-import { DataDestination, ModelRole } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 declare global {
@@ -497,6 +497,7 @@ export interface LLMOptions {
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
+  rules?: Rule[];
   apiKey?: string;
 
   // continueProperties
@@ -1312,7 +1313,7 @@ export interface ContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: string[];
+  rules?: Rule[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1335,7 +1336,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: string[];
+  rules?: Rule[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;

@@ -59,6 +59,7 @@ async function modelConfigToBaseLLM({
     uniqueId,
     title: model.name,
     systemMessage: config.systemMessage,
+    rules: config.rules,
     promptTemplates: model.promptTemplates,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
