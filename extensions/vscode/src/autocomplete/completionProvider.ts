@@ -416,8 +416,6 @@ export class ContinueCompletionProvider
       return null;
     }
 
-    const selectedCompletionInfo = context.selectedCompletionInfo;
-
     let injectDetails: string | undefined = undefined;
 
     try {
@@ -475,7 +473,6 @@ export class ContinueCompletionProvider
         pos,
         manuallyPassFileContents,
         manuallyPassPrefix,
-        selectedCompletionInfo,
         injectDetails,
         isUntitledFile: document.isUntitled,
         completionId: uuidv4(),
@@ -496,38 +493,12 @@ export class ContinueCompletionProvider
         return null;
       }
 
-      // VS Code displays dependent on selectedCompletionInfo (their docstring below)
-      // We should first always make sure we have a valid completion, but if it goes wrong we
-      // want telemetry to be correct
-      /**
-       * Provides information about the currently selected item in the autocomplete widget if it is visible.
-       *
-       * If set, provided inline completions must extend the text of the selected item
-       * and use the same range, otherwise they are not shown as preview.
-       * As an example, if the document text is `console.` and the selected item is `.log` replacing the `.` in the document,
-       * the inline completion must also replace `.` and start with `.log`, for example `.log()`.
-       *
-       * Inline completion providers are requested again whenever the selected item changes.
-       */
-      if (selectedCompletionInfo) {
-        outcome.completion = selectedCompletionInfo.text + outcome.completion;
-      }
-      const willDisplay = this.willDisplay(
-        document,
-        selectedCompletionInfo,
-        signal,
-        outcome,
-      );
-      if (!willDisplay) {
-        return null;
-      }
-
       // Mark displayed
       this.completionProvider.markDisplayed(input.completionId, outcome);
       this._lastShownCompletion = outcome;
 
       // Construct the range/text to show
-      const startPos = selectedCompletionInfo?.range.start ?? position;
+      const startPos = position;
       let range = new vscode.Range(startPos, startPos);
       let completionText = outcome.completion;
       const isSingleLineCompletion = outcome.completion.split("\n").length <= 1;
@@ -575,29 +546,5 @@ export class ContinueCompletionProvider
     } finally {
       stopStatusBarLoading();
     }
-  }
-
-  willDisplay(
-    document: vscode.TextDocument,
-    selectedCompletionInfo: vscode.SelectedCompletionInfo | undefined,
-    abortSignal: AbortSignal,
-    outcome: AutocompleteOutcome,
-  ): boolean {
-    if (selectedCompletionInfo) {
-      const { text, range } = selectedCompletionInfo;
-      if (!outcome.completion.startsWith(text)) {
-        console.log(
-          `Won't display completion because text doesn't match: ${text}, ${outcome.completion}`,
-          range,
-        );
-        return false;
-      }
-    }
-
-    if (abortSignal.aborted) {
-      return false;
-    }
-
-    return true;
   }
 }

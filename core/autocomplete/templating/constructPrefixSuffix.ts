@@ -22,8 +22,8 @@ export async function constructInitialPrefixSuffix(
   let prefix =
     getRangeInString(fileContents, {
       start: { line: 0, character: 0 },
-      end: input.selectedCompletionInfo?.range.start ?? input.pos,
-    }) + (input.selectedCompletionInfo?.text ?? "");
+      end: input.pos,
+    });
 
   if (input.injectDetails) {
     const lines = prefix.split("\n");
