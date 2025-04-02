@@ -26,6 +26,7 @@ import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
+import InceptionLabs from "./InceptionLabs";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
@@ -71,6 +72,7 @@ export const LLMClasses = [
   Novita,
   HuggingFaceTGI,
   HuggingFaceInferenceAPI,
+  InceptionLabs,
   Kindo,
   LlamaCpp,
   OpenAI,
