@@ -78,13 +78,13 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
 
 export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
-  models: z.array(modelSchema).optional(),
-  context: z.array(contextSchema).optional(),
-  data: z.array(dataSchema).optional(),
-  mcpServers: z.array(mcpServerSchema).optional(),
-  rules: z.array(z.string()).optional(),
-  prompts: z.array(promptSchema).optional(),
-  docs: z.array(docSchema).optional(),
+  models: z.array(modelSchema.nullable()).optional(),
+  context: z.array(contextSchema.nullable()).optional(),
+  data: z.array(dataSchema.nullable()).optional(),
+  mcpServers: z.array(mcpServerSchema.nullable()).optional(),
+  rules: z.array(z.string().nullable()).optional(),
+  prompts: z.array(promptSchema.nullable()).optional(),
+  docs: z.array(docSchema.nullable()).optional(),
 });
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;

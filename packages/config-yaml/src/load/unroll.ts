@@ -292,16 +292,23 @@ export async function unrollBlocks(
       for (const unrolledBlock of assistant[section]) {
         // "uses/with" block
         if ("uses" in unrolledBlock) {
-          const blockConfigYaml = await resolveBlock(
-            decodeFullSlug(unrolledBlock.uses),
-            unrolledBlock.with,
-            registry,
-          );
-          const block = blockConfigYaml[section]?.[0];
-          if (block) {
-            sectionBlocks.push(
-              mergeOverrides(block, unrolledBlock.override ?? {}),
+          try {
+            const blockConfigYaml = await resolveBlock(
+              decodeFullSlug(unrolledBlock.uses),
+              unrolledBlock.with,
+              registry,
             );
+            const block = blockConfigYaml[section]?.[0];
+            if (block) {
+              sectionBlocks.push(
+                mergeOverrides(block, unrolledBlock.override ?? {}),
+              );
+            }
+          } catch (err) {
+            console.error(
+              `Failed to unroll block ${unrolledBlock.uses}: ${(err as Error).message}`,
+            );
+            sectionBlocks.push(null);
           }
         } else {
           // Normal block
@@ -315,19 +322,26 @@ export async function unrollBlocks(
 
   // Rules are a bit different because they're just strings, so handle separately
   if (assistant.rules) {
-    const rules: string[] = [];
+    const rules: Array<string | null> = [];
     for (const rule of assistant.rules) {
       if (typeof rule === "string") {
         rules.push(rule);
       } else {
-        const blockConfigYaml = await resolveBlock(
-          decodeFullSlug(rule.uses),
-          rule.with,
-          registry,
-        );
-        const block = blockConfigYaml.rules?.[0];
-        if (block) {
-          rules.push(block);
+        try {
+          const blockConfigYaml = await resolveBlock(
+            decodeFullSlug(rule.uses),
+            rule.with,
+            registry,
+          );
+          const block = blockConfigYaml.rules?.[0];
+          if (block) {
+            rules.push(block);
+          }
+        } catch (err) {
+          console.error(
+            `Failed to unroll block ${rule.uses}: ${(err as Error).message}`,
+          );
+          rules.push(null);
         }
       }
     }

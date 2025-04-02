@@ -1,18 +1,19 @@
 import * as fs from "fs";
-import { decodeSecretLocation, resolveSecretLocationInProxy } from "../dist";
 import {
+  decodeSecretLocation,
   FQSN,
   FullSlug,
   PlatformClient,
   PlatformSecretStore,
   Registry,
   resolveFQSN,
+  resolveSecretLocationInProxy,
   SecretLocation,
   SecretResult,
   SecretStore,
   SecretType,
   unrollAssistant,
-} from "../src";
+} from "../index.js";
 
 // Test e2e flows from raw yaml -> unroll -> client render -> resolve secrets on proxy
 describe("E2E Scenarios", () => {
@@ -98,6 +99,22 @@ describe("E2E Scenarios", () => {
     },
   };
 
+  it.only("should unroll assistant with a single block that doesn't exist", async () => {
+    const unrolledConfig = await unrollAssistant(
+      "test-org/assistant-with-non-existing-block",
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+      },
+    );
+
+    expect(unrolledConfig.rules?.[0]).toBeNull();
+  });
+
   it("should correctly unroll assistant", async () => {
     const unrolledConfig = await unrollAssistant(
       "test-org/assistant",
@@ -133,10 +150,10 @@ describe("E2E Scenarios", () => {
     );
 
     expect(unrolledConfig.rules?.length).toBe(2);
-    expect(unrolledConfig.docs?.[0].startUrl).toBe(
+    expect(unrolledConfig.docs?.[0]?.startUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
-    expect(unrolledConfig.docs?.[0].rootUrl).toBe(
+    expect(unrolledConfig.docs?.[0]?.rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
 
