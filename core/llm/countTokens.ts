@@ -251,16 +251,35 @@ function pruneChatHistory(
     }, 0);
 
   // 0. Prune any messages that take up more than 1/3 of the context length
-  const longestMessages = [...chatHistory];
-  longestMessages.sort((a, b) => b.content.length - a.content.length);
+  const zippedMessagesAndTokens: [ChatMessage, number][] = [];
 
-  const longerThanOneThird = longestMessages.filter(
-    (message: ChatMessage) =>
-      countTokens(message.content, modelName) > contextLength / 3,
+  // Zipped ChatMessage with its token counts
+  chatHistory.forEach((message) => {
+    const zippedItem: [ChatMessage, number] = [
+      message,
+      countTokens(message.content, modelName),
+    ];
+    zippedMessagesAndTokens.push(zippedItem);
+  });
+
+  const zippedLongerThanOneThird = zippedMessagesAndTokens.filter(
+    ([_message, tokens]: [ChatMessage, number]) => tokens > contextLength / 3,
   );
-  const distanceFromThird = longerThanOneThird.map(
-    (message: ChatMessage) =>
-      countTokens(message.content, modelName) - contextLength / 3,
+
+  zippedLongerThanOneThird.sort(
+    (
+      [_messageA, tokensA]: [ChatMessage, number],
+      [_messageB, tokensB]: [ChatMessage, number],
+    ) => {
+      return tokensB - tokensA;
+    },
+  );
+
+  const longerThanOneThird = zippedLongerThanOneThird.map(
+    ([message, _token]: [ChatMessage, number]) => message,
+  );
+  const distanceFromThird = zippedLongerThanOneThird.map(
+    ([_message, token]: [ChatMessage, number]) => token - contextLength / 3,
   );
 
   for (let i = 0; i < longerThanOneThird.length; i++) {
