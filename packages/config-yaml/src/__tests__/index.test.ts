@@ -93,7 +93,7 @@ describe("E2E Scenarios", () => {
     getContent: async function (fullSlug: FullSlug): Promise<string> {
       return fs
         .readFileSync(
-          `./test/packages/${fullSlug.ownerSlug}/${fullSlug.packageSlug}.yaml`,
+          `./src/__tests__/packages/${fullSlug.ownerSlug}/${fullSlug.packageSlug}.yaml`,
         )
         .toString();
     },
