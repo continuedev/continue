@@ -9,12 +9,7 @@ import { useAppSelector } from "../../../redux/hooks";
 import { LumpToolbar } from "./LumpToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
 
-interface LumpProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}
-
-const LumpDiv = styled.div<{ open: boolean }>`
+const LumpDiv = styled.div`
   background-color: ${vscInputBackground};
   margin-left: 4px;
   margin-right: 4px;
@@ -35,12 +30,32 @@ const ContentDiv = styled.div<{ hasSection: boolean; isVisible: boolean }>`
   overflow-y: auto;
 `;
 
-export function Lump(props: LumpProps) {
-  const { open, setOpen } = props;
+export function Lump() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [displayedSection, setDisplayedSection] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
+
+  useEffect(() => {
+    if (!selectedSection) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSelectedSection(null);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedSection]);
+
+  useEffect(() => {
+    if (isStreaming) {
+      setSelectedSection(null);
+    }
+  }, [isStreaming]);
 
   useEffect(() => {
     if (selectedSection) {
@@ -48,20 +63,17 @@ export function Lump(props: LumpProps) {
       setIsVisible(true);
     } else {
       setIsVisible(false);
-      // Delay clearing the displayed section until after the fade-out
       const timeout = setTimeout(() => {
         setDisplayedSection(null);
-      }, 300); // Match the transition duration
-      return () => clearTimeout(timeout);
+      }, 300);
+      return () => {
+        clearTimeout(timeout);
+      };
     }
   }, [selectedSection]);
 
-  if (!open) {
-    return null;
-  }
-
   return (
-    <LumpDiv open={open}>
+    <LumpDiv>
       <div className="mt-0.5 px-2">
         <LumpToolbar
           selectedSection={selectedSection}
@@ -73,9 +85,7 @@ export function Lump(props: LumpProps) {
           hasSection={!!selectedSection}
           isVisible={isVisible}
         >
-          {!isStreaming && (
-            <SelectedSection selectedSection={displayedSection} />
-          )}
+          <SelectedSection selectedSection={displayedSection} />
         </ContentDiv>
       </div>
     </LumpDiv>
