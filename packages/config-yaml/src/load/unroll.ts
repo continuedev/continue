@@ -314,11 +314,11 @@ export async function unrollBlocks(
     }
   }
 
-  // Rules are a bit different because they're just strings, so handle separately
+  // Rules are a bit different because they can be strings, so hanlde separately
   if (assistant.rules) {
     const rules: Rule[] = [];
     for (const rule of assistant.rules) {
-      if (typeof rule === "string") {
+      if (typeof rule === "string" || !("uses" in rule)) {
         rules.push(rule);
       } else if ("uses" in rule) {
         const blockConfigYaml = await resolveBlock(
