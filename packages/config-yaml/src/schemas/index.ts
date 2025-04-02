@@ -34,6 +34,12 @@ const ruleObjectSchema = z.object({
   if: z.string().optional(),
 });
 
+const ruleSchema = z.union([z.string(), ruleObjectSchema]);
+
+export type Rule = z.infer<typeof ruleSchema>;
+
+export type RuleObject = z.infer<typeof ruleObjectSchema>;
+
 export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.object({
     uses: z.string(),
@@ -88,7 +94,7 @@ export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
   context: z.array(contextSchema).optional(),
   data: z.array(dataSchema).optional(),
   mcpServers: z.array(mcpServerSchema).optional(),
-  rules: z.array(z.string()).optional(),
+  rules: z.array(ruleSchema).optional(),
   prompts: z.array(promptSchema).optional(),
   docs: z.array(docSchema).optional(),
 });
@@ -102,7 +108,7 @@ export const blockSchema = baseConfigYamlSchema.and(
     z.object({ data: z.array(dataSchema).length(1) }),
     z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
     z.object({
-      rules: z.array(z.union([z.string(), ruleObjectSchema])).length(1),
+      rules: z.array(ruleSchema).length(1),
     }),
     z.object({ prompts: z.array(promptSchema).length(1) }),
     z.object({ docs: z.array(docSchema).length(1) }),

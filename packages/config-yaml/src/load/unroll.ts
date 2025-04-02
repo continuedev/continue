@@ -17,6 +17,7 @@ import {
   blockSchema,
   ConfigYaml,
   configYamlSchema,
+  Rule,
 } from "../schemas/index.js";
 import { useProxyForUnrenderedSecrets } from "./clientRender.js";
 
@@ -315,7 +316,7 @@ export async function unrollBlocks(
 
   // Rules are a bit different because they're just strings, so handle separately
   if (assistant.rules) {
-    const rules: string[] = [];
+    const rules: Rule[] = [];
     for (const rule of assistant.rules) {
       if (typeof rule === "string") {
         rules.push(rule);
