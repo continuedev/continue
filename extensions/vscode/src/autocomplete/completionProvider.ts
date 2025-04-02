@@ -169,7 +169,6 @@ export class ContinueCompletionProvider
         pos,
         manuallyPassFileContents,
         manuallyPassPrefix,
-        selectedCompletionInfo,
         injectDetails,
         isUntitledFile: document.isUntitled,
         completionId: uuidv4(),
