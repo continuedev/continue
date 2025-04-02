@@ -99,7 +99,7 @@ describe("E2E Scenarios", () => {
     },
   };
 
-  it.only("should unroll assistant with a single block that doesn't exist", async () => {
+  it("should unroll assistant with a single block that doesn't exist", async () => {
     const unrolledConfig = await unrollAssistant(
       "test-org/assistant-with-non-existing-block",
       registry,
