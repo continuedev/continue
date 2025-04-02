@@ -297,7 +297,7 @@ export class Core {
     });
 
     on("config/refreshProfiles", async (msg) => {
-      await this.configHandler.loadAssistantsForSelectedOrg();
+      await this.configHandler.refreshAssistantsForSelectedOrg();
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -754,7 +754,7 @@ export class Core {
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
         for (const uri of data.uris) {
           if (isLocalAssistantFile(uri)) {
-            await this.configHandler.loadAssistantsForSelectedOrg();
+            await this.configHandler.refreshAssistantsForSelectedOrg();
           }
         }
       }
@@ -807,19 +807,10 @@ export class Core {
 
     on("didChangeSelectedProfile", async (msg) => {
       await this.configHandler.setSelectedProfileId(msg.data.id);
-      await this.configHandler.reloadConfig();
     });
 
     on("didChangeSelectedOrg", async (msg) => {
       await this.configHandler.setSelectedOrgId(msg.data.id);
-      await this.configHandler.loadAssistantsForSelectedOrg();
-      if (msg.data.profileId) {
-        this.invoke("didChangeSelectedProfile", {
-          id: msg.data.profileId,
-        });
-      } else {
-        await this.configHandler.reloadConfig();
-      }
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
@@ -827,6 +818,7 @@ export class Core {
         msg.data.sessionInfo,
       );
     });
+
     on("auth/getAuthUrl", async (msg) => {
       const url = await getAuthUrlForTokenPage(
         ideSettingsPromise,
