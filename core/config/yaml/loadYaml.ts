@@ -211,15 +211,15 @@ async function configYamlToContinueConfig(
   for (const model of config.models ?? []) {
     model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
     try {
-      const llms = await llmsFromModelConfig(
+      const llms = await llmsFromModelConfig({
         model,
         ide,
         uniqueId,
         ideSettings,
         writeLog,
         platformConfigMetadata,
-        continueConfig.systemMessage,
-      );
+        systemMessage: continueConfig.systemMessage,
+      });
 
       if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
         continueConfig.models.push(...llms);

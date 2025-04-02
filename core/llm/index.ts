@@ -189,6 +189,7 @@ export abstract class BaseLLM implements ILLM {
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.systemMessage = options.systemMessage;
+    // debugger;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -596,7 +597,7 @@ export abstract class BaseLLM implements ILLM {
   ) {
     const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
-    debugger;
+    // debugger;
 
     let prompt = pruneRawPromptFromTop(
       completionOptions.model,
@@ -761,7 +762,7 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
-    debugger;
+    // debugger;
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
 

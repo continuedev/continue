@@ -29,6 +29,7 @@ async function modelConfigToBaseLLM(
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   systemMessage: string | undefined,
 ): Promise<BaseLLM | undefined> {
+  debugger;
   const cls = getModelClass(model);
 
   if (!cls) {
@@ -167,15 +168,23 @@ async function autodetectModels(
   }
 }
 
-export async function llmsFromModelConfig(
-  model: ModelConfig,
-  ide: IDE,
-  uniqueId: string,
-  ideSettings: IdeSettings,
-  writeLog: (log: string) => Promise<void>,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  systemMessage: string | undefined,
-): Promise<BaseLLM[]> {
+export async function llmsFromModelConfig({
+  model,
+  ide,
+  uniqueId,
+  ideSettings,
+  writeLog,
+  platformConfigMetadata,
+  systemMessage,
+}: {
+  model: ModelConfig;
+  ide: IDE;
+  uniqueId: string;
+  ideSettings: IdeSettings;
+  writeLog: (log: string) => Promise<void>;
+  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  systemMessage: string | undefined;
+}): Promise<BaseLLM[]> {
   const baseLlm = await modelConfigToBaseLLM(
     model,
     uniqueId,
