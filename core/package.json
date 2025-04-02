@@ -66,6 +66,7 @@
     "diff": "^7.0.0",
     "dotenv": "^16.4.5",
     "fastest-levenshtein": "^1.0.16",
+    "filtrex": "^3.1.0",
     "follow-redirects": "^1.15.5",
     "google-auth-library": "^9.14.2",
     "handlebars": "^4.7.8",
