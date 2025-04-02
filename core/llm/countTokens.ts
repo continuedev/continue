@@ -288,11 +288,7 @@ function pruneChatHistory(
   }
 
   // 2. Remove entire messages until the last 5
-  while (
-    chatHistory.length > 5 &&
-    totalTokens > contextLength &&
-    chatHistory.length > 0
-  ) {
+  while (chatHistory.length > 5 && totalTokens > contextLength) {
     const message = chatHistory.shift()!;
     totalTokens -= countTokens(message.content, modelName);
   }
