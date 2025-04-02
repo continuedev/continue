@@ -2,10 +2,10 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Tool } from "core";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { useAppSelector } from "../../../../redux/hooks";
-import { addTool, toggleToolSetting } from "../../../../redux/slices/uiSlice";
-import { fontSize } from "../../../../util";
-import { ToolTip } from "../../../gui/Tooltip";
+import { useAppSelector } from "../../../redux/hooks";
+import { addTool, toggleToolSetting } from "../../../redux/slices/uiSlice";
+import { fontSize } from "../../../util";
+import { ToolTip } from "../../gui/Tooltip";
 
 interface ToolDropdownItemProps {
   tool: Tool;

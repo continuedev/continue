@@ -165,7 +165,11 @@ const sidebars = {
     {
       type: "category",
       label: "Governance",
-      items: ["hub/governance/org-permissions", "hub/governance/pricing"],
+      items: [
+        "hub/governance/org-permissions",
+        "hub/governance/creating-an-org",
+        "hub/governance/pricing",
+      ],
     },
     {
       type: "link",

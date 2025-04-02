@@ -13,7 +13,7 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { toggleBlockSettingsToolbar } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
-import HoverItem from "../InputToolbar/bottom/HoverItem";
+import HoverItem from "../InputToolbar/HoverItem";
 
 interface BlockSettingsToolbarIcon {
   tooltip: string;
@@ -57,7 +57,7 @@ function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
         className={`relative flex select-none items-center rounded-full px-1 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${props.className || ""}`}
       >
         <props.icon
-          className="h-3 w-3 hover:brightness-125"
+          className="h-[13px] w-[13px] flex-shrink-0 hover:brightness-125"
           style={{
             color: props.isSelected ? vscBadgeForeground : undefined,
           }}
@@ -129,7 +129,7 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
           </div>
         </div>
       </div>
-      <div className="ml-auto">
+      <div>
         <AssistantSelect />
       </div>
     </div>

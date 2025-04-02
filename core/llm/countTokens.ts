@@ -27,9 +27,9 @@ class LlamaEncoding implements Encoding {
 }
 
 class NonWorkerAsyncEncoder implements AsyncEncoder {
-  constructor(private readonly encoding: Encoding) { }
+  constructor(private readonly encoding: Encoding) {}
 
-  async close(): Promise<void> { }
+  async close(): Promise<void> {}
 
   async encode(text: string): Promise<number[]> {
     return this.encoding.encode(text);
@@ -313,8 +313,21 @@ function pruneChatHistory(
 
   // 4. Remove entire messages in the last 5, except last 1
   while (totalTokens > contextLength && chatHistory.length > 1) {
-    const message = chatHistory.shift()!;
-    totalTokens -= countTokens(message.content, modelName);
+    // If tool call/response detected prune both (can't have response with no call)
+    // TODO prune lines from tool response before pruning both messages
+    if (
+      chatHistory.length > 2 &&
+      messageHasToolCalls(chatHistory[0]) &&
+      chatHistory[1].role === "tool"
+    ) {
+      const firstMessage = chatHistory.shift()!;
+      const secondMessage = chatHistory.shift()!;
+      totalTokens -= countTokens(firstMessage.content, modelName);
+      totalTokens -= countTokens(secondMessage.content, modelName);
+    } else {
+      const message = chatHistory.shift()!;
+      totalTokens -= countTokens(message.content, modelName);
+    }
   }
 
   // 5. Truncate last message
@@ -328,7 +341,6 @@ function pruneChatHistory(
     );
     totalTokens = contextLength;
   }
-
   return chatHistory;
 }
 
@@ -384,8 +396,8 @@ function compileChatMessages(
 ): ChatMessage[] {
   let msgsCopy = msgs
     ? msgs
-      .map((msg) => ({ ...msg }))
-      .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
+        .map((msg) => ({ ...msg }))
+        .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
@@ -470,6 +482,5 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop
+  pruneStringFromTop,
 };
-

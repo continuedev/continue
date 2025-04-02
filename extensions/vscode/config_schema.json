@@ -3063,7 +3063,7 @@
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
-            "model": "deepseek-coder:1.3b-base"
+            "model": "qwen2.5-coder:1.5b-base"
           },
           "oneOf": [
             {
