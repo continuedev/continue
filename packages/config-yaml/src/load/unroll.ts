@@ -19,6 +19,7 @@ import {
   configYamlSchema,
 } from "../schemas/index.js";
 import { useProxyForUnrenderedSecrets } from "./clientRender.js";
+import { getBlockType } from "./getBlockType.js";
 
 export function parseConfigYaml(configYaml: string): ConfigYaml {
   try {
@@ -176,11 +177,18 @@ async function extractRenderedSecretsMap(
   return map;
 }
 
-export interface DoNotRenderSecretsUnrollAssistantOptions {
+export interface BaseUnrollAssistantOptions {
+  renderSecrets: boolean;
+  injectBlocks?: FullSlug[];
+}
+
+export interface DoNotRenderSecretsUnrollAssistantOptions
+  extends BaseUnrollAssistantOptions {
   renderSecrets: false;
 }
 
-export interface RenderSecretsUnrollAssistantOptions {
+export interface RenderSecretsUnrollAssistantOptions
+  extends BaseUnrollAssistantOptions {
   renderSecrets: true;
   orgScopeId: string | null;
   currentUserSlug: string;
@@ -236,7 +244,11 @@ export async function unrollAssistantFromContent(
   let parsedYaml = parseConfigYaml(rawYaml);
 
   // Unroll blocks and convert their secrets to FQSNs
-  const unrolledAssistant = await unrollBlocks(parsedYaml, registry);
+  const unrolledAssistant = await unrollBlocks(
+    parsedYaml,
+    registry,
+    options.injectBlocks,
+  );
 
   // Back to a string so we can fill in template variables
   const rawUnrolledYaml = YAML.stringify(unrolledAssistant);
@@ -273,6 +285,7 @@ export async function unrollAssistantFromContent(
 export async function unrollBlocks(
   assistant: ConfigYaml,
   registry: Registry,
+  injectBlocks: FullSlug[] | undefined,
 ): Promise<AssistantUnrolled> {
   const unrolledAssistant: AssistantUnrolled = {
     name: assistant.name,
@@ -347,6 +360,33 @@ export async function unrollBlocks(
     }
 
     unrolledAssistant.rules = rules;
+  }
+
+  // Add injected blocks
+  for (const injectBlock of injectBlocks ?? []) {
+    try {
+      const blockConfigYaml = await registry.getContent(injectBlock);
+      const parsedBlock = parseConfigYaml(blockConfigYaml);
+      const blockType = getBlockType(parsedBlock);
+      const resolvedBlock = await resolveBlock(
+        injectBlock,
+        undefined,
+        registry,
+      );
+
+      if (blockType) {
+        if (!unrolledAssistant[blockType]) {
+          unrolledAssistant[blockType] = [];
+        }
+        unrolledAssistant[blockType]?.push(
+          ...(resolvedBlock[blockType] as any),
+        );
+      }
+    } catch (err) {
+      console.error(
+        `Failed to unroll block ${injectBlock}: ${(err as Error).message}`,
+      );
+    }
   }
 
   return unrolledAssistant;
