@@ -1,7 +1,13 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
-import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+import {
+  ChatMessage,
+  MessageContent,
+  MessagePart,
+  UserChatMessage,
+} from "../index.js";
 
+import { Rule } from "@continuedev/config-yaml";
 import { renderChatMessage } from "../util/messageContent.js";
 import {
   AsyncEncoder,
@@ -421,6 +427,30 @@ function addSystemMessage({
   return messages;
 }
 
+const getSystemMessage = ({
+  userMessage,
+}: {
+  userMessage: UserChatMessage;
+  rules: Rule[];
+}) => {
+  if (systemMessage) {
+    return "";
+  }
+
+  return systemMessage;
+};
+
+function getLastUserMessage(messages: ChatMessage[]): ChatMessage | undefined {
+  // Iterate backwards through messages to find the last user message
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === "user") {
+      return messages[i];
+    }
+  }
+
+  return undefined;
+}
+
 function compileChatMessages({
   modelName,
   msgs,
@@ -440,6 +470,7 @@ function compileChatMessages({
   functions: any[] | undefined;
   systemMessage: string | undefined;
 }): ChatMessage[] {
+  debugger;
   let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
@@ -455,6 +486,8 @@ function compileChatMessages({
     };
     msgsCopy.push(promptMsg);
   }
+
+  const lastUserMessage = getLastUserMessage(msgsCopy);
 
   msgsCopy = addSystemMessage({
     messages: msgsCopy,
