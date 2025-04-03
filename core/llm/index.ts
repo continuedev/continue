@@ -167,7 +167,6 @@ export abstract class BaseLLM implements ILLM {
   protected openaiAdapter?: BaseLlmApi;
 
   constructor(_options: LLMOptions) {
-    // debugger;
     this._llmOptions = _options;
 
     // Set default options
@@ -191,7 +190,6 @@ export abstract class BaseLLM implements ILLM {
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.systemMessage = options.systemMessage;
-    // debugger;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -602,7 +600,6 @@ export abstract class BaseLLM implements ILLM {
   ) {
     const { completionOptions, logEnabled, raw } =
       this._parseCompletionOptions(options);
-    // debugger;
 
     let prompt = pruneRawPromptFromTop(
       completionOptions.model,
@@ -767,7 +764,6 @@ export abstract class BaseLLM implements ILLM {
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
-    // debugger;
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
 

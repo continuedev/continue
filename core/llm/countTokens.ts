@@ -513,7 +513,6 @@ function compileChatMessages({
   systemMessage: string | undefined;
   rules: Rule[];
 }): ChatMessage[] {
-  // debugger;
   let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
