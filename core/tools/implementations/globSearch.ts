@@ -1,12 +1,12 @@
 import { ToolImpl } from ".";
 
 export const fileGlobSearchImpl: ToolImpl = async (args, extras) => {
-  // const content = await extras.ide.getSearchResults(args.query);
+  const results = await extras.ide.getFileResults(args.pattern);
   return [
     {
       name: "File results",
       description: "Results from file glob search",
-      content: "",
+      content: results.join("\n"),
     },
   ];
 };

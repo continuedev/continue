@@ -556,13 +556,13 @@ class VsCodeIde implements IDE {
   }
 
   async getFileResults(pattern: string): Promise<string[]> {
-    vscode.workspace.findFiles("");
-    return [];
+    // vscode.workspace.findFiles("");
+    return ["file1", "file2"];
   }
 
   async getSearchResults(query: string): Promise<string> {
     if (vscode.env.remoteName) {
-      return "Exact search not supported for remote workspaces";
+      return "Ripgrep not supported, this workspace is remote";
     }
     const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
@@ -604,50 +604,10 @@ class VsCodeIde implements IDE {
         });
       });
 
-      const keepLines: string[] = [];
-
-      function countLeadingSpaces(line: string) {
-        return line?.match(/^ */)?.[0].length ?? 0;
-      }
-
-      // function formatLine(line: string, sectionIndent: number): string {
-      //   return line.replace(new RegExp(`^[ ]{0,${sectionIndent}}`), "");
-      // }
-
-      let leading = false;
-      let sectionIndent = 0;
-      // let sectionTrim = 0;
-      for (const line of dirResults.split("\n").filter((l) => !!l)) {
-        if (line.startsWith("./") || line === "--") {
-          leading = true;
-          keepLines.push(line);
-          continue;
-        }
-
-        if (leading) {
-          // Exclude leading single-char lines
-          if (line.trim().length > 1) {
-            // Record spacing at first non-single char line
-            leading = false;
-            sectionIndent = countLeadingSpaces(line);
-            keepLines.push(line);
-          }
-          continue;
-        }
-        // Exclude trailing
-        // TODO may exclude wanted results for lines that look like
-        // ./filename
-        //      thisThing
-        //   relevantThing
-        //
-        if (countLeadingSpaces(line) >= sectionIndent) {
-          keepLines.push(line);
-        }
-      }
-      results.push(keepLines.join("\n"));
+      results.push(dirResults);
     }
 
-    return results.join("\n\n");
+    return results.join("\n");
   }
 
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {

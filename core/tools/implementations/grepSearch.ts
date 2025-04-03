@@ -1,12 +1,13 @@
 import { ToolImpl } from ".";
+import { formatGrepSearchResults } from "../../util/grepSearch";
 
 export const grepSearchImpl: ToolImpl = async (args, extras) => {
-  const content = await extras.ide.getSearchResults(args.query);
+  const results = await extras.ide.getSearchResults(args.query);
   return [
     {
       name: "Search results",
       description: "Results from exact search",
-      content,
+      content: formatGrepSearchResults(results),
     },
   ];
 };
