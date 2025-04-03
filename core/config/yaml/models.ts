@@ -36,7 +36,6 @@ async function modelConfigToBaseLLM({
   platformConfigMetadata: PlatformConfigMetadata | undefined;
   config: ContinueConfig;
 }): Promise<BaseLLM | undefined> {
-  debugger;
   const cls = getModelClass(model);
 
   if (!cls) {

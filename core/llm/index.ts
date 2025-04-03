@@ -302,7 +302,6 @@ export abstract class BaseLLM implements ILLM {
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
-    debugger;
     if (!this.templateMessages) {
       return prompt;
     }

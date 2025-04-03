@@ -530,7 +530,6 @@ function compileChatMessages({
   }
 
   const lastUserMessage = getLastUserMessage(msgsCopy);
-  debugger;
 
   msgsCopy = addSystemMessage({
     messages: msgsCopy,

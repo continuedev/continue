@@ -40,6 +40,23 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
     );
   }
 
+  const renderRuleContent = () => {
+    if (typeof rule === "string") {
+      return <div>{rule}</div>;
+    }
+
+    if (rule.rule) {
+      return (
+        <div>
+          <div>{rule.rule}</div>
+          {rule.if && <div className="text-gray-500">if: {rule.if}</div>}
+        </div>
+      );
+    }
+
+    return <div>{JSON.stringify(rule)}</div>;
+  };
+
   return (
     <div
       style={{
@@ -65,8 +82,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
               }}
               className="line-clamp-3 text-gray-400"
             >
-              {/** TODO: Render the rule in a more readable way */}
-              {JSON.stringify(rule)}
+              {renderRuleContent()}
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -162,7 +178,4 @@ export function RulesSection() {
       <ExploreBlocksButton blockType="rules" />
     </div>
   );
-}
-function useTypedDispatch() {
-  throw new Error("Function not implemented.");
 }
