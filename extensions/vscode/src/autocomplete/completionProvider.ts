@@ -203,10 +203,26 @@ export class ContinueCompletionProvider
       position
     ));
 
-    const editorFragment = new SourceFragment(editorText);
+    let completionFragment: SourceFragment;
+    if (this._lastShownCompletion?.suffix) {
+      const suffixFragment = new SourceFragment(this._lastShownCompletion.suffix);
+      const fullCompletionFragment = this.pendingInlineCompletion.sourceFragment;
 
+      // If the text in the editor after the cursor shows up in the completion
+      // results, truncate it so we don't end up with duplicated output.
+      // This works around poor LLM output, but also helps with VSCode bracket
+      // matching problems.
+      completionFragment = fullCompletionFragment.getAsTruncatedFragment({
+        suffix: suffixFragment,
+        ignoreWhitespace: true,
+      });
+    } else {
+      completionFragment = this.pendingInlineCompletion.sourceFragment;
+    }
+
+    const editorFragment = new SourceFragment(editorText);
     const remainingCompletion = editorFragment.getRemainingCompletion(
-      this.pendingInlineCompletion.sourceFragment,
+      completionFragment,
       { ignoreWhitespace: true, mergeWhitespace: true }
     );
 
