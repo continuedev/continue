@@ -166,6 +166,7 @@ export abstract class BaseLLM implements ILLM {
   protected openaiAdapter?: BaseLlmApi;
 
   constructor(_options: LLMOptions) {
+    // debugger;
     this._llmOptions = _options;
 
     // Set default options
@@ -287,19 +288,20 @@ export abstract class BaseLLM implements ILLM {
         CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
     }
 
-    return compileChatMessages(
-      options.model,
-      messages,
+    return compileChatMessages({
+      modelName: options.model,
+      msgs: messages,
       contextLength,
-      options.maxTokens ?? DEFAULT_MAX_TOKENS,
-      this.supportsImages(),
-      undefined,
+      maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+      supportsImages: this.supportsImages(),
+      prompt: undefined,
       functions,
-      this.systemMessage,
-    );
+      systemMessage: this.systemMessage,
+    });
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
+    debugger;
     if (!this.templateMessages) {
       return prompt;
     }

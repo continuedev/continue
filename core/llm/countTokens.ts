@@ -417,16 +417,25 @@ function addSystemMessage(
   return messages;
 }
 
-function compileChatMessages(
-  modelName: string,
-  msgs: ChatMessage[] | undefined,
-  contextLength: number,
-  maxTokens: number,
-  supportsImages: boolean,
-  prompt: string | undefined = undefined,
-  functions: any[] | undefined = undefined,
-  systemMessage: string | undefined = undefined,
-): ChatMessage[] {
+function compileChatMessages({
+  modelName,
+  msgs,
+  contextLength,
+  maxTokens,
+  supportsImages,
+  prompt,
+  functions,
+  systemMessage,
+}: {
+  modelName: string;
+  msgs: ChatMessage[] | undefined;
+  contextLength: number;
+  maxTokens: number;
+  supportsImages: boolean;
+  prompt: string | undefined;
+  functions: any[] | undefined;
+  systemMessage: string | undefined;
+}): ChatMessage[] {
   let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
