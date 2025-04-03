@@ -63,7 +63,7 @@ export function parseBlock(configYaml: string): Block {
   }
 }
 
-const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
+export const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
 
 export function getTemplateVariables(templatedYaml: string): string[] {
   const variables = new Set<string>();
