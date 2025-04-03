@@ -14,15 +14,21 @@ data class ShowVirtualFileParams(
     val content: String
 )
 
+data class TerminalOptions(
+    val relativeCwd: String?,
+    val onlyRunLocally: Boolean?,
+    val insertOnly: Boolean?,
+    val preferVisibleTerminal: Boolean?,
+    val reuseTerminalNamed: String? 
+)
+
+data class RunCommandParams(val command: String, val options: TerminalOptions?)
 
 data class OpenFileParams(val path: String)
 
 typealias OpenUrlParam = String
 
 typealias getTagsParams = String
-
-data class GetSearchResultsParams(val query: String)
-
 
 data class SaveFileParams(val filepath: String)
 

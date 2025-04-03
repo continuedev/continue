@@ -69,9 +69,14 @@ export default function StepContainerPreActionButtons({
     });
   }
 
-  async function onClickRunTerminal(): Promise<void> {
+  async function onClickRunTerminal() {
     if (shouldRunTerminalCmd) {
-      return ideMessenger.ide.runCommand(getTerminalCommand(codeBlockContent));
+      return await ideMessenger.ide.runCommand(
+        getTerminalCommand(codeBlockContent),
+        {
+          preferVisibleTerminal: true,
+        },
+      );
     }
   }
 

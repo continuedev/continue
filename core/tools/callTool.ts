@@ -4,7 +4,8 @@ import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
 import { createNewFileImpl } from "./implementations/createNewFile";
-import { exactSearchImpl } from "./implementations/exactSearch";
+import { globToolImpl } from "./implementations/globTool";
+import { grepToolImpl } from "./implementations/grepTool";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
@@ -140,8 +141,6 @@ export async function callTool(
       return await readFileImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
-    case BuiltInToolNames.ExactSearch:
-      return await exactSearchImpl(args, extras);
     case BuiltInToolNames.RunTerminalCommand:
       return await runTerminalCommandImpl(args, extras);
     case BuiltInToolNames.SearchWeb:
@@ -150,6 +149,10 @@ export async function callTool(
       return await viewDiffImpl(args, extras);
     case BuiltInToolNames.LSTool:
       return await lsToolImpl(args, extras);
+    case BuiltInToolNames.GlobTool:
+      return await globToolImpl(args, extras);
+    case BuiltInToolNames.GrepTool:
+      return await grepToolImpl(args, extras);
     case BuiltInToolNames.ReadCurrentlyOpenFile:
       return await readCurrentlyOpenFileImpl(args, extras);
     // case BuiltInToolNames.ViewRepoMap:

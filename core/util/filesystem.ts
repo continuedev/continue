@@ -198,8 +198,11 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  runCommand(command: string, options?: TerminalOptions): Promise<void> {
-    return Promise.resolve();
+  runCommand(command: string, options?: TerminalOptions) {
+    return Promise.resolve({
+      error: "not implemented in filesystem ide",
+      output: "",
+    });
   }
 
   saveFile(fileUri: string): Promise<void> {
@@ -233,17 +236,8 @@ class FileSystemIde implements IDE {
   getPinnedFiles(): Promise<string[]> {
     return Promise.resolve([]);
   }
-
-  async getSearchResults(query: string): Promise<string> {
-    return "";
-  }
-
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
     return Promise.resolve([]);
-  }
-
-  async subprocess(command: string, cwd?: string): Promise<[string, string]> {
-    return ["", ""];
   }
 }
 

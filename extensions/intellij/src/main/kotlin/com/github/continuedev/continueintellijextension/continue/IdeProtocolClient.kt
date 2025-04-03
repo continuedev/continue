@@ -313,8 +313,12 @@ class IdeProtocolClient(
                     }
 
                     "runCommand" -> {
-                        // Running commands not yet supported in JetBrains
-                        respond(null)
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            RunCommandParams::class.java
+                        )
+                        val result = ide.runCommand(params.command, params.options)
+                        respond(result)
                     }
 
                     "showToast" -> {
@@ -336,15 +340,6 @@ class IdeProtocolClient(
 
                         val result = ide.showToast(type, message, *otherParams)
                         respond(result)
-                    }
-
-                    "getSearchResults" -> {
-                        val params = Gson().fromJson(
-                            dataElement.toString(),
-                            GetSearchResultsParams::class.java
-                        )
-                        val results = ide.getSearchResults(params.query)
-                        respond(results)
                     }
 
                     "getOpenFiles" -> {

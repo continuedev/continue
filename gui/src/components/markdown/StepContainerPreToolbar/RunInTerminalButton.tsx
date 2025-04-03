@@ -13,7 +13,12 @@ export default function RunInTerminalButton({
   const ideMessenger = useContext(IdeMessengerContext);
 
   function runInTerminal() {
-    void ideMessenger.post("runCommand", { command });
+    void ideMessenger.post("runCommand", {
+      command,
+      options: {
+        preferVisibleTerminal: true,
+      },
+    });
   }
 
   return (

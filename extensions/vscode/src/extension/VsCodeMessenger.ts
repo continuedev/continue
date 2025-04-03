@@ -18,6 +18,7 @@ import { stripImages } from "core/util/messageContent";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
+import { ILLM } from "core";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -28,7 +29,6 @@ import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { ILLM } from "core";
 
 /**
  * A shared messenger class between Core and Webview
@@ -386,13 +386,7 @@ export class VsCodeMessenger {
       return ide.openFile(msg.data.path);
     });
     this.onWebviewOrCore("runCommand", async (msg) => {
-      await ide.runCommand(msg.data.command);
-    });
-    this.onWebviewOrCore("getSearchResults", async (msg) => {
-      return ide.getSearchResults(msg.data.query);
-    });
-    this.onWebviewOrCore("subprocess", async (msg) => {
-      return ide.subprocess(msg.data.command, msg.data.cwd);
+      return await ide.runCommand(msg.data.command, msg.data.options);
     });
     this.onWebviewOrCore("getProblems", async (msg) => {
       return ide.getProblems(msg.data.filepath);

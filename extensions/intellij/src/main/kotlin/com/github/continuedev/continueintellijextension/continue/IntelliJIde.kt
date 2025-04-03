@@ -210,8 +210,34 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun runCommand(command: String) {
-        throw NotImplementedError("runCommand not implemented in IntelliJ")
+    override suspend fun runCommand(command: String, options: TerminalOptions) {
+
+        return mapOf(
+            "output" to "Hi"
+        )
+    //     val commandList = command.split(" ")
+    //     val builder = ProcessBuilder(commandList)
+
+    //     if (cwd != null) {
+    //         builder.directory(File(cwd))
+    //     }
+
+    //     val process = withContext(Dispatchers.IO) {
+    //         builder.start()
+    //     }
+
+    //     val stdout = process.inputStream.bufferedReader().readText()
+    //     val stderr = process.errorStream.bufferedReader().readText()
+
+    //     withContext(Dispatchers.IO) {
+    //         process.waitFor()
+    //     }
+
+    // //         val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
+    // // command.setWorkDirectory(project.basePath)
+    // // return ExecUtil.execAndGetOutput(command).stdout
+
+    //     return listOf(stdout, stderr)
     }
 
     override suspend fun saveFile(filepath: String) {
@@ -307,34 +333,6 @@ class IntelliJIDE(
     override suspend fun getPinnedFiles(): List<String> {
         // Returning open files for now as per existing code
         return getOpenFiles()
-    }
-
-    override suspend fun getSearchResults(query: String): String {
-        val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
-        command.setWorkDirectory(project.basePath)
-        return ExecUtil.execAndGetOutput(command).stdout
-    }
-
-    override suspend fun subprocess(command: String, cwd: String?): List<Any> {
-        val commandList = command.split(" ")
-        val builder = ProcessBuilder(commandList)
-
-        if (cwd != null) {
-            builder.directory(File(cwd))
-        }
-
-        val process = withContext(Dispatchers.IO) {
-            builder.start()
-        }
-
-        val stdout = process.inputStream.bufferedReader().readText()
-        val stderr = process.errorStream.bufferedReader().readText()
-
-        withContext(Dispatchers.IO) {
-            process.waitFor()
-        }
-
-        return listOf(stdout, stderr)
     }
 
     override suspend fun getProblems(filepath: String?): List<Problem> {

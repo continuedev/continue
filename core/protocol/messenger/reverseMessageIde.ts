@@ -139,7 +139,7 @@ export class ReverseMessageIde {
     });
 
     this.on("runCommand", (data) => {
-      return this.ide.runCommand(data.command);
+      return this.ide.runCommand(data.command, data.options);
     });
 
     this.on("saveFile", (data) => {
@@ -162,16 +162,8 @@ export class ReverseMessageIde {
       return this.ide.getPinnedFiles();
     });
 
-    this.on("getSearchResults", (data) => {
-      return this.ide.getSearchResults(data.query);
-    });
-
     this.on("getProblems", (data) => {
       return this.ide.getProblems(data.filepath);
-    });
-
-    this.on("subprocess", (data) => {
-      return this.ide.subprocess(data.command, data.cwd);
     });
 
     this.on("getBranch", (data) => {

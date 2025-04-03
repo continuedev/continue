@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension
 
 import com.google.gson.JsonElement
+import com.github.continuedev.continueintellijextension.protocol.TerminalOptions
 
 enum class ToastType(val value: String) {
     INFO("info"),
@@ -131,7 +132,7 @@ interface IDE {
 
     suspend fun openUrl(url: String)
 
-    suspend fun runCommand(command: String)
+    suspend fun runCommand(command: String, options: TerminalOptions?): TerminalOutput
 
     suspend fun saveFile(filepath: String)
 
@@ -156,12 +157,6 @@ interface IDE {
     suspend fun getCurrentFile(): Map<String, Any>?
 
     suspend fun getPinnedFiles(): List<String>
-
-    suspend fun getSearchResults(query: String): String
-
-    // Note: This should be a `Pair<String, String>` but we use `List<Any>` because the keys of `Pair`
-    // will serialize to `first and `second` rather than `0` and `1` like in JavaScript
-    suspend fun subprocess(command: String, cwd: String? = null): List<Any>
 
     suspend fun getProblems(filepath: String? = null): List<Problem>
 
@@ -212,3 +207,8 @@ data class Message(
 data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 
 data class DeleteAtIndex(val index: Int)
+
+data class TerminalOutput(
+    val error: String?,
+    val output: String,
+)

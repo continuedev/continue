@@ -1,6 +1,3 @@
-import * as child_process from "node:child_process";
-import { exec } from "node:child_process";
-
 import { Range } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { GetGhTokenArgs } from "core/protocol/ide";
@@ -12,7 +9,7 @@ import { executeGotoProvider } from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
 import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
-import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
+import { openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 import type {
@@ -458,24 +455,42 @@ class VsCodeIde implements IDE {
 
   async runCommand(
     command: string,
-    options: TerminalOptions = { reuseTerminal: true },
-  ): Promise<void> {
+    options: TerminalOptions,
+  ): Promise<{ error?: string; output: string }> {
+    // relativeCwd?: string; // relative unless onlyRunLocally
+    // onlyRunLocally?: boolean; // aka don't allow using remote filesystem terminal
+
+    // insertOnly?: boolean; // VS Code only, if true Jetbrains will do nothing
+    // preferVisibleTerminal?: boolean; // VS Code only
+    // reuseTerminalNamed?: string; // VS Code only
+
+    const result = await vscode.commands.executeCommand(
+      "workbench.action.terminal.sendSequence",
+      {
+        text: `${command}\n`,
+      },
+    );
+
     let terminal: vscode.Terminal | undefined;
-    if (vscode.window.terminals.length && options.reuseTerminal) {
-      if (options.terminalName) {
+    if (options.reuseTerminalNamed) {
+      if (options.reuseTerminalNamed) {
         terminal = vscode.window.terminals.find(
           (t) => t?.name === options.terminalName,
         );
       } else {
+        vscode.window.createTerminal(options?.terminalName);
         terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
       }
     }
-
+    vscode.workspace.execute;
     if (!terminal) {
       terminal = vscode.window.createTerminal(options?.terminalName);
     }
     terminal.show();
     terminal.sendText(command, false);
+    return {
+      output: "",
+    };
   }
 
   async saveFile(fileUri: string): Promise<void> {
@@ -555,97 +570,6 @@ class VsCodeIde implements IDE {
       .map((t) => (t.input as vscode.TabInputText).uri.toString());
   }
 
-  private async _searchDir(query: string, dir: string): Promise<string> {
-    const relativeDir = vscode.Uri.parse(dir).fsPath;
-    const ripGrepUri = vscode.Uri.joinPath(
-      getExtensionUri(),
-      "out/node_modules/@vscode/ripgrep/bin/rg",
-    );
-    const p = child_process.spawn(
-      ripGrepUri.fsPath,
-      [
-        "-i", // Case-insensitive search
-        "-C",
-        "2", // Show 2 lines of context
-        "--heading", // Only show filepath once per result
-        "-e",
-        query, // Pattern to search for
-        ".", // Directory to search in
-      ],
-      { cwd: relativeDir },
-    );
-    let output = "";
-
-    p.stdout.on("data", (data) => {
-      output += data.toString();
-    });
-
-    return new Promise<string>((resolve, reject) => {
-      p.on("error", reject);
-      p.on("close", (code) => {
-        if (code === 0) {
-          resolve(output);
-        } else if (code === 1) {
-          // No matches
-          resolve("No matches found");
-        } else {
-          reject(new Error(`Process exited with code ${code}`));
-        }
-      });
-    });
-  }
-
-  async getSearchResults(query: string): Promise<string> {
-    const results: string[] = [];
-    for (const dir of await this.getWorkspaceDirs()) {
-      const dirResults = await this._searchDir(query, dir);
-
-      const keepLines: string[] = [];
-
-      function countLeadingSpaces(line: string) {
-        return line?.match(/^ */)?.[0].length ?? 0;
-      }
-
-      // function formatLine(line: string, sectionIndent: number): string {
-      //   return line.replace(new RegExp(`^[ ]{0,${sectionIndent}}`), "");
-      // }
-
-      let leading = false;
-      let sectionIndent = 0;
-      // let sectionTrim = 0;
-      for (const line of dirResults.split("\n").filter((l) => !!l)) {
-        if (line.startsWith("./") || line === "--") {
-          leading = true;
-          keepLines.push(line);
-          continue;
-        }
-
-        if (leading) {
-          // Exclude leading single-char lines
-          if (line.trim().length > 1) {
-            // Record spacing at first non-single char line
-            leading = false;
-            sectionIndent = countLeadingSpaces(line);
-            keepLines.push(line);
-          }
-          continue;
-        }
-        // Exclude trailing
-        // TODO may exclude wanted results for lines that look like
-        // ./filename
-        //      thisThing
-        //   relevantThing
-        //
-        if (countLeadingSpaces(line) >= sectionIndent) {
-          keepLines.push(line);
-        }
-      }
-      results.push(keepLines.join("\n"));
-    }
-
-    return results.join("\n\n");
-  }
-
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
     const uri = fileUri
       ? vscode.Uri.parse(fileUri)
@@ -665,18 +589,6 @@ class VsCodeIde implements IDE {
         },
         message: d.message,
       };
-    });
-  }
-
-  async subprocess(command: string, cwd?: string): Promise<[string, string]> {
-    return new Promise((resolve, reject) => {
-      exec(command, { cwd }, (error, stdout, stderr) => {
-        if (error) {
-          console.warn(error);
-          reject(stderr);
-        }
-        resolve([stdout, stderr]);
-      });
     });
   }
 

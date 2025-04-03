@@ -680,7 +680,10 @@ export interface IDE {
 
   openUrl(url: string): Promise<void>;
 
-  runCommand(command: string, options?: TerminalOptions): Promise<void>;
+  runCommand(
+    command: string,
+    options?: TerminalOptions,
+  ): Promise<{ error?: string; output: string }>;
 
   saveFile(fileUri: string): Promise<void>;
 
@@ -706,10 +709,6 @@ export interface IDE {
   updateLastFileSaveTimestamp?(): void;
 
   getPinnedFiles(): Promise<string[]>;
-
-  getSearchResults(query: string): Promise<string>;
-
-  subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
   getProblems(fileUri?: string | undefined): Promise<Problem[]>;
 
@@ -1380,6 +1379,10 @@ export type PackageDocsResult = {
 );
 
 export interface TerminalOptions {
-  reuseTerminal?: boolean;
-  terminalName?: string;
+  relativeCwd?: string; // relative unless onlyRunLocally
+  onlyRunLocally?: boolean; // aka don't allow using remote filesystem terminal
+
+  insertOnly?: boolean; // VS Code only, if true Jetbrains will do nothing
+  preferVisibleTerminal?: boolean; // VS Code only
+  reuseTerminalNamed?: string; // VS Code only
 }

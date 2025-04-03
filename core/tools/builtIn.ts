@@ -3,10 +3,11 @@ export enum BuiltInToolNames {
   ReadCurrentlyOpenFile = "builtin_read_currently_open_file",
   CreateNewFile = "builtin_create_new_file",
   RunTerminalCommand = "builtin_run_terminal_command",
-  ExactSearch = "builtin_exact_search",
   SearchWeb = "builtin_search_web",
   ViewDiff = "builtin_view_diff",
   LSTool = "builtin_ls",
+  GlobTool = "builtin_glob",
+  GrepTool = "builtin_grep",
 
   // excluded from allTools for now
   ViewRepoMap = "builtin_view_repo_map",

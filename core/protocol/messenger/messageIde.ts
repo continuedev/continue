@@ -160,8 +160,8 @@ export class MessageIde implements IDE {
     await this.request("openUrl", url);
   }
 
-  async runCommand(command: string, options?: TerminalOptions): Promise<void> {
-    await this.request("runCommand", { command, options });
+  async runCommand(command: string, options?: TerminalOptions) {
+    return await this.request("runCommand", { command, options });
   }
 
   async saveFile(fileUri: string): Promise<void> {
@@ -183,16 +183,8 @@ export class MessageIde implements IDE {
     return this.request("getPinnedFiles", undefined);
   }
 
-  getSearchResults(query: string): Promise<string> {
-    return this.request("getSearchResults", { query });
-  }
-
   getProblems(fileUri: string): Promise<Problem[]> {
     return this.request("getProblems", { filepath: fileUri });
-  }
-
-  subprocess(command: string, cwd?: string): Promise<[string, string]> {
-    return this.request("subprocess", { command, cwd });
   }
 
   async getBranch(dir: string): Promise<string> {

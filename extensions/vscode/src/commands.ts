@@ -735,10 +735,6 @@ const getCommandsMap: (
         selectionLines: foldSelectionLines,
       });
     },
-    "continue.sendToTerminal": (text: string) => {
-      captureCommandTelemetry("sendToTerminal");
-      ide.runCommand(text);
-    },
     "continue.newSession": () => {
       sidebar.webviewProtocol?.request("newSession", undefined);
     },

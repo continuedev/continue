@@ -49,10 +49,11 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
       [BuiltInToolNames.ViewSubdirectory]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewRepoMap]: "allowedWithoutPermission",
-      [BuiltInToolNames.ExactSearch]: "allowedWithoutPermission",
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
       [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
+      [BuiltInToolNames.GlobTool]: "allowedWithoutPermission",
+      [BuiltInToolNames.GrepTool]: "allowedWithoutPermission",
     },
     toolGroupSettings: {
       BUILT_IN_GROUP_NAME: "include",

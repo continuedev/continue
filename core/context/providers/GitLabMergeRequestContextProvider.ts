@@ -57,15 +57,14 @@ interface GitLabComment {
   };
 }
 
-const trimFirstElement = (args: Array<string>): string => {
-  return args[0].trim();
-};
-
 const getSubprocess = async (extras: ContextProviderExtras) => {
-  const workingDir = await extras.ide.getWorkspaceDirs().then(trimFirstElement);
-
-  return (command: string) =>
-    extras.ide.subprocess(command, workingDir).then(trimFirstElement);
+  return async (command: string) => {
+    const { error, output } = await extras.ide.runCommand(command);
+    if (error) {
+      throw new Error(error);
+    }
+    return output;
+  };
 };
 
 class GitLabMergeRequestContextProvider extends BaseContextProvider {
@@ -124,10 +123,10 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     let urlMatches: RegExpExecArray | null;
     if (/https?.*/.test(remoteUrl)) {
       const pathname = new URL(remoteUrl).pathname;
-      urlMatches = /\/(?<projectPath>.*?)(?:(?=\.git)|$)/.exec(pathname)
+      urlMatches = /\/(?<projectPath>.*?)(?:(?=\.git)|$)/.exec(pathname);
     } else {
       // ssh
-      urlMatches = /:(?<projectPath>.*).git/.exec(remoteUrl)
+      urlMatches = /:(?<projectPath>.*).git/.exec(remoteUrl);
     }
 
     const project = urlMatches?.groups?.projectPath ?? null;

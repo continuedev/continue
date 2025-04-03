@@ -3,6 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
+import { grepSearchDirs } from "../../util/grepSearch.js";
 import { BaseContextProvider } from "../index.js";
 
 class SearchContextProvider extends BaseContextProvider {
@@ -18,7 +19,7 @@ class SearchContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const results = await extras.ide.getSearchResults(query);
+    const results = await grepSearchDirs(query, extras.ide);
     return [
       {
         description: "Search results",

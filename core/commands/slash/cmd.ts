@@ -19,14 +19,14 @@ const GenerateTerminalCommand: SlashCommand = {
       return;
     }
 
-    const gen =
-      llm.streamComplete(`The user has made a request to run a shell command. Their description of what it should do is:
+    const gen = llm.streamComplete(
+      `The user has made a request to run a shell command. Their description of what it should do is:
 
 "${input}"
 
 Please write a shell command that will do what the user requested. Your output should consist of only the command itself, without any explanation or example output. Do not use any newlines. Only output the command that when inserted into the terminal will do precisely what was requested. Here is the command:`,
-        new AbortController().signal
-      );
+      new AbortController().signal,
+    );
 
     const lines = streamLines(gen);
     let cmd = "";
@@ -54,7 +54,9 @@ Please write a shell command that will do what the user requested. Your output s
     if (commandIsPotentiallyDangerous(cmd)) {
       yield "\n\nWarning: This command may be potentially dangerous. Please double-check before pasting it in your terminal.";
     } else {
-      await ide.runCommand(cmd);
+      await ide.runCommand(cmd, {
+        preferVisibleTerminal: true,
+      });
     }
   },
 };

@@ -611,7 +611,7 @@ declare global {
   
     openUrl(url: string): Promise<void>;
   
-    runCommand(command: string): Promise<void>;
+    runCommand(command: string, options?: TerminalOptions): Promise<void>;
   
     saveFile(filepath: string): Promise<void>;
   
@@ -636,10 +636,6 @@ declare global {
     >;
   
     getPinnedFiles(): Promise<string[]>;
-  
-    getSearchResults(query: string): Promise<string>;
-  
-    subprocess(command: string, cwd?: string): Promise<[string, string]>;
   
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
   

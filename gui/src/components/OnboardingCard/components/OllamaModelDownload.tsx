@@ -1,9 +1,9 @@
 import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { StyledActionButton } from "../..";
-import OllamaCompletedStep from "./OllamaCompletedStep";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ToolTip } from "../../gui/Tooltip";
+import OllamaCompletedStep from "./OllamaCompletedStep";
 
 interface OllamaModelDownloadProps {
   title: string;
@@ -21,7 +21,12 @@ function OllamaModelDownload({
   const id = `info-hover-${encodeURIComponent(command)}`;
 
   function onClick() {
-    void ideMessenger.ide.runCommand(command);
+    void ideMessenger.ide.runCommand(command, {
+      insertOnly: true,
+      onlyRunLocally: true,
+      preferVisibleTerminal: true,
+      reuseTerminalNamed: "Start Ollama",
+    });
     ideMessenger.post("copyText", { text: command });
   }
 
