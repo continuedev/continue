@@ -5,13 +5,12 @@ import { BuiltInToolNames } from "./builtIn";
 
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { exactSearchImpl } from "./implementations/exactSearch";
+import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
-import { viewRepoMapImpl } from "./implementations/viewRepoMap";
-import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
 
 async function callHttpTool(
   url: string,
@@ -149,12 +148,14 @@ export async function callTool(
       return await searchWebImpl(args, extras);
     case BuiltInToolNames.ViewDiff:
       return await viewDiffImpl(args, extras);
-    case BuiltInToolNames.ViewRepoMap:
-      return await viewRepoMapImpl(args, extras);
-    case BuiltInToolNames.ViewSubdirectory:
-      return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.LSTool:
+      return await lsToolImpl(args, extras);
     case BuiltInToolNames.ReadCurrentlyOpenFile:
       return await readCurrentlyOpenFileImpl(args, extras);
+    // case BuiltInToolNames.ViewRepoMap:
+    //   return await viewRepoMapImpl(args, extras);
+    // case BuiltInToolNames.ViewSubdirectory:
+    //   return await viewSubdirectoryImpl(args, extras);
     default:
       return await callToolFromUri(uri, args, extras);
   }
