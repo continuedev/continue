@@ -459,10 +459,16 @@ const getSystemMessage = ({
 }) => {
   const messageStringContent = getMessageStringContent(userMessage);
   const filePathsFromMessage = extractPathsFromCodeBlocks(messageStringContent);
-  debugger;
+
   return rules
     .filter((rule) => {
       return isRuleActive({ rule });
+    })
+    .map((rule) => {
+      if (typeof rule === "string") {
+        return rule;
+      }
+      return rule.rule;
     })
     .join("\n");
 };
