@@ -15,7 +15,9 @@ class MessageTypes {
             "fileExists",
             "showVirtualFile",
             "openFile",
-            "runCommand",
+            "ripgrepSearch"
+            "runCommandInWorkspace",
+            "runCommandLocally",
             "saveFile",
             "readFile",
             "showDiff",

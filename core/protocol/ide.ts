@@ -9,12 +9,13 @@ import type {
   IdeInfo,
   IdeSettings,
   IndexTag,
+  LocalTerminalOptions,
   Location,
   Problem,
   Range,
   RangeInFile,
-  TerminalOptions,
   Thread,
+  WorkspaceTerminalOptions,
 } from "../";
 
 export interface GetGhTokenArgs {
@@ -29,10 +30,15 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   showVirtualFile: [{ name: string; content: string }, void];
   openFile: [{ path: string }, void];
   openUrl: [string, void];
-  runCommand: [
-    { command: string; options?: TerminalOptions },
+  runCommandLocally: [
+    { command: string; options?: LocalTerminalOptions },
     { error?: string; output: string },
   ];
+  runCommandInWorkspace: [
+    { command: string; options?: WorkspaceTerminalOptions },
+    { error?: string; output: string },
+  ];
+  ripgrepSearch: [{ args: string[] }, string];
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];

@@ -14,15 +14,22 @@ data class ShowVirtualFileParams(
     val content: String
 )
 
-data class TerminalOptions(
-    val relativeCwd: String?,
-    val onlyRunLocally: Boolean?,
+data class LocalTerminalOptions(
+    val preferVisibleTerminal: Boolean?,
     val insertOnly: Boolean?,
+    val reuseTerminalNamed: String? 
+)
+
+data class WorkspaceTerminalOptions(
     val preferVisibleTerminal: Boolean?,
     val reuseTerminalNamed: String? 
 )
 
-data class RunCommandParams(val command: String, val options: TerminalOptions?)
+data class RipgrepSearchParams(val args: List<String>)
+
+data class RunCommandLocallyParams(val command: String, val options: LocalTerminalOptions?)
+
+data class RunCommandInWorkspaceParams(val command: String, val options: WorkspaceTerminalOptions?)
 
 data class OpenFileParams(val path: String)
 

@@ -59,7 +59,9 @@ interface GitLabComment {
 
 const getSubprocess = async (extras: ContextProviderExtras) => {
   return async (command: string) => {
-    const { error, output } = await extras.ide.runCommand(command);
+    const { error, output } = await extras.ide.runCommandInWorkspace(command, {
+      preferVisibleTerminal: false,
+    });
     if (error) {
       throw new Error(error);
     }

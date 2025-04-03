@@ -54,7 +54,7 @@ Please write a shell command that will do what the user requested. Your output s
     if (commandIsPotentiallyDangerous(cmd)) {
       yield "\n\nWarning: This command may be potentially dangerous. Please double-check before pasting it in your terminal.";
     } else {
-      await ide.runCommand(cmd, {
+      await ide.runCommandInWorkspace(cmd, {
         preferVisibleTerminal: true,
       });
     }

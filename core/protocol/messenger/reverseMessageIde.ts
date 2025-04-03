@@ -138,8 +138,16 @@ export class ReverseMessageIde {
       return this.ide.openFile(data.path);
     });
 
-    this.on("runCommand", (data) => {
-      return this.ide.runCommand(data.command, data.options);
+    this.on("ripgrepSearch", (data) => {
+      return this.ide.ripgrepSearch(data.args);
+    });
+
+    this.on("runCommandLocally", (data) => {
+      return this.ide.runCommandLocally(data.command, data.options);
+    });
+
+    this.on("runCommandInWorkspace", (data) => {
+      return this.ide.runCommandInWorkspace(data.command, data.options);
     });
 
     this.on("saveFile", (data) => {

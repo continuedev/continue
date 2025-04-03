@@ -4,6 +4,8 @@ import com.github.continuedev.continueintellijextension.`continue`.GitService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.*
+import com.github.continuedev.continueintellijextension.protocol.LocalTerminalOptions
+import com.github.continuedev.continueintellijextension.protocol.WorkspaceTerminalOptions
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
@@ -210,38 +212,52 @@ class IntelliJIDE(
         }
     }
 
-    override suspend fun runCommand(command: String, options: TerminalOptions) {
-        return null
-        // val commandLine = GeneralCommandLine(command.split(" "))
-        // commandLine.setWorkDirectory(project.basePath)
-        // val result = ExecUtil.execAndGetOutput(commandLine)
+    override suspend fun ripgrepSearch(args: List<String>): String {
+        val command = GeneralCommandLine(listOf(ripgrep) + args)
+        command.setWorkDirectory(project.basePath)
+        return ExecUtil.execAndGetOutput(command).stdout
+    }
 
+    override suspend fun runCommandInWorkspace(command: String, options: WorkspaceTerminalOptions?): TerminalOutput {
+        val commandLine = GeneralCommandLine(command.split(" "))
+        commandLine.setWorkDirectory(project.basePath)
+        val result = ExecUtil.execAndGetOutput(commandLine)
 
+        return TerminalOutput(
+            error = if (result.exitCode != 0) result.stderr else null,
+            output = result.stdout
+        )
+    }
+
+    override suspend fun runCommandLocally(command: String, options: LocalTerminalOptions?): TerminalOutput {
+        if(options?.insertOnly == true){
+            throw NotImplementedError("gotoDefinition not implemented yet")
+        }
+        val commandLine = GeneralCommandLine(command.split(" "))
+        commandLine.setWorkDirectory(project.basePath)
+        val result = ExecUtil.execAndGetOutput(commandLine)
+
+        return TerminalOutput(
+            error = if (result.exitCode != 0) result.stderr else null,
+            output = result.stdout
+        )
         
-        // return mapOf(
-        //     "output" to "Hi"
-        //     )
+        // Old "subprocess" implementation
+        //     if (cwd != null) {
+        //         builder.directory(File(cwd))
+        //     }
 
+        //     val process = withContext(Dispatchers.IO) {
+        //         builder.start()
+        //     }
 
-            // val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
-    //     val commandList = command.split(" ")
-    //     val builder = ProcessBuilder(commandList)
+        //     val stdout = process.inputStream.bufferedReader().readText()
+        //     val stderr = process.errorStream.bufferedReader().readText()
 
-    //     if (cwd != null) {
-    //         builder.directory(File(cwd))
-    //     }
-
-    //     val process = withContext(Dispatchers.IO) {
-    //         builder.start()
-    //     }
-
-    //     val stdout = process.inputStream.bufferedReader().readText()
-    //     val stderr = process.errorStream.bufferedReader().readText()
-
-    //     withContext(Dispatchers.IO) {
-    //         process.waitFor()
-    //     }
-    //     return listOf(stdout, stderr)
+        //     withContext(Dispatchers.IO) {
+        //         process.waitFor()
+        //     }
+        //     return listOf(stdout, stderr)
     }
 
     override suspend fun saveFile(filepath: String) {

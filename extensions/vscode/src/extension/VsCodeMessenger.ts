@@ -385,8 +385,17 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("openFile", async (msg) => {
       return ide.openFile(msg.data.path);
     });
-    this.onWebviewOrCore("runCommand", async (msg) => {
-      return await ide.runCommand(msg.data.command, msg.data.options);
+    this.onWebviewOrCore("ripgrepSearch", async (msg) => {
+      return await ide.ripgrepSearch(msg.data.args);
+    });
+    this.onWebviewOrCore("runCommandLocally", async (msg) => {
+      return await ide.runCommandLocally(msg.data.command, msg.data.options);
+    });
+    this.onWebviewOrCore("runCommandInWorkspace", async (msg) => {
+      return await ide.runCommandInWorkspace(
+        msg.data.command,
+        msg.data.options,
+      );
     });
     this.onWebviewOrCore("getProblems", async (msg) => {
       return ide.getProblems(msg.data.filepath);

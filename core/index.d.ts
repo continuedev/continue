@@ -680,10 +680,17 @@ export interface IDE {
 
   openUrl(url: string): Promise<void>;
 
-  runCommand(
+  runCommandLocally(
     command: string,
-    options?: TerminalOptions,
+    options?: LocalTerminalOptions,
   ): Promise<{ error?: string; output: string }>;
+
+  runCommandInWorkspace(
+    command: string,
+    options?: WorkspaceTerminalOptions,
+  ): Promise<{ error?: string; output: string }>;
+
+  ripgrepSearch(args: string[]): Promise<string>;
 
   saveFile(fileUri: string): Promise<void>;
 
@@ -1378,11 +1385,13 @@ export type PackageDocsResult = {
   | { details: PackageDetailsSuccess; error?: never }
 );
 
-export interface TerminalOptions {
-  relativeCwd?: string; // relative unless onlyRunLocally
-  onlyRunLocally?: boolean; // aka don't allow using remote filesystem terminal
-
+export interface LocalTerminalOptions {
+  preferVisibleTerminal?: boolean;
   insertOnly?: boolean; // VS Code only, if true Jetbrains will do nothing
+  reuseTerminalNamed?: string; // VS Code only
+}
+
+export interface WorkspaceTerminalOptions {
   preferVisibleTerminal?: boolean; // VS Code only
   reuseTerminalNamed?: string; // VS Code only
 }

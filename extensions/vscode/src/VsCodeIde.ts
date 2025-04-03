@@ -5,12 +5,7 @@ import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import { executeGotoProvider } from "./autocomplete/lsp";
-import { Repository } from "./otherExtensions/git";
-import { SecretStorage } from "./stubs/SecretStorage";
-import { VsCodeIdeUtils } from "./util/ideUtils";
-import { openEditorAndRevealRange } from "./util/vscode";
-import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import child_process, { exec } from "child_process";
 
 import type {
   ContinueRcJson,
@@ -20,12 +15,19 @@ import type {
   IdeInfo,
   IdeSettings,
   IndexTag,
+  LocalTerminalOptions,
   Location,
   Problem,
   RangeInFile,
-  TerminalOptions,
   Thread,
+  WorkspaceTerminalOptions,
 } from "core";
+import { executeGotoProvider } from "./autocomplete/lsp";
+import { Repository } from "./otherExtensions/git";
+import { SecretStorage } from "./stubs/SecretStorage";
+import { VsCodeIdeUtils } from "./util/ideUtils";
+import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
+import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -453,45 +455,233 @@ class VsCodeIde implements IDE {
     );
   }
 
-  async runCommand(
-    command: string,
-    options: TerminalOptions,
-  ): Promise<{ error?: string; output: string }> {
-    // relativeCwd?: string; // relative unless onlyRunLocally
-    // onlyRunLocally?: boolean; // aka don't allow using remote filesystem terminal
-
-    // insertOnly?: boolean; // VS Code only, if true Jetbrains will do nothing
-    // preferVisibleTerminal?: boolean; // VS Code only
-    // reuseTerminalNamed?: string; // VS Code only
-    // vscode.workspace.exe
-
-    const result = await vscode.commands.executeCommand(
-      "workbench.action.terminal.sendSequence",
-      {
-        text: `${command}\n`,
-      },
+  async ripgrepSearch(args: string[]): Promise<string> {
+    const dir = this.ideUtils.getWorkspaceDirectories()[0];
+    const dirPath = dir.fsPath;
+    const ripGrepUri = vscode.Uri.joinPath(
+      getExtensionUri(),
+      "out/node_modules/@vscode/ripgrep/bin/rg",
     );
+    const p = child_process.spawn(ripGrepUri.fsPath, args, { cwd: dirPath });
 
-    // let terminal: vscode.Terminal | undefined;
-    // if (options.reuseTerminalNamed) {
-    //   if (options.reuseTerminalNamed) {
-    //     terminal = vscode.window.terminals.find(
-    //       (t) => t?.name === options.terminalName,
-    //     );
-    //   } else {
-    //     vscode.window.createTerminal(options?.terminalName);
-    //     terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
-    //   }
-    // }
-    // vscode.workspace.execute;
-    // if (!terminal) {
-    //   terminal = vscode.window.createTerminal(options?.terminalName);
-    // }
-    // terminal.show();
-    // terminal.sendText(command, false);
+    let output = "";
+    p.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+
+    return new Promise<string>((resolve, reject) => {
+      p.on("error", reject);
+      p.on("close", (code) => {
+        if (code === 0) {
+          resolve(output);
+        } else if (code === 1) {
+          // No matches
+          resolve("No matches found");
+        } else {
+          reject(new Error(`Process exited with code ${code}`));
+        }
+      });
+    });
+  }
+
+  async runCommandInWorkspace(
+    command: string,
+    options?: WorkspaceTerminalOptions,
+  ) {
+    if (vscode.env.remoteName) {
+      const task = new vscode.Task(
+        { type: "shell" },
+        vscode.TaskScope.Workspace,
+        "Command",
+        "shell",
+        new vscode.ShellExecution(command),
+      );
+
+      await vscode.tasks.executeTask(task);
+
+      return {
+        output: "Terminal output cannot be returned for remote workspaces",
+      };
+    } else {
+      // TODO potential security concerns since runCommandLocally isn't guaranteed to be in workspace but not a regression
+      return await this.runCommandLocally(command, {
+        insertOnly: false,
+        preferVisibleTerminal: options?.preferVisibleTerminal,
+      });
+    }
+
+    const result = new Promise<{
+      error?: string;
+      output?: string;
+    }>(async (resolve, reject) => {
+      let output = "";
+
+      // Create and execute task
+      const task = new vscode.Task(
+        { type: "shell" },
+        vscode.TaskScope.Workspace,
+        "Command",
+        "shell",
+        new vscode.ShellExecution(command),
+      );
+
+      const execution = await vscode.tasks.executeTask(task);
+
+      // if("terminal" in execution) {
+      //   const terminal = execution.terminal
+      // }
+
+      // // Listen for output
+      // const outputDisposable = vscode.tasks.onDidWriteTaskOutput((event) => {
+      //   if (event.execution.task === task) {
+      //     output += event.line + "\n";
+      //   }
+      // });
+
+      // Listen for task ends
+      const endDisposable = vscode.tasks.onDidEndTaskProcess((event) => {
+        if (event.execution.task === task) {
+          // startDisposable.dispose();
+          // outputDisposable.dispose();
+          endDisposable.dispose();
+
+          if (event.exitCode === 0) {
+            resolve({ output: "from promise" });
+          } else {
+            reject(new Error(`Task failed with exit code ${event.exitCode}`));
+          }
+        }
+      });
+    });
+    await result;
+
+    options?.preferVisibleTerminal;
     return {
-      output: "nada",
+      output: "",
     };
+
+    // Can't get output from this:
+    // const result = await vscode.commands.executeCommand(
+    //   "workbench.action.terminal.sendSequence",
+    //   {
+    //     text: `${command}\n`,
+    //   },
+    // );
+  }
+
+  async runCommandLocally(
+    command: string,
+    options?: LocalTerminalOptions,
+  ): Promise<{ error?: string; output: string }> {
+    options?.insertOnly;
+    options?.preferVisibleTerminal;
+    options?.reuseTerminalNamed;
+
+    if (
+      options?.insertOnly ||
+      options?.preferVisibleTerminal ||
+      options?.reuseTerminalNamed
+    ) {
+      // If only inserting, use window terminals and insert without running
+      if (options.insertOnly) {
+        let terminal: vscode.Terminal | undefined;
+        if (options?.reuseTerminalNamed) {
+          terminal = vscode.window.terminals.find(
+            (t) => t?.name === options.reuseTerminalNamed,
+          );
+          if (!terminal) {
+            terminal = vscode.window.createTerminal(options.reuseTerminalNamed);
+          }
+        } else {
+          terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
+
+          if (!terminal) {
+            terminal = vscode.window.createTerminal("Continue");
+          }
+        }
+
+        if (options?.preferVisibleTerminal) {
+          terminal.show();
+        }
+
+        terminal.sendText(command, false);
+        return {
+          output: "",
+          error: "Terminal output not supported when only inserting command",
+        };
+      } else {
+        const taskName = options?.reuseTerminalNamed || "Continue";
+
+        // Otherwise use tasks and trigger
+        const existingExecution = vscode.tasks.taskExecutions.find(
+          (execution) => execution.task.name === taskName,
+        );
+
+        // Wait for currently-running command to finish
+        if (existingExecution) {
+          await new Promise((resolve) => {
+            vscode.tasks.onDidEndTask((e) => {
+              if (e.execution === existingExecution) {
+                resolve(null);
+              }
+            });
+          });
+        }
+
+        const task = new vscode.Task(
+          { type: "shell" },
+          vscode.TaskScope.Global, // Use Global scope for local commands
+          taskName,
+          "shell",
+          new vscode.ShellExecution(command),
+        );
+
+        task.presentationOptions = {
+          reveal: options?.preferVisibleTerminal
+            ? vscode.TaskRevealKind.Always
+            : vscode.TaskRevealKind.Silent,
+          focus: options?.preferVisibleTerminal || false,
+          panel: vscode.TaskPanelKind.Shared,
+        };
+        const execution = await vscode.tasks.executeTask(task);
+
+        return await new Promise((resolve, reject) => {
+          const completionDisposable = vscode.tasks.onDidEndTaskProcess((e) => {
+            if (e.execution === execution) {
+              completionDisposable.dispose();
+
+              if (e.exitCode === 0) {
+                resolve({
+                  output:
+                    "Command executed successfully. Terminal output not supported when using visible/named terminals",
+                });
+              } else {
+                resolve({
+                  output: "",
+                  error: `Terminal exited with code ${e.exitCode}`,
+                });
+              }
+            }
+          });
+        });
+      }
+    } else {
+      // Ideally use exec to get terminal output
+      return new Promise((resolve) => {
+        exec(command, (error, stdout, stderr) => {
+          if (error) {
+            resolve({
+              error: stderr,
+              output: "",
+            });
+          } else {
+            resolve({
+              output: stdout,
+            });
+          }
+        });
+      });
+    }
   }
 
   async saveFile(fileUri: string): Promise<void> {

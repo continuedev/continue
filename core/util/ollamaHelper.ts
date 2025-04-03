@@ -44,10 +44,10 @@ export async function startLocalOllama(ide: IDE): Promise<any> {
       }
   }
   if (startCommand) {
-    return ide.runCommand(startCommand, {
+    return ide.runCommandLocally(startCommand, {
       reuseTerminalNamed: "Start Ollama",
       preferVisibleTerminal: true,
-      onlyRunLocally: true,
+      insertOnly: false,
     });
   }
 }

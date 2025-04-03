@@ -1,7 +1,8 @@
 package com.github.continuedev.continueintellijextension
 
 import com.google.gson.JsonElement
-import com.github.continuedev.continueintellijextension.protocol.TerminalOptions
+import com.github.continuedev.continueintellijextension.protocol.WorkspaceTerminalOptions
+import com.github.continuedev.continueintellijextension.protocol.LocalTerminalOptions
 
 enum class ToastType(val value: String) {
     INFO("info"),
@@ -132,7 +133,11 @@ interface IDE {
 
     suspend fun openUrl(url: String)
 
-    suspend fun runCommand(command: String, options: TerminalOptions?): TerminalOutput
+    suspend fun ripgrepSearch(args: List<String>): String
+
+    suspend fun runCommandLocally(command: String, options: LocalTerminalOptions?): TerminalOutput
+
+    suspend fun runCommandInWorkspace(command: String, options: WorkspaceTerminalOptions?): TerminalOutput
 
     suspend fun saveFile(filepath: String)
 

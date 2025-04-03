@@ -9,13 +9,14 @@ import {
   IdeInfo,
   IdeSettings,
   IndexTag,
+  LocalTerminalOptions,
   Location,
   Problem,
   Range,
   RangeInFile,
-  TerminalOptions,
   Thread,
   ToastType,
+  WorkspaceTerminalOptions,
 } from "../index.js";
 import { GetGhTokenArgs } from "../protocol/ide.js";
 
@@ -198,7 +199,24 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  runCommand(command: string, options?: TerminalOptions) {
+  ripgrepSearch(args: string[]): Promise<string> {
+    return Promise.resolve("Not implemented");
+  }
+
+  runCommandInWorkspace(
+    command: string,
+    options?: WorkspaceTerminalOptions,
+  ): Promise<{ error?: string; output: string }> {
+    return Promise.resolve({
+      error: "not implemented in filesystem ide",
+      output: "",
+    });
+  }
+
+  runCommandLocally(
+    command: string,
+    options?: LocalTerminalOptions,
+  ): Promise<{ error?: string; output: string }> {
     return Promise.resolve({
       error: "not implemented in filesystem ide",
       output: "",

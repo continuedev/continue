@@ -312,12 +312,30 @@ class IdeProtocolClient(
                         respond(null)
                     }
 
-                    "runCommand" -> {
+                    "ripgrepSearch" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
-                            RunCommandParams::class.java
+                            RipgrepSearchParams::class.java
                         )
-                        val result = ide.runCommand(params.command, params.options)
+                        val result = ide.ripgrepSearch(params.args)
+                        respond(result)
+                    }
+
+                    "runCommandLocally" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            RunCommandLocallyParams::class.java
+                        )
+                        val result = ide.runCommandLocally(params.command, params.options)
+                        respond(result)
+                    }
+
+                    "runCommandInWorkspace" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            RunCommandInWorkspaceParams::class.java
+                        )
+                        val result = ide.runCommandInWorkspace(params.command, params.options)
                         respond(result)
                     }
 

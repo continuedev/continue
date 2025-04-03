@@ -21,9 +21,8 @@ function OllamaModelDownload({
   const id = `info-hover-${encodeURIComponent(command)}`;
 
   function onClick() {
-    void ideMessenger.ide.runCommand(command, {
+    void ideMessenger.ide.runCommandLocally(command, {
       insertOnly: true,
-      onlyRunLocally: true,
       preferVisibleTerminal: true,
       reuseTerminalNamed: "Start Ollama",
     });

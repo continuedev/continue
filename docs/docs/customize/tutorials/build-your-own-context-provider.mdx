@@ -161,7 +161,7 @@ const ReadMeContextProvider: CustomContextProvider = {
 
     const allFiles = await Promise.all(
       workspaceDirs.map((dir) =>
-        ide.runCommand(`find ${dir} -name "README.md"`),
+        ide.runCommandInWorkspace(`find ${dir} -name "README.md"`),
       ),
     );
 

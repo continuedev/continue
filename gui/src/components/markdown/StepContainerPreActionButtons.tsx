@@ -71,7 +71,7 @@ export default function StepContainerPreActionButtons({
 
   async function onClickRunTerminal() {
     if (shouldRunTerminalCmd) {
-      return await ideMessenger.ide.runCommand(
+      return await ideMessenger.ide.runCommandInWorkspace(
         getTerminalCommand(codeBlockContent),
         {
           preferVisibleTerminal: true,

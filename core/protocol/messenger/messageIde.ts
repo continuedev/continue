@@ -9,12 +9,13 @@ import type {
   IdeInfo,
   IdeSettings,
   IndexTag,
+  LocalTerminalOptions,
   Location,
   Problem,
   Range,
   RangeInFile,
-  TerminalOptions,
   Thread,
+  WorkspaceTerminalOptions,
 } from "../..";
 
 export class MessageIde implements IDE {
@@ -160,8 +161,19 @@ export class MessageIde implements IDE {
     await this.request("openUrl", url);
   }
 
-  async runCommand(command: string, options?: TerminalOptions) {
-    return await this.request("runCommand", { command, options });
+  async ripgrepSearch(args: string[]) {
+    return await this.request("ripgrepSearch", { args });
+  }
+
+  async runCommandLocally(command: string, options?: LocalTerminalOptions) {
+    return await this.request("runCommandLocally", { command, options });
+  }
+
+  async runCommandInWorkspace(
+    command: string,
+    options?: WorkspaceTerminalOptions,
+  ) {
+    return await this.request("runCommandInWorkspace", { command, options });
   }
 
   async saveFile(fileUri: string): Promise<void> {
