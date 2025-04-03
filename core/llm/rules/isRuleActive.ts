@@ -6,12 +6,14 @@ const TEMPLATE_VAR_REGEX = /^\$\{\{(\s*.*?\s*)\}\}$/;
 
 const createGlobFunction = (activePaths: string[]) => {
   return (pattern: string) => {
-    return activePaths.some((path) => minimatch(path, pattern));
+    const result = activePaths.some((path) => minimatch(path, pattern));
+    debugger;
+    return result;
   };
 };
 
 const contains = (str: string, searchStr: string): boolean => {
-  return str.toLowerCase().includes(searchStr.toLowerCase());
+  return str.includes(searchStr);
 };
 
 const evaluateIf = ({
@@ -29,6 +31,7 @@ const evaluateIf = ({
   }
 
   try {
+    debugger;
     const evaluate = compileExpression(expression, {
       extraFunctions: {
         glob: createGlobFunction(activePaths),
