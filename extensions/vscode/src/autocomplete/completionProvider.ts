@@ -99,6 +99,9 @@ export class ContinueCompletionProvider
     );
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
 
+    // Disable the suggestion widget until the LLM has had a chance to generate a completion
+    vscode.commands.executeCommand("continue.disableSuggestionWidget");
+
     this.requestNewInlineCompletionsOnEditorChanges();
   }
 
@@ -131,6 +134,63 @@ export class ContinueCompletionProvider
       this.pendingInlineCompletion.acceptListener?.dispose();
       this.pendingInlineCompletion = null;
     }
+  }
+
+  private async suggestionWidgetMatchesInlineCompletion() {
+    if (!this.pendingInlineCompletion) return true;
+    if (!this.pendingInlineCompletion.result) return false;
+
+    const [completionResult] = this.pendingInlineCompletion.result;
+
+    if (!completionResult) return false;
+
+    const position = new vscode.Position(
+      this.pendingInlineCompletion.line,
+      this.pendingInlineCompletion.character,
+    );
+
+    let hasCompatibleSuggestion;
+    try {
+      const completionList =
+        await vscode.commands.executeCommand<vscode.CompletionList>(
+          "vscode.executeCompletionItemProvider",
+          this.pendingInlineCompletion.editor!.document.uri,
+          position,
+        );
+
+      const inlineCompletionText = completionResult.insertText.toString();
+
+      hasCompatibleSuggestion = completionList.items.some((item) => {
+        const insertText = item.insertText?.toString() || item.label.toString();
+        return (
+          inlineCompletionText.startsWith(insertText) ||
+          insertText.startsWith(inlineCompletionText)
+        );
+      });
+    } catch (error) {
+      hasCompatibleSuggestion = false;
+    }
+
+    if (!hasCompatibleSuggestion) return false;
+
+    return hasCompatibleSuggestion;
+  }
+
+  private async requestSuggestWidget() {
+    const isDisabled = await vscode.commands.executeCommand(
+      "continue.isSuggestionWidgetDisabled",
+    );
+
+    if (isDisabled) return;
+
+    const hasCompatibleSuggestion =
+      await this.suggestionWidgetMatchesInlineCompletion();
+
+    if (!hasCompatibleSuggestion) return;
+
+    setTimeout(async () => {
+      await vscode.commands.executeCommand("editor.action.triggerSuggest");
+    }, 500);
   }
 
   private async requestNewInlineCompletion() {
@@ -213,6 +273,12 @@ export class ContinueCompletionProvider
       });
       result[0].insertText = insertText;
       result[0].range = new vscode.Range(position, position);
+
+      const isDisabled = await vscode.commands.executeCommand("continue.isSuggestionWidgetDisabled");
+      if (isDisabled) {
+        vscode.commands.executeCommand("continue.enableSuggestionWidget");
+        this.requestSuggestWidget();
+      }
     }
 
     return result;
@@ -237,8 +303,11 @@ export class ContinueCompletionProvider
 
     if (!completionPromise) return null;
 
+    vscode.commands.executeCommand("continue.disableSuggestionWidget");
+
     const acceptListener = this.completionProvider.onAccept((completionId, acceptedOutcome) => {
       if (!this.pendingInlineCompletion) return;
+      vscode.commands.executeCommand("continue.disableSuggestionWidget");
 
       this.pendingInlineCompletion.cancellationSource?.cancel();
       this.pendingInlineCompletion.acceptListener?.dispose();
@@ -301,6 +370,10 @@ export class ContinueCompletionProvider
       // Cancel if the user has moved around
       if (this.isInlineCompletionInvalid(position, document)) {
         this.pendingInlineCompletion.cancellationSource?.cancel();
+        const isDisabled = await vscode.commands.executeCommand("continue.isSuggestionWidgetDisabled");
+        if (isDisabled)
+          vscode.commands.executeCommand("continue.disableSuggestionWidget");
+
         this.pendingInlineCompletion.task = null;
         this.pendingInlineCompletion.result = null;
         this.pendingInlineCompletion = null;
@@ -319,7 +392,6 @@ export class ContinueCompletionProvider
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
-
 
   private async provideInlineCompletionItemsLater(
     document: vscode.TextDocument,
@@ -498,6 +570,7 @@ export class ContinueCompletionProvider
       );
 
       (completionItem as any).completeBracketPairs = true;
+
       return [completionItem];
     } finally {
       stopStatusBarLoading();
