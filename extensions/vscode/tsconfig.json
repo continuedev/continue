@@ -17,6 +17,7 @@
     "../../core/dist/**/*",
     "../../core/**/*.test.ts",
     "../../core/**/test/**/*",
-    "../../core/**/*.skip.ts"
+    "../../core/**/*.skip.ts",
+    "../../core/node_modules/**/*"
   ]
 }
