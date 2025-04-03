@@ -3,6 +3,7 @@ import Cohere from "../llm/llms/Cohere";
 import FreeTrial from "../llm/llms/FreeTrial";
 import HuggingFaceTEI from "../llm/llms/HuggingFaceTEI";
 import { LLMReranker } from "../llm/llms/llm";
+import SiliconFlow from "../llm/llms/SiliconFlow";
 import ContinueProxy from "../llm/llms/stubs/ContinueProxy";
 import Voyage from "../llm/llms/Voyage";
 import WatsonX from "../llm/llms/WatsonX";
@@ -16,4 +17,5 @@ export const AllRerankers: { [key: string]: any } = {
   "free-trial": FreeTrial,
   "huggingface-tei": HuggingFaceTEI,
   "continue-proxy": ContinueProxy,
+  siliconflow: SiliconFlow,
 };
