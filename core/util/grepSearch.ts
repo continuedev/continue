@@ -8,7 +8,7 @@ export async function grepSearchDirs(
   const dirsToSearch = dirUris ?? (await ide.getWorkspaceDirs());
   const results: string[] = [];
   for (const dir of dirsToSearch) {
-    const dirResults = ""; //await _searchDir(query, dir);
+    const dirResults = "result1\nresult2"; //await _searchDir(query, dir);
 
     const keepLines: string[] = [];
 

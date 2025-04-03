@@ -463,6 +463,7 @@ class VsCodeIde implements IDE {
     // insertOnly?: boolean; // VS Code only, if true Jetbrains will do nothing
     // preferVisibleTerminal?: boolean; // VS Code only
     // reuseTerminalNamed?: string; // VS Code only
+    // vscode.workspace.exe
 
     const result = await vscode.commands.executeCommand(
       "workbench.action.terminal.sendSequence",
@@ -471,25 +472,25 @@ class VsCodeIde implements IDE {
       },
     );
 
-    let terminal: vscode.Terminal | undefined;
-    if (options.reuseTerminalNamed) {
-      if (options.reuseTerminalNamed) {
-        terminal = vscode.window.terminals.find(
-          (t) => t?.name === options.terminalName,
-        );
-      } else {
-        vscode.window.createTerminal(options?.terminalName);
-        terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
-      }
-    }
-    vscode.workspace.execute;
-    if (!terminal) {
-      terminal = vscode.window.createTerminal(options?.terminalName);
-    }
-    terminal.show();
-    terminal.sendText(command, false);
+    // let terminal: vscode.Terminal | undefined;
+    // if (options.reuseTerminalNamed) {
+    //   if (options.reuseTerminalNamed) {
+    //     terminal = vscode.window.terminals.find(
+    //       (t) => t?.name === options.terminalName,
+    //     );
+    //   } else {
+    //     vscode.window.createTerminal(options?.terminalName);
+    //     terminal = vscode.window.activeTerminal ?? vscode.window.terminals[0];
+    //   }
+    // }
+    // vscode.workspace.execute;
+    // if (!terminal) {
+    //   terminal = vscode.window.createTerminal(options?.terminalName);
+    // }
+    // terminal.show();
+    // terminal.sendText(command, false);
     return {
-      output: "",
+      output: "nada",
     };
   }
 

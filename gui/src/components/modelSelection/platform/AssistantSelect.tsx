@@ -81,7 +81,7 @@ const AssistantSelectOption = ({
       fontSizeModifier={-2}
     >
       <div className="flex w-full flex-col gap-0.5">
-        <div className="flex w-full items-center justify-between">
+        <div className="flex w-full items-center justify-between gap-1">
           <div className="flex w-full items-center gap-2">
             <div className="mr-2 h-4 w-4 flex-shrink-0">
               <AssistantIcon assistant={profile} />
@@ -92,8 +92,8 @@ const AssistantSelectOption = ({
               {profile.title}
             </span>
           </div>
-          <div className="flex flex-row items-center gap-2">
-            <div>{selected ? <CheckIcon className="h-3 w-3" /> : null}</div>
+          <div className="flex flex-row items-center gap-1">
+            {selected ? <CheckIcon className="h-3 w-3 flex-shrink-0" /> : null}
             {!profile.errors?.length ? (
               isLocalProfile(profile) ? (
                 <Cog6ToothIcon
