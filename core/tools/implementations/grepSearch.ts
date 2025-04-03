@@ -1,6 +1,6 @@
 import { ToolImpl } from ".";
 
-export const exactSearchImpl: ToolImpl = async (args, extras) => {
+export const grepSearchImpl: ToolImpl = async (args, extras) => {
   const content = await extras.ide.getSearchResults(args.query);
   return [
     {

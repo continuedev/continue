@@ -26,6 +26,8 @@ import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.testFramework.LightVirtualFile
 import kotlinx.coroutines.*
 import java.awt.Toolkit
@@ -37,6 +39,7 @@ import java.io.InputStreamReader
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Paths
+import org.apache.tools.ant.DirectoryScanner
 
 class IntelliJIDE(
     private val project: Project,
@@ -310,10 +313,45 @@ class IntelliJIDE(
     }
 
     override suspend fun getFileResults(pattern: String): List<String> {
+        // val scanner = DirectoryScanner().apply {
+        //     includes = arrayOf(pattern)
+        // }
+        
+        // val projectBasePath = project.basePath ?: return emptyList()
+        
+        // return FilenameIndex.getAllFilesByExt(project, "*", GlobalSearchScope.projectScope(project))
+        //     .filter { virtualFile ->
+        //         scanner.match(virtualFile.path.replace('\\', '/'), globPattern)
+        //     }
+        //     .map { it.path.removePrefix("$projectBasePath/") }
         return listOf("")
     }
-
     override suspend fun getSearchResults(query: String): String {
+        // val findModel = FindModel().apply {
+        //     stringToFind = searchText
+        //     isRegularExpressions = false
+        //     isWholeWordsOnly = false
+        //     isCaseSensitive = false
+        //     searchContext = FindModel.SearchContext.ANY
+        //     isGlobal = true
+        // }
+    
+        // val findManager = FindManager.getInstance(project)
+        // val scope = GlobalSearchScope.projectScope(project)
+        
+        // FindInProjectUtil.findUsages(
+        //     findModel,
+        //     project.basePath,
+        //     project,
+        //     {
+        //         // Process each found usage
+        //         val virtualFile = it.virtualFile
+        //         val lineNumber = it.line
+        //         // Handle result
+        //     },
+        //     scope
+        // )
+
         // return withContext(Dispatchers.IO) {
         //     val findModel = FindModel().apply {
         //         stringToFind = query

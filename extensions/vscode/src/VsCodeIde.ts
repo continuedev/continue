@@ -561,6 +561,9 @@ class VsCodeIde implements IDE {
   }
 
   async getSearchResults(query: string): Promise<string> {
+    if (vscode.env.remoteName) {
+      return "Exact search not supported for remote workspaces";
+    }
     const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
       const relativeDir = vscode.Uri.parse(dir).fsPath;
