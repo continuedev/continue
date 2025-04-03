@@ -1,4 +1,4 @@
-import { IIdeMessenger } from "../../../context/IdeMessenger";
+import { IIdeMessenger } from "../../../../context/IdeMessenger";
 
 const IMAGE_RESOLUTION = 1024;
 

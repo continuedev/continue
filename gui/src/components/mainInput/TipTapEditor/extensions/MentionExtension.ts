@@ -1,34 +1,28 @@
-// Adapted from SlashCommand extension (@tiptap/extension-mention/src/mention.ts)
-
 import { mergeAttributes, Node } from "@tiptap/core";
-import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { PluginKey } from "@tiptap/pm/state";
-import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
+import Suggestion from "@tiptap/suggestion";
+import { MentionOptions } from "./types";
 
-export type SlashCommandOptions = {
-  HTMLAttributes: Record<string, any>;
-  renderText: (props: {
-    options: SlashCommandOptions;
-    node: ProseMirrorNode;
-  }) => string;
-  suggestion: Omit<SuggestionOptions, "editor">;
-};
+export const MENTION_NAME = "mention";
 
-export const SlashCommandPluginKey = new PluginKey("slashcommand");
+export const MentionPluginKey = new PluginKey(MENTION_NAME);
 
-export const SlashCommand = Node.create<SlashCommandOptions>({
-  name: "slashcommand",
+export const MentionExtension = Node.create<MentionOptions>({
+  name: MENTION_NAME,
 
   addOptions() {
     return {
       HTMLAttributes: {},
-      renderText({ options, node }) {
-        return `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
+      renderHTML({ options, node }) {
+        return [
+          "span",
+          this.HTMLAttributes,
+          `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`,
+        ];
       },
       suggestion: {
-        char: "/",
-        pluginKey: SlashCommandPluginKey,
-        startOfLine: true,
+        char: "@",
+        pluginKey: MentionPluginKey,
         command: ({ editor, range, props }) => {
           // increase range.to by one when the next node is of type "text"
           // and starts with a space character
@@ -61,7 +55,13 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
           const type = state.schema.nodes[this.name];
           const allow = !!$from.parent.type.contentMatch.matchType(type);
 
-          return allow;
+          // Check if there's a space after the "@"
+          const textFrom = range.from;
+          const textTo = state.selection.$to.pos;
+          const text = state.doc.textBetween(textFrom, textTo);
+          const hasSpace = text.includes(" ");
+
+          return allow && !hasSpace;
         },
       },
     };
@@ -104,6 +104,48 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
           };
         },
       },
+
+      renderInlineAs: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-renderInlineAs"),
+        renderHTML: (attributes) => {
+          if (typeof attributes.renderInlineAs !== "string") {
+            return {};
+          }
+
+          return {
+            "data-renderInlineAs": attributes.renderInlineAs,
+          };
+        },
+      },
+
+      query: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-query"),
+        renderHTML: (attributes) => {
+          if (!attributes.query) {
+            return {};
+          }
+
+          return {
+            "data-query": attributes.query,
+          };
+        },
+      },
+
+      itemType: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-itemType"),
+        renderHTML: (attributes) => {
+          if (!attributes.itemType) {
+            return {};
+          }
+
+          return {
+            "data-itemType": attributes.itemType,
+          };
+        },
+      },
     };
   },
 
@@ -116,32 +158,30 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    return [
-      "span",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
-      this.options.renderText({
-        options: this.options,
-        node,
-      }),
-    ];
-  },
-
-  renderText({ node }) {
-    return this.options.renderText({
+    const html = this.options.renderHTML({
       options: this.options,
       node,
     });
+
+    if (typeof html === "string") {
+      return [
+        "span",
+        mergeAttributes(
+          { "data-type": this.name },
+          this.options.HTMLAttributes,
+          HTMLAttributes,
+        ),
+        html,
+      ];
+    }
+    return html;
   },
 
   addKeyboardShortcuts() {
     return {
       Backspace: () =>
         this.editor.commands.command(({ tr, state }) => {
-          let isSlashCommand = false;
+          let isMention = false;
           const { selection } = state;
           const { empty, anchor } = selection;
 
@@ -151,7 +191,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
 
           state.doc.nodesBetween(anchor - 1, anchor, (node, pos) => {
             if (node.type.name === this.name) {
-              isSlashCommand = true;
+              isMention = true;
               tr.insertText(
                 this.options.suggestion.char || "",
                 pos,
@@ -162,7 +202,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
             }
           });
 
-          return isSlashCommand;
+          return isMention;
         }),
     };
   },

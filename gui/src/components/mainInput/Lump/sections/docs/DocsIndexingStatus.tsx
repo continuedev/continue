@@ -78,7 +78,7 @@ function DocsIndexingStatus({
   if (hasDeleted) return null;
 
   return (
-    <div className="mt-2 flex w-full flex-col">
+    <div className="mt-1 flex w-full flex-col">
       <div
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
@@ -90,13 +90,6 @@ function DocsIndexingStatus({
             }
           }}
         >
-          {docConfig.faviconUrl ? (
-            <img
-              src={docConfig.faviconUrl}
-              alt="doc icon"
-              className="h-3 w-3"
-            />
-          ) : null}
           <p
             style={{
               fontSize: fontSize(-3),

@@ -10,6 +10,7 @@ import {
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
 import { TipTapEditorProps } from "./TipTapEditor";
+import { CodeBlockExtension } from "./extensions";
 
 export function useWebviewListeners(options: {
   editor: Editor | null;
@@ -117,7 +118,7 @@ export function useWebviewListeners(options: {
         if (el.attrs?.item?.name === contextItem.name) {
           return; // Prevent exact duplicate code blocks
         }
-        if (el.type === "codeBlock") {
+        if (el.type === CodeBlockExtension.name) {
           index += 2;
         } else {
           break;
@@ -126,13 +127,14 @@ export function useWebviewListeners(options: {
       editor
         .chain()
         .insertContentAt(index, {
-          type: "codeBlock",
+          type: CodeBlockExtension.name,
           attrs: {
             item: contextItem,
             inputId: props.inputId,
           },
         })
         .run();
+
       dispatch(
         setNewestCodeblocksForInput({
           inputId: props.inputId,

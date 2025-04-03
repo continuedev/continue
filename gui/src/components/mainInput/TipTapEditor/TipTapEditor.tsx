@@ -14,12 +14,12 @@ import {
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
 import { DragOverlay } from "./DragOverlay";
-import { createEditorConfig, getPlaceholderText } from "./editorConfig";
-import { handleImageFile } from "./imageUtils";
-import { useEditorEventHandlers } from "./keyHandlers";
 import { InputBoxDiv } from "./StyledComponents";
 import "./TipTapEditor.css";
 import { useWebviewListeners } from "./useWebviewListeners";
+import { handleImageFile } from "./utils";
+import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
+import { useEditorEventHandlers } from "./utils/keyHandlers";
 
 export interface TipTapEditorProps {
   availableContextProviders: ContextProviderDescription[];
@@ -150,7 +150,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     editor,
     isOSREnabled: isOSREnabled,
     editorFocusedRef,
-    isInEditMode,
     setActiveKey,
   });
 

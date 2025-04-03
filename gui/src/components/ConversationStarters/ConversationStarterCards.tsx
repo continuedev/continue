@@ -1,9 +1,16 @@
 import { SlashCommandDescription } from "core";
 import { useState } from "react";
 import { useBookmarkedSlashCommands } from "../../hooks/useBookmarkedSlashCommands";
+import { MAIN_EDITOR_INPUT_ID } from "../../pages/gui/Chat";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setMainEditorContentTrigger } from "../../redux/slices/sessionSlice";
-import { getParagraphNodeFromString } from "../mainInput/utils";
+import {
+  setMainEditorContentTrigger,
+  setNewestCodeblocksForInput,
+} from "../../redux/slices/sessionSlice";
+import {
+  createParagraphNodeFromSlashCmdDescription,
+  createPromptBlockNodeFromSlashCmdDescription,
+} from "../mainInput/TipTapEditor/extensions";
 import { ConversationStarterCard } from "./ConversationStarterCard";
 
 const NUM_CARDS_TO_RENDER = 5;
@@ -21,11 +28,22 @@ export function ConversationStarterCards() {
   );
 
   function onClick(command: SlashCommandDescription) {
-    if (command.prompt) {
-      dispatch(
-        setMainEditorContentTrigger(getParagraphNodeFromString(command.prompt)),
-      );
-    }
+    dispatch(
+      setNewestCodeblocksForInput({
+        inputId: MAIN_EDITOR_INPUT_ID,
+        contextItemId: command.name,
+      }),
+    );
+
+    dispatch(
+      setMainEditorContentTrigger({
+        type: "doc",
+        content: [
+          createPromptBlockNodeFromSlashCmdDescription(command),
+          createParagraphNodeFromSlashCmdDescription(command),
+        ],
+      }),
+    );
   }
 
   if (bookmarkedSlashCommands.length === 0) {

@@ -1,0 +1,186 @@
+import {
+  ChevronDownIcon,
+  EyeSlashIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import { EyeIcon } from "@heroicons/react/24/solid";
+import { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
+import { defaultBorderRadius, lightGray, vscEditorBackground } from "../../..";
+import { getFontSize } from "../../../../util";
+import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
+
+const MAX_PREVIEW_HEIGHT = 100;
+const MAX_EXPANED_PREVIEW_HEIGHT = MAX_PREVIEW_HEIGHT * 3;
+
+const PreviewDiv = styled.div<{
+  borderColor?: string;
+}>`
+  background-color: ${vscEditorBackground};
+  border-radius: ${defaultBorderRadius};
+  border: 0.5px solid ${(props) => props.borderColor || lightGray};
+  margin-top: 4px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  position: relative;
+
+  & div {
+    background-color: ${vscEditorBackground};
+  }
+`;
+
+const ContentContainer = styled.div<{ expanded: boolean }>`
+  position: relative;
+  max-height: ${(props) =>
+    props.expanded
+      ? `${MAX_EXPANED_PREVIEW_HEIGHT}px`
+      : `${MAX_PREVIEW_HEIGHT}px`};
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+`;
+
+const ScrollableContent = styled.div<{ shouldShowChevron: boolean }>`
+  overflow-y: auto;
+  padding-bottom: ${(props) => (props.shouldShowChevron ? "24px" : "0px")};
+`;
+
+const ChevronContainer = styled.div`
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  background: ${vscEditorBackground};
+  padding: 4px 0;
+  z-index: 10;
+`;
+
+/**
+ * Props for the ExpandablePreview component
+ */
+interface ExpandablePreviewProps {
+  /** Title to display in the header */
+  title: string;
+  /** Optional icon to display next to the title */
+  icon?: React.ReactNode;
+  /** Whether the preview is initially hidden */
+  initiallyHidden?: boolean;
+  /** Callback when the delete button is clicked */
+  onDelete?: () => void;
+  /** Callback when the title is clicked */
+  onTitleClick?: (e: React.MouseEvent) => void;
+  /** Border color of the preview */
+  borderColor?: string;
+  /** Content to display in the preview */
+  children: React.ReactNode;
+}
+
+/**
+ * A generalized expandable preview component for displaying content with a header and expandable body
+ */
+export function ExpandablePreview(props: ExpandablePreviewProps) {
+  const [hidden, setHidden] = useState(props.initiallyHidden ?? false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentDims, setContentDims] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const resizeObserver = new ResizeObserver(() => {
+      setContentDims({
+        width: contentRef.current?.scrollWidth ?? 0,
+        height: contentRef.current?.scrollHeight ?? 0,
+      });
+    });
+
+    if (contentRef.current) {
+      resizeObserver.observe(contentRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, [contentRef]);
+
+  return (
+    <PreviewDiv
+      spellCheck={false}
+      borderColor={props.borderColor}
+      className="find-widget-skip"
+    >
+      {/* Keep existing header code */}
+      <div
+        className="border-b-vsc-commandCenter-inactiveBorder m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid px-[5px] py-1.5 hover:opacity-90"
+        style={{
+          fontSize: getFontSize() - 3,
+        }}
+        onClick={() => {
+          setHidden(!hidden);
+        }}
+      >
+        <div
+          className="flex items-center gap-1 text-[11px] hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (props.onTitleClick) {
+              props.onTitleClick(e);
+            }
+          }}
+        >
+          {props.icon}
+          {props.title}
+        </div>
+        <div className="flex items-center gap-1">
+          <HeaderButtonWithToolTip text={hidden ? "Show" : "Hide"}>
+            {hidden ? (
+              <EyeIcon className="h-2.5 w-2.5" />
+            ) : (
+              <EyeSlashIcon className="h-2.5 w-2.5" />
+            )}
+          </HeaderButtonWithToolTip>
+          {props.onDelete && (
+            <HeaderButtonWithToolTip
+              text="Delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onDelete?.();
+              }}
+            >
+              <XMarkIcon className="h-2.5 w-2.5" />
+            </HeaderButtonWithToolTip>
+          )}
+        </div>
+      </div>
+
+      {/* Updated content section */}
+      {!hidden && (
+        <ContentContainer expanded={isExpanded}>
+          <ScrollableContent
+            ref={contentRef}
+            shouldShowChevron={contentDims.height > MAX_PREVIEW_HEIGHT}
+          >
+            {props.children}
+          </ScrollableContent>
+
+          {contentDims.height > MAX_PREVIEW_HEIGHT && (
+            <ChevronContainer>
+              <HeaderButtonWithToolTip
+                text={isExpanded ? "Collapse" : "Expand"}
+              >
+                <ChevronDownIcon
+                  className="h-3 w-3 transition-all"
+                  style={{
+                    transform: isExpanded ? "rotate(180deg)" : "",
+                  }}
+                  onClick={() => setIsExpanded((v) => !v)}
+                />
+              </HeaderButtonWithToolTip>
+            </ChevronContainer>
+          )}
+        </ContentContainer>
+      )}
+    </PreviewDiv>
+  );
+}

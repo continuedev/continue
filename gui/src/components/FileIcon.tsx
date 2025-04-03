@@ -5,9 +5,10 @@ import { themeIcons } from "seti-file-icons";
 
 export interface FileIconProps {
   filename: string;
-  height: string;
-  width: string;
+  height: `${number}px`;
+  width: `${number}px`;
 }
+
 export default function FileIcon({ filename, height, width }: FileIconProps) {
   const file = useMemo(() => {
     if (filename.includes(" (")) {
@@ -33,6 +34,7 @@ export default function FileIcon({ filename, height, width }: FileIconProps) {
     ignore: "#586e75",
   });
 
+  console.log({ file });
   // Sanitize the SVG string before rendering it
   const { svg, color } = getIcon(file);
   const sanitizedSVG = DOMPurify.sanitize(svg);

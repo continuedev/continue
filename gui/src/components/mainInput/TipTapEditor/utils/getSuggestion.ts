@@ -6,10 +6,12 @@ import {
 } from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
-import { IIdeMessenger } from "../../../context/IdeMessenger";
-import AtMentionDropdown from "../AtMentionDropdown";
-import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../types";
-import { TIPPY_DIV_ID } from "./TipTapEditor";
+import { IIdeMessenger } from "../../../../context/IdeMessenger";
+import { setNewestCodeblocksForInput } from "../../../../redux/slices/sessionSlice";
+import { AppDispatch } from "../../../../redux/store";
+import AtMentionDropdown from "../../AtMentionDropdown";
+import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../../types";
+import { TIPPY_DIV_ID } from "../TipTapEditor";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
@@ -196,6 +198,8 @@ export function getSlashCommandDropdownOptions(
   onClose: () => void,
   onOpen: () => void,
   ideMessenger: IIdeMessenger,
+  dispatch: AppDispatch,
+  inputId: string,
 ) {
   const items = async ({ query }: { query: string }) => {
     const options = [...availableSlashCommandsRef.current];
@@ -216,7 +220,17 @@ export function getSlashCommandDropdownOptions(
       title: provider.title,
       label: provider.title,
       type: (provider.type ?? "slashCommand") as ComboBoxItemType,
-      action: provider.action,
+      content: provider.content,
+      action: () => {
+        dispatch(
+          setNewestCodeblocksForInput({
+            inputId,
+            contextItemId: provider.title,
+          }),
+        );
+
+        provider.action?.();
+      },
     }));
 
     if (query.length === 0 && commandItems.length === 0) {
@@ -232,6 +246,7 @@ export function getSlashCommandDropdownOptions(
         name: "",
         id: "",
         label: "",
+        content: "",
       });
     }
 
