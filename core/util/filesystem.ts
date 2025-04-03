@@ -238,6 +238,10 @@ class FileSystemIde implements IDE {
     return "";
   }
 
+  async getFileResults(pattern: string): Promise<string[]> {
+    return [];
+  }
+
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
     return Promise.resolve([]);
   }

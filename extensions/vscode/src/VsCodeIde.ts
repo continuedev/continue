@@ -555,50 +555,51 @@ class VsCodeIde implements IDE {
       .map((t) => (t.input as vscode.TabInputText).uri.toString());
   }
 
-  private async _searchDir(query: string, dir: string): Promise<string> {
-    const relativeDir = vscode.Uri.parse(dir).fsPath;
-    const ripGrepUri = vscode.Uri.joinPath(
-      getExtensionUri(),
-      "out/node_modules/@vscode/ripgrep/bin/rg",
-    );
-    const p = child_process.spawn(
-      ripGrepUri.fsPath,
-      [
-        "-i", // Case-insensitive search
-        "-C",
-        "2", // Show 2 lines of context
-        "--heading", // Only show filepath once per result
-        "-e",
-        query, // Pattern to search for
-        ".", // Directory to search in
-      ],
-      { cwd: relativeDir },
-    );
-    let output = "";
-
-    p.stdout.on("data", (data) => {
-      output += data.toString();
-    });
-
-    return new Promise<string>((resolve, reject) => {
-      p.on("error", reject);
-      p.on("close", (code) => {
-        if (code === 0) {
-          resolve(output);
-        } else if (code === 1) {
-          // No matches
-          resolve("No matches found");
-        } else {
-          reject(new Error(`Process exited with code ${code}`));
-        }
-      });
-    });
+  async getFileResults(pattern: string): Promise<string[]> {
+    vscode.workspace.findFiles("");
+    return [];
   }
 
   async getSearchResults(query: string): Promise<string> {
     const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
-      const dirResults = await this._searchDir(query, dir);
+      const relativeDir = vscode.Uri.parse(dir).fsPath;
+      const ripGrepUri = vscode.Uri.joinPath(
+        getExtensionUri(),
+        "out/node_modules/@vscode/ripgrep/bin/rg",
+      );
+      const p = child_process.spawn(
+        ripGrepUri.fsPath,
+        [
+          "-i", // Case-insensitive search
+          "-C",
+          "2", // Show 2 lines of context
+          "--heading", // Only show filepath once per result
+          "-e",
+          query, // Pattern to search for
+          ".", // Directory to search in
+        ],
+        { cwd: relativeDir },
+      );
+      let output = "";
+
+      p.stdout.on("data", (data) => {
+        output += data.toString();
+      });
+
+      const dirResults = await new Promise<string>((resolve, reject) => {
+        p.on("error", reject);
+        p.on("close", (code) => {
+          if (code === 0) {
+            resolve(output);
+          } else if (code === 1) {
+            // No matches
+            resolve("No matches found");
+          } else {
+            reject(new Error(`Process exited with code ${code}`));
+          }
+        });
+      });
 
       const keepLines: string[] = [];
 

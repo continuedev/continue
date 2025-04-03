@@ -309,7 +309,34 @@ class IntelliJIDE(
         return getOpenFiles()
     }
 
+    override suspend fun getFileResults(pattern: String): List<String> {
+        return listOf("")
+    }
+
     override suspend fun getSearchResults(query: String): String {
+        // return withContext(Dispatchers.IO) {
+        //     val findModel = FindModel().apply {
+        //         stringToFind = query
+        //         isRegularExpressions = false
+        //         isWholeWordsOnly = false
+        //         isCaseSensitive = false
+        //         searchContext = UsageSearchContext.ANY
+        //     }
+    
+        //     val results = StringBuilder()
+        //     runReadAction {
+        //         FindInProjectUtil.findUsages(
+        //             findModel,
+        //             project.baseDir,
+        //             {
+        //                 results.append("${it.file.path}:${it.line + 1}: ${it.lineText}\n")
+        //                 true
+        //             },
+        //             null
+        //         )
+        //     }
+        //     results.toString()
+        // }
         val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
         command.setWorkDirectory(project.basePath)
         return ExecUtil.execAndGetOutput(command).stdout

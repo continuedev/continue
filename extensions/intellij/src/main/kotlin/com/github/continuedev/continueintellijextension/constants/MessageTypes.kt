@@ -23,6 +23,7 @@ class MessageTypes {
             "getCurrentFile",
             "getPinnedFiles",
             "getSearchResults",
+            "getFileResults",
             "getProblems",
             "subprocess",
             "getBranch",
