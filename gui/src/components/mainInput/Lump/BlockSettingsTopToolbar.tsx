@@ -12,6 +12,7 @@ import { vscBadgeBackground, vscBadgeForeground } from "../..";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { toggleBlockSettingsToolbar } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
+import { ToolTip } from "../../gui/Tooltip";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
 
@@ -57,12 +58,16 @@ function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
         className={`relative flex select-none items-center rounded-full px-1 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${props.className || ""}`}
       >
         <props.icon
+          data-tooltip-id={`lump-settings-icon-${props.tooltip}`}
           className="h-[13px] w-[13px] flex-shrink-0 hover:brightness-125"
           style={{
             color: props.isSelected ? vscBadgeForeground : undefined,
           }}
           aria-hidden="true"
         />
+        <ToolTip id={`lump-settings-icon-${props.tooltip}`}>
+          {props.tooltip}
+        </ToolTip>
         <div
           style={{ fontSize: fontSize(-3) }}
           className={`overflow-hidden transition-all duration-200 ${
