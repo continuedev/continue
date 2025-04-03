@@ -19,12 +19,14 @@ const evaluateIf = (condition: string, activePaths: string[]) => {
   try {
     debugger;
 
-    const evaluate = compileExpression(expression, {
-      extraFunctions: {
-        glob: createGlobFunction(activePaths),
-      },
+    const evaluate = compileExpression(`current.model == "gpt-4"`, {
+      // extraFunctions: {
+      //   glob: createGlobFunction(activePaths),
+      // },
       constants: {
-        current: { model: "gpt-4" }, // Hardcoded for now
+        current: {
+          model: "gpt-4",
+        },
       },
     });
 
