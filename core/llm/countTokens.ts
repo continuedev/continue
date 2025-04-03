@@ -384,11 +384,15 @@ function chatMessageIsEmpty(message: ChatMessage): boolean {
   }
 }
 
-function addSystemMessage(
-  messages: ChatMessage[],
-  systemMessage: string | undefined,
-  originalMessages: ChatMessage[] | undefined,
-): ChatMessage[] {
+function addSystemMessage({
+  messages,
+  systemMessage,
+  originalMessages,
+}: {
+  messages: ChatMessage[];
+  systemMessage: string | undefined;
+  originalMessages: ChatMessage[] | undefined;
+}): ChatMessage[] {
   if (
     !(systemMessage && systemMessage.trim() !== "") &&
     originalMessages?.[0]?.role !== "system"
@@ -452,7 +456,11 @@ function compileChatMessages({
     msgsCopy.push(promptMsg);
   }
 
-  msgsCopy = addSystemMessage(msgsCopy, systemMessage, msgs);
+  msgsCopy = addSystemMessage({
+    messages: msgsCopy,
+    systemMessage,
+    originalMessages: msgs,
+  });
 
   let functionTokens = 0;
   if (functions) {
