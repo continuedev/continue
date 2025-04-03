@@ -276,7 +276,7 @@ export class CompletionProvider implements Disposable {
         filepath: helper.filepath,
         numLines: completion.split("\n").length,
         completionId: helper.input.completionId,
-        gitRepo: await this.ide.getRepoName(helper.filepath),
+        gitRepo: '',
         uniqueId: await this.ide.getUniqueId(),
         timestamp: Date.now(),
         ...helper.options,
