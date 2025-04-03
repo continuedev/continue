@@ -462,7 +462,7 @@ const getSystemMessage = ({
 
   return rules
     .filter((rule) => {
-      return isRuleActive({ rule });
+      return isRuleActive({ rule, activePaths: filePathsFromMessage });
     })
     .map((rule) => {
       if (typeof rule === "string") {

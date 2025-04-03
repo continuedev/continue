@@ -12,26 +12,23 @@ const createGlobFunction = (activePaths: string[]) => {
 
 const evaluateIf = (condition: string, activePaths: string[]) => {
   const expression = condition.match(TEMPLATE_VAR_REGEX)?.[1]?.trim();
-
   if (!expression) {
     return true;
   }
 
   try {
-    const context = {
-      glob: createGlobFunction(activePaths),
-      current: {
-        model: "gpt-4", // Hardcoded for now
-      },
-    };
+    debugger;
 
     const evaluate = compileExpression(expression, {
       extraFunctions: {
-        glob: (pattern: string) => context.glob(pattern),
+        glob: createGlobFunction(activePaths),
+      },
+      constants: {
+        current: { model: "gpt-4" }, // Hardcoded for now
       },
     });
 
-    return evaluate(context);
+    return evaluate({});
   } catch (error) {
     console.error("Error evaluating rule condition:", error);
     return false;
