@@ -17,8 +17,6 @@ const evaluateIf = (condition: string, activePaths: string[]) => {
   }
 
   try {
-    debugger;
-
     const evaluate = compileExpression(expression, {
       extraFunctions: {
         glob: createGlobFunction(activePaths),
