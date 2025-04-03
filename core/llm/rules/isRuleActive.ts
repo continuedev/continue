@@ -7,7 +7,6 @@ const TEMPLATE_VAR_REGEX = /^\$\{\{(\s*.*?\s*)\}\}$/;
 const createGlobFunction = (activePaths: string[]) => {
   return (pattern: string) => {
     const result = activePaths.some((path) => minimatch(path, pattern));
-    debugger;
     return result;
   };
 };
@@ -31,16 +30,13 @@ const evaluateIf = ({
   }
 
   try {
-    debugger;
     const evaluate = compileExpression(expression, {
       extraFunctions: {
         glob: createGlobFunction(activePaths),
         contains,
       },
       constants: {
-        current: {
-          model: { model: currentModel },
-        },
+        "current.model.model": currentModel,
       },
     });
 

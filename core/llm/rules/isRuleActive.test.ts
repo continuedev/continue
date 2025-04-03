@@ -4,7 +4,7 @@ describe("isRuleActive", () => {
   const rule = {
     name: "My Rule",
     rule: "Do no harm",
-    if: "${{ and(contains(current.model.model, 'claude-3-7-sonnet') and glob('*.tsx')) }}",
+    if: '${{ contains(current.model.model, "claude-3-7-sonnet") and glob("*.tsx") }}',
   };
 
   it("should return false when activePaths is empty", () => {
