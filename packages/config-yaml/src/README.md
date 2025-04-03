@@ -18,11 +18,11 @@ The unrolled config.yaml is then rendered on the client. This is done by replaci
 
 ## Publishing
 
-First, bump the version in `package.json` and then run:
+Make sure you are logged into the npm registry with `npm login`.
+
+Then, bump the version in `package.json` and then run:
 
 ```bash
 npm run build
 npm publish --access public
 ```
-
-Make sure you have an `NPM_TOKEN` set in your `packages/config-yaml/.env` file.
