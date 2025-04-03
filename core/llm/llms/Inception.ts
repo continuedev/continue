@@ -3,9 +3,31 @@ import { streamSse } from "../stream.js";
 
 import OpenAI from "./OpenAI.js";
 
+/**
+ * Inception Labs provider
+ *
+ * Integrates with Inception Labs' OpenAI-compatible API endpoints.
+ * Provides access to Mercury models for autocomplete and other tasks.
+ *
+ * Different models use different API endpoints:
+ * - mercury-editor-mini-experimental: zaragoza.api.inceptionlabs.ai
+ * - mercury-editor-small-experimental: copenhagen.api.inceptionlabs.ai
+ *
+ * More information at: https://docs.inceptionlabs.ai/
+ */
 class Inception extends OpenAI {
   static providerName = "inception";
-  static defaultOptions: Partial<LLMOptions> = {};
+  static defaultOptions: Partial<LLMOptions> = {
+    apiBase: "https://copenhagen.api.inceptionlabs.ai/v1/",
+    model: "mercury-editor-small-experimental",
+    completionOptions: {
+      temperature: 0.0,
+      maxTokens: 150,
+      presencePenalty: 1.5,
+      stop: ["\n\n", "\n \n", "<|endoftext|>"],
+      model: "mercury-editor-small-experimental", // Added model to fix TypeScript error
+    },
+  };
 
   supportsFim(): boolean {
     return true;
