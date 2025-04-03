@@ -460,9 +460,11 @@ const getSystemMessage = ({
   const messageStringContent = getMessageStringContent(userMessage);
   const filePathsFromMessage = extractPathsFromCodeBlocks(messageStringContent);
   debugger;
-  return rules.filter((rule) => {
-    return isRuleActive({ rule });
-  });
+  return rules
+    .filter((rule) => {
+      return isRuleActive({ rule });
+    })
+    .join("\n");
 };
 
 function getLastUserMessage(
