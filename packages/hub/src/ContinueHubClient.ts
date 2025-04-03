@@ -9,12 +9,12 @@ import {
 import { IContinueHubClient } from "./IContinueHubClient.js";
 
 interface ContinueHubClientOptions {
-  apiKey: string;
+  apiKey?: string;
   apiBase?: string;
 }
 
 export class ContinueHubClient implements IContinueHubClient {
-  private readonly apiKey: string;
+  private readonly apiKey?: string;
   private readonly apiBase: string;
 
   constructor(options: ContinueHubClientOptions) {
@@ -24,13 +24,15 @@ export class ContinueHubClient implements IContinueHubClient {
 
   private async request(path: string, init: RequestInit): Promise<Response> {
     const url = new URL(path, this.apiBase).toString();
-    const resp = await fetch(url, {
-      ...init,
-      headers: {
+
+    if (this.apiKey) {
+      init.headers = {
         ...init.headers,
         Authorization: `Bearer ${this.apiKey}`,
-      },
-    });
+      };
+    }
+
+    const resp = await fetch(url, init);
 
     if (!resp.ok) {
       throw new Error(
