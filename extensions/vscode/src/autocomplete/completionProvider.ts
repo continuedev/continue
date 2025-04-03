@@ -1,10 +1,11 @@
-import { CompletionProvider } from "core/autocomplete/CompletionProvider";
+import * as CompletionProvider from "core/autocomplete/CompletionProvider";
 import { processSingleLineCompletion } from "core/autocomplete/util/processSingleLineCompletion";
 import {
   type AutocompleteInput,
   type AutocompleteOutcome,
 } from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { SourceFragment } from "core/util/SourceFragment";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -28,6 +29,18 @@ interface VsCodeCompletionInput {
   document: vscode.TextDocument;
   position: vscode.Position;
   context: vscode.InlineCompletionContext;
+}
+
+interface PendingInlineCompletion {
+  task: Promise<vscode.InlineCompletionItem[] | null> | null;
+  result: vscode.InlineCompletionItem[] | null;
+  cancellationSource: vscode.CancellationTokenSource | null;
+  editor: vscode.TextEditor | null;
+  documentUri: string;
+  line: number;
+  character: number;
+  sourceFragment: SourceFragment;
+  acceptListener: CompletionProvider.Disposable | null;
 }
 
 export class ContinueCompletionProvider
@@ -58,7 +71,8 @@ export class ContinueCompletionProvider
     });
   }
 
-  private completionProvider: CompletionProvider;
+  private completionProvider: CompletionProvider.CompletionProvider;
+  private pendingInlineCompletion: PendingInlineCompletion | null = null;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
   private recentlyEditedTracker: RecentlyEditedTracker;
   private disposables: vscode.Disposable[];
@@ -78,7 +92,7 @@ export class ContinueCompletionProvider
       }
       return config.selectedModelByRole.autocomplete ?? undefined;
     }
-    this.completionProvider = new CompletionProvider(
+    this.completionProvider = new CompletionProvider.CompletionProvider(
       this.configHandler,
       this.ide,
       getAutocompleteModel,
@@ -93,6 +107,7 @@ export class ContinueCompletionProvider
   private requestNewInlineCompletionsOnEditorChanges(): void {
     let disposable: vscode.Disposable | undefined;
 
+    this.pendingInlineCompletion?.cancellationSource?.cancel();
     disposable = vscode.window.onDidChangeActiveTextEditor(() => {
       this.requestNewInlineCompletion();
     });
@@ -101,6 +116,8 @@ export class ContinueCompletionProvider
     disposable = vscode.window.onDidChangeWindowState((event) => {
       if (event.focused)
         this.requestNewInlineCompletion();
+      else
+        this.pendingInlineCompletion?.cancellationSource?.cancel();
     });
     this.disposables.push(disposable);
   }
@@ -110,6 +127,12 @@ export class ContinueCompletionProvider
     this.disposables = [];
 
     this.completionProvider.dispose();
+
+    if (this.pendingInlineCompletion) {
+      this.pendingInlineCompletion.cancellationSource?.cancel();
+      this.pendingInlineCompletion.acceptListener?.dispose();
+      this.pendingInlineCompletion = null;
+    }
   }
 
   private async requestNewInlineCompletion() {
@@ -120,9 +143,190 @@ export class ContinueCompletionProvider
     }, 33);
   }
 
-  _lastShownCompletion: AutocompleteOutcome | undefined;
+  private isInlineCompletionInvalid(
+    position: vscode.Position,
+    document: vscode.TextDocument
+  ): boolean {
+    if (!this.pendingInlineCompletion) return false;
+
+    const completionLineCount = this.pendingInlineCompletion.sourceFragment.getLineCount();
+
+    const startLine = this.pendingInlineCompletion.line;
+    const endLine = this.pendingInlineCompletion.line + completionLineCount;
+
+    // If the cursor moved outside the completion's range, then
+    // it's no longer valid
+    if (position.line < startLine || position.line > endLine) return true;
+
+    // If the cursor hasn't moved, then the document didn't change
+    // so any completion is still valid
+    if (this.pendingInlineCompletion.character === position.character)
+      return false;
+
+    // If we don't have a result yet, then it can't be invalid
+    if (!this.pendingInlineCompletion.result) return false;
+
+    const currentText = document.getText(new vscode.Range(
+      new vscode.Position(this.pendingInlineCompletion.line, 0),
+      position
+    ));
+
+    const editorFragment = new SourceFragment(currentText);
+    const completionFragment = this.pendingInlineCompletion.sourceFragment;
+
+    // The completion is invalid if what the user types no longer matches it
+    return !editorFragment.endsWithStartOf(completionFragment, {
+      ignoreWhitespace: true
+    });
+  }
+
+  private async handlePendingInlineCompletionResult(
+    position: vscode.Position,
+    document: vscode.TextDocument
+  ): Promise<vscode.InlineCompletionItem[] | null> {
+    if (!this.pendingInlineCompletion) return null;
+
+    if (!this.pendingInlineCompletion.result ||
+        !this.pendingInlineCompletion.result[0]) {
+      this.pendingInlineCompletion = null;
+      return null;
+    }
+
+    const result = [new vscode.InlineCompletionItem(
+      this.pendingInlineCompletion.result[0].insertText,
+      this.pendingInlineCompletion.result[0].range,
+      this.pendingInlineCompletion.result[0].command
+    )];
+
+    const editorText = document.getText(new vscode.Range(
+      new vscode.Position(this.pendingInlineCompletion.line, 0),
+      position
+    ));
+
+    const editorFragment = new SourceFragment(editorText);
+
+    const remainingCompletion = editorFragment.getRemainingCompletion(
+      this.pendingInlineCompletion.sourceFragment,
+      { ignoreWhitespace: true, mergeWhitespace: true }
+    );
+
+    // If the user started to type into the completion, we need to
+    // chop off what they typed and only return what's left as
+    // the completion item
+    if (remainingCompletion) {
+      const insertText = remainingCompletion.getAsText({
+        ignoreWhitespace: false,
+      });
+      result[0].insertText = insertText;
+      result[0].range = new vscode.Range(position, position);
+    }
+
+    return result;
+  }
+
+  private async prepareNewInlineCompletion(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    context: vscode.InlineCompletionContext,
+    token: vscode.CancellationToken
+  ): Promise<vscode.InlineCompletionItem[] | null> {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) return null;
+
+    const cancellationSource = new vscode.CancellationTokenSource();
+    const completionPromise = this.provideInlineCompletionItemsLater(
+      document,
+      position,
+      context,
+      cancellationSource.token,
+    );
+
+    if (!completionPromise) return null;
+
+    const acceptListener = this.completionProvider.onAccept((completionId, acceptedOutcome) => {
+      if (!this.pendingInlineCompletion) return;
+
+      this.pendingInlineCompletion.cancellationSource?.cancel();
+      this.pendingInlineCompletion.acceptListener?.dispose();
+      this.pendingInlineCompletion.task = null;
+      this.pendingInlineCompletion.result = null;
+      this.pendingInlineCompletion = null;
+    });
+
+    // Prime the completion with the current line until we can get an
+    // answer from the LLM
+    const completionText = document
+      .lineAt(position.line)
+      .text.slice(0, position.character);
+    const completionFragment = new SourceFragment(completionText);
+    this.pendingInlineCompletion = {
+      task: completionPromise,
+      result: null,
+      cancellationSource,
+      editor,
+      documentUri: document.uri.toString(),
+      line: position.line,
+      character: position.character,
+      sourceFragment: completionFragment,
+      acceptListener,
+    };
+
+    this.handleInlineCompletionWhenReady(completionPromise);
+
+    return null;
+  }
+
+  private async handleInlineCompletionWhenReady(
+    completionPromise: Promise<vscode.InlineCompletionItem[] | null>
+  ): Promise<void> {
+    completionPromise.then(async (result: vscode.InlineCompletionItem[] | null) => {
+      if (!this.pendingInlineCompletion) return;
+
+      this.pendingInlineCompletion.task = null;
+      this.pendingInlineCompletion.cancellationSource = null;
+      this.pendingInlineCompletion.result = result;
+
+      if (result && result[0]) {
+        const completionText = result[0].insertText.toString();
+        const currentText = this.pendingInlineCompletion.sourceFragment.getAsText({ ignoreWhitespace: false });
+        this.pendingInlineCompletion.sourceFragment = new SourceFragment(currentText + completionText);
+      }
+
+      await this.requestNewInlineCompletion();
+    });
+  }
 
   public async provideInlineCompletionItems(
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    context: vscode.InlineCompletionContext,
+    token: vscode.CancellationToken,
+  ): Promise<vscode.InlineCompletionItem[] | null> {
+    // Check if an inline completion is already being generated
+    if (this.pendingInlineCompletion) {
+      // Cancel if the user has moved around
+      if (this.isInlineCompletionInvalid(position, document)) {
+        this.pendingInlineCompletion.cancellationSource?.cancel();
+        this.pendingInlineCompletion.task = null;
+        this.pendingInlineCompletion.result = null;
+        this.pendingInlineCompletion = null;
+        return null;
+      }
+
+      // Return null if it's still being worked on
+      if (this.pendingInlineCompletion.task) return null;
+
+      // Return it if it finished
+      return await this.handlePendingInlineCompletionResult(position, document);
+    }
+
+    // Start a new completion process
+    return await this.prepareNewInlineCompletion(document, position, context, token);
+  }
+
+  _lastShownCompletion: AutocompleteOutcome | undefined;
+
+  private async provideInlineCompletionItemsLater(
     document: vscode.TextDocument,
     position: vscode.Position,
     context: vscode.InlineCompletionContext,
