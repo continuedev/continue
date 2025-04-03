@@ -10,7 +10,19 @@ const createGlobFunction = (activePaths: string[]) => {
   };
 };
 
-const evaluateIf = (condition: string, activePaths: string[]) => {
+const contains = (str: string, searchStr: string): boolean => {
+  return str.toLowerCase().includes(searchStr.toLowerCase());
+};
+
+const evaluateIf = ({
+  condition,
+  activePaths,
+  currentModel,
+}: {
+  condition: string;
+  activePaths: string[];
+  currentModel: string;
+}) => {
   const expression = condition.match(TEMPLATE_VAR_REGEX)?.[1]?.trim();
   if (!expression) {
     return true;
@@ -20,10 +32,11 @@ const evaluateIf = (condition: string, activePaths: string[]) => {
     const evaluate = compileExpression(expression, {
       extraFunctions: {
         glob: createGlobFunction(activePaths),
+        contains,
       },
       constants: {
         current: {
-          model: "gpt-4",
+          model: { model: currentModel },
         },
       },
     });
@@ -38,16 +51,18 @@ const evaluateIf = (condition: string, activePaths: string[]) => {
 export const isRuleActive = ({
   rule,
   activePaths,
+  currentModel,
 }: {
   rule: Rule;
   activePaths: string[];
+  currentModel: string;
 }): boolean => {
   if (typeof rule === "string") {
     return true;
   }
 
   if (rule.if) {
-    return evaluateIf(rule.if, activePaths);
+    return evaluateIf({ condition: rule.if, activePaths, currentModel });
   }
 
   return true;

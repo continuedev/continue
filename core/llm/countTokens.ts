@@ -453,16 +453,22 @@ function getMessageStringContent(message?: UserChatMessage): string {
 const getSystemMessage = ({
   userMessage,
   rules,
+  currentModel,
 }: {
   userMessage?: UserChatMessage;
   rules: Rule[];
+  currentModel: string;
 }) => {
   const messageStringContent = getMessageStringContent(userMessage);
   const filePathsFromMessage = extractPathsFromCodeBlocks(messageStringContent);
 
   return rules
     .filter((rule) => {
-      return isRuleActive({ rule, activePaths: filePathsFromMessage });
+      return isRuleActive({
+        rule,
+        activePaths: filePathsFromMessage,
+        currentModel,
+      });
     })
     .map((rule) => {
       if (typeof rule === "string") {
@@ -525,6 +531,7 @@ function compileChatMessages({
   }
 
   const lastUserMessage = getLastUserMessage(msgsCopy);
+  debugger;
 
   msgsCopy = addSystemMessage({
     messages: msgsCopy,
@@ -533,6 +540,7 @@ function compileChatMessages({
       getSystemMessage({
         userMessage: lastUserMessage,
         rules,
+        currentModel: modelName,
       }),
     originalMessages: msgs,
   });
