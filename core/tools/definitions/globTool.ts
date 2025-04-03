@@ -15,14 +15,13 @@ export const globTool: Tool = {
     description: "Finds files based on pattern matching",
     parameters: {
       type: "object",
-      required: ["globPattern"],
+      required: ["pattern", "path"],
       properties: {
-        recursive: {
-          type: "boolean",
-          description:
-            "If true, lists files and folders recursively. To prevent unexpected large results, use this sparingly",
+        pattern: {
+          type: "string",
+          description: "ripgrep glob pattern",
         },
-        dirPath: {
+        path: {
           type: "string",
           description:
             "The directory path to search relative to the root of the project. Always use forward slash paths like '/'. rather than e.g. '.'",

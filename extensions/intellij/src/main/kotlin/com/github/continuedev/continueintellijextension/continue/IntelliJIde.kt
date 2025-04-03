@@ -211,10 +211,19 @@ class IntelliJIDE(
     }
 
     override suspend fun runCommand(command: String, options: TerminalOptions) {
+        return null
+        // val commandLine = GeneralCommandLine(command.split(" "))
+        // commandLine.setWorkDirectory(project.basePath)
+        // val result = ExecUtil.execAndGetOutput(commandLine)
 
-        return mapOf(
-            "output" to "Hi"
-        )
+
+        
+        // return mapOf(
+        //     "output" to "Hi"
+        //     )
+
+
+            // val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
     //     val commandList = command.split(" ")
     //     val builder = ProcessBuilder(commandList)
 
@@ -232,11 +241,6 @@ class IntelliJIDE(
     //     withContext(Dispatchers.IO) {
     //         process.waitFor()
     //     }
-
-    // //         val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
-    // // command.setWorkDirectory(project.basePath)
-    // // return ExecUtil.execAndGetOutput(command).stdout
-
     //     return listOf(stdout, stderr)
     }
 

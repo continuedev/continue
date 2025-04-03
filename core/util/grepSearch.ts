@@ -95,3 +95,9 @@ export async function grepSearchDirs(
 //       });
 //     });
 //   }
+
+// override suspend fun grepSearch(query: String, isFileGlob: Boolean?): String {
+//     val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
+//     command.setWorkDirectory(project.basePath)
+//     return ExecUtil.execAndGetOutput(command).stdout
+// }
