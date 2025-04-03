@@ -521,13 +521,12 @@ export class ContinueCompletionProvider
         if (result.range) {
           range = new vscode.Range(
             new vscode.Position(startPos.line, result.range.start),
-            new vscode.Position(startPos.line, result.range.end)
+            new vscode.Position(startPos.line, result.range.start)
           );
         }
-
       } else {
         // Extend the range to the end of the line for multiline completions
-        range = new vscode.Range(startPos, document.lineAt(startPos).range.end);
+        range = new vscode.Range(startPos, startPos);
       }
 
       const completionItem = new vscode.InlineCompletionItem(
