@@ -434,6 +434,7 @@ const getSystemMessage = ({
   userMessage?: UserChatMessage;
   rules: Rule[];
 }) => {
+  debugger;
   return "Respond in Spanish";
   // if (systemMessage) {
   //   return "";
@@ -464,6 +465,7 @@ function compileChatMessages({
   prompt,
   functions,
   systemMessage,
+  rules,
 }: {
   modelName: string;
   msgs: ChatMessage[] | undefined;
@@ -473,6 +475,7 @@ function compileChatMessages({
   prompt: string | undefined;
   functions: any[] | undefined;
   systemMessage: string | undefined;
+  rules: Rule[];
 }): ChatMessage[] {
   debugger;
   let msgsCopy = msgs
@@ -499,7 +502,7 @@ function compileChatMessages({
       systemMessage ??
       getSystemMessage({
         userMessage: lastUserMessage,
-        rules: [],
+        rules,
       }),
     originalMessages: msgs,
   });

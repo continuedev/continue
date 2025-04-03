@@ -1,4 +1,4 @@
-import { ModelRole } from "@continuedev/config-yaml";
+import { ModelRole, Rule } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -143,6 +143,7 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
+  rules?: Rule[];
 
   deployment?: string;
   apiVersion?: string;
@@ -244,6 +245,7 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
     this.roles = options.roles;
+    this.rules = options.rules;
 
     this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
@@ -297,6 +299,7 @@ export abstract class BaseLLM implements ILLM {
       prompt: undefined,
       functions,
       systemMessage: this.systemMessage,
+      rules: this.rules ?? [],
     });
   }
 
