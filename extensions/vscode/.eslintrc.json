@@ -4,7 +4,6 @@
     "project": "./tsconfig.json"
   },
   "extends": ["../../.eslintrc.shared.json"],
-  "ignorePatterns": ["**/node_modules/**", "dist/**"],
   "rules": {
     "@typescript-eslint/naming-convention": "off"
   }
