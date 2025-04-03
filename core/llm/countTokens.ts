@@ -384,6 +384,39 @@ function chatMessageIsEmpty(message: ChatMessage): boolean {
   }
 }
 
+function addSystemMessage(
+  messages: ChatMessage[],
+  systemMessage: string | undefined,
+  originalMessages: ChatMessage[] | undefined,
+): ChatMessage[] {
+  if (
+    !(systemMessage && systemMessage.trim() !== "") &&
+    originalMessages?.[0]?.role !== "system"
+  ) {
+    return messages;
+  }
+
+  let content = "";
+  if (originalMessages?.[0]?.role === "system") {
+    content = renderChatMessage(originalMessages[0]);
+  }
+  if (systemMessage && systemMessage.trim() !== "") {
+    const shouldAddNewLines = content !== "";
+    if (shouldAddNewLines) {
+      content += "\n\n";
+    }
+    content += systemMessage;
+  }
+
+  const systemChatMsg: ChatMessage = {
+    role: "system",
+    content,
+  };
+  // Insert as second to last
+  messages.splice(-1, 0, systemChatMsg);
+  return messages;
+}
+
 function compileChatMessages(
   modelName: string,
   msgs: ChatMessage[] | undefined,
@@ -410,29 +443,7 @@ function compileChatMessages(
     msgsCopy.push(promptMsg);
   }
 
-  if (
-    (systemMessage && systemMessage.trim() !== "") ||
-    msgs?.[0]?.role === "system"
-  ) {
-    let content = "";
-    if (msgs?.[0]?.role === "system") {
-      content = renderChatMessage(msgs?.[0]);
-    }
-    if (systemMessage && systemMessage.trim() !== "") {
-      const shouldAddNewLines = content !== "";
-      if (shouldAddNewLines) {
-        content += "\n\n";
-      }
-      content += systemMessage;
-    }
-    const systemChatMsg: ChatMessage = {
-      role: "system",
-      content,
-    };
-    // Insert as second to last
-    // Later moved to top, but want second-priority to last user message
-    msgsCopy.splice(-1, 0, systemChatMsg);
-  }
+  msgsCopy = addSystemMessage(msgsCopy, systemMessage, msgs);
 
   let functionTokens = 0;
   if (functions) {
