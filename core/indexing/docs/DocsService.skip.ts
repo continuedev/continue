@@ -3,6 +3,7 @@
 //  */
 // import { ConfigHandler } from "../../config/ConfigHandler.js";
 // import { SiteIndexingConfig } from "../../index.js";
+// import { LLMLogger } from "../../llm/logger.js";
 // import FileSystemIde from "../../util/filesystem.js";
 // import { editConfigJson } from "../../util/paths.js";
 
@@ -48,7 +49,7 @@
 //     configHandler = new ConfigHandler(
 //       ide,
 //       ideSettingsPromise,
-//       async () => {},
+//       new LLMLogger(),
 //       Promise.resolve(undefined),
 //     );
 

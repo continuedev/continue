@@ -2,6 +2,7 @@ import {
   BaseCompletionOptions,
   IdeSettings,
   ILLM,
+  ILLMLogger,
   LLMOptions,
   ModelDescription,
 } from "../..";
@@ -115,7 +116,7 @@ export async function llmFromDescription(
   readFile: (filepath: string) => Promise<string>,
   uniqueId: string,
   ideSettings: IdeSettings,
-  writeLog: (log: string) => Promise<void>,
+  llmLogger: ILLMLogger,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
@@ -145,7 +146,7 @@ export async function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
     systemMessage,
-    writeLog,
+    logger: llmLogger,
     uniqueId,
   };
 
