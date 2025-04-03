@@ -17,6 +17,8 @@ import {
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
+import { isRuleActive } from "./rules/isRuleActive.js";
+import { extractPathsFromCodeBlocks } from "./utils/extractPathsFromCodeBlocks.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -427,6 +429,27 @@ function addSystemMessage({
   return messages;
 }
 
+function getMessageStringContent(message?: UserChatMessage): string {
+  if (!message) {
+    return "";
+  }
+
+  if (typeof message.content === "string") {
+    return message.content;
+  }
+
+  // Handle MessagePart array
+  return message.content
+    .map((part) => {
+      if (part.type === "text") {
+        return part.text;
+      }
+
+      return "";
+    })
+    .join("\n");
+}
+
 const getSystemMessage = ({
   userMessage,
   rules,
@@ -434,13 +457,12 @@ const getSystemMessage = ({
   userMessage?: UserChatMessage;
   rules: Rule[];
 }) => {
+  const messageStringContent = getMessageStringContent(userMessage);
+  const filePathsFromMessage = extractPathsFromCodeBlocks(messageStringContent);
   debugger;
-  return "Respond in Spanish";
-  // if (systemMessage) {
-  //   return "";
-  // }
-
-  // return systemMessage;
+  return rules.filter((rule) => {
+    return isRuleActive({ rule });
+  });
 };
 
 function getLastUserMessage(

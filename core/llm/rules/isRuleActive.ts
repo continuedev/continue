@@ -4,7 +4,7 @@ const evaluateIf = (condition: string) => {
   return true;
 };
 
-export const isRuleActive = (rule: Rule): boolean => {
+export const isRuleActive = ({ rule }: { rule: Rule }): boolean => {
   if (typeof rule === "string") {
     return true;
   }
