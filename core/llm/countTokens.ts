@@ -429,22 +429,26 @@ function addSystemMessage({
 
 const getSystemMessage = ({
   userMessage,
+  rules,
 }: {
-  userMessage: UserChatMessage;
+  userMessage?: UserChatMessage;
   rules: Rule[];
 }) => {
-  if (systemMessage) {
-    return "";
-  }
+  return "Respond in Spanish";
+  // if (systemMessage) {
+  //   return "";
+  // }
 
-  return systemMessage;
+  // return systemMessage;
 };
 
-function getLastUserMessage(messages: ChatMessage[]): ChatMessage | undefined {
+function getLastUserMessage(
+  messages: ChatMessage[],
+): UserChatMessage | undefined {
   // Iterate backwards through messages to find the last user message
   for (let i = messages.length - 1; i >= 0; i--) {
     if (messages[i].role === "user") {
-      return messages[i];
+      return messages[i] as UserChatMessage;
     }
   }
 
@@ -491,7 +495,12 @@ function compileChatMessages({
 
   msgsCopy = addSystemMessage({
     messages: msgsCopy,
-    systemMessage,
+    systemMessage:
+      systemMessage ??
+      getSystemMessage({
+        userMessage: lastUserMessage,
+        rules: [],
+      }),
     originalMessages: msgs,
   });
 
