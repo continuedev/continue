@@ -466,8 +466,8 @@ const config = {
             from: "/actions",
           },
           {
-            to: "/apply/how-to-use-it",
-            from: "/apply",
+            to: "/customize/model-roles/apply",
+            from: ["/apply", "/apply/how-to-use-it", "/apply/how-it-works", "/apply/how-to-customize", "/apply/model-setup", "/apply/context-selection"],
           },
           {
             to: "/autocomplete/how-to-use-it",

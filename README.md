@@ -52,7 +52,7 @@
 
 ## Apply
 
-[Apply](https://continue.dev/docs/apply/how-to-use-it) integrates code smoothly into your files with a specialized model
+[Apply](https://continue.dev/docs/customize/model-roles/apply) integrates code smoothly into your files with a specialized model
 
 ![apply](docs/static/img/apply.gif)
 

@@ -8,9 +8,31 @@ sidebar_position: 4
 import TabItem from "@theme/TabItem";
 import Tabs from "@theme/Tabs";
 
-When editing code, Chat and Edit model output often doesn't clearly align with existing code. A model with the `apply` role is used to generate a more precise diff to apply changes to a file.
+When editing code, Chat and Edit model output often doesn't perfectly align with your existing codebase. A model with the `apply` role is used to generate a more precise diff to apply changes to your file.
 
-Generally speaking, models proficient in chat and edit can also be used for applying code.
+## How Apply Works
+
+The Apply feature uses a model to take the original code and the generated code from a model like Claude or GPT-4o, then applies the changes to your file directly. 
+
+The Apply model is designed to understand both the structure of your existing code and the intent of the generated code, creating a seamless integration between the two. This is especially useful for large files that might exceed the context window of your primary model, as the Apply model focuses specifically on the changes needed.
+
+## Benefits of Using Apply
+
+- **Faster**: Apply models like Morph are optimized for speed, making coding with AI quick and efficient 
+- **Handles large files**: Apply can work with files that exceed the context window of your primary model
+- **Preserves code structure**: Apply understands the structure of your code and makes changes that respect that structure
+- **Reduces manual editing**: Apply automates the process of integrating generated code into your existing codebase
+
+## When Apply is Used
+
+The Apply feature is automatically used when you:
+
+1. Click "Apply to current file" on a code block in Chat
+2. Accept an Edit suggestion
+
+## Context Window Considerations
+
+One of the key benefits of using a dedicated Apply model is that it can apply diffs faster than a frontier model. The Apply model is specifically designed to focus on the changes needed, rather than understanding the entire codebase.
 
 ## Recommended Apply Models
 
@@ -41,6 +63,46 @@ You can sign up for a free Morph API key at [https://morphllm.com/dashboard](htt
 
 You can also use general-purpose models like GPT-4o or Claude for the Apply role, though specialized models like Morph are optimized for this specific task.
 
-For more detailed information about the Apply feature, see the [Apply documentation](../../apply/how-it-works.md).
+## Custom Prompt Templates
+
+The Apply feature uses a prompt template to format the original code and the generated code for the model. You can customize this template in your `config.yaml`:
+
+```yaml title="config.yaml"
+models:
+  - name: My Apply Model
+    provider: openai
+    model: gpt-4o
+    apiKey: YOUR_OPENAI_API_KEY
+    roles:
+      - apply
+    promptTemplates:
+      apply: "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
+```
+
+## Multiple Apply Models
+
+You can configure multiple models with the `apply` role:
+
+```yaml title="config.yaml"
+models:
+  - name: Morph Fast Apply
+    provider: openai
+    model: morph-v0
+    apiKey: YOUR_MORPH_API_KEY
+    apiBase: https://api.morphllm.com/v1/
+    roles:
+      - apply
+    promptTemplates:
+      apply: "<code>{{{ original_code }}}</code>\n<update>{{{ new_code }}}</update>"
+      
+  - name: GPT-4o Apply
+    provider: openai
+    model: gpt-4o
+    apiKey: YOUR_OPENAI_API_KEY
+    roles:
+      - apply
+```
+
+You can then select which model to use for Apply in the Continue settings under the "Active Models" section.
 
 Explore apply models in [the hub](https://hub.continue.dev/explore/models?roles=apply).
