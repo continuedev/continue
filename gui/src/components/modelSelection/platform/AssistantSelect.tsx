@@ -46,6 +46,8 @@ const AssistantSelectOption = ({
   selected,
   onClick,
 }: AssistantSelectOptionProps) => {
+  const tinyFont = useFontSize(-4);
+
   const navigate = useNavigate();
 
   const hasFatalErrors = useMemo(() => {
@@ -81,10 +83,20 @@ const AssistantSelectOption = ({
       onClick={!hasFatalErrors ? handleOptionClick : undefined}
       fontSizeModifier={-2}
     >
-      <div className="flex w-full flex-col gap-0.5">
+      <div
+        className="flex w-full flex-col gap-0.5"
+        style={{
+          fontSize: tinyFont,
+        }}
+      >
         <div className="flex w-full items-center justify-between bg-transparent">
-          <div className="flex w-full items-center gap-2">
-            <div className="h-4 w-4 flex-shrink-0">
+          <div className="flex w-full items-center gap-1.5">
+            <div className="flex h-4 w-3 items-center justify-center">
+              {selected ? (
+                <CheckIcon className="text-lightgray h-3 w-3" />
+              ) : null}
+            </div>
+            <div className="flex h-4 w-4 flex-shrink-0">
               <AssistantIcon assistant={profile} />
             </div>
             <span
@@ -93,12 +105,11 @@ const AssistantSelectOption = ({
               {profile.title}
             </span>
           </div>
-          <div className="flex flex-row items-center gap-2">
-            <div>{selected ? <CheckIcon className="h-3 w-3" /> : null}</div>
+          <div className="flex flex-row items-center gap-1">
             {!profile.errors?.length ? (
               isLocalProfile(profile) ? (
                 <Cog6ToothIcon
-                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
+                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -107,7 +118,7 @@ const AssistantSelectOption = ({
                 />
               ) : (
                 <ArrowTopRightOnSquareIcon
-                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
+                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -240,7 +251,7 @@ export default function AssistantSelect() {
         <Transition>
           <ListboxOptions className="min-w-[200px] pb-0">
             <div
-              className={`thin-scrollbar flex max-h-[300px] flex-col gap-1 overflow-y-auto py-1`}
+              className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
             >
               {profiles?.map((profile, idx) => {
                 return (
@@ -267,8 +278,13 @@ export default function AssistantSelect() {
                 fontSizeModifier={-2}
                 onClick={session ? onNewAssistant : () => login(false)}
               >
-                <div className="flex flex-row items-center gap-2">
-                  <PlusIcon className="h-4 w-4 flex-shrink-0" />
+                <div
+                  className="text-lightgray flex flex-row items-center gap-2"
+                  style={{
+                    fontSize: tinyFont,
+                  }}
+                >
+                  <PlusIcon className="ml-5 h-3 w-3 flex-shrink-0" />
                   New Assistant
                 </div>
               </ListboxOption>
@@ -281,12 +297,17 @@ export default function AssistantSelect() {
               />
 
               <div
-                className="text-lightgray flex items-center justify-between px-2 py-1.5"
+                className="text-lightgray flex items-center justify-between px-2 py-1"
                 style={{
                   fontSize: tinyFont,
                 }}
               >
-                <span className="block">
+                <span
+                  className="block"
+                  style={{
+                    fontSize: tinyFont - 1,
+                  }}
+                >
                   <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
                 </span>
                 <div
@@ -301,7 +322,12 @@ export default function AssistantSelect() {
                   ) : (
                     <BuildingOfficeIcon className="h-4 w-4" />
                   )}
-                  <span className="hover:cursor-pointer hover:underline">
+                  <span
+                    className="hover:cursor-pointer hover:underline"
+                    style={{
+                      fontSize: tinyFont - 1,
+                    }}
+                  >
                     {selectedOrganization?.name || "Personal"}
                   </span>
                 </div>
