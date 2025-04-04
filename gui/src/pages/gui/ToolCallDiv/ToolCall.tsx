@@ -130,7 +130,7 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
               {args.map(([key, value]) => (
                 <div key={key} className="flex gap-2 py-0.5">
                   <span className="text-lightgray">{key}:</span>
-                  <code className="line-clamp-1">{value}</code>
+                  <code className="line-clamp-1">{value.toString()}</code>
                 </div>
               ))}
             </div>

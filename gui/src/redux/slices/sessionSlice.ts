@@ -111,6 +111,12 @@ export const sessionSlice = createSlice({
       lastMessage.promptLogs = lastMessage.promptLogs
         ? lastMessage.promptLogs.concat(payload)
         : payload;
+
+      // Inactive thinking for reasoning models when '</think>' tag is not received on request completion
+      if (lastMessage.reasoning?.active) {
+        lastMessage.reasoning.active = false;
+        lastMessage.reasoning.endAt = Date.now();
+      }
     },
     setActive: (state) => {
       state.isStreaming = true;
