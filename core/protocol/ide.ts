@@ -23,17 +23,6 @@ export interface GetGhTokenArgs {
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
-  // We pass the `curSelectedModel` because we currently cannot access the
-  // default model title in the GUI from JB
-  applyToFile: [
-    {
-      text: string;
-      streamId: string;
-      curSelectedModelTitle: string;
-      filepath?: string;
-    },
-    void,
-  ];
   getIdeInfo: [undefined, IdeInfo];
   getWorkspaceDirs: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];

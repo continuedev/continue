@@ -1,5 +1,4 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
-import { BuiltInToolNames } from "core/tools/builtIn";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
 import {
@@ -35,11 +34,6 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     const result = await extra.ideMessenger.request("tools/call", {
       toolCall: toolCallState.toolCall,
       selectedModelTitle: defaultModel.title,
-      applyStreamId:
-        toolCallState.toolCall.function.name ===
-        BuiltInToolNames.EditExistingFile
-          ? state.session.lastApplyToolStreamId
-          : undefined,
     });
 
     if (result.status === "success") {
@@ -76,3 +70,24 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     }
   },
 );
+
+// export const editFileImpl: ToolImpl = async (args, extras) => {
+//   const firstUriMatch = await resolveRelativePathInDir(
+//     args.filepath,
+//     extras.ide,
+//   );
+//   if (!firstUriMatch) {
+//     throw new Error(`File ${args.filepath} does not exist.`);
+//   }
+//   if (!extras.applyToFile) {
+//     throw new Error("Failed to apply to file: invalid apply stream id");
+//   }
+//   await extras.applyToFile(firstUriMatch, args.new_contents);
+//   return [
+//     {
+//       name: "Edit results",
+//       description: `Edited ${args.filepath}`,
+//       content: `Applied edit diffs to ${args.filepath}. The user must manually reject/accept diffs. Prompt them to do so in your response`,
+//     },
+//   ];
+// };

@@ -193,7 +193,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [
-    { toolCall: ToolCall; selectedModelTitle: string; applyStreamId?: string },
+    { toolCall: ToolCall; selectedModelTitle: string },
     { contextItems: ContextItem[] },
   ];
   "clipboardCache/add": [{ content: string }, void];

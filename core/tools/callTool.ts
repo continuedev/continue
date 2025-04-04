@@ -4,7 +4,6 @@ import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
 import { createNewFileImpl } from "./implementations/createNewFile";
-import { editFileImpl } from "./implementations/editFile";
 import { exactSearchImpl } from "./implementations/exactSearch";
 import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
@@ -139,8 +138,9 @@ export async function callTool(
   switch (uri) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
-    case BuiltInToolNames.EditExistingFile:
-      return await editFileImpl(args, extras);
+    // Custom GUI handling for edit
+    // case BuiltInToolNames.EditExistingFile:
+    // return await editFileImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
     case BuiltInToolNames.ExactSearch:

@@ -891,7 +891,6 @@ export interface ToolExtras {
   llm: ILLM;
   fetch: FetchFunction;
   tool: Tool;
-  applyToFile?: (path: string, content: string) => Promise<void>;
 }
 
 export interface Tool {

@@ -18,7 +18,6 @@ import { stripImages } from "core/util/messageContent";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
-import { ILLM } from "core";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -29,6 +28,7 @@ import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { ILLM } from "core";
 
 /**
  * A shared messenger class between Core and Webview
@@ -128,7 +128,7 @@ export class VsCodeMessenger {
       );
     });
 
-    this.onWebviewOrCore("applyToFile", async ({ data }) => {
+    this.onWebview("applyToFile", async ({ data }) => {
       webviewProtocol.request("updateApplyState", {
         streamId: data.streamId,
         status: "streaming",
