@@ -38,6 +38,7 @@ export function Lump() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   const [displayedSection, setDisplayedSection] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isToolbarExpanded, setIsToolbarExpanded] = useState(true);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   // Handle keyboard escape
@@ -53,6 +54,11 @@ export function Lump() {
   // Function to hide the lump
   const hideLump = useCallback(() => {
     setSelectedSection(null);
+  }, []);
+
+  // Function to toggle toolbar expanded state
+  const toggleToolbar = useCallback(() => {
+    setIsToolbarExpanded((prev) => !prev);
   }, []);
 
   // Reset when streaming starts
@@ -84,8 +90,10 @@ export function Lump() {
     <LumpProvider
       isLumpVisible={isVisible}
       selectedSection={selectedSection}
+      isToolbarExpanded={isToolbarExpanded}
       hideLump={hideLump}
       setSelectedSection={setSelectedSection}
+      toggleToolbar={toggleToolbar}
     >
       <LumpDiv>
         <div className="mt-0.5 px-2">

@@ -6,8 +6,10 @@ import { createContext, ReactNode, useContext } from "react";
 interface LumpContextType {
   isLumpVisible: boolean;
   selectedSection: string | null;
+  isToolbarExpanded: boolean;
   hideLump: () => void;
   setSelectedSection: (section: string | null) => void;
+  toggleToolbar: () => void;
 }
 
 const LumpContext = createContext<LumpContextType | undefined>(undefined);
@@ -16,8 +18,10 @@ interface LumpProviderProps {
   children: ReactNode;
   isLumpVisible: boolean;
   selectedSection: string | null;
+  isToolbarExpanded: boolean;
   hideLump: () => void;
   setSelectedSection: (section: string | null) => void;
+  toggleToolbar: () => void;
 }
 
 /**
@@ -27,12 +31,21 @@ export function LumpProvider({
   children,
   isLumpVisible,
   selectedSection,
+  isToolbarExpanded,
   hideLump,
   setSelectedSection,
+  toggleToolbar,
 }: LumpProviderProps) {
   return (
     <LumpContext.Provider
-      value={{ isLumpVisible, selectedSection, hideLump, setSelectedSection }}
+      value={{
+        isLumpVisible,
+        selectedSection,
+        isToolbarExpanded,
+        hideLump,
+        setSelectedSection,
+        toggleToolbar,
+      }}
     >
       {children}
     </LumpContext.Provider>
