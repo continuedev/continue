@@ -101,55 +101,69 @@ export function UserSettingsForm() {
   }, [ideMessenger]);
 
   return (
-    <div className="divide-x-0 divide-y-2 divide-solid divide-zinc-700">
+    <div className="flex flex-col pt-3">
+      {/* {selectedProfile && isLocalProfile(selectedProfile) ? (
+        <div className="flex items-center justify-center">
+          <SecondaryButton
+            className="flex flex-row items-center gap-1"
+            onClick={() => {
+              ideMessenger.post("config/openProfile", {
+                profileId: selectedProfile.id,
+              });
+            }}
+          >
+            <span>Open</span>
+            <span>Config</span>
+            <span className="xs:flex hidden">File</span>
+          </SecondaryButton>
+        </div>
+      ) : null} */}
       {!controlServerBetaEnabled || hubEnabled ? (
-        <div className="flex flex-col">
-          <div className="flex flex-col">
-            <div className="flex flex-col gap-4 py-6">
-              <div>
-                <h2 className="mb-2 mt-0">User settings</h2>
-              </div>
+        <div className="flex flex-col gap-4 py-4">
+          <div>
+            <h2 className="mb-2 mt-0 p-0">User settings</h2>
+          </div>
 
-              <div className="flex flex-col gap-4">
-                <ToggleSwitch
-                  isToggled={showSessionTabs}
-                  onToggle={() =>
-                    handleUpdate({
-                      showSessionTabs: !showSessionTabs,
-                    })
-                  }
-                  text="Show Session Tabs"
-                />
-                <ToggleSwitch
-                  isToggled={codeWrap}
-                  onToggle={() =>
-                    handleUpdate({
-                      codeWrap: !codeWrap,
-                    })
-                  }
-                  text="Wrap Codeblocks"
-                />
+          <div className="flex flex-col gap-4">
+            <ToggleSwitch
+              isToggled={showSessionTabs}
+              onToggle={() =>
+                handleUpdate({
+                  showSessionTabs: !showSessionTabs,
+                })
+              }
+              text="Show Session Tabs"
+            />
+            <ToggleSwitch
+              isToggled={codeWrap}
+              onToggle={() =>
+                handleUpdate({
+                  codeWrap: !codeWrap,
+                })
+              }
+              text="Wrap Codeblocks"
+            />
 
-                <ToggleSwitch
-                  isToggled={showChatScrollbar}
-                  onToggle={() =>
-                    handleUpdate({
-                      showChatScrollbar: !showChatScrollbar,
-                    })
-                  }
-                  text="Show Chat Scrollbar"
-                />
-                <ToggleSwitch
-                  isToggled={readResponseTTS}
-                  onToggle={() =>
-                    handleUpdate({
-                      readResponseTTS: !readResponseTTS,
-                    })
-                  }
-                  text="Text-to-Speech Output"
-                />
+            <ToggleSwitch
+              isToggled={showChatScrollbar}
+              onToggle={() =>
+                handleUpdate({
+                  showChatScrollbar: !showChatScrollbar,
+                })
+              }
+              text="Show Chat Scrollbar"
+            />
+            <ToggleSwitch
+              isToggled={readResponseTTS}
+              onToggle={() =>
+                handleUpdate({
+                  readResponseTTS: !readResponseTTS,
+                })
+              }
+              text="Text-to-Speech Output"
+            />
 
-                {/* <ToggleSwitch
+            {/* <ToggleSwitch
                     isToggled={useChromiumForDocsCrawling}
                     onToggle={() =>
                       handleUpdate({
@@ -158,46 +172,46 @@ export function UserSettingsForm() {
                     }
                     text="Use Chromium for Docs Crawling"
                   /> */}
-                <ToggleSwitch
-                  isToggled={!disableSessionTitles}
-                  onToggle={() =>
-                    handleUpdate({
-                      disableSessionTitles: !disableSessionTitles,
-                    })
-                  }
-                  text="Enable Session Titles"
-                />
-                <ToggleSwitch
-                  isToggled={!displayRawMarkdown}
-                  onToggle={() =>
-                    handleUpdate({
-                      displayRawMarkdown: !displayRawMarkdown,
-                    })
-                  }
-                  text="Format Markdown"
-                />
+            <ToggleSwitch
+              isToggled={!disableSessionTitles}
+              onToggle={() =>
+                handleUpdate({
+                  disableSessionTitles: !disableSessionTitles,
+                })
+              }
+              text="Enable Session Titles"
+            />
+            <ToggleSwitch
+              isToggled={!displayRawMarkdown}
+              onToggle={() =>
+                handleUpdate({
+                  displayRawMarkdown: !displayRawMarkdown,
+                })
+              }
+              text="Format Markdown"
+            />
 
-                <ToggleSwitch
-                  isToggled={allowAnonymousTelemetry}
-                  onToggle={() =>
-                    handleUpdate({
-                      allowAnonymousTelemetry: !allowAnonymousTelemetry,
-                    })
-                  }
-                  text="Allow Anonymous Telemetry"
-                />
+            <ToggleSwitch
+              isToggled={allowAnonymousTelemetry}
+              onToggle={() =>
+                handleUpdate({
+                  allowAnonymousTelemetry: !allowAnonymousTelemetry,
+                })
+              }
+              text="Allow Anonymous Telemetry"
+            />
 
-                <ToggleSwitch
-                  isToggled={!disableIndexing}
-                  onToggle={() =>
-                    handleUpdate({
-                      disableIndexing: !disableIndexing,
-                    })
-                  }
-                  text="Enable Indexing"
-                />
+            <ToggleSwitch
+              isToggled={!disableIndexing}
+              onToggle={() =>
+                handleUpdate({
+                  disableIndexing: !disableIndexing,
+                })
+              }
+              text="Enable Indexing"
+            />
 
-                {/* <ToggleSwitch
+            {/* <ToggleSwitch
                     isToggled={useAutocompleteCache}
                     onToggle={() =>
                       handleUpdate({
@@ -207,89 +221,86 @@ export function UserSettingsForm() {
                     text="Use Autocomplete Cache"
                   /> */}
 
-                <label className="flex items-center justify-between gap-3">
-                  <span className="text-left">Font Size</span>
-                  <NumberInput
-                    value={fontSize}
-                    onChange={(val) =>
-                      handleUpdate({
-                        fontSize: val,
-                      })
-                    }
-                    min={7}
-                    max={50}
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-left">Font Size</span>
+              <NumberInput
+                value={fontSize}
+                onChange={(val) =>
+                  handleUpdate({
+                    fontSize: val,
+                  })
+                }
+                min={7}
+                max={50}
+              />
+            </label>
+
+            <label className="flex items-center justify-between gap-3">
+              <span className="line-clamp-1 text-left">
+                Multiline Autocompletions
+              </span>
+              <Select
+                value={useAutocompleteMultilineCompletions}
+                onChange={(e) =>
+                  handleUpdate({
+                    useAutocompleteMultilineCompletions: e.target.value as
+                      | "auto"
+                      | "always"
+                      | "never",
+                  })
+                }
+              >
+                <option value="auto">Auto</option>
+                <option value="always">Always</option>
+                <option value="never">Never</option>
+              </Select>
+            </label>
+
+            <form
+              className="flex flex-col gap-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleDisableAutocompleteSubmit();
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <span>Disable autocomplete in files</span>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={formDisableAutocomplete}
+                    className="max-w-[100px]"
+                    onChange={(e) => {
+                      setFormDisableAutocomplete(e.target.value);
+                    }}
                   />
-                </label>
-
-                <label className="flex items-center justify-between gap-3">
-                  <span className="line-clamp-1 text-left">
-                    Multiline Autocompletions
-                  </span>
-                  <Select
-                    value={useAutocompleteMultilineCompletions}
-                    onChange={(e) =>
-                      handleUpdate({
-                        useAutocompleteMultilineCompletions: e.target.value as
-                          | "auto"
-                          | "always"
-                          | "never",
-                      })
-                    }
-                  >
-                    <option value="auto">Auto</option>
-                    <option value="always">Always</option>
-                    <option value="never">Never</option>
-                  </Select>
-                </label>
-
-                <form
-                  className="flex flex-col gap-1"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleDisableAutocompleteSubmit();
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>Disable autocomplete in files</span>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={formDisableAutocomplete}
-                        className="max-w-[100px]"
-                        onChange={(e) => {
-                          setFormDisableAutocomplete(e.target.value);
-                        }}
-                      />
-                      <div className="flex h-full flex-col">
-                        {formDisableAutocomplete !==
-                        disableAutocompleteInFiles ? (
-                          <>
-                            <div
-                              onClick={handleDisableAutocompleteSubmit}
-                              className="cursor-pointer"
-                            >
-                              <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
-                            </div>
-                            <div
-                              onClick={cancelChangeDisableAutocomplete}
-                              className="cursor-pointer"
-                            >
-                              <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
-                            </div>
-                          </>
-                        ) : (
-                          <div>
-                            <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
-                          </div>
-                        )}
+                  <div className="flex h-full flex-col">
+                    {formDisableAutocomplete !== disableAutocompleteInFiles ? (
+                      <>
+                        <div
+                          onClick={handleDisableAutocompleteSubmit}
+                          className="cursor-pointer"
+                        >
+                          <CheckIcon className="h-4 w-4 text-green-500 hover:opacity-80" />
+                        </div>
+                        <div
+                          onClick={cancelChangeDisableAutocomplete}
+                          className="cursor-pointer"
+                        >
+                          <XMarkIcon className="h-4 w-4 text-red-500 hover:opacity-80" />
+                        </div>
+                      </>
+                    ) : (
+                      <div>
+                        <CheckIcon className="text-vsc-foreground-muted h-4 w-4" />
                       </div>
-                    </div>
+                    )}
                   </div>
-                  <span className="text-vsc-foreground-muted text-lightgray self-end text-xs">
-                    Comma-separated list of path matchers
-                  </span>
-                </form>
+                </div>
               </div>
-            </div>
+              <span className="text-vsc-foreground-muted text-lightgray self-end text-xs">
+                Comma-separated list of path matchers
+              </span>
+            </form>
           </div>
         </div>
       ) : null}

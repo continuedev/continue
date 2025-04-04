@@ -495,6 +495,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     packages: [
       models.gemini20Flash,
+      models.gemini20FlashLite,
+      models.gemini20FlashImageGeneration,
+      models.gemini25ProExp,
       models.gemini15Pro,
       models.geminiPro,
       models.gemini15Flash,

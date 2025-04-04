@@ -18,6 +18,7 @@ import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
+import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
@@ -26,6 +27,7 @@ import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
+import Inception from "./Inception";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
@@ -87,6 +89,7 @@ export const LLMClasses = [
   ContinueProxy,
   Cloudflare,
   Deepseek,
+  Docker,
   Msty,
   Azure,
   WatsonX,
@@ -104,6 +107,7 @@ export const LLMClasses = [
   SiliconFlow,
   Scaleway,
   Relace,
+  Inception,
 ];
 
 export async function llmFromDescription(

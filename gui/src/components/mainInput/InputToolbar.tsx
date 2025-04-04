@@ -31,7 +31,7 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
 import { useFontSize } from "../ui/font";
-import HoverItem from "./InputToolbar/bottom/HoverItem";
+import HoverItem from "./InputToolbar/HoverItem";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -87,8 +87,6 @@ interface InputToolbarProps {
   toolbarOptions?: ToolbarOptions;
   disabled?: boolean;
   isMainInput?: boolean;
-  lumpOpen: boolean;
-  setLumpOpen: (open: boolean) => void;
 }
 
 function InputToolbar(props: InputToolbarProps) {

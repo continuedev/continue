@@ -4,7 +4,7 @@ import { MCPSection } from "./MCPSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
 import { RulesSection } from "./RulesSection";
-import { ToolsSection } from "./ToolsSection";
+import { ToolPoliciesSection } from "./tool-policies/ToolPoliciesSection";
 
 interface SelectedSectionProps {
   selectedSection: string | null;
@@ -23,7 +23,7 @@ export function SelectedSection(props: SelectedSectionProps) {
     case "context":
       return <ContextSection />;
     case "tools":
-      return <ToolsSection />;
+      return <ToolPoliciesSection />;
     case "mcp":
       return <MCPSection />;
     default:

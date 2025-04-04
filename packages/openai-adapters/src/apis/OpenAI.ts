@@ -1,5 +1,4 @@
 import { streamSse } from "@continuedev/fetch";
-import fetch from "node-fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -14,7 +13,7 @@ import {
 } from "openai/resources/index";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
-import { customFetch, maybeCustomFetch } from "../util.js";
+import { customFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -36,8 +35,9 @@ export class OpenAIApi implements BaseLlmApi {
   }
 
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
-    // o-series models
-    if (body.model.startsWith("o")) {
+    // o-series models - only apply for official OpenAI API
+    const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
+    if (isOfficialOpenAIAPI && body.model.startsWith("o")) {
       // a) use max_completion_tokens instead of max_tokens
       body.max_completion_tokens = body.max_tokens;
       body.max_tokens = undefined;
