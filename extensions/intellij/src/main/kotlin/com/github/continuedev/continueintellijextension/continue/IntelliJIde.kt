@@ -7,6 +7,8 @@ import com.github.continuedev.continueintellijextension.utils.*
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
+import com.intellij.find.FindModel
+import com.intellij.find.impl.FindInProjectUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
@@ -20,8 +22,10 @@ import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -29,6 +33,8 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.testFramework.LightVirtualFile
+import com.intellij.usages.FindUsagesProcessPresentation
+import com.intellij.usages.UsageViewPresentation
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -327,58 +333,67 @@ class IntelliJIDE(
         return listOf("")
     }
     override suspend fun getSearchResults(query: String): String {
-        // val findModel = FindModel().apply {
-        //     stringToFind = searchText
-        //     isRegularExpressions = false
-        //     isWholeWordsOnly = false
-        //     isCaseSensitive = false
-        //     searchContext = FindModel.SearchContext.ANY
-        //     isGlobal = true
-        // }
+        val ideInfo = this.getIdeInfo()
+    if (ideInfo.remoteName != "local") {
+            val command = GeneralCommandLine(
+                ripgrep, 
+                "-i", 
+                "--ignore-file",
+                ".continueignore",
+                "--ignore-file",
+                ".gitignore", 
+                "-C", 
+                "2", 
+                "--heading", 
+                "-e", 
+                query, 
+                "."
+            )
     
-        // val findManager = FindManager.getInstance(project)
-        // val scope = GlobalSearchScope.projectScope(project)
-        
-        // FindInProjectUtil.findUsages(
-        //     findModel,
-        //     project.basePath,
-        //     project,
-        //     {
-        //         // Process each found usage
-        //         val virtualFile = it.virtualFile
-        //         val lineNumber = it.line
-        //         // Handle result
-        //     },
-        //     scope
-        // )
-
-        // return withContext(Dispatchers.IO) {
-        //     val findModel = FindModel().apply {
-        //         stringToFind = query
-        //         isRegularExpressions = false
-        //         isWholeWordsOnly = false
-        //         isCaseSensitive = false
-        //         searchContext = UsageSearchContext.ANY
-        //     }
-    
-        //     val results = StringBuilder()
-        //     runReadAction {
-        //         FindInProjectUtil.findUsages(
-        //             findModel,
-        //             project.baseDir,
-        //             {
-        //                 results.append("${it.file.path}:${it.line + 1}: ${it.lineText}\n")
-        //                 true
-        //             },
-        //             null
-        //         )
-        //     }
-        //     results.toString()
-        // }
-        val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
-        command.setWorkDirectory(project.basePath)
-        return ExecUtil.execAndGetOutput(command).stdout
+            command.setWorkDirectory(project.basePath)
+            return ExecUtil.execAndGetOutput(command).stdout
+        } else {
+            return "Ripgrep not supported, this workspace is remote"
+        // For remote workspaces, use JetBrains search functionality
+//        val searchResults = StringBuilder()
+//        ApplicationManager.getApplication().invokeAndWait {
+//            val options = FindModel().apply {
+//                stringToFind = query
+//                isCaseSensitive = false
+//                isRegularExpressions = false
+//                isWholeWordsOnly = false
+//                searchContext = FindModel.SearchContext.ANY  // or IN_CODE, IN_COMMENTS, IN_STRING_LITERALS, etc.
+//                isMultiline = true  // Allow matching across multiple lines
+//            }
+//
+//            val progressIndicator = EmptyProgressIndicator()
+//            val presentation = FindUsagesProcessPresentation(
+//                UsageViewPresentation()
+//            )
+//            val filesToSearch = ProjectFileIndex.getInstance(project)
+//                .iterateContent(::ArrayList)
+//                .filterNot { it.isDirectory }
+//                .toSet()
+//
+//
+//            FindInProjectUtil.findUsages(
+//                options,
+//                project,
+//                progressIndicator,
+//                presentation,
+//                filesToSearch
+//            ) { result ->
+//                val virtualFile = result.virtualFile
+//                searchResults.append(virtualFile.path).append("\n")
+//                searchResults.append("${result..trim()}\n")
+//                true // continue searching
+//            }
+//        }
+//        return searchResults.toString()
+//
+//            val scope = GlobalSearchScope.projectScope(project)
     }
+}
 
     override suspend fun subprocess(command: String, cwd: String?): List<Any> {
         val commandList = command.split(" ")

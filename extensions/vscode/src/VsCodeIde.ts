@@ -555,54 +555,143 @@ class VsCodeIde implements IDE {
       .map((t) => (t.input as vscode.TabInputText).uri.toString());
   }
 
+  runRipgrepQuery(dirUri: string, args: string[]) {
+    const relativeDir = vscode.Uri.parse(dirUri).fsPath;
+    const ripGrepUri = vscode.Uri.joinPath(
+      getExtensionUri(),
+      "out/node_modules/@vscode/ripgrep/bin/rg",
+    );
+    const p = child_process.spawn(ripGrepUri.fsPath, args, {
+      cwd: relativeDir,
+    });
+    let output = "";
+
+    p.stdout.on("data", (data) => {
+      output += data.toString();
+    });
+
+    return new Promise<string>((resolve, reject) => {
+      p.on("error", reject);
+      p.on("close", (code) => {
+        if (code === 0) {
+          resolve(output);
+        } else if (code === 1) {
+          // No matches
+          resolve("No matches found");
+        } else {
+          reject(new Error(`Process exited with code ${code}`));
+        }
+      });
+    });
+  }
+
   async getFileResults(pattern: string): Promise<string[]> {
-    // vscode.workspace.findFiles("");
-    return ["file1", "file2"];
+    const MAX_FILE_RESULTS = 200;
+    if (vscode.env.remoteName) {
+      // TODO better tests for this remote search implementation
+      // throw new Error("Ripgrep not supported, this workspace is remote");
+
+      // IMPORTANT: findFiles automatically accounts for .gitignore
+      const ignoreFiles = await vscode.workspace.findFiles(
+        "**/.continueignore",
+        null,
+      );
+
+      const ignoreGlobs: Set<string> = new Set();
+      for (const file of ignoreFiles) {
+        const content = await vscode.workspace.fs.readFile(file);
+        const filePath = vscode.workspace.asRelativePath(file);
+        const fileDir = filePath
+          .replace(/\\/g, "/")
+          .replace(/\/$/, "")
+          .split("/")
+          .slice(0, -1)
+          .join("/");
+
+        const patterns = Buffer.from(content)
+          .toString()
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(
+            (line) => line && !line.startsWith("#") && !pattern.startsWith("!"),
+          );
+        // VSCode does not support negations
+
+        patterns
+          // Handle prefix
+          .map((pattern) => {
+            const normalizedPattern = pattern.replace(/\\/g, "/");
+
+            if (normalizedPattern.startsWith("/")) {
+              if (fileDir) {
+                return `{/,}${normalizedPattern}`;
+              } else {
+                return `${fileDir}/${normalizedPattern.substring(1)}`;
+              }
+            } else {
+              if (fileDir) {
+                return `${fileDir}/${normalizedPattern}`;
+              } else {
+                return `**/${normalizedPattern}`;
+              }
+            }
+          })
+          // Handle suffix
+          .map((pattern) => {
+            return pattern.endsWith("/") ? `${pattern}**/*` : pattern;
+          })
+          .forEach((pattern) => {
+            ignoreGlobs.add(pattern);
+          });
+      }
+
+      const ignoreGlobsArray = Array.from(ignoreGlobs);
+
+      const results = await vscode.workspace.findFiles(
+        pattern,
+        ignoreGlobs.size ? `{${ignoreGlobsArray.join(",")}}` : null,
+        MAX_FILE_RESULTS,
+      );
+      return results.map((result) => vscode.workspace.asRelativePath(result));
+    } else {
+      const results: string[] = [];
+      for (const dir of await this.getWorkspaceDirs()) {
+        const dirResults = await this.runRipgrepQuery(dir, [
+          "--files",
+          "--iglob",
+          pattern,
+          "--ignore-file",
+          ".continueignore",
+          "--ignore-file",
+          ".gitignore",
+        ]);
+
+        results.push(dirResults);
+      }
+
+      return results.join("\n").split("\n").slice(0, MAX_FILE_RESULTS);
+    }
   }
 
   async getSearchResults(query: string): Promise<string> {
     if (vscode.env.remoteName) {
-      return "Ripgrep not supported, this workspace is remote";
+      throw new Error("Ripgrep not supported, this workspace is remote");
     }
     const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
-      const relativeDir = vscode.Uri.parse(dir).fsPath;
-      const ripGrepUri = vscode.Uri.joinPath(
-        getExtensionUri(),
-        "out/node_modules/@vscode/ripgrep/bin/rg",
-      );
-      const p = child_process.spawn(
-        ripGrepUri.fsPath,
-        [
-          "-i", // Case-insensitive search
-          "-C",
-          "2", // Show 2 lines of context
-          "--heading", // Only show filepath once per result
-          "-e",
-          query, // Pattern to search for
-          ".", // Directory to search in
-        ],
-        { cwd: relativeDir },
-      );
-      let output = "";
-
-      p.stdout.on("data", (data) => {
-        output += data.toString();
-      });
-
-      const dirResults = await new Promise<string>((resolve, reject) => {
-        p.on("error", reject);
-        p.on("close", (code) => {
-          if (code === 0) {
-            resolve(output);
-          } else if (code === 1) {
-            // No matches
-            resolve("No matches found");
-          } else {
-            reject(new Error(`Process exited with code ${code}`));
-          }
-        });
-      });
+      const dirResults = await this.runRipgrepQuery(dir, [
+        "-i", // Case-insensitive search
+        "--ignore-file",
+        ".continueignore",
+        "--ignore-file",
+        ".gitignore",
+        "-C",
+        "2", // Show 2 lines of context
+        "--heading", // Only show filepath once per result
+        "-e",
+        query, // Pattern to search for
+        ".", // Directory to search in
+      ]);
 
       results.push(dirResults);
     }
