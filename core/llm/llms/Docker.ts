@@ -1,6 +1,7 @@
 import { spawn } from "child_process";
 import { LLMOptions, ModelInstaller } from "../../index.js";
 import OpenAI from "./OpenAI.js";
+import http from "http";
 
 /**
  * Docker Model Runner provider
@@ -16,7 +17,7 @@ import OpenAI from "./OpenAI.js";
 class Docker extends OpenAI implements ModelInstaller {
   static providerName = "docker";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://model-runner.docker.internal/v1/",
+    apiBase: "http://localhost:12434/engines/v1",
     model: "gemma3-4B-F4", // Default model
   };
 
@@ -53,6 +54,58 @@ class Docker extends OpenAI implements ModelInstaller {
     if (this.model && this.modelMap[this.model]) {
       this.model = this.modelMap[this.model];
     }
+    
+    // Check if Docker Model Runner is active and enable it if needed
+    this.ensureModelRunnerEnabled();
+  }
+
+  /**
+   * Checks if Docker Model Runner is running at the expected port
+   * and enables it if not running
+   */
+  private async ensureModelRunnerEnabled(): Promise<void> {
+    try {
+      // Check if the Model Runner service is running on the expected port
+      const isRunning = await this.isPortBound(12434);
+      
+      if (!isRunning) {
+        console.log("Docker Model Runner not detected. Attempting to enable it...");
+        await this.executeDockerCommand(['desktop', 'enable', 'model-runner', '--tcp', '12434']);
+        console.log("Docker Model Runner has been enabled on port 12434");
+      }
+    } catch (error) {
+      console.warn("Failed to enable Docker Model Runner:", error);
+    }
+  }
+
+  /**
+   * Checks if a port is currently bound/in use
+   */
+  private isPortBound(port: number): Promise<boolean> {
+    return new Promise((resolve) => {
+      const req = http.request({
+        method: 'HEAD',
+        host: 'localhost',
+        port: port,
+        timeout: 1000,
+        path: '/'
+      }, () => {
+        // If we can connect, the port is in use
+        resolve(true);
+      });
+
+      req.on('error', () => {
+        // If we can't connect, the port is not in use
+        resolve(false);
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(false);
+      });
+
+      req.end();
+    });
   }
 
   private async executeDockerCommand(
