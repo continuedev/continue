@@ -89,6 +89,31 @@ export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
 
+export const assistantUnrolledSchemaNonNullable = baseConfigYamlSchema.extend({
+  models: z.array(modelSchema).optional(),
+  context: z.array(contextSchema).optional(),
+  data: z.array(dataSchema).optional(),
+  mcpServers: z.array(mcpServerSchema).optional(),
+  rules: z.array(z.string()).optional(),
+  prompts: z.array(promptSchema).optional(),
+  docs: z.array(docSchema).optional(),
+});
+
+export type AssistantUnrolledNonNullable = z.infer<
+  typeof assistantUnrolledSchemaNonNullable
+>;
+
+export const isAssistantUnrolledNonNullable = (
+  a: AssistantUnrolled,
+): a is AssistantUnrolledNonNullable =>
+  (!a.models || a.models.every((m) => m !== null)) &&
+  (!a.context || a.context.every((c) => c !== null)) &&
+  (!a.data || a.data.every((d) => d !== null)) &&
+  (!a.mcpServers || a.mcpServers.every((s) => s !== null)) &&
+  (!a.rules || a.rules.every((r) => r !== null)) &&
+  (!a.prompts || a.prompts.every((p) => p !== null)) &&
+  (!a.docs || a.docs.every((d) => d !== null));
+
 export const blockSchema = baseConfigYamlSchema.and(
   z.union([
     z.object({ models: z.array(modelSchema).length(1) }),
