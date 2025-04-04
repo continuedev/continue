@@ -5,14 +5,14 @@ import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { PluginKey } from "@tiptap/pm/state";
 import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 import { ContextItemWithId, SlashCommandDescription } from "core";
-import { v4 as uuidv4 } from "uuid";
 import { MAIN_EDITOR_INPUT_ID } from "../../../../pages/gui/Chat";
+import { ComboBoxItem } from "../../types";
 import { PROMPT_BLOCK_NAME } from "./PromptExtension";
 
 export type SlashCommandOptions = {
   HTMLAttributes: Record<string, any>;
   renderText: (props: { node: ProseMirrorNode }) => string;
-  suggestion: Omit<SuggestionOptions, "editor">;
+  suggestion: Omit<SuggestionOptions<ComboBoxItem, ComboBoxItem>, "editor">;
 };
 
 export const SLASH_CMD_NAME = "slash-command";
@@ -59,42 +59,11 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
             range.to += 1;
           }
 
-          editor
-            .chain()
-            .focus()
-            .insertContentAt(range, [
-              {
-                type: this.name,
-                attrs: props,
-              },
-              {
-                type: "text",
-                text: " ",
-              },
-            ])
-            .run();
-
-          const promptId = uuidv4();
-
-          editor
-            .chain()
-            .focus()
-            .insertContentAt(0, {
-              type: "promptBlock",
-              attrs: {
-                item: {
-                  content: props.content,
-                  name: props.title,
-                  description: props.description,
-                  id: {
-                    providerTitle: "prompt",
-                    itemId: props.name,
-                  },
-                } as ContextItemWithId,
-                inputId: promptId,
-              },
-            })
-            .run();
+          editor.commands.insertSlashCommand({
+            name: props.title,
+            description: props.description,
+            prompt: props.content,
+          });
 
           window.getSelection()?.collapseToEnd();
         },
