@@ -1,8 +1,6 @@
 import { ToolImpl } from ".";
 import { resolveRelativePathInDir } from "../../util/ideUtils";
 
-export const EDIT_TOOL_CONTEXT_ITEM_NAME = "Edit Tool Instructions";
-
 export const editFileImpl: ToolImpl = async (args, extras) => {
   const firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
@@ -11,12 +9,18 @@ export const editFileImpl: ToolImpl = async (args, extras) => {
   if (!firstUriMatch) {
     throw new Error(`File ${args.filepath} does not exist.`);
   }
+  if (!extras.applyToFile) {
+    throw new Error("Failed to apply to file: invalid apply stream id");
+  }
+  if (!extras.llm.title) {
+    throw new Error("Failed to apply to file: no model selected");
+  }
+  await extras.applyToFile(firstUriMatch, args.new_contents);
   return [
     {
-      name: EDIT_TOOL_CONTEXT_ITEM_NAME,
-      description: "Instructions for editing the file",
-      content:
-        "Edit Instructions: return the full new file contents in a codeblock. The codeblock header should be of the format '```language filepath'",
+      name: "Edit results",
+      description: `Result of editing ${args.filepath}`,
+      content: `Successfully applied edits to ${args.filepath}. The users must manually reject/accept diffs, prompt them to do so`,
     },
   ];
 };

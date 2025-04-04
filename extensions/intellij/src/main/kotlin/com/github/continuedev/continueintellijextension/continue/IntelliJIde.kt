@@ -7,6 +7,8 @@ import com.github.continuedev.continueintellijextension.utils.*
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
+import com.intellij.find.FindModel
+import com.intellij.find.impl.FindInProjectUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
@@ -20,8 +22,10 @@ import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.progress.EmptyProgressIndicator
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
+import com.intellij.openapi.roots.ProjectFileIndex
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -45,7 +49,6 @@ class IntelliJIDE(
 ) : IDE {
 
     private val gitService = GitService(project, continuePluginService)
-
 
     private val ripgrep: String
 
@@ -309,11 +312,115 @@ class IntelliJIDE(
         return getOpenFiles()
     }
 
-    override suspend fun getSearchResults(query: String): String {
-        val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--heading", "-e", query, ".")
-        command.setWorkDirectory(project.basePath)
-        return ExecUtil.execAndGetOutput(command).stdout
+    override suspend fun getFileResults(pattern: String): List<String> {
+        val ideInfo = this.getIdeInfo()
+        if (ideInfo.remoteName == "local") {
+            val command = GeneralCommandLine(
+                ripgrep, 
+                "--files",
+                "--iglob",
+                pattern,
+                "--ignore-file",
+                ".continueignore",
+                "--ignore-file",
+                ".gitignore",
+            )
+    
+            command.setWorkDirectory(project.basePath)
+            val results = ExecUtil.execAndGetOutput(command).stdout
+            return results.split("\n")
+        } else {
+             throw NotImplementedError("Ripgrep not supported, this workspace is remote")
+
+             // Leaving in here for ideas
+             //            val projectBasePath = project.basePath ?: return emptyList()
+             //            val scope = GlobalSearchScope.projectScope(project)
+             //
+             //            // Get all ignore patterns from .continueignore files
+             //            val ignorePatterns = mutableSetOf<String>()
+             //            VirtualFileManager.getInstance().findFileByUrl("file://$projectBasePath")?.let { root ->
+             //                VfsUtil.collectChildrenRecursively(root).forEach { file ->
+             //                    if (file.name == ".continueignore") {
+             //                        file.inputStream.bufferedReader().useLines { lines ->
+             //                            ignorePatterns.addAll(lines.filter { it.isNotBlank() && !it.startsWith("#") })
+             //                        }
+             //                    }
+             //                }
+             //            }
+             //
+             //            return FilenameIndex.getAllFilesByExt(project, "*", scope)
+             //                .filter { file ->
+             //                    val relativePath = file.path.removePrefix("$projectBasePath/")
+             //                    // Check if file matches pattern and isn't ignored
+             //                    PatternUtil.(relativePath, pattern) &&
+             //                    !ignorePatterns.any { PatternUtil.matchesGlob(relativePath, it) }
+             //                }
+             //                .map { it.path.removePrefix("$projectBasePath/") }
+        }
     }
+
+    override suspend fun getSearchResults(query: String): String {
+        val ideInfo = this.getIdeInfo()
+        if (ideInfo.remoteName == "local") {
+            val command = GeneralCommandLine(
+                ripgrep, 
+                "-i", 
+                "--ignore-file",
+                ".continueignore",
+                "--ignore-file",
+                ".gitignore", 
+                "-C", 
+                "2", 
+                "--heading", 
+                "-e", 
+                query, 
+                "."
+            )
+    
+            command.setWorkDirectory(project.basePath)
+            return ExecUtil.execAndGetOutput(command).stdout
+        } else {
+            throw NotImplementedError("Ripgrep not supported, this workspace is remote")
+
+            // For remote workspaces, use JetBrains search functionality
+            //        val searchResults = StringBuilder()
+            //        ApplicationManager.getApplication().invokeAndWait {
+            //            val options = FindModel().apply {
+            //                stringToFind = query
+            //                isCaseSensitive = false
+            //                isRegularExpressions = false
+            //                isWholeWordsOnly = false
+            //                searchContext = FindModel.SearchContext.ANY  // or IN_CODE, IN_COMMENTS, IN_STRING_LITERALS, etc.
+            //                isMultiline = true  // Allow matching across multiple lines
+            //            }
+            //
+            //            val progressIndicator = EmptyProgressIndicator()
+            //            val presentation = FindUsagesProcessPresentation(
+            //                UsageViewPresentation()
+            //            )
+            //            val filesToSearch = ProjectFileIndex.getInstance(project)
+            //                .iterateContent(::ArrayList)
+            //                .filterNot { it.isDirectory }
+            //                .toSet()
+            //
+            //
+            //            FindInProjectUtil.findUsages(
+            //                options,
+            //                project,
+            //                progressIndicator,
+            //                presentation,
+            //                filesToSearch
+            //            ) { result ->
+            //                val virtualFile = result.virtualFile
+            //                searchResults.append(virtualFile.path).append("\n")
+            //                searchResults.append("${result..trim()}\n")
+            //                true // continue searching
+            //            }
+            //        }
+            //        return searchResults.toString()
+        }
+    }
+     
 
     override suspend fun subprocess(command: String, cwd: String?): List<Any> {
         val commandList = command.split(" ")

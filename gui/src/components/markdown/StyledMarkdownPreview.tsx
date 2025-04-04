@@ -130,8 +130,8 @@ interface StyledMarkdownPreviewProps {
   scrollLocked?: boolean;
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
-  autoApplyCodeblocks?: boolean;
   hideApply?: boolean;
+  firstCodeblockStreamId?: string;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -199,7 +199,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
   const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
-    [],
+    props.firstCodeblockStreamId
+      ? [
+          {
+            streamId: props.firstCodeblockStreamId,
+            isGenerating: false,
+          },
+        ]
+      : [],
   );
 
   const [reactContent, setMarkdownSource] = useRemark({
@@ -319,9 +326,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               streamId: uuidv4(),
               isGenerating: isGeneratingCodeBlock,
             };
+          } else {
+            codeblockState.current[codeBlockIndex].isGenerating =
+              isGeneratingCodeBlock;
           }
-          const codeblockStreamId =
-            codeblockState.current[codeBlockIndex].streamId;
 
           // We use a custom toolbar for codeblocks in the step container
           return (
@@ -332,8 +340,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
-              autoApply={props.autoApplyCodeblocks}
-              codeBlockStreamId={codeblockStreamId}
+              codeBlockStreamId={
+                codeblockState.current[codeBlockIndex].streamId
+              }
               hideApply={props.hideApply}
             >
               <SyntaxHighlightedPre {...preProps} />

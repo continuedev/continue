@@ -54,6 +54,7 @@ type SessionState = {
     curIndex: number;
   };
   newestCodeblockForInput: Record<string, string>;
+  lastApplyToolStreamId?: string;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -637,6 +638,12 @@ export const sessionSlice = createSlice({
 
       toolCallState.status = "calling";
     },
+    setLastApplyToolStreamId: (
+      state,
+      action: PayloadAction<{ streamId: string }>,
+    ) => {
+      state.lastApplyToolStreamId = action.payload.streamId;
+    },
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
@@ -759,6 +766,7 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
+  setLastApplyToolStreamId,
   cycleMode,
 } = sessionSlice.actions;
 

@@ -36,6 +36,7 @@ import { TTS } from "./util/tts";
 
 import {
   DiffLine,
+  ToolExtras,
   type ContextItemId,
   type IDE,
   type IndexingProgressUpdate,
@@ -871,7 +872,8 @@ export class Core {
       }
     });
 
-    on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
+    on("tools/call", async (msg) => {
+      const { toolCall, selectedModelTitle, applyStreamId } = msg.data;
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
         throw new Error("Config not loaded");
@@ -887,6 +889,19 @@ export class Core {
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
+      let applyToFile: ToolExtras["applyToFile"] = undefined;
+      if (applyStreamId) {
+        applyToFile = async (path: string, contents: string) => {
+          return await this.messenger.request("applyToFile", {
+            filepath: path,
+            text: contents,
+            streamId: applyStreamId,
+            curSelectedModelTitle:
+              config.selectedModelByRole.apply?.title ?? selectedModelTitle,
+          });
+        };
+      }
+
       const contextItems = await callTool(
         tool,
         JSON.parse(toolCall.function.arguments || "{}"),
@@ -896,6 +911,7 @@ export class Core {
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
           tool,
+          applyToFile,
         },
       );
 

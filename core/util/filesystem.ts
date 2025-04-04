@@ -242,6 +242,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
+  async applyToFile() {
+    throw new Error("not implemented");
+  }
+
   async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return ["", ""];
   }

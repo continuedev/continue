@@ -1,4 +1,5 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
 import {
@@ -34,6 +35,11 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     const result = await extra.ideMessenger.request("tools/call", {
       toolCall: toolCallState.toolCall,
       selectedModelTitle: defaultModel.title,
+      applyStreamId:
+        toolCallState.toolCall.function.name ===
+        BuiltInToolNames.EditExistingFile
+          ? state.session.lastApplyToolStreamId
+          : undefined,
     });
 
     if (result.status === "success") {
