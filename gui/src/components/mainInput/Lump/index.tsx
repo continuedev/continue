@@ -1,12 +1,10 @@
-import { useCallback, useState } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
   vscCommandCenterInactiveBorder,
   vscInputBackground,
 } from "../..";
-import { useAppSelector } from "../../../redux/hooks";
-import { LumpProvider } from "./LumpContext";
+import { LumpProvider, useLump } from "./LumpContext";
 import { LumpToolbar } from "./LumpToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
 
@@ -35,82 +33,32 @@ const ContentDiv = styled.div<{ hasSection: boolean; isVisible: boolean }>`
  * Main component that displays the toolbar and selected content section
  */
 export function Lump() {
-  const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  const [displayedSection, setDisplayedSection] = useState<string | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [isToolbarExpanded, setIsToolbarExpanded] = useState(true);
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
-
-  // Handle keyboard escape
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (event.key === "Escape" && selectedSection) {
-        setSelectedSection(null);
-      }
-    },
-    [selectedSection],
+  return (
+    <LumpProvider>
+      <LumpContent />
+    </LumpProvider>
   );
+}
 
-  // Function to hide the lump
-  const hideLump = useCallback(() => {
-    setSelectedSection(null);
-  }, []);
-
-  // Function to toggle toolbar expanded state
-  const toggleToolbar = useCallback(() => {
-    setIsToolbarExpanded((prev) => !prev);
-  }, []);
-
-  // Reset when streaming starts
-  if (isStreaming && selectedSection) {
-    setSelectedSection(null);
-  }
-
-  // Update displayedSection and visibility when selectedSection changes
-  if (selectedSection) {
-    if (displayedSection !== selectedSection || !isVisible) {
-      setDisplayedSection(selectedSection);
-      setIsVisible(true);
-    }
-  } else if (isVisible) {
-    setIsVisible(false);
-    setTimeout(() => {
-      setDisplayedSection(null);
-    }, 300);
-  }
-
-  // Set up keyboard listener
-  if (selectedSection) {
-    document.addEventListener("keydown", handleKeyDown);
-  } else {
-    document.removeEventListener("keydown", handleKeyDown);
-  }
+/**
+ * Internal component that consumes the LumpContext
+ */
+function LumpContent() {
+  const { isLumpVisible, selectedSection } = useLump();
 
   return (
-    <LumpProvider
-      isLumpVisible={isVisible}
-      selectedSection={selectedSection}
-      isToolbarExpanded={isToolbarExpanded}
-      hideLump={hideLump}
-      setSelectedSection={setSelectedSection}
-      toggleToolbar={toggleToolbar}
-    >
-      <LumpDiv>
-        <div className="mt-0.5 px-2">
-          <LumpToolbar
-            selectedSection={selectedSection}
-            setSelectedSection={setSelectedSection}
-          />
+    <LumpDiv>
+      <div className="mt-0.5 px-2">
+        <LumpToolbar />
 
-          <ContentDiv
-            className="no-scrollbar pr-0.5"
-            hasSection={!!selectedSection}
-            isVisible={isVisible}
-          >
-            <SelectedSection selectedSection={displayedSection} />
-          </ContentDiv>
-        </div>
-      </LumpDiv>
-    </LumpProvider>
+        <ContentDiv
+          className="no-scrollbar pr-0.5"
+          hasSection={!!selectedSection}
+          isVisible={isLumpVisible}
+        >
+          <SelectedSection />
+        </ContentDiv>
+      </div>
+    </LumpDiv>
   );
 }

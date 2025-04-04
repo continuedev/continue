@@ -19,12 +19,7 @@ const StopButton = styled.div`
   cursor: pointer;
 `;
 
-interface TopToolbarProps {
-  selectedSection: string | null;
-  setSelectedSection: (value: string | null) => void;
-}
-
-export function LumpToolbar(props: TopToolbarProps) {
+export function LumpToolbar() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
@@ -60,10 +55,5 @@ export function LumpToolbar(props: TopToolbarProps) {
     );
   }
 
-  return (
-    <BlockSettingsTopToolbar
-      selectedSection={props.selectedSection}
-      setSelectedSection={props.setSelectedSection}
-    />
-  );
+  return <BlockSettingsTopToolbar />;
 }

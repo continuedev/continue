@@ -80,17 +80,17 @@ function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
   );
 }
 
-interface BlockSettingsTopToolbarProps {
-  selectedSection: string | null;
-  setSelectedSection: (value: string | null) => void;
-}
-
-export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
-  const { isToolbarExpanded, toggleToolbar } = useLump();
+export function BlockSettingsTopToolbar() {
+  const {
+    isToolbarExpanded,
+    toggleToolbar,
+    selectedSection,
+    setSelectedSection,
+  } = useLump();
 
   const handleEllipsisClick = () => {
     if (isToolbarExpanded) {
-      props.setSelectedSection(null);
+      setSelectedSection(null);
     }
     toggleToolbar();
   };
@@ -115,10 +115,10 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
                 key={section.id}
                 icon={section.icon}
                 tooltip={section.tooltip}
-                isSelected={props.selectedSection === section.id}
+                isSelected={selectedSection === section.id}
                 onClick={() =>
-                  props.setSelectedSection(
-                    props.selectedSection === section.id ? null : section.id,
+                  setSelectedSection(
+                    selectedSection === section.id ? null : section.id,
                   )
                 }
               />
