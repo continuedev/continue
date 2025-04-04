@@ -279,7 +279,7 @@ export default function AssistantSelect() {
                     fontSize: tinyFont,
                   }}
                 >
-                  <PlusIcon className="h-3 w-3 flex-shrink-0" />
+                  <PlusIcon className="ml-0.5 h-3 w-3 flex-shrink-0" />
                   New Assistant
                 </div>
               </ListboxOption>
