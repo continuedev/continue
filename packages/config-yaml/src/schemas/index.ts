@@ -92,7 +92,7 @@ export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
   context: z.array(contextSchema.nullable()).optional(),
   data: z.array(dataSchema.nullable()).optional(),
   mcpServers: z.array(mcpServerSchema.nullable()).optional(),
-  rules: z.array(z.string().nullable()).optional(),
+  rules: z.array(ruleSchema.nullable()).optional(),
   prompts: z.array(promptSchema.nullable()).optional(),
   docs: z.array(docSchema.nullable()).optional(),
 });
