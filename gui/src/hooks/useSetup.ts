@@ -17,6 +17,7 @@ import {
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   addContextItemsAtIndex,
+  selectLastEditToolApplyState,
   setInactive,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
@@ -245,6 +246,13 @@ function useSetup() {
     },
     [defaultModel],
   );
+
+  const lastEditToolApplyState = useAppSelector(selectLastEditToolApplyState);
+  useEffect(() => {
+    ideMessenger.post("showToast", ["info", "updated last apply state"]);
+    // dispatch(setToolCallOutput(output));
+    // dispatch(acceptToolCall());
+  }, [lastEditToolApplyState]);
 }
 
 export default useSetup;

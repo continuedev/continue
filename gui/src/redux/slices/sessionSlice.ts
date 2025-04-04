@@ -21,7 +21,6 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -368,12 +367,6 @@ export const sessionSlice = createSlice({
                 );
               }
 
-              if (
-                toolCallDelta.function?.name ===
-                BuiltInToolNames.EditExistingFile
-              ) {
-                state.lastApplyToolStreamId = uuidv4();
-              }
               historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
             }
             state.history.push(historyItem);
@@ -559,7 +552,9 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-
+    setLastToolApplyStreamId: (state, { payload }: PayloadAction<string>) => {
+      state.lastApplyToolStreamId = payload;
+    },
     updateCurCheckpoint: (
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
@@ -781,6 +776,7 @@ export const {
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
   cycleMode,
+  setLastToolApplyStreamId,
 } = sessionSlice.actions;
 
 export const {

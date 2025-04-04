@@ -1,10 +1,17 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
+import { ContextItem } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
+import { EditToolArgs } from "core/tools/definitions/editFile";
+import { resolveRelativePathInDir } from "core/util/ideUtils";
+import { v4 as uuidv4 } from "uuid";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
 import {
   acceptToolCall,
   cancelToolCall,
   setCalling,
+  setLastToolApplyStreamId,
   setToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -31,28 +38,46 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     dispatch(setCalling());
 
-    const result = await extra.ideMessenger.request("tools/call", {
-      toolCall: toolCallState.toolCall,
-      selectedModelTitle: defaultModel.title,
-    });
+    let errorMessage = "";
+    let output: ContextItem[] | undefined = undefined;
 
-    if (result.status === "success") {
-      const contextItems = result.content.contextItems;
-      dispatch(setToolCallOutput(contextItems));
-      dispatch(acceptToolCall());
-
-      // Send to the LLM to continue the conversation
-      const response = await dispatch(
-        streamResponseAfterToolCall({
-          toolCallId: toolCallState.toolCall.id,
-          toolOutput: contextItems,
-        }),
+    if (
+      toolCallState.toolCall.function.name === BuiltInToolNames.EditExistingFile
+    ) {
+      const newToolStreamId = uuidv4();
+      dispatch(setLastToolApplyStreamId(newToolStreamId));
+      const args = JSON.parse(
+        toolCallState.toolCall.function.arguments || "{}",
       );
-      unwrapResult(response);
+      try {
+        await customGuiEditImpl(
+          args,
+          extra.ideMessenger,
+          newToolStreamId,
+          defaultModel.title,
+        );
+      } catch (e) {
+        errorMessage = "Failed to call edit tool";
+        if (e instanceof Error) {
+          errorMessage = e.message;
+        }
+      }
     } else {
+      const result = await extra.ideMessenger.request("tools/call", {
+        toolCall: toolCallState.toolCall,
+        selectedModelTitle: defaultModel.title,
+      });
+      if (result.status === "error") {
+        errorMessage = result.error;
+      } else {
+        output = result.content.contextItems;
+      }
+    }
+
+    if (errorMessage) {
       dispatch(cancelToolCall());
 
-      const output = await dispatch(
+      const wrapped = await dispatch(
         streamResponseAfterToolCall({
           toolCallId: toolCallState.toolCallId,
           toolOutput: [
@@ -60,34 +85,52 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
               icon: "problems",
               name: "Tool Call Error",
               description: "Tool Call Failed",
-              content: `The tool call failed with the message:\n\n${result.error}\n\nPlease try something else or request further instructions.`,
+              content: `The tool call failed with the message:\n\n${errorMessage}\n\nPlease try something else or request further instructions.`,
               hidden: false,
             },
           ],
         }),
       );
-      unwrapResult(output);
+      unwrapResult(wrapped);
+    } else if (output) {
+      dispatch(setToolCallOutput(output));
+      dispatch(acceptToolCall());
+
+      // Send to the LLM to continue the conversation
+      const wrapped = await dispatch(
+        streamResponseAfterToolCall({
+          toolCallId: toolCallState.toolCall.id,
+          toolOutput: output,
+        }),
+      );
+      unwrapResult(wrapped);
     }
+    // okay for a tool to have no output and need some GUI trigger or other to trigger response e.g. edit tool
   },
 );
 
-// export const editFileImpl: ToolImpl = async (args, extras) => {
-//   const firstUriMatch = await resolveRelativePathInDir(
-//     args.filepath,
-//     extras.ide,
-//   );
-//   if (!firstUriMatch) {
-//     throw new Error(`File ${args.filepath} does not exist.`);
-//   }
-//   if (!extras.applyToFile) {
-//     throw new Error("Failed to apply to file: invalid apply stream id");
-//   }
-//   await extras.applyToFile(firstUriMatch, args.new_contents);
-//   return [
-//     {
-//       name: "Edit results",
-//       description: `Edited ${args.filepath}`,
-//       content: `Applied edit diffs to ${args.filepath}. The user must manually reject/accept diffs. Prompt them to do so in your response`,
-//     },
-//   ];
-// };
+async function customGuiEditImpl(
+  args: EditToolArgs,
+  ideMessenger: IIdeMessenger,
+  streamId: string,
+  modelTitle: string,
+) {
+  const firstUriMatch = await resolveRelativePathInDir(
+    args.filepath,
+    ideMessenger.ide,
+  );
+  if (!firstUriMatch) {
+    return [
+      {
+        name: "Edit failure",
+        description: `editing ${args.filepath}`,
+        content: `Failed to edit ${args.filepath}: does not exist`,
+      },
+    ];
+  }
+  ideMessenger.post("applyToFile", {
+    streamId,
+    text: args.new_contents,
+    curSelectedModelTitle: modelTitle,
+  });
+}
