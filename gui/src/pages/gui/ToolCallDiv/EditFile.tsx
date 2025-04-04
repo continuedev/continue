@@ -34,11 +34,12 @@ export function EditFile(props: EditToolCallProps) {
         disableManualApply={true}
         singleCodeblockStreamId={applyState?.streamId}
       />
-      {isStreaming && applyState?.status === "streaming" && (
+      {/* TODO better indicator of generation at bottom */}
+      {/* {isStreaming && applyState?.status === "streaming" && (
         <div className={`m-2 flex items-center justify-center`}>
           Generating...
         </div>
-      )}
+      )} */}
       {!isStreaming && applyState?.status === "done" && (
         <div className={`m-2 flex items-center justify-center`}>
           <AcceptRejectAllButtons

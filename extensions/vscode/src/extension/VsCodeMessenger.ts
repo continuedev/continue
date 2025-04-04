@@ -213,6 +213,7 @@ export class VsCodeMessenger {
           diffLines,
           instant,
           data.streamId,
+          data.toolCallId,
         );
       } else {
         const prompt = `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`;
