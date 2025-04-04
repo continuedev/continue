@@ -1,8 +1,8 @@
-import FileIcon from "../../FileIcon";
+import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
+import { getLastNPathParts } from "core/util/uri";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { getLastNPathParts, getUriPathBasename } from "core/util/uri";
-import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
+import FileIcon from "../../FileIcon";
 
 export interface FileInfoProps {
   relativeFilepath: string;
@@ -23,17 +23,18 @@ const FileInfo = ({ relativeFilepath, range }: FileInfoProps) => {
   }
 
   return (
-    <div className="flex w-full min-w-0 items-center">
-      <div
-        className="mr-0.5 flex w-full min-w-0 cursor-pointer items-center gap-0.5"
-        onClick={onClickFileName}
-      >
+    <div
+      className="flex cursor-pointer flex-row items-center gap-0.5"
+      onClick={onClickFileName}
+    >
+      <div>
         <FileIcon height="20px" width="20px" filename={relativeFilepath} />
-        <span className="w-full truncate hover:underline">
-          {getLastNPathParts(relativeFilepath, 1)}
-          {range && ` ${range}`}
-        </span>
       </div>
+      <span className="line-clamp-1 break-all hover:underline">
+        asdfasdfasdfasdfasdfasdfasdf
+        {getLastNPathParts(relativeFilepath, 1)}
+        {range && ` ${range}`}
+      </span>
     </div>
   );
 };

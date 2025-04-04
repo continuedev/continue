@@ -45,7 +45,7 @@ export default function FileIcon({ filename, height, width }: FileIconProps) {
         height: height,
         fill: color,
         flexShrink: 0,
-        display: "block",
+        display: "flex",
       }}
     />
   );

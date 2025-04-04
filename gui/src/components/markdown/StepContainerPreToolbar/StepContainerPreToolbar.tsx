@@ -25,6 +25,8 @@ import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
 
 const TopDiv = styled.div`
+  display: flex;
+  flex-direction: column;
   outline: 1px solid ${vscCommandCenterInactiveBorder};
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
@@ -37,7 +39,6 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: inherit;
   font-size: ${getFontSize() - 2}px;
   padding: 4px 6px;
   margin: 0;
@@ -181,31 +182,27 @@ export default function StepContainerPreToolbar(
 
   return (
     <TopDiv>
-      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
-        <div className="flex min-w-0 max-w-[45%] items-center">
+      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
+        <div className="flex max-w-72 flex-row items-center">
           <ChevronDownIcon
             onClick={onClickExpand}
-            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
+            className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
-          <div className="w-full min-w-0">
-            <FileInfo
-              relativeFilepath={props.relativeFilepath}
-              range={props.range}
-            />
-          </div>
+          <FileInfo
+            relativeFilepath={props.relativeFilepath}
+            range={props.range}
+          />
         </div>
 
         <div className="flex items-center gap-3 max-sm:gap-1.5">
-          {isGeneratingCodeBlock && (
+          {isGeneratingCodeBlock ? (
             <GeneratingCodeLoader
               showLineCount={!isExpanded}
               codeBlockContent={codeBlockContent}
             />
-          )}
-
-          {!isGeneratingCodeBlock && (
+          ) : (
             <>
               <CopyButton text={props.codeBlockContent} />
               {isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
