@@ -5,7 +5,7 @@ import { MutableRefObject } from "react";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import {
   clearCodeToEdit,
-  setNewestCodeblocksForInput,
+  setNewestToolbarPreviewForInput,
 } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
@@ -132,10 +132,8 @@ export function useMainEditorWebviewListeners({
         })
         .run();
 
-      console.log("id: ", contextItem.id.itemId);
-
       dispatch(
-        setNewestCodeblocksForInput({
+        setNewestToolbarPreviewForInput({
           inputId,
           contextItemId: contextItem.id.itemId,
         }),

@@ -38,7 +38,7 @@ export interface TipTapEditorProps {
 
 export const TIPPY_DIV_ID = "tippy-js-div";
 
-function TipTapEditor(props: TipTapEditorProps) {
+export function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useAppDispatch();
   const mainEditorContext = useMainEditor();
 
@@ -275,5 +275,3 @@ function TipTapEditor(props: TipTapEditorProps) {
     </InputBoxDiv>
   );
 }
-
-export default TipTapEditor;

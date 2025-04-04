@@ -1,10 +1,8 @@
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
 import { NodeViewProps } from "@tiptap/react";
-import { useContext, useMemo } from "react";
-import { vscBadgeBackground } from "../../../..";
+import { useContext } from "react";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
-import { useAppSelector } from "../../../../../redux/hooks";
-import { ExpandablePreview } from "../../components/ExpandablePreview";
+import { ExpandableToolbarPreview } from "../../components/ExpandableToolbarPreview";
 import { NodeViewWrapper } from "../../components/NodeViewWrapper";
 import { PromptBlockAttributes } from "./PromptBlock";
 
@@ -20,14 +18,6 @@ export const PromptBlockPreview = ({
 
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const newestCodeblockForInputId = useAppSelector(
-    (store) => store.session.newestCodeblockForInput[inputId],
-  );
-
-  const initiallyHidden = useMemo(() => {
-    return newestCodeblockForInputId !== item.id.itemId;
-  }, [newestCodeblockForInputId, item.id.itemId]);
-
   const handleTitleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     ideMessenger.post("showVirtualFile", {
@@ -40,22 +30,21 @@ export const PromptBlockPreview = ({
     editor.commands.clearSlashCommand();
   };
 
-  const borderColor = selected ? vscBadgeBackground : undefined;
-
   return (
     <NodeViewWrapper>
-      <ExpandablePreview
+      <ExpandableToolbarPreview
+        isSelected={selected}
         title={item.name}
         icon={<ChatBubbleLeftIcon className="h-3 w-3 pl-1 pr-0.5" />}
-        initiallyHidden={initiallyHidden}
+        inputId={inputId}
+        itemId={item.id.itemId}
         onDelete={handleDelete}
-        borderColor={borderColor}
         onTitleClick={handleTitleClick}
       >
         <div className="whitespace-pre-wrap px-3 py-1 text-xs">
           {item.content}
         </div>
-      </ExpandablePreview>
+      </ExpandableToolbarPreview>
     </NodeViewWrapper>
   );
 };

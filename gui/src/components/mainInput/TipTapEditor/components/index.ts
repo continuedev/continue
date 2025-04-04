@@ -1,3 +1,3 @@
 export * from "./DragOverlay";
-export * from "./ExpandablePreview";
+export * from "./ExpandableToolbarPreview";
 export * from "./StyledComponents";

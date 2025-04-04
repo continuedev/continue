@@ -3,7 +3,7 @@ import { ReactNodeViewRenderer } from "@tiptap/react";
 import { CodeBlockPreview } from "./CodeBlockPreview";
 
 export const CodeBlock = Node.create({
-  name: "codeblock",
+  name: "code-block",
 
   group: "block",
 

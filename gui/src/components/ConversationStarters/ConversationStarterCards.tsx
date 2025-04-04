@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useBookmarkedSlashCommands } from "../../hooks/useBookmarkedSlashCommands";
 import { MAIN_EDITOR_INPUT_ID } from "../../pages/gui/Chat";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setNewestCodeblocksForInput } from "../../redux/slices/sessionSlice";
+import { setNewestToolbarPreviewForInput } from "../../redux/slices/sessionSlice";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import { ConversationStarterCard } from "./ConversationStarterCard";
 
@@ -27,7 +27,7 @@ export function ConversationStarterCards() {
 
   function onClick(command: SlashCommandDescription) {
     dispatch(
-      setNewestCodeblocksForInput({
+      setNewestToolbarPreviewForInput({
         inputId: MAIN_EDITOR_INPUT_ID,
         contextItemId: command.name,
       }),

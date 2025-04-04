@@ -7,7 +7,7 @@ import {
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
-import { setNewestCodeblocksForInput } from "../../../../redux/slices/sessionSlice";
+import { setNewestToolbarPreviewForInput } from "../../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../../redux/store";
 import AtMentionDropdown from "../../AtMentionDropdown";
 import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../../types";
@@ -224,7 +224,7 @@ export function getSlashCommandDropdownOptions(
       content: provider.content,
       action: () => {
         dispatch(
-          setNewestCodeblocksForInput({
+          setNewestToolbarPreviewForInput({
             inputId,
             contextItemId: provider.title,
           }),

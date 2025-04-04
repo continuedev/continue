@@ -51,6 +51,50 @@ type ResolveEditorContentOutput = [
 ];
 
 /**
+ * This function converts the input from the editor to a string, resolving any context items
+ * Context items are appended to the top of the prompt and then referenced within the input
+ */
+export async function resolveEditorContent({
+  editorState,
+  modifiers,
+  ideMessenger,
+  defaultContextProviders,
+  availableSlashCommands,
+  selectedModelTitle,
+  dispatch,
+}: ResolveEditorContentInput): Promise<ResolveEditorContentOutput> {
+  const { parts, contextItemAttrs, selectedCode, slashCommandName } =
+    processEditorContent(editorState);
+
+  const slashCommandWithInput = processSlashCommand(
+    slashCommandName,
+    availableSlashCommands,
+    parts,
+  );
+
+  const shouldGatherContext = modifiers.useCodebase || slashCommandWithInput;
+  if (shouldGatherContext) {
+    dispatch(setIsGatheringContext(true));
+  }
+
+  const contextItems = await gatherContextItems({
+    contextItemAttrs,
+    modifiers,
+    ideMessenger,
+    defaultContextProviders,
+    parts,
+    selectedCode,
+    selectedModelTitle,
+  });
+
+  if (shouldGatherContext) {
+    dispatch(setIsGatheringContext(false));
+  }
+
+  return [contextItems, selectedCode, parts, slashCommandWithInput];
+}
+
+/**
  * Processes editor content and extracts parts, context items, code, and slash commands
  */
 function processEditorContent(editorState: JSONContent) {
@@ -294,48 +338,4 @@ function resolveParagraph(
     .trimStart();
 
   return [text, contextItems, slashCommand];
-}
-
-/**
- * This function converts the input from the editor to a string, resolving any context items
- * Context items are appended to the top of the prompt and then referenced within the input
- */
-export async function resolveEditorContent({
-  editorState,
-  modifiers,
-  ideMessenger,
-  defaultContextProviders,
-  availableSlashCommands,
-  selectedModelTitle,
-  dispatch,
-}: ResolveEditorContentInput): Promise<ResolveEditorContentOutput> {
-  const { parts, contextItemAttrs, selectedCode, slashCommandName } =
-    processEditorContent(editorState);
-
-  const slashCommandWithInput = processSlashCommand(
-    slashCommandName,
-    availableSlashCommands,
-    parts,
-  );
-
-  const shouldGatherContext = modifiers.useCodebase || slashCommandWithInput;
-  if (shouldGatherContext) {
-    dispatch(setIsGatheringContext(true));
-  }
-
-  const contextItems = await gatherContextItems({
-    contextItemAttrs,
-    modifiers,
-    ideMessenger,
-    defaultContextProviders,
-    parts,
-    selectedCode,
-    selectedModelTitle,
-  });
-
-  if (shouldGatherContext) {
-    dispatch(setIsGatheringContext(false));
-  }
-
-  return [contextItems, selectedCode, parts, slashCommandWithInput];
 }

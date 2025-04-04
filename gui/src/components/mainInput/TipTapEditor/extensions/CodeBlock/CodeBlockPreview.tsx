@@ -5,10 +5,9 @@ import { dedent, getMarkdownLanguageTagForFile } from "core/util";
 import { useContext, useMemo } from "react";
 import { vscBadgeBackground } from "../../../..";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
-import { useAppSelector } from "../../../../../redux/hooks";
 import FileIcon from "../../../../FileIcon";
 import StyledMarkdownPreview from "../../../../markdown/StyledMarkdownPreview";
-import { ExpandablePreview } from "../../components/ExpandablePreview";
+import { ExpandableToolbarPreview } from "../../components/ExpandableToolbarPreview";
 import { NodeViewWrapper } from "../../components/NodeViewWrapper";
 
 const backticksRegex = /`{3,}/gm;
@@ -23,22 +22,7 @@ export const CodeBlockPreview = ({
 }: NodeViewProps) => {
   const item: ContextItemWithId = node.attrs.item;
   const inputId = node.attrs.inputId;
-  const isFirstContextItem = false; // TODO: fix this, decided not worth the insane renders for now
   const ideMessenger = useContext(IdeMessengerContext);
-
-  const newestCodeblockForInputId = useAppSelector(
-    (store) => store.session.newestCodeblockForInput[inputId],
-  );
-
-  const initiallyHidden = useMemo(() => {
-    return newestCodeblockForInputId !== item.id.itemId;
-  }, [newestCodeblockForInputId, item.id.itemId]);
-
-  console.log({
-    newestCodeblockForInputId,
-    id: item.id.itemId,
-    initiallyHidden,
-  });
 
   const content = useMemo(() => {
     return dedent`${item.content}`;
@@ -71,26 +55,22 @@ export const CodeBlockPreview = ({
     }
   };
 
-  const borderColor = isFirstContextItem
-    ? "#d0d"
-    : selected
-      ? vscBadgeBackground
-      : undefined;
-
   return (
     <NodeViewWrapper>
-      <ExpandablePreview
+      <ExpandableToolbarPreview
+        isSelected={selected}
         title={item.name}
         icon={<FileIcon height="16px" width="16px" filename={item.name} />}
-        initiallyHidden={initiallyHidden}
+        inputId={inputId}
+        itemId={item.id.itemId}
         onDelete={() => deleteNode()}
-        borderColor={borderColor}
+        borderColor={selected ? vscBadgeBackground : undefined}
         onTitleClick={handleTitleClick}
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(item.name)} ${item.description}\n${content}\n${fence}`}
         />
-      </ExpandablePreview>
+      </ExpandableToolbarPreview>
     </NodeViewWrapper>
   );
 };

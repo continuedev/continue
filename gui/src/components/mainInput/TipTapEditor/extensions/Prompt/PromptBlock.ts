@@ -30,7 +30,7 @@ declare module "@tiptap/core" {
 }
 
 /**
- * Extension for adding prompt blocks to the Tiptap editor
+ * Extension for adding prompt blocks to the TipTap editor
  */
 export const PromptBlock = Node.create<PromptBlockOptions>({
   name: "prompt-block",
@@ -85,6 +85,8 @@ export const PromptBlock = Node.create<PromptBlockOptions>({
           });
         },
 
+      // TODO: This could probably be greatly simplified with something along the lines of
+      // `editor.commands.deleteNode(this.name)`, but was unable to get it working
       clearPrompt:
         () =>
         ({ state, commands }) => {

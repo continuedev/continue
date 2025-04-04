@@ -4,9 +4,16 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { EyeIcon } from "@heroicons/react/24/solid";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscEditorBackground } from "../../..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscBadgeBackground,
+  vscCommandCenterInactiveBorder,
+  vscEditorBackground,
+} from "../../..";
+import { useAppSelector } from "../../../../redux/hooks";
 import { getFontSize } from "../../../../util";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 
@@ -58,14 +65,18 @@ const ChevronContainer = styled.div`
 `;
 
 /**
- * Props for the ExpandablePreview component
+ * Props for the ExpandableToolbarPreview component
  */
-interface ExpandablePreviewProps {
+interface ExpandableToolbarPreviewProps {
   /** Title to display in the header */
   title: string;
   /** Optional icon to display next to the title */
   icon?: React.ReactNode;
-  /** Whether the preview is initially hidden */
+  /** ID of the input this preview is associated with (for toolbar hiding logic) */
+  inputId?: string;
+  /** ID of the item being displayed (for toolbar hiding logic) */
+  itemId?: string;
+  /** Whether the preview is initially hidden (overridden if inputId and itemId are provided) */
   initiallyHidden?: boolean;
   /** Callback when the delete button is clicked */
   onDelete?: () => void;
@@ -73,6 +84,8 @@ interface ExpandablePreviewProps {
   onTitleClick?: (e: React.MouseEvent) => void;
   /** Border color of the preview */
   borderColor?: string;
+  /* Whether the preview is selected */
+  isSelected?: boolean;
   /** Content to display in the preview */
   children: React.ReactNode;
 }
@@ -80,16 +93,35 @@ interface ExpandablePreviewProps {
 /**
  * A generalized expandable preview component for displaying content with a header and expandable body
  */
-export function ExpandablePreview(props: ExpandablePreviewProps) {
-  const [hidden, setHidden] = useState(props.initiallyHidden ?? false);
+export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
+  // Get toolbar visibility state from Redux if inputId and itemId are provided
+  const newestCodeblockForInputId = useAppSelector((store) =>
+    props.inputId
+      ? store.session.newestToolbarPreviewForInput[props.inputId]
+      : undefined,
+  );
+
+  const calculatedInitiallyHidden = useMemo(() => {
+    if (props.inputId && props.itemId) {
+      return newestCodeblockForInputId !== props.itemId;
+    }
+    return props.initiallyHidden ?? false;
+  }, [
+    newestCodeblockForInputId,
+    props.inputId,
+    props.itemId,
+    props.initiallyHidden,
+  ]);
+
+  const [hidden, setHidden] = useState(calculatedInitiallyHidden);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentDims, setContentDims] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    setHidden(props.initiallyHidden ?? false);
-  }, [props.initiallyHidden]);
+    setHidden(calculatedInitiallyHidden);
+  }, [calculatedInitiallyHidden]);
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
@@ -111,10 +143,11 @@ export function ExpandablePreview(props: ExpandablePreviewProps) {
   return (
     <PreviewDiv
       spellCheck={false}
-      borderColor={props.borderColor}
+      borderColor={
+        props.isSelected ? vscBadgeBackground : vscCommandCenterInactiveBorder
+      }
       className="find-widget-skip"
     >
-      {/* Keep existing header code */}
       <div
         className="border-b-vsc-commandCenter-inactiveBorder m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid px-[5px] py-1.5 hover:opacity-90"
         style={{
