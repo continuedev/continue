@@ -16,7 +16,7 @@ export const NodeViewWrapper: React.FC<NodeViewWrapperProps> = ({
   const nodeViewWrapperTag: TiptapNodeViewWrapperProps["as"] = "p";
 
   return (
-    <TiptapNodeViewWrapper className={`mt-0`} as={nodeViewWrapperTag}>
+    <TiptapNodeViewWrapper className="my-1.5" as={nodeViewWrapperTag}>
       {children}
     </TiptapNodeViewWrapper>
   );

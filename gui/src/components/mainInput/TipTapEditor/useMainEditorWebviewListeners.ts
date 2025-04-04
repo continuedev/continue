@@ -9,7 +9,7 @@ import {
 } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
-import { CodeBlock } from "./extensions";
+import { CodeBlock, PromptBlock } from "./extensions";
 
 /**
  * Hook for setting up main editor specific webview listeners
@@ -111,15 +111,19 @@ export function useMainEditorWebviewListeners({
 
       let index = 0;
       for (const el of editor.getJSON()?.content ?? []) {
+        // Prevent exact duplicate code blocks
         if (el.attrs?.item?.name === contextItem.name) {
-          return; // Prevent exact duplicate code blocks
+          return;
         }
-        if (el.type === CodeBlock.name) {
+
+        if (el.type === CodeBlock.name || el.type === PromptBlock.name) {
           index += 2;
         } else {
           break;
         }
       }
+
+      debugger;
 
       editor
         .chain()

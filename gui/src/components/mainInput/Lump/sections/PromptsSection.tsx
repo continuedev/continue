@@ -3,44 +3,70 @@ import {
   PencilIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolid } from "@heroicons/react/24/solid";
+import { SlashCommandDescription } from "core";
 import { useBookmarkedSlashCommands } from "../../../../hooks/useBookmarkedSlashCommands";
 import { useAppSelector } from "../../../../redux/hooks";
 import { fontSize } from "../../../../util";
+import { useMainEditor } from "../../TipTapEditor";
+import { useLump } from "../LumpContext";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 interface PromptRowProps {
-  command: string;
-  description: string;
+  prompt: SlashCommandDescription;
   isBookmarked: boolean;
   setIsBookmarked: (isBookmarked: boolean) => void;
   onEdit?: () => void;
 }
 
+/**
+ * Displays a single prompt row with bookmark and edit controls
+ */
 function PromptRow({
-  command,
-  description,
+  prompt,
   isBookmarked,
   setIsBookmarked,
   onEdit,
 }: PromptRowProps) {
+  const { mainEditor } = useMainEditor();
+  const { hideLump } = useLump();
+
+  const handlePromptClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    mainEditor?.commands.insertPrompt(prompt);
+    hideLump();
+  };
+
+  const handleBookmarkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsBookmarked(!isBookmarked);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit();
+    }
+  };
+
   return (
     <div
-      className="flex items-center justify-between gap-3"
+      className="hover:bg-list-active hover:text-list-active-foreground flex items-center justify-between gap-3 rounded-md px-2 hover:cursor-pointer"
+      onClick={handlePromptClick}
       style={{
         fontSize: fontSize(-3),
       }}
     >
       <div className="flex min-w-0 gap-2">
-        <span className="text-vscForeground shrink-0">{command}</span>
-        <span className="truncate text-gray-400">{description}</span>
+        <span className="text-vscForeground shrink-0">{prompt.name}</span>
+        <span className="truncate text-gray-400">{prompt.description}</span>
       </div>
       <div className="flex items-center gap-2">
         <PencilIcon
           className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
-          onClick={onEdit}
+          onClick={handleEditClick}
         />
         <div
-          onClick={() => setIsBookmarked(!isBookmarked)}
+          onClick={handleBookmarkClick}
           className="cursor-pointer pt-0.5 text-gray-400 hover:brightness-125"
         >
           {isBookmarked ? (
@@ -54,8 +80,12 @@ function PromptRow({
   );
 }
 
+/**
+ * Section that displays all available prompts with bookmarking functionality
+ */
 export function PromptsSection() {
   const { isCommandBookmarked, toggleBookmark } = useBookmarkedSlashCommands();
+
   const slashCommands = useAppSelector(
     (state) => state.config.config.slashCommands ?? [],
   );
@@ -78,8 +108,7 @@ export function PromptsSection() {
       {sortedCommands.map((prompt) => (
         <PromptRow
           key={prompt.name}
-          command={prompt.name}
-          description={prompt.description}
+          prompt={prompt}
           isBookmarked={isCommandBookmarked(prompt.name)}
           setIsBookmarked={() => toggleBookmark(prompt)}
           onEdit={() => handleEdit(prompt)}

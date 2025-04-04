@@ -7,7 +7,6 @@ import {
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
-import { setNewestToolbarPreviewForInput } from "../../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../../redux/store";
 import AtMentionDropdown from "../../AtMentionDropdown";
 import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../../types";
@@ -222,16 +221,7 @@ export function getSlashCommandDropdownOptions(
       label: provider.title,
       type: (provider.type ?? SlashCommand.name) as ComboBoxItemType,
       content: provider.content,
-      action: () => {
-        dispatch(
-          setNewestToolbarPreviewForInput({
-            inputId,
-            contextItemId: provider.title,
-          }),
-        );
-
-        provider.action?.();
-      },
+      action: provider.action,
     }));
 
     if (query.length === 0 && commandItems.length === 0) {

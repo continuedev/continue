@@ -1,191 +1,50 @@
 // Adapted from SlashCommand extension (@tiptap/extension-mention/src/mention.ts)
 
-import { mergeAttributes, Node } from "@tiptap/core";
-import Document from "@tiptap/extension-document";
-import Paragraph from "@tiptap/extension-paragraph";
-import { Node as ProseMirrorNode } from "@tiptap/pm/model";
+import { Node } from "@tiptap/core";
 import { PluginKey } from "@tiptap/pm/state";
 import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
-import { ContextItemWithId, SlashCommandDescription } from "core";
-import { MAIN_EDITOR_INPUT_ID } from "../../../../pages/gui/Chat";
 import { ComboBoxItem } from "../../types";
-import { PromptBlock } from "./Prompt/PromptBlock";
 
 export type SlashCommandOptions = {
-  HTMLAttributes: Record<string, any>;
-  renderText: (props: { node: ProseMirrorNode }) => string;
   suggestion: Omit<SuggestionOptions<ComboBoxItem, ComboBoxItem>, "editor">;
 };
-
-declare module "@tiptap/core" {
-  interface Commands<ReturnType> {
-    slashCommand: {
-      /**
-       * Insert a slash command and its associated prompt block
-       * @param command The slash command description
-       */
-      insertSlashCommand: (command: SlashCommandDescription) => ReturnType;
-
-      /**
-       * Clear the slash command content from the editor
-       */
-      clearSlashCommand: () => ReturnType;
-    };
-  }
-}
 
 export const SlashCommand = Node.create<SlashCommandOptions>({
   name: "slash-command",
 
   addOptions() {
     return {
-      HTMLAttributes: {
-        class: "mention",
-      },
-      renderText({ node }) {
-        return node.attrs.label ?? node.attrs.id;
-      },
       suggestion: {
         char: "/",
         pluginKey: new PluginKey(this.name),
         startOfLine: true,
         command: ({ editor, range, props }) => {
-          // increase range.to by one when the next node is of type "text"
-          // and starts with a space character
-          const nodeAfter = editor.view.state.selection.$to.nodeAfter;
-          const overrideSpace = nodeAfter?.text?.startsWith(" ");
+          // First delete the slash character and any text after it
+          editor.chain().focus().deleteRange(range).run();
 
-          if (overrideSpace) {
-            range.to += 1;
-          }
-
-          editor.commands.insertSlashCommand({
+          editor.commands.insertPrompt({
             name: props.title,
             description: props.description,
             prompt: props.content,
           });
-
-          window.getSelection()?.collapseToEnd();
-        },
-        allow: ({ state, range }) => {
-          const $from = state.doc.resolve(range.from);
-          const type = state.schema.nodes[this.name];
-          const allow = !!$from.parent.type.contentMatch.matchType(type);
-
-          return allow;
         },
       },
     };
   },
 
   group: "inline",
-
   inline: true,
-
   selectable: false,
-
   atom: true,
 
+  // We don't need attributes since we won't be rendering any node
   addAttributes() {
-    return {
-      id: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-id"),
-        renderHTML: (attributes) => {
-          if (!attributes.id) {
-            return {};
-          }
-
-          return {
-            "data-id": attributes.id,
-          };
-        },
-      },
-
-      label: {
-        default: null,
-        parseHTML: (element) => element.getAttribute("data-label"),
-        renderHTML: (attributes) => {
-          if (!attributes.label) {
-            return {};
-          }
-
-          return {
-            "data-label": attributes.label,
-          };
-        },
-      },
-    };
+    return {};
   },
 
+  // No need to parse HTML since we're not rendering anything
   parseHTML() {
-    return [
-      {
-        tag: `span[data-type="${this.name}"]`,
-      },
-    ];
-  },
-
-  renderHTML({ node, HTMLAttributes }) {
-    return [
-      "span",
-      mergeAttributes(
-        { "data-type": this.name },
-        this.options.HTMLAttributes,
-        HTMLAttributes,
-      ),
-      this.options.renderText({
-        node,
-      }),
-    ];
-  },
-
-  addKeyboardShortcuts() {
-    return {
-      Backspace: () => {
-        // Get a reference to the editor
-        const editor = this.editor;
-
-        // First try to find if we're at a slash command
-        const result = editor.commands.command(({ tr, state }) => {
-          let isSlashCommand = false;
-          const { selection } = state;
-          const { empty, anchor } = selection;
-
-          if (!empty) {
-            return false;
-          }
-
-          state.doc.nodesBetween(anchor - 1, anchor, (node, pos) => {
-            if (node.type.name === this.name) {
-              isSlashCommand = true;
-              tr.insertText(
-                this.options.suggestion.char || "",
-                pos,
-                pos + node.nodeSize,
-              );
-
-              return false;
-            }
-          });
-
-          return isSlashCommand;
-        });
-
-        // If we found and processed a slash command, also call clearSlashCommand
-        // to remove the prompt block
-        if (result) {
-          // We need to do this with a small delay to ensure the transaction
-          // above completes first
-          setTimeout(() => {
-            editor.commands.clearSlashCommand();
-          }, 0);
-          return true;
-        }
-
-        return false;
-      },
-    };
+    return [];
   },
 
   addProseMirrorPlugins() {
@@ -195,91 +54,5 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
         ...this.options.suggestion,
       }),
     ];
-  },
-
-  addCommands() {
-    return {
-      insertSlashCommand:
-        (
-          command: SlashCommandDescription,
-          inputId: string = MAIN_EDITOR_INPUT_ID,
-        ) =>
-        ({ chain }) => {
-          if (!command.prompt) {
-            return false;
-          }
-
-          const contextItem: ContextItemWithId = {
-            content: command.prompt,
-            name: command.name,
-            description: command.description || "",
-            id: {
-              providerTitle: "prompt",
-              itemId: command.name,
-            },
-          };
-
-          // Right now this inserts at the beginning of the document, which removes codeblocks.
-          // This is the current behavior of slash commands, eg codeblocks aren't sent.
-          // Once this bug if fixed, we should instead insert prompt block at the beginning of the document
-          // without clearing the codeblocks.
-          return chain()
-            .setContent({
-              type: Document.name,
-              content: [
-                // First insert the prompt using the PromptExtension command
-                {
-                  type: PromptBlock.name,
-                  attrs: {
-                    item: contextItem,
-                    inputId,
-                  },
-                },
-                // Add the paragraph with the slash command
-                {
-                  type: Paragraph.name,
-                  content: [
-                    {
-                      type: this.name,
-                      attrs: {
-                        id: command.name,
-                        label: command.name,
-                      },
-                    },
-                    {
-                      type: "text",
-                      text: " ",
-                    },
-                  ],
-                },
-              ],
-            })
-            .focus()
-            .run();
-        },
-
-      clearSlashCommand:
-        () =>
-        ({ editor }) => {
-          editor.commands.clearPrompt();
-
-          editor.commands.command(({ tr, state }) => {
-            let hasDeleted = false;
-
-            // Find all slash command nodes in the document
-            state.doc.descendants((node, pos) => {
-              if (node.type.name === this.name) {
-                // Delete the node at the found position
-                tr.delete(pos, pos + node.nodeSize);
-                hasDeleted = true;
-              }
-            });
-
-            return hasDeleted;
-          });
-
-          return true;
-        },
-    };
   },
 });

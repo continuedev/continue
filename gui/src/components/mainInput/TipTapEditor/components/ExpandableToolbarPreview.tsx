@@ -102,6 +102,12 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
   );
 
   const calculatedInitiallyHidden = useMemo(() => {
+    // If initiallyHidden is explicitly set to false, always start visible
+    if (props.initiallyHidden === false) {
+      return false;
+    }
+
+    // Otherwise, use the inputId/itemId logic
     if (props.inputId && props.itemId) {
       return newestCodeblockForInputId !== props.itemId;
     }
@@ -116,13 +122,19 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
   const [hidden, setHidden] = useState(calculatedInitiallyHidden);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Track if user has manually toggled visibility
+  const [userToggled, setUserToggled] = useState(false);
+
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentDims, setContentDims] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    setHidden(calculatedInitiallyHidden);
-  }, [calculatedInitiallyHidden]);
-
+    // Only update hidden state from props if user hasn't manually toggled
+    // or if initiallyHidden isn't explicitly set to false
+    if (!userToggled || props.initiallyHidden !== false) {
+      setHidden(calculatedInitiallyHidden);
+    }
+  }, [calculatedInitiallyHidden, userToggled, props.initiallyHidden]);
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
       setContentDims({
@@ -146,7 +158,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
       borderColor={
         props.isSelected ? vscBadgeBackground : vscCommandCenterInactiveBorder
       }
-      className="find-widget-skip"
+      className="find-widget-skip !my-0"
     >
       <div
         className="border-b-vsc-commandCenter-inactiveBorder m-0 flex cursor-pointer items-center justify-between break-all border-0 border-b-[1px] border-solid px-[5px] py-1.5 hover:opacity-90"
@@ -154,6 +166,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
           fontSize: getFontSize() - 3,
         }}
         onClick={() => {
+          setUserToggled(true);
           setHidden(!hidden);
         }}
       >

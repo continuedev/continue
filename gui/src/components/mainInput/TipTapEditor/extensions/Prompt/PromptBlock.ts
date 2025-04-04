@@ -1,7 +1,8 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { ContextItemWithId } from "core";
+import { ContextItemWithId, SlashCommandDescription } from "core";
+import { MAIN_EDITOR_INPUT_ID } from "../../../../../pages/gui/Chat";
 import { PromptBlockPreview } from "./PromptBlockPreview";
 
 export interface PromptBlockOptions {
@@ -19,7 +20,7 @@ declare module "@tiptap/core" {
       /**
        * Insert a prompt block into the editor
        */
-      insertPrompt: (item: ContextItemWithId, inputId: string) => ReturnType;
+      insertPrompt: (item: SlashCommandDescription) => ReturnType;
 
       /**
        * Clear all prompt blocks from the editor
@@ -35,6 +36,7 @@ declare module "@tiptap/core" {
 export const PromptBlock = Node.create<PromptBlockOptions>({
   name: "prompt-block",
   group: "block",
+  content: "inline*",
 
   addOptions() {
     return {
@@ -74,15 +76,28 @@ export const PromptBlock = Node.create<PromptBlockOptions>({
   addCommands() {
     return {
       insertPrompt:
-        (item: ContextItemWithId, inputId: string) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: {
-              item,
-              inputId,
+        (prompt: SlashCommandDescription) =>
+        ({ chain }) => {
+          const item: ContextItemWithId = {
+            content: prompt.prompt ?? "",
+            name: prompt.name,
+            description: prompt.description,
+            id: {
+              providerTitle: "prompt",
+              itemId: prompt.name,
             },
-          });
+          };
+
+          return chain()
+            .insertContentAt(0, {
+              type: this.name,
+              attrs: {
+                item,
+                inputId: MAIN_EDITOR_INPUT_ID,
+              },
+            })
+            .focus("end")
+            .run();
         },
 
       // TODO: This could probably be greatly simplified with something along the lines of

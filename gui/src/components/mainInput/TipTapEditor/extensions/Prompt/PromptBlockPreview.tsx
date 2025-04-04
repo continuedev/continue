@@ -27,12 +27,13 @@ export const PromptBlockPreview = ({
   };
 
   const handleDelete = () => {
-    editor.commands.clearSlashCommand();
+    editor.commands.clearPrompt();
   };
 
   return (
     <NodeViewWrapper>
       <ExpandableToolbarPreview
+        initiallyHidden={false}
         isSelected={selected}
         title={item.name}
         icon={<ChatBubbleLeftIcon className="h-3 w-3 pl-1 pr-0.5" />}

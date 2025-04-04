@@ -12,6 +12,7 @@ import {
 import { fontSize } from "../../../../../util";
 import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
 import EditBlockButton from "../../EditBlockButton";
+import { useLump } from "../../LumpContext";
 import { StatusIndicator } from "./StatusIndicator";
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
@@ -24,6 +25,7 @@ function DocsIndexingStatus({
 }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
+  const { hideLump } = useLump();
 
   const status = useAppSelector(
     (store) => store.indexing.indexing.statuses[docConfig.startUrl],
@@ -87,6 +89,7 @@ function DocsIndexingStatus({
           onClick={() => {
             if (status?.url) {
               ideMessenger.post("openUrl", status.url);
+              hideLump();
             }
           }}
         >

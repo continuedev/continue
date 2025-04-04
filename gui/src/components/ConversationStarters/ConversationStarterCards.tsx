@@ -1,9 +1,7 @@
 import { SlashCommandDescription } from "core";
 import { useState } from "react";
 import { useBookmarkedSlashCommands } from "../../hooks/useBookmarkedSlashCommands";
-import { MAIN_EDITOR_INPUT_ID } from "../../pages/gui/Chat";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setNewestToolbarPreviewForInput } from "../../redux/slices/sessionSlice";
 import { useMainEditor } from "../mainInput/TipTapEditor";
 import { ConversationStarterCard } from "./ConversationStarterCard";
 
@@ -26,14 +24,7 @@ export function ConversationStarterCards() {
   );
 
   function onClick(command: SlashCommandDescription) {
-    dispatch(
-      setNewestToolbarPreviewForInput({
-        inputId: MAIN_EDITOR_INPUT_ID,
-        contextItemId: command.name,
-      }),
-    );
-
-    mainEditor?.commands.insertSlashCommand(command);
+    mainEditor?.commands.insertPrompt(command);
   }
 
   if (bookmarkedSlashCommands.length === 0) {
