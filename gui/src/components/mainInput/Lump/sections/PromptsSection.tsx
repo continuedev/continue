@@ -50,15 +50,19 @@ function PromptRow({
 
   return (
     <div
-      className="hover:bg-list-active hover:text-list-active-foreground flex items-center justify-between gap-3 rounded-md px-2 hover:cursor-pointer"
+      className="hover:bg-list-active hover:text-list-active-foreground flex items-center justify-between gap-3 rounded-md px-2 py-1 hover:cursor-pointer"
       onClick={handlePromptClick}
       style={{
         fontSize: fontSize(-3),
       }}
     >
-      <div className="flex min-w-0 gap-2">
-        <span className="text-vscForeground shrink-0">{prompt.name}</span>
-        <span className="truncate text-gray-400">{prompt.description}</span>
+      <div className="flex min-w-0 flex-col">
+        <span className="text-vscForeground shrink-0 font-medium">
+          {prompt.name}
+        </span>
+        <span className="line-clamp-2 text-[11px] text-gray-400">
+          {prompt.description}
+        </span>
       </div>
       <div className="flex items-center gap-2">
         <PencilIcon
