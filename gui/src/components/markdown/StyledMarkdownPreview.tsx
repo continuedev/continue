@@ -130,7 +130,7 @@ interface StyledMarkdownPreviewProps {
   scrollLocked?: boolean;
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
-  hideApply?: boolean;
+  disableManualApply?: boolean;
   firstCodeblockStreamId?: string;
 }
 
@@ -343,7 +343,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               codeBlockStreamId={
                 codeblockState.current[codeBlockIndex].streamId
               }
-              hideApply={props.hideApply}
+              disableManualApply={props.disableManualApply}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>

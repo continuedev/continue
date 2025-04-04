@@ -21,6 +21,7 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -354,15 +355,24 @@ export const sessionSlice = createSlice({
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
               if (
-                toolCallDelta.id &&
-                toolCallDelta.function?.arguments &&
-                toolCallDelta.function?.name &&
-                toolCallDelta.type
+                !(
+                  toolCallDelta.id &&
+                  toolCallDelta.function?.arguments &&
+                  toolCallDelta.function?.name &&
+                  toolCallDelta.type
+                )
               ) {
                 console.warn(
                   "Received streamed tool call without required fields",
                   toolCallDelta,
                 );
+              }
+
+              if (
+                toolCallDelta.function?.name ===
+                BuiltInToolNames.EditExistingFile
+              ) {
+                state.lastApplyToolStreamId = uuidv4();
               }
               historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
             }
@@ -638,12 +648,6 @@ export const sessionSlice = createSlice({
 
       toolCallState.status = "calling";
     },
-    setLastApplyToolStreamId: (
-      state,
-      action: PayloadAction<{ streamId: string }>,
-    ) => {
-      state.lastApplyToolStreamId = action.payload.streamId;
-    },
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
@@ -723,7 +727,17 @@ export const selectCurrentToolCall = createSelector(
 export const selectApplyStateByStreamId = createSelector(
   [
     (state: RootState) => state.session.codeBlockApplyStates.states,
-    (state: RootState, streamId: string) => streamId,
+    (state: RootState, streamId?: string) => streamId,
+  ],
+  (states, streamId) => {
+    return states.find((state) => state.streamId === streamId);
+  },
+);
+
+export const selectLastEditToolApplyState = createSelector(
+  [
+    (state: RootState) => state.session.codeBlockApplyStates.states,
+    (state: RootState) => state.session.lastApplyToolStreamId,
   ],
   (states, streamId) => {
     return states.find((state) => state.streamId === streamId);
@@ -766,7 +780,6 @@ export const {
   updateSessionMetadata,
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
-  setLastApplyToolStreamId,
   cycleMode,
 } = sessionSlice.actions;
 

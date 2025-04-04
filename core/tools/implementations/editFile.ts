@@ -12,15 +12,12 @@ export const editFileImpl: ToolImpl = async (args, extras) => {
   if (!extras.applyToFile) {
     throw new Error("Failed to apply to file: invalid apply stream id");
   }
-  if (!extras.llm.title) {
-    throw new Error("Failed to apply to file: no model selected");
-  }
   await extras.applyToFile(firstUriMatch, args.new_contents);
   return [
     {
       name: "Edit results",
       description: `Result of editing ${args.filepath}`,
-      content: `Successfully applied edits to ${args.filepath}. The users must manually reject/accept diffs, prompt them to do so`,
+      content: `Successfully applied edits to ${args.filepath}. The users must manually reject/accept diffs. Prompt them to do so in your response`,
     },
   ];
 };

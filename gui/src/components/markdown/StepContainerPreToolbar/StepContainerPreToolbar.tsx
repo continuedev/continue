@@ -56,7 +56,7 @@ export interface StepContainerPreToolbarProps {
   range?: string;
   children: any;
   expanded?: boolean;
-  hideApply?: boolean;
+  disableManualApply?: boolean;
 }
 
 export default function StepContainerPreToolbar(
@@ -206,8 +206,9 @@ export default function StepContainerPreToolbar(
               <CopyButton text={props.codeBlockContent} />
               {isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
                 <RunInTerminalButton command={props.codeBlockContent} />
-              ) : props.hideApply ? null : (
+              ) : (
                 <ApplyActions
+                  disableManualApply={props.disableManualApply}
                   applyState={applyState}
                   onClickApply={onClickApply}
                   onClickAccept={onClickAcceptApply}

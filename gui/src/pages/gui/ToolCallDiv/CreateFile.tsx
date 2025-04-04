@@ -13,7 +13,7 @@ export function CreateFile(props: CreateFileToolCallProps) {
     <StyledMarkdownPreview
       isRenderingInStepContainer={true}
       source={src}
-      hideApply={true}
+      disableManualApply={true}
     />
   ) : null;
 }
