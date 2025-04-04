@@ -6,7 +6,6 @@ import { AuthProvider } from "../context/Auth";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { selectUseHub } from "../redux/selectors";
 import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
 import {
   addCodeToEdit,
@@ -249,21 +248,6 @@ const Layout = () => {
       onboardingCard.open("Quickstart");
     }
   }, [location]);
-
-  const useHub = useAppSelector(selectUseHub);
-
-  // Existing users that have already seen the onboarding card
-  // should be shown an intro card for hub.continue.dev
-  // useEffect(() => {
-  //   if (useHub !== true) {
-  //     return;
-  //   }
-  //   const seenHubIntro = getLocalStorage("seenHubIntro");
-  //   if (!onboardingCard.show && !seenHubIntro) {
-  //     onboardingCard.setActiveTab("ExistingUserHubIntro");
-  //   }
-  //   setLocalStorage("seenHubIntro", true);
-  // }, [onboardingCard.show, useHub]);
 
   return (
     <LocalStorageProvider>
