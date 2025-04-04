@@ -1,6 +1,11 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
+export interface EditToolArgs {
+  filepath: string;
+  new_contents: string;
+}
+
 export const editFileTool: Tool = {
   type: "function",
   displayTitle: "Edit File",
@@ -12,15 +17,19 @@ export const editFileTool: Tool = {
   function: {
     name: BuiltInToolNames.EditExistingFile,
     description:
-      "To edit an existing file, call this tool and follow the returned instructions. If you don't have the contents of the file, read it first.",
+      "Use this tool to edit an existing file. If you don't know the contents of the file, read it first.",
     parameters: {
       type: "object",
-      required: ["filepath"],
+      required: ["filepath", "new_contents"],
       properties: {
         filepath: {
           type: "string",
           description:
             "The path of the file to edit, relative to the root of the workspace.",
+        },
+        new_contents: {
+          type: "string",
+          description: "The new file contents",
         },
       },
     },

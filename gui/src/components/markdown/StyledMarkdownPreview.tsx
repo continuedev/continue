@@ -130,6 +130,7 @@ interface StyledMarkdownPreviewProps {
   scrollLocked?: boolean;
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
+  autoApplyCodeblocks?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -330,7 +331,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
-              autoApply={false}
+              autoApply={props.autoApplyCodeblocks}
               codeBlockStreamId={codeblockStreamId}
             >
               <SyntaxHighlightedPre {...preProps} />
