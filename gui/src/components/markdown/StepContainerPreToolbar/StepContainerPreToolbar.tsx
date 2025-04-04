@@ -69,7 +69,6 @@ export default function StepContainerPreToolbar(
     props.expanded ?? (isInEditMode ? false : true),
   );
   const [codeBlockContent, setCodeBlockContent] = useState("");
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
@@ -78,15 +77,6 @@ export default function StepContainerPreToolbar(
   const applyState = useAppSelector((state) =>
     selectApplyStateByStreamId(state, props.codeBlockStreamId),
   );
-
-  // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
-  // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
-  // we are done generating based on whether the next node in the tree is not a codeblock.
-  // The tree parsing logic for Remark is defined on page load, so we can't access state
-  // during the actual tree parsing.
-  const isGeneratingCodeBlock = !isStreaming
-    ? false
-    : props.isGeneratingCodeBlock;
 
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
@@ -196,7 +186,7 @@ export default function StepContainerPreToolbar(
         </div>
 
         <div className="flex items-center gap-3 max-sm:gap-1.5">
-          {isGeneratingCodeBlock ? (
+          {props.isGeneratingCodeBlock ? (
             <GeneratingCodeLoader
               showLineCount={!isExpanded}
               codeBlockContent={codeBlockContent}

@@ -33,6 +33,7 @@ export function EditFile(props: EditToolCallProps) {
         source={src}
         disableManualApply={true}
         singleCodeblockStreamId={applyState?.streamId}
+        expandCodeblocks={false}
       />
       {/* TODO better indicator of generation at bottom */}
       {/* {isStreaming && applyState?.status === "streaming" && (

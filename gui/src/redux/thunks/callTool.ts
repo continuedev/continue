@@ -11,6 +11,7 @@ import {
   cancelToolCall,
   setCalling,
   setToolCallOutput,
+  updateApplyState,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
@@ -60,6 +61,17 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
         errorMessage = "Failed to call edit tool";
         if (e instanceof Error) {
           errorMessage = e.message;
+        }
+        if (state.session.activeToolStreamId?.[0]) {
+          dispatch(
+            updateApplyState({
+              streamId: state.session.activeToolStreamId[0],
+              status: "closed",
+              toolCallId: toolCallState.toolCallId,
+              numDiffs: 0,
+              filepath: args.filepath,
+            }),
+          );
         }
       }
     } else {
@@ -128,7 +140,7 @@ async function customGuiEditImpl(
     text: args.new_contents,
     curSelectedModelTitle: modelTitle,
     toolCallId,
-    filepath: firstUriMatch
+    filepath: firstUriMatch,
   });
   if (apply.status === "error") {
     throw new Error(apply.error);

@@ -132,6 +132,7 @@ interface StyledMarkdownPreviewProps {
   useParentBackgroundColor?: boolean;
   disableManualApply?: boolean;
   singleCodeblockStreamId?: string;
+  expandCodeblocks?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -198,9 +199,18 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
+  const isLastItem = useMemo(() => {
+    return props.itemIndex && props.itemIndex === history.length - 1;
+  }, [history.length, props.itemIndex]);
+  const isLastItemRef = useUpdatingRef(isLastItem);
+
+  const isStreaming = useAppSelector((store) => store.session.isStreaming);
+  const isStreamingRef = useUpdatingRef(isStreaming);
+
   const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
     [],
   );
+
   useEffect(() => {
     if (props.singleCodeblockStreamId) {
       codeblockState.current = [
@@ -235,8 +245,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           node.data = node.data || {};
           node.data.hProperties = node.data.hProperties || {};
 
-          node.data.hProperties["data-isgeneratingcodeblock"] =
-            lastCodeNode === node;
+          node.data.hProperties["data-islastcodeblock"] = lastCodeNode === node;
           node.data.hProperties["data-codeblockcontent"] = node.value;
 
           if (node.meta) {
@@ -318,7 +327,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           }
 
           const isGeneratingCodeBlock =
-            preChildProps["data-isgeneratingcodeblock"];
+            preChildProps["data-islastcodeblock"] &&
+            isLastItemRef.current &&
+            !isStreamingRef.current;
 
           if (codeblockState.current[codeBlockIndex] === undefined) {
             codeblockState.current[codeBlockIndex] = {
@@ -342,6 +353,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               codeBlockStreamId={
                 codeblockState.current[codeBlockIndex].streamId
               }
+              expanded={props.expandCodeblocks}
               disableManualApply={props.disableManualApply}
             >
               <SyntaxHighlightedPre {...preProps} />

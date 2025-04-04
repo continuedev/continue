@@ -3,7 +3,7 @@ import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { ConfigResult } from "@continuedev/config-yaml";
-import { BrowserSerializedContinueConfig, ContextItem } from "core";
+import { BrowserSerializedContinueConfig } from "core";
 import {
   initializeProfilePreferencesThunk,
   selectProfileThunk,
@@ -268,17 +268,17 @@ function useSetup() {
         state.streamId === activeToolStreamId[0] &&
         state.status === "closed"
       ) {
-        const output: ContextItem = {
-          name: "Edit tool output",
-          content: "Completed edit",
-          description: "",
-        };
+        // const output: ContextItem = {
+        //   name: "Edit tool output",
+        //   content: "Completed edit",
+        //   description: "",
+        // };
         dispatch(acceptToolCall());
-        dispatch(setToolCallOutput([output]));
+        dispatch(setToolCallOutput([]));
         dispatch(
           streamResponseAfterToolCall({
             toolCallId: activeToolStreamId[1],
-            toolOutput: [output],
+            toolOutput: [],
           }),
         );
       }
