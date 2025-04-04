@@ -39,9 +39,8 @@ type OrgWithProfiles = OrganizationDescription & {
   currentProfile: ProfileLifecycleManager | null;
 };
 
-// Continue for Teams: show local + assistants in single org
-// Continue Hub: show personal org with local and personal assistants
-// Not signed in: show local and personal assistants
+const PERSONAL_ORG_ID = "personal";
+const LOCAL_ORG_ID = "local";
 
 export class ConfigHandler {
   controlPlaneClient: ControlPlaneClient;
@@ -49,8 +48,8 @@ export class ConfigHandler {
   private globalLocalProfileManager: ProfileLifecycleManager;
 
   private organizations: OrgWithProfiles[] = [];
-  currentProfile: ProfileLifecycleManager;
-  currentOrg: OrgWithProfiles | null = null;
+  currentProfile: ProfileLifecycleManager | null;
+  currentOrg: OrgWithProfiles;
 
   constructor(
     private readonly ide: IDE,
@@ -77,37 +76,34 @@ export class ConfigHandler {
       this.ide,
     );
 
-    // Just to be safe, always force a selected profile
+    // Just to be safe, always force a default personal org with local profile manager
     this.currentProfile = this.globalLocalProfileManager;
-    this.personalOrg = {
+    const personalOrg: OrgWithProfiles = {
       currentProfile: this.globalLocalProfileManager,
+      profiles: [this.globalLocalProfileManager],
+      name: "Personal",
+      id: PERSONAL_ORG_ID,
+      iconUrl: "",
+      slug: undefined,
     };
-    this.organizations = [this.personalOrg];
+
+    this.currentOrg = personalOrg;
+    this.organizations = [personalOrg];
 
     void this.cascadeInit();
   }
 
   private workspaceDirs: string[] | null = null;
-  async workspaceId() {
+  async getWorkspaceId() {
     if (!this.workspaceDirs) {
       this.workspaceDirs = await this.ide.getWorkspaceDirs();
     }
     return this.workspaceDirs.join("&");
   }
 
-  private PERSONAL_ORG_ID = "personal";
-
-  async openConfigProfile(profileId?: string) {
-    let openProfileId = profileId || this.currentProfileId;
-    const profile = this.profiles?.find(
-      (p) => p.profileDescription.id === openProfileId,
-    );
-    if (profile?.profileDescription.profileType === "local") {
-      await this.ide.openFile(profile.profileDescription.uri);
-    } else {
-      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
-      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
-    }
+  async getProfileKey(orgId: string) {
+    const workspaceId = await this.getWorkspaceId();
+    return `${workspaceId}:::${orgId}`;
   }
 
   // Loads orgs
@@ -117,227 +113,133 @@ export class ConfigHandler {
   private async cascadeInit() {
     this.workspaceDirs = null; // forces workspace dirs reload
 
-    const userId = await this.controlPlaneClient.userId;
+    const orgs = await this.getOrgs();
 
-    const orgs = this.controlPlaneClient.listOrganizations();
+    // this.currentProfile = profile
+
+    // const selectedProfiles = this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+    // const profileKey = `${workspaceId}:::${org.id}`
+    // const selectedProfileId = selectedProfiles[profileKey];
+    // const profile = selectedProfileId ? org.profiles.find(profile => profile.profileDescription.id === selectedProfileId) :
+    // if(!selectedProfile) {
+    //   //
+    // }
+  }
+
+  private async getOrgs(): Promise<OrgWithProfiles[]> {
+    let orgs: OrgWithProfiles[];
+    const userId = await this.controlPlaneClient.userId;
+    if (userId) {
+      if (await useHub(this.ideSettingsPromise)) {
+        const orgDescs = await this.controlPlaneClient.listOrganizations();
+        // const personalOrg =
+        const hubOrgs = await Promise.all(
+          orgDescs.map((org) => this.makeNonPersonalHubOrg(org)),
+        );
+        // profiles = [...hubProfiles, ...allLocalProfiles];
+        orgs = hubOrgs;
+      } else {
+        const teamsOrg = await this.getTeamsOrg();
+        orgs = [teamsOrg];
+      }
+    } else {
+      const localOrg = await this.getLocalOrg();
+      orgs = [localOrg];
+    }
+    return orgs;
+  }
+
+  private async getHubOrg(
+    org: OrganizationDescription,
+    orgScopeId: string | null,
+  ): Promise<OrgWithProfiles> {
+    const assistants = await this.controlPlaneClient.listAssistants(orgScopeId);
+
+    const profiles = await Promise.all(
+      assistants.map(async (assistant) => {
+        const profileLoader = await PlatformProfileLoader.create(
+          {
+            ...assistant.configResult,
+            config: assistant.configResult.config,
+          },
+          assistant.ownerSlug,
+          assistant.packageSlug,
+          assistant.iconUrl,
+          assistant.configResult.config?.version ?? "latest",
+          this.controlPlaneClient,
+          this.ide,
+          this.ideSettingsPromise,
+          this.writeLog,
+          assistant.rawYaml,
+          orgScopeId,
+        );
+
+        return new ProfileLifecycleManager(profileLoader, this.ide);
+      }),
+    );
+
+    return this.rectifyProfilesForOrg(org, profiles);
   }
 
   // Refresh cascades: org -> profiles -> config
-  private async cascadeRefreshOrgs() {
+  private async makePersonalHubOrg() {
     // loads orgs
     // gets last selected org from context
     // checks if valid
     // if valid sets selected org
     // if not valid defaults to hub org or personal if no hub and saves fallback in context
     // cascade refreshes profiles for all orgs
-    await this.cascadeRefreshProfilesForAllOrgs();
-    //   const selectedOrgs =
-    //     this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-    //   selectedOrgs[await this.getWorkspaceId()] = orgId;
-    //   this.globalContext.update("lastSelectedOrgIdForWorkspace", selectedOrgs);
+    const allLocalProfiles = await this.getAllLocalProfiles();
+    profiles = [...hubProfiles, ...allLocalProfiles];
+    return await this.getHubOrg();
   }
 
-  private async cascadeRefreshProfilesForAllOrgs() {
-    await Promise.all(
-      this.organizations.map((org) =>
-        this.cascadeRefreshProfilesForOrg(org.id),
-      ),
-    );
+  private async makeNonPersonalHubOrg(): OrgWithProfiles {
+    profiles = hubProfiles;
+    return await this.getHubOrg();
   }
 
-  private async cascadeRefreshProfilesForOrg(orgId: string | null) {
-    // personal org: local profiles + personal hub if signed in
-    //
-    const workspaceId = await this.workspaceId();
-    const contextKey = `${workspaceId}:::${orgId ?? this.PERSONAL_ORG_ID}`;
-
-    // loads assistants
-    // gets last selected profile from context (by org id/workspace id combo)
-    // checks if valid
-    // if valid sets selected profile
-    // if not valid defaults to hub/teams profiles otherwise local, and and saves fallback in context
-    // reloads config for selected profile
-
-    await this.reloadConfig();
+  private async getLocalOrg() {
+    const allLocalProfiles = await this.getAllLocalProfiles();
+    return this.rectifyProfilesForOrg(org, allLocalProfiles);
   }
 
-  // Selection cascades: org -> profiles -> config
-  private async cascadeSelectOrg() {}
+  async getTeamsOrg(org: OrganizationDescription): Promise<OrgWithProfiles> {
+    const workspaces = await this.controlPlaneClient.listWorkspaces();
+    const profiles = await this.getAllLocalProfiles();
+    workspaces.forEach((workspace) => {
+      const profileLoader = new ControlPlaneProfileLoader(
+        workspace.id,
+        workspace.name,
+        this.controlPlaneClient,
+        this.ide,
+        this.ideSettingsPromise,
+        this.writeLog,
+        this.reloadConfig.bind(this),
+      );
 
-  /*
-  This rectifies selected ids to make sure no invalid state is reached
-  And walks through the config profile tree logic
-  Should be the default whenever a refresh is needed
-  */
-  private async cascadeConfigRefresh() {
-    let resolvedOrgId = this._selectedOrgId;
-    let resolvedProfileId = this.currentProfileId;
+      profiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
+    });
+    return rectifyProfilesForOrg({}, profiles);
+  }
 
-    // private async updateAvailableProfiles(profiles: ProfileLifecycleManager[]) {
-    //   this.profiles = profiles;
-
-    //   // If the last selected profile is in the list choose that
-    //   // Otherwise, choose the first profile
-    //   const previouslySelectedProfileId =
-    //     await this.getPersistedSelectedProfileId();
-
-    //   // Check if the previously selected profile exists in the current profiles
-    //   const profileExists = profiles.some(
-    //     (profile) =>
-    //       profile.profileDescription.id === previouslySelectedProfileId,
-    //   );
-
-    //   const selectedProfileId = profileExists
-    //     ? previouslySelectedProfileId
-    //     : (profiles[0]?.profileDescription.id ?? null);
-
-    //   // Notify listeners
-    //   const profileDescriptions = profiles.map(
-    //     (profile) => profile.profileDescription,
-    //   );
-    //   this.notifyConfigListeners();
-    //   this.notifyProfileListeners(profileDescriptions, selectedProfileId);
-    //   await this.setSelectedProfile(selectedProfileId);
-    // }
-
-    // SET SELECTED PROFILE ID
-    const result = await this.loadConfig();
-    this.notifyConfigListeners(result);
-
+  private async rectifyProfilesForOrg(
+    org: OrganizationDescription,
+    profiles: ProfileLifecycleManager[],
+  ): OrgWithProfiles {
+    const profileKey = await this.getProfileKey(org.id);
     const selectedProfiles =
       this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
-    selectedProfiles[await getWorkspaceId()] = profileId;
-    this.globalContext.update(
-      "lastSelectedProfileForWorkspace",
-      selectedProfiles,
-    );
+    const selectedProfile = selectedProfiles[profileKey];
 
-    // OTHER CASCADE STUFF
-    // async getPersistedSelectedProfileId(): Promise<string | null> {
-    //   const workspaceId = await this.getWorkspaceId();
-    //   const lastSelectedIds =
-    //     this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
-    //   return lastSelectedIds[workspaceId] ?? null;
-    // }
-
-    // async getSelectedOrgId(): Promise<string | null> {
-    //   const selectedOrgs =
-    //     this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
-    //   const workspaceId = await this.getWorkspaceId();
-    //   return selectedOrgs[workspaceId] ?? null;
-    // }
-
-    // async setSelectedOrgId(orgId: string | null) {
-
-    // }
-  }
-
-  // Initialization:
-
-  //////////////////
-  // External actions that can cause a cascading config refresh
-  // Should not be used internally
-  //////////////////
-
-  // Ide settings change: refresh session and cascade refresh from the top
-  async updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettingsPromise = Promise.resolve(ideSettings);
-    await this.cascadeInit();
-  }
-
-  // Session change: refresh session and cascade refresh from the top
-  async updateControlPlaneSessionInfo(
-    sessionInfo: ControlPlaneSessionInfo | undefined,
-  ) {
-    this.controlPlaneClient = new ControlPlaneClient(
-      Promise.resolve(sessionInfo),
-      this.ideSettingsPromise,
-    );
-    await this.cascadeInit();
-  }
-
-  // Org id: check id validity, cascade org selection
-  async setSelectedOrgId(orgId: string | null) {
-    if (orgId === (this.currentOrg?.id ?? null)) {
-      return;
-    }
-    if (orgId) {
-      const org = this.organizations.find((org) => org.id === orgId);
-      if (!org) {
-        throw new Error(`Org ${orgId} not found`);
-      }
-    }
-
-    await this.cascadeSelectOrg(orgId);
-  }
-
-  async setSelectedProfileId(profileId: string | null) {
-    if (profileId === (this.currentProfile?.profileDescription.id ?? null)) {
-      return;
-    }
-    if (orgId) {
-      const profile = this._organizations.find((org) => org.id === orgId);
-      if (!profile) {
-        throw new Error(`Profile ${profileId} not found in current org`);
-      }
-    }
-    // if (config) {
-    //   this.inactiveProfiles.forEach((profile) => profile.clearConfig());
-    //   return (this.profiles ?? []).filter(
-    //     (p) => p.profileDescription.id !== this.selectedProfileId,
-    //   );
-    // }
-    await this.cascadeP(orgId);
-  }
-
-  async getControlPlaneAssistantsForOrg(
-    orgId: string,
-  ): Promise<ProfileLifecycleManager[]> {
-    if (await useHub(this.ideSettingsPromise)) {
-      // Hub: only show org assistants within org
-      const assistants = await this.controlPlaneClient.listAssistants(orgId);
-
-      return await Promise.all(
-        assistants.map(async (assistant) => {
-          const profileLoader = await PlatformProfileLoader.create(
-            {
-              ...assistant.configResult,
-              config: assistant.configResult.config,
-            },
-            assistant.ownerSlug,
-            assistant.packageSlug,
-            assistant.iconUrl,
-            assistant.configResult.config?.version ?? "latest",
-            this.controlPlaneClient,
-            this.ide,
-            this.ideSettingsPromise,
-            this.writeLog,
-            assistant.rawYaml,
-            orgId,
-          );
-
-          return new ProfileLifecycleManager(profileLoader, this.ide);
-        }),
-      );
+    if (!selectedProfile) {
     } else {
-      // Continue for teams: show local and teams profiles
-      const workspaces = await this.controlPlaneClient.listWorkspaces();
-      const profiles = await this.getAllLocalProfiles();
-      workspaces.forEach((workspace) => {
-        const profileLoader = new ControlPlaneProfileLoader(
-          workspace.id,
-          workspace.name,
-          this.controlPlaneClient,
-          this.ide,
-          this.ideSettingsPromise,
-          this.writeLog,
-          this.reloadConfig.bind(this),
-        );
-
-        profiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
-      });
-      return profiles;
     }
+
+    this.globalContext.update("lastSelectedProfileForWorkspace", {
+      ...selectedProfiles,
+      [profileKey]: profileId,
+    });
   }
 
   async getAllLocalProfiles() {
@@ -360,35 +262,80 @@ export class ConfigHandler {
     return [this.globalLocalProfileManager, ...localAssistantProfiles];
   }
 
-  async refreshAllAssistants(orgId: string | null) {
-    // Get the profiles and create their lifecycle managers
-
-    const userId = await this.controlPlaneClient.userId;
-    const selectedOrgId = await this.getSelectedOrgId();
-
-    let profiles: ProfileLifecycleManager[] | null = null;
-    if (!userId) {
-      // Not logged in
-      const allLocalProfiles = await this.getAllLocalProfiles();
-      profiles = [...allLocalProfiles];
-    } else {
-      // Logged in
-
-      if (selectedOrgId === null) {
-        // Personal
-        const allLocalProfiles = await this.getAllLocalProfiles();
-        profiles = [...hubProfiles, ...allLocalProfiles];
-      } else {
-        // Organization
-        profiles = hubProfiles;
-      }
-    }
-
-    this.profiles = profiles;
-    await this.cascadeSelectOrg(orgId);
+  //////////////////
+  // External actions that can cause a cascading config refresh
+  // Should not be used internally
+  //////////////////
+  async refreshAll() {
+    await this.cascadeInit();
   }
 
-  async cascadeSelectProfile(id: string) {}
+  // Ide settings change: refresh session and cascade refresh from the top
+  async updateIdeSettings(ideSettings: IdeSettings) {
+    this.ideSettingsPromise = Promise.resolve(ideSettings);
+    await this.cascadeInit();
+  }
+
+  // Session change: refresh session and cascade refresh from the top
+  async updateControlPlaneSessionInfo(
+    sessionInfo: ControlPlaneSessionInfo | undefined,
+  ) {
+    this.controlPlaneClient = new ControlPlaneClient(
+      Promise.resolve(sessionInfo),
+      this.ideSettingsPromise,
+    );
+    await this.cascadeInit();
+  }
+
+  // Org id: check id validity, save selection, switch and reload
+  async setSelectedOrgId(orgId: string) {
+    if (orgId === this.currentOrg.id) {
+      return;
+    }
+    const org = this.organizations.find((org) => org.id === orgId);
+    if (!org) {
+      throw new Error(`Org ${orgId} not found`);
+    }
+
+    const workspaceId = await this.getWorkspaceId();
+    const selectedOrgs =
+      this.globalContext.get("lastSelectedOrgIdForWorkspace") ?? {};
+    this.globalContext.update("lastSelectedOrgIdForWorkspace", {
+      ...selectedOrgs,
+      [workspaceId]: org.id,
+    });
+
+    this.currentOrg = org;
+    this.currentProfile = org.currentProfile;
+    await this.reloadConfig();
+  }
+
+  // Profile id: check id validity, save selection, switch and reload
+  async setSelectedProfileId(profileId: string) {
+    if (
+      this.currentProfile &&
+      profileId === this.currentProfile.profileDescription.id
+    ) {
+      return;
+    }
+    const profile = this.currentOrg.profiles.find(
+      (profile) => profile.profileDescription.id === profileId,
+    );
+    if (!profile) {
+      throw new Error(`Profile ${profileId} not found in current org`);
+    }
+
+    const profileKey = await this.getProfileKey(this.currentOrg.id);
+    const selectedProfiles =
+      this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+    this.globalContext.update("lastSelectedProfileForWorkspace", {
+      ...selectedProfiles,
+      [profileKey]: profileId,
+    });
+
+    this.currentProfile = profile;
+    await this.reloadConfig();
+  }
 
   // Bottom level of cascade: refresh the current profile
   // IMPORTANT - must always refresh when switching profiles
@@ -401,6 +348,17 @@ export class ConfigHandler {
         errors: [],
         configLoadInterrupted: true,
       };
+    }
+
+    for (const org of this.organizations) {
+      for (const profile of org.profiles) {
+        if (
+          profile.profileDescription.id !==
+          this.currentProfile.profileDescription.id
+        ) {
+          profile.clearConfig();
+        }
+      }
     }
 
     const { config, errors, configLoadInterrupted } =
@@ -454,6 +412,22 @@ export class ConfigHandler {
     );
   }
 
+  async openConfigProfile(profileId?: string) {
+    let openProfileId = profileId || this.currentProfile?.profileDescription.id;
+    if (!openProfileId) {
+      return;
+    }
+    const profile = this.currentOrg.profiles.find(
+      (p) => p.profileDescription.id === openProfileId,
+    );
+    if (profile?.profileDescription.profileType === "local") {
+      await this.ide.openFile(profile.profileDescription.uri);
+    } else {
+      const env = await getControlPlaneEnv(this.ide.getIdeSettings());
+      await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
+    }
+  }
+
   // Only used till we move to using selectedModelByRole.chat
   async llmFromTitle(title?: string): Promise<ILLM> {
     const { config } = await this.loadConfig();
@@ -492,7 +466,3 @@ export class ConfigHandler {
       .map((provider) => provider.description.title);
   }
 }
-
-// listProfileDescriptions(): ProfileDescription[] {
-//   return this.profiles?.map((p) => p.profileDescription) ?? [];
-// }
