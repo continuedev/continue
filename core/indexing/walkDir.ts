@@ -10,10 +10,11 @@ import {
 } from "./ignore";
 
 export interface WalkerOptions {
-  onlyDirs?: boolean;
+  include?: "dirs" | "files" | "both";
   returnRelativeUrisPaths?: boolean;
   source?: string;
   overrideDefaultIgnores?: Ignore;
+  recursive?: boolean;
 }
 
 type Entry = [string, FileType];
@@ -195,7 +196,7 @@ class DFSWalker {
         if (this.entryIsDirectory(entry)) {
           relPath = `${relPath}/`;
         } else {
-          if (this.options.onlyDirs) {
+          if (this.options.include === "dirs") {
             continue;
           }
         }
@@ -221,19 +222,22 @@ class DFSWalker {
         }
 
         if (this.entryIsDirectory(entry)) {
-          stack.push({
-            walkableEntry,
-            ignoreContexts,
-          });
-          if (this.options.onlyDirs) {
-            // when onlyDirs is enabled the walker will only return directory names
+          if (this.options.recursive) {
+            stack.push({
+              walkableEntry,
+              ignoreContexts,
+            });
+          }
+          if (this.options.include !== "files") {
+            // if yielding dirs or both, walker includes relative paths
+            const trailingSlash = this.options.include === "dirs" ? "" : "/";
             if (this.options.returnRelativeUrisPaths) {
-              yield walkableEntry.relativeUriPath;
+              yield walkableEntry.relativeUriPath + trailingSlash;
             } else {
-              yield walkableEntry.uri;
+              yield walkableEntry.uri + trailingSlash;
             }
           }
-        } else {
+        } else if (this.options.include !== "dirs") {
           if (this.options.returnRelativeUrisPaths) {
             yield walkableEntry.relativeUriPath;
           } else {
@@ -257,8 +261,9 @@ class DFSWalker {
 }
 
 const defaultOptions: WalkerOptions = {
-  onlyDirs: false,
+  include: "files",
   returnRelativeUrisPaths: false,
+  recursive: true,
 };
 
 export async function* walkDirAsync(

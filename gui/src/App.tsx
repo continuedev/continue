@@ -4,7 +4,6 @@ import { MainEditorProvider } from "./components/mainInput/TipTapEditor";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
 import { VscThemeProvider } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
-import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
 import ConfigPage from "./pages/config";
 import ConfigErrorPage from "./pages/config-error";
 import ErrorPage from "./pages/error";
@@ -34,14 +33,6 @@ const router = createMemoryRouter([
       {
         path: "/stats",
         element: <Stats />,
-      },
-      {
-        path: "/addModel",
-        element: <AddNewModel />,
-      },
-      {
-        path: "/addModel/provider/:providerName",
-        element: <ConfigureProvider />,
       },
       {
         path: ROUTES.CONFIG_ERROR,

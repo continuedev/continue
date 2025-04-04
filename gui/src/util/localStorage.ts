@@ -15,8 +15,6 @@ type LocalStorageTypes = {
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;
-  /** Indicates whether the user has seen any kind of onboarding card since hub.continue.dev */
-  seenHubIntro: boolean;
 };
 
 export enum LocalStorageKey {

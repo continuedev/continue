@@ -5,7 +5,7 @@ import { MCPSection } from "./MCPSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
 import { RulesSection } from "./RulesSection";
-import { ToolsSection } from "./ToolsSection";
+import { ToolPoliciesSection } from "./tool-policies/ToolPoliciesSection";
 
 /**
  * Renders the appropriate section based on the selected section in the Lump context
@@ -25,7 +25,7 @@ export function SelectedSection() {
     case "context":
       return <ContextSection />;
     case "tools":
-      return <ToolsSection />;
+      return <ToolPoliciesSection />;
     case "mcp":
       return <MCPSection />;
     default:
