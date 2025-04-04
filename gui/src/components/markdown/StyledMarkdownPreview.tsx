@@ -17,7 +17,7 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
-import { getFontSize, isJetBrains } from "../../util";
+import { getFontSize } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
@@ -305,11 +305,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
-          // If we don't have a filepath show the more basic toolbar
-          // that is just action buttons on hover.
-          // We also use this in JB since we haven't yet implemented
-          // the logic forfileUri lazy apply.
-          if (!relativeFilePath || isJetBrains()) {
+          if (!relativeFilePath) {
             return (
               <StepContainerPreActionButtons
                 language={language}

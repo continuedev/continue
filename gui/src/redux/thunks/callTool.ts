@@ -123,10 +123,14 @@ async function customGuiEditImpl(
   if (!firstUriMatch) {
     throw new Error(`${args.filepath} does not exist`);
   }
-  ideMessenger.post("applyToFile", {
+  const apply = await ideMessenger.request("applyToFile", {
     streamId,
     text: args.new_contents,
     curSelectedModelTitle: modelTitle,
     toolCallId,
+    filepath: firstUriMatch
   });
+  if (apply.status === "error") {
+    throw new Error(apply.error);
+  }
 }
