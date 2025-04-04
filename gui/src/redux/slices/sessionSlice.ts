@@ -55,7 +55,7 @@ type SessionState = {
     curIndex: number;
   };
   newestCodeblockForInput: Record<string, string>;
-  activeToolStreamId?: string;
+  activeToolStreamId?: [string, string];
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -379,7 +379,7 @@ export const sessionSlice = createSlice({
                   toolCallId: toolCallDelta.id,
                   status: "streaming",
                 });
-                state.activeToolStreamId = streamId;
+                state.activeToolStreamId = [streamId, toolCallDelta.id];
               }
               historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
             }

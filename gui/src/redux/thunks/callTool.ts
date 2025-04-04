@@ -52,7 +52,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
         await customGuiEditImpl(
           args,
           extra.ideMessenger,
-          state.session.activeToolStreamId,
+          state.session.activeToolStreamId[0],
           defaultModel.title,
           toolCallState.toolCallId,
         );

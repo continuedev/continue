@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
@@ -20,6 +20,7 @@ import {
   addContextItemsAtIndex,
   setInactive,
   setToolCallOutput,
+  updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { streamResponseAfterToolCall } from "../redux/thunks";
@@ -252,35 +253,38 @@ function useSetup() {
   const activeToolStreamId = useAppSelector(
     (store) => store.session.activeToolStreamId,
   );
-  const applyStates = useAppSelector(
-    (store) => store.session.codeBlockApplyStates,
+  useWebviewListener(
+    "updateApplyState",
+    async (state) => {
+      // dispatch(
+      //   updateCurCheckpoint({
+      //     filepath: state.filepath,
+      //     content: state.fileContent,
+      //   }),
+      // );
+      dispatch(updateApplyState(state));
+      if (
+        activeToolStreamId &&
+        state.streamId === activeToolStreamId[0] &&
+        state.status === "closed"
+      ) {
+        const output: ContextItem = {
+          name: "Edit tool output",
+          content: "Completed edit",
+          description: "",
+        };
+        dispatch(acceptToolCall());
+        dispatch(setToolCallOutput([output]));
+        dispatch(
+          streamResponseAfterToolCall({
+            toolCallId: activeToolStreamId[1],
+            toolOutput: [output],
+          }),
+        );
+      }
+    },
+    [activeToolStreamId],
   );
-  const activeToolApplyState = useMemo(() => {
-    if (!activeToolStreamId) {
-      return undefined;
-    }
-    return applyStates.states.find(
-      (state) => state.streamId && state.streamId === activeToolStreamId,
-    );
-  }, [applyStates, activeToolStreamId]);
-
-  useEffect(() => {
-    if (activeToolApplyState?.status === "closed") {
-      const output: ContextItem = {
-        name: "Edit tool output",
-        content: "Completed edit",
-        description: "",
-      };
-      dispatch(acceptToolCall());
-      dispatch(setToolCallOutput([output]));
-      dispatch(
-        streamResponseAfterToolCall({
-          toolCallId: activeToolApplyState.toolCallId!,
-          toolOutput: [output],
-        }),
-      );
-    }
-  }, [activeToolApplyState?.status]);
 }
 
 export default useSetup;
