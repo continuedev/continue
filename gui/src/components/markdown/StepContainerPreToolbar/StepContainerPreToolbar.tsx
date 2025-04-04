@@ -24,10 +24,10 @@ import {
   selectIsInEditMode,
 } from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
+import { CopyIconButton } from "../../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../../gui/HeaderButtonWithToolTip";
 import { childrenToText, isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
-import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
@@ -222,18 +222,10 @@ export default function StepContainerPreToolbar(
 
           {!isGeneratingCodeBlock && (
             <>
-              <CopyButton text={props.codeBlockContent} />
-              {props.hideApply ||
-                (isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
-                  <RunInTerminalButton command={props.codeBlockContent} />
-                ) : (
-                  <ApplyActions
-                    applyState={applyState}
-                    onClickApply={onClickApply}
-                    onClickAccept={onClickAcceptApply}
-                    onClickReject={onClickRejectApply}
-                  />
-                ))}
+              <CopyIconButton
+                text={props.codeBlockContent}
+                tooltipPlacement={toolTipPlacement}
+              />
               <HeaderButtonWithToolTip
                 text="Insert at cursor"
                 style={{ backgroundColor: vscEditorBackground }}
@@ -246,6 +238,17 @@ export default function StepContainerPreToolbar(
               >
                 <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
               </HeaderButtonWithToolTip>
+              {props.hideApply ||
+                (isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
+                  <RunInTerminalButton command={props.codeBlockContent} />
+                ) : (
+                  <ApplyActions
+                    applyState={applyState}
+                    onClickApply={onClickApply}
+                    onClickAccept={onClickAcceptApply}
+                    onClickReject={onClickRejectApply}
+                  />
+                ))}
             </>
           )}
         </div>

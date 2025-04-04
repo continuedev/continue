@@ -21,6 +21,7 @@ import { isJetBrains } from "../../util";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { getTerminalCommand, isTerminalCodeBlock } from "./utils";
+import CopyButton from "./StepContainerPreToolbar/CopyButton";
 
 interface StepContainerPreActionButtonsProps {
   language: string | null;
@@ -114,14 +115,11 @@ export default function StepContainerPreActionButtons({
               <CommandLineIcon className="h-4 w-4 text-gray-400" />
             </HeaderButtonWithToolTip>
           )}
-          <HeaderButtonWithToolTip
-            text="Apply"
-            style={{ backgroundColor: vscEditorBackground }}
-            onClick={onClickApply}
+          <CopyIconButton
+            text={codeBlockContent}
             tooltipPlacement={toolTipPlacement}
-          >
-            <PlayIcon className="h-4 w-4 text-gray-400" />
-          </HeaderButtonWithToolTip>
+          />
+
           <HeaderButtonWithToolTip
             text="Insert at cursor"
             style={{ backgroundColor: vscEditorBackground }}
@@ -132,10 +130,14 @@ export default function StepContainerPreActionButtons({
           >
             <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
           </HeaderButtonWithToolTip>
-          <CopyIconButton
-            text={codeBlockContent}
+          <HeaderButtonWithToolTip
+            text="Apply"
+            style={{ backgroundColor: vscEditorBackground }}
+            onClick={onClickApply}
             tooltipPlacement={toolTipPlacement}
-          />
+          >
+            <PlayIcon className="h-4 w-4 text-gray-400" />
+          </HeaderButtonWithToolTip>
         </div>
       )}
     </div>
