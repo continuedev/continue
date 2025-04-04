@@ -1,7 +1,5 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { ContextItemWithId, SlashCommandDescription } from "core";
-import { MAIN_EDITOR_INPUT_ID } from "../../../../pages/gui/Chat";
 import { PromptBlockPreview } from "../toolbar-previews/PromptBlockPreview";
 
 export interface PromptOptions {
@@ -16,8 +14,6 @@ export const PROMPT_BLOCK_NAME = "prompt-block";
 export const PromptExtension = Node.create<PromptOptions>({
   name: PROMPT_BLOCK_NAME,
   group: "block",
-  //   atom: true,
-  //   draggable: true,
 
   addOptions() {
     return {
@@ -52,30 +48,3 @@ export const PromptExtension = Node.create<PromptOptions>({
     return ReactNodeViewRenderer(PromptBlockPreview);
   },
 });
-
-/**
- * Creates a prompt block node from a slash command description
- * @param command The slash command description to create the block from
- * @param inputId Optional input ID, defaults to main editor input ID
- * @returns A node object representing the prompt block
- */
-export const createPromptBlockNodeFromSlashCmdDescription = (
-  command: SlashCommandDescription,
-  inputId: string = MAIN_EDITOR_INPUT_ID,
-) => {
-  return {
-    type: PromptExtension.name,
-    attrs: {
-      item: {
-        content: command.prompt,
-        name: command.name,
-        description: command.description || "",
-        id: {
-          providerTitle: "prompt",
-          itemId: command.name,
-        },
-      } as ContextItemWithId,
-      inputId,
-    },
-  };
-};

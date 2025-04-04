@@ -364,7 +364,7 @@ export function createEditorConfig(options: {
           class: "prompt-block",
         },
       }),
-      ContinueExtensions.CodeBlockExtension,
+      ContinueExtensions.CodeblockExtension,
     ],
     editorProps: {
       attributes: {

@@ -19,7 +19,7 @@ import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
 import {
-  CodeBlockExtension,
+  CodeblockExtension,
   MentionExtension,
   SlashCommandExtension,
 } from "../extensions";
@@ -86,7 +86,7 @@ function processEditorContent(editorState: JSONContent) {
           return [...parts, { type: "text", text }];
         }
 
-        case CodeBlockExtension.name: {
+        case CodeblockExtension.name: {
           if (!p.attrs?.item) {
             console.warn("codeBlock has no item attribute");
             return parts;

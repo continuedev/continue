@@ -1,5 +1,5 @@
 export * from "./AddCodeToEditExtension";
-export * from "./CodeBlockExtension";
+export * from "./CodeblockExtension";
 export * from "./MentionExtension";
 export * from "./PromptExtension";
 export * from "./SlashCommandExtension";

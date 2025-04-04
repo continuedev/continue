@@ -6,6 +6,8 @@ import { PluginKey } from "@tiptap/pm/state";
 import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 import { ContextItemWithId, SlashCommandDescription } from "core";
 import { v4 as uuidv4 } from "uuid";
+import { MAIN_EDITOR_INPUT_ID } from "../../../../pages/gui/Chat";
+import { PROMPT_BLOCK_NAME } from "./PromptExtension";
 
 export type SlashCommandOptions = {
   HTMLAttributes: Record<string, any>;
@@ -17,6 +19,22 @@ export const SLASH_CMD_NAME = "slash-command";
 export const SLASH_CMD_SUGGESTION_CHAR = "/";
 
 export const SlashCommandPluginKey = new PluginKey(SLASH_CMD_NAME);
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    slashCommand: {
+      /**
+       * Insert a slash command and its associated prompt block
+       * @param command The slash command description
+       * @param inputId The input ID (defaults to MAIN_EDITOR_INPUT_ID)
+       */
+      insertSlashCommand: (
+        command: SlashCommandDescription,
+        inputId?: string,
+      ) => ReturnType;
+    };
+  }
+}
 
 export const SlashCommandExtension = Node.create<SlashCommandOptions>({
   name: SLASH_CMD_NAME,
@@ -57,9 +75,6 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
             .run();
 
           const promptId = uuidv4();
-
-          // Create a generic "promptToPromptBlockExtension" fn
-          // For here and in the conversation starters
 
           editor
             .chain()
@@ -200,30 +215,58 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
       }),
     ];
   },
-});
 
-/**
- * Creates a paragraph node containing a slash command reference
- * @param command The slash command description to create the reference from
- * @returns A node object representing the paragraph with slash command
- */
-export const createParagraphNodeFromSlashCmdDescription = (
-  command: SlashCommandDescription,
-) => {
-  return {
-    type: "paragraph",
-    content: [
-      {
-        type: SlashCommandExtension.name,
-        attrs: {
-          id: command.name,
-          label: command.name,
+  addCommands() {
+    return {
+      insertSlashCommand:
+        (
+          command: SlashCommandDescription,
+          inputId: string = MAIN_EDITOR_INPUT_ID,
+        ) =>
+        ({ chain }) => {
+          // Create the document with both a prompt block and the slash command paragraph
+          return chain()
+            .setContent({
+              type: "doc",
+              content: [
+                // Add the prompt block at the beginning
+                {
+                  type: PROMPT_BLOCK_NAME,
+                  attrs: {
+                    item: {
+                      content: command.prompt,
+                      name: command.name,
+                      description: command.description || "",
+                      id: {
+                        providerTitle: "prompt",
+                        itemId: command.name,
+                      },
+                    } as ContextItemWithId,
+                    inputId,
+                  },
+                },
+                // Add the paragraph with the slash command
+                {
+                  type: "paragraph",
+                  content: [
+                    {
+                      type: this.name,
+                      attrs: {
+                        id: command.name,
+                        label: command.name,
+                      },
+                    },
+                    {
+                      type: "text",
+                      text: " ",
+                    },
+                  ],
+                },
+              ],
+            })
+            .focus()
+            .run();
         },
-      },
-      {
-        type: "text",
-        text: " ",
-      },
-    ],
-  };
-};
+    };
+  },
+});

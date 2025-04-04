@@ -1,6 +1,6 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatHistoryItem, ContextItemWithId } from "core";
-import { CodeBlockExtension } from "../../components/mainInput/TipTapEditor/extensions";
+import { CodeblockExtension } from "../../components/mainInput/TipTapEditor/extensions";
 import { updateFileSymbols } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 
@@ -26,7 +26,7 @@ export function getContextItemsFromHistory(
     .flatMap((item) => item.editorState.content)
     .filter(
       (content) =>
-        content?.type === CodeBlockExtension.name &&
+        content?.type === CodeblockExtension.name &&
         content?.attrs?.item?.uri?.value &&
         content.attrs.item.uri?.type === "file",
     )

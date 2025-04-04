@@ -9,7 +9,7 @@ import {
 } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
-import { CodeBlockExtension } from "./extensions";
+import { CodeblockExtension } from "./extensions";
 
 /**
  * Hook for setting up main editor specific webview listeners
@@ -114,7 +114,7 @@ export function useMainEditorWebviewListeners({
         if (el.attrs?.item?.name === contextItem.name) {
           return; // Prevent exact duplicate code blocks
         }
-        if (el.type === CodeBlockExtension.name) {
+        if (el.type === CodeblockExtension.name) {
           index += 2;
         } else {
           break;
@@ -124,7 +124,7 @@ export function useMainEditorWebviewListeners({
       editor
         .chain()
         .insertContentAt(index, {
-          type: CodeBlockExtension.name,
+          type: CodeblockExtension.name,
           attrs: {
             item: contextItem,
             inputId,

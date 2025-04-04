@@ -5,14 +5,13 @@ import { MAIN_EDITOR_INPUT_ID } from "../../pages/gui/Chat";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setNewestCodeblocksForInput } from "../../redux/slices/sessionSlice";
 import { useMainEditor } from "../mainInput/TipTapEditor";
-import {
-  createParagraphNodeFromSlashCmdDescription,
-  createPromptBlockNodeFromSlashCmdDescription,
-} from "../mainInput/TipTapEditor/extensions";
 import { ConversationStarterCard } from "./ConversationStarterCard";
 
 const NUM_CARDS_TO_RENDER = 5;
 
+/**
+ * Displays a grid of conversation starter cards for bookmarked slash commands
+ */
 export function ConversationStarterCards() {
   const dispatch = useAppDispatch();
   const { mainEditor } = useMainEditor();
@@ -34,13 +33,7 @@ export function ConversationStarterCards() {
       }),
     );
 
-    mainEditor?.commands.setContent({
-      type: "doc",
-      content: [
-        createPromptBlockNodeFromSlashCmdDescription(command),
-        createParagraphNodeFromSlashCmdDescription(command),
-      ],
-    });
+    mainEditor?.commands.insertSlashCommand(command);
   }
 
   if (bookmarkedSlashCommands.length === 0) {

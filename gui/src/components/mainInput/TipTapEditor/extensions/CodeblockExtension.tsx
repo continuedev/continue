@@ -4,7 +4,7 @@ import { CodeblockPreview } from "../toolbar-previews/CodeblockPreview";
 
 export const CODEBLOCK_NAME = "codeblock";
 
-export const CodeBlockExtension = Node.create({
+export const CodeblockExtension = Node.create({
   name: CODEBLOCK_NAME,
 
   group: "block",
