@@ -106,7 +106,7 @@ function InputToolbar(props: InputToolbarProps) {
     props.disabled ||
     isEditModeAndNoCodeToEdit ||
     toolCallState?.status === "generated" ||
-    activeToolCallStreamId;
+    !!activeToolCallStreamId;
 
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
