@@ -21,6 +21,7 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -54,7 +55,7 @@ type SessionState = {
     curIndex: number;
   };
   newestCodeblockForInput: Record<string, string>;
-  lastApplyToolStreamId?: string;
+  activeToolStreamId?: string;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -367,6 +368,19 @@ export const sessionSlice = createSlice({
                 );
               }
 
+              if (
+                toolCallDelta.id &&
+                toolCallDelta.function?.name ===
+                  BuiltInToolNames.EditExistingFile
+              ) {
+                const streamId = uuidv4();
+                state.codeBlockApplyStates.states.push({
+                  streamId,
+                  toolCallId: toolCallDelta.id,
+                  status: "streaming",
+                });
+                state.activeToolStreamId = streamId;
+              }
               historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
             }
             state.history.push(historyItem);
@@ -552,9 +566,7 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    setLastToolApplyStreamId: (state, { payload }: PayloadAction<string>) => {
-      state.lastApplyToolStreamId = payload;
-    },
+
     updateCurCheckpoint: (
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
@@ -632,6 +644,7 @@ export const sessionSlice = createSlice({
       toolCallState.status = "canceled";
     },
     acceptToolCall: (state) => {
+      state.activeToolStreamId = undefined;
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
@@ -729,16 +742,6 @@ export const selectApplyStateByStreamId = createSelector(
   },
 );
 
-export const selectLastEditToolApplyState = createSelector(
-  [
-    (state: RootState) => state.session.codeBlockApplyStates.states,
-    (state: RootState) => state.session.lastApplyToolStreamId,
-  ],
-  (states, streamId) => {
-    return states.find((state) => state.streamId === streamId);
-  },
-);
-
 export const {
   updateFileSymbols,
   setContextItemsAtIndex,
@@ -776,7 +779,6 @@ export const {
   deleteSessionMetadata,
   setNewestCodeblocksForInput,
   cycleMode,
-  setLastToolApplyStreamId,
 } = sessionSlice.actions;
 
 export const {

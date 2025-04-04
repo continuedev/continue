@@ -26,6 +26,7 @@ function FunctionSpecificToolCallDiv({
         <EditFile
           relativeFilePath={args.filepath}
           newContents={args.new_contents}
+          toolCallId={toolCall.id}
         />
       );
     case BuiltInToolNames.RunTerminalCommand:

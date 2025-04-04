@@ -98,11 +98,16 @@ function InputToolbar(props: InputToolbarProps) {
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
+  const activeToolCallStreamId = useAppSelector(
+    (store) => store.session.activeToolStreamId,
+  );
 
   const isEnterDisabled =
     props.disabled ||
     isEditModeAndNoCodeToEdit ||
-    toolCallState?.status === "generated";
+    toolCallState?.status === "generated" ||
+    activeToolCallStreamId;
+
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =

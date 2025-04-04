@@ -131,7 +131,7 @@ interface StyledMarkdownPreviewProps {
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
   disableManualApply?: boolean;
-  firstCodeblockStreamId?: string;
+  singleCodeblockStreamId?: string;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -199,15 +199,18 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
   const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
-    props.firstCodeblockStreamId
-      ? [
-          {
-            streamId: props.firstCodeblockStreamId,
-            isGenerating: false,
-          },
-        ]
-      : [],
+    [],
   );
+  useEffect(() => {
+    if (props.singleCodeblockStreamId) {
+      codeblockState.current = [
+        {
+          streamId: props.singleCodeblockStreamId,
+          isGenerating: false,
+        },
+      ];
+    }
+  }, [props.singleCodeblockStreamId]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [

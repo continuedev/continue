@@ -1,9 +1,9 @@
-import { useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 import { ConfigResult } from "@continuedev/config-yaml";
-import { BrowserSerializedContinueConfig } from "core";
+import { BrowserSerializedContinueConfig, ContextItem } from "core";
 import {
   initializeProfilePreferencesThunk,
   selectProfileThunk,
@@ -16,11 +16,13 @@ import {
 } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
+  acceptToolCall,
   addContextItemsAtIndex,
-  selectLastEditToolApplyState,
   setInactive,
+  setToolCallOutput,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import { streamResponseAfterToolCall } from "../redux/thunks";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
@@ -247,12 +249,38 @@ function useSetup() {
     [defaultModel],
   );
 
-  const lastEditToolApplyState = useAppSelector(selectLastEditToolApplyState);
+  const activeToolStreamId = useAppSelector(
+    (store) => store.session.activeToolStreamId,
+  );
+  const applyStates = useAppSelector(
+    (store) => store.session.codeBlockApplyStates,
+  );
+  const activeToolApplyState = useMemo(() => {
+    if (!activeToolStreamId) {
+      return undefined;
+    }
+    return applyStates.states.find(
+      (state) => state.streamId && state.streamId === activeToolStreamId,
+    );
+  }, [applyStates, activeToolStreamId]);
+
   useEffect(() => {
-    ideMessenger.post("showToast", ["info", "updated last apply state"]);
-    // dispatch(setToolCallOutput(output));
-    // dispatch(acceptToolCall());
-  }, [lastEditToolApplyState]);
+    if (activeToolApplyState?.status === "closed") {
+      const output: ContextItem = {
+        name: "Edit tool output",
+        content: "Completed edit",
+        description: "",
+      };
+      dispatch(acceptToolCall());
+      dispatch(setToolCallOutput([output]));
+      dispatch(
+        streamResponseAfterToolCall({
+          toolCallId: activeToolApplyState.toolCallId!,
+          toolOutput: [output],
+        }),
+      );
+    }
+  }, [activeToolApplyState?.status]);
 }
 
 export default useSetup;

@@ -3,7 +3,6 @@ import { ContextItem } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import { EditToolArgs } from "core/tools/definitions/editFile";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
-import { v4 as uuidv4 } from "uuid";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectDefaultModel } from "../slices/configSlice";
@@ -11,7 +10,6 @@ import {
   acceptToolCall,
   cancelToolCall,
   setCalling,
-  setLastToolApplyStreamId,
   setToolCallOutput,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
@@ -44,17 +42,19 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     if (
       toolCallState.toolCall.function.name === BuiltInToolNames.EditExistingFile
     ) {
-      const newToolStreamId = uuidv4();
-      dispatch(setLastToolApplyStreamId(newToolStreamId));
       const args = JSON.parse(
         toolCallState.toolCall.function.arguments || "{}",
       );
       try {
+        if (!state.session.activeToolStreamId) {
+          throw new Error("Invalid apply state");
+        }
         await customGuiEditImpl(
           args,
           extra.ideMessenger,
-          newToolStreamId,
+          state.session.activeToolStreamId,
           defaultModel.title,
+          toolCallState.toolCallId,
         );
       } catch (e) {
         errorMessage = "Failed to call edit tool";
@@ -85,7 +85,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
               icon: "problems",
               name: "Tool Call Error",
               description: "Tool Call Failed",
-              content: `The tool call failed with the message:\n\n${errorMessage}\n\nPlease try something else or request further instructions.`,
+              content: `${toolCallState.toolCall.function.name} failed with the message:\n\n${errorMessage}\n\nPlease try something else or request further instructions.`,
               hidden: false,
             },
           ],
@@ -114,23 +114,19 @@ async function customGuiEditImpl(
   ideMessenger: IIdeMessenger,
   streamId: string,
   modelTitle: string,
+  toolCallId: string,
 ) {
   const firstUriMatch = await resolveRelativePathInDir(
     args.filepath,
     ideMessenger.ide,
   );
   if (!firstUriMatch) {
-    return [
-      {
-        name: "Edit failure",
-        description: `editing ${args.filepath}`,
-        content: `Failed to edit ${args.filepath}: does not exist`,
-      },
-    ];
+    throw new Error(`${args.filepath} does not exist`);
   }
   ideMessenger.post("applyToFile", {
     streamId,
     text: args.new_contents,
     curSelectedModelTitle: modelTitle,
+    toolCallId,
   });
 }

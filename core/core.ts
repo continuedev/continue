@@ -871,8 +871,7 @@ export class Core {
       }
     });
 
-    on("tools/call", async (msg) => {
-      const { toolCall, selectedModelTitle } = msg.data;
+    on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
         throw new Error("Config not loaded");

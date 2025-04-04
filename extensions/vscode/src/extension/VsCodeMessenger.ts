@@ -18,6 +18,7 @@ import { stripImages } from "core/util/messageContent";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
+import { ILLM } from "core";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -28,7 +29,6 @@ import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { ILLM } from "core";
 
 /**
  * A shared messenger class between Core and Webview
@@ -133,6 +133,7 @@ export class VsCodeMessenger {
         streamId: data.streamId,
         status: "streaming",
         fileContent: data.text,
+        toolCallId: data.toolCallId,
       });
 
       if (data.filepath) {
@@ -164,6 +165,7 @@ export class VsCodeMessenger {
           status: "closed",
           numDiffs: 0,
           fileContent: data.text,
+          toolCallId: data.toolCallId,
         });
 
         return;
@@ -232,6 +234,7 @@ export class VsCodeMessenger {
           undefined,
           rangeToApplyTo,
           data.text,
+          data.toolCallId,
         );
       }
     });
