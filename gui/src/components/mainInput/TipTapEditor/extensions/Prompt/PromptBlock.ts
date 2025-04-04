@@ -1,14 +1,14 @@
 import { mergeAttributes, Node } from "@tiptap/core";
+import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { ReactNodeViewRenderer } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { PromptBlockPreview } from "./PromptBlockPreview";
 
-export interface PromptOptions {
+export interface PromptBlockOptions {
   HTMLAttributes: Record<string, any>;
 }
 
-export interface PromptAttributes {
+export interface PromptBlockAttributes {
   item: ContextItemWithId;
   inputId: string;
 }
@@ -32,13 +32,15 @@ declare module "@tiptap/core" {
 /**
  * Extension for adding prompt blocks to the Tiptap editor
  */
-export const PromptExtension = Node.create<PromptOptions>({
+export const PromptBlock = Node.create<PromptBlockOptions>({
   name: "prompt-block",
   group: "block",
 
   addOptions() {
     return {
-      HTMLAttributes: {},
+      HTMLAttributes: {
+        class: "prompt-block",
+      },
     };
   },
 
@@ -71,7 +73,8 @@ export const PromptExtension = Node.create<PromptOptions>({
 
   addCommands() {
     return {
-      insertPrompt: (item: ContextItemWithId, inputId: string) => 
+      insertPrompt:
+        (item: ContextItemWithId, inputId: string) =>
         ({ commands }) => {
           return commands.insertContent({
             type: this.name,
@@ -82,27 +85,29 @@ export const PromptExtension = Node.create<PromptOptions>({
           });
         },
 
-      clearPrompt: () => ({ state, commands }) => {
-        // Find all prompt-block nodes in the document
-        const promptNodes: { pos: number, node: ProseMirrorNode }[] = [];
-        state.doc.descendants((node, pos) => {
-          if (node.type.name === this.name) {
-            promptNodes.push({ pos, node });
-            return false; // Don't descend into this node
+      clearPrompt:
+        () =>
+        ({ state, commands }) => {
+          // Find all prompt-block nodes in the document
+          const promptNodes: { pos: number; node: ProseMirrorNode }[] = [];
+          state.doc.descendants((node, pos) => {
+            if (node.type.name === this.name) {
+              promptNodes.push({ pos, node });
+              return false; // Don't descend into this node
+            }
+            return true;
+          });
+
+          // Delete all found prompt blocks
+          // We process them in reverse order so that deleting one doesn't affect the position of others
+          for (let i = promptNodes.length - 1; i >= 0; i--) {
+            const { pos, node } = promptNodes[i];
+            commands.deleteRange({ from: pos, to: pos + node.nodeSize });
           }
-          return true;
-        });
-        
-        // Delete all found prompt blocks
-        // We process them in reverse order so that deleting one doesn't affect the position of others
-        for (let i = promptNodes.length - 1; i >= 0; i--) {
-          const { pos, node } = promptNodes[i];
-          commands.deleteRange({ from: pos, to: pos + node.nodeSize });
-        }
-        
-        // Return true if we deleted any nodes
-        return promptNodes.length > 0;
-      },
+
+          // Return true if we deleted any nodes
+          return promptNodes.length > 0;
+        },
     };
   },
 });

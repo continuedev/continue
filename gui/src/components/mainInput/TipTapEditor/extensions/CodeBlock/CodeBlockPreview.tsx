@@ -1,8 +1,4 @@
-import {
-  NodeViewProps,
-  NodeViewWrapper,
-  NodeViewWrapperProps,
-} from "@tiptap/react";
+import { NodeViewProps } from "@tiptap/react";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { dedent, getMarkdownLanguageTagForFile } from "core/util";
@@ -13,13 +9,14 @@ import { useAppSelector } from "../../../../../redux/hooks";
 import FileIcon from "../../../../FileIcon";
 import StyledMarkdownPreview from "../../../../markdown/StyledMarkdownPreview";
 import { ExpandablePreview } from "../../components/ExpandablePreview";
+import { NodeViewWrapper } from "../../components/NodeViewWrapper";
 
 const backticksRegex = /`{3,}/gm;
 
 /**
  * Component for displaying a code block in the TipTap editor
  */
-export const CodeblockPreview = ({
+export const CodeBlockPreview = ({
   node,
   deleteNode,
   selected,
@@ -29,10 +26,6 @@ export const CodeblockPreview = ({
   const isFirstContextItem = false; // TODO: fix this, decided not worth the insane renders for now
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // Not setting this as a "p" will cause issues with foreign keyboards
-  // See https://github.com/continuedev/continue/issues/3199
-  const nodeViewWrapperTag: NodeViewWrapperProps["as"] = "p";
-
   const newestCodeblockForInputId = useAppSelector(
     (store) => store.session.newestCodeblockForInput[inputId],
   );
@@ -40,6 +33,12 @@ export const CodeblockPreview = ({
   const initiallyHidden = useMemo(() => {
     return newestCodeblockForInputId !== item.id.itemId;
   }, [newestCodeblockForInputId, item.id.itemId]);
+
+  console.log({
+    newestCodeblockForInputId,
+    id: item.id.itemId,
+    initiallyHidden,
+  });
 
   const content = useMemo(() => {
     return dedent`${item.content}`;
@@ -79,10 +78,7 @@ export const CodeblockPreview = ({
       : undefined;
 
   return (
-    <NodeViewWrapper
-      className="code-block-with-content"
-      as={nodeViewWrapperTag}
-    >
+    <NodeViewWrapper>
       <ExpandablePreview
         title={item.name}
         icon={<FileIcon height="16px" width="16px" filename={item.name} />}

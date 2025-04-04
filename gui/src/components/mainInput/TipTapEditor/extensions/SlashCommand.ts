@@ -1,24 +1,21 @@
 // Adapted from SlashCommand extension (@tiptap/extension-mention/src/mention.ts)
 
 import { mergeAttributes, Node } from "@tiptap/core";
+import Document from "@tiptap/extension-document";
+import Paragraph from "@tiptap/extension-paragraph";
 import { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import { PluginKey } from "@tiptap/pm/state";
 import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 import { ContextItemWithId, SlashCommandDescription } from "core";
 import { MAIN_EDITOR_INPUT_ID } from "../../../../pages/gui/Chat";
 import { ComboBoxItem } from "../../types";
-import { PromptExtension } from "./PromptExtension/PromptExtension";
+import { PromptBlock } from "./Prompt/PromptBlock";
 
 export type SlashCommandOptions = {
   HTMLAttributes: Record<string, any>;
   renderText: (props: { node: ProseMirrorNode }) => string;
   suggestion: Omit<SuggestionOptions<ComboBoxItem, ComboBoxItem>, "editor">;
 };
-
-export const SLASH_CMD_NAME = "slash-command";
-export const SLASH_CMD_SUGGESTION_CHAR = "/";
-
-export const SlashCommandPluginKey = new PluginKey(SLASH_CMD_NAME);
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -37,18 +34,20 @@ declare module "@tiptap/core" {
   }
 }
 
-export const SlashCommandExtension = Node.create<SlashCommandOptions>({
-  name: SLASH_CMD_NAME,
+export const SlashCommand = Node.create<SlashCommandOptions>({
+  name: "slash-command",
 
   addOptions() {
     return {
-      HTMLAttributes: {},
+      HTMLAttributes: {
+        class: "mention",
+      },
       renderText({ node }) {
         return node.attrs.label ?? node.attrs.id;
       },
       suggestion: {
-        char: SLASH_CMD_SUGGESTION_CHAR,
-        pluginKey: SlashCommandPluginKey,
+        char: "/",
+        pluginKey: new PluginKey(this.name),
         startOfLine: true,
         command: ({ editor, range, props }) => {
           // increase range.to by one when the next node is of type "text"
@@ -141,12 +140,6 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
     ];
   },
 
-  renderText({ node }) {
-    return this.options.renderText({
-      node,
-    });
-  },
-
   addKeyboardShortcuts() {
     return {
       Backspace: () => {
@@ -211,7 +204,7 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
           command: SlashCommandDescription,
           inputId: string = MAIN_EDITOR_INPUT_ID,
         ) =>
-        ({ commands, chain }) => {
+        ({ chain }) => {
           if (!command.prompt) {
             return false;
           }
@@ -226,14 +219,17 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
             },
           };
 
-          // Create the document with both a prompt block and the slash command paragraph
+          // Right now this inserts at the beginning of the document, which removes codeblocks.
+          // This is the current behavior of slash commands, eg codeblocks aren't sent.
+          // Once this bug if fixed, we should instead insert prompt block at the beginning of the document
+          // without clearing the codeblocks.
           return chain()
             .setContent({
-              type: "doc",
+              type: Document.name,
               content: [
                 // First insert the prompt using the PromptExtension command
                 {
-                  type: PromptExtension.name,
+                  type: PromptBlock.name,
                   attrs: {
                     item: contextItem,
                     inputId,
@@ -241,7 +237,7 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
                 },
                 // Add the paragraph with the slash command
                 {
-                  type: "paragraph",
+                  type: Paragraph.name,
                   content: [
                     {
                       type: this.name,
@@ -264,29 +260,25 @@ export const SlashCommandExtension = Node.create<SlashCommandOptions>({
 
       clearSlashCommand:
         () =>
-        ({ commands, state }) => {
-          // First clear all prompt blocks using the PromptExtension command
-          commands.clearPrompt();
+        ({ editor }) => {
+          editor.commands.clearPrompt();
 
-          // Then find and remove all slash command nodes
-          let found = false;
-          const slashNodes: { pos: number; node: ProseMirrorNode }[] = [];
+          editor.commands.command(({ tr, state }) => {
+            let hasDeleted = false;
 
-          state.doc.descendants((node, pos) => {
-            if (node.type.name === this.name) {
-              slashNodes.push({ pos, node });
-              found = true;
-            }
-            return true;
+            // Find all slash command nodes in the document
+            state.doc.descendants((node, pos) => {
+              if (node.type.name === this.name) {
+                // Delete the node at the found position
+                tr.delete(pos, pos + node.nodeSize);
+                hasDeleted = true;
+              }
+            });
+
+            return hasDeleted;
           });
 
-          // Delete all found slash command nodes in reverse order
-          for (let i = slashNodes.length - 1; i >= 0; i--) {
-            const { pos, node } = slashNodes[i];
-            commands.deleteRange({ from: pos, to: pos + node.nodeSize });
-          }
-
-          return found;
+          return true;
         },
     };
   },

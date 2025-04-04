@@ -3,12 +3,14 @@ import { PluginKey } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
 import { MentionOptions } from "./types";
 
-export const MentionExtension = Node.create<MentionOptions>({
-  name: "mention",
+export const AddCodeToEdit = Node.create<MentionOptions>({
+  name: "add-code-to-edit",
 
   addOptions() {
     return {
-      HTMLAttributes: {},
+      HTMLAttributes: {
+        class: "add-code-to-edit",
+      },
       renderHTML({ options, node }) {
         return [
           "span",
@@ -17,41 +19,14 @@ export const MentionExtension = Node.create<MentionOptions>({
         ];
       },
       suggestion: {
-        char: "@",
+        char: "#",
         pluginKey: new PluginKey(this.name),
-        command: ({ editor, range, props }) => {
-          // increase range.to by one when the next node is of type "text"
-          // and starts with a space character
-          const nodeAfter = editor.view.state.selection.$to.nodeAfter;
-          const overrideSpace = nodeAfter?.text?.startsWith(" ");
-
-          if (overrideSpace) {
-            range.to += 1;
-          }
-
-          editor
-            .chain()
-            .focus()
-            .insertContentAt(range, [
-              {
-                type: this.name,
-                attrs: props,
-              },
-              {
-                type: "text",
-                text: " ",
-              },
-            ])
-            .run();
-
-          window.getSelection()?.collapseToEnd();
-        },
         allow: ({ state, range }) => {
           const $from = state.doc.resolve(range.from);
           const type = state.schema.nodes[this.name];
           const allow = !!$from.parent.type.contentMatch.matchType(type);
 
-          // Check if there's a space after the "@"
+          // Check if there's a space after the "#"
           const textFrom = range.from;
           const textTo = state.selection.$to.pos;
           const text = state.doc.textBetween(textFrom, textTo);

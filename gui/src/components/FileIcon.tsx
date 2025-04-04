@@ -34,7 +34,6 @@ export default function FileIcon({ filename, height, width }: FileIconProps) {
     ignore: "#586e75",
   });
 
-  console.log({ file });
   // Sanitize the SVG string before rendering it
   const { svg, color } = getIcon(file);
   const sanitizedSVG = DOMPurify.sanitize(svg);

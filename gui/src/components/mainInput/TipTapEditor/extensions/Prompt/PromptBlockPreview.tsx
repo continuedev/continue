@@ -1,31 +1,24 @@
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import {
-  NodeViewProps,
-  NodeViewWrapper,
-  NodeViewWrapperProps,
-} from "@tiptap/react";
+import { NodeViewProps } from "@tiptap/react";
 import { useContext, useMemo } from "react";
 import { vscBadgeBackground } from "../../../..";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppSelector } from "../../../../../redux/hooks";
 import { ExpandablePreview } from "../../components/ExpandablePreview";
-import { PromptAttributes } from "./PromptExtension";
+import { NodeViewWrapper } from "../../components/NodeViewWrapper";
+import { PromptBlockAttributes } from "./PromptBlock";
 
 /**
  * Component for prompt blocks in the Tiptap editor
  */
 export const PromptBlockPreview = ({
   node,
-  deleteNode,
   selected,
   editor,
 }: NodeViewProps) => {
-  const { item, inputId } = node.attrs as PromptAttributes;
+  const { item, inputId } = node.attrs as PromptBlockAttributes;
 
   const ideMessenger = useContext(IdeMessengerContext);
-
-  // Not setting this as a "p" will cause issues with foreign keyboards
-  const nodeViewWrapperTag: NodeViewWrapperProps["as"] = "p";
 
   const newestCodeblockForInputId = useAppSelector(
     (store) => store.session.newestCodeblockForInput[inputId],
@@ -44,26 +37,13 @@ export const PromptBlockPreview = ({
   };
 
   const handleDelete = () => {
-    // Use the clearSlashCommand command to properly clean up everything
-    if (editor) {
-      // Make sure this runs after the current event loop cycle
-      // to avoid React state update conflicts
-      setTimeout(() => {
-        editor.commands.clearSlashCommand();
-      }, 0);
-    } else {
-      // Fallback to deleteNode if editor is not available
-      deleteNode();
-    }
+    editor.commands.clearSlashCommand();
   };
 
   const borderColor = selected ? vscBadgeBackground : undefined;
 
   return (
-    <NodeViewWrapper
-      className="prompt-block-with-content"
-      as={nodeViewWrapperTag}
-    >
+    <NodeViewWrapper>
       <ExpandablePreview
         title={item.name}
         icon={<ChatBubbleLeftIcon className="h-3 w-3 pl-1 pr-0.5" />}

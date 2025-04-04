@@ -18,11 +18,7 @@ import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
-import {
-  CodeblockExtension,
-  MentionExtension,
-  SlashCommandExtension,
-} from "../extensions";
+import { CodeBlock, Mention, SlashCommand } from "../extensions";
 
 interface MentionAttrs {
   label: string;
@@ -86,7 +82,7 @@ function processEditorContent(editorState: JSONContent) {
           return [...parts, { type: "text", text }];
         }
 
-        case CodeblockExtension.name: {
+        case CodeBlock.name: {
           if (!p.attrs?.item) {
             console.warn("codeBlock has no item attribute");
             return parts;
@@ -280,10 +276,10 @@ function resolveParagraph(
       switch (child.type) {
         case Text.name:
           return child.text;
-        case MentionExtension.name:
+        case Mention.name:
           contextItems.push(child.attrs as MentionAttrs);
           return child.attrs?.renderInlineAs ?? child.attrs?.label;
-        case SlashCommandExtension.name:
+        case SlashCommand.name:
           if (!slashCommand) {
             slashCommand = child.attrs?.id;
             return "";

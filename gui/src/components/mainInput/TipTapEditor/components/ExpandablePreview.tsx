@@ -88,6 +88,10 @@ export function ExpandablePreview(props: ExpandablePreviewProps) {
   const [contentDims, setContentDims] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
+    setHidden(props.initiallyHidden ?? false);
+  }, [props.initiallyHidden]);
+
+  useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
       setContentDims({
         width: contentRef.current?.scrollWidth ?? 0,
@@ -154,7 +158,6 @@ export function ExpandablePreview(props: ExpandablePreviewProps) {
         </div>
       </div>
 
-      {/* Updated content section */}
       {!hidden && (
         <ContentContainer expanded={isExpanded}>
           <ScrollableContent

@@ -286,10 +286,7 @@ export function createEditorConfig(options: {
         },
       }),
       Text,
-      ContinueExtensions.MentionExtension.configure({
-        HTMLAttributes: {
-          class: "mention",
-        },
+      ContinueExtensions.Mention.configure({
         suggestion: getContextProviderDropdownOptions(
           availableContextProvidersRef,
           getSubmenuContextItemsRef,
@@ -299,15 +296,8 @@ export function createEditorConfig(options: {
           inSubmenuRef,
           ideMessenger,
         ),
-        renderHTML: (props) => {
-          return `@${props.node.attrs.label || props.node.attrs.id}`;
-        },
       }),
-
-      ContinueExtensions.AddCodeToEditExtension.configure({
-        HTMLAttributes: {
-          class: "add-code-to-edit",
-        },
+      ContinueExtensions.AddCodeToEdit.configure({
         suggestion: {
           ...getContextProviderDropdownOptions(
             availableContextProvidersRef,
@@ -343,10 +333,7 @@ export function createEditorConfig(options: {
           },
         },
       }),
-      ContinueExtensions.SlashCommandExtension.configure({
-        HTMLAttributes: {
-          class: "mention",
-        },
+      ContinueExtensions.SlashCommand.configure({
         suggestion: getSlashCommandDropdownOptions(
           availableSlashCommandsRef,
           onClose,
@@ -355,20 +342,13 @@ export function createEditorConfig(options: {
           dispatch,
           props.inputId,
         ),
-        renderText: (props) => {
-          return props.node.attrs.label;
-        },
       }),
-      ContinueExtensions.PromptExtension.configure({
-        HTMLAttributes: {
-          class: "prompt-block",
-        },
-      }),
-      ContinueExtensions.CodeblockExtension,
+      ContinueExtensions.PromptBlock,
+      ContinueExtensions.CodeBlock,
     ],
     editorProps: {
       attributes: {
-        class: "outline-none -mt-1 overflow-hidden",
+        class: "outline-none overflow-hidden",
         style: `font-size: ${getFontSize()}px;`,
       },
     },

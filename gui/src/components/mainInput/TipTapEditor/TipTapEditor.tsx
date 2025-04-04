@@ -10,9 +10,8 @@ import { selectDefaultModel } from "../../../redux/slices/configSlice";
 import { selectIsInEditMode } from "../../../redux/slices/sessionSlice";
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
-import { DragOverlay } from "./DragOverlay";
+import { DragOverlay, InputBoxDiv } from "./components";
 import { useMainEditor } from "./MainEditorProvider";
-import { InputBoxDiv } from "./StyledComponents";
 import "./TipTapEditor.css";
 import { handleImageFile } from "./utils";
 import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
@@ -31,6 +30,9 @@ export interface TipTapEditorProps {
   toolbarOptions?: ToolbarOptions;
   placeholder?: string;
   historyKey: string;
+
+  // TODO: This isn't actually used anywhere in this component, but it appears
+  // to be pulled into some of our TipTap extensions.
   inputId: string;
 }
 
