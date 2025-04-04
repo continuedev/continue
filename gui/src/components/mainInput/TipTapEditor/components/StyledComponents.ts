@@ -8,8 +8,8 @@ import {
   vscForeground,
   vscInputBackground,
   vscInputBorderFocus,
-} from "../..";
-import { getFontSize } from "../../../util";
+} from "../../..";
+import { getFontSize } from "../../../../util";
 
 export const InputBoxDiv = styled.div<{}>`
   resize: none;

@@ -7,12 +7,12 @@ import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { dedent, getMarkdownLanguageTagForFile } from "core/util";
 import { useContext, useMemo } from "react";
-import { vscBadgeBackground } from "../../..";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { useAppSelector } from "../../../../redux/hooks";
-import FileIcon from "../../../FileIcon";
-import StyledMarkdownPreview from "../../../markdown/StyledMarkdownPreview";
-import { ExpandablePreview } from "./ExpandablePreview";
+import { vscBadgeBackground } from "../../../..";
+import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { useAppSelector } from "../../../../../redux/hooks";
+import FileIcon from "../../../../FileIcon";
+import StyledMarkdownPreview from "../../../../markdown/StyledMarkdownPreview";
+import { ExpandablePreview } from "../../components/ExpandablePreview";
 
 const backticksRegex = /`{3,}/gm;
 

@@ -1,19 +1,27 @@
 import { ChatBubbleLeftIcon } from "@heroicons/react/24/outline";
-import { NodeViewWrapper, NodeViewWrapperProps } from "@tiptap/react";
-import { ContextItemWithId } from "core";
+import {
+  NodeViewProps,
+  NodeViewWrapper,
+  NodeViewWrapperProps,
+} from "@tiptap/react";
 import { useContext, useMemo } from "react";
-import { vscBadgeBackground } from "../../..";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { useAppSelector } from "../../../../redux/hooks";
-import { ExpandablePreview } from "./ExpandablePreview";
+import { vscBadgeBackground } from "../../../..";
+import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
+import { useAppSelector } from "../../../../../redux/hooks";
+import { ExpandablePreview } from "../../components/ExpandablePreview";
+import { PromptAttributes } from "./PromptExtension";
 
 /**
  * Component for prompt blocks in the Tiptap editor
  */
-export const PromptBlockPreview = (props: any) => {
-  const { node, deleteNode, selected } = props;
-  const item: ContextItemWithId = node.attrs.item;
-  const inputId = node.attrs.inputId;
+export const PromptBlockPreview = ({
+  node,
+  deleteNode,
+  selected,
+  editor,
+}: NodeViewProps) => {
+  const { item, inputId } = node.attrs as PromptAttributes;
+
   const ideMessenger = useContext(IdeMessengerContext);
 
   // Not setting this as a "p" will cause issues with foreign keyboards
@@ -27,14 +35,26 @@ export const PromptBlockPreview = (props: any) => {
     return newestCodeblockForInputId !== item.id.itemId;
   }, [newestCodeblockForInputId, item.id.itemId]);
 
-  console.log({ id: item.id.itemId, newestCodeblockForInputId });
-
   const handleTitleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     ideMessenger.post("showVirtualFile", {
       content: item.content,
       name: item.name,
     });
+  };
+
+  const handleDelete = () => {
+    // Use the clearSlashCommand command to properly clean up everything
+    if (editor) {
+      // Make sure this runs after the current event loop cycle
+      // to avoid React state update conflicts
+      setTimeout(() => {
+        editor.commands.clearSlashCommand();
+      }, 0);
+    } else {
+      // Fallback to deleteNode if editor is not available
+      deleteNode();
+    }
   };
 
   const borderColor = selected ? vscBadgeBackground : undefined;
@@ -48,7 +68,7 @@ export const PromptBlockPreview = (props: any) => {
         title={item.name}
         icon={<ChatBubbleLeftIcon className="h-3 w-3 pl-1 pr-0.5" />}
         initiallyHidden={initiallyHidden}
-        onDelete={() => deleteNode()}
+        onDelete={handleDelete}
         borderColor={borderColor}
         onTitleClick={handleTitleClick}
       >

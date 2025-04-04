@@ -3,12 +3,8 @@ import { PluginKey } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
 import { MentionOptions } from "./types";
 
-export const ADD_CODE_TO_EDIT_NAME = "add-code-to-edit";
-
-export const AddCodeToEditPluginKey = new PluginKey(ADD_CODE_TO_EDIT_NAME);
-
 export const AddCodeToEditExtension = Node.create<MentionOptions>({
-  name: ADD_CODE_TO_EDIT_NAME,
+  name: "add-code-to-edit",
 
   addOptions() {
     return {
@@ -22,7 +18,7 @@ export const AddCodeToEditExtension = Node.create<MentionOptions>({
       },
       suggestion: {
         char: "#",
-        pluginKey: AddCodeToEditPluginKey,
+        pluginKey: new PluginKey(this.name),
         allow: ({ state, range }) => {
           const $from = state.doc.resolve(range.from);
           const type = state.schema.nodes[this.name];

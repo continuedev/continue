@@ -3,12 +3,8 @@ import { PluginKey } from "@tiptap/pm/state";
 import Suggestion from "@tiptap/suggestion";
 import { MentionOptions } from "./types";
 
-export const MENTION_NAME = "mention";
-
-export const MentionPluginKey = new PluginKey(MENTION_NAME);
-
 export const MentionExtension = Node.create<MentionOptions>({
-  name: MENTION_NAME,
+  name: "mention",
 
   addOptions() {
     return {
@@ -22,7 +18,7 @@ export const MentionExtension = Node.create<MentionOptions>({
       },
       suggestion: {
         char: "@",
-        pluginKey: MentionPluginKey,
+        pluginKey: new PluginKey(this.name),
         command: ({ editor, range, props }) => {
           // increase range.to by one when the next node is of type "text"
           // and starts with a space character
