@@ -4,35 +4,46 @@ import {
   FQSN,
   FullSlug,
   SecretResult,
-  SecretType,
 } from "@continuedev/config-yaml";
 import { IContinueHubClient } from "./IContinueHubClient.js";
 
 interface ContinueHubClientOptions {
   apiKey?: string;
   apiBase?: string;
+  fetchOptions?: RequestInit;
 }
 
 export class ContinueHubClient implements IContinueHubClient {
   private readonly apiKey?: string;
   private readonly apiBase: string;
+  private readonly fetchOptions?: RequestInit;
 
   constructor(options: ContinueHubClientOptions) {
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase ?? "https://api.continue.dev";
+    this.fetchOptions = options.fetchOptions;
   }
 
   private async request(path: string, init: RequestInit): Promise<Response> {
     const url = new URL(path, this.apiBase).toString();
 
-    if (this.apiKey) {
-      init.headers = {
+    const finalInit: RequestInit = {
+      ...this.fetchOptions,
+      ...init,
+      headers: {
+        ...this.fetchOptions?.headers,
         ...init.headers,
+      },
+    };
+
+    if (this.apiKey) {
+      finalInit.headers = {
+        ...finalInit.headers,
         Authorization: `Bearer ${this.apiKey}`,
       };
     }
 
-    const resp = await fetch(url, init);
+    const resp = await fetch(url, finalInit);
 
     if (!resp.ok) {
       throw new Error(
@@ -47,17 +58,6 @@ export class ContinueHubClient implements IContinueHubClient {
     fqsns: FQSN[],
     orgScopeId: string | null,
   ): Promise<(SecretResult | undefined)[]> {
-    if (!this.apiKey) {
-      return fqsns.map((fqsn) => ({
-        found: false,
-        fqsn,
-        secretLocation: {
-          secretName: fqsn.secretName,
-          secretType: SecretType.NotFound,
-        },
-      }));
-    }
-
     const resp = await this.request("ide/sync-secrets", {
       method: "POST",
       body: JSON.stringify({ fqsns, orgScopeId }),
@@ -73,10 +73,6 @@ export class ContinueHubClient implements IContinueHubClient {
       rawYaml: string;
     }[]
   > {
-    if (!this.apiKey) {
-      return [];
-    }
-
     try {
       const url = organizationId
         ? `ide/list-assistants?organizationId=${organizationId}`
@@ -94,10 +90,6 @@ export class ContinueHubClient implements IContinueHubClient {
   async listAssistantFullSlugs(
     organizationId: string | null,
   ): Promise<FullSlug[] | null> {
-    if (!this.apiKey) {
-      return null;
-    }
-
     const url = organizationId
       ? `ide/list-assistant-full-slugs?organizationId=${organizationId}`
       : "ide/list-assistant-full-slugs";
