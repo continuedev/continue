@@ -3,7 +3,6 @@ import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { v4 as uuidv4 } from "uuid";
 import {
   defaultBorderRadius,
   vscCommandCenterInactiveBorder,
@@ -52,17 +51,18 @@ export interface StepContainerPreToolbarProps {
   relativeFilepath: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
+  codeBlockStreamId: string;
   range?: string;
   children: any;
   expanded?: boolean;
   hideApply?: boolean;
+  autoApply?: boolean;
 }
 
 export default function StepContainerPreToolbar(
   props: StepContainerPreToolbarProps,
 ) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const [isExpanded, setIsExpanded] = useState(
@@ -76,7 +76,7 @@ export default function StepContainerPreToolbar(
   );
 
   const applyState = useAppSelector((state) =>
-    selectApplyStateByStreamId(state, streamIdRef.current),
+    selectApplyStateByStreamId(state, props.codeBlockStreamId),
   );
 
   // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
@@ -104,7 +104,7 @@ export default function StepContainerPreToolbar(
     );
 
     ideMessenger.post("applyToFile", {
-      streamId: streamIdRef.current,
+      streamId: props.codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
       curSelectedModelTitle: defaultModel.title,
@@ -135,19 +135,25 @@ export default function StepContainerPreToolbar(
     }
   }, [props.children, codeBlockContent]);
 
-  // Temporarily disabling auto apply for Edit mode
   // useEffect(() => {
   //   const hasCompletedGenerating =
   //     wasGeneratingRef.current && !isGeneratingCodeBlock;
-
-  //   const shouldAutoApply = hasCompletedGenerating && isInEditMode;
-
-  //   if (shouldAutoApply) {
-  //     onClickApply();
-  //   }
-
+  //   console.log(
+  //     wasGeneratingRef.current,
+  //     isGeneratingCodeBlock,
+  //     props.autoApply,
+  //   );
   //   wasGeneratingRef.current = isGeneratingCodeBlock;
-  // }, [isGeneratingCodeBlock]);
+  //   if (hasCompletedGenerating) {
+  //     console.log("Completed generating", props.autoApply);
+  //     if (props.autoApply) {
+  //       onClickApply();
+  //     }
+  //     // else if(isInEditMode) {
+  //     //   onClickApply();
+  //     // }
+  //   }
+  // }, [wasGeneratingRef, isGeneratingCodeBlock, props.autoApply]);
 
   async function onClickAcceptApply() {
     const fileUri = await inferResolvedUriFromRelativePath(
@@ -156,7 +162,7 @@ export default function StepContainerPreToolbar(
     );
     ideMessenger.post("acceptDiff", {
       filepath: fileUri,
-      streamId: streamIdRef.current,
+      streamId: props.codeBlockStreamId,
     });
   }
 
@@ -167,7 +173,7 @@ export default function StepContainerPreToolbar(
     );
     ideMessenger.post("rejectDiff", {
       filepath: fileUri,
-      streamId: streamIdRef.current,
+      streamId: props.codeBlockStreamId,
     });
   }
 

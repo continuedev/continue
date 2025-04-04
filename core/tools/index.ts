@@ -1,4 +1,5 @@
 import { createNewFileTool } from "./definitions/createNewFile";
+import { editFileTool } from "./definitions/editFile";
 import { exactSearchTool } from "./definitions/exactSearch";
 import { lsTool } from "./definitions/lsTool";
 import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
@@ -9,6 +10,7 @@ import { viewDiffTool } from "./definitions/viewDiff";
 
 export const allTools = [
   readFileTool,
+  editFileTool,
   createNewFileTool,
   runTerminalCommandTool,
 

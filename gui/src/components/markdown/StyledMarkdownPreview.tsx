@@ -1,5 +1,5 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -196,6 +196,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
+  const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
+    [],
+  );
+
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
       remarkTables,
@@ -282,8 +286,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           const { className, range } = preChildProps;
           const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
-          const isGeneratingCodeBlock =
-            preChildProps["data-isgeneratingcodeblock"];
 
           if (!props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;
@@ -307,6 +309,18 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             );
           }
 
+          const isGeneratingCodeBlock =
+            preChildProps["data-isgeneratingcodeblock"];
+
+          if (codeblockState.current[codeBlockIndex] === undefined) {
+            codeblockState.current[codeBlockIndex] = {
+              streamId: uuidv4(),
+              isGenerating: isGeneratingCodeBlock,
+            };
+          }
+          const codeblockStreamId =
+            codeblockState.current[codeBlockIndex].streamId;
+
           // We use a custom toolbar for codeblocks in the step container
           return (
             <StepContainerPreToolbar
@@ -316,6 +330,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
+              autoApply={false}
+              codeBlockStreamId={codeblockStreamId}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>
