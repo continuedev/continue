@@ -642,8 +642,8 @@ export const sessionSlice = createSlice({
     },
     cycleMode: (state, action: PayloadAction<{ isJetBrains: boolean }>) => {
       const modes = action.payload.isJetBrains
-        ? ["chat", "edit", "agent"]
-        : ["chat", "agent"];
+        ? ["chat", "agent"]
+        : ["chat", "edit", "agent"];
       const currentIndex = modes.indexOf(state.mode);
       const nextIndex = (currentIndex + 1) % modes.length;
       state.mode = modes[nextIndex] as MessageModes;
