@@ -1,5 +1,6 @@
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
+import { MainEditorProvider } from "./components/mainInput/TipTapEditor";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
 import { VscThemeProvider } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
@@ -66,9 +67,11 @@ function SetupListeners() {
 function App() {
   return (
     <VscThemeProvider>
-      <SubmenuContextProvidersProvider>
-        <RouterProvider router={router} />
-      </SubmenuContextProvidersProvider>
+      <MainEditorProvider>
+        <SubmenuContextProvidersProvider>
+          <RouterProvider router={router} />
+        </SubmenuContextProvidersProvider>
+      </MainEditorProvider>
       <SetupListeners />
     </VscThemeProvider>
   );

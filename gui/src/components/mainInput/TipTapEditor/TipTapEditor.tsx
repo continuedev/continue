@@ -7,16 +7,13 @@ import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectDefaultModel } from "../../../redux/slices/configSlice";
-import {
-  selectIsInEditMode,
-  setMainEditorContentTrigger,
-} from "../../../redux/slices/sessionSlice";
+import { selectIsInEditMode } from "../../../redux/slices/sessionSlice";
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
 import { DragOverlay } from "./DragOverlay";
+import { useMainEditor } from "./MainEditorProvider";
 import { InputBoxDiv } from "./StyledComponents";
 import "./TipTapEditor.css";
-import { useWebviewListeners } from "./useWebviewListeners";
 import { handleImageFile } from "./utils";
 import { createEditorConfig, getPlaceholderText } from "./utils/editorConfig";
 import { useEditorEventHandlers } from "./utils/keyHandlers";
@@ -41,6 +38,7 @@ export const TIPPY_DIV_ID = "tippy-js-div";
 
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useAppDispatch();
+  const mainEditorContext = useMainEditor();
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -56,6 +54,15 @@ function TipTapEditor(props: TipTapEditorProps) {
     ideMessenger,
     dispatch,
   });
+
+  // Register the main editor with the provider
+  useEffect(() => {
+    if (props.isMainInput && editor) {
+      mainEditorContext.setMainEditor(editor);
+      mainEditorContext.setInputId(props.inputId);
+      mainEditorContext.onEnterRef.current = onEnterRef.current;
+    }
+  }, [editor, props.isMainInput, props.inputId, mainEditorContext, onEnterRef]);
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(true);
 
@@ -100,30 +107,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, isStreaming, editor]);
-
-  // This allows anywhere in the app to set the content of the main input
-  const mainInputContentTrigger = useAppSelector(
-    (store) => store.session.mainEditorContentTrigger,
-  );
-  useEffect(() => {
-    if (!props.isMainInput || !mainInputContentTrigger) {
-      return;
-    }
-    queueMicrotask(() => {
-      editor?.commands.setContent(mainInputContentTrigger);
-    });
-    dispatch(setMainEditorContentTrigger(undefined));
-  }, [editor, props.isMainInput, mainInputContentTrigger]);
-
-  // IDE event listeners
-  useWebviewListeners({
-    editor,
-    onEnterRef,
-    dispatch,
-    historyLength,
-    props,
-    editorFocusedRef,
-  });
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
@@ -185,9 +168,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     cancelBlurTimeout();
     setShouldHideToolbar(false);
   }, [cancelBlurTimeout]);
-
-  // TODO pass clear blur timeout to model and mode selectors
-  // Seems like unnecessary for now?
 
   return (
     <InputBoxDiv

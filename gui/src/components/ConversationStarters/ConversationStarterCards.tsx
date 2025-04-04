@@ -3,10 +3,8 @@ import { useState } from "react";
 import { useBookmarkedSlashCommands } from "../../hooks/useBookmarkedSlashCommands";
 import { MAIN_EDITOR_INPUT_ID } from "../../pages/gui/Chat";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  setMainEditorContentTrigger,
-  setNewestCodeblocksForInput,
-} from "../../redux/slices/sessionSlice";
+import { setNewestCodeblocksForInput } from "../../redux/slices/sessionSlice";
+import { useMainEditor } from "../mainInput/TipTapEditor";
 import {
   createParagraphNodeFromSlashCmdDescription,
   createPromptBlockNodeFromSlashCmdDescription,
@@ -17,6 +15,7 @@ const NUM_CARDS_TO_RENDER = 5;
 
 export function ConversationStarterCards() {
   const dispatch = useAppDispatch();
+  const { mainEditor } = useMainEditor();
   const [showAll, setShowAll] = useState(false);
   const { isCommandBookmarked } = useBookmarkedSlashCommands();
   const slashCommands = useAppSelector(
@@ -35,15 +34,13 @@ export function ConversationStarterCards() {
       }),
     );
 
-    dispatch(
-      setMainEditorContentTrigger({
-        type: "doc",
-        content: [
-          createPromptBlockNodeFromSlashCmdDescription(command),
-          createParagraphNodeFromSlashCmdDescription(command),
-        ],
-      }),
-    );
+    mainEditor?.commands.setContent({
+      type: "doc",
+      content: [
+        createPromptBlockNodeFromSlashCmdDescription(command),
+        createParagraphNodeFromSlashCmdDescription(command),
+      ],
+    });
   }
 
   if (bookmarkedSlashCommands.length === 0) {
