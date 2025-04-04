@@ -135,25 +135,17 @@ export default function StepContainerPreToolbar(
     }
   }, [props.children, codeBlockContent]);
 
-  // useEffect(() => {
-  //   const hasCompletedGenerating =
-  //     wasGeneratingRef.current && !isGeneratingCodeBlock;
-  //   console.log(
-  //     wasGeneratingRef.current,
-  //     isGeneratingCodeBlock,
-  //     props.autoApply,
-  //   );
-  //   wasGeneratingRef.current = isGeneratingCodeBlock;
-  //   if (hasCompletedGenerating) {
-  //     console.log("Completed generating", props.autoApply);
-  //     if (props.autoApply) {
-  //       onClickApply();
-  //     }
-  //     // else if(isInEditMode) {
-  //     //   onClickApply();
-  //     // }
-  //   }
-  // }, [wasGeneratingRef, isGeneratingCodeBlock, props.autoApply]);
+  useEffect(() => {
+    const hasCompletedGenerating =
+      wasGeneratingRef.current && !isGeneratingCodeBlock;
+
+    wasGeneratingRef.current = isGeneratingCodeBlock;
+    if (hasCompletedGenerating) {
+      if (props.autoApply) {
+        onClickApply();
+      }
+    }
+  }, [wasGeneratingRef, isGeneratingCodeBlock, props.autoApply]);
 
   async function onClickAcceptApply() {
     const fileUri = await inferResolvedUriFromRelativePath(
