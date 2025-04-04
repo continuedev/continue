@@ -82,13 +82,13 @@ const AssistantSelectOption = ({
       fontSizeModifier={-2}
     >
       <div className="flex w-full flex-col gap-0.5">
-        <div className="flex w-full items-center justify-between">
+        <div className="flex w-full items-center justify-between bg-transparent">
           <div className="flex w-full items-center gap-2">
-            <div className="mr-2 h-4 w-4 flex-shrink-0">
+            <div className="h-4 w-4 flex-shrink-0">
               <AssistantIcon assistant={profile} />
             </div>
             <span
-              className={`line-clamp-1 flex-1 ${selected ? "font-bold" : ""}`}
+              className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""}`}
             >
               {profile.title}
             </span>
@@ -238,7 +238,7 @@ export default function AssistantSelect() {
         </ListboxButton>
 
         <Transition>
-          <ListboxOptions className="pb-0">
+          <ListboxOptions className="min-w-[200px] pb-0">
             <div
               className={`thin-scrollbar flex max-h-[300px] flex-col gap-1 overflow-y-auto py-1`}
             >
@@ -281,7 +281,7 @@ export default function AssistantSelect() {
               />
 
               <div
-                className="text-lightgray flex items-center justify-between px-2 py-1"
+                className="text-lightgray flex items-center justify-between px-2 py-1.5"
                 style={{
                   fontSize: tinyFont,
                 }}
@@ -290,7 +290,7 @@ export default function AssistantSelect() {
                   <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
                 </span>
                 <div
-                  className="flex items-center gap-1"
+                  className="ml-auto flex items-center gap-1"
                   onClick={() => navigate(ROUTES.CONFIG)}
                 >
                   {selectedOrganization?.iconUrl ? (
