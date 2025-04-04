@@ -25,7 +25,6 @@ type UIState = {
   toolSettings: { [toolName: string]: ToolSetting };
   toolGroupSettings: { [toolGroupName: string]: ToolGroupSetting };
   ttsActive: boolean;
-  isBlockSettingsToolbarExpanded: boolean;
 };
 
 export const DEFAULT_TOOL_SETTING: ToolSetting = "allowedWithPermission";
@@ -57,7 +56,6 @@ export const uiSlice = createSlice({
     toolGroupSettings: {
       BUILT_IN_GROUP_NAME: "include",
     },
-    isBlockSettingsToolbarExpanded: true,
   } as UIState,
   reducers: {
     setOnboardingCard: (
@@ -125,10 +123,6 @@ export const uiSlice = createSlice({
     setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
       state.ttsActive = payload;
     },
-    toggleBlockSettingsToolbar: (state) => {
-      state.isBlockSettingsToolbarExpanded =
-        !state.isBlockSettingsToolbarExpanded;
-    },
   },
 });
 
@@ -143,7 +137,6 @@ export const {
   toggleToolGroupSetting,
   addTool,
   setTTSActive,
-  toggleBlockSettingsToolbar,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

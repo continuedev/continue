@@ -11,7 +11,7 @@ import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile, selectProfileThunk } from "../../../redux";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch } from "../../../redux/hooks";
 import {
   fontSize,
   getMetaKeyLabel,
@@ -31,6 +31,7 @@ import { useNavigate } from "react-router-dom";
 import { vscCommandCenterInactiveBorder } from "../..";
 import { ROUTES } from "../../../util/navigation";
 import { ToolTip } from "../../gui/Tooltip";
+import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
 
@@ -143,9 +144,7 @@ export default function AssistantSelect() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { selectedProfile, selectedOrganization } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
-  const isLumpToolbarExpanded = useAppSelector(
-    (state) => state.ui.isBlockSettingsToolbarExpanded,
-  );
+  const { isToolbarExpanded } = useLump();
 
   const { profiles, session, login } = useAuth();
   const navigate = useNavigate();
@@ -205,7 +204,7 @@ export default function AssistantSelect() {
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
         <span
-          className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+          className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
         >
           Create your first assistant
         </span>
@@ -227,7 +226,7 @@ export default function AssistantSelect() {
               <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
             <span
-              className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+              className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
             >
               {selectedProfile.title}
             </span>

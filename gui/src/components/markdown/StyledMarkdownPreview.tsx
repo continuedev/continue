@@ -69,7 +69,7 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    padding: 16px 8px;
+    padding: 8px;
   }
 
   code {
@@ -112,10 +112,6 @@ const StyledMarkdown = styled.div<{
   ol,
   ul {
     line-height: 1.5;
-  }
-
-  > *:first-child {
-    margin-top: 8px;
   }
 
   > *:last-child {

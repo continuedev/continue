@@ -1,43 +1,50 @@
-import { Editor } from "@tiptap/core";
+import { Editor } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { rifWithContentsToContextItem } from "core/commands/util";
 import { MutableRefObject } from "react";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import {
   clearCodeToEdit,
-  setNewestCodeblocksForInput,
+  setNewestToolbarPreviewForInput,
 } from "../../../redux/slices/sessionSlice";
 import { AppDispatch } from "../../../redux/store";
 import { loadSession, saveCurrentSession } from "../../../redux/thunks/session";
-import { TipTapEditorProps } from "./TipTapEditor";
+import { CodeBlock, PromptBlock } from "./extensions";
 
-export function useWebviewListeners(options: {
+/**
+ * Hook for setting up main editor specific webview listeners
+ */
+export function useMainEditorWebviewListeners({
+  editor,
+  onEnterRef,
+  dispatch,
+  historyLength,
+  inputId,
+  editorFocusedRef,
+}: {
   editor: Editor | null;
   onEnterRef: MutableRefObject<(modifiers: InputModifiers) => void>;
   dispatch: AppDispatch;
   historyLength: number;
-  props: TipTapEditorProps;
+  inputId: string;
   editorFocusedRef: MutableRefObject<boolean | undefined>;
 }) {
-  const {
-    editor,
-    onEnterRef,
-    dispatch,
-    historyLength,
-    props,
-    editorFocusedRef,
-  } = options;
+  useWebviewListener(
+    "isContinueInputFocused",
+    async () => {
+      return !!editorFocusedRef.current;
+    },
+    [editorFocusedRef],
+  );
 
   useWebviewListener(
     "userInput",
     async (data) => {
-      if (!props.isMainInput) {
-        return;
-      }
-      editor?.commands.insertContent(data.input);
+      if (!editor) return;
+      editor.commands.insertContent(data.input);
       onEnterRef.current({ useCodebase: false, noContext: true });
     },
-    [editor, onEnterRef.current, props.isMainInput],
+    [editor, onEnterRef.current],
   );
 
   useWebviewListener("jetbrains/editorInsetRefresh", async () => {
@@ -46,11 +53,7 @@ export function useWebviewListeners(options: {
 
   useWebviewListener(
     "focusContinueInput",
-    async (data) => {
-      if (!props.isMainInput) {
-        return;
-      }
-
+    async () => {
       dispatch(clearCodeToEdit());
 
       if (historyLength > 0) {
@@ -61,52 +64,46 @@ export function useWebviewListeners(options: {
           }),
         );
       }
+
       setTimeout(() => {
         editor?.commands.blur();
         editor?.commands.focus("end");
       }, 20);
     },
-    [historyLength, editor, props.isMainInput],
+    [historyLength, editor, dispatch],
   );
 
   useWebviewListener(
     "focusContinueInputWithoutClear",
     async () => {
-      if (!props.isMainInput) {
-        return;
-      }
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput],
+    [editor],
   );
 
   useWebviewListener(
     "focusContinueInputWithNewSession",
     async () => {
-      if (!props.isMainInput) {
-        return;
-      }
       await dispatch(
         saveCurrentSession({
           openNewSession: true,
           generateTitle: true,
         }),
       );
+
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput],
+    [editor, dispatch],
   );
 
   useWebviewListener(
     "highlightedCode",
     async (data) => {
-      if (!props.isMainInput || !editor) {
-        return;
-      }
+      if (!editor) return;
 
       const contextItem = rifWithContentsToContextItem(
         data.rangeInFileWithContents,
@@ -114,31 +111,38 @@ export function useWebviewListeners(options: {
 
       let index = 0;
       for (const el of editor.getJSON()?.content ?? []) {
+        // Prevent exact duplicate code blocks
         if (el.attrs?.item?.name === contextItem.name) {
-          return; // Prevent exact duplicate code blocks
+          return;
         }
-        if (el.type === "codeBlock") {
+
+        if (el.type === CodeBlock.name || el.type === PromptBlock.name) {
           index += 2;
         } else {
           break;
         }
       }
+
+      debugger;
+
       editor
         .chain()
         .insertContentAt(index, {
-          type: "codeBlock",
+          type: CodeBlock.name,
           attrs: {
             item: contextItem,
-            inputId: props.inputId,
+            inputId,
           },
         })
         .run();
+
       dispatch(
-        setNewestCodeblocksForInput({
-          inputId: props.inputId,
+        setNewestToolbarPreviewForInput({
+          inputId,
           contextItemId: contextItem.id.itemId,
         }),
       );
+
       if (data.prompt) {
         editor.commands.focus("end");
         editor.commands.insertContent(data.prompt);
@@ -153,52 +157,42 @@ export function useWebviewListeners(options: {
         editor.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput, historyLength, onEnterRef.current],
+    [editor, inputId, onEnterRef.current],
   );
 
   useWebviewListener(
     "focusEdit",
     async () => {
-      if (!props.isMainInput) {
-        return;
-      }
-
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput],
+    [editor],
   );
 
   useWebviewListener(
     "focusEditWithoutClear",
     async () => {
-      if (!props.isMainInput) {
-        return;
-      }
-
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 2000);
     },
-    [editor, props.isMainInput],
+    [editor],
   );
 
   useWebviewListener(
     "isContinueInputFocused",
     async () => {
-      return props.isMainInput && !!editorFocusedRef.current;
+      return !!editorFocusedRef.current;
     },
-    [editorFocusedRef, props.isMainInput],
-    !props.isMainInput,
+    [editorFocusedRef],
   );
 
   useWebviewListener(
     "focusContinueSessionId",
     async (data) => {
-      if (!props.isMainInput || !data.sessionId) {
-        return;
-      }
+      if (!data.sessionId) return;
+
       await dispatch(
         loadSession({
           sessionId: data.sessionId,
@@ -206,6 +200,6 @@ export function useWebviewListeners(options: {
         }),
       );
     },
-    [props.isMainInput],
+    [],
   );
 }
