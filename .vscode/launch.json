@@ -14,6 +14,7 @@
         // Pass a directory to manually test in
         "${workspaceFolder}/manual-testing-sandbox",
         "${workspaceFolder}/manual-testing-sandbox/test.js",
+        "--disable-extension=redhat.granitecode",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
       "pauseForSourceMap": false,
@@ -83,6 +84,7 @@
       "args": [
         // Pass a directory to run tests in
         "${workspaceFolder}/extensions/vscode/manual-testing-sandbox",
+        "--disable-extension=redhat.granitecode",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
         "--extensionTestsPath=${workspaceFolder}/extensions/vscode/out/test/runner/mochaRunner"
       ],
