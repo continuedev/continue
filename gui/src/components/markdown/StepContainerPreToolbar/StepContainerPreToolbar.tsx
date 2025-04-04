@@ -216,17 +216,16 @@ export default function StepContainerPreToolbar(
           {!isGeneratingCodeBlock && (
             <>
               <CopyButton text={props.codeBlockContent} />
-              {props.hideApply ||
-                (isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
-                  <RunInTerminalButton command={props.codeBlockContent} />
-                ) : (
-                  <ApplyActions
-                    applyState={applyState}
-                    onClickApply={onClickApply}
-                    onClickAccept={onClickAcceptApply}
-                    onClickReject={onClickRejectApply}
-                  />
-                ))}
+              {isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
+                <RunInTerminalButton command={props.codeBlockContent} />
+              ) : props.hideApply ? null : (
+                <ApplyActions
+                  applyState={applyState}
+                  onClickApply={onClickApply}
+                  onClickAccept={onClickAcceptApply}
+                  onClickReject={onClickRejectApply}
+                />
+              )}
             </>
           )}
         </div>

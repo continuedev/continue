@@ -131,6 +131,7 @@ interface StyledMarkdownPreviewProps {
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
   autoApplyCodeblocks?: boolean;
+  hideApply?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -333,6 +334,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               range={range}
               autoApply={props.autoApplyCodeblocks}
               codeBlockStreamId={codeblockStreamId}
+              hideApply={props.hideApply}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>
