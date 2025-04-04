@@ -448,17 +448,15 @@ class IdeProtocolClient(
 
                         var editor: Editor? = null;
 
-//                        if (!filepath.isNullOrEmpty()) {
-//                            val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
-//                            if (virtualFile != null) {
-////                                ApplicationManager.getApplication().invokeAndWait {
-//                                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
-//                                    editor = FileEditorManager.getInstance(project).selectedTextEditor
-////                                }
-//                            }
-//                        } else {
-//                        }
-                            editor = FileEditorManager.getInstance(project).selectedTextEditor
+                        if (!filepath.isNullOrEmpty()) {
+                            val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
+                            if (virtualFile != null) {
+                                ApplicationManager.getApplication().invokeAndWait {
+                                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
+                                }
+                            }
+                        }
+                        editor = FileEditorManager.getInstance(project).selectedTextEditor
 
                         if (editor == null) {
                             ide.showToast(ToastType.ERROR, "No active editor to apply edits to")
