@@ -16,8 +16,8 @@ export const editFileImpl: ToolImpl = async (args, extras) => {
   return [
     {
       name: "Edit results",
-      description: `Result of editing ${args.filepath}`,
-      content: `Successfully applied edits to ${args.filepath}. The users must manually reject/accept diffs. Prompt them to do so in your response`,
+      description: `Edited ${args.filepath}`,
+      content: `Applied edit diffs to ${args.filepath}. The user must manually reject/accept diffs. Prompt them to do so in your response`,
     },
   ];
 };

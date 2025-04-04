@@ -8,6 +8,13 @@ import { editConfigFile, getConfigJsonPath } from "core/util/paths";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
+import { executeGotoProvider } from "./autocomplete/lsp";
+import { Repository } from "./otherExtensions/git";
+import { SecretStorage } from "./stubs/SecretStorage";
+import { VsCodeIdeUtils } from "./util/ideUtils";
+import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
+import { VsCodeWebviewProtocol } from "./webviewProtocol";
+
 import type {
   ContinueRcJson,
   FileStatsMap,
@@ -22,12 +29,6 @@ import type {
   TerminalOptions,
   Thread,
 } from "core";
-import { executeGotoProvider } from "./autocomplete/lsp";
-import { Repository } from "./otherExtensions/git";
-import { SecretStorage } from "./stubs/SecretStorage";
-import { VsCodeIdeUtils } from "./util/ideUtils";
-import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
-import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
