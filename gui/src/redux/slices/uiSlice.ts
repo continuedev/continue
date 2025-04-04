@@ -52,6 +52,7 @@ export const uiSlice = createSlice({
       [BuiltInToolNames.ExactSearch]: "allowedWithoutPermission",
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
+      [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
     },
     toolGroupSettings: {
       BUILT_IN_GROUP_NAME: "include",

@@ -1,12 +1,12 @@
 import { Tool } from "core";
 import { useMemo } from "react";
-import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { toggleToolGroupSetting } from "../../../../redux/slices/uiSlice";
-import { fontSize } from "../../../../util";
-import ToggleSwitch from "../../../gui/Switch";
-import ToolDropdownItem from "./ToolDropdownItem";
+import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
+import { toggleToolGroupSetting } from "../../../../../redux/slices/uiSlice";
+import { fontSize } from "../../../../../util";
+import ToggleSwitch from "../../../../gui/Switch";
+import ToolPolicyItem from "./ToolPolicyItem";
 
-export const ToolPermissionsDialog = () => {
+export const ToolPoliciesSection = () => {
   const availableTools = useAppSelector((state) => state.config.config.tools);
   const toolGroupSettings = useAppSelector(
     (store) => store.ui.toolGroupSettings,
@@ -61,7 +61,7 @@ export const ToolPermissionsDialog = () => {
           </div>
           <div className="relative flex flex-col p-1">
             {tools.map((tool) => (
-              <ToolDropdownItem
+              <ToolPolicyItem
                 key={tool.uri + tool.function.name}
                 tool={tool}
                 duplicatesDetected={duplicateDetection[tool.function.name]}

@@ -2,10 +2,13 @@ import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { Tool } from "core";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { useAppSelector } from "../../../../redux/hooks";
-import { addTool, toggleToolSetting } from "../../../../redux/slices/uiSlice";
-import { fontSize } from "../../../../util";
-import { ToolTip } from "../../../gui/Tooltip";
+import { useAppSelector } from "../../../../../redux/hooks";
+import {
+  addTool,
+  toggleToolSetting,
+} from "../../../../../redux/slices/uiSlice";
+import { fontSize } from "../../../../../util";
+import { ToolTip } from "../../../../gui/Tooltip";
 
 interface ToolDropdownItemProps {
   tool: Tool;
@@ -13,19 +16,19 @@ interface ToolDropdownItemProps {
   excluded: boolean;
 }
 
-function ToolDropdownItem(props: ToolDropdownItemProps) {
+function ToolPolicyItem(props: ToolDropdownItemProps) {
   const dispatch = useDispatch();
-  const settings = useAppSelector(
+  const policy = useAppSelector(
     (state) => state.ui.toolSettings[props.tool.function.name],
   );
 
   useEffect(() => {
-    if (!settings) {
+    if (!policy) {
       dispatch(addTool(props.tool));
     }
-  }, [props.tool.function.name, settings]);
+  }, [props.tool.function.name, policy]);
 
-  if (!settings) {
+  if (!policy) {
     return null;
   }
 
@@ -81,13 +84,13 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
         <span className="text-lightgray">Excluded</span>
       ) : (
         <div className="flex cursor-pointer gap-2">
-          {(settings === "allowedWithPermission" || settings === undefined) && (
+          {(policy === "allowedWithPermission" || policy === undefined) && (
             <span className="text-yellow-500">Ask First</span>
           )}
-          {settings === "allowedWithoutPermission" && (
+          {policy === "allowedWithoutPermission" && (
             <span className="text-green-500">Automatic</span>
           )}
-          {settings === "disabled" && (
+          {policy === "disabled" && (
             <span className="text-lightgray">Excluded</span>
           )}
         </div>
@@ -96,4 +99,4 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
   );
 }
 
-export default ToolDropdownItem;
+export default ToolPolicyItem;

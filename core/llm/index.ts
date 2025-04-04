@@ -1,4 +1,4 @@
-import { ModelRole } from "@continuedev/config-yaml";
+import { ModelRole, Rule } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -143,6 +143,7 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
+  rules?: Rule[];
 
   deployment?: string;
   apiVersion?: string;
@@ -242,6 +243,7 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
     this.roles = options.roles;
+    this.rules = options.rules;
 
     this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
@@ -286,21 +288,17 @@ export abstract class BaseLLM implements ILLM {
         CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
     }
 
-    return compileChatMessages(
-      options.model,
-      messages,
+    return compileChatMessages({
+      modelName: options.model,
+      msgs: messages,
       contextLength,
-      options.maxTokens ?? DEFAULT_MAX_TOKENS,
-      this.supportsImages(),
-      undefined,
+      maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+      supportsImages: this.supportsImages(),
+      prompt: undefined,
       functions,
-      this.systemMessage,
-    );
-  }
-
-  private _getSystemMessage(): string | undefined {
-    // TODO: Merge with config system message
-    return this.systemMessage;
+      systemMessage: this.systemMessage,
+      rules: this.rules ?? [],
+    });
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
@@ -310,7 +308,7 @@ export abstract class BaseLLM implements ILLM {
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
-    const systemMessage = this._getSystemMessage();
+    const systemMessage = this.systemMessage;
     if (systemMessage) {
       msgs.unshift({ role: "system", content: systemMessage });
     }

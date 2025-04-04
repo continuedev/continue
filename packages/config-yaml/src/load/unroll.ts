@@ -17,6 +17,7 @@ import {
   blockSchema,
   ConfigYaml,
   configYamlSchema,
+  Rule,
 } from "../schemas/index.js";
 import { useProxyForUnrenderedSecrets } from "./clientRender.js";
 
@@ -62,7 +63,7 @@ export function parseBlock(configYaml: string): Block {
   }
 }
 
-const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
+export const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
 
 export function getTemplateVariables(templatedYaml: string): string[] {
   const variables = new Set<string>();
@@ -145,6 +146,7 @@ function extractFQSNMap(
 async function extractRenderedSecretsMap(
   rawContent: string,
   platformClient: PlatformClient,
+  alwaysUseProxy: boolean = false,
 ): Promise<Record<string, string>> {
   // Get all template variables
   const templateVars = getTemplateVariables(rawContent);
@@ -164,7 +166,7 @@ async function extractRenderedSecretsMap(
     }
 
     // User secrets are rendered
-    if ("value" in secretResult) {
+    if ("value" in secretResult && !alwaysUseProxy) {
       map[encodeFQSN(secretResult.fqsn)] = secretResult.value;
     } else {
       // Other secrets are rendered as secret locations and then converted to proxy types later
@@ -186,6 +188,7 @@ export interface RenderSecretsUnrollAssistantOptions {
   currentUserSlug: string;
   platformClient: PlatformClient;
   onPremProxyUrl: string | null;
+  alwaysUseProxy?: boolean;
 }
 
 export type UnrollAssistantOptions =
@@ -255,6 +258,7 @@ export async function unrollAssistantFromContent(
   const secrets = await extractRenderedSecretsMap(
     templatedYaml,
     options.platformClient,
+    options.alwaysUseProxy,
   );
   const renderedYaml = renderTemplateData(templatedYaml, {
     secrets,
@@ -320,13 +324,13 @@ export async function unrollBlocks(
     }
   }
 
-  // Rules are a bit different because they're just strings, so handle separately
+  // Rules are a bit different because they can be strings, so hanlde separately
   if (assistant.rules) {
-    const rules: Array<string | null> = [];
+    const rules: (Rule | null)[] = [];
     for (const rule of assistant.rules) {
-      if (typeof rule === "string") {
+      if (typeof rule === "string" || !("uses" in rule)) {
         rules.push(rule);
-      } else {
+      } else if ("uses" in rule) {
         try {
           const blockConfigYaml = await resolveBlock(
             decodeFullSlug(rule.uses),

@@ -227,7 +227,7 @@ More information about usage/params for each context provider can be found [here
 
 ```yaml title="config.yaml"
 context:
-  - provider: files
+  - provider: file
   - provider: code
   - provider: codebase
     params:

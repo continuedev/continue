@@ -28,6 +28,16 @@ const docSchema = z.object({
   faviconUrl: z.string().optional(),
 });
 
+const ruleObjectSchema = z.object({
+  name: z.string(),
+  rule: z.string(),
+  if: z.string().optional(),
+});
+
+const ruleSchema = z.union([z.string(), ruleObjectSchema]);
+
+export type Rule = z.infer<typeof ruleSchema>;
+
 export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.object({
     uses: z.string(),
@@ -63,7 +73,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
   rules: z
     .array(
       z.union([
-        z.string(),
+        ruleSchema,
         z.object({
           uses: z.string(),
           with: z.record(z.string()).optional(),
@@ -94,7 +104,7 @@ export const assistantUnrolledSchemaNonNullable = baseConfigYamlSchema.extend({
   context: z.array(contextSchema).optional(),
   data: z.array(dataSchema).optional(),
   mcpServers: z.array(mcpServerSchema).optional(),
-  rules: z.array(z.string()).optional(),
+  rules: z.array(ruleSchema).optional(),
   prompts: z.array(promptSchema).optional(),
   docs: z.array(docSchema).optional(),
 });
@@ -120,7 +130,9 @@ export const blockSchema = baseConfigYamlSchema.and(
     z.object({ context: z.array(contextSchema).length(1) }),
     z.object({ data: z.array(dataSchema).length(1) }),
     z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
-    z.object({ rules: z.array(z.string()).length(1) }),
+    z.object({
+      rules: z.array(ruleSchema).length(1),
+    }),
     z.object({ prompts: z.array(promptSchema).length(1) }),
     z.object({ docs: z.array(docSchema).length(1) }),
   ]),

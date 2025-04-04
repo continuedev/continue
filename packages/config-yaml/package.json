@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/config-yaml",
-  "version": "1.0.75",
+  "version": "1.0.76",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
