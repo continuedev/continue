@@ -31,7 +31,6 @@ const FileInfo = ({ relativeFilepath, range }: FileInfoProps) => {
         <FileIcon height="20px" width="20px" filename={relativeFilepath} />
       </div>
       <span className="line-clamp-1 break-all hover:underline">
-        asdfasdfasdfasdfasdfasdfasdf
         {getLastNPathParts(relativeFilepath, 1)}
         {range && ` ${range}`}
       </span>
