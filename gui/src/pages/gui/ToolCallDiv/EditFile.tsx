@@ -14,6 +14,7 @@ export function EditFile(props: EditToolCallProps) {
       isRenderingInStepContainer={true}
       source={src}
       autoApplyCodeblocks={true}
+      hideApply={true}
     />
   ) : null;
 }
