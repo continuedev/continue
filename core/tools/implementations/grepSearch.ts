@@ -6,7 +6,7 @@ export const grepSearchImpl: ToolImpl = async (args, extras) => {
   return [
     {
       name: "Search results",
-      description: "Results from exact search",
+      description: "Results from grep search",
       content: formatGrepSearchResults(results),
     },
   ];
