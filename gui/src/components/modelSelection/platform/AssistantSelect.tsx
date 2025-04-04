@@ -1,7 +1,6 @@
 import {
   ArrowTopRightOnSquareIcon,
   BuildingOfficeIcon,
-  CheckIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
@@ -82,6 +81,7 @@ const AssistantSelectOption = ({
       disabled={hasFatalErrors}
       onClick={!hasFatalErrors ? handleOptionClick : undefined}
       fontSizeModifier={-2}
+      className={selected ? "bg-list-active text-list-active-foreground" : ""}
     >
       <div
         className="flex w-full flex-col gap-0.5"
@@ -91,11 +91,6 @@ const AssistantSelectOption = ({
       >
         <div className="flex w-full items-center justify-between bg-transparent">
           <div className="flex w-full items-center gap-1.5">
-            <div className="flex h-4 w-3 items-center justify-center">
-              {selected ? (
-                <CheckIcon className="text-lightgray h-3 w-3" />
-              ) : null}
-            </div>
             <div className="flex h-4 w-4 flex-shrink-0">
               <AssistantIcon assistant={profile} />
             </div>
@@ -284,7 +279,7 @@ export default function AssistantSelect() {
                     fontSize: tinyFont,
                   }}
                 >
-                  <PlusIcon className="ml-5 h-3 w-3 flex-shrink-0" />
+                  <PlusIcon className="h-3 w-3 flex-shrink-0" />
                   New Assistant
                 </div>
               </ListboxOption>
