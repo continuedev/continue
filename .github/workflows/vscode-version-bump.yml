@@ -1,0 +1,111 @@
+name: VS Code Extension Version Bump
+on:
+  schedule:
+    # Runs at 7 AM PST (15:00 UTC) every Friday
+    - cron: "0 15 * * 5"
+  workflow_dispatch:
+    # Allows manual triggering
+
+jobs:
+  version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history and tags
+
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Find and process version tags
+        run: |
+          echo "Starting version bump process..."
+
+          # Find last v1.1.x-vscode tag that's at least 6 days old
+          CURRENT_TIMESTAMP=$(date +%s)
+          SIX_DAYS_AGO=$((CURRENT_TIMESTAMP - 6*24*60*60))
+          echo "Current timestamp: $(date -d @${CURRENT_TIMESTAMP})"
+          echo "Six days ago: $(date -d @${SIX_DAYS_AGO})"
+
+          echo "Looking for v1.1.x-vscode tags..."
+          git for-each-ref --sort=-creatordate --format '%(refname:short) %(creatordate:iso)' refs/tags | grep 'v1\.1\.[0-9]\+-vscode' || echo "No matching tags found"
+
+          LAST_1_1_TAG=$(git for-each-ref --sort=-creatordate --format '%(refname:short) %(creatordate:unix)' refs/tags \
+            | grep 'v1\.1\.[0-9]\+-vscode' \
+            | while read tag timestamp; do
+                if [ $timestamp -le $SIX_DAYS_AGO ]; then
+                  echo ${tag% *}
+                  break
+                fi
+              done)
+
+          echo "Selected v1.1.x tag: $LAST_1_1_TAG"
+          if [ -z "$LAST_1_1_TAG" ]; then
+            echo "::error::No suitable v1.1.x-vscode tag found"
+            exit 1
+          fi
+
+          # Find last v1.0.y-vscode tag
+          echo "Looking for v1.0.y-vscode tags..."
+          git tag --sort=-v:refname | grep '^v1\.0\.[0-9]\+-vscode' || echo "No matching tags found"
+
+          LAST_1_0_TAG=$(git tag --sort=-v:refname | grep '^v1\.0\.[0-9]\+-vscode' | head -n1)
+          echo "Selected v1.0.y tag: $LAST_1_0_TAG"
+          if [ -z "$LAST_1_0_TAG" ]; then
+            echo "::error::No v1.0.y-vscode tag found"
+            exit 1
+          fi
+
+          # Extract the y number and increment it
+          Y_NUMBER=$(echo $LAST_1_0_TAG | sed 's/v1\.0\.\([0-9]\+\)-vscode/\1/')
+          NEXT_Y=$((Y_NUMBER + 1))
+          NEW_BRANCH="v1.0.${NEXT_Y}-vscode"
+          NEW_VERSION="1.0.${NEXT_Y}"
+          echo "Current Y number: $Y_NUMBER"
+          echo "Next Y number: $NEXT_Y"
+          echo "New branch name: $NEW_BRANCH"
+          echo "New version: $NEW_VERSION"
+
+          # Create new branch from the v1.1.x tag
+          echo "Creating new branch from $LAST_1_1_TAG..."
+          git checkout $LAST_1_1_TAG
+          git checkout -b $NEW_BRANCH
+
+          # Update the version in package.json
+          echo "Current package.json version:"
+          cat extensions/vscode/package.json | grep version
+
+          echo "Updating version in package.json..."
+          jq ".version = \"$NEW_VERSION\"" extensions/vscode/package.json > temp.json && mv temp.json extensions/vscode/package.json
+
+          echo "New package.json version:"
+          cat extensions/vscode/package.json | grep version
+
+          # Configure git
+          echo "Configuring git..."
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+
+          # Commit and push changes
+          echo "Committing changes..."
+          git add extensions/vscode/package.json
+          git commit -m "Bump VS Code extension to ${NEW_VERSION}"
+
+          echo "Pushing branch to origin..."
+          git push origin $NEW_BRANCH
+
+          echo "Version bump process completed successfully!"
+
+      - name: Check for errors
+        if: failure()
+        run: |
+          echo "::error::Failed to process version tags and create new branch"
+          echo "Last few lines of git log:"
+          git log -n 5 --oneline
+          echo "Current git status:"
+          git status
+          echo "Current branches:"
+          git branch -a
