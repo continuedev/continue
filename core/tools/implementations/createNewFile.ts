@@ -12,7 +12,7 @@ export const createNewFileImpl: ToolImpl = async (args, extras) => {
     const exists = await extras.ide.fileExists(resolvedFileUri);
     if (exists) {
       throw new Error(
-        `File ${args.filepath} already exists. Use the edit too to edit this file`,
+        `File ${args.filepath} already exists. Use the edit tool to edit this file`,
       );
     }
     await extras.ide.writeFile(resolvedFileUri, args.contents);
