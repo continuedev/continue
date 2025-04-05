@@ -18,7 +18,7 @@ import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { getUriFileExtension } from "core/util/uri";
 import { IIdeMessenger } from "../../../../context/IdeMessenger";
 import { setIsGatheringContext } from "../../../../redux/slices/sessionSlice";
-import { CodeBlock, Mention, SlashCommand } from "../extensions";
+import { CodeBlock, Mention, PromptBlock } from "../extensions";
 
 interface MentionAttrs {
   label: string;
@@ -105,13 +105,12 @@ function processEditorContent(editorState: JSONContent) {
   const parts = (editorState?.content || []).reduce<MessagePart[]>(
     (parts, p) => {
       switch (p.type) {
-        case Paragraph.name: {
-          const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
+        case PromptBlock.name: {
+          slashCommandName = resvolePromptBlock(p);
+        }
 
-          // Only take the first slash command
-          if (foundSlashCommand && !slashCommandName) {
-            slashCommandName = foundSlashCommand;
-          }
+        case Paragraph.name: {
+          const [text, ctxItems] = resolveParagraph(p);
 
           contextItemAttrs.push(...ctxItems);
 
@@ -204,10 +203,13 @@ function processSlashCommand(
 
   let input: string;
 
-  // Get input and add text of last slash command text back in to last text node
+  /**
+   * Although we no longer render slash command <span /> tags from the editor,
+   * we are inserting a slash command style text back into the text here.
+   * This is a a hack, but there's a number of assumptions in `core` that there
+   * is slash command text at the beginning of the text in order to process slash commands.
+   */
   if (lastTextPart) {
-    // TODO: only input the slash cmd is currently using
-    // improove this comment
     input = renderChatMessage({
       role: "user",
       content: lastTextPart.text,
@@ -309,11 +311,12 @@ function findLastIndex<T>(
   return -1; // if no element satisfies the predicate
 }
 
-function resolveParagraph(
-  p: JSONContent,
-): [string, MentionAttrs[], string | undefined] {
+function resvolePromptBlock(p: JSONContent): string | undefined {
+  return p.attrs?.item.name;
+}
+
+function resolveParagraph(p: JSONContent): [string, MentionAttrs[]] {
   const contextItems: MentionAttrs[] = [];
-  let slashCommand: string | undefined;
 
   const text = (p.content || [])
     .map((child) => {
@@ -323,12 +326,7 @@ function resolveParagraph(
         case Mention.name:
           contextItems.push(child.attrs as MentionAttrs);
           return child.attrs?.renderInlineAs ?? child.attrs?.label;
-        case SlashCommand.name:
-          if (!slashCommand) {
-            slashCommand = child.attrs?.id;
-            return "";
-          }
-          return child.attrs?.label;
+
         default:
           console.warn("Unexpected child type", child.type);
           return "";
@@ -337,5 +335,5 @@ function resolveParagraph(
     .join("")
     .trimStart();
 
-  return [text, contextItems, slashCommand];
+  return [text, contextItems];
 }
