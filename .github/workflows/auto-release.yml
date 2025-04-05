@@ -1,0 +1,52 @@
+name: Create Automatic Release
+
+on:
+  schedule:
+    - cron: "0 17 * * *" # Run at 9am PST (17:00 UTC) every day
+  workflow_dispatch: # Keep manual trigger option
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for creating releases
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Important for getting all tags and commits
+
+      - name: Get latest tag
+        id: get_latest_tag
+        run: |
+          # Get the latest tag ending in -vscode or default to v1.1.0-vscode if none exists
+          latest_tag=$(git tag --sort=-creatordate | grep -E "-vscode$" | head -n 1 || echo "v1.1.0-vscode")
+          echo "Latest tag: $latest_tag"
+          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+
+      - name: Generate next version
+        id: generate_version
+        run: |
+          # Extract version numbers (handle the -vscode suffix)
+          version=${LATEST_TAG#v}  # Remove v prefix
+          version=${version%-vscode}  # Remove -vscode suffix
+          IFS='.' read -ra VERSION_PARTS <<< "$version"
+
+          # Increment patch version
+          ((VERSION_PARTS[2]++))
+
+          # Create new version string with -vscode suffix
+          new_version="v${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.${VERSION_PARTS[2]}-vscode"
+          echo "New version will be: $new_version"
+          echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Create a new draft release with auto-generated release notes
+          gh release create "$NEW_VERSION" \
+            --generate-notes \
+            --title "$NEW_VERSION" \
+            --draft \
+            --latest
