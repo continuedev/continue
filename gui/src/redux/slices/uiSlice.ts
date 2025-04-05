@@ -44,6 +44,7 @@ export const uiSlice = createSlice({
     ttsActive: false,
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
+      [BuiltInToolNames.EditExistingFile]: "allowedWithPermission",
       [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
       [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
       [BuiltInToolNames.ViewSubdirectory]: "allowedWithoutPermission",

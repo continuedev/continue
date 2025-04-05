@@ -1143,6 +1143,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  toolCallId?: string;
 }
 
 export interface RangeInFileWithContents {
