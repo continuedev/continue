@@ -23,9 +23,9 @@ jobs:
         id: get_latest_tag
         run: |
           # Get the latest tag ending in -vscode or default to v1.1.0-vscode if none exists
-          latest_tag=$(git tag --sort=-creatordate | grep -E '\-vscode$' || echo "v1.1.0-vscode")
+          latest_tag=$(git tag --sort=-creatordate | grep -E '\-vscode$' | head -n1 || echo "v1.1.0-vscode")
           echo "Latest tag: $latest_tag"
-          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+          echo "LATEST_TAG=${latest_tag}" >> "$GITHUB_ENV"
 
       - name: Generate next version
         id: generate_version
@@ -69,9 +69,9 @@ jobs:
         id: get_latest_tag
         run: |
           # Get the latest tag ending in -jetbrains or default to v1.1.0-jetbrains if none exists
-          latest_tag=$(git tag --sort=-creatordate | grep -E '\-jetbrains$' || echo "v1.1.0-jetbrains")
+          latest_tag=$(git tag --sort=-creatordate | grep -E '\-jetbrains$' | head -n1 || echo "v1.1.0-jetbrains")
           echo "Latest tag: $latest_tag"
-          echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
+          echo "LATEST_TAG=${latest_tag}" >> "$GITHUB_ENV"
 
       - name: Generate next version
         id: generate_version
