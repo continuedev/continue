@@ -54,8 +54,8 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
-  newestCodeblockForInput: Record<string, string>;
   activeToolStreamId?: [string, string];
+  newestToolbarPreviewForInput: Record<string, string>;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -93,7 +93,7 @@ const initialState: SessionState = {
     curIndex: 0,
   },
   lastSessionId: undefined,
-  newestCodeblockForInput: {},
+  newestToolbarPreviewForInput: {},
 };
 
 export const sessionSlice = createSlice({
@@ -667,7 +667,7 @@ export const sessionSlice = createSlice({
       const nextIndex = (currentIndex + 1) % modes.length;
       state.mode = modes[nextIndex] as MessageModes;
     },
-    setNewestCodeblocksForInput: (
+    setNewestToolbarPreviewForInput: (
       state,
       {
         payload,
@@ -676,7 +676,8 @@ export const sessionSlice = createSlice({
         contextItemId: string;
       }>,
     ) => {
-      state.newestCodeblockForInput[payload.inputId] = payload.contextItemId;
+      state.newestToolbarPreviewForInput[payload.inputId] =
+        payload.contextItemId;
     },
   },
   selectors: {
@@ -777,7 +778,7 @@ export const {
   addSessionMetadata,
   updateSessionMetadata,
   deleteSessionMetadata,
-  setNewestCodeblocksForInput,
+  setNewestToolbarPreviewForInput,
   cycleMode,
 } = sessionSlice.actions;
 

@@ -14,7 +14,6 @@ function DocsIndexingStatuses() {
     (store) => store.indexing.indexing.statuses,
   );
   const { selectedProfile } = useAuth();
-
   const mergedDocs = useMemo(() => {
     const parsed = selectedProfile?.rawYaml
       ? parseConfigYaml(selectedProfile?.rawYaml ?? "")

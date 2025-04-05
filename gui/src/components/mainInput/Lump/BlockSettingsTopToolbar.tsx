@@ -9,11 +9,10 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { toggleBlockSettingsToolbar } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
+import { useLump } from "./LumpContext";
 
 interface BlockSettingsToolbarIcon {
   tooltip: string;
@@ -81,21 +80,19 @@ function BlockSettingsToolbarIcon(props: BlockSettingsToolbarIcon) {
   );
 }
 
-interface BlockSettingsTopToolbarProps {
-  selectedSection: string | null;
-  setSelectedSection: (value: string | null) => void;
-}
+export function BlockSettingsTopToolbar() {
+  const {
+    isToolbarExpanded,
+    toggleToolbar,
+    selectedSection,
+    setSelectedSection,
+  } = useLump();
 
-export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
-  const isExpanded = useAppSelector(
-    (state) => state.ui.isBlockSettingsToolbarExpanded,
-  );
-  const dispatch = useAppDispatch();
   const handleEllipsisClick = () => {
-    if (isExpanded) {
-      props.setSelectedSection(null);
+    if (isToolbarExpanded) {
+      setSelectedSection(null);
     }
-    dispatch(toggleBlockSettingsToolbar());
+    toggleToolbar();
   };
 
   return (
@@ -103,14 +100,14 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
       <div className="xs:flex hidden items-center justify-center text-gray-400">
         <BlockSettingsToolbarIcon
           className="-ml-1.5"
-          icon={isExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-          tooltip={isExpanded ? "Collapse sections" : "Expand sections"}
+          icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
+          tooltip={isToolbarExpanded ? "Collapse sections" : "Expand sections"}
           isSelected={false}
           onClick={handleEllipsisClick}
         />
         <div
           className="flex overflow-hidden transition-all duration-200"
-          style={{ width: isExpanded ? `160px` : "0px" }}
+          style={{ width: isToolbarExpanded ? `160px` : "0px" }}
         >
           <div className="flex">
             {sections.map((section) => (
@@ -118,10 +115,10 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
                 key={section.id}
                 icon={section.icon}
                 tooltip={section.tooltip}
-                isSelected={props.selectedSection === section.id}
+                isSelected={selectedSection === section.id}
                 onClick={() =>
-                  props.setSelectedSection(
-                    props.selectedSection === section.id ? null : section.id,
+                  setSelectedSection(
+                    selectedSection === section.id ? null : section.id,
                   )
                 }
               />
