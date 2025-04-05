@@ -1,4 +1,4 @@
-import { parseConfigYaml, Rule } from "@continuedev/config-yaml";
+import { parseConfigYaml, type Rule } from "@continuedev/config-yaml";
 import { ArrowsPointingOutIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { useContext, useMemo } from "react";
 import { useSelector } from "react-redux";

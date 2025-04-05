@@ -1,18 +1,19 @@
 import * as fs from "fs";
-import { decodeSecretLocation, resolveSecretLocationInProxy } from "../dist";
 import {
+  decodeSecretLocation,
   FQSN,
   FullSlug,
   PlatformClient,
   PlatformSecretStore,
   Registry,
   resolveFQSN,
+  resolveSecretLocationInProxy,
   SecretLocation,
   SecretResult,
   SecretStore,
   SecretType,
   unrollAssistant,
-} from "../src";
+} from "../index.js";
 
 // Test e2e flows from raw yaml -> unroll -> client render -> resolve secrets on proxy
 describe("E2E Scenarios", () => {
@@ -92,11 +93,27 @@ describe("E2E Scenarios", () => {
     getContent: async function (fullSlug: FullSlug): Promise<string> {
       return fs
         .readFileSync(
-          `./test/packages/${fullSlug.ownerSlug}/${fullSlug.packageSlug}.yaml`,
+          `./src/__tests__/packages/${fullSlug.ownerSlug}/${fullSlug.packageSlug}.yaml`,
         )
         .toString();
     },
   };
+
+  it("should unroll assistant with a single block that doesn't exist", async () => {
+    const unrolledConfig = await unrollAssistant(
+      "test-org/assistant-with-non-existing-block",
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+      },
+    );
+
+    expect(unrolledConfig.rules?.[0]).toBeNull();
+  });
 
   it("should correctly unroll assistant", async () => {
     const unrolledConfig = await unrollAssistant(
@@ -133,10 +150,10 @@ describe("E2E Scenarios", () => {
     );
 
     expect(unrolledConfig.rules?.length).toBe(2);
-    expect(unrolledConfig.docs?.[0].startUrl).toBe(
+    expect(unrolledConfig.docs?.[0]?.startUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
-    expect(unrolledConfig.docs?.[0].rootUrl).toBe(
+    expect(unrolledConfig.docs?.[0]?.rootUrl).toBe(
       "https://docs.python.org/release/3.13.1",
     );
 
@@ -174,6 +191,41 @@ describe("E2E Scenarios", () => {
       undefined,
     );
     expect(geminiSecretValue2).toBe("gemini-api-key");
+  });
+
+  it("should correctly unroll assistant with injected blocks", async () => {
+    const unrolledConfig = await unrollAssistant(
+      "test-org/assistant",
+      registry,
+      {
+        renderSecrets: true,
+        platformClient,
+        orgScopeId: "test-org",
+        currentUserSlug: "test-user",
+        onPremProxyUrl: null,
+        // Add an injected block
+        injectBlocks: [
+          {
+            ownerSlug: "test-org",
+            packageSlug: "docs",
+            versionSlug: "latest",
+          },
+        ],
+      },
+    );
+
+    // The original docs array should have one item
+    expect(unrolledConfig.docs?.length).toBe(2); // Now 2 with the injected block
+
+    // Check the original doc is still there
+    expect(unrolledConfig.docs?.[0]?.startUrl).toBe(
+      "https://docs.python.org/release/3.13.1",
+    );
+
+    // Check the injected doc block was added
+    expect(unrolledConfig.docs?.[1]?.startUrl).toBe(
+      "https://docs.python.org/release/3.13.1",
+    );
   });
 
   it.skip("should prioritize org over user / package secrets", () => {});
