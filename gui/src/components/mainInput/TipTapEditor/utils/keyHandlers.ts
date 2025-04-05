@@ -1,20 +1,18 @@
 import { Editor } from "@tiptap/react";
 import { KeyboardEvent } from "react";
-import { isJetBrains, isMetaEquivalentKeyPressed } from "../../../util";
+import { isJetBrains, isMetaEquivalentKeyPressed } from "../../../../util";
 import {
   handleJetBrainsOSRMetaKeyIssues,
   handleVSCMetaKeyIssues,
-} from "../util/handleMetaKeyIssues";
+} from "../../util/handleMetaKeyIssues";
 
 export function useEditorEventHandlers(options: {
   editor: Editor | null;
   isOSREnabled: boolean;
   editorFocusedRef: React.MutableRefObject<boolean | undefined>;
-  isInEditMode: boolean;
   setActiveKey: (key: string | null) => void;
 }) {
-  const { editor, isOSREnabled, editorFocusedRef, isInEditMode, setActiveKey } =
-    options;
+  const { editor, isOSREnabled, editorFocusedRef, setActiveKey } = options;
 
   /**
    * This handles various issues with meta key actions

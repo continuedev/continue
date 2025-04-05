@@ -1,9 +1,9 @@
 import { mergeAttributes, Node } from "@tiptap/core";
 import { ReactNodeViewRenderer } from "@tiptap/react";
-import { CodeBlockComponent } from "../CodeBlockComponent";
+import { CodeBlockPreview } from "./CodeBlockPreview";
 
-export const CodeBlockExtension = Node.create({
-  name: "codeBlock",
+export const CodeBlock = Node.create({
+  name: "code-block",
 
   group: "block",
 
@@ -37,6 +37,6 @@ export const CodeBlockExtension = Node.create({
   },
 
   addNodeView() {
-    return ReactNodeViewRenderer(CodeBlockComponent);
+    return ReactNodeViewRenderer(CodeBlockPreview);
   },
 });

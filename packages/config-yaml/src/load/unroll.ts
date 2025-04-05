@@ -17,6 +17,7 @@ import {
   blockSchema,
   ConfigYaml,
   configYamlSchema,
+  Rule,
 } from "../schemas/index.js";
 import { useProxyForUnrenderedSecrets } from "./clientRender.js";
 
@@ -62,7 +63,7 @@ export function parseBlock(configYaml: string): Block {
   }
 }
 
-const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
+export const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
 
 export function getTemplateVariables(templatedYaml: string): string[] {
   const variables = new Set<string>();
@@ -313,13 +314,13 @@ export async function unrollBlocks(
     }
   }
 
-  // Rules are a bit different because they're just strings, so handle separately
+  // Rules are a bit different because they can be strings, so hanlde separately
   if (assistant.rules) {
-    const rules: string[] = [];
+    const rules: Rule[] = [];
     for (const rule of assistant.rules) {
-      if (typeof rule === "string") {
+      if (typeof rule === "string" || !("uses" in rule)) {
         rules.push(rule);
-      } else {
+      } else if ("uses" in rule) {
         const blockConfigYaml = await resolveBlock(
           decodeFullSlug(rule.uses),
           rule.with,

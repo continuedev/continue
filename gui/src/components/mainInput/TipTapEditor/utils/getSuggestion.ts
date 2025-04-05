@@ -6,10 +6,12 @@ import {
 } from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
-import { IIdeMessenger } from "../../../context/IdeMessenger";
-import AtMentionDropdown from "../AtMentionDropdown";
-import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../types";
-import { TIPPY_DIV_ID } from "./TipTapEditor";
+import { IIdeMessenger } from "../../../../context/IdeMessenger";
+import { AppDispatch } from "../../../../redux/store";
+import AtMentionDropdown from "../../AtMentionDropdown";
+import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "../../types";
+import { TIPPY_DIV_ID } from "../TipTapEditor";
+import { SlashCommand } from "../extensions";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
@@ -196,6 +198,8 @@ export function getSlashCommandDropdownOptions(
   onClose: () => void,
   onOpen: () => void,
   ideMessenger: IIdeMessenger,
+  dispatch: AppDispatch,
+  inputId: string,
 ) {
   const items = async ({ query }: { query: string }) => {
     const options = [...availableSlashCommandsRef.current];
@@ -215,7 +219,8 @@ export function getSlashCommandDropdownOptions(
       id: provider.title,
       title: provider.title,
       label: provider.title,
-      type: (provider.type ?? "slashCommand") as ComboBoxItemType,
+      type: (provider.type ?? SlashCommand.name) as ComboBoxItemType,
+      content: provider.content,
       action: provider.action,
     }));
 
@@ -232,6 +237,7 @@ export function getSlashCommandDropdownOptions(
         name: "",
         id: "",
         label: "",
+        content: "",
       });
     }
 

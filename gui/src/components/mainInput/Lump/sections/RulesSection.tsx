@@ -1,4 +1,4 @@
-import { parseConfigYaml } from "@continuedev/config-yaml";
+import { parseConfigYaml, Rule } from "@continuedev/config-yaml";
 import { ArrowsPointingOutIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { useContext, useMemo } from "react";
 import { useSelector } from "react-redux";
@@ -13,11 +13,12 @@ import {
 import { RootState } from "../../../../redux/store";
 import { fontSize } from "../../../../util";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
+import { useLump } from "../LumpContext";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 interface RuleCardProps {
   index: number;
-  rule: string;
+  rule: Rule;
   onClick: () => void;
   title: string;
 }
@@ -31,11 +32,31 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
       setDialogMessage(
         <div className="p-4 text-center">
           <h3>{title}</h3>
-          <pre className="max-w-full overflow-x-scroll">{rule}</pre>
+          <pre className="max-w-full overflow-x-scroll">
+            {/** TODO: Render the rule in a more readable way */}
+            {JSON.stringify(rule)}
+          </pre>
         </div>,
       ),
     );
   }
+
+  const renderRuleContent = () => {
+    if (typeof rule === "string") {
+      return <div>{rule}</div>;
+    }
+
+    if (rule.rule) {
+      return (
+        <div>
+          <div>{rule.rule}</div>
+          {rule.if && <div className="text-gray-500">if: {rule.if}</div>}
+        </div>
+      );
+    }
+
+    return <div>{JSON.stringify(rule)}</div>;
+  };
 
   return (
     <div
@@ -62,7 +83,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
               }}
               className="line-clamp-3 text-gray-400"
             >
-              {rule}
+              {renderRuleContent()}
             </div>
           </div>
           <div className="flex items-center gap-1">
@@ -82,6 +103,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
 export function RulesSection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const { selectedProfile } = useAuth();
+  const { hideLump } = useLump();
 
   const rules = useSelector(
     (state: RootState) => state.config.config.rules ?? [],
@@ -97,11 +119,13 @@ export function RulesSection() {
     }));
   }, [rules]);
 
-  const openUrl = (path: string) =>
+  const openUrl = (path: string) => {
     ideMessenger.request("controlPlane/openUrl", {
       path,
       orgSlug: undefined,
     });
+    hideLump();
+  };
 
   return (
     <div>
@@ -113,11 +137,12 @@ export function RulesSection() {
                 key={index}
                 index={index}
                 rule={rule.unrolledRule}
-                onClick={() =>
+                onClick={() => {
                   ideMessenger.post("config/openProfile", {
                     profileId: undefined,
-                  })
-                }
+                  });
+                  hideLump();
+                }}
                 title="Locally Defined Rule"
               />
             );
@@ -137,27 +162,25 @@ export function RulesSection() {
             );
           }
 
-          if (!rule.ruleFromYaml?.uses) {
-            return null;
+          if ("uses" in rule.ruleFromYaml) {
+            const ruleSlug = rule.ruleFromYaml?.uses;
+
+            return (
+              <RuleCard
+                key={index}
+                index={index}
+                rule={rule.unrolledRule}
+                onClick={() => openUrl(`${ruleSlug}/new-version`)}
+                title={ruleSlug}
+              />
+            );
           }
 
-          const ruleSlug = rule.ruleFromYaml?.uses;
-
-          return (
-            <RuleCard
-              key={index}
-              index={index}
-              rule={rule.unrolledRule}
-              onClick={() => openUrl(`${ruleSlug}/new-version`)}
-              title={ruleSlug}
-            />
-          );
+          // TODO: Handle rules as object with 'if'
+          return null;
         })}
       </div>
       <ExploreBlocksButton blockType="rules" />
     </div>
   );
-}
-function useTypedDispatch() {
-  throw new Error("Function not implemented.");
 }

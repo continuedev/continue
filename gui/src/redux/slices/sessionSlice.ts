@@ -21,6 +21,7 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -53,7 +54,8 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
-  newestCodeblockForInput: Record<string, string>;
+  activeToolStreamId?: [string, string];
+  newestToolbarPreviewForInput: Record<string, string>;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -91,7 +93,7 @@ const initialState: SessionState = {
     curIndex: 0,
   },
   lastSessionId: undefined,
-  newestCodeblockForInput: {},
+  newestToolbarPreviewForInput: {},
 };
 
 export const sessionSlice = createSlice({
@@ -353,15 +355,31 @@ export const sessionSlice = createSlice({
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
               if (
-                toolCallDelta.id &&
-                toolCallDelta.function?.arguments &&
-                toolCallDelta.function?.name &&
-                toolCallDelta.type
+                !(
+                  toolCallDelta.id &&
+                  toolCallDelta.function?.arguments &&
+                  toolCallDelta.function?.name &&
+                  toolCallDelta.type
+                )
               ) {
                 console.warn(
                   "Received streamed tool call without required fields",
                   toolCallDelta,
                 );
+              }
+
+              if (
+                toolCallDelta.id &&
+                toolCallDelta.function?.name ===
+                  BuiltInToolNames.EditExistingFile
+              ) {
+                const streamId = uuidv4();
+                state.codeBlockApplyStates.states.push({
+                  streamId,
+                  toolCallId: toolCallDelta.id,
+                  status: "streaming",
+                });
+                state.activeToolStreamId = [streamId, toolCallDelta.id];
               }
               historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
             }
@@ -626,6 +644,7 @@ export const sessionSlice = createSlice({
       toolCallState.status = "canceled";
     },
     acceptToolCall: (state) => {
+      state.activeToolStreamId = undefined;
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
@@ -648,7 +667,7 @@ export const sessionSlice = createSlice({
       const nextIndex = (currentIndex + 1) % modes.length;
       state.mode = modes[nextIndex] as MessageModes;
     },
-    setNewestCodeblocksForInput: (
+    setNewestToolbarPreviewForInput: (
       state,
       {
         payload,
@@ -657,7 +676,8 @@ export const sessionSlice = createSlice({
         contextItemId: string;
       }>,
     ) => {
-      state.newestCodeblockForInput[payload.inputId] = payload.contextItemId;
+      state.newestToolbarPreviewForInput[payload.inputId] =
+        payload.contextItemId;
     },
   },
   selectors: {
@@ -716,7 +736,7 @@ export const selectCurrentToolCall = createSelector(
 export const selectApplyStateByStreamId = createSelector(
   [
     (state: RootState) => state.session.codeBlockApplyStates.states,
-    (state: RootState, streamId: string) => streamId,
+    (state: RootState, streamId?: string) => streamId,
   ],
   (states, streamId) => {
     return states.find((state) => state.streamId === streamId);
@@ -758,7 +778,7 @@ export const {
   addSessionMetadata,
   updateSessionMetadata,
   deleteSessionMetadata,
-  setNewestCodeblocksForInput,
+  setNewestToolbarPreviewForInput,
   cycleMode,
 } = sessionSlice.actions;
 
