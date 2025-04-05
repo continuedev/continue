@@ -64,7 +64,10 @@ export class ContinueHubClient implements IContinueHubClient {
     });
     return (await resp.json()) as any;
   }
-  async listAssistants(organizationId: string | null): Promise<
+  async listAssistants(options: {
+    organizationId: string | null;
+    alwaysUseProxy?: boolean;
+  }): Promise<
     {
       configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
@@ -73,10 +76,21 @@ export class ContinueHubClient implements IContinueHubClient {
       rawYaml: string;
     }[]
   > {
+    const organizationId = options.organizationId;
+    const alwaysUseProxy = options.alwaysUseProxy ?? false;
+
     try {
-      const url = organizationId
-        ? `ide/list-assistants?organizationId=${organizationId}`
-        : "ide/list-assistants";
+      const urlObj = new URL(
+        organizationId ? "ide/list-assistants" : "ide/list-assistants",
+        this.apiBase,
+      );
+      if (organizationId) {
+        urlObj.searchParams.set("organizationId", organizationId);
+      }
+      if (alwaysUseProxy) {
+        urlObj.searchParams.set("alwaysUseProxy", alwaysUseProxy.toString());
+      }
+      const url = urlObj.toString();
 
       const resp = await this.request(url, {
         method: "GET",

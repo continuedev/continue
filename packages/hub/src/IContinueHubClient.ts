@@ -18,7 +18,10 @@ export interface IContinueHubClient {
   /**
    * Do a full reload of all assistants used in the organization by the user.
    */
-  listAssistants(organizationId: string | null): Promise<
+  listAssistants(options: {
+    organizationId: string | null;
+    alwaysUseProxy?: boolean;
+  }): Promise<
     {
       configResult: ConfigResult<AssistantUnrolled>;
       ownerSlug: string;
