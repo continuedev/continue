@@ -348,6 +348,15 @@ class IdeProtocolClient(
                         respond(results)
                     }
 
+                    "getFileResults" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            GetFileResultsParams::class.java
+                        )
+                        val results = ide.getFileResults(params.pattern)
+                        respond(results)
+                    }
+
                     "getOpenFiles" -> {
                         val openFiles = ide.getOpenFiles()
                         respond(openFiles)

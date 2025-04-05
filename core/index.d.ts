@@ -711,6 +711,8 @@ export interface IDE {
 
   getSearchResults(query: string): Promise<string>;
 
+  getFileResults(pattern: string): Promise<string[]>;
+
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
   getProblems(fileUri?: string | undefined): Promise<Problem[]>;
