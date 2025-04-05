@@ -1,4 +1,4 @@
-name: Publish Preview Extension
+name: Publish Pre-release Extension
 
 on:
   release:
@@ -207,6 +207,7 @@ jobs:
     if: github.event_name != 'workflow_dispatch' || github.event.inputs.publish_build == 'true'
     permissions:
       contents: write
+      pull-requests: write
     steps:
       # 0. Setup git
       - name: Checkout
@@ -242,12 +243,44 @@ jobs:
           cd extensions/vscode
           npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
 
-      # 4. Update the package.json version and push changes
+      # 4. Create PR with version bump
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Create PR branch
+        run: |
+          BRANCH_NAME="chore/bump-vscode-version-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Bump version in package.json
+        run: |
+          cd extensions/vscode
+          npm version patch --no-git-tag-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "NEW_VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          commit-message: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
+          title: "chore: bump vscode extension version to ${{ env.NEW_VERSION }}"
+          body: |
+            Automated PR to bump the VS Code extension version after successful pre-release publication.
+
+            - Bumped version in extensions/vscode/package.json to ${{ env.NEW_VERSION }}
+          branch: ${{ env.BRANCH_NAME }}
+          base: main
+          delete-branch: true
+
+      # 5. Update version in package.json
       # - name: Update version in package.json
       #   run: |
       #     cd extensions/vscode
       #     npm version patch
-
       # - name: Commit changes
       #   run: |
       #     git config --local user.email "action@github.com"
