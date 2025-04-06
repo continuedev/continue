@@ -1,4 +1,4 @@
-name: VS Code Extension Version Bump
+name: Create VS Code main release draft
 on:
   schedule:
     # Runs at 7 AM PST (15:00 UTC) every Friday
