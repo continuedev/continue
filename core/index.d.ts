@@ -162,6 +162,11 @@ export interface ILLM extends LLMOptions {
     otherData: Record<string, string>,
     canPutWordsInModelsMouth?: boolean,
   ): string | ChatMessage[];
+
+  /**
+   * This method should return false if the model is missing an API key or something else that would cause it to fail if called
+   */
+  isProperlyConfigured(): boolean;
 }
 
 export interface ModelInstaller {

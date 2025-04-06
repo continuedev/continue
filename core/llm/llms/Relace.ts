@@ -9,4 +9,8 @@ export class Relace extends OpenAI {
     apiBase: "https://instantapply.endpoint.relace.run/v1/",
   };
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
+
+  isProperlyConfigured(): boolean {
+    return !!this.apiKey;
+  }
 }

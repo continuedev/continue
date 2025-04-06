@@ -260,6 +260,12 @@ export abstract class BaseLLM implements ILLM {
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
   }
+  isProperlyConfigured(): boolean {
+    return true;
+  }
+  useLegacyCompletionsEndpoint?: boolean | undefined;
+  modelArn?: string | undefined;
+  env?: Record<string, string | number | boolean> | undefined;
 
   protected createOpenAiAdapter() {
     return constructLlmApi({
