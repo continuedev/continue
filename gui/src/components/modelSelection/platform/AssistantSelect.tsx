@@ -1,4 +1,5 @@
 import {
+  ArrowPathRoundedSquareIcon,
   ArrowTopRightOnSquareIcon,
   BuildingOfficeIcon,
   ChevronDownIcon,
@@ -153,7 +154,7 @@ const AssistantSelectOption = ({
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile } = useAuth();
+  const { selectedProfile, refreshProfiles } = useAuth();
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
@@ -189,8 +190,7 @@ export default function AssistantSelect() {
         if (now - lastToggleTime >= DEBOUNCE_MS) {
           lastToggleTime = now;
 
-          const profileIds =
-            currentOrg?.profiles.map((profile) => profile.id) ?? [];
+          const profileIds = profiles?.map((profile) => profile.id) ?? [];
           // In case of 1 or 0 profiles just does nothing
           if (profileIds.length < 2) {
             return;
@@ -242,118 +242,136 @@ export default function AssistantSelect() {
   }
 
   return (
-    <Listbox>
-      <div className="relative">
-        <ListboxButton
-          data-testid="assistant-select-button"
-          ref={buttonRef}
-          className="border-none bg-transparent text-gray-400 hover:brightness-125"
-          style={{ fontSize: fontSize(-3) }}
-        >
-          <div className="flex flex-row items-center gap-1.5">
-            <div className="h-3 w-3 flex-shrink-0 select-none">
-              <AssistantIcon size={3} assistant={selectedProfile} />
-            </div>
-            <span
-              className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-            >
-              {selectedProfile.title}
-            </span>
-          </div>
-          <ChevronDownIcon
-            className="h-2 w-2 flex-shrink-0 select-none"
-            aria-hidden="true"
-          />
-        </ListboxButton>
-
-        <Transition>
-          <ListboxOptions className="min-w-[200px] pb-0">
-            <div
-              className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
-            >
-              {profiles?.map((profile, idx) => {
-                return (
-                  <AssistantSelectOption
-                    key={idx}
-                    profile={profile}
-                    onClick={close}
-                    selected={profile.id === selectedProfile.id}
-                  />
-                );
-              })}
-            </div>
-
-            <div className="flex flex-col">
-              <div
-                className="my-0 h-[0.5px]"
-                style={{
-                  backgroundColor: vscCommandCenterInactiveBorder,
-                }}
-              />
-
-              <ListboxOption
-                value={"new-assistant"}
-                fontSizeModifier={-2}
-                onClick={session ? onNewAssistant : () => login(false)}
+    <>
+      <Listbox>
+        <div className="relative">
+          <ListboxButton
+            data-testid="assistant-select-button"
+            ref={buttonRef}
+            className="border-none bg-transparent text-gray-400 hover:brightness-125"
+            style={{ fontSize: fontSize(-3) }}
+          >
+            <div className="flex flex-row items-center gap-1.5">
+              <div className="h-3 w-3 flex-shrink-0 select-none">
+                <AssistantIcon size={3} assistant={selectedProfile} />
+              </div>
+              <span
+                className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
               >
+                {selectedProfile.title}
+              </span>
+            </div>
+            <ChevronDownIcon
+              className="h-2 w-2 flex-shrink-0 select-none"
+              aria-hidden="true"
+            />
+          </ListboxButton>
+
+          <Transition>
+            <ListboxOptions className="pb-0">
+              <div
+                className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
+              >
+                {profiles?.map((profile, idx) => {
+                  return (
+                    <AssistantSelectOption
+                      key={idx}
+                      profile={profile}
+                      onClick={close}
+                      selected={profile.id === selectedProfile.id}
+                    />
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-col">
                 <div
-                  className="text-lightgray flex flex-row items-center gap-2"
+                  className="my-0 h-[0.5px]"
+                  style={{
+                    backgroundColor: vscCommandCenterInactiveBorder,
+                  }}
+                />
+
+                <div className="flex flex-row items-center justify-between gap-1 pr-2">
+                  <ListboxOption
+                    value={"new-assistant"}
+                    fontSizeModifier={-2}
+                    onClick={session ? onNewAssistant : () => login(false)}
+                  >
+                    <div
+                      className="text-lightgray flex flex-row items-center gap-2"
+                      style={{
+                        fontSize: tinyFont,
+                      }}
+                    >
+                      <PlusIcon className="ml-0.5 h-3 w-3 flex-shrink-0" />
+                      New Assistant
+                    </div>
+                  </ListboxOption>
+                  <div>
+                    <ArrowPathRoundedSquareIcon
+                      data-tooltip-id="refresh-all"
+                      className="h-3 w-3 cursor-pointer hover:brightness-125"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        refreshProfiles();
+                        buttonRef.current?.click();
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  className="my-0 h-[0.5px]"
+                  style={{
+                    backgroundColor: vscCommandCenterInactiveBorder,
+                  }}
+                />
+
+                <div
+                  className="text-lightgray flex items-center justify-between px-2 py-1"
                   style={{
                     fontSize: tinyFont,
                   }}
                 >
-                  <PlusIcon className="ml-0.5 h-3 w-3 flex-shrink-0" />
-                  New Assistant
-                </div>
-              </ListboxOption>
-
-              <div
-                className="my-0 h-[0.5px]"
-                style={{
-                  backgroundColor: vscCommandCenterInactiveBorder,
-                }}
-              />
-
-              <div
-                className="text-lightgray flex items-center justify-between px-2 py-1"
-                style={{
-                  fontSize: tinyFont,
-                }}
-              >
-                <span
-                  className="block"
-                  style={{
-                    fontSize: tinyFont - 1,
-                  }}
-                >
-                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
-                </span>
-                <div
-                  className="ml-auto flex items-center gap-1"
-                  onClick={() => navigate(ROUTES.CONFIG)}
-                >
-                  {currentOrg?.iconUrl ? (
-                    <img
-                      src={currentOrg.iconUrl}
-                      className="h-3 w-3 rounded-full"
-                    />
-                  ) : (
-                    <BuildingOfficeIcon className="h-4 w-4" />
-                  )}
                   <span
-                    className="hover:cursor-pointer hover:underline"
+                    className="block"
                     style={{
                       fontSize: tinyFont - 1,
                     }}
                   >
-                    {currentOrg?.name || "Personal"}
+                    <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
                   </span>
+                  <div
+                    className="ml-auto flex items-center gap-1"
+                    onClick={() => navigate(ROUTES.CONFIG)}
+                  >
+                    {currentOrg?.iconUrl ? (
+                      <img
+                        src={currentOrg.iconUrl}
+                        className="h-3 w-3 rounded-full"
+                      />
+                    ) : (
+                      <BuildingOfficeIcon className="h-4 w-4" />
+                    )}
+                    <span
+                      className="hover:cursor-pointer hover:underline"
+                      style={{
+                        fontSize: tinyFont - 1,
+                      }}
+                    >
+                      {currentOrg?.name || "Personal"}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </ListboxOptions>
-        </Transition>
-      </div>
-    </Listbox>
+            </ListboxOptions>
+          </Transition>
+        </div>
+      </Listbox>
+      <ToolTip place="left" id="refresh-all">
+        Refresh orgs/assistants
+      </ToolTip>
+    </>
   );
 }
