@@ -68,6 +68,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       profileId: string | null;
       organizations: SerializedOrgWithProfiles[];
       selectedOrgId: string;
+      usingContinueForTeams: boolean;
     },
   ];
   "config/deleteModel": [{ title: string }, void];

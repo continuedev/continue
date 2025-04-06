@@ -11,6 +11,7 @@ import React, {
   useState,
 } from "react";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 import { selectCurrentOrg, selectSelectedProfile } from "../redux/";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
@@ -121,17 +122,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
   }, []);
 
-  // useWebviewListener(
-  //   setControlServerBetaEnabled(settings.enableControlServerBeta);
-  //   "didChangeIdeSettings",
-  //   async (msg) => {
-  //     const { settings } = msg;
-  //     dispatch(
-  //       setLastControlServerBetaEnabledStatus(settings.enableControlServerBeta),
-  //     );
-  //   },
-  //   [],
-  // );
+  // Hacky, remove once continue for teams is deprecated
+  useWebviewListener(
+    "configUpdate",
+    async (msg) => {
+      setControlServerBetaEnabled(msg.usingContinueForTeams);
+    },
+    [],
+  );
 
   const refreshProfiles = async () => {
     try {

@@ -129,6 +129,8 @@ export class Core {
           this.configHandler.currentProfile?.profileDescription.id || null,
         organizations: this.configHandler.getSerializedOrgs(),
         selectedOrgId: this.configHandler.currentOrg.id,
+        usingContinueForTeams: (await ideSettingsPromise)
+          .enableControlServerBeta,
       });
 
       // update additional submenu context providers registered via VSCode API
@@ -458,6 +460,8 @@ export class Core {
           this.configHandler.currentProfile?.profileDescription.id ?? null,
         organizations: this.configHandler.getSerializedOrgs(),
         selectedOrgId: this.configHandler.currentOrg.id,
+        usingContinueForTeams: (await ideSettingsPromise)
+          .enableControlServerBeta,
       };
     });
 
