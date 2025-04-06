@@ -3,6 +3,7 @@ import {
   ChevronUpDownIcon,
 } from "@heroicons/react/24/outline";
 import { UserCircleIcon } from "@heroicons/react/24/solid";
+import { useContext } from "react";
 import {
   Listbox,
   ListboxButton,
@@ -10,18 +11,24 @@ import {
   ListboxOptions,
 } from "../../components/ui/Listbox";
 import { useAuth } from "../../context/Auth";
-import { selectOrgThunk } from "../../redux";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { setSelectedOrgId } from "../../redux";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 
 export function ScopeSelect() {
   const { organizations, selectedOrganization } = useAuth();
+  const ideMessenger = useContext(IdeMessengerContext);
   const selectedOrgId = useAppSelector(
     (state) => state.organizations.selectedOrganizationId,
   );
   const dispatch = useAppDispatch();
 
-  const handleChange = (newValue: string | null) => {
-    dispatch(selectOrgThunk(newValue));
+  const handleChange = (newValue: string) => {
+    // optimisitic update
+    dispatch(setSelectedOrgId(newValue));
+    ideMessenger.post("didChangeSelectedOrg", {
+      id: newValue,
+    });
   };
 
   const CurScopeEntityFallBackIcon = selectedOrgId

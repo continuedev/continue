@@ -21,6 +21,9 @@ export const organizationsSlice = createSlice({
     ) => {
       state.organizations = payload;
     },
+    setSelectedOrgId: (state, { payload }: PayloadAction<string | null>) => {
+      state.selectedOrganizationId = payload;
+    },
   },
   selectors: {
     selectSelectedOrganization: (state) =>
