@@ -10,7 +10,11 @@ import {
 import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { selectCurrentOrg, setSelectedProfile } from "../../../redux";
+import {
+  selectCurrentOrg,
+  setSelectedOrgId,
+  setSelectedProfile,
+} from "../../../redux";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   fontSize,
@@ -156,6 +160,7 @@ export default function AssistantSelect() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { selectedProfile, refreshProfiles } = useAuth();
   const currentOrg = useAppSelector(selectCurrentOrg);
+  const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
 
@@ -216,6 +221,24 @@ export default function AssistantSelect() {
     };
   }, [currentOrg, selectedProfile]);
 
+  const cycleOrgs = () => {
+    const orgIds = orgs.map((org) => org.id);
+    if (orgIds.length < 2) {
+      return;
+    }
+    let nextId = orgIds[0];
+    if (currentOrg) {
+      const curIndex = orgIds.indexOf(currentOrg.id);
+      const nextIndex = (curIndex + 1) % orgIds.length;
+      nextId = orgIds[nextIndex];
+    }
+    // Optimistic update
+    dispatch(setSelectedOrgId(nextId));
+    ideMessenger.post("didChangeSelectedOrg", {
+      id: nextId,
+    });
+  };
+
   const tinyFont = useFontSize(-4);
   const smallFont = useFontSize(-3);
 
@@ -242,136 +265,138 @@ export default function AssistantSelect() {
   }
 
   return (
-    <>
-      <Listbox>
-        <div className="relative">
-          <ListboxButton
-            data-testid="assistant-select-button"
-            ref={buttonRef}
-            className="border-none bg-transparent text-gray-400 hover:brightness-125"
-            style={{ fontSize: fontSize(-3) }}
-          >
-            <div className="flex flex-row items-center gap-1.5">
-              <div className="h-3 w-3 flex-shrink-0 select-none">
-                <AssistantIcon size={3} assistant={selectedProfile} />
-              </div>
-              <span
-                className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
-              >
-                {selectedProfile.title}
-              </span>
+    <Listbox>
+      <div className="relative">
+        <ListboxButton
+          data-testid="assistant-select-button"
+          ref={buttonRef}
+          className="border-none bg-transparent text-gray-400 hover:brightness-125"
+          style={{ fontSize: fontSize(-3) }}
+        >
+          <div className="flex flex-row items-center gap-1.5">
+            <div className="h-3 w-3 flex-shrink-0 select-none">
+              <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
-            <ChevronDownIcon
-              className="h-2 w-2 flex-shrink-0 select-none"
-              aria-hidden="true"
-            />
-          </ListboxButton>
+            <span
+              className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+            >
+              {selectedProfile.title}
+            </span>
+          </div>
+          <ChevronDownIcon
+            className="h-2 w-2 flex-shrink-0 select-none"
+            aria-hidden="true"
+          />
+        </ListboxButton>
 
-          <Transition>
-            <ListboxOptions className="pb-0">
+        <Transition>
+          <ListboxOptions className="pb-0">
+            <div
+              className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
+            >
+              {profiles?.map((profile, idx) => {
+                return (
+                  <AssistantSelectOption
+                    key={idx}
+                    profile={profile}
+                    onClick={close}
+                    selected={profile.id === selectedProfile.id}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col">
               <div
-                className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
-              >
-                {profiles?.map((profile, idx) => {
-                  return (
-                    <AssistantSelectOption
-                      key={idx}
-                      profile={profile}
-                      onClick={close}
-                      selected={profile.id === selectedProfile.id}
-                    />
-                  );
-                })}
-              </div>
+                className="my-0 h-[0.5px]"
+                style={{
+                  backgroundColor: vscCommandCenterInactiveBorder,
+                }}
+              />
 
-              <div className="flex flex-col">
-                <div
-                  className="my-0 h-[0.5px]"
-                  style={{
-                    backgroundColor: vscCommandCenterInactiveBorder,
-                  }}
-                />
-
-                <div className="flex flex-row items-center justify-between gap-1 pr-2">
-                  <ListboxOption
-                    value={"new-assistant"}
-                    fontSizeModifier={-2}
-                    onClick={session ? onNewAssistant : () => login(false)}
+              <div className="flex flex-row items-center justify-between gap-1 pr-2">
+                <ListboxOption
+                  value={"new-assistant"}
+                  fontSizeModifier={-2}
+                  onClick={session ? onNewAssistant : () => login(false)}
+                >
+                  <div
+                    className="text-lightgray flex flex-row items-center gap-2"
+                    style={{
+                      fontSize: tinyFont,
+                    }}
                   >
-                    <div
-                      className="text-lightgray flex flex-row items-center gap-2"
-                      style={{
-                        fontSize: tinyFont,
-                      }}
-                    >
-                      <PlusIcon className="ml-0.5 h-3 w-3 flex-shrink-0" />
-                      New Assistant
-                    </div>
-                  </ListboxOption>
-                  <div>
-                    <ArrowPathRoundedSquareIcon
-                      data-tooltip-id="refresh-all"
-                      className="h-3 w-3 cursor-pointer hover:brightness-125"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        refreshProfiles();
-                        buttonRef.current?.click();
-                      }}
-                    />
+                    <PlusIcon className="ml-0.5 h-3 w-3 flex-shrink-0" />
+                    New Assistant
                   </div>
-                </div>
-
+                </ListboxOption>
                 <div
-                  className="my-0 h-[0.5px]"
-                  style={{
-                    backgroundColor: vscCommandCenterInactiveBorder,
-                  }}
-                />
-
-                <div
-                  className="text-lightgray flex items-center justify-between px-2 py-1"
-                  style={{
-                    fontSize: tinyFont,
+                  className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    refreshProfiles();
+                    buttonRef.current?.click();
                   }}
                 >
+                  <ArrowPathRoundedSquareIcon className="h-3 w-3" />
                   <span
-                    className="block"
+                    className="hidden sm:flex"
+                    style={{
+                      fontSize: tinyFont,
+                    }}
+                  >
+                    Refresh
+                  </span>
+                </div>
+              </div>
+
+              <div
+                className="my-0 h-[0.5px]"
+                style={{
+                  backgroundColor: vscCommandCenterInactiveBorder,
+                }}
+              />
+
+              <div
+                className="text-lightgray flex items-center justify-between px-2 py-1"
+                style={{
+                  fontSize: tinyFont,
+                }}
+              >
+                <span
+                  className="block"
+                  style={{
+                    fontSize: tinyFont - 1,
+                  }}
+                >
+                  <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
+                </span>
+                <div
+                  className="ml-auto flex items-center gap-1"
+                  onClick={cycleOrgs}
+                >
+                  {currentOrg?.iconUrl ? (
+                    <img
+                      src={currentOrg.iconUrl}
+                      className="h-3 w-3 rounded-full"
+                    />
+                  ) : (
+                    <BuildingOfficeIcon className="h-4 w-4" />
+                  )}
+                  <span
+                    className="hover:cursor-pointer hover:underline"
                     style={{
                       fontSize: tinyFont - 1,
                     }}
                   >
-                    <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
+                    {currentOrg?.name || "Personal"}
                   </span>
-                  <div
-                    className="ml-auto flex items-center gap-1"
-                    onClick={() => navigate(ROUTES.CONFIG)}
-                  >
-                    {currentOrg?.iconUrl ? (
-                      <img
-                        src={currentOrg.iconUrl}
-                        className="h-3 w-3 rounded-full"
-                      />
-                    ) : (
-                      <BuildingOfficeIcon className="h-4 w-4" />
-                    )}
-                    <span
-                      className="hover:cursor-pointer hover:underline"
-                      style={{
-                        fontSize: tinyFont - 1,
-                      }}
-                    >
-                      {currentOrg?.name || "Personal"}
-                    </span>
-                  </div>
                 </div>
               </div>
-            </ListboxOptions>
-          </Transition>
-        </div>
-      </Listbox>
-      <ToolTip place="left" id="refresh-all">
-        Refresh orgs/assistants
-      </ToolTip>
-    </>
+            </div>
+          </ListboxOptions>
+        </Transition>
+      </div>
+    </Listbox>
   );
 }
