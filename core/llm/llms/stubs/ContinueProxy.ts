@@ -1,4 +1,8 @@
-import { ContinueProperties } from "@continuedev/config-yaml";
+import {
+  ContinueProperties,
+  decodeSecretLocation,
+  SecretType,
+} from "@continuedev/config-yaml";
 
 import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
 import { Telemetry } from "../../../util/posthog.js";
@@ -47,6 +51,18 @@ class ContinueProxy extends OpenAI {
     return {
       continueProperties,
     };
+  }
+
+  isProperlyConfigured(): boolean {
+    if (!this.apiKeyLocation) {
+      return true;
+    }
+    const secretLocation = decodeSecretLocation(this.apiKeyLocation);
+    if (secretLocation.secretType === SecretType.NotFound) {
+      return false;
+    }
+
+    return true;
   }
 
   protected _getHeaders() {
