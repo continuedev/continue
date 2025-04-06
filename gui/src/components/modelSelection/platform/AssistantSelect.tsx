@@ -153,7 +153,7 @@ const AssistantSelectOption = ({
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, selectedOrganization } = useAuth();
+  const { selectedProfile } = useAuth();
   const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
@@ -169,7 +169,7 @@ export default function AssistantSelect() {
   function onNewAssistant() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "new",
-      orgSlug: selectedOrganization?.slug,
+      orgSlug: currentOrg?.slug,
     });
     close();
   }
@@ -225,7 +225,7 @@ export default function AssistantSelect() {
         onClick={() => {
           ideMessenger.request("controlPlane/openUrl", {
             path: "/new?type=assistant",
-            orgSlug: selectedOrganization?.slug,
+            orgSlug: currentOrg?.slug,
           });
         }}
         className="flex cursor-pointer select-none items-center gap-1 text-gray-400"
@@ -332,9 +332,9 @@ export default function AssistantSelect() {
                   className="ml-auto flex items-center gap-1"
                   onClick={() => navigate(ROUTES.CONFIG)}
                 >
-                  {selectedOrganization?.iconUrl ? (
+                  {currentOrg?.iconUrl ? (
                     <img
-                      src={selectedOrganization.iconUrl}
+                      src={currentOrg.iconUrl}
                       className="h-3 w-3 rounded-full"
                     />
                   ) : (
@@ -346,7 +346,7 @@ export default function AssistantSelect() {
                       fontSize: tinyFont - 1,
                     }}
                   >
-                    {selectedOrganization?.name || "Personal"}
+                    {currentOrg?.name || "Personal"}
                   </span>
                 </div>
               </div>

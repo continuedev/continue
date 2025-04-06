@@ -13,17 +13,21 @@ import {
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setSelectedOrgId } from "../../redux/slices/profiles/slice";
+import {
+  selectCurrentOrg,
+  setSelectedOrgId,
+} from "../../redux/slices/profiles/slice";
 
 interface ScopeSelectProps {
   onSelect?: () => void;
 }
 export function ScopeSelect({ onSelect }: ScopeSelectProps) {
-  const { organizations, selectedOrganization } = useAuth();
+  const { organizations } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedOrgId = useAppSelector(
     (state) => state.profiles.selectedOrganizationId,
   );
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const dispatch = useAppDispatch();
 
   const handleChange = (newValue: string) => {
@@ -39,7 +43,7 @@ export function ScopeSelect({ onSelect }: ScopeSelectProps) {
     ? BuildingOfficeIcon
     : UserCircleIcon;
 
-  const selectedDisplay = selectedOrganization ?? {
+  const selectedDisplay = currentOrg ?? {
     name: "Personal",
     iconUrl: null,
   };

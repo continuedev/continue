@@ -8,12 +8,16 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { selectCurrentOrg, selectSelectedProfile } from "../redux/";
+import {
+  selectCurrentOrg,
+  selectSelectedProfile,
+  setOrganizations,
+  setSelectedOrgId,
+} from "../redux/";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
@@ -27,7 +31,6 @@ interface AuthContextType {
   refreshProfiles: () => void;
   controlServerBetaEnabled: boolean;
   organizations: OrganizationDescription[];
-  selectedOrganization: OrganizationDescription | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-
   // Session
   const [session, setSession] = useState<ControlPlaneSessionInfo | undefined>(
     undefined,
@@ -45,15 +47,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Orgs
   const orgs = useAppSelector((store) => store.profiles.organizations);
-  const selectedOrgId = useAppSelector(
-    (store) => store.profiles.selectedOrganizationId,
-  );
-  const selectedOrganization = useMemo(() => {
-    if (!selectedOrgId) {
-      return null;
-    }
-    return orgs.find((p) => p.id === selectedOrgId) ?? null;
-  }, [orgs, selectedOrgId]);
 
   // Profiles
   const currentOrg = useAppSelector(selectCurrentOrg);
@@ -89,6 +82,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           text="Are you sure you want to log out of Continue?"
           onConfirm={() => {
             ideMessenger.post("logoutOfControlPlane", undefined);
+            dispatch(
+              setOrganizations(orgs.filter((org) => org.id === "personal")),
+            );
+            dispatch(setSelectedOrgId("personal"));
           }}
           onCancel={() => {
             dispatch(setDialogMessage(undefined));
@@ -111,6 +108,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     void init();
   }, []);
+
+  useWebviewListener(
+    "didChangeControlPlaneSessionInfo",
+    async (data) => {
+      setSession(data.sessionInfo);
+    },
+    [],
+  );
 
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =
     useState(false);
@@ -143,7 +148,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         selectedProfile,
         profiles: currentOrg?.profiles ?? [],
         refreshProfiles,
-        selectedOrganization,
         organizations: orgs,
         controlServerBetaEnabled,
       }}
