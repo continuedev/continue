@@ -26,18 +26,15 @@ import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
   OrganizationDescription,
+  OrgWithProfiles,
   ProfileDescription,
   ProfileLifecycleManager,
+  SerializedOrgWithProfiles,
 } from "./ProfileLifecycleManager.js";
 
 export type { ProfileDescription };
 
 type ConfigUpdateFunction = (payload: ConfigResult<ContinueConfig>) => void;
-
-type OrgWithProfiles = OrganizationDescription & {
-  profiles: ProfileLifecycleManager[];
-  currentProfile: ProfileLifecycleManager | null;
-};
 
 export class ConfigHandler {
   controlPlaneClient: ControlPlaneClient;
@@ -134,6 +131,7 @@ export class ConfigHandler {
       [workspaceId]: selectedOrg.id,
     });
 
+    this.organizations = orgs;
     this.currentOrg = selectedOrg;
     this.currentProfile = selectedOrg.currentProfile;
     await this.reloadConfig();
@@ -150,11 +148,23 @@ export class ConfigHandler {
         );
         return [personalHubOrg, ...hubOrgs];
       } else {
-        return [await this.getTeamsOrg(orgDescs[0])];
+        // Should only ever be one teams org. Will be removed soon anyways
+        return await Promise.all(orgDescs.map((org) => this.getTeamsOrg(org)));
       }
     } else {
       return [await this.getLocalOrg()];
     }
+  }
+
+  getSerializedOrgs(): SerializedOrgWithProfiles[] {
+    return this.organizations.map((org) => ({
+      iconUrl: org.iconUrl,
+      id: org.id,
+      name: org.name,
+      slug: org.slug,
+      profiles: org.profiles.map((profile) => profile.profileDescription),
+      selectedProfileId: org.currentProfile?.profileDescription.id || null,
+    }));
   }
 
   private async getHubProfiles(orgScopeId: string | null) {

@@ -1,8 +1,5 @@
 import { ConfigResult } from "@continuedev/config-yaml";
-import {
-  OrganizationDescription,
-  ProfileDescription,
-} from "../config/ProfileLifecycleManager.js";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
@@ -16,9 +13,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
-      availableOrgs: OrganizationDescription[];
+      organizations: SerializedOrgWithProfiles[];
       selectedOrgId: string | null;
-      availableOrgProfiles: ProfileDescription[];
     },
     void,
   ];

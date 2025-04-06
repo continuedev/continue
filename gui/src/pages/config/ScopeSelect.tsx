@@ -12,14 +12,14 @@ import {
 } from "../../components/ui/Listbox";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { setSelectedOrgId } from "../../redux";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { setSelectedOrgId } from "../../redux/slices/profiles/slice";
 
 export function ScopeSelect() {
   const { organizations, selectedOrganization } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedOrgId = useAppSelector(
-    (state) => state.organizations.selectedOrganizationId,
+    (state) => state.profiles.selectedOrganizationId,
   );
   const dispatch = useAppDispatch();
 

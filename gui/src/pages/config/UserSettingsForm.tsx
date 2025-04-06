@@ -17,7 +17,7 @@ import { getFontSize } from "../../util";
 export function UserSettingsForm() {
   /////// User settings section //////
   const dispatch = useAppDispatch();
-  const { selectedProfile, controlServerBetaEnabled } = useAuth();
+  const { controlServerBetaEnabled } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const config = useAppSelector((state) => state.config.config);
 

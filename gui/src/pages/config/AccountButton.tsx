@@ -8,13 +8,13 @@ import {
   Transition,
 } from "../../components/ui";
 import { useAuth } from "../../context/Auth";
-import { selectSelectedOrganization } from "../../redux";
+import { selectCurrentOrg } from "../../redux";
 import { useAppSelector } from "../../redux/hooks";
 import { ScopeSelect } from "./ScopeSelect";
 
 export function AccountButton() {
   const { session, logout, login, organizations } = useAuth();
-  const selectedOrg = useAppSelector(selectSelectedOrganization);
+  const selectedOrg = useAppSelector(selectCurrentOrg);
 
   if (!session) {
     return (

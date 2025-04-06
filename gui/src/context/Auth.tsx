@@ -11,7 +11,7 @@ import React, {
   useState,
 } from "react";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
-import { selectSelectedProfile } from "../redux/";
+import { selectCurrentOrg, selectSelectedProfile } from "../redux/";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
@@ -42,9 +42,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   // Orgs
-  const orgs = useAppSelector((store) => store.organizations.organizations);
+  const orgs = useAppSelector((store) => store.profiles.organizations);
   const selectedOrgId = useAppSelector(
-    (store) => store.organizations.selectedOrganizationId,
+    (store) => store.profiles.selectedOrganizationId,
   );
   const selectedOrganization = useMemo(() => {
     if (!selectedOrgId) {
@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [orgs, selectedOrgId]);
 
   // Profiles
-  const profiles = useAppSelector((store) => store.profiles.availableProfiles);
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const selectedProfile = useAppSelector(selectSelectedProfile);
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
@@ -150,7 +150,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         login,
         selectedProfile,
-        profiles,
+        profiles: currentOrg?.profiles ?? [],
         refreshProfiles,
         selectedOrganization,
         organizations: orgs,

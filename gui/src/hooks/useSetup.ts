@@ -2,11 +2,11 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
-import { ConfigResult } from "@continuedev/config-yaml";
-import { BrowserSerializedContinueConfig } from "core";
+import { FromCoreProtocol } from "core/protocol";
 import {
   initializeProfilePreferences,
-  selectSelectedProfileId,
+  setOrganizations,
+  setSelectedOrgId,
   setSelectedProfile,
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
@@ -36,25 +36,28 @@ function useSetup() {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
   const defaultModel = useAppSelector(selectDefaultModel);
-  const selectedProfileId = useAppSelector(selectSelectedProfileId);
+  const selectedProfileId = useAppSelector(
+    (store) => store.profiles.selectedProfileId,
+  );
 
   const hasDoneInitialConfigLoad = useRef(false);
 
   const handleConfigUpdate = useCallback(
-    async (
-      isInitial: boolean,
-      result: {
-        result: ConfigResult<BrowserSerializedContinueConfig>;
-        profileId: string | null;
-      },
-    ) => {
-      const { result: configResult, profileId } = result;
+    async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
+      const {
+        result: configResult,
+        profileId,
+        organizations,
+        selectedOrgId,
+      } = result;
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
       hasDoneInitialConfigLoad.current = true;
-      dispatch(setConfigResult(configResult));
+      dispatch(setOrganizations(organizations));
+      dispatch(setSelectedOrgId(selectedOrgId));
       dispatch(setSelectedProfile(profileId));
+      dispatch(setConfigResult(configResult));
 
       const isNewProfileId = profileId && profileId !== selectedProfileId;
 

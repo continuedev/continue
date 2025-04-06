@@ -30,6 +30,7 @@ import type {
   SlashCommandDescription,
   ToolCall,
 } from "../";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
@@ -65,6 +66,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+      organizations: SerializedOrgWithProfiles[];
+      selectedOrgId: string;
     },
   ];
   "config/deleteModel": [{ title: string }, void];

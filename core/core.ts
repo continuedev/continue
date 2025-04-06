@@ -126,10 +126,9 @@ export class Core {
       this.messenger.send("configUpdate", {
         result: serializedResult,
         profileId:
-          this.configHandler.currentProfile?.profileDescription.id ?? null,
-        selectedOrgId: this.configHandler.selectedOrgId,
-        availableOrgProfiles: this.configHandler.listProfileDescriptions(),
-        availableOrgs: this.configHandler.organizations,
+          this.configHandler.currentProfile?.profileDescription.id || null,
+        organizations: this.configHandler.getSerializedOrgs(),
+        selectedOrgId: this.configHandler.currentOrg.id,
       });
 
       // update additional submenu context providers registered via VSCode API
@@ -297,7 +296,7 @@ export class Core {
     });
 
     on("config/refreshProfiles", async (msg) => {
-      await this.configHandler.refreshAssistantsForSelectedOrg();
+      await this.configHandler.refreshAll();
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -457,6 +456,8 @@ export class Core {
         result: await this.configHandler.getSerializedConfig(),
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
+        organizations: this.configHandler.getSerializedOrgs(),
+        selectedOrgId: this.configHandler.currentOrg.id,
       };
     });
 
@@ -752,10 +753,14 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
+        let localAssistantCreated = false;
         for (const uri of data.uris) {
           if (isLocalAssistantFile(uri)) {
-            await this.configHandler.refreshAssistantsForSelectedOrg();
+            localAssistantCreated = true;
           }
+        }
+        if (localAssistantCreated) {
+          await this.configHandler.refreshAll();
         }
       }
     });

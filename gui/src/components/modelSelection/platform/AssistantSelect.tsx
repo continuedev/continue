@@ -9,7 +9,7 @@ import {
 import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { setSelectedProfile } from "../../../redux";
+import { selectCurrentOrg, setSelectedProfile } from "../../../redux";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   fontSize,
@@ -154,9 +154,7 @@ export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { selectedProfile, selectedOrganization } = useAuth();
-  const availableProfiles = useAppSelector(
-    (store) => store.profiles.availableProfiles,
-  );
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const ideMessenger = useContext(IdeMessengerContext);
   const { isToolbarExpanded } = useLump();
 
@@ -178,7 +176,7 @@ export default function AssistantSelect() {
 
   useEffect(() => {
     let lastToggleTime = 0;
-    const DEBOUNCE_MS = 500;
+    const DEBOUNCE_MS = 800;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -192,7 +190,7 @@ export default function AssistantSelect() {
           lastToggleTime = now;
 
           const profileIds =
-            availableProfiles?.map((profile) => profile.id) ?? [];
+            currentOrg?.profiles.map((profile) => profile.id) ?? [];
           // In case of 1 or 0 profiles just does nothing
           if (profileIds.length < 2) {
             return;
@@ -203,6 +201,7 @@ export default function AssistantSelect() {
             const nextIndex = (curIndex + 1) % profileIds.length;
             nextId = profileIds[nextIndex];
           }
+          // Optimistic update
           dispatch(setSelectedProfile(nextId));
           ideMessenger.post("didChangeSelectedProfile", {
             id: nextId,
@@ -215,7 +214,7 @@ export default function AssistantSelect() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [availableProfiles, selectedProfile]);
+  }, [currentOrg, selectedProfile]);
 
   const tinyFont = useFontSize(-4);
   const smallFont = useFontSize(-3);
