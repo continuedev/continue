@@ -247,6 +247,7 @@ async function processDiff(
   verticalDiffManager: VerticalDiffManager,
   newFileUri?: string,
   streamId?: string,
+  toolCallId?: string,
 ) {
   captureCommandTelemetry(`${action}Diff`);
 
@@ -280,6 +281,7 @@ async function processDiff(
       streamId,
       status: "closed",
       numDiffs: 0,
+      toolCallId,
     });
   }
 

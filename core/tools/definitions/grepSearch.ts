@@ -1,17 +1,17 @@
 import { Tool } from "../..";
 import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
-export const exactSearchTool: Tool = {
+export const grepSearchTool: Tool = {
   type: "function",
-  displayTitle: "Exact Search",
+  displayTitle: "Grep Search",
   wouldLikeTo: 'search for "{{{ query }}}" in the repository',
   isCurrently: 'getting search results for "{{{ query }}}"',
-  hasAlready: 'retreived search results for "{{{ query }}}"',
+  hasAlready: 'retrieved search results for "{{{ query }}}"',
   readonly: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
-    name: BuiltInToolNames.ExactSearch,
-    description: "Perform an exact search over the repository using ripgrep.",
+    name: BuiltInToolNames.GrepSearch,
+    description: "Perform a search over the repository using ripgrep.",
     parameters: {
       type: "object",
       required: ["query"],

@@ -1,6 +1,7 @@
 import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -710,6 +711,8 @@ export interface IDE {
 
   getSearchResults(query: string): Promise<string>;
 
+  getFileResults(pattern: string): Promise<string[]>;
+
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
   getProblems(fileUri?: string | undefined): Promise<Problem[]>;
@@ -1142,6 +1145,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  toolCallId?: string;
 }
 
 export interface RangeInFileWithContents {

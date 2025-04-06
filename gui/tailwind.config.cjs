@@ -33,6 +33,8 @@ module.exports = {
         "vsc-editor-background":
           "var(--vscode-editor-background, var(--vscode-sideBar-background, rgb(30 30 30)))",
         "vsc-input-border": "var(--vscode-input-border, #999998)",
+        "vsc-commandCenter-inactiveBorder":
+          "var(--vscode-commandCenter-inactiveBorder, #999998)",
 
         // Starting to make things less vsc-specific
         // TODO make it all non-IDE-specific naming

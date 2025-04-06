@@ -21,7 +21,7 @@ import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
 import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
@@ -74,6 +74,8 @@ const StepsDiv = styled.div`
     margin: 0px 0px 0px 1px;
   }
 `;
+
+export const MAIN_EDITOR_INPUT_ID = "main-editor-input";
 
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
@@ -295,7 +297,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-[2px] overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`mt-3 overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -406,7 +408,7 @@ export function Chat() {
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
-            inputId={"main-editor"}
+            inputId={MAIN_EDITOR_INPUT_ID}
           />
         )}
 

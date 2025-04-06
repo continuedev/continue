@@ -13,6 +13,7 @@ import {
 import { RootState } from "../../../../redux/store";
 import { fontSize } from "../../../../util";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
+import { useLump } from "../LumpContext";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 interface RuleCardProps {
@@ -102,6 +103,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ index, rule, onClick, title }) => {
 export function RulesSection() {
   const ideMessenger = useContext(IdeMessengerContext);
   const { selectedProfile } = useAuth();
+  const { hideLump } = useLump();
 
   const rules = useSelector(
     (state: RootState) => state.config.config.rules ?? [],
@@ -117,11 +119,13 @@ export function RulesSection() {
     }));
   }, [rules]);
 
-  const openUrl = (path: string) =>
+  const openUrl = (path: string) => {
     ideMessenger.request("controlPlane/openUrl", {
       path,
       orgSlug: undefined,
     });
+    hideLump();
+  };
 
   return (
     <div>
@@ -133,11 +137,12 @@ export function RulesSection() {
                 key={index}
                 index={index}
                 rule={rule.unrolledRule}
-                onClick={() =>
+                onClick={() => {
                   ideMessenger.post("config/openProfile", {
                     profileId: undefined,
-                  })
-                }
+                  });
+                  hideLump();
+                }}
                 title="Locally Defined Rule"
               />
             );

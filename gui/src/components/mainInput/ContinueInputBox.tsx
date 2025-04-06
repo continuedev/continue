@@ -8,7 +8,7 @@ import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import ContextItemsPeek from "./belowMainInput/ContextItemsPeek";
 import { ToolbarOptions } from "./InputToolbar";
 import { Lump } from "./Lump";
-import TipTapEditor from "./tiptap/TipTapEditor";
+import { TipTapEditor } from "./TipTapEditor";
 
 interface ContinueInputBoxProps {
   isEditMode?: boolean;
