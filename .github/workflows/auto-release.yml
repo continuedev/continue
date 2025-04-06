@@ -16,30 +16,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Important for getting all tags and commits
 
-      - name: Get latest tag
-        id: get_latest_tag
+      - name: Get version from package.json
+        id: get_version
         run: |
-          # Get the latest tag ending in -vscode or default to v1.1.0-vscode if none exists
-          latest_tag=$(git tag --sort=-creatordate | grep -E '\-vscode$' | head -n1 || echo "v1.1.0-vscode")
-          echo "Latest tag: $latest_tag"
-          echo "LATEST_TAG=${latest_tag}" >> "$GITHUB_ENV"
-
-      - name: Generate next version
-        id: generate_version
-        run: |
-          # Extract version numbers (handle the -vscode suffix)
-          version=${LATEST_TAG#v}  # Remove v prefix
-          version=${version%-vscode}  # Remove -vscode suffix
-          IFS='.' read -ra VERSION_PARTS <<< "$version"
-
-          # Increment patch version
-          ((VERSION_PARTS[2]++))
-
-          # Create new version string with -vscode suffix
-          new_version="v${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.${VERSION_PARTS[2]}-vscode"
+          # Read version from package.json and add -vscode suffix
+          version=$(node -p "require('./extensions/vscode/package.json').version")
+          new_version="v${version}-vscode"
           echo "New version will be: $new_version"
           echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
 
@@ -63,29 +46,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Important for getting all tags and commits
+          fetch-depth: 0
 
-      - name: Get latest tag
-        id: get_latest_tag
+      - name: Get version from gradle.properties
+        id: get_version
         run: |
-          # Get the latest tag ending in -jetbrains or default to v1.1.0-jetbrains if none exists
-          latest_tag=$(git tag --sort=-creatordate | grep -E '\-jetbrains$' | head -n1 || echo "v1.1.0-jetbrains")
-          echo "Latest tag: $latest_tag"
-          echo "LATEST_TAG=${latest_tag}" >> "$GITHUB_ENV"
-
-      - name: Generate next version
-        id: generate_version
-        run: |
-          # Extract version numbers (handle the -jetbrains suffix)
-          version=${LATEST_TAG#v}  # Remove v prefix
-          version=${version%-jetbrains}  # Remove -jetbrains suffix
-          IFS='.' read -ra VERSION_PARTS <<< "$version"
-
-          # Increment patch version
-          ((VERSION_PARTS[2]++))
-
-          # Create new version string with -jetbrains suffix
-          new_version="v${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.${VERSION_PARTS[2]}-jetbrains"
+          # Read version from gradle.properties and add -jetbrains suffix
+          version=$(grep '^pluginVersion=' extensions/intellij/gradle.properties | cut -d'=' -f2)
+          new_version="v${version}-jetbrains"
           echo "New version will be: $new_version"
           echo "NEW_VERSION=$new_version" >> $GITHUB_ENV
 
