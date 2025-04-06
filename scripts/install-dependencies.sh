@@ -23,14 +23,15 @@ setup_node_version() {
   # Try fnm first
   if command -v fnm &> /dev/null; then
     echo "📦 Using fnm to set Node.js version to $required_version..."
-    eval "$(fnm env --use-on-cd)"
-    fnm use "$required_version" || fnm use
+    # Capture output to avoid duplicate messages
+    eval "$(fnm env --use-on-cd)" &> /dev/null
+    fnm use "$required_version" &> /dev/null || fnm use &> /dev/null
   # Then try nvm
   elif command -v nvm &> /dev/null || [ -s "$NVM_DIR/nvm.sh" ]; then
     echo "📦 Using nvm to set Node.js version to $required_version..."
     export NVM_DIR="$HOME/.nvm"
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # Load nvm
-    nvm use "$required_version" || nvm use
+    nvm use "$required_version" &> /dev/null || nvm use &> /dev/null
   # Fall back to version check only
   else
     echo "Neither fnm nor nvm found. Proceeding with current Node.js version."
@@ -43,9 +44,6 @@ setup_node_version() {
   if [ "$required_version" != "$current_version" ]; then
     echo "⚠️  Warning: Your Node.js version ($current_node_version) does not match the required version (v$required_version)"
     echo "Even after attempting to use version managers, the correct version couldn't be activated."
-    echo "Please consider switching to the correct version using: `nvm use` or `fnm use` or setting "
-    echo "the correct version in a .nvmrc or .node-version file."
-
     if [ -t 0 ]; then
       read -p "Press Enter to continue with installation anyway..."
     else
