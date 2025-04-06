@@ -5,11 +5,17 @@ import { isJetBrains } from "../../util";
 interface KeyboardShortcutProps {
   shortcut: string;
   description: string;
+  isEven: boolean;
 }
 
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   return (
-    <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1">
+    <div
+      className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 p-2"
+      style={{
+        backgroundColor: props.isEven ? '#1e1e1e' : 'transparent'
+      }}
+    >
       <span className="max-w-60 text-xs">{props.description}:</span>
       <div className="flex flex-1 flex-row items-center justify-end gap-1.5">
         <Shortcut>{props.shortcut}</Shortcut>
@@ -19,7 +25,7 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
 }
 
 // Shortcut strings will be rendered correctly based on the platform by the Shortcut component
-const vscodeShortcuts: KeyboardShortcutProps[] = [
+const vscodeShortcuts: Omit<KeyboardShortcutProps, 'isEven'>[] = [
   {
     shortcut: "cmd '",
     description: "Toggle Selected Model",
@@ -76,7 +82,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   },
 ];
 
-const jetbrainsShortcuts: KeyboardShortcutProps[] = [
+const jetbrainsShortcuts: Omit<KeyboardShortcutProps, 'isEven'>[] = [
   {
     shortcut: "cmd '",
     description: "Toggle Selected Model",
@@ -129,13 +135,14 @@ function KeyboardShortcuts() {
   return (
     <div className="flex max-w-[400px] flex-col">
       <h3 className="mb-2 text-xl">Keyboard shortcuts</h3>
-      <div className="flex flex-col items-center justify-center gap-x-3 gap-y-3 p-1">
+      <div className="flex flex-col items-center justify-center gap-y-1 overflow-hidden rounded">
         {shortcuts.map((shortcut, i) => {
           return (
             <KeyboardShortcut
               key={i}
               shortcut={shortcut.shortcut}
               description={shortcut.description}
+              isEven={i % 2 === 0}
             />
           );
         })}
