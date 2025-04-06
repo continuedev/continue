@@ -328,7 +328,7 @@ export class ConfigHandler {
   }
 
   // Org id: check id validity, save selection, switch and reload
-  async setSelectedOrgId(orgId: string) {
+  async setSelectedOrgId(orgId: string, profileId?: string) {
     if (orgId === this.currentOrg.id) {
       return;
     }
@@ -346,8 +346,13 @@ export class ConfigHandler {
     });
 
     this.currentOrg = org;
-    this.currentProfile = org.currentProfile;
-    await this.reloadConfig();
+
+    if (profileId) {
+      this.setSelectedProfileId(profileId);
+    } else {
+      this.currentProfile = org.currentProfile;
+      await this.reloadConfig();
+    }
   }
 
   // Profile id: check id validity, save selection, switch and reload

@@ -202,16 +202,10 @@ export class VsCodeExtension {
       let profileId = queryParams.get("profile_id");
       let orgId = queryParams.get("org_id");
 
-      if (orgId) {
-        if (orgId === "null") {
-          orgId = null;
-        }
+      if (orgId && orgId !== "null") {
         // In case org id is passed with profile id
         // Make sure org is updated before profile is set
-        if (profileId) {
-          if (profileId === "null") {
-            profileId = null;
-          }
+        if (profileId && profileId !== "null") {
           this.core.invoke("didChangeSelectedOrg", {
             id: orgId,
             profileId,
@@ -221,10 +215,7 @@ export class VsCodeExtension {
             id: orgId,
           });
         }
-      } else if (profileId) {
-        if (profileId === "null") {
-          profileId = null;
-        }
+      } else if (profileId && profileId !== "null") {
         this.core.invoke("didChangeSelectedProfile", {
           id: profileId,
         });

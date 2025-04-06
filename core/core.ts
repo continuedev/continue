@@ -819,7 +819,10 @@ export class Core {
     });
 
     on("didChangeSelectedOrg", async (msg) => {
-      await this.configHandler.setSelectedOrgId(msg.data.id);
+      await this.configHandler.setSelectedOrgId(
+        msg.data.id,
+        msg.data.profileId,
+      );
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
