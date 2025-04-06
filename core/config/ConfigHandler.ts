@@ -146,7 +146,7 @@ export class ConfigHandler {
         const hubOrgs = await Promise.all(
           orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
         );
-        return [personalHubOrg, ...hubOrgs];
+        return [...hubOrgs, personalHubOrg];
       } else {
         // Should only ever be one teams org. Will be removed soon anyways
         return await Promise.all(orgDescs.map((org) => this.getTeamsOrg(org)));

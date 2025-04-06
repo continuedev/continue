@@ -15,7 +15,10 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setSelectedOrgId } from "../../redux/slices/profiles/slice";
 
-export function ScopeSelect() {
+interface ScopeSelectProps {
+  onSelect?: () => void;
+}
+export function ScopeSelect({ onSelect }: ScopeSelectProps) {
   const { organizations, selectedOrganization } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedOrgId = useAppSelector(
@@ -29,6 +32,7 @@ export function ScopeSelect() {
     ideMessenger.post("didChangeSelectedOrg", {
       id: newValue,
     });
+    onSelect?.();
   };
 
   const CurScopeEntityFallBackIcon = selectedOrgId
@@ -70,17 +74,6 @@ export function ScopeSelect() {
               </div>
             </ListboxOption>
           ))}
-
-          {!!organizations.length && (
-            <div className="bg-lightgray mx-1 my-1 h-px" />
-          )}
-
-          <ListboxOption value={null}>
-            <div className="flex items-center gap-2">
-              <UserCircleIcon className="h-5 w-5" />
-              <span>Personal</span>
-            </div>
-          </ListboxOption>
         </ListboxOptions>
       </div>
     </Listbox>

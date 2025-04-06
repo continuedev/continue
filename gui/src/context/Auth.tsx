@@ -5,6 +5,7 @@ import {
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -114,14 +115,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =
     useState(false);
 
-  useEffect(() => {
-    ideMessenger.ide
-      .getIdeSettings()
-      .then(({ enableControlServerBeta, continueTestEnvironment }) => {
-        setControlServerBetaEnabled(enableControlServerBeta);
-      });
-  }, []);
-
   // Hacky, remove once continue for teams is deprecated
   useWebviewListener(
     "configUpdate",
@@ -131,7 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
-  const refreshProfiles = async () => {
+  const refreshProfiles = useCallback(async () => {
     try {
       await ideMessenger.request("config/refreshProfiles", undefined);
       ideMessenger.post("showToast", ["info", "Config refreshed"]);
@@ -139,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Failed to refresh profiles", e);
       ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
     }
-  };
+  }, [ideMessenger]);
 
   return (
     <AuthContext.Provider
