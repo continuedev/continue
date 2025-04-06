@@ -108,7 +108,7 @@ export function PromptsSection() {
   });
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col">
       {sortedCommands.map((prompt) => (
         <PromptRow
           key={prompt.name}
