@@ -1,192 +1,122 @@
 import { useMemo } from "react";
-import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscForeground,
-} from "../../components";
-import { ToolTip } from "../../components/gui/Tooltip";
-import { getPlatform, isJetBrains } from "../../util";
-
-const StyledKeyDiv = styled.div`
-  border: 0.5px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  padding: 2px;
-  color: ${vscForeground};
-
-  width: 16px;
-  height: 16px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const keyToName: { [key: string]: string } = {
-  "⌘": "Cmd",
-  "⌃": "Ctrl",
-  "⇧": "Shift",
-  "⏎": "Enter",
-  "⌫": "Backspace",
-  "⌥": "Option",
-  "⎇": "Alt",
-};
-
-function KeyDiv({ text }: { text: string }) {
-  return (
-    <>
-      <StyledKeyDiv data-tooltip-id={`header_button_${text}`}>
-        {text}
-      </StyledKeyDiv>
-
-      <ToolTip id={`header_button_${text}`} place="bottom">
-        {keyToName[text]}
-      </ToolTip>
-    </>
-  );
-}
+import Shortcut from "../../components/gui/Shortcut";
+import { isJetBrains } from "../../util";
 
 interface KeyboardShortcutProps {
-  mac: string;
-  windows: string;
+  shortcut: string;
   description: string;
 }
 
 function KeyboardShortcut(props: KeyboardShortcutProps) {
-  const shortcut = getPlatform() === "mac" ? props.mac : props.windows;
   return (
     <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1">
       <span className="max-w-60 text-xs">{props.description}:</span>
       <div className="flex flex-1 flex-row items-center justify-end gap-1.5">
-        {shortcut.split(" ").map((key, i) => {
-          return <KeyDiv key={i} text={key}></KeyDiv>;
-        })}
+        <Shortcut>{props.shortcut}</Shortcut>
       </div>
     </div>
   );
 }
 
+// Shortcut strings will be rendered correctly based on the platform by the Shortcut component
 const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
-    mac: "⌘ '",
-    windows: "⌃ '",
+    shortcut: "cmd '",
     description: "Toggle Selected Model",
   },
   {
-    mac: "⌘ I",
-    windows: "⌃ I",
+    shortcut: "cmd I",
     description: "Edit highlighted code",
   },
   {
-    mac: "⌘ L",
-    windows: "⌃ L",
+    shortcut: "cmd L",
     description:
       "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⌫",
-    windows: "⌃ ⌫",
+    shortcut: "cmd backspace",
     description: "Cancel response",
   },
   {
-    mac: "⌘ ⇧ I",
-    windows: "⌃ ⇧ I",
+    shortcut: "cmd shift I",
     description: "Toggle inline edit focus",
   },
   {
-    mac: "⌘ ⇧ L",
-    windows: "⌃ ⇧ L",
+    shortcut: "cmd shift L",
     description:
       "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⇧ R",
-    windows: "⌃ ⇧ R",
+    shortcut: "cmd shift R",
     description: "Debug Terminal",
   },
   {
-    mac: "⌘ ⇧ ⌫",
-    windows: "⌃ ⇧ ⌫",
+    shortcut: "cmd shift backspace",
     description: "Reject Diff",
   },
   {
-    mac: "⌘ ⇧ ⏎",
-    windows: "⌃ ⇧ ⏎",
+    shortcut: "cmd shift enter",
     description: "Accept Diff",
   },
   {
-    mac: "⌥ ⌘ N",
-    windows: "Alt ⌃ N",
+    shortcut: "alt cmd N",
     description: "Reject Top Change in Diff",
   },
   {
-    mac: "⌥ ⌘ Y",
-    windows: "Alt ⌃ Y",
+    shortcut: "alt cmd Y",
     description: "Accept Top Change in Diff",
   },
   {
-    mac: "⌘ K ⌘ A",
-    windows: "⌃ K ⌃ A",
+    shortcut: "cmd K cmd A",
     description: "Toggle Autocomplete Enabled",
   },
   {
-    mac: "⌘ K ⌘ M",
-    windows: "⌃ K ⌃ M",
+    shortcut: "cmd K cmd M",
     description: "Toggle Full Screen",
   },
 ];
 
 const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
-    mac: "⌘ '",
-    windows: "⌃ '",
+    shortcut: "cmd '",
     description: "Toggle Selected Model",
   },
   {
-    mac: "⌘ I",
-    windows: "⌃ I",
+    shortcut: "cmd I",
     description: "Edit highlighted code",
   },
   {
-    mac: "⌘ J",
-    windows: "⌃ J",
+    shortcut: "cmd J",
     description:
       "New Chat / New Chat With Selected Code / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⌫",
-    windows: "⌃ ⌫",
+    shortcut: "cmd backspace",
     description: "Cancel response",
   },
   {
-    mac: "⌘ ⇧ I",
-    windows: "⌃ ⇧ I",
+    shortcut: "cmd shift I",
     description: "Toggle inline edit focus",
   },
   {
-    mac: "⌘ ⇧ J",
-    windows: "⌃ ⇧ J",
+    shortcut: "cmd shift J",
     description:
       "Focus Current Chat / Add Selected Code To Current Chat / Close Continue Sidebar If Chat Already In Focus",
   },
   {
-    mac: "⌘ ⇧ ⌫",
-    windows: "⌃ ⇧ ⌫",
+    shortcut: "cmd shift backspace",
     description: "Reject Diff",
   },
   {
-    mac: "⌘ ⇧ ⏎",
-    windows: "⌃ ⇧ ⏎",
+    shortcut: "cmd shift enter",
     description: "Accept Diff",
   },
   {
-    mac: "⌥ ⇧ J",
-    windows: "Alt ⇧ J",
+    shortcut: "alt shift J",
     description: "Quick Input",
   },
   {
-    mac: "⌥ ⌘ J",
-    windows: "Alt ⌃ J",
+    shortcut: "alt cmd J",
     description: "Toggle Sidebar",
   },
 ];
@@ -204,8 +134,7 @@ function KeyboardShortcuts() {
           return (
             <KeyboardShortcut
               key={i}
-              mac={shortcut.mac}
-              windows={shortcut.windows}
+              shortcut={shortcut.shortcut}
               description={shortcut.description}
             />
           );
@@ -216,3 +145,4 @@ function KeyboardShortcuts() {
 }
 
 export default KeyboardShortcuts;
+
