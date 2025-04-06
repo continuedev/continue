@@ -142,15 +142,15 @@ export class ConfigHandler {
   private async getOrgs(): Promise<OrgWithProfiles[]> {
     const userId = await this.controlPlaneClient.userId;
     if (userId) {
+      const orgDescs = await this.controlPlaneClient.listOrganizations();
       if (await useHub(this.ideSettingsPromise)) {
-        const orgDescs = await this.controlPlaneClient.listOrganizations();
         const personalHubOrg = await this.getPersonalHubOrg();
         const hubOrgs = await Promise.all(
           orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
         );
         return [personalHubOrg, ...hubOrgs];
       } else {
-        return [await this.getTeamsOrg()];
+        return [await this.getTeamsOrg(orgDescs[0])];
       }
     } else {
       return [await this.getLocalOrg()];
@@ -209,10 +209,7 @@ export class ConfigHandler {
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, allLocalProfiles);
   }
 
-  async getTeamsOrg(): Promise<OrgWithProfiles> {
-    const teamsOrgDescription: OrganizationDescription ={
-      iconUrl: workspaces.
-    }
+  async getTeamsOrg(org: OrganizationDescription): Promise<OrgWithProfiles> {
     const workspaces = await this.controlPlaneClient.listWorkspaces();
     const profiles = await this.getAllLocalProfiles();
     workspaces.forEach((workspace) => {
@@ -228,7 +225,7 @@ export class ConfigHandler {
 
       profiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
     });
-    return this.rectifyProfilesForOrg(teamsOrgDescription, profiles);
+    return this.rectifyProfilesForOrg(org, profiles);
   }
 
   private async rectifyProfilesForOrg(
@@ -241,35 +238,38 @@ export class ConfigHandler {
 
     const currentSelection = selectedProfiles[profileKey];
 
-      const firstNonLocal = profiles.find(
-        (profile) => profile.profileDescription.profileType !== "local",
+    const firstNonLocal = profiles.find(
+      (profile) => profile.profileDescription.profileType !== "local",
+    );
+    const fallback =
+      firstNonLocal ?? (profiles.length > 0 ? profiles[0] : null);
+
+    let currentProfile: ProfileLifecycleManager | null;
+    if (!currentSelection) {
+      currentProfile = fallback;
+    } else {
+      const match = profiles.find(
+        (profile) => profile.profileDescription.id === currentSelection,
       );
-      const fallback = firstNonLocal ?? (profiles.length > 0 ? profiles[0] : null)
-    
-        let currentProfile: ProfileLifecycleManager | null;
-        if (!currentSelection) {
-          currentProfile = fallback;
-        } else {
-          const match = profiles.find((profile) => profile.profileDescription.id === currentSelection);
-          if (match) {
-            currentProfile = match;
-          } else {
-            currentProfile = fallback;
-          }
-        }
-
-      if(currentProfile) {
-        this.globalContext.update("lastSelectedProfileForWorkspace", {
-          ...selectedProfiles,
-          [profileKey]: selectedProfiles.id ?? null,
-        });
+      if (match) {
+        currentProfile = match;
+      } else {
+        currentProfile = fallback;
       }
+    }
 
-      return {
-        ...org,
-        profiles,
-        currentProfile,
-      }
+    if (currentProfile) {
+      this.globalContext.update("lastSelectedProfileForWorkspace", {
+        ...selectedProfiles,
+        [profileKey]: selectedProfiles.id ?? null,
+      });
+    }
+
+    return {
+      ...org,
+      profiles,
+      currentProfile,
+    };
   }
 
   async getAllLocalProfiles() {
