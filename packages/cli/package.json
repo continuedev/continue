@@ -18,10 +18,15 @@
   "dependencies": {
     "@continuedev/config-yaml": "^1.0.78",
     "@continuedev/hub": "file:../hub",
-    "@continuedev/openai-adapters": "^1.0.18"
+    "@continuedev/openai-adapters": "^1.0.18",
+    "dotenv": "^16.4.0",
+    "readline-sync": "^1.4.10",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
+    "@types/readline-sync": "^1.4.8",
+    "@types/uuid": "^9.0.8",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.3",

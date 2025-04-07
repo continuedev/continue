@@ -7,7 +7,7 @@ export function handleSlashCommands(
   output?: string;
   exit?: boolean;
   newInput?: string;
-} {
+} | null {
   if (input.startsWith("/")) {
     const [command, ...args] = input.slice(1).split(" ");
     switch (command) {
@@ -38,5 +38,5 @@ export function handleSlashCommands(
         return { output: `Unknown command: ${command}` };
     }
   }
-  return {};
+  return null;
 }

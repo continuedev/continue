@@ -1,7 +1,13 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { constructLlmApi } from "@continuedev/openai-adapters";
 import * as dotenv from "dotenv";
-import { ChatMessage } from "./types.js";
+import {
+  ChatCompletionChunk,
+  ChatCompletionMessageParam,
+  ChatCompletionMessageToolCall,
+} from "openai/resources.mjs";
+import { ChatCompletionTool } from "openai/src/resources.js";
+import { executeToolCall, tools } from "./tools.js";
 
 dotenv.config();
 
@@ -26,33 +32,179 @@ function getLlmFromAssistant(assistant: AssistantUnrolled) {
   return { llm, model: chatModel.model };
 }
 
-// Define a function to handle streaming responses
+type TODO = any;
+
+// Define a function to handle streaming responses with tool calling
 export async function streamChatResponse(
-  chatHistory: ChatMessage[],
+  chatHistory: ChatCompletionMessageParam[],
   assistant: AssistantUnrolled,
 ) {
   const { llm, model } = getLlmFromAssistant(assistant);
 
-  const stream = llm.chatCompletionStream(
-    {
-      model,
-      messages: chatHistory,
-      stream: true,
+  // Prepare tools for the API call
+  const toolsForRequest: ChatCompletionTool[] = tools.map((tool) => ({
+    type: "function" as const,
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: {
+        type: "object",
+        properties: Object.fromEntries(
+          Object.entries(tool.parameters).map(([key, param]) => [
+            key,
+            { type: param.type, description: param.description },
+          ]),
+        ),
+        required: Object.entries(tool.parameters)
+          .filter(([_, param]) => param.required)
+          .map(([key, _]) => key),
+      },
     },
-    new AbortController().signal,
-  );
-
+  }));
   let aiResponse = "";
+  let currentToolCalls: TODO[] = [];
+  let shouldContinueConversation = true;
 
-  // // Iterate over the stream and display the response in real-time
-  for await (const chunk of stream) {
-    const content = chunk.choices[0].delta.content;
-    if (content) {
-      process.stdout.write(content); // Write to stdout without a newline
-      aiResponse += content;
+  while (shouldContinueConversation) {
+    let stream: AsyncGenerator<ChatCompletionChunk, any, any>;
+    try {
+      stream = llm.chatCompletionStream(
+        {
+          model,
+          messages: chatHistory,
+          stream: true,
+          tools: toolsForRequest,
+        },
+        new AbortController().signal,
+      );
+    } catch (error: any) {
+      console.error("Error in streamChatResponse:", error.message);
+      process.exit(1);
     }
+
+    aiResponse = "";
+    currentToolCalls = [];
+    let currentToolCallId = "";
+    let toolArguments = "";
+
+    for await (const chunk of stream) {
+      // Handle regular content
+      if (chunk.choices[0].delta.content) {
+        const content = chunk.choices[0].delta.content;
+        process.stdout.write(content);
+        aiResponse += content;
+      }
+
+      // Handle tool calls
+      if (chunk.choices[0].delta.tool_calls) {
+        for (const toolCallDelta of chunk.choices[0].delta.tool_calls) {
+          // Initialize a new tool call if we get an index and id
+          if (toolCallDelta.index !== undefined && toolCallDelta.id) {
+            if (!currentToolCalls[toolCallDelta.index]) {
+              currentToolCalls[toolCallDelta.index] = {
+                id: toolCallDelta.id,
+                name: "",
+                arguments: {},
+              };
+            }
+            currentToolCallId = toolCallDelta.id;
+          }
+
+          // Add function name if present
+          if (toolCallDelta.function?.name) {
+            const toolCall = currentToolCalls.find(
+              (tc) => tc.id === currentToolCallId,
+            );
+            if (toolCall) {
+              toolCall.name += toolCallDelta.function.name;
+              process.stdout.write(`\n[Using tool: ${toolCall.id}]`);
+            }
+          }
+
+          // Collect function arguments
+          if (toolCallDelta.function?.arguments) {
+            const toolCall = currentToolCalls.find(
+              (tc) => tc.id === currentToolCallId,
+            );
+            if (toolCall) {
+              // Accumulate arguments as string to later parse as JSON
+              toolArguments += toolCallDelta.function.arguments;
+
+              try {
+                // Try to parse complete JSON
+                const parsed = JSON.parse(toolArguments);
+                toolCall.arguments = parsed;
+              } catch (e) {
+                // Not complete JSON yet, continue collecting
+              }
+            }
+          }
+        }
+      }
+    }
+
+    console.log(); // Add a newline after the response
+
+    // Add the tool calls to the chat history
+    if (currentToolCalls.length > 0) {
+      const toolCalls: ChatCompletionMessageToolCall[] = currentToolCalls.map(
+        (tc) => ({
+          id: tc.id,
+          type: "function",
+          function: {
+            name: tc.name,
+            arguments: JSON.stringify(tc.arguments),
+          },
+        }),
+      );
+      chatHistory.push({
+        role: "assistant",
+        content: "",
+        tool_calls: toolCalls,
+      });
+    }
+
+    // If we have tool calls, execute them
+    if (currentToolCalls.length > 0) {
+      for (const toolCall of currentToolCalls) {
+        console.log(`\n[Executing tool: ${toolCall.name}]`);
+
+        try {
+          // Execute the tool
+          const toolResult = await executeToolCall({
+            name: toolCall.name,
+            arguments: toolCall.arguments,
+          });
+
+          // Add tool result to chat history
+          chatHistory.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: toolResult,
+          });
+
+          console.log(`[Tool result: ${toolResult}]`);
+        } catch (error) {
+          const errorMessage = `Error executing tool ${toolCall.name}: ${error instanceof Error ? error.message : String(error)}`;
+          chatHistory.push({
+            role: "tool",
+            tool_call_id: toolCall.id,
+            content: errorMessage,
+          });
+          console.log(`[Tool error: ${errorMessage}]`);
+        }
+      }
+
+      // Continue the conversation with the tool results
+      shouldContinueConversation = true;
+    } else {
+      // No more tool calls, end the conversation
+      shouldContinueConversation = false;
+    }
+
+    // Add the assistant's response to chat history before any tool calls
+    chatHistory.push({ role: "assistant", content: aiResponse });
   }
 
-  console.log(); // Add a newline at the end of the response
   return aiResponse;
 }

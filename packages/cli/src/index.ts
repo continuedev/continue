@@ -1,11 +1,12 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { ContinueHubClient } from "@continuedev/hub";
 import * as fs from "fs";
+import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
-import { ChatMessage } from "./types.js";
+import { tools } from "./tools.js";
 
 const hub = new ContinueHubClient({
   apiKey: process.env.CONTINUE_API_KEY,
@@ -40,20 +41,28 @@ function loadSystemMessage(assistant: AssistantUnrolled): string | undefined {
     .join("\n");
 }
 
+function introMessage(assistant: AssistantUnrolled) {
+  console.log(CONTINUE_ASCII_ART);
+
+  console.log(`\nAssistant: ${assistant.name}\n`);
+  console.log("Available tools:");
+  tools.forEach((tool) => {
+    console.log(`- ${tool.name}: ${tool.description}`);
+  });
+  console.log("");
+}
+
 async function chat() {
   // Load assistant
   const assistant = await loadAssistant();
+  introMessage(assistant);
 
   // Rules
-  const chatHistory: ChatMessage[] = [];
+  const chatHistory: ChatCompletionMessageParam[] = [];
   const systemMessage = loadSystemMessage(assistant);
   if (systemMessage) {
     chatHistory.push({ role: "system", content: systemMessage });
   }
-
-  console.log(CONTINUE_ASCII_ART);
-
-  console.log(`\nAssistant: ${assistant.name}\n`);
 
   while (true) {
     // Get user input
@@ -78,30 +87,16 @@ async function chat() {
     // Add user message to history
     chatHistory.push({ role: "user", content: userInput });
 
+    // Get AI response with potential tool usage
+    console.log("\nAssistant:");
+
     try {
-      // Get AI response
-      const aiResponse = await streamChatResponse(chatHistory, assistant);
-
-      // Add AI response to history
-      chatHistory.push({ role: "assistant", content: aiResponse });
-
-      // Display AI response (already displayed in real-time)
-    } catch (error) {
-      console.error(
-        "Error:",
-        error instanceof Error ? error.message : "An unknown error occurred",
-      );
-      chatHistory.pop(); // Remove the failed user message from history
+      await streamChatResponse(chatHistory, assistant);
+    } catch (e: any) {
+      console.error(`\nError: ${e.message}`);
+      console.log(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`);
     }
   }
-}
-
-// Start the chat if this file is run directly
-// Check for API key
-if (!process.env.OPENAI_API_KEY) {
-  console.error("Error: OPENAI_API_KEY not found in environment variables");
-  console.error("Please create a .env file with your OpenAI API key");
-  process.exit(1);
 }
 
 chat().catch(console.error);
