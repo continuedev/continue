@@ -12,7 +12,7 @@ import { executeToolCall, tools } from "./tools.js";
 
 dotenv.config();
 
-function getLlmFromAssistant(assistant: AssistantUnrolled) {
+export function getLlmFromAssistant(assistant: AssistantUnrolled) {
   const chatModel = assistant.models?.filter((model) =>
     model?.roles?.includes("chat"),
   )?.[0];

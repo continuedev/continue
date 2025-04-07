@@ -6,7 +6,10 @@ import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { handleSlashCommands } from "./slashCommands.js";
-import { streamChatResponse } from "./streamChatResponse.js";
+import {
+  getLlmFromAssistant,
+  streamChatResponse,
+} from "./streamChatResponse.js";
 import { tools } from "./tools.js";
 
 const hub = new ContinueHubClient({
@@ -47,11 +50,27 @@ function loadSystemMessage(assistant: AssistantUnrolled): string | undefined {
 function introMessage(assistant: AssistantUnrolled) {
   console.log(chalk.cyan(CONTINUE_ASCII_ART));
 
-  console.log(`\n${chalk.bold.blue(`Assistant: ${assistant.name}`)}\n`);
+  const { model } = getLlmFromAssistant(assistant);
+  console.log(`\n${chalk.bold.blue(`Assistant: ${assistant.name}`)}`);
+  console.log(`${chalk.blue(`Model: ${model}`)}\n`);
+
   console.log(chalk.yellow("Available tools:"));
   tools.forEach((tool) => {
     console.log(`- ${chalk.green(tool.name)}: ${tool.description}`);
   });
+
+  console.log(chalk.yellow("\nAvailable slash commands:"));
+  console.log("- /exit: Exit the chat");
+  console.log("- /clear: Clear the chat history");
+  console.log("- /help: Show help message");
+  console.log("- /models: Show available models");
+  for (const prompt of assistant.prompts ?? []) {
+    console.log(`- /${prompt.name}: ${prompt.description}`);
+  }
+
+  if (assistant.rules?.length) {
+    console.log(chalk.yellow("\nAssistant rules: " + assistant.rules.length));
+  }
   console.log("");
 }
 
