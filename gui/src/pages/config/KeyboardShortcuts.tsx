@@ -11,14 +11,13 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   return (
     <div
-      className="flex items-center"
+      className="sm:flex-row flex-col flex items-start sm:items-center py-2"
       style={{
         backgroundColor: props.isEven ? '#1e1e1e' : 'transparent',
-        padding: '8px 0'
       }}
     >
-      <div className="flex-grow overflow-hidden pr-4 min-w-0">
-        <span className="text-xs block text-ellipsis overflow-hidden">{props.description}:</span>
+      <div className="flex-grow pr-4 pb-1 sm:pb-0 w-full sm:w-auto">
+        <span className="text-xs block break-words">{props.description}:</span>
       </div>
       <div className="flex-shrink-0 whitespace-nowrap">
         <Shortcut>{props.shortcut}</Shortcut>
