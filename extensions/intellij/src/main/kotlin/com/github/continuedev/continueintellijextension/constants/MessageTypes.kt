@@ -101,6 +101,7 @@ class MessageTypes {
             "autocomplete/cancel",
             "autocomplete/accept",
             "tts/kill",
+            "llm/compileChat",
             "llm/complete",
             "llm/streamChat",
             "llm/listModels",

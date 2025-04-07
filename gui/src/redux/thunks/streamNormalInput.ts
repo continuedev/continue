@@ -9,7 +9,8 @@ import {
   addPromptCompletionPair,
   selectUseTools,
   setToolGenerated,
-  streamUpdate
+  setWarningMessage,
+  streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
@@ -39,6 +40,34 @@ export const streamNormalInput = createAsyncThunk<
     }
     const includeTools = useTools && modelSupportsTools(defaultModel);
 
+    const res = await extra.ideMessenger.request("llm/compileChat", {
+      title: defaultModel.title,
+      messages,
+      options: includeTools
+        ? {
+            tools: state.config.config.tools.filter(
+              (tool) =>
+                toolSettings[tool.function.name] !== "disabled" &&
+                toolGroupSettings[tool.group] !== "exclude",
+            ),
+          }
+        : {},
+    });
+
+    if (res.status === "error") {
+      throw new Error(res.error);
+    }
+
+    const { compiledChatMessages, lastMessageTruncated } = res.content;
+
+    if (lastMessageTruncated) {
+      dispatch(
+        setWarningMessage(
+          "The provided context items are too large. They have been truncated to fit within the model's context length.",
+        ),
+      );
+    }
+
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(
       {
@@ -52,8 +81,9 @@ export const streamNormalInput = createAsyncThunk<
             }
           : {},
         title: defaultModel.title,
-        messages,
+        messages: compiledChatMessages,
         legacySlashCommandData,
+        messageOptions: { precompiled: true },
       },
       streamAborter.signal,
     );

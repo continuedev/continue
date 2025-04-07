@@ -23,8 +23,13 @@ export async function* llmStreamChat(
     void TTS.kill();
   }
 
-  const { title, legacySlashCommandData, completionOptions, messages } =
-    msg.data;
+  const {
+    title,
+    legacySlashCommandData,
+    completionOptions,
+    messages,
+    messageOptions,
+  } = msg.data;
 
   const model = await configHandler.llmFromTitle(title);
 
@@ -113,6 +118,7 @@ export async function* llmStreamChat(
       messages,
       new AbortController().signal,
       completionOptions,
+      messageOptions,
     );
     let next = await gen.next();
     while (!next.done) {

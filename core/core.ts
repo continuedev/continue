@@ -474,6 +474,18 @@ export class Core {
       }
     });
 
+    on("llm/compileChat", async (msg) => {
+      const { title: modelName, messages, options } = msg.data;
+      const model = await this.configHandler.llmFromTitle(modelName);
+
+      const { compiledChatMessages, lastMessageTruncated } =
+        model.compileChatMessages(options, messages);
+      return {
+        compiledChatMessages,
+        lastMessageTruncated,
+      };
+    });
+
     on("llm/streamChat", (msg) =>
       llmStreamChat(
         this.configHandler,

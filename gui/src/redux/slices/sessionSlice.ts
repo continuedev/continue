@@ -56,6 +56,7 @@ type SessionState = {
   };
   activeToolStreamId?: [string, string];
   newestToolbarPreviewForInput: Record<string, string>;
+  warningMessage: string;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -94,6 +95,7 @@ const initialState: SessionState = {
   },
   lastSessionId: undefined,
   newestToolbarPreviewForInput: {},
+  warningMessage: "",
 };
 
 export const sessionSlice = createSlice({
@@ -234,6 +236,7 @@ export const sessionSlice = createSlice({
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
       state.history.splice(action.payload - 1, 2);
+      state.warningMessage = "";
     },
     updateHistoryItemAtIndex: (
       state,
@@ -679,6 +682,9 @@ export const sessionSlice = createSlice({
       state.newestToolbarPreviewForInput[payload.inputId] =
         payload.contextItemId;
     },
+    setWarningMessage: (state, action: PayloadAction<string>) => {
+      state.warningMessage = action.payload;
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -780,6 +786,7 @@ export const {
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
   cycleMode,
+  setWarningMessage,
 } = sessionSlice.actions;
 
 export const {
