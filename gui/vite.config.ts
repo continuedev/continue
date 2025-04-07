@@ -9,7 +9,6 @@ export default defineConfig({
   build: {
     // Change the output .js filename to not include a hash
     rollupOptions: {
-      // external: ["vscode-webview"],
       input: {
         index: resolve(__dirname, "index.html"),
         indexConsole: resolve(__dirname, "indexConsole.html"),
