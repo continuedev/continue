@@ -160,6 +160,7 @@ export default async function doLoadConfig(
         const serverContextProvider = new MCPContextProvider({
           submenuItems,
           mcpId: server.id,
+          serverName: server.name,
         });
         newConfig.contextProviders.push(serverContextProvider);
       }
