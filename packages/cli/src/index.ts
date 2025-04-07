@@ -1,8 +1,18 @@
+import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { ContinueHubClient } from "@continuedev/hub";
+import * as fs from "fs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import { streamChatResponse } from "./streamChatResponse.js";
 import { ChatMessage } from "./types.js";
+
+const hub = new ContinueHubClient({
+  apiKey: process.env.CONTINUE_API_KEY,
+  currentUserSlug: "e2e",
+  orgScopeId: null,
+  apiBase: process.env.CONTINUE_API_BASE ?? "http://localhost:3001/",
+});
 
 const chatHistory: ChatMessage[] = [
   {
@@ -12,8 +22,30 @@ const chatHistory: ChatMessage[] = [
   },
 ];
 
+async function loadAssistant(): Promise<AssistantUnrolled> {
+  const filepathOrSlug = process.argv[2];
+  if (!filepathOrSlug) {
+    console.error(
+      "Error: filepath or slug not provided as a command-line argument.",
+    );
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(filepathOrSlug)) {
+    // Assume it's a slug
+    return await hub.loadAssistant(filepathOrSlug);
+  }
+
+  const content = fs.readFileSync(filepathOrSlug, "utf-8");
+  const assistant = await hub.loadAssistantFromContent(content);
+  return assistant;
+}
 async function chat() {
   console.log(CONTINUE_ASCII_ART);
+
+  const assistant = await loadAssistant();
+
+  console.log(`\nAssistant: ${assistant.name}\n`);
 
   while (true) {
     // Get user input
@@ -35,7 +67,7 @@ async function chat() {
 
     try {
       // Get AI response
-      const aiResponse = await streamChatResponse(chatHistory);
+      const aiResponse = await streamChatResponse(chatHistory, assistant);
 
       // Add AI response to history
       chatHistory.push({ role: "assistant", content: aiResponse });
