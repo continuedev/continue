@@ -489,6 +489,10 @@ const config = {
             to: "/getting-started/install",
             from: "/getting-started",
           },
+          {
+            to: "/customize/deep-dives/prompt-files",
+            from: "/customize/deep-dives/prompts",
+          },
         ],
       },
     ],
