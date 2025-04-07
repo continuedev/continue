@@ -4,6 +4,7 @@ import { searchCodeTool } from "./searchCode.js";
 import { Tool } from "./types.js";
 import { viewDiffTool } from "./viewDiff.js";
 import { writeFileTool } from "./writeFile.js";
+import { runTerminalCommandTool } from "./runTerminalCommand.js";
 
 export { Tool } from "./types.js";
 
@@ -13,6 +14,7 @@ export const tools: Tool[] = [
   listFilesTool,
   viewDiffTool,
   searchCodeTool,
+  runTerminalCommandTool,
 ];
 
 export function getToolsDescription(): string {
