@@ -1,6 +1,7 @@
 import * as dotenv from "dotenv";
 import { OpenAI } from "openai";
 import * as readlineSync from "readline-sync";
+import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 
 dotenv.config();
 const openai = new OpenAI();
@@ -18,17 +19,66 @@ const chatHistory: ChatMessage[] = [
   },
 ];
 
+// Define a function to handle streaming responses
+async function streamChatResponse(userInput: string) {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+
+  // Create a stream for the AI response
+  const stream = await openai.chat.completions.create({
+    model: "gpt-3.5-turbo",
+    messages: chatHistory,
+    max_tokens: 1000,
+    temperature: 0.7,
+    stream: true, // Enable streaming
+  });
+
+  let aiResponse = "";
+
+  // Iterate over the stream and display the response in real-time
+  for await (const chunk of stream) {
+    const content = chunk.choices[0].delta.content;
+    if (content) {
+      process.stdout.write(content); // Write to stdout without a newline
+      aiResponse += content;
+    }
+  }
+
+  console.log(); // Add a newline at the end of the response
+  return aiResponse;
+}
+
+function handleSlashCommands(input: string): string | null {
+  if (input.startsWith("/")) {
+    const [command, ...args] = input.split(" ");
+    switch (command) {
+      case "/help":
+        return "Available commands:\n/help - Show this help message\n/exit - Exit the chat";
+      case "/exit":
+        return "exit";
+      default:
+        return `Unknown command: ${command}`;
+    }
+  }
+  return null;
+}
+
 async function chat() {
-  console.log('Welcome to the AI Chat CLI! (Type "exit" to quit)\n');
+  console.log(CONTINUE_ASCII_ART);
 
   while (true) {
     // Get user input
     const userInput = readlineSync.question("\nYou: ");
 
-    // Check for exit command
-    if (userInput.toLowerCase() === "exit") {
-      console.log("\nGoodbye!");
-      break;
+    // Handle slash commands
+    const commandResult = handleSlashCommands(userInput);
+    if (commandResult) {
+      if (commandResult === "exit") {
+        console.log("\nGoodbye!");
+        break;
+      }
+      console.log(`\n${commandResult}`);
+      continue;
     }
 
     // Add user message to history
@@ -36,21 +86,12 @@ async function chat() {
 
     try {
       // Get AI response
-      const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: chatHistory,
-        max_tokens: 1000,
-        temperature: 0.7,
-      });
-
-      // Get the AI's response
-      const aiResponse = completion.choices[0].message.content;
+      const aiResponse = await streamChatResponse(userInput);
 
       // Add AI response to history
-      chatHistory.push({ role: "assistant", content: aiResponse || "" });
+      chatHistory.push({ role: "assistant", content: aiResponse });
 
-      // Display AI response
-      console.log("\nAI:", aiResponse);
+      // Display AI response (already displayed in real-time)
     } catch (error) {
       console.error(
         "Error:",
