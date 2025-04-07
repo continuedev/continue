@@ -14,14 +14,6 @@ const hub = new ContinueHubClient({
   apiBase: process.env.CONTINUE_API_BASE ?? "http://localhost:3001/",
 });
 
-const chatHistory: ChatMessage[] = [
-  {
-    role: "system",
-    content:
-      "You are a helpful AI assistant. Be concise and clear in your responses.",
-  },
-];
-
 async function loadAssistant(): Promise<AssistantUnrolled> {
   const filepathOrSlug = process.argv[2];
   if (!filepathOrSlug) {
@@ -40,10 +32,26 @@ async function loadAssistant(): Promise<AssistantUnrolled> {
   const assistant = await hub.loadAssistantFromContent(content);
   return assistant;
 }
-async function chat() {
-  console.log(CONTINUE_ASCII_ART);
 
+function loadSystemMessage(assistant: AssistantUnrolled): string | undefined {
+  return assistant.rules
+    ?.filter((rule) => !!rule)
+    .map((rule) => (typeof rule === "string" ? rule : rule.rule))
+    .join("\n");
+}
+
+async function chat() {
+  // Load assistant
   const assistant = await loadAssistant();
+
+  // Rules
+  const chatHistory: ChatMessage[] = [];
+  const systemMessage = loadSystemMessage(assistant);
+  if (systemMessage) {
+    chatHistory.push({ role: "system", content: systemMessage });
+  }
+
+  console.log(CONTINUE_ASCII_ART);
 
   console.log(`\nAssistant: ${assistant.name}\n`);
 
