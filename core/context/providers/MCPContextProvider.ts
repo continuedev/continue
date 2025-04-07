@@ -24,7 +24,9 @@ class MCPContextProvider extends BaseContextProvider {
   override get description(): ContextProviderDescription {
     return {
       title: `${MCPContextProvider.description.title}-${this.options["mcpId"]}`,
-      displayTitle: this.options["displayTitle"] ?? "MCP",
+      displayTitle: this.options["serverName"]
+        ? `${this.options["serverName"]} resources`
+        : "MCP",
       description: "Model Context Protocol",
       type: "submenu",
     };
