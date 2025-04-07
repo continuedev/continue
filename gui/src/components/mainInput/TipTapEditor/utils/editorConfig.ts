@@ -11,32 +11,29 @@ import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { usePostHog } from "posthog-js/react";
 import { useRef } from "react";
-import { IIdeMessenger } from "../../../context/IdeMessenger";
-import { useSubmenuContextProviders } from "../../../context/SubmenuContextProviders";
-import { useInputHistory } from "../../../hooks/useInputHistory";
-import useUpdatingRef from "../../../hooks/useUpdatingRef";
-import { useAppSelector } from "../../../redux/hooks";
-import { selectUseActiveFile } from "../../../redux/selectors";
-import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import {
+  getContextProviderDropdownOptions,
+  getSlashCommandDropdownOptions,
+} from ".";
+import { IIdeMessenger } from "../../../../context/IdeMessenger";
+import { useSubmenuContextProviders } from "../../../../context/SubmenuContextProviders";
+import { useInputHistory } from "../../../../hooks/useInputHistory";
+import useUpdatingRef from "../../../../hooks/useUpdatingRef";
+import { useAppSelector } from "../../../../redux/hooks";
+import { selectUseActiveFile } from "../../../../redux/selectors";
+import { selectDefaultModel } from "../../../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   selectHasCodeToEdit,
   selectIsInEditMode,
-} from "../../../redux/slices/sessionSlice";
-import { AppDispatch } from "../../../redux/store";
-import { exitEditMode } from "../../../redux/thunks";
-import { loadLastSession } from "../../../redux/thunks/session";
-import { getFontSize } from "../../../util";
-import { AddCodeToEdit } from "./extensions/AddCodeToEditExtension";
-import { CodeBlockExtension } from "./extensions/CodeBlockExtension";
-import { SlashCommand } from "./extensions/CommandsExtension";
-import { Mention } from "./extensions/MentionExtension";
-import {
-  getContextProviderDropdownOptions,
-  getSlashCommandDropdownOptions,
-} from "./getSuggestion";
+} from "../../../../redux/slices/sessionSlice";
+import { AppDispatch } from "../../../../redux/store";
+import { exitEditMode } from "../../../../redux/thunks";
+import { loadLastSession } from "../../../../redux/thunks/session";
+import { getFontSize } from "../../../../util";
+import * as ContinueExtensions from "../extensions";
+import { TipTapEditorProps } from "../TipTapEditor";
 import { handleImageFile } from "./imageUtils";
-import { TipTapEditorProps } from "./TipTapEditor";
 
 export function getPlaceholderText(
   placeholder: TipTapEditorProps["placeholder"],
@@ -63,7 +60,6 @@ export function createEditorConfig(options: {
 
   const posthog = usePostHog();
 
-  // #region Selectors
   const { getSubmenuContextItems } = useSubmenuContextProviders();
   const defaultModel = useAppSelector(selectDefaultModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
@@ -72,9 +68,7 @@ export function createEditorConfig(options: {
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-  // #endregion
 
-  // #region Refs
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
   const defaultModelRef = useUpdatingRef(defaultModel);
@@ -89,8 +83,6 @@ export function createEditorConfig(options: {
     props.availableSlashCommands,
   );
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
-
-  // #endregion
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -294,10 +286,7 @@ export function createEditorConfig(options: {
         },
       }),
       Text,
-      Mention.configure({
-        HTMLAttributes: {
-          class: "mention",
-        },
+      ContinueExtensions.Mention.configure({
         suggestion: getContextProviderDropdownOptions(
           availableContextProvidersRef,
           getSubmenuContextItemsRef,
@@ -307,15 +296,8 @@ export function createEditorConfig(options: {
           inSubmenuRef,
           ideMessenger,
         ),
-        renderHTML: (props) => {
-          return `@${props.node.attrs.label || props.node.attrs.id}`;
-        },
       }),
-
-      AddCodeToEdit.configure({
-        HTMLAttributes: {
-          class: "add-code-to-edit",
-        },
+      ContinueExtensions.AddCodeToEdit.configure({
         suggestion: {
           ...getContextProviderDropdownOptions(
             availableContextProvidersRef,
@@ -351,25 +333,22 @@ export function createEditorConfig(options: {
           },
         },
       }),
-      SlashCommand.configure({
-        HTMLAttributes: {
-          class: "mention",
-        },
+      ContinueExtensions.SlashCommand.configure({
         suggestion: getSlashCommandDropdownOptions(
           availableSlashCommandsRef,
           onClose,
           onOpen,
           ideMessenger,
+          dispatch,
+          props.inputId,
         ),
-        renderText: (props) => {
-          return props.node.attrs.label;
-        },
       }),
-      CodeBlockExtension,
+      ContinueExtensions.PromptBlock,
+      ContinueExtensions.CodeBlock,
     ],
     editorProps: {
       attributes: {
-        class: "outline-none -mt-1 overflow-hidden",
+        class: "outline-none overflow-hidden",
         style: `font-size: ${getFontSize()}px;`,
       },
     },

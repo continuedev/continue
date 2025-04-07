@@ -207,7 +207,10 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                 textArea.document.insertString(textArea.caretPosition, ", ", null)
                 textArea.requestFocus()
                 customPanelRef.get().finish()
-            })
+            },
+            null,
+            null
+        )
 
     val diffStreamService = project.service<DiffStreamService>()
     diffStreamService.register(diffStreamHandler, editor)

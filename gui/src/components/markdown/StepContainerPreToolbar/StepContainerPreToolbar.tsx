@@ -3,7 +3,6 @@ import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { v4 as uuidv4 } from "uuid";
 import {
   defaultBorderRadius,
   vscCommandCenterInactiveBorder,
@@ -26,6 +25,8 @@ import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
 
 const TopDiv = styled.div`
+  display: flex;
+  flex-direction: column;
   outline: 1px solid ${vscCommandCenterInactiveBorder};
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
@@ -38,7 +39,6 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: inherit;
   font-size: ${getFontSize() - 2}px;
   padding: 4px 6px;
   margin: 0;
@@ -52,41 +52,31 @@ export interface StepContainerPreToolbarProps {
   relativeFilepath: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
+  codeBlockStreamId: string;
   range?: string;
   children: any;
   expanded?: boolean;
-  hideApply?: boolean;
+  disableManualApply?: boolean;
 }
 
 export default function StepContainerPreToolbar(
   props: StepContainerPreToolbarProps,
 ) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const [isExpanded, setIsExpanded] = useState(
     props.expanded ?? (isInEditMode ? false : true),
   );
   const [codeBlockContent, setCodeBlockContent] = useState("");
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
   );
 
   const applyState = useAppSelector((state) =>
-    selectApplyStateByStreamId(state, streamIdRef.current),
+    selectApplyStateByStreamId(state, props.codeBlockStreamId),
   );
-
-  // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
-  // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
-  // we are done generating based on whether the next node in the tree is not a codeblock.
-  // The tree parsing logic for Remark is defined on page load, so we can't access state
-  // during the actual tree parsing.
-  const isGeneratingCodeBlock = !isStreaming
-    ? false
-    : props.isGeneratingCodeBlock;
 
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
@@ -104,7 +94,7 @@ export default function StepContainerPreToolbar(
     );
 
     ideMessenger.post("applyToFile", {
-      streamId: streamIdRef.current,
+      streamId: props.codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
       curSelectedModelTitle: defaultModel.title,
@@ -135,19 +125,17 @@ export default function StepContainerPreToolbar(
     }
   }, [props.children, codeBlockContent]);
 
-  // Temporarily disabling auto apply for Edit mode
   // useEffect(() => {
   //   const hasCompletedGenerating =
   //     wasGeneratingRef.current && !isGeneratingCodeBlock;
 
-  //   const shouldAutoApply = hasCompletedGenerating && isInEditMode;
-
-  //   if (shouldAutoApply) {
-  //     onClickApply();
-  //   }
-
   //   wasGeneratingRef.current = isGeneratingCodeBlock;
-  // }, [isGeneratingCodeBlock]);
+  //   if (hasCompletedGenerating) {
+  //     if (props.autoApply) {
+  //       onClickApply();
+  //     }
+  //   }
+  // }, [wasGeneratingRef, isGeneratingCodeBlock, props.autoApply]);
 
   async function onClickAcceptApply() {
     const fileUri = await inferResolvedUriFromRelativePath(
@@ -156,7 +144,7 @@ export default function StepContainerPreToolbar(
     );
     ideMessenger.post("acceptDiff", {
       filepath: fileUri,
-      streamId: streamIdRef.current,
+      streamId: props.codeBlockStreamId,
     });
   }
 
@@ -167,7 +155,7 @@ export default function StepContainerPreToolbar(
     );
     ideMessenger.post("rejectDiff", {
       filepath: fileUri,
-      streamId: streamIdRef.current,
+      streamId: props.codeBlockStreamId,
     });
   }
 
@@ -183,44 +171,40 @@ export default function StepContainerPreToolbar(
 
   return (
     <TopDiv>
-      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
-        <div className="flex min-w-0 max-w-[45%] items-center">
+      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
+        <div className="flex max-w-72 flex-row items-center">
           <ChevronDownIcon
             onClick={onClickExpand}
-            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
+            className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
-          <div className="w-full min-w-0">
-            <FileInfo
-              relativeFilepath={props.relativeFilepath}
-              range={props.range}
-            />
-          </div>
+          <FileInfo
+            relativeFilepath={props.relativeFilepath}
+            range={props.range}
+          />
         </div>
 
         <div className="flex items-center gap-3 max-sm:gap-1.5">
-          {isGeneratingCodeBlock && (
+          {props.isGeneratingCodeBlock ? (
             <GeneratingCodeLoader
               showLineCount={!isExpanded}
               codeBlockContent={codeBlockContent}
             />
-          )}
-
-          {!isGeneratingCodeBlock && (
+          ) : (
             <>
               <CopyButton text={props.codeBlockContent} />
-              {props.hideApply ||
-                (isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
-                  <RunInTerminalButton command={props.codeBlockContent} />
-                ) : (
-                  <ApplyActions
-                    applyState={applyState}
-                    onClickApply={onClickApply}
-                    onClickAccept={onClickAcceptApply}
-                    onClickReject={onClickRejectApply}
-                  />
-                ))}
+              {isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
+                <RunInTerminalButton command={props.codeBlockContent} />
+              ) : (
+                <ApplyActions
+                  disableManualApply={props.disableManualApply}
+                  applyState={applyState}
+                  onClickApply={onClickApply}
+                  onClickAccept={onClickAcceptApply}
+                  onClickReject={onClickRejectApply}
+                />
+              )}
             </>
           )}
         </div>

@@ -190,6 +190,7 @@ export class VerticalDiffManager {
     diffStream: AsyncGenerator<DiffLine>,
     instant: boolean,
     streamId: string,
+    toolCallId?: string,
   ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
@@ -226,6 +227,7 @@ export class VerticalDiffManager {
             numDiffs,
             fileContent,
             filepath: fileUri,
+            toolCallId,
           }),
       },
     );
@@ -276,6 +278,7 @@ export class VerticalDiffManager {
     quickEdit?: string,
     range?: vscode.Range,
     newCode?: string,
+    toolCallId?: string,
   ): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
@@ -351,6 +354,7 @@ export class VerticalDiffManager {
             numDiffs,
             fileContent,
             filepath: fileUri,
+            toolCallId,
           }),
       },
     );

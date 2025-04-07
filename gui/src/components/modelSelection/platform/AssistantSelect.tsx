@@ -1,7 +1,6 @@
 import {
   ArrowTopRightOnSquareIcon,
   BuildingOfficeIcon,
-  CheckIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
   ExclamationTriangleIcon,
@@ -11,7 +10,7 @@ import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { cycleProfile, selectProfileThunk } from "../../../redux";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch } from "../../../redux/hooks";
 import {
   fontSize,
   getMetaKeyLabel,
@@ -31,6 +30,7 @@ import { useNavigate } from "react-router-dom";
 import { vscCommandCenterInactiveBorder } from "../..";
 import { ROUTES } from "../../../util/navigation";
 import { ToolTip } from "../../gui/Tooltip";
+import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
 
@@ -45,6 +45,8 @@ const AssistantSelectOption = ({
   selected,
   onClick,
 }: AssistantSelectOptionProps) => {
+  const tinyFont = useFontSize(-4);
+
   const navigate = useNavigate();
 
   const hasFatalErrors = useMemo(() => {
@@ -79,25 +81,30 @@ const AssistantSelectOption = ({
       disabled={hasFatalErrors}
       onClick={!hasFatalErrors ? handleOptionClick : undefined}
       fontSizeModifier={-2}
+      className={selected ? "bg-list-active text-list-active-foreground" : ""}
     >
-      <div className="flex w-full flex-col gap-0.5">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex w-full items-center gap-2">
-            <div className="mr-2 h-4 w-4 flex-shrink-0">
+      <div
+        className="flex w-full flex-col gap-0.5"
+        style={{
+          fontSize: tinyFont,
+        }}
+      >
+        <div className="flex w-full items-center justify-between bg-transparent">
+          <div className="flex w-full items-center gap-1.5">
+            <div className="flex h-4 w-4 flex-shrink-0">
               <AssistantIcon assistant={profile} />
             </div>
             <span
-              className={`line-clamp-1 flex-1 ${selected ? "font-bold" : ""}`}
+              className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""}`}
             >
               {profile.title}
             </span>
           </div>
-          <div className="flex flex-row items-center gap-2">
-            <div>{selected ? <CheckIcon className="h-3 w-3" /> : null}</div>
+          <div className="flex flex-row items-center gap-1">
             {!profile.errors?.length ? (
               isLocalProfile(profile) ? (
                 <Cog6ToothIcon
-                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
+                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -106,7 +113,7 @@ const AssistantSelectOption = ({
                 />
               ) : (
                 <ArrowTopRightOnSquareIcon
-                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
+                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -143,9 +150,7 @@ export default function AssistantSelect() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { selectedProfile, selectedOrganization } = useAuth();
   const ideMessenger = useContext(IdeMessengerContext);
-  const isLumpToolbarExpanded = useAppSelector(
-    (state) => state.ui.isBlockSettingsToolbarExpanded,
-  );
+  const { isToolbarExpanded } = useLump();
 
   const { profiles, session, login } = useAuth();
   const navigate = useNavigate();
@@ -205,7 +210,7 @@ export default function AssistantSelect() {
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
         <span
-          className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+          className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
         >
           Create your first assistant
         </span>
@@ -227,7 +232,7 @@ export default function AssistantSelect() {
               <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
             <span
-              className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+              className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
             >
               {selectedProfile.title}
             </span>
@@ -239,9 +244,9 @@ export default function AssistantSelect() {
         </ListboxButton>
 
         <Transition>
-          <ListboxOptions className="pb-0">
+          <ListboxOptions className="min-w-[200px] pb-0">
             <div
-              className={`thin-scrollbar flex max-h-[300px] flex-col gap-1 overflow-y-auto py-1`}
+              className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
             >
               {profiles?.map((profile, idx) => {
                 return (
@@ -268,8 +273,13 @@ export default function AssistantSelect() {
                 fontSizeModifier={-2}
                 onClick={session ? onNewAssistant : () => login(false)}
               >
-                <div className="flex flex-row items-center gap-2">
-                  <PlusIcon className="h-4 w-4 flex-shrink-0" />
+                <div
+                  className="text-lightgray flex flex-row items-center gap-2"
+                  style={{
+                    fontSize: tinyFont,
+                  }}
+                >
+                  <PlusIcon className="ml-0.5 h-3 w-3 flex-shrink-0" />
                   New Assistant
                 </div>
               </ListboxOption>
@@ -287,22 +297,32 @@ export default function AssistantSelect() {
                   fontSize: tinyFont,
                 }}
               >
-                <span className="block">
+                <span
+                  className="block"
+                  style={{
+                    fontSize: tinyFont - 1,
+                  }}
+                >
                   <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
                 </span>
                 <div
-                  className="flex items-center gap-1"
+                  className="ml-auto flex items-center gap-1"
                   onClick={() => navigate(ROUTES.CONFIG)}
                 >
                   {selectedOrganization?.iconUrl ? (
                     <img
                       src={selectedOrganization.iconUrl}
-                      className="h-4 w-4 rounded-full"
+                      className="h-3 w-3 rounded-full"
                     />
                   ) : (
                     <BuildingOfficeIcon className="h-4 w-4" />
                   )}
-                  <span className="hover:cursor-pointer hover:underline">
+                  <span
+                    className="hover:cursor-pointer hover:underline"
+                    style={{
+                      fontSize: tinyFont - 1,
+                    }}
+                  >
                     {selectedOrganization?.name || "Personal"}
                   </span>
                 </div>
