@@ -35,16 +35,21 @@ export function slashFromCustomCommand(
           { input },
         );
       } else {
-        renderedPrompt = await renderPromptFileV2(customCommand.prompt, {
-          config,
-          llm,
-          ide,
-          selectedCode,
-          fetch,
-          fullInput: input,
-          embeddingsProvider: config.modelsByRole.embed[0],
-          reranker: config.modelsByRole.rerank[0],
-        });
+        const renderedPromptFile = await renderPromptFileV2(
+          customCommand.prompt,
+          {
+            config,
+            llm,
+            ide,
+            selectedCode,
+            fetch,
+            fullInput: input,
+            embeddingsProvider: config.modelsByRole.embed[0],
+            reranker: config.modelsByRole.rerank[0],
+          },
+        );
+
+        renderedPrompt = renderedPromptFile[1];
       }
 
       // Replaces slash command messages with the rendered prompt

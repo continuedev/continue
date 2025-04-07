@@ -68,7 +68,7 @@ export function slashCommandFromPromptFileV1(
       context.llm.systemMessage = systemMessage;
 
       const userInput = extractUserInput(context.input, name);
-      const renderedPrompt = await renderPromptFileV2(prompt, {
+      const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
         config: context.config,
         fullInput: userInput,
         embeddingsProvider: context.config.modelsByRole.embed[0],
