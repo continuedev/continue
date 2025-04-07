@@ -31,8 +31,7 @@ interface VsCodeCompletionInput {
 }
 
 export class ContinueCompletionProvider
-  implements vscode.InlineCompletionItemProvider
-{
+  implements vscode.InlineCompletionItemProvider, vscode.Disposable {
   private async onError(e: any) {
     if (await handleLLMError(e)) {
       return;
@@ -62,6 +61,7 @@ export class ContinueCompletionProvider
   private completionProvider: CompletionProvider;
   private recentlyVisitedRanges: RecentlyVisitedRangesService;
   private recentlyEditedTracker: RecentlyEditedTracker;
+  private disposables: vscode.Disposable[];
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -69,6 +69,7 @@ export class ContinueCompletionProvider
     private readonly webviewProtocol: VsCodeWebviewProtocol,
   ) {
     this.recentlyEditedTracker = new RecentlyEditedTracker(ide.ideUtils);
+    this.disposables = [];
 
     async function getAutocompleteModel() {
       const { config } = await configHandler.loadConfig();
@@ -85,6 +86,36 @@ export class ContinueCompletionProvider
       getDefinitionsFromLsp,
     );
     this.recentlyVisitedRanges = new RecentlyVisitedRangesService(ide);
+
+    this.requestNewInlineCompletionsOnEditorChanges();
+  }
+
+  private requestNewInlineCompletionsOnEditorChanges(): void {
+    let disposable: vscode.Disposable | undefined;
+
+    disposable = vscode.window.onDidChangeActiveTextEditor(() => {
+      this.requestNewInlineCompletion();
+    });
+    this.disposables.push(disposable);
+
+    disposable = vscode.window.onDidChangeWindowState((event) => {
+      if (event.focused)
+        this.requestNewInlineCompletion();
+    });
+    this.disposables.push(disposable);
+  }
+
+  public dispose(): void {
+    this.disposables.forEach(d => d.dispose());
+    this.disposables = [];
+  }
+
+  private async requestNewInlineCompletion() {
+    setTimeout(async () => {
+      await vscode.commands.executeCommand(
+        "editor.action.inlineSuggest.trigger",
+      );
+    }, 33);
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
