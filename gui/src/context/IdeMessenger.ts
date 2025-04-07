@@ -15,7 +15,6 @@ import {
 } from "core/protocol/util";
 import { createContext } from "react";
 import { v4 as uuidv4 } from "uuid";
-import "vscode-webview";
 import { isJetBrains } from "../util";
 
 interface vscode {
