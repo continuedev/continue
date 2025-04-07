@@ -2,15 +2,9 @@ import * as dotenv from "dotenv";
 import { OpenAI } from "openai";
 import * as readlineSync from "readline-sync";
 
-// Load environment variables
 dotenv.config();
+const openai = new OpenAI();
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-// Chat history to maintain context
 interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
