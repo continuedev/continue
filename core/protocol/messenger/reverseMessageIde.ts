@@ -166,6 +166,10 @@ export class ReverseMessageIde {
       return this.ide.getSearchResults(data.query);
     });
 
+    this.on("getFileResults", (data) => {
+      return this.ide.getFileResults(data.pattern);
+    });
+
     this.on("getProblems", (data) => {
       return this.ide.getProblems(data.filepath);
     });

@@ -1,4 +1,4 @@
-export function updateChatHistory(
+export function replaceSlashCommandWithPromptInChatHistory(
   history: any[],
   commandName: string,
   renderedPrompt: string,

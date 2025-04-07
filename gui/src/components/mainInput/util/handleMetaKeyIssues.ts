@@ -1,6 +1,7 @@
 import { Editor } from "@tiptap/react";
 import { KeyboardEvent } from "react";
 import { getPlatform, isWebEnvironment } from "../../../util";
+import { CodeBlock } from "../TipTapEditor";
 
 const isWebEnv = isWebEnvironment();
 
@@ -103,7 +104,7 @@ export const handleJetBrainsMetaBackspace = (editor: Editor) => {
   for (let i = doc.content.childCount - 1; i >= 0; i--) {
     const node = doc.content.child(i);
 
-    if (node.type.name === "codeBlock") {
+    if (node.type.name === CodeBlock.name) {
       continue;
     }
 

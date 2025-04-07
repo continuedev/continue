@@ -16,10 +16,14 @@ import {
 } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
+  acceptToolCall,
   addContextItemsAtIndex,
   setInactive,
+  setToolCallOutput,
+  updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import { streamResponseAfterToolCall } from "../redux/thunks";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
@@ -244,6 +248,42 @@ function useSetup() {
       return defaultModel?.title;
     },
     [defaultModel],
+  );
+
+  const activeToolStreamId = useAppSelector(
+    (store) => store.session.activeToolStreamId,
+  );
+  useWebviewListener(
+    "updateApplyState",
+    async (state) => {
+      // dispatch(
+      //   updateCurCheckpoint({
+      //     filepath: state.filepath,
+      //     content: state.fileContent,
+      //   }),
+      // );
+      dispatch(updateApplyState(state));
+      if (
+        activeToolStreamId &&
+        state.streamId === activeToolStreamId[0] &&
+        state.status === "closed"
+      ) {
+        // const output: ContextItem = {
+        //   name: "Edit tool output",
+        //   content: "Completed edit",
+        //   description: "",
+        // };
+        dispatch(acceptToolCall());
+        dispatch(setToolCallOutput([]));
+        dispatch(
+          streamResponseAfterToolCall({
+            toolCallId: activeToolStreamId[1],
+            toolOutput: [],
+          }),
+        );
+      }
+    },
+    [activeToolStreamId],
   );
 }
 
