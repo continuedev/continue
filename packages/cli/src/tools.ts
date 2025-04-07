@@ -1,5 +1,8 @@
+import * as child_process from "child_process";
 import * as fs from "fs";
 import * as path from "path";
+import * as util from "util";
+const execPromise = util.promisify(child_process.exec);
 
 export interface Tool {
   name: string;
@@ -58,7 +61,6 @@ export const tools: Tool[] = [
       content: string;
     }): Promise<string> => {
       try {
-        // Create directory if it doesn't exist
         const dirPath = path.dirname(args.filepath);
         if (!fs.existsSync(dirPath)) {
           fs.mkdirSync(dirPath, { recursive: true });
@@ -106,6 +108,50 @@ export const tools: Tool[] = [
       }
     },
   },
+  {
+    name: "view_diff",
+    description: "View all uncommitted changes in the git repository",
+    parameters: {
+      path: {
+        type: "string",
+        description:
+          "The path to the git repository (defaults to current directory)",
+        required: false,
+      },
+    },
+    run: async (args: { path?: string }): Promise<string> => {
+      try {
+        const repoPath = args.path || process.cwd();
+        if (!fs.existsSync(repoPath)) {
+          return `Error: Path does not exist: ${repoPath}`;
+        }
+
+        try {
+          await execPromise("git rev-parse --is-inside-work-tree", {
+            cwd: repoPath,
+          });
+        } catch (error) {
+          return `Error: The specified path is not a git repository: ${repoPath}`;
+        }
+
+        const { stdout, stderr } = await execPromise("git diff", {
+          cwd: repoPath,
+        });
+
+        if (stderr) {
+          return `Error executing git diff: ${stderr}`;
+        }
+
+        if (!stdout.trim()) {
+          return "No changes detected in the git repository.";
+        }
+
+        return `Git diff for repository at ${repoPath}:\n\n${stdout}`;
+      } catch (error) {
+        return `Error running git diff: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    },
+  },
 ];
 
 export function getToolsDescription(): string {
@@ -130,13 +176,12 @@ ${params}
       .filter(([_, param]) => param.required)
       .map(([name]) => `"${name}"`)
       .join(", ")}]
-  }
+}
 }`;
     })
     .join(",\n");
 }
 
-// Extract and validate tool calls from AI response
 export function extractToolCalls(
   response: string,
 ): Array<{ name: string; arguments: Record<string, any> }> {
@@ -162,7 +207,6 @@ export function extractToolCalls(
   return toolCalls;
 }
 
-// Execute a tool call
 export async function executeToolCall(toolCall: {
   name: string;
   arguments: Record<string, any>;
@@ -173,7 +217,6 @@ export async function executeToolCall(toolCall: {
     return `Error: Tool "${toolCall.name}" not found`;
   }
 
-  // Validate required parameters
   for (const [paramName, paramDef] of Object.entries(tool.parameters)) {
     if (
       paramDef.required &&

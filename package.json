@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "@types/readline-sync": "^1.4.8",
-    "chalk": "^5.4.1",
     "dotenv": "^16.4.7",
     "openai": "^4.90.0",
     "readline-sync": "^1.4.10"
