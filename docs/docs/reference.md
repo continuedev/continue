@@ -474,7 +474,8 @@ models:
   - name: qwen2.5-coder-7b
     <<: *model_defaults
     model: qwen2.5-coder-7b
-    useLegacyCompletionsEndpoint: false
+    env:
+      useLegacyCompletionsEndpoint: false
     roles:
       - autocomplete
 ```
