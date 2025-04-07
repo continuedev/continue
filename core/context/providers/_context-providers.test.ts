@@ -32,7 +32,6 @@ async function getContextProviderExtras(
     async (text) => {},
     Promise.resolve(undefined),
   );
-  await configHandler.initializedPromise;
   const { config } = await configHandler.loadConfig();
   if (!config) {
     throw new Error("Config not found");

@@ -202,16 +202,10 @@ export class VsCodeExtension {
       let profileId = queryParams.get("profile_id");
       let orgId = queryParams.get("org_id");
 
-      if (orgId) {
-        if (orgId === "null") {
-          orgId = null;
-        }
+      if (orgId && orgId !== "null") {
         // In case org id is passed with profile id
         // Make sure org is updated before profile is set
-        if (profileId) {
-          if (profileId === "null") {
-            profileId = null;
-          }
+        if (profileId && profileId !== "null") {
           this.core.invoke("didChangeSelectedOrg", {
             id: orgId,
             profileId,
@@ -221,10 +215,7 @@ export class VsCodeExtension {
             id: orgId,
           });
         }
-      } else if (profileId) {
-        if (profileId === "null") {
-          profileId = null;
-        }
+      } else if (profileId && profileId !== "null") {
         this.core.invoke("didChangeSelectedProfile", {
           id: profileId,
         });
@@ -334,14 +325,6 @@ export class VsCodeExtension {
         );
 
         const sessionInfo = await getControlPlaneSessionInfo(true, false);
-        this.webviewProtocolPromise.then(async (webviewProtocol) => {
-          void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
-            sessionInfo,
-          });
-
-          // To make sure continue-proxy models and anything else requiring it get updated access token
-          this.configHandler.reloadConfig();
-        });
         void this.core.invoke("didChangeControlPlaneSessionInfo", {
           sessionInfo,
         });
@@ -415,10 +398,7 @@ export class VsCodeExtension {
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
-        const webviewProtocol = await this.webviewProtocolPromise;
-        void webviewProtocol.request("didChangeIdeSettings", {
-          settings,
-        });
+        void this.core.invoke("config/ideSettingsUpdate", settings);
       }
     });
   }

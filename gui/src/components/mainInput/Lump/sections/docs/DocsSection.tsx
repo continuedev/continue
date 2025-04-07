@@ -1,14 +1,12 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
 import { IndexingStatus } from "core";
 import { useMemo } from "react";
-import { useDispatch } from "react-redux";
 import { useAuth } from "../../../../../context/Auth";
 import { useAppSelector } from "../../../../../redux/hooks";
 import { ExploreBlocksButton } from "../ExploreBlocksButton";
 import DocsIndexingStatus from "./DocsIndexingStatus";
 
 function DocsIndexingStatuses() {
-  const dispatch = useDispatch();
   const config = useAppSelector((store) => store.config.config);
   const indexingStatuses = useAppSelector(
     (store) => store.indexing.indexing.statuses,
