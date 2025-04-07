@@ -158,18 +158,21 @@ async function getAddRemoveForTag(
   const updateLastUpdated: PathAndCacheKey[] = [];
 
   // First, group items by path and find latest timestamp for each
-  const pathGroups = new Map<string, {
-    latest: { lastUpdated: number, cacheKey: string },
-    allVersions: Array<{ cacheKey: string }>
-  }>();
+  const pathGroups = new Map<
+    string,
+    {
+      latest: { lastUpdated: number; cacheKey: string };
+      allVersions: Array<{ cacheKey: string }>;
+    }
+  >();
 
   for (const item of saved) {
     const { lastUpdated, path, cacheKey } = item;
-    
+
     if (!pathGroups.has(path)) {
       pathGroups.set(path, {
         latest: { lastUpdated, cacheKey },
-        allVersions: [{ cacheKey }]
+        allVersions: [{ cacheKey }],
       });
     } else {
       const group = pathGroups.get(path)!;
@@ -530,6 +533,6 @@ export function truncateToLastNBytes(input: string, maxBytes: number): string {
   return input.substring(startIndex, input.length);
 }
 
-export function truncateSqliteLikePattern(input: string) {
-  return truncateToLastNBytes(input, SQLITE_MAX_LIKE_PATTERN_LENGTH);
+export function truncateSqliteLikePattern(input: string, safety: number = 100) {
+  return truncateToLastNBytes(input, SQLITE_MAX_LIKE_PATTERN_LENGTH - safety);
 }
