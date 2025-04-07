@@ -11,13 +11,16 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   return (
     <div
-      className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-1 p-2"
+      className="flex items-center"
       style={{
-        backgroundColor: props.isEven ? '#1e1e1e' : 'transparent'
+        backgroundColor: props.isEven ? '#1e1e1e' : 'transparent',
+        padding: '8px 0'
       }}
     >
-      <span className="max-w-60 text-xs">{props.description}:</span>
-      <div className="flex flex-1 flex-row items-center justify-end gap-1.5">
+      <div className="flex-grow overflow-hidden pr-4">
+        <span className="text-xs">{props.description}:</span>
+      </div>
+      <div>
         <Shortcut>{props.shortcut}</Shortcut>
       </div>
     </div>
@@ -133,9 +136,9 @@ function KeyboardShortcuts() {
   }, []);
 
   return (
-    <div className="flex max-w-[400px] flex-col">
-      <h3 className="mb-2 text-xl">Keyboard shortcuts</h3>
-      <div className="flex flex-col items-center justify-center gap-y-1 overflow-hidden rounded">
+    <div className="p-5 h-full overflow-auto">
+      <h3 className="mb-5 text-xl">Keyboard shortcuts</h3>
+      <div>
         {shortcuts.map((shortcut, i) => {
           return (
             <KeyboardShortcut
