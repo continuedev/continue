@@ -196,4 +196,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
+  isItemTooBig: [
+    { item: ContextItemWithId; selectedModelTitle: string | undefined },
+    boolean,
+  ];
 };
