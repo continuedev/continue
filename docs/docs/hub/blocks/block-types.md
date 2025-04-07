@@ -41,7 +41,7 @@ Learn more in the [rules deep dive](../../customize/deep-dives/rules.md), and vi
 
 Prompts blocks are pre-written, reusable prompts that can be referenced at any time during chat. They are especially useful as context for repetitive and/or complex tasks. [Explore prompts](https://hub.continue.dev/explore/prompts) on the hub.
 
-Prompt blocks have the same syntax as [prompt files](../../customize/deep-dives/prompt-files.md). The `config.yaml` spec for `prompts` can be found [here](../../reference.md#prompts).
+Prompt blocks have the same syntax as [prompt files](../../customize/deep-dives/prompts.md). The `config.yaml` spec for `prompts` can be found [here](../../reference.md#prompts).
 
 ## Data
 
