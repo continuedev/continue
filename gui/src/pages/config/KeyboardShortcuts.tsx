@@ -17,10 +17,10 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
         padding: '8px 0'
       }}
     >
-      <div className="flex-grow overflow-hidden pr-4">
-        <span className="text-xs">{props.description}:</span>
+      <div className="flex-grow overflow-hidden pr-4 min-w-0">
+        <span className="text-xs block text-ellipsis overflow-hidden">{props.description}:</span>
       </div>
-      <div>
+      <div className="flex-shrink-0 whitespace-nowrap">
         <Shortcut>{props.shortcut}</Shortcut>
       </div>
     </div>
