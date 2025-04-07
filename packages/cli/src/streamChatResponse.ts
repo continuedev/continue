@@ -1,5 +1,6 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { constructLlmApi } from "@continuedev/openai-adapters";
+import chalk from "chalk";
 import * as dotenv from "dotenv";
 import {
   ChatCompletionChunk,
@@ -16,7 +17,7 @@ function getLlmFromAssistant(assistant: AssistantUnrolled) {
     model?.roles?.includes("chat"),
   )?.[0];
   if (!chatModel) {
-    console.error("Error: No chat model found in the assistant.");
+    console.error(chalk.red("Error: No chat model found in the assistant."));
     process.exit(1);
   }
   const llm = constructLlmApi({
@@ -25,7 +26,7 @@ function getLlmFromAssistant(assistant: AssistantUnrolled) {
     apiBase: chatModel.apiBase,
   });
   if (!llm) {
-    console.error("Error: Failed to construct LLM API.");
+    console.error(chalk.red("Error: Failed to construct LLM API."));
     process.exit(1);
   }
 
@@ -78,7 +79,10 @@ export async function streamChatResponse(
         new AbortController().signal,
       );
     } catch (error: any) {
-      console.error("Error in streamChatResponse:", error.message);
+      console.error(
+        chalk.red("Error in streamChatResponse:"),
+        chalk.red(error.message),
+      );
       process.exit(1);
     }
 
@@ -91,7 +95,7 @@ export async function streamChatResponse(
       // Handle regular content
       if (chunk.choices[0].delta.content) {
         const content = chunk.choices[0].delta.content;
-        process.stdout.write(content);
+        process.stdout.write(chalk.white(content));
         aiResponse += content;
       }
 
@@ -117,7 +121,9 @@ export async function streamChatResponse(
             );
             if (toolCall) {
               toolCall.name += toolCallDelta.function.name;
-              process.stdout.write(`\n[Using tool: ${toolCall.id}]`);
+              process.stdout.write(
+                `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(toolCall.name)}${chalk.yellow("]")}`,
+              );
             }
           }
 
@@ -167,8 +173,9 @@ export async function streamChatResponse(
     // If we have tool calls, execute them
     if (currentToolCalls.length > 0) {
       for (const toolCall of currentToolCalls) {
-        console.log(`\n[Executing tool: ${toolCall.name}]`);
-
+        console.log(
+          `\n${chalk.yellow("[Executing tool:")} ${chalk.yellow.bold(toolCall.name)}${chalk.yellow("]")}`,
+        );
         try {
           // Execute the tool
           const toolResult = await executeToolCall({
@@ -183,7 +190,9 @@ export async function streamChatResponse(
             content: toolResult,
           });
 
-          console.log(`[Tool result: ${toolResult}]`);
+          console.log(
+            `${chalk.green("[Tool result:")} ${chalk.green(toolResult)}${chalk.green("]")}\n`,
+          );
         } catch (error) {
           const errorMessage = `Error executing tool ${toolCall.name}: ${error instanceof Error ? error.message : String(error)}`;
           chatHistory.push({
@@ -191,7 +200,9 @@ export async function streamChatResponse(
             tool_call_id: toolCall.id,
             content: errorMessage,
           });
-          console.log(`[Tool error: ${errorMessage}]`);
+          console.log(
+            `${chalk.red("[Tool error:")} ${chalk.red(errorMessage)}${chalk.red(")")}`,
+          );
         }
       }
 

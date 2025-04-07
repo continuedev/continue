@@ -1,5 +1,6 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { ContinueHubClient } from "@continuedev/hub";
+import chalk from "chalk";
 import * as fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
@@ -19,7 +20,9 @@ async function loadAssistant(): Promise<AssistantUnrolled> {
   const filepathOrSlug = process.argv[2];
   if (!filepathOrSlug) {
     console.error(
-      "Error: filepath or slug not provided as a command-line argument.",
+      chalk.red(
+        "Error: filepath or slug not provided as a command-line argument.",
+      ),
     );
     process.exit(1);
   }
@@ -42,12 +45,12 @@ function loadSystemMessage(assistant: AssistantUnrolled): string | undefined {
 }
 
 function introMessage(assistant: AssistantUnrolled) {
-  console.log(CONTINUE_ASCII_ART);
+  console.log(chalk.cyan(CONTINUE_ASCII_ART));
 
-  console.log(`\nAssistant: ${assistant.name}\n`);
-  console.log("Available tools:");
+  console.log(`\n${chalk.bold.blue(`Assistant: ${assistant.name}`)}\n`);
+  console.log(chalk.yellow("Available tools:"));
   tools.forEach((tool) => {
-    console.log(`- ${tool.name}: ${tool.description}`);
+    console.log(`- ${chalk.green(tool.name)}: ${tool.description}`);
   });
   console.log("");
 }
@@ -66,7 +69,7 @@ async function chat() {
 
   while (true) {
     // Get user input
-    let userInput = readlineSync.question("\nYou: ");
+    let userInput = readlineSync.question(`\n${chalk.bold.green("You:")} `);
 
     // Handle slash commands
     const commandResult = handleSlashCommands(userInput, assistant);
@@ -75,7 +78,7 @@ async function chat() {
         break;
       }
 
-      console.log(`\n${commandResult.output ?? ""}`);
+      console.log(`\n${chalk.italic.gray(commandResult.output ?? "")}`);
 
       if (commandResult.newInput) {
         userInput = commandResult.newInput;
@@ -88,15 +91,19 @@ async function chat() {
     chatHistory.push({ role: "user", content: userInput });
 
     // Get AI response with potential tool usage
-    console.log("\nAssistant:");
+    console.log(`\n${chalk.bold.blue("Assistant:")}`);
 
     try {
       await streamChatResponse(chatHistory, assistant);
     } catch (e: any) {
-      console.error(`\nError: ${e.message}`);
-      console.log(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`);
+      console.error(`\n${chalk.red(`Error: ${e.message}`)}`);
+      console.log(
+        chalk.dim(`Chat history:\n${JSON.stringify(chatHistory, null, 2)}`),
+      );
     }
   }
 }
 
-chat().catch(console.error);
+chat().catch((error) =>
+  console.error(chalk.red(`Fatal error: ${error.message}`)),
+);
