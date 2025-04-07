@@ -57,17 +57,22 @@ async function chat() {
 
   while (true) {
     // Get user input
-    const userInput = readlineSync.question("\nYou: ");
+    let userInput = readlineSync.question("\nYou: ");
 
     // Handle slash commands
-    const commandResult = handleSlashCommands(userInput);
+    const commandResult = handleSlashCommands(userInput, assistant);
     if (commandResult) {
-      if (commandResult === "exit") {
-        console.log("\nGoodbye!");
+      if (commandResult.exit) {
         break;
       }
-      console.log(`\n${commandResult}`);
-      continue;
+
+      console.log(`\n${commandResult.output ?? ""}`);
+
+      if (commandResult.newInput) {
+        userInput = commandResult.newInput;
+      } else {
+        continue;
+      }
     }
 
     // Add user message to history
