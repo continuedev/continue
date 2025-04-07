@@ -5,12 +5,13 @@ import * as fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
+import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import {
+  getAllTools,
   getLlmFromAssistant,
   streamChatResponse,
 } from "./streamChatResponse.js";
-import { tools } from "./tools.js";
 
 const hub = new ContinueHubClient({
   apiKey: process.env.CONTINUE_API_KEY,
@@ -47,7 +48,10 @@ function loadSystemMessage(assistant: AssistantUnrolled): string | undefined {
     .join("\n");
 }
 
-function introMessage(assistant: AssistantUnrolled) {
+function introMessage(assistant: AssistantUnrolled, mcpService: MCPService) {
+  const mcpTools = mcpService.getTools() ?? [];
+  const mcpPrompts = mcpService.getPrompts() ?? [];
+
   console.log(chalk.cyan(CONTINUE_ASCII_ART));
 
   const { model } = getLlmFromAssistant(assistant);
@@ -55,9 +59,15 @@ function introMessage(assistant: AssistantUnrolled) {
   console.log(`${chalk.blue(`Model: ${model}`)}\n`);
 
   console.log(chalk.yellow("Available tools:"));
-  tools.forEach((tool) => {
+  getAllTools().forEach((tool) => {
+    console.log(
+      `- ${chalk.green(tool.function.name)}: ${tool.function.description ?? ""}`,
+    );
+  });
+  mcpTools.forEach((tool) => {
     console.log(`- ${chalk.green(tool.name)}: ${tool.description}`);
   });
+  console.log("");
 
   console.log(chalk.yellow("\nAvailable slash commands:"));
   console.log("- /exit: Exit the chat");
@@ -67,9 +77,20 @@ function introMessage(assistant: AssistantUnrolled) {
   for (const prompt of assistant.prompts ?? []) {
     console.log(`- /${prompt.name}: ${prompt.description}`);
   }
+  for (const prompt of mcpPrompts) {
+    console.log(`- /${prompt.name}: ${prompt.description}`);
+  }
+  console.log("");
 
   if (assistant.rules?.length) {
     console.log(chalk.yellow("\nAssistant rules: " + assistant.rules.length));
+  }
+
+  if (assistant.mcpServers?.length) {
+    console.log(chalk.yellow("\nMCP Servers:"));
+    assistant.mcpServers.forEach((server) => {
+      console.log(`- ${chalk.cyan(server.name)}`);
+    });
   }
   console.log("");
 }
@@ -77,7 +98,10 @@ function introMessage(assistant: AssistantUnrolled) {
 async function chat() {
   // Load assistant
   const assistant = await loadAssistant();
-  introMessage(assistant);
+
+  const mcpService = await MCPService.create(assistant);
+
+  introMessage(assistant, mcpService);
 
   // Rules
   const chatHistory: ChatCompletionMessageParam[] = [];

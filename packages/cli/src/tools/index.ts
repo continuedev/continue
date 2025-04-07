@@ -1,14 +1,15 @@
+import { MCPService } from "../mcp.js";
 import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
+import { runTerminalCommandTool } from "./runTerminalCommand.js";
 import { searchCodeTool } from "./searchCode.js";
-import { Tool } from "./types.js";
+import { Tool, ToolParameters } from "./types.js";
 import { viewDiffTool } from "./viewDiff.js";
 import { writeFileTool } from "./writeFile.js";
-import { runTerminalCommandTool } from "./runTerminalCommand.js";
 
 export { Tool } from "./types.js";
 
-export const tools: Tool[] = [
+export const BUILTIN_TOOLS: Tool[] = [
   readFileTool,
   writeFileTool,
   listFilesTool,
@@ -18,16 +19,15 @@ export const tools: Tool[] = [
 ];
 
 export function getToolsDescription(): string {
-  return tools
-    .map((tool) => {
-      const params = Object.entries(tool.parameters)
-        .map(
-          ([name, param]) =>
-            `    "${name}": { "type": "${param.type}", "description": "${param.description}", "required": ${param.required} }`,
-        )
-        .join(",\n");
+  return BUILTIN_TOOLS.map((tool) => {
+    const params = Object.entries(tool.parameters)
+      .map(
+        ([name, param]) =>
+          `    "${name}": { "type": "${param.type}", "description": "${param.description}", "required": ${param.required} }`,
+      )
+      .join(",\n");
 
-      return `{
+    return `{
   "name": "${tool.name}",
   "description": "${tool.description}",
   "parameters": {
@@ -41,8 +41,7 @@ ${params}
       .join(", ")}]
 }
 }`;
-    })
-    .join(",\n");
+  }).join(",\n");
 }
 
 export function extractToolCalls(
@@ -70,11 +69,41 @@ export function extractToolCalls(
   return toolCalls;
 }
 
+function convertInputSchemaToParameters(inputSchema: any): ToolParameters {
+  const parameters: Record<
+    string,
+    { type: string; description: string; required: boolean }
+  > = {};
+  for (const [key, value] of Object.entries(inputSchema.properties)) {
+    const val = value as any;
+    parameters[key] = {
+      type: val.type,
+      description: val.description || "",
+      required: inputSchema.required?.includes(key) || false,
+    };
+  }
+  return parameters;
+}
+
 export async function executeToolCall(toolCall: {
   name: string;
   arguments: Record<string, any>;
 }): Promise<string> {
-  const tool = tools.find((t) => t.name === toolCall.name);
+  const allTools: Tool[] = [
+    ...BUILTIN_TOOLS,
+    ...(MCPService.getInstance()
+      ?.getTools()
+      .map((t) => ({
+        name: t.name,
+        description: t.description ?? "",
+        parameters: convertInputSchemaToParameters(t.inputSchema),
+        run: async (args: any) => {
+          const result = await MCPService.getInstance()?.runTool(t.name, args);
+          return JSON.stringify(result?.content) ?? "";
+        },
+      })) || []),
+  ];
+  const tool = allTools.find((t) => t.name === toolCall.name);
 
   if (!tool) {
     return `Error: Tool "${toolCall.name}" not found`;

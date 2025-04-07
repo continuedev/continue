@@ -6,9 +6,11 @@ import {
   ChatCompletionChunk,
   ChatCompletionMessageParam,
   ChatCompletionMessageToolCall,
+  ChatCompletionTool,
 } from "openai/resources.mjs";
-import { ChatCompletionTool } from "openai/src/resources.js";
-import { executeToolCall, tools } from "./tools.js";
+import { MCPService } from "./mcp.js";
+import { executeToolCall } from "./tools.js";
+import { BUILTIN_TOOLS } from "./tools/index.js";
 
 dotenv.config();
 
@@ -33,17 +35,8 @@ export function getLlmFromAssistant(assistant: AssistantUnrolled) {
   return { llm, model: chatModel.model };
 }
 
-type TODO = any;
-
-// Define a function to handle streaming responses with tool calling
-export async function streamChatResponse(
-  chatHistory: ChatCompletionMessageParam[],
-  assistant: AssistantUnrolled,
-) {
-  const { llm, model } = getLlmFromAssistant(assistant);
-
-  // Prepare tools for the API call
-  const toolsForRequest: ChatCompletionTool[] = tools.map((tool) => ({
+export function getAllTools() {
+  const allTools: ChatCompletionTool[] = BUILTIN_TOOLS.map((tool) => ({
     type: "function" as const,
     function: {
       name: tool.name,
@@ -62,6 +55,34 @@ export async function streamChatResponse(
       },
     },
   }));
+
+  const mcpTools = MCPService.getInstance()?.getTools() ?? [];
+  allTools.push(
+    ...mcpTools.map((tool) => ({
+      type: "function" as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.inputSchema,
+      },
+    })),
+  );
+
+  return allTools;
+}
+
+type TODO = any;
+
+// Define a function to handle streaming responses with tool calling
+export async function streamChatResponse(
+  chatHistory: ChatCompletionMessageParam[],
+  assistant: AssistantUnrolled,
+) {
+  const { llm, model } = getLlmFromAssistant(assistant);
+
+  // Prepare tools for the API call
+  const toolsForRequest = getAllTools();
+
   let aiResponse = "";
   let currentToolCalls: TODO[] = [];
   let shouldContinueConversation = true;

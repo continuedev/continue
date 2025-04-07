@@ -1,13 +1,15 @@
+export type ToolParameters = Record<
+  string,
+  {
+    type: string;
+    description: string;
+    required: boolean;
+  }
+>;
+
 export interface Tool {
   name: string;
   description: string;
-  parameters: Record<
-    string,
-    {
-      type: string;
-      description: string;
-      required: boolean;
-    }
-  >;
+  parameters: ToolParameters;
   run: (args: any) => Promise<string>;
 }
