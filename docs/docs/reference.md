@@ -142,6 +142,7 @@ The `models` section defines the language models used in your configuration. Mod
 - `name` (**required**): A unique name to identify the model within your configuration.
 - `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 - `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
+- `apiBase`: Can be used to override the default API base that is specified per model
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
