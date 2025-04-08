@@ -4,11 +4,8 @@ import {
   AssistantUnrolled,
   ConfigResult,
   ConfigValidationError,
-  FQSN,
   ModelRole,
-  PlatformClient,
   RegistryClient,
-  SecretResult,
   unrollAssistantFromContent,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
@@ -43,23 +40,8 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
-
-export class LocalPlatformClient implements PlatformClient {
-  constructor(
-    private orgScopeId: string | null,
-    private readonly client: ControlPlaneClient,
-  ) {}
-
-  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
-    if (fqsns.length === 0) {
-      return [];
-    }
-
-    const response = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
-    return response;
-  }
-}
 
 async function loadConfigYaml(
   rawYaml: string,
@@ -67,6 +49,7 @@ async function loadConfigYaml(
   controlPlaneClient: ControlPlaneClient,
   orgScopeId: string | null,
   ideSettings: IdeSettings,
+  ide: IDE,
 ): Promise<ConfigResult<AssistantUnrolled>> {
   let config =
     overrideConfigYaml ??
@@ -89,7 +72,11 @@ async function loadConfigYaml(
         currentUserSlug: "",
         onPremProxyUrl: null,
         orgScopeId,
-        platformClient: new LocalPlatformClient(orgScopeId, controlPlaneClient),
+        platformClient: new LocalPlatformClient(
+          orgScopeId,
+          controlPlaneClient,
+          ide,
+        ),
         renderSecrets: true,
       },
     ));
@@ -435,6 +422,7 @@ export async function loadContinueConfigFromYaml(
     controlPlaneClient,
     orgScopeId,
     ideSettings,
+    ide,
   );
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
