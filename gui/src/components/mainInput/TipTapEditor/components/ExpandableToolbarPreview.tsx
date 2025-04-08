@@ -118,23 +118,20 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
     props.itemId,
     props.initiallyHidden,
   ]);
-
   const [hidden, setHidden] = useState(calculatedInitiallyHidden);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Track if user has manually toggled visibility
-  const [userToggled, setUserToggled] = useState(false);
-
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentDims, setContentDims] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    // Only update hidden state from props if user hasn't manually toggled
-    // or if initiallyHidden isn't explicitly set to false
-    if (!userToggled || props.initiallyHidden !== false) {
+    // Only update hidden state from props if initiallyHidden isn't explicitly set to false
+    if (props.initiallyHidden !== false) {
       setHidden(calculatedInitiallyHidden);
     }
-  }, [calculatedInitiallyHidden, userToggled, props.initiallyHidden]);
+  }, [calculatedInitiallyHidden, props.initiallyHidden]);
+
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
       setContentDims({
@@ -166,7 +163,6 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
           fontSize: getFontSize() - 3,
         }}
         onClick={() => {
-          setUserToggled(true);
           setHidden(!hidden);
         }}
       >
