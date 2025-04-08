@@ -1034,6 +1034,7 @@ declare global {
     displayRawMarkdown?: boolean;
     showChatScrollbar?: boolean;
     codeWrap?: boolean;
+    newlineShortcuts?: Array<"shift+enter" | "ctrl+enter" | "alt+enter">;
   }
   
   interface ContextMenuConfig {

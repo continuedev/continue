@@ -21,7 +21,7 @@ import { useInputHistory } from "../../../../hooks/useInputHistory";
 import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
-import { selectDefaultModel } from "../../../../redux/slices/configSlice";
+import { selectDefaultModel, selectUIConfig } from "../../../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   selectHasCodeToEdit,
@@ -89,6 +89,7 @@ export function createEditorConfig(options: {
   const historyLength = useAppSelector((store) => store.session.history.length);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const uiConfig = useAppSelector(selectUIConfig);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
@@ -201,36 +202,64 @@ export function createEditorConfig(options: {
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {
+          // Get configured newline shortcuts from UI settings
+          const newlineShortcutsConfig = (uiConfig && 'newlineShortcuts' in uiConfig ? 
+            uiConfig.newlineShortcuts as Array<string> : ["ctrl+enter"]);
+  
+          // Create the command for inserting a newline
+          const insertNewline = () => 
+            this.editor.commands.first(({ commands }) => [
+              () => commands.newlineInCode(),
+              () => commands.createParagraphNear(),
+              () => commands.liftEmptyBlock(),
+              () => commands.splitBlock(),
+            ]);
+            
+          // Return the shortcut map based on configuration
           return {
             Enter: () => {
               if (inDropdownRef.current) {
                 return false;
               }
-
+  
               onEnterRef.current({
                 useCodebase: false,
                 noContext: !useActiveFile,
               });
               return true;
             },
-
+  
             "Mod-Enter": () => {
+              // Check if Mod+Enter should be used for newline
+              if (newlineShortcutsConfig.includes("ctrl+enter")) {
+                return insertNewline();
+              }
+              
+              // Default behavior
               onEnterRef.current({
                 useCodebase: true,
                 noContext: !useActiveFile,
               });
               return true;
             },
+            
             "Alt-Enter": () => {
+              // Check if Alt+Enter should be used for newline
+              if (newlineShortcutsConfig.includes("alt+enter")) {
+                return insertNewline();
+              }
+              
+              // Default behavior
               posthog.capture("gui_use_active_file_enter");
-
+  
               onEnterRef.current({
                 useCodebase: false,
                 noContext: !!useActiveFile,
               });
-
+  
               return true;
             },
+            
             "Mod-Backspace": () => {
               // If you press cmd+backspace wanting to cancel,
               // but are inside of a text box, it shouldn't
@@ -240,19 +269,23 @@ export function createEditorConfig(options: {
               }
               return false;
             },
-            "Shift-Enter": () =>
-              this.editor.commands.first(({ commands }) => [
-                () => commands.newlineInCode(),
-                () => commands.createParagraphNear(),
-                () => commands.liftEmptyBlock(),
-                () => commands.splitBlock(),
-              ]),
-
+            
+            "Shift-Enter": () => {
+              // Shift+Enter always inserts a newline if configured
+              if (newlineShortcutsConfig.includes("shift+enter")) {
+                return insertNewline();
+              }
+              
+              // If not configured for newline, could add alternative behavior here
+              // For now, still use newline as fallback
+              return insertNewline();
+            },
+  
             ArrowUp: () => {
               if (this.editor.state.selection.anchor > 1) {
                 return false;
               }
-
+  
               const previousInput = prevRef.current(
                 this.editor.state.toJSON().doc,
               );
@@ -402,6 +435,10 @@ export function createEditorConfig(options: {
     },
     [props.onEnter, editor, props.isMainInput],
   );
+
+  // Check if we have any custom newline shortcuts configured
+  const newlineShortcuts = (uiConfig && 'newlineShortcuts' in uiConfig ? 
+    uiConfig.newlineShortcuts as Array<string> : ["ctrl+enter"]);
 
   return { editor, onEnterRef };
 }
