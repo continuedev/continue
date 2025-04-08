@@ -253,7 +253,7 @@ async function configYamlToContinueConfig(
               ide,
               uniqueId,
               ideSettings,
-              writeLog,
+              llmLogger,
               platformConfigMetadata,
               config: continueConfig,
             });
