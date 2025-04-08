@@ -21,6 +21,7 @@ import {
   StatusBarStatus,
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
+import { ContinueConsoleWebviewViewProvider } from "../ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
@@ -48,6 +49,7 @@ export class VsCodeExtension {
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
+  private consoleView: ContinueConsoleWebviewViewProvider;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private editDecorationManager: EditDecorationManager;
@@ -106,10 +108,6 @@ export class VsCodeExtension {
     );
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
 
-    // Config Handler with output channel
-    const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion",
-    );
     const inProcessMessenger = new InProcessMessenger<
       ToCoreProtocol,
       FromCoreProtocol
@@ -125,19 +123,12 @@ export class VsCodeExtension {
       this.editDecorationManager,
     );
 
-    this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.append(log);
-    });
+    this.core = new Core(inProcessMessenger, this.ide);
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
     this.configHandler.loadConfig();
+
     this.verticalDiffManager = new VerticalDiffManager(
       this.configHandler,
       this.sidebar.webviewProtocol,
@@ -202,16 +193,10 @@ export class VsCodeExtension {
       let profileId = queryParams.get("profile_id");
       let orgId = queryParams.get("org_id");
 
-      if (orgId) {
-        if (orgId === "null") {
-          orgId = null;
-        }
+      if (orgId && orgId !== "null") {
         // In case org id is passed with profile id
         // Make sure org is updated before profile is set
-        if (profileId) {
-          if (profileId === "null") {
-            profileId = null;
-          }
+        if (profileId && profileId !== "null") {
           this.core.invoke("didChangeSelectedOrg", {
             id: orgId,
             profileId,
@@ -221,10 +206,7 @@ export class VsCodeExtension {
             id: orgId,
           });
         }
-      } else if (profileId) {
-        if (profileId === "null") {
-          profileId = null;
-        }
+      } else if (profileId && profileId !== "null") {
         this.core.invoke("didChangeSelectedProfile", {
           id: profileId,
         });
@@ -253,12 +235,27 @@ export class VsCodeExtension {
       this.fileSearch,
     );
 
+    // LLM Log view
+    this.consoleView = new ContinueConsoleWebviewViewProvider(
+      this.windowId,
+      this.extensionContext,
+      this.core.llmLogger,
+    );
+
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        "continue.continueConsoleView",
+        this.consoleView,
+      ),
+    );
+
     // Commands
     registerAllCommands(
       context,
       this.ide,
       context,
       this.sidebar,
+      this.consoleView,
       this.configHandler,
       this.verticalDiffManager,
       this.core.continueServerClientPromise,
@@ -334,14 +331,6 @@ export class VsCodeExtension {
         );
 
         const sessionInfo = await getControlPlaneSessionInfo(true, false);
-        this.webviewProtocolPromise.then(async (webviewProtocol) => {
-          void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
-            sessionInfo,
-          });
-
-          // To make sure continue-proxy models and anything else requiring it get updated access token
-          this.configHandler.reloadConfig();
-        });
         void this.core.invoke("didChangeControlPlaneSessionInfo", {
           sessionInfo,
         });
@@ -415,10 +404,7 @@ export class VsCodeExtension {
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = await this.ide.getIdeSettings();
-        const webviewProtocol = await this.webviewProtocolPromise;
-        void webviewProtocol.request("didChangeIdeSettings", {
-          settings,
-        });
+        void this.core.invoke("config/ideSettingsUpdate", settings);
       }
     });
   }

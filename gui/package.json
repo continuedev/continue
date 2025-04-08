@@ -33,7 +33,6 @@
     "@tiptap/starter-kit": "^2.1.13",
     "@tiptap/suggestion": "^2.1.13",
     "@types/uuid": "^10.0.0",
-    "@types/vscode-webview": "^1.57.1",
     "clsx": "^2.1.1",
     "core": "file:../core",
     "dompurify": "^3.0.6",
@@ -71,8 +70,7 @@
     "tailwind-merge": "^3.0.2",
     "tippy.js": "^6.3.7",
     "unist-util-visit": "^5.0.0",
-    "uuid": "^9.0.1",
-    "vscode-webview": "^1.0.1-beta.1"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@swc/cli": "^0.3.14",
