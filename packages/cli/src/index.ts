@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import { AssistantUnrolled } from "@continuedev/config-yaml";
+import { ContinueHubClient } from "@continuedev/hub";
 import chalk from "chalk";
 import * as fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as os from "os";
 import * as path from "path";
 import * as readlineSync from "readline-sync";
-import { ContinueHubClient } from "../../hub/src/ContinueHubClient.js";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
 import { loadAuthConfig } from "./auth/workos.js";
@@ -99,7 +99,7 @@ async function chat() {
   const authConfig = loadAuthConfig();
 
   const hub = new ContinueHubClient({
-    apiKey: authConfig.refreshToken,
+    apiKey: authConfig.accessToken,
     currentUserSlug: "e2e",
     orgScopeId: null,
     apiBase: env.apiBase,
