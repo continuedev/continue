@@ -46,6 +46,7 @@ import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import { MCPManagerSingleton } from "./context/mcp";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
+import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -58,6 +59,7 @@ export class Core {
   codebaseIndexingState: IndexingProgressUpdate;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
+  llmLogger = new LLMLogger();
 
   private readonly indexingPauseToken = new PauseToken(
     this.globalContext.get("indexingPaused") === true,
@@ -85,7 +87,6 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
     migrateV1DevDataFiles();
@@ -106,7 +107,7 @@ export class Core {
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
-      this.onWrite,
+      this.llmLogger,
       sessionInfoPromise,
     );
 

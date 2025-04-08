@@ -16,8 +16,12 @@ export class GUIActions {
     await GUIActions.toggleGui();
     await TestUtils.waitForSuccess(async () => {
       await new Workbench().executeCommand("View: Move View");
-      await (await InputBox.create(DEFAULT_TIMEOUT.MD)).selectQuickPick(4);
-      await (await InputBox.create(DEFAULT_TIMEOUT.MD)).selectQuickPick(14);
+      await (
+        await InputBox.create(DEFAULT_TIMEOUT.MD)
+      ).selectQuickPick("Continue");
+      await (
+        await InputBox.create(DEFAULT_TIMEOUT.MD)
+      ).selectQuickPick("New Secondary Side Bar Entry");
     });
 
     // first call focuses the input
