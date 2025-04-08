@@ -12,6 +12,7 @@ import {
   ContinueRcJson,
   IDE,
   IdeSettings,
+  ILLMLogger,
   SerializedContinueConfig,
   Tool,
 } from "../../";
@@ -39,12 +40,13 @@ export default async function doLoadConfig(
   ide: IDE,
   ideSettingsPromise: Promise<IdeSettings>,
   controlPlaneClient: ControlPlaneClient,
-  writeLog: (message: string) => Promise<void>,
+  llmLogger: ILLMLogger,
   overrideConfigJson: SerializedContinueConfig | undefined,
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
   profileId: string,
   overrideConfigYamlByPath: string | undefined,
+  orgScopeId: string | null,
 ): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
@@ -54,7 +56,7 @@ export default async function doLoadConfig(
 
   // Migrations for old config files
   // Removes
-  const configJsonPath = getConfigJsonPath(ideInfo.ideType);
+  const configJsonPath = getConfigJsonPath();
   if (fs.existsSync(configJsonPath)) {
     migrateJsonSharedConfig(configJsonPath, ide);
   }
@@ -70,16 +72,16 @@ export default async function doLoadConfig(
   if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
     const result = await loadContinueConfigFromYaml(
       ide,
-      workspaceConfigs.map((c) => JSON.stringify(c)),
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
+      llmLogger,
       workOsAccessToken,
       overrideConfigYaml,
       platformConfigMetadata,
       controlPlaneClient,
       configYamlPath,
+      orgScopeId,
     );
     newConfig = result.config;
     errors = result.errors;
@@ -91,7 +93,7 @@ export default async function doLoadConfig(
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
+      llmLogger,
       workOsAccessToken,
       overrideConfigJson,
     );
@@ -134,7 +136,6 @@ export default async function doLoadConfig(
         faviconUrl: server.faviconUrl,
         readonly: false,
         type: "function" as const,
-        wouldLikeTo: "",
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
       }));
@@ -160,6 +161,7 @@ export default async function doLoadConfig(
         const serverContextProvider = new MCPContextProvider({
           submenuItems,
           mcpId: server.id,
+          serverName: server.name,
         });
         newConfig.contextProviders.push(serverContextProvider);
       }

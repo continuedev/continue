@@ -10,7 +10,7 @@ import {
   setupLocalConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { addContextProvider, addModel, deleteModel } from "./config/util";
+import { addModel, deleteModel } from "./config/util";
 import CodebaseContextProvider from "./context/providers/CodebaseContextProvider";
 import CurrentFileContextProvider from "./context/providers/CurrentFileContextProvider";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
@@ -29,7 +29,7 @@ import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigJson, migrateV1DevDataFiles } from "./util/paths";
+import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -41,10 +41,12 @@ import {
   type IndexingProgressUpdate,
 } from ".";
 
+import { ConfigYaml } from "@continuedev/config-yaml";
 import { isLocalAssistantFile } from "./config/loadLocalAssistants";
 import { MCPManagerSingleton } from "./context/mcp";
 import { shouldIgnore } from "./indexing/shouldIgnore";
 import { walkDirCache } from "./indexing/walkDir";
+import { LLMLogger } from "./llm/logger";
 import { llmStreamChat } from "./llm/streamChat";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./protocol/messenger";
@@ -57,6 +59,7 @@ export class Core {
   codebaseIndexingState: IndexingProgressUpdate;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
+  llmLogger = new LLMLogger();
 
   private readonly indexingPauseToken = new PauseToken(
     this.globalContext.get("indexingPaused") === true,
@@ -84,7 +87,6 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
     migrateV1DevDataFiles();
@@ -105,13 +107,8 @@ export class Core {
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
-      this.onWrite,
+      this.llmLogger,
       sessionInfoPromise,
-      (orgId: string | null) => {
-        void messenger.request("didSelectOrganization", {
-          orgId,
-        });
-      },
     );
 
     this.docsService = DocsService.createSingleton(
@@ -122,8 +119,6 @@ export class Core {
 
     const mcpManager = MCPManagerSingleton.getInstance();
     mcpManager.onConnectionsRefreshed = async () => {
-      // This ensures that it triggers a NEW load after waiting for config promise to finish
-      await this.configHandler.loadConfig();
       await this.configHandler.reloadConfig();
     };
 
@@ -132,7 +127,11 @@ export class Core {
       this.messenger.send("configUpdate", {
         result: serializedResult,
         profileId:
-          this.configHandler.currentProfile?.profileDescription.id ?? null,
+          this.configHandler.currentProfile?.profileDescription.id || null,
+        organizations: this.configHandler.getSerializedOrgs(),
+        selectedOrgId: this.configHandler.currentOrg.id,
+        usingContinueForTeams: (await ideSettingsPromise)
+          .enableControlServerBeta,
       });
 
       // update additional submenu context providers registered via VSCode API
@@ -144,14 +143,6 @@ export class Core {
         });
       }
     });
-
-    this.configHandler.onDidChangeAvailableProfiles(
-      (profiles, selectedProfileId) =>
-        this.messenger.send("didChangeAvailableProfiles", {
-          profiles,
-          selectedProfileId,
-        }),
-    );
 
     // Dev Data Logger
     const dataLogger = DataLogger.getInstance();
@@ -307,19 +298,8 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
-    on("config/listProfiles", async (msg) => {
-      const profiles = this.configHandler.listProfiles();
-      const selectedProfileId =
-        this.configHandler.currentProfile?.profileDescription.id ?? null;
-      return { profiles, selectedProfileId };
-    });
-
     on("config/refreshProfiles", async (msg) => {
-      await this.configHandler.loadAssistantsForSelectedOrg();
-    });
-
-    on("config/addContextProvider", async (msg) => {
-      addContextProvider(msg.data, this.configHandler);
+      await this.configHandler.refreshAll();
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -345,10 +325,6 @@ export class Core {
         url += `?org=${msg.data.orgSlug}`;
       }
       await this.messenger.request("openUrl", url);
-    });
-
-    on("controlPlane/listOrganizations", async (msg) => {
-      return await this.configHandler.listOrganizations();
     });
 
     on("mcp/reloadServer", async (msg) => {
@@ -483,6 +459,10 @@ export class Core {
         result: await this.configHandler.getSerializedConfig(),
         profileId:
           this.configHandler.currentProfile?.profileDescription.id ?? null,
+        organizations: this.configHandler.getSerializedOrgs(),
+        selectedOrgId: this.configHandler.currentOrg.id,
+        usingContinueForTeams: (await ideSettingsPromise)
+          .enableControlServerBeta,
       };
     });
 
@@ -607,38 +587,55 @@ export class Core {
         return;
       }
 
-      let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
+      let editConfigYamlCallback: (config: ConfigYaml) => ConfigYaml;
 
       switch (mode) {
         case "Local":
-          editConfigJsonCallback = setupLocalConfig;
+          editConfigYamlCallback = setupLocalConfig;
           break;
 
         case "Quickstart":
-          editConfigJsonCallback = setupQuickstartConfig;
+          editConfigYamlCallback = setupQuickstartConfig;
           break;
 
         case "Best":
-          editConfigJsonCallback = setupBestConfig;
+          editConfigYamlCallback = setupBestConfig;
           break;
 
         default:
           console.error(`Invalid mode: ${mode}`);
-          editConfigJsonCallback = (config) => config;
+          editConfigYamlCallback = (config) => config;
       }
 
-      editConfigJson(editConfigJsonCallback);
+      editConfigFile((c) => c, editConfigYamlCallback);
 
       void this.configHandler.reloadConfig();
     });
 
     on("addAutocompleteModel", (msg) => {
-      editConfigJson((config) => {
-        return {
+      const model = msg.data.model;
+      editConfigFile(
+        (config) => {
+          return {
+            ...config,
+            tabAutocompleteModel: model,
+          };
+        },
+        (config) => ({
           ...config,
-          tabAutocompleteModel: msg.data.model,
-        };
-      });
+          models: [
+            ...(config.models ?? []),
+            {
+              name: model.title,
+              provider: model.provider,
+              model: model.model,
+              apiKey: model.apiKey,
+              roles: ["autocomplete"],
+              apiBase: model.apiBase,
+            },
+          ],
+        }),
+      );
       void this.configHandler.reloadConfig();
     });
 
@@ -761,10 +758,14 @@ export class Core {
         void refreshIfNotIgnored(data.uris);
 
         // If it's a local assistant being created, we want to reload all assistants so it shows up in the list
+        let localAssistantCreated = false;
         for (const uri of data.uris) {
           if (isLocalAssistantFile(uri)) {
-            await this.configHandler.loadAssistantsForSelectedOrg();
+            localAssistantCreated = true;
           }
+        }
+        if (localAssistantCreated) {
+          await this.configHandler.refreshAll();
         }
       }
     });
@@ -815,20 +816,14 @@ export class Core {
     //
 
     on("didChangeSelectedProfile", async (msg) => {
-      await this.configHandler.setSelectedProfile(msg.data.id);
-      await this.configHandler.reloadConfig();
+      await this.configHandler.setSelectedProfileId(msg.data.id);
     });
 
     on("didChangeSelectedOrg", async (msg) => {
-      await this.configHandler.setSelectedOrgId(msg.data.id);
-      await this.configHandler.loadAssistantsForSelectedOrg();
-      if (msg.data.profileId) {
-        this.invoke("didChangeSelectedProfile", {
-          id: msg.data.profileId,
-        });
-      } else {
-        await this.configHandler.reloadConfig();
-      }
+      await this.configHandler.setSelectedOrgId(
+        msg.data.id,
+        msg.data.profileId,
+      );
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
@@ -836,6 +831,7 @@ export class Core {
         msg.data.sessionInfo,
       );
     });
+
     on("auth/getAuthUrl", async (msg) => {
       const url = await getAuthUrlForTokenPage(
         ideSettingsPromise,
@@ -979,4 +975,3 @@ export class Core {
 
   // private
 }
-

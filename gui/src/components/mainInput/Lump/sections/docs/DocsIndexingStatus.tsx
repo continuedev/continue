@@ -1,13 +1,7 @@
 import { ConfigYaml } from "@continuedev/config-yaml";
-import {
-  ArrowPathIcon,
-  ArrowTopRightOnSquareIcon,
-  PencilIcon,
-  StopIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowPathIcon, StopIcon } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { useContext, useMemo, useState } from "react";
-import { useAuth } from "../../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../../redux/hooks";
 import { updateIndexingStatus } from "../../../../../redux/slices/indexingSlice";
@@ -17,14 +11,12 @@ import {
 } from "../../../../../redux/slices/uiSlice";
 import { fontSize } from "../../../../../util";
 import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
+import EditBlockButton from "../../EditBlockButton";
+import { useLump } from "../../LumpContext";
 import { StatusIndicator } from "./StatusIndicator";
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
   docFromYaml?: NonNullable<ConfigYaml["docs"]>[number];
-}
-
-function isUsesBlock(block: any): block is { uses: string } {
-  return typeof block !== "string" && "uses" in block;
 }
 
 function DocsIndexingStatus({
@@ -32,8 +24,8 @@ function DocsIndexingStatus({
   docFromYaml,
 }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { selectedProfile } = useAuth();
   const dispatch = useAppDispatch();
+  const { hideLump } = useLump();
 
   const status = useAppSelector(
     (store) => store.indexing.indexing.statuses[docConfig.startUrl],
@@ -78,25 +70,6 @@ function DocsIndexingStatus({
     dispatch(setShowDialog(true));
   };
 
-  const openUrl = (path: string) =>
-    ideMessenger.request("controlPlane/openUrl", {
-      path,
-      orgSlug: undefined,
-    });
-
-  const handleEdit = () => {
-    console.log("edit", docFromYaml);
-    if (selectedProfile?.profileType === "local") {
-      ideMessenger.post("config/openProfile", {
-        profileId: undefined,
-      });
-    } else if (docFromYaml && isUsesBlock(docFromYaml)) {
-      openUrl(`${docFromYaml.uses}/new-version`);
-    } else if (selectedProfile?.fullSlug) {
-      const slug = `${selectedProfile.fullSlug.ownerSlug}/${selectedProfile.fullSlug.packageSlug}`;
-      openUrl(`${slug}/new-version`);
-    }
-  };
   const progressPercentage = useMemo(() => {
     if (!status) {
       return 0;
@@ -107,7 +80,7 @@ function DocsIndexingStatus({
   if (hasDeleted) return null;
 
   return (
-    <div className="mt-2 flex w-full flex-col">
+    <div className="mt-1 flex w-full flex-col">
       <div
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
@@ -116,35 +89,22 @@ function DocsIndexingStatus({
           onClick={() => {
             if (status?.url) {
               ideMessenger.post("openUrl", status.url);
+              hideLump();
             }
           }}
         >
-          <StatusIndicator
-            status={status?.status}
-            hoverMessage={
-              status?.status === "failed" ? status?.debugInfo : undefined
-            }
-          />
-          {docConfig.faviconUrl ? (
-            <img
-              src={docConfig.faviconUrl}
-              alt="doc icon"
-              className="h-3 w-3"
-            />
-          ) : null}
           <p
             style={{
               fontSize: fontSize(-3),
             }}
-            className={`lines lines-1 m-0 p-0 text-left ${status?.url ? "cursor-pointer hover:underline" : ""}`}
+            className={`m-0 line-clamp-1 p-0 text-left ${status?.url ? "cursor-pointer hover:underline" : ""}`}
           >
             {docConfig.title ?? docConfig.startUrl}
           </p>
-          <ArrowTopRightOnSquareIcon className="h-2 w-2 text-gray-400" />
         </div>
 
         <div className="flex flex-row items-center gap-2">
-          <div className="flex flex-row items-center gap-1 text-gray-400">
+          <div className="flex flex-row items-center gap-2 text-gray-400">
             {status?.status === "indexing" && (
               <span
                 className="text-xs"
@@ -163,6 +123,8 @@ function DocsIndexingStatus({
               />
             )}
 
+            <EditBlockButton blockType="docs" block={docFromYaml} />
+
             {["aborted", "complete", "failed"].includes(
               status?.status ?? "",
             ) && (
@@ -172,12 +134,12 @@ function DocsIndexingStatus({
               />
             )}
 
-            <PencilIcon
-              className="h-3 w-3 cursor-pointer text-gray-400 hover:brightness-125"
-              onClick={handleEdit}
+            <StatusIndicator
+              status={status?.status}
+              hoverMessage={
+                status?.status === "failed" ? status?.debugInfo : undefined
+              }
             />
-
-            {/* Removed StatusIndicator from here */}
           </div>
         </div>
       </div>

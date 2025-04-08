@@ -66,7 +66,6 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
       comp = (
         <div className="flex flex-col gap-0.5">
           <p className="m-0 mt-2 p-0 text-stone-500">{`Title: ${data.config.title}`}</p>
-          <p className="m-0 p-0 text-stone-500">{`Pre-indexed doc: ${data.isPreIndexedDoc}`}</p>
           {!data.chunks?.length ? (
             <div>No article chunks</div>
           ) : (
@@ -99,7 +98,7 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
                             data-tooltip-id={contentToolTipId}
                             data-tooltip-delay-show={500}
                           >
-                            <span className="lines lines-1">
+                            <span className="line-clamp-1">
                               {chunk.content}
                             </span>
                           </td>
@@ -145,7 +144,7 @@ function DocsDetailsDialog({ startUrl }: DocsDetailsDialogProps) {
     <div className="px-2 py-4 sm:px-4">
       <h3>Docs index</h3>
       <p
-        className="m-0 mt-1 cursor-pointer p-0 text-stone-500 hover:underline"
+        className="text-lightgray m-0 mt-1 cursor-pointer p-0 hover:underline"
         onClick={(e) => {
           e.stopPropagation();
           ideMessenger.post("openUrl", startUrl);

@@ -5,8 +5,6 @@ import {
 } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
-import { ProfileDescription } from "../config/ConfigHandler";
-import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -15,7 +13,6 @@ import type {
   ChatMessage,
   ContextItem,
   ContextItemWithId,
-  ContextProviderWithParams,
   ContextSubmenuItem,
   DiffLine,
   DocsIndexingDetails,
@@ -33,6 +30,7 @@ import type {
   SlashCommandDescription,
   ToolCall,
 } from "../";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -67,15 +65,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+      organizations: SerializedOrgWithProfiles[];
+      selectedOrgId: string;
+      usingContinueForTeams: boolean;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/addContextProvider": [ContextProviderWithParams, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/listProfiles": [
-    undefined,
-    { profiles: ProfileDescription[] | null; selectedProfileId: string | null },
-  ];
   "config/refreshProfiles": [undefined, void];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
@@ -200,5 +196,4 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
-  "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
 };

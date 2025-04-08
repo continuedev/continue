@@ -21,14 +21,14 @@ function DocsIndexingPeek({ status }: DocsIndexingPeekProps) {
 
   return (
     <div
-      className="flex cursor-pointer flex-row items-center gap-2 rounded-md px-1 text-stone-500 hover:bg-gray-700/10"
+      className="text-lightgray flex cursor-pointer flex-row items-center gap-2 rounded-md px-1 hover:bg-gray-700/10"
       onClick={() => {
         // navigate("/more"); TODO
         dispatch(setShowDialog(false));
         dispatch(setDialogMessage(undefined));
       }}
     >
-      <p className="m-0 p-0 text-stone-500 group-hover:underline">
+      <p className="text-lightgray m-0 p-0 group-hover:underline">
         {status.title}
       </p>
       <div className="my-2 h-1.5 flex-1 rounded-md border border-solid border-gray-400">
@@ -39,12 +39,12 @@ function DocsIndexingPeek({ status }: DocsIndexingPeekProps) {
           }}
         />
       </div>
-      <div className="xs:flex hidden flex-row items-center gap-1 text-stone-500">
+      <div className="xs:flex text-lightgray hidden flex-row items-center gap-1">
         <span className="text-xs no-underline">
           {progressPercentage.toFixed(0)}%
         </span>
         {/* <ArrowPathIcon
-          className={`animate-spin-slow inline-block h-4 w-4 text-stone-500`}
+          className={`animate-spin-slow inline-block h-4 w-4 text-lightgray`}
         ></ArrowPathIcon> */}
       </div>
     </div>

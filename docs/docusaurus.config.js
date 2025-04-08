@@ -95,6 +95,13 @@ const config = {
           },
           {
             type: "docSidebar",
+            sidebarId: "hubSidebar",
+            position: "left",
+            label: "Hub",
+            href: "/hub/introduction",
+          },
+          {
+            type: "docSidebar",
             sidebarId: "customizingSidebar",
             position: "left",
             label: "Customize",
@@ -107,13 +114,7 @@ const config = {
             label: "Reference",
             href: "/reference",
           },
-          {
-            type: "docSidebar",
-            sidebarId: "hubSidebar",
-            position: "left",
-            label: "Hub",
-            href: "/hub/introduction",
-          },
+
           {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
@@ -222,20 +223,20 @@ const config = {
           },
           {
             to: "/customize/overview",
-            from: "/customize",
+            from: ["/customize", "/customization"],
           },
           {
-            to: "/customize/overview",
-            from: "/customization",
+            to: "/customize/deep-dives/mcp",
+            from: "/customize/tools",
           },
           {
             to: "/getting-started/install",
             from: ["/install/vscode", "/install/jetbrains"],
           },
-          // {
-          //   to: "/getting-started/install",
-          //   from: "/getting-started",
-          // },
+          {
+            to: "/customize/deep-dives/settings",
+            from: "/customize/settings",
+          },
           {
             to: "/customize/model-roles",
             from: ["/customize/model-types", "/setup/overview"],
@@ -285,12 +286,27 @@ const config = {
             ],
           },
           {
-            to: "/customize/deep-dives/prompt-files",
+            to: "/customize/deep-dives/prompts",
             from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
+          // TODO - actions redirects
           {
-            to: "/actions/how-to-use-it#quick-actions",
-            from: "/walkthroughs/quick-actions",
+            to: "/customize/deep-dives/slash-commands",
+            from: [
+              "/actions/how-to-use-it",
+              "/actions/how-to-customize",
+              "/actions",
+              "/actions/model-setup",
+              "/actions/context-selection",
+              "/actions/how-it-works",
+              "/customize/slash-commands",
+              "/customization/slash-commands",
+            ],
+          },
+
+          {
+            to: "/customize/deep-dives/vscode-actions",
+            from: ["/walkthroughs/quick-actions"],
           },
           {
             to: "/customize/changelog",
@@ -298,7 +314,11 @@ const config = {
           },
           {
             to: "/reference",
-            from: ["/customization/code-config", "/reference/config"],
+            from: [
+              "/customization/code-config",
+              "/reference/config",
+              "/yaml-reference",
+            ],
           },
           {
             to: "/customize/context-providers",
@@ -347,10 +367,6 @@ const config = {
           {
             to: "/customize/model-providers/openai",
             from: "/reference/Model Providers/openai",
-          },
-          {
-            to: "/customize/slash-commands",
-            from: "/customization/slash-commands",
           },
           {
             to: "/customize/tutorials/custom-code-rag",
@@ -458,12 +474,12 @@ const config = {
             from: "/chat",
           },
           {
-            to: "/edit/how-to-use-it",
-            from: "/edit",
+            to: "/agent/how-to-use-it",
+            from: "/agent",
           },
           {
-            to: "/actions/how-to-use-it",
-            from: "/actions",
+            to: "/edit/how-to-use-it",
+            from: "/edit",
           },
           {
             to: "/autocomplete/how-to-use-it",
@@ -472,6 +488,10 @@ const config = {
           {
             to: "/getting-started/install",
             from: "/getting-started",
+          },
+          {
+            to: "/customize/deep-dives/prompts",
+            from: "/customize/deep-dives/prompt-files",
           },
         ],
       },

@@ -5,9 +5,10 @@ import {
   InputModifiers,
   MessageContent,
   RangeInFile,
+  SlashCommandDescription,
 } from "core";
 import * as URI from "uri-js";
-import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
 import { selectDefaultModel } from "../slices/configSlice";
 import { ThunkApiType } from "../store";
 
@@ -16,6 +17,12 @@ export const gatherContext = createAsyncThunk<
     selectedContextItems: ContextItemWithId[];
     selectedCode: RangeInFile[];
     content: MessageContent;
+    slashCommandWithInput:
+      | {
+          command: SlashCommandDescription;
+          input: string;
+        }
+      | undefined;
   },
   {
     editorState: JSONContent;
@@ -42,12 +49,13 @@ export const gatherContext = createAsyncThunk<
     }
 
     // Resolve context providers and construct new history
-    let [selectedContextItems, selectedCode, content] =
+    let [selectedContextItems, selectedCode, content, slashCommandWithInput] =
       await resolveEditorContent({
         editorState,
         modifiers,
         ideMessenger: extra.ideMessenger,
         defaultContextProviders,
+        availableSlashCommands: state.config.config.slashCommands,
         dispatch,
         selectedModelTitle: defaultModel.title,
       });
@@ -107,7 +115,11 @@ export const gatherContext = createAsyncThunk<
       }
     }
 
-    // dispatch(addContextItems(contextItems));
-    return { selectedContextItems, selectedCode, content };
+    return {
+      selectedContextItems,
+      selectedCode,
+      content,
+      slashCommandWithInput,
+    };
   },
 );

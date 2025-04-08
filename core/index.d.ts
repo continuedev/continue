@@ -1,6 +1,7 @@
-import { DataDestination, ModelRole } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -89,7 +90,7 @@ export interface ILLM extends LLMOptions {
   requestOptions?: RequestOptions;
   promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
+  llmLogger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
@@ -236,7 +237,6 @@ export interface SiteIndexingConfig {
   maxDepth?: number;
   faviconUrl?: string;
   useLocalCrawling?: boolean;
-  rootUrl?: string; // Currently only used by preindexed docs
 }
 
 export interface DocsIndexingDetails {
@@ -244,7 +244,6 @@ export interface DocsIndexingDetails {
   config: SiteIndexingConfig;
   indexingStatus: IndexingStatus | undefined;
   chunks: Chunk[];
-  isPreIndexedDoc: boolean;
 }
 
 export interface IContextProvider {
@@ -484,6 +483,94 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
 export type ToastType = "info" | "error" | "warning";
 
+export interface LLMInteractionBase {
+  interactionId: string;
+  timestamp: number;
+}
+
+export interface LLMInteractionStartChat extends LLMInteractionBase {
+  kind: "startChat";
+  messages: ChatMessage[];
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionStartComplete extends LLMInteractionBase {
+  kind: "startComplete";
+  prompt: string;
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionStartFim extends LLMInteractionBase {
+  kind: "startFim";
+  prefix: string;
+  suffix: string;
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionChunk extends LLMInteractionBase {
+  kind: "chunk";
+  chunk: string;
+}
+
+export interface LLMInteractionMessage extends LLMInteractionBase {
+  kind: "message";
+  message: ChatMessage;
+}
+
+export interface LLMInteractionEnd extends LLMInteractionBase {
+  promptTokens: number;
+  generatedTokens: number;
+  thinkingTokens: number;
+}
+
+export interface LLMInteractionSuccess extends LLMInteractionEnd {
+  kind: "success";
+}
+
+export interface LLMInteractionCancel extends LLMInteractionEnd {
+  kind: "cancel";
+}
+
+export interface LLMInteractionError extends LLMInteractionEnd {
+  kind: "error";
+  name: string;
+  message: string;
+}
+
+export type LLMInteractionItem =
+  | LLMInteractionStartChat
+  | LLMInteractionStartComplete
+  | LLMInteractionStartFim
+  | LLMInteractionChunk
+  | LLMInteractionMessage
+  | LLMInteractionSuccess
+  | LLMInteractionCancel
+  | LLMInteractionError;
+
+// When we log a LLM interaction, we want to add the interactionId and timestamp
+// in the logger code, so we need a type that omits these members from *each*
+// member of the union. This can be done by using the distributive behavior of
+// conditional types in Typescript.
+//
+// www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+// https://stackoverflow.com/questions/57103834/typescript-omit-a-property-from-all-interfaces-in-a-union-but-keep-the-union-s
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+export type LLMInteractionItemDetails = DistributiveOmit<
+  LLMInteractionItem,
+  "interactionId" | "timestamp"
+>;
+
+export interface ILLMInteractionLog {
+  logItem(item: LLMInteractionItemDetails): void;
+}
+
+export interface ILLMLogger {
+  createInteractionLog(): ILLMInteractionLog;
+}
+
 export interface LLMOptions {
   model: string;
 
@@ -497,8 +584,9 @@ export interface LLMOptions {
   template?: TemplateType;
   promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
+  logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
+  rules?: Rule[];
   apiKey?: string;
 
   // continueProperties
@@ -711,6 +799,8 @@ export interface IDE {
 
   getSearchResults(query: string): Promise<string>;
 
+  getFileResults(pattern: string): Promise<string[]>;
+
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
   getProblems(fileUri?: string | undefined): Promise<Problem[]>;
@@ -905,7 +995,9 @@ export interface Tool {
   };
 
   displayTitle: string;
-  wouldLikeTo: string;
+  wouldLikeTo?: string;
+  isCurrently?: string;
+  hasAlready?: string;
   readonly: boolean;
   uri?: string;
   faviconUrl?: string;
@@ -1142,6 +1234,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  toolCallId?: string;
 }
 
 export interface RangeInFileWithContents {
@@ -1313,7 +1406,7 @@ export interface ContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: string[];
+  rules?: Rule[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1336,7 +1429,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: string[];
+  rules?: Rule[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;

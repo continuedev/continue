@@ -1,21 +1,52 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { ProfileDescription } from "core/config/ConfigHandler";
-import { ensureProfilePreferences } from "./utils";
+import { SlashCommandDescription } from "core";
+import { SerializedOrgWithProfiles } from "core/config/ProfileLifecycleManager";
+
+const DEFAULT_SLASH_COMMANDS_BOOKMARKS_COUNT = 5;
+
+const INITIAL_PREFERENCES_STATE: PreferencesState = {
+  bookmarkedSlashCommands: [],
+};
 
 export interface PreferencesState {
-  bookmarksByName: string[];
+  bookmarkedSlashCommands: string[];
 }
 
 export interface ProfilesState {
-  availableProfiles: ProfileDescription[] | null;
+  organizations: SerializedOrgWithProfiles[];
   selectedProfileId: string | null;
+  selectedOrganizationId: string | null;
   preferencesByProfileId: Record<string, PreferencesState>;
 }
 
 const initialState: ProfilesState = {
-  availableProfiles: null,
-  selectedProfileId: null,
   preferencesByProfileId: {},
+  selectedProfileId: null,
+  selectedOrganizationId: null,
+  organizations: [
+    {
+      id: "personal",
+      profiles: [
+        {
+          title: "Local Assistant",
+          id: "local",
+          errors: [],
+          profileType: "local",
+          uri: "",
+          iconUrl: "",
+          fullSlug: {
+            ownerSlug: "",
+            packageSlug: "",
+            versionSlug: "",
+          },
+        },
+      ],
+      slug: "",
+      selectedProfileId: "local",
+      name: "Personal",
+      iconUrl: "",
+    },
+  ],
 };
 
 export const profilesSlice = createSlice({
@@ -24,21 +55,57 @@ export const profilesSlice = createSlice({
   reducers: {
     setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedProfileId = payload;
-
-      if (payload) {
-        ensureProfilePreferences(state, payload);
+      const currentOrg = state.organizations.find(
+        (o) => o.id === state.selectedOrganizationId,
+      );
+      if (currentOrg) {
+        currentOrg.selectedProfileId = payload;
       }
     },
-    setAvailableProfiles: (
+    setOrganizations: (
       state,
-      { payload }: PayloadAction<ProfileDescription[] | null>,
+      { payload }: PayloadAction<SerializedOrgWithProfiles[]>,
     ) => {
-      state.availableProfiles = payload;
+      state.organizations = payload;
+    },
+    setSelectedOrgId: (state, { payload }: PayloadAction<string | null>) => {
+      state.selectedOrganizationId = payload;
+      const org = state.organizations.find((o) => o.id === payload);
+      if (org) {
+        state.selectedProfileId = org.selectedProfileId;
+      } else {
+        state.selectedProfileId = null;
+      }
+    },
+    initializeProfilePreferences: (
+      state,
+      action: PayloadAction<{
+        profileId: string;
+        defaultSlashCommands?: SlashCommandDescription[];
+      }>,
+    ) => {
+      const { profileId, defaultSlashCommands = [] } = action.payload;
+      const defaultSlashCommandNames = defaultSlashCommands.map(
+        (cmd) => cmd.name,
+      );
 
-      if (payload) {
-        for (const profile of payload) {
-          ensureProfilePreferences(state, profile.id);
-        }
+      // First ensure all profile preferences are complete to handle
+      // the case where a new preference has been added since last load
+      Object.keys(state.preferencesByProfileId).forEach((pid) => {
+        state.preferencesByProfileId[pid] = {
+          ...INITIAL_PREFERENCES_STATE,
+          ...state.preferencesByProfileId[pid],
+        };
+      });
+
+      // Then initialize preferences for the new profile if needed
+      if (!state.preferencesByProfileId[profileId]) {
+        state.preferencesByProfileId[profileId] = {
+          bookmarkedSlashCommands: defaultSlashCommandNames.slice(
+            0,
+            DEFAULT_SLASH_COMMANDS_BOOKMARKS_COUNT,
+          ),
+        };
       }
     },
     bookmarkSlashCommand: (
@@ -46,16 +113,15 @@ export const profilesSlice = createSlice({
       action: PayloadAction<{ commandName: string }>,
     ) => {
       const { commandName } = action.payload;
-      const profileId = state.selectedProfileId;
+      const preferences =
+        state.preferencesByProfileId[state.selectedProfileId ?? ""];
 
-      if (!profileId) return;
+      if (!preferences) return;
 
-      const bookmarks = state.preferencesByProfileId[profileId].bookmarksByName;
-      if (!bookmarks.includes(commandName)) {
-        bookmarks.push(commandName);
+      if (!preferences.bookmarkedSlashCommands.includes(commandName)) {
+        preferences.bookmarkedSlashCommands.push(commandName);
       }
     },
-
     unbookmarkSlashCommand: (
       state,
       action: PayloadAction<{ commandName: string }>,
@@ -66,26 +132,41 @@ export const profilesSlice = createSlice({
       if (!profileId) return;
 
       const preferences = state.preferencesByProfileId[profileId];
-      preferences.bookmarksByName = preferences.bookmarksByName.filter(
-        (cmd) => cmd !== commandName,
-      );
+      if (!preferences) return;
+
+      preferences.bookmarkedSlashCommands =
+        preferences.bookmarkedSlashCommands.filter(
+          (cmd) => cmd !== commandName,
+        );
     },
   },
   selectors: {
     selectSelectedProfile: (state) => {
-      return (
-        state.availableProfiles?.find(
+      const selectedOrg = state.organizations.find(
+        (org) => org.id === state.selectedOrganizationId,
+      );
+      if (selectedOrg) {
+        const profile = selectedOrg.profiles.find(
           (profile) => profile.id === state.selectedProfileId,
+        );
+        return profile ?? null;
+      } else {
+        return null;
+      }
+    },
+
+    selectCurrentOrg: (state) => {
+      return (
+        state.organizations.find(
+          (org) => org.id === state.selectedOrganizationId,
         ) ?? null
       );
     },
 
-    selectSelectedProfileId: (state) => state.selectedProfileId,
-
     selectBookmarkedSlashCommands: (state) => {
       if (!state.selectedProfileId) return [];
       const preferences = state.preferencesByProfileId[state.selectedProfileId];
-      return preferences?.bookmarksByName || [];
+      return preferences?.bookmarkedSlashCommands || [];
     },
 
     selectPreferencesByProfileId: (state) => state.preferencesByProfileId,
@@ -93,17 +174,19 @@ export const profilesSlice = createSlice({
 });
 
 export const {
-  setAvailableProfiles,
   setSelectedProfile,
   bookmarkSlashCommand,
   unbookmarkSlashCommand,
+  initializeProfilePreferences,
+  setOrganizations,
+  setSelectedOrgId,
 } = profilesSlice.actions;
 
 export const {
   selectSelectedProfile,
-  selectSelectedProfileId,
   selectBookmarkedSlashCommands,
   selectPreferencesByProfileId,
+  selectCurrentOrg,
 } = profilesSlice.selectors;
 
 export const { reducer: profilesReducer } = profilesSlice;

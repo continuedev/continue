@@ -27,6 +27,7 @@ import {
   IdeSettings,
   IdeType,
   ILLM,
+  ILLMLogger,
   LLMOptions,
   ModelDescription,
   RerankerDescription,
@@ -70,12 +71,6 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import {
-  defaultContextProvidersJetBrains,
-  defaultContextProvidersVsCode,
-  defaultSlashCommandsJetBrains,
-  defaultSlashCommandsVscode,
-} from "./default";
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
@@ -122,7 +117,7 @@ function loadSerializedConfig(
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
     try {
-      config = resolveSerializedConfig(getConfigJsonPath(ideType));
+      config = resolveSerializedConfig(getConfigJsonPath());
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
@@ -161,16 +156,6 @@ function loadSerializedConfig(
       configMergeKeys,
     );
   }
-
-  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
-  config.contextProviders ??=
-    ideType === "vscode"
-      ? [...defaultContextProvidersVsCode]
-      : [...defaultContextProvidersJetBrains];
-  config.slashCommands ??=
-    ideType === "vscode"
-      ? [...defaultSlashCommandsVscode]
-      : [...defaultSlashCommandsJetBrains];
 
   if (os.platform() === "linux" && !isSupportedLanceDbCpuTargetForLinux(ide)) {
     config.disableIndexing = true;
@@ -238,7 +223,7 @@ async function intermediateToFinalConfig(
   ideSettings: IdeSettings,
   ideInfo: IdeInfo,
   uniqueId: string,
-  writeLog: (log: string) => Promise<void>,
+  llmLogger: ILLMLogger,
   workOsAccessToken: string | undefined,
   loadPromptFiles: boolean = true,
   allowFreeTrial: boolean = true,
@@ -254,7 +239,7 @@ async function intermediateToFinalConfig(
         ide.readFile.bind(ide),
         uniqueId,
         ideSettings,
-        writeLog,
+        llmLogger,
         config.completionOptions,
         config.systemMessage,
       );
@@ -276,7 +261,7 @@ async function intermediateToFinalConfig(
                 ide.readFile.bind(ide),
                 uniqueId,
                 ideSettings,
-                writeLog,
+                llmLogger,
                 copyOf(config.completionOptions),
                 config.systemMessage,
               );
@@ -296,7 +281,7 @@ async function intermediateToFinalConfig(
     } else {
       const llm = new CustomLLMClass({
         ...desc,
-        options: { ...desc.options, writeLog } as any,
+        options: { ...desc.options, logger: llmLogger } as any,
       });
       if (llm.model === "AUTODETECT") {
         try {
@@ -305,7 +290,11 @@ async function intermediateToFinalConfig(
             (modelName) =>
               new CustomLLMClass({
                 ...desc,
-                options: { ...desc.options, model: modelName, writeLog },
+                options: {
+                  ...desc.options,
+                  model: modelName,
+                  logger: llmLogger,
+                },
               }),
           );
 
@@ -359,7 +348,7 @@ async function intermediateToFinalConfig(
               ide.readFile.bind(ide),
               uniqueId,
               ideSettings,
-              writeLog,
+              llmLogger,
               config.completionOptions,
               config.systemMessage,
             );
@@ -516,7 +505,7 @@ async function intermediateToFinalConfig(
     ...config,
     contextProviders,
     models,
-    tools: allTools,
+    tools: [...allTools],
     mcpServerStatuses: [],
     slashCommands: config.slashCommands ?? [],
     modelsByRole: {
@@ -545,7 +534,7 @@ async function intermediateToFinalConfig(
     (config.experimental?.modelContextProtocolServers ?? []).map(
       (server, index) => ({
         id: `continue-mcp-server-${index + 1}`,
-        name: `MCP Server ${index + 1}`,
+        name: `MCP Server`,
         ...server,
       }),
     ),
@@ -847,7 +836,7 @@ async function loadContinueConfigFromJson(
   ideSettings: IdeSettings,
   ideInfo: IdeInfo,
   uniqueId: string,
-  writeLog: (log: string) => Promise<void>,
+  llmLogger: ILLMLogger,
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
@@ -947,7 +936,7 @@ async function loadContinueConfigFromJson(
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
+      llmLogger,
       workOsAccessToken,
     );
   return {
