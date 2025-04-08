@@ -42,7 +42,7 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { LLMConfigurationStatus } from "../../llm/constants";
+import { LLMConfigurationStatuses } from "../../llm/constants";
 import { llmsFromModelConfig } from "./models";
 
 export class LocalPlatformClient implements PlatformClient {
@@ -240,7 +240,7 @@ async function configYamlToContinueConfig(
         if (
           llms.every(
             (llm) =>
-              llm.getConfigurationStatus() !== LLMConfigurationStatus.VALID,
+              llm.getConfigurationStatus() !== LLMConfigurationStatuses.VALID,
           )
         ) {
           const chatModelForApplyFallback = config.models?.find((model) =>

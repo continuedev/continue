@@ -1,6 +1,6 @@
 import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
-import { LLMConfigurationStatus } from "./llm/constants";
+import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -164,7 +164,7 @@ export interface ILLM extends LLMOptions {
     canPutWordsInModelsMouth?: boolean,
   ): string | ChatMessage[];
 
-  getConfigurationStatus(): LLMConfigurationStatus;
+  getConfigurationStatus(): LLMConfigurationStatuses;
 }
 
 export interface ModelInstaller {
@@ -976,7 +976,7 @@ export interface ModelDescription {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
-  configurationStatus?: LLMConfigurationStatus;
+  configurationStatus?: LLMConfigurationStatuses;
 }
 
 export interface EmbedOptions {

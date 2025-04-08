@@ -5,7 +5,7 @@ import {
   CubeIcon,
 } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
-import { LLMConfigurationStatus } from "core/llm/constants";
+import { LLMConfigurationStatuses } from "core/llm/constants";
 import { MouseEvent, useContext, useState } from "react";
 import { defaultBorderRadius } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
@@ -101,7 +101,7 @@ const ModelRoleSelector = ({
               {models.map((option, idx) => {
                 const showMissingApiKeyMsg =
                   option.configurationStatus ===
-                  LLMConfigurationStatus.MISSING_API_KEY;
+                  LLMConfigurationStatuses.MISSING_API_KEY;
 
                 return (
                   <ListboxOption

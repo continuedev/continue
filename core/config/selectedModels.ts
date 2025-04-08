@@ -1,7 +1,7 @@
 import { ModelRole } from "@continuedev/config-yaml";
 
 import { ContinueConfig, ILLM } from "..";
-import { LLMConfigurationStatus } from "../llm/constants";
+import { LLMConfigurationStatuses } from "../llm/constants";
 import {
   GlobalContext,
   GlobalContextModelSelections,
@@ -52,7 +52,7 @@ export function rectifySelectedModelsFromGlobalContext(
       fellBack = true;
     }
 
-    if (newModel?.getConfigurationStatus() !== LLMConfigurationStatus.VALID) {
+    if (newModel?.getConfigurationStatus() !== LLMConfigurationStatuses.VALID) {
       break;
     }
 

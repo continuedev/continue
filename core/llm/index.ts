@@ -44,7 +44,7 @@ import {
   DEFAULT_MAX_BATCH_SIZE,
   DEFAULT_MAX_CHUNK_SIZE,
   DEFAULT_MAX_TOKENS,
-  LLMConfigurationStatus,
+  LLMConfigurationStatuses,
 } from "./constants.js";
 import {
   compileChatMessages,
@@ -263,7 +263,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   getConfigurationStatus() {
-    return LLMConfigurationStatus.VALID;
+    return LLMConfigurationStatuses.VALID;
   }
 
   protected createOpenAiAdapter() {
