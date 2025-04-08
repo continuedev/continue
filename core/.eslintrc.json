@@ -17,6 +17,6 @@
     "max-statements": ["error", { "max": 114 }],
     "max-depth": ["error", { "max": 6 }],
     "max-nested-callbacks": ["error", { "max": 4 }],
-    "max-params": ["error", { "max": 11 }]
+    "max-params": ["error", { "max": 8 }]
   }
 }

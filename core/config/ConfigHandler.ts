@@ -172,22 +172,22 @@ export class ConfigHandler {
 
     return await Promise.all(
       assistants.map(async (assistant) => {
-        const profileLoader = await PlatformProfileLoader.create(
-          {
+        const profileLoader = await PlatformProfileLoader.create({
+          configResult: {
             ...assistant.configResult,
             config: assistant.configResult.config,
           },
-          assistant.ownerSlug,
-          assistant.packageSlug,
-          assistant.iconUrl,
-          assistant.configResult.config?.version ?? "latest",
-          this.controlPlaneClient,
-          this.ide,
-          this.ideSettingsPromise,
-          this.llmLogger,
-          assistant.rawYaml,
-          orgScopeId,
-        );
+          ownerSlug: assistant.ownerSlug,
+          packageSlug: assistant.packageSlug,
+          iconUrl: assistant.iconUrl,
+          versionSlug: assistant.configResult.config?.version ?? "latest",
+          controlPlaneClient: this.controlPlaneClient,
+          ide: this.ide,
+          ideSettingsPromise: this.ideSettingsPromise,
+          llmLogger: this.llmLogger,
+          rawYaml: assistant.rawYaml,
+          orgScopeId: orgScopeId,
+        });
 
         return new ProfileLifecycleManager(profileLoader, this.ide);
       }),

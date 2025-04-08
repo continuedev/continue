@@ -21,33 +21,81 @@ export interface PlatformConfigMetadata {
 export default class PlatformProfileLoader implements IProfileLoader {
   static RELOAD_INTERVAL = 1000 * 5; // 5 seconds
 
-  private constructor(
-    private configResult: ConfigResult<AssistantUnrolled>,
-    private readonly ownerSlug: string,
-    private readonly packageSlug: string,
-    private readonly iconUrl: string,
-    private readonly versionSlug: string,
-    private readonly controlPlaneClient: ControlPlaneClient,
-    private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
-    private llmLogger: ILLMLogger,
-    readonly description: ProfileDescription,
-    private readonly orgScopeId: string | null,
-  ) {}
+  private configResult: ConfigResult<AssistantUnrolled>;
+  private readonly ownerSlug: string;
+  private readonly packageSlug: string;
+  private readonly iconUrl: string;
+  private readonly versionSlug: string;
+  private readonly controlPlaneClient: ControlPlaneClient;
+  private readonly ide: IDE;
+  private ideSettingsPromise: Promise<IdeSettings>;
+  private llmLogger: ILLMLogger;
+  readonly description: ProfileDescription;
+  private readonly orgScopeId: string | null;
 
-  static async create(
-    configResult: ConfigResult<AssistantUnrolled>,
-    ownerSlug: string,
-    packageSlug: string,
-    iconUrl: string,
-    versionSlug: string,
-    controlPlaneClient: ControlPlaneClient,
-    ide: IDE,
-    ideSettingsPromise: Promise<IdeSettings>,
-    llmLogger: ILLMLogger,
-    rawYaml: string,
-    orgScopeId: string | null,
-  ): Promise<PlatformProfileLoader> {
+  private constructor({
+    configResult,
+    ownerSlug,
+    packageSlug,
+    iconUrl,
+    versionSlug,
+    controlPlaneClient,
+    ide,
+    ideSettingsPromise,
+    llmLogger,
+    description,
+    orgScopeId,
+  }: {
+    configResult: ConfigResult<AssistantUnrolled>;
+    ownerSlug: string;
+    packageSlug: string;
+    iconUrl: string;
+    versionSlug: string;
+    controlPlaneClient: ControlPlaneClient;
+    ide: IDE;
+    ideSettingsPromise: Promise<IdeSettings>;
+    llmLogger: ILLMLogger;
+    description: ProfileDescription;
+    orgScopeId: string | null;
+  }) {
+    this.configResult = configResult;
+    this.ownerSlug = ownerSlug;
+    this.packageSlug = packageSlug;
+    this.iconUrl = iconUrl;
+    this.versionSlug = versionSlug;
+    this.controlPlaneClient = controlPlaneClient;
+    this.ide = ide;
+    this.ideSettingsPromise = ideSettingsPromise;
+    this.llmLogger = llmLogger;
+    this.description = description;
+    this.orgScopeId = orgScopeId;
+  }
+
+  static async create({
+    configResult,
+    ownerSlug,
+    packageSlug,
+    iconUrl,
+    versionSlug,
+    controlPlaneClient,
+    ide,
+    ideSettingsPromise,
+    llmLogger,
+    rawYaml,
+    orgScopeId,
+  }: {
+    configResult: ConfigResult<AssistantUnrolled>;
+    ownerSlug: string;
+    packageSlug: string;
+    iconUrl: string;
+    versionSlug: string;
+    controlPlaneClient: ControlPlaneClient;
+    ide: IDE;
+    ideSettingsPromise: Promise<IdeSettings>;
+    llmLogger: ILLMLogger;
+    rawYaml: string;
+    orgScopeId: string | null;
+  }): Promise<PlatformProfileLoader> {
     const controlPlaneEnv = await getControlPlaneEnv(ideSettingsPromise);
 
     const description: ProfileDescription = {
@@ -65,7 +113,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       rawYaml,
     };
 
-    return new PlatformProfileLoader(
+    return new PlatformProfileLoader({
       configResult,
       ownerSlug,
       packageSlug,
@@ -77,7 +125,7 @@ export default class PlatformProfileLoader implements IProfileLoader {
       llmLogger,
       description,
       orgScopeId,
-    );
+    });
   }
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
@@ -89,21 +137,21 @@ export default class PlatformProfileLoader implements IProfileLoader {
       };
     }
 
-    const results = await doLoadConfig(
-      this.ide,
-      this.ideSettingsPromise,
-      this.controlPlaneClient,
-      this.llmLogger,
-      undefined,
-      this.configResult.config,
-      {
+    const results = await doLoadConfig({
+      ide: this.ide,
+      ideSettingsPromise: this.ideSettingsPromise,
+      controlPlaneClient: this.controlPlaneClient,
+      llmLogger: this.llmLogger,
+      overrideConfigJson: undefined,
+      overrideConfigYaml: this.configResult.config,
+      platformConfigMetadata: {
         ownerSlug: this.ownerSlug,
         packageSlug: this.packageSlug,
       },
-      this.description.id,
-      undefined,
-      this.orgScopeId,
-    );
+      profileId: this.description.id,
+      overrideConfigYamlByPath: undefined,
+      orgScopeId: this.orgScopeId,
+    });
 
     return {
       config: results.config,

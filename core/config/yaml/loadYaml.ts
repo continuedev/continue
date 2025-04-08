@@ -111,17 +111,25 @@ async function loadConfigYaml(
   };
 }
 
-async function configYamlToContinueConfig(
-  config: AssistantUnrolled,
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  allowFreeTrial: boolean = true,
-): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+async function configYamlToContinueConfig({
+  config,
+  ide,
+  ideSettings,
+  ideInfo,
+  uniqueId,
+  llmLogger,
+  platformConfigMetadata,
+  allowFreeTrial = true,
+}: {
+  config: AssistantUnrolled;
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  allowFreeTrial: boolean;
+}): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const localErrors: ConfigValidationError[] = [];
   const continueConfig: ContinueConfig = {
     slashCommands: [],
@@ -408,19 +416,31 @@ async function configYamlToContinueConfig(
   return { config: continueConfig, errors: localErrors };
 }
 
-export async function loadContinueConfigFromYaml(
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  controlPlaneClient: ControlPlaneClient,
-  configYamlPath: string | undefined,
-  orgScopeId: string | null,
-): Promise<ConfigResult<ContinueConfig>> {
+export async function loadContinueConfigFromYaml({
+  ide,
+  ideSettings,
+  ideInfo,
+  uniqueId,
+  llmLogger,
+  // workOsAccessToken,
+  overrideConfigYaml,
+  platformConfigMetadata,
+  controlPlaneClient,
+  configYamlPath,
+  orgScopeId,
+}: {
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  // workOsAccessToken: string | undefined;
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  controlPlaneClient: ControlPlaneClient;
+  configYamlPath: string | undefined;
+  orgScopeId: string | null;
+}): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
       ? fs.readFileSync(
@@ -446,16 +466,16 @@ export async function loadContinueConfigFromYaml(
   }
 
   const { config: continueConfig, errors: localErrors } =
-    await configYamlToContinueConfig(
-      configYamlResult.config,
+    await configYamlToContinueConfig({
+      config: configYamlResult.config,
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
       platformConfigMetadata,
-    );
+      allowFreeTrial: true,
+    });
 
   try {
     const systemPromptDotFile = await getSystemPromptDotFile(ide);

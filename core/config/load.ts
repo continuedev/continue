@@ -217,17 +217,27 @@ export function isContextProviderWithParams(
 }
 
 /** Only difference between intermediate and final configs is the `models` array */
-async function intermediateToFinalConfig(
-  config: Config,
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
-  loadPromptFiles: boolean = true,
-  allowFreeTrial: boolean = true,
-): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+async function intermediateToFinalConfig({
+  config,
+  ide,
+  ideSettings,
+  ideInfo,
+  uniqueId,
+  llmLogger,
+  workOsAccessToken,
+  loadPromptFiles = true,
+  allowFreeTrial = true,
+}: {
+  config: Config;
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  workOsAccessToken: string | undefined;
+  loadPromptFiles?: boolean;
+  allowFreeTrial?: boolean;
+}): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
 
   // Auto-detect models
@@ -930,15 +940,15 @@ async function loadContinueConfigFromJson(
 
   // Convert to final config format
   const { config: finalConfig, errors: finalErrors } =
-    await intermediateToFinalConfig(
-      intermediate,
+    await intermediateToFinalConfig({
+      config: intermediate,
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,
       workOsAccessToken,
-    );
+    });
   return {
     config: finalConfig,
     errors: [...(errors ?? []), ...finalErrors],
