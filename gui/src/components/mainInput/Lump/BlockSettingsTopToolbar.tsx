@@ -8,8 +8,10 @@ import {
   Squares2X2Icon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
+import { modelSupportsTools } from "core/llm/autodetect";
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { selectDefaultModel } from "../../../redux/slices/configSlice";
 import { toggleBlockSettingsToolbar } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
@@ -97,6 +99,11 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
     }
     dispatch(toggleBlockSettingsToolbar());
   };
+  const selectedModel = useAppSelector(selectDefaultModel);
+  const agentModeSupported = selectedModel && modelSupportsTools(selectedModel);
+  const availableSections = sections.filter(
+    (s) => agentModeSupported || (s.id != "tools" && s.id != "mcp"),
+  );
 
   return (
     <div className="flex w-full items-center justify-between">
@@ -113,7 +120,7 @@ export function BlockSettingsTopToolbar(props: BlockSettingsTopToolbarProps) {
           style={{ width: isExpanded ? `160px` : "0px" }}
         >
           <div className="flex">
-            {sections.map((section) => (
+            {availableSections.map((section) => (
               <BlockSettingsToolbarIcon
                 key={section.id}
                 icon={section.icon}
