@@ -160,6 +160,8 @@ The `models` section defines the language models used in your configuration. Mod
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
   - `n`: Number of completions to generate.
+  - `reasoning`: Boolean to enable thinking/reasoning for Anthropic Claude 3.7+ models.
+  - `reasoningBudgetTokens`: Budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models.
 
 - `requestOptions`: HTTP request options specific to the model.
 

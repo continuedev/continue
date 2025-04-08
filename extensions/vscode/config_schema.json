@@ -71,6 +71,16 @@
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
           "type": "integer"
+        },
+        "reasoning": {
+          "title": "Reasoning",
+          "description": "Enable thinking/reasoning for Anthropic Claude 3.7+ models",
+          "type": "boolean"
+        },
+        "reasoningBudgetTokens": {
+          "title": "Reasoning Budget Tokens",
+          "description": "Set budget tokens for thinking/reasoning in Anthropic Claude 3.7+ models",
+          "type": "integer"
         }
       }
     },
