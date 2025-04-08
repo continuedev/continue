@@ -18,7 +18,8 @@ import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
 import {
-  getAllAssistantFiles,
+  ASSISTANTS,
+  getAllDotContinueYamlFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
 import {
@@ -309,7 +310,11 @@ export class ConfigHandler {
     }
 
     if (options.includeWorkspace) {
-      const assistantFiles = await getAllAssistantFiles(this.ide, options);
+      const assistantFiles = await getAllDotContinueYamlFiles(
+        this.ide,
+        options,
+        ASSISTANTS,
+      );
       const profiles = assistantFiles.map((assistant) => {
         return new LocalProfileLoader(
           this.ide,

@@ -376,12 +376,16 @@ export function getPromptLogsPath(): string {
   return path.join(getLogsDirPath(), "prompt.log");
 }
 
+export function getGlobalFolderWithName(name: string): string {
+  return path.join(getContinueGlobalPath(), name);
+}
+
 export function getGlobalPromptsPath(): string {
-  return path.join(getContinueGlobalPath(), "prompts");
+  return getGlobalFolderWithName("prompts");
 }
 
 export function getGlobalAssistantsPath(): string {
-  return path.join(getContinueGlobalPath(), "assistants");
+  return getGlobalFolderWithName("assistants");
 }
 
 export function readAllGlobalPromptFiles(
