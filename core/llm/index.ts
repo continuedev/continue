@@ -44,6 +44,7 @@ import {
   DEFAULT_MAX_BATCH_SIZE,
   DEFAULT_MAX_CHUNK_SIZE,
   DEFAULT_MAX_TOKENS,
+  LLMConfigurationStatus,
 } from "./constants.js";
 import {
   compileChatMessages,
@@ -260,12 +261,10 @@ export abstract class BaseLLM implements ILLM {
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
   }
-  isProperlyConfigured(): boolean {
-    return true;
+
+  getConfigurationStatus() {
+    return LLMConfigurationStatus.VALID;
   }
-  useLegacyCompletionsEndpoint?: boolean | undefined;
-  modelArn?: string | undefined;
-  env?: Record<string, string | number | boolean> | undefined;
 
   protected createOpenAiAdapter() {
     return constructLlmApi({

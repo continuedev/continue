@@ -602,6 +602,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     promptTemplates: llm.promptTemplates as any,
     capabilities: llm.capabilities,
     roles: llm.roles,
+    configurationStatus: llm.getConfigurationStatus(),
   };
 }
 

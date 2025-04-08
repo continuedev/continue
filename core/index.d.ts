@@ -1,5 +1,6 @@
 import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { LLMConfigurationStatus } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -163,10 +164,7 @@ export interface ILLM extends LLMOptions {
     canPutWordsInModelsMouth?: boolean,
   ): string | ChatMessage[];
 
-  /**
-   * This method should return false if the model is missing an API key or something else that would cause it to fail if called
-   */
-  isProperlyConfigured(): boolean;
+  getConfigurationStatus(): LLMConfigurationStatus;
 }
 
 export interface ModelInstaller {
@@ -978,6 +976,7 @@ export interface ModelDescription {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
+  configurationStatus?: LLMConfigurationStatus;
 }
 
 export interface EmbedOptions {

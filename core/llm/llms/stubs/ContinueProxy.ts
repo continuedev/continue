@@ -9,6 +9,7 @@ import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 
 import type { Chunk, LLMOptions } from "../../../index.js";
+import { LLMConfigurationStatus } from "../../constants.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
@@ -53,16 +54,17 @@ class ContinueProxy extends OpenAI {
     };
   }
 
-  isProperlyConfigured(): boolean {
+  getConfigurationStatus() {
     if (!this.apiKeyLocation) {
-      return true;
-    }
-    const secretLocation = decodeSecretLocation(this.apiKeyLocation);
-    if (secretLocation.secretType === SecretType.NotFound) {
-      return false;
+      return LLMConfigurationStatus.VALID;
     }
 
-    return true;
+    const secretLocation = decodeSecretLocation(this.apiKeyLocation);
+    if (secretLocation.secretType === SecretType.NotFound) {
+      return LLMConfigurationStatus.MISSING_API_KEY;
+    }
+
+    return LLMConfigurationStatus.VALID;
   }
 
   protected _getHeaders() {

@@ -1,5 +1,12 @@
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
-import { type ModelDescription } from "core";
+import {
+  CheckIcon,
+  ChevronUpDownIcon,
+  Cog6ToothIcon,
+  CubeIcon,
+} from "@heroicons/react/24/outline";
+import { ModelDescription } from "core";
+import { LLMConfigurationStatus } from "core/llm/constants";
+import { MouseEvent, useContext, useState } from "react";
 import { defaultBorderRadius } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
 import InfoHover from "../../components/InfoHover";
@@ -10,6 +17,7 @@ import {
   ListboxOptions,
   Transition,
 } from "../../components/ui";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { fontSize } from "../../util";
 
 interface ModelRoleSelectorProps {
@@ -27,8 +35,27 @@ const ModelRoleSelector = ({
   displayName,
   description,
 }: ModelRoleSelectorProps) => {
+  const ideMessenger = useContext(IdeMessengerContext);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   function handleSelect(title: string | null) {
     onSelect(models.find((m) => m.title === title) ?? null);
+  }
+
+  function onClickGear(e: MouseEvent<SVGSVGElement>) {
+    e.stopPropagation();
+    e.preventDefault();
+    ideMessenger.post("config/openProfile", { profileId: undefined });
+  }
+
+  function handleOptionClick(
+    showMissingApiKeyMsg: boolean,
+    e: MouseEvent<HTMLLIElement>,
+  ) {
+    if (showMissingApiKeyMsg) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   }
 
   return (
@@ -71,19 +98,55 @@ const ModelRoleSelector = ({
               style={{ borderRadius: defaultBorderRadius }}
               className="min-w-40"
             >
-              {models.map((option, idx) => (
-                <ListboxOption key={idx} value={option.title} className={""}>
-                  <span
-                    className="line-clamp-1 flex h-4 items-center gap-2"
-                    style={{ fontSize: fontSize(-3) }}
+              {models.map((option, idx) => {
+                const showMissingApiKeyMsg =
+                  option.configurationStatus ===
+                  LLMConfigurationStatus.MISSING_API_KEY;
+
+                return (
+                  <ListboxOption
+                    key={idx}
+                    value={option.title}
+                    disabled={showMissingApiKeyMsg}
+                    onMouseEnter={() => setHoveredIdx(idx)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    onClick={(e: any) =>
+                      handleOptionClick(showMissingApiKeyMsg, e)
+                    }
+                    className={""}
                   >
-                    {option.title}
-                  </span>
-                  {option.title === selectedModel?.title && (
-                    <CheckIcon className="h-3 w-3" aria-hidden="true" />
-                  )}
-                </ListboxOption>
-              ))}
+                    <div className="flex flex-col gap-0.5">
+                      <div className="flex flex-1 flex-row items-center justify-between gap-2">
+                        <div className="flex flex-1 flex-row items-center gap-2">
+                          <CubeIcon className="h-3 w-3 flex-shrink-0" />
+                          <span
+                            className="line-clamp-1 flex-1"
+                            style={{ fontSize: fontSize(-3) }}
+                          >
+                            {option.title}
+                            {showMissingApiKeyMsg && (
+                              <span className="ml-2 text-[10px] italic">
+                                (Missing API key)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex flex-shrink-0 flex-row items-center gap-1">
+                          {hoveredIdx === idx && (
+                            <Cog6ToothIcon
+                              className="h-3 w-3 flex-shrink-0"
+                              onClick={onClickGear}
+                            />
+                          )}
+                          {option.title === selectedModel?.title && (
+                            <CheckIcon className="h-3 w-3 flex-shrink-0" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </ListboxOption>
+                );
+              })}
             </ListboxOptions>
           </Transition>
         </div>

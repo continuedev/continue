@@ -1,4 +1,5 @@
 import { LLMOptions } from "../..";
+import { LLMConfigurationStatus } from "../constants";
 import { LlmApiRequestType } from "../openaiTypeConverters";
 
 import OpenAI from "./OpenAI";
@@ -10,7 +11,11 @@ export class Relace extends OpenAI {
   };
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
 
-  isProperlyConfigured(): boolean {
-    return !!this.apiKey;
+  getConfigurationStatus() {
+    if (!this.apiKey) {
+      return LLMConfigurationStatus.MISSING_API_KEY;
+    }
+
+    return LLMConfigurationStatus.VALID;
   }
 }
