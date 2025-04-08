@@ -20,9 +20,11 @@
     "@continuedev/hub": "^0.0.6",
     "@continuedev/openai-adapters": "^1.0.18",
     "@modelcontextprotocol/sdk": "^1.9.0",
+    "@workos-inc/node": "^7.45.0",
     "chalk": "^5.4.1",
     "diff": "^7.0.0",
     "dotenv": "^16.4.0",
+    "open": "^10.1.0",
     "readline-sync": "^1.4.10",
     "uuid": "^9.0.1"
   },

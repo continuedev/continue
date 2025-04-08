@@ -9,6 +9,8 @@ import * as os from "os";
 import * as path from "path";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
+import { ensureAuthenticated } from "./auth/ensureAuth.js";
+import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
 import {
@@ -18,10 +20,10 @@ import {
 } from "./streamChatResponse.js";
 
 const hub = new ContinueHubClient({
-  apiKey: process.env.CONTINUE_API_KEY,
+  apiKey: env.apiKey,
   currentUserSlug: "e2e",
   orgScopeId: null,
-  apiBase: process.env.CONTINUE_API_BASE ?? "http://localhost:3001/",
+  apiBase: env.apiBase,
 });
 
 async function loadAssistant(): Promise<AssistantUnrolled> {
@@ -93,6 +95,9 @@ function introMessage(assistant: AssistantUnrolled, mcpService: MCPService) {
 }
 
 async function chat() {
+  // Ensure authenticated
+  const isAuthenticated = await ensureAuthenticated(true);
+
   // Load assistant
   const assistant = await loadAssistant();
 

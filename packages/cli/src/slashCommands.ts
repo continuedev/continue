@@ -1,4 +1,11 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
+import chalk from "chalk";
+import {
+  isAuthenticated,
+  loadAuthConfig,
+  loginWithMagicAuth,
+  logout,
+} from "./auth/workos.js";
 
 export function handleSlashCommands(
   input: string,
@@ -27,6 +34,44 @@ export function handleSlashCommands(
         };
       case "exit":
         return { exit: true, output: "Goodbye!" };
+      case "/login":
+        loginWithMagicAuth()
+          .then((config) => {
+            console.log(
+              chalk.green(
+                `\nLogged in as ${config.userEmail || config.userId}`,
+              ),
+            );
+          })
+          .catch((error) => {
+            console.error(chalk.red(`\nLogin failed: ${error.message}`));
+          });
+        return {
+          exit: false,
+          output: "Starting login process...",
+        };
+
+      case "/logout":
+        logout();
+        return {
+          exit: false,
+          output: "Logged out successfully",
+        };
+
+      case "/whoami":
+        if (isAuthenticated()) {
+          const config = loadAuthConfig();
+          return {
+            exit: false,
+            output: `Logged in as ${config.userEmail || config.userId}`,
+          };
+        } else {
+          return {
+            exit: false,
+            output: "Not logged in. Use /login to authenticate.",
+          };
+        }
+
       default:
         const assistantPrompt = assistant.prompts?.find(
           (prompt) => prompt.name === command,
