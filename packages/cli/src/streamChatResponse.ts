@@ -141,7 +141,7 @@ export async function streamChatResponse(
               (tc) => tc.id === currentToolCallId,
             );
             if (toolCall) {
-              toolCall.name += toolCallDelta.function.name;
+              toolCall.name = toolCallDelta.function.name;
               process.stdout.write(
                 `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(toolCall.name)}${chalk.yellow("]")}`,
               );
