@@ -118,6 +118,7 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
     props.itemId,
     props.initiallyHidden,
   ]);
+
   const [hidden, setHidden] = useState(calculatedInitiallyHidden);
   const [isExpanded, setIsExpanded] = useState(false);
 
