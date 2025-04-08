@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { isAuthenticated, loginWithMagicAuth } from "./workos.js";
+import { isAuthenticated, login } from "./workos.js";
 
 /**
  * Ensures the user is authenticated before proceeding
@@ -19,7 +19,7 @@ export async function ensureAuthenticated(
   console.log(chalk.yellow("Authentication required."));
 
   try {
-    await loginWithMagicAuth();
+    await login();
     return true;
   } catch (error) {
     console.error(chalk.red("Failed to authenticate."));

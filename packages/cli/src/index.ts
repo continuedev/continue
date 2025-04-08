@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 
 import { AssistantUnrolled } from "@continuedev/config-yaml";
-import { ContinueHubClient } from "@continuedev/hub";
 import chalk from "chalk";
 import * as fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
 import * as os from "os";
 import * as path from "path";
 import * as readlineSync from "readline-sync";
+import { ContinueHubClient } from "../../hub/src/ContinueHubClient.js";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
+import { loadAuthConfig } from "./auth/workos.js";
 import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
@@ -19,14 +20,9 @@ import {
   streamChatResponse,
 } from "./streamChatResponse.js";
 
-const hub = new ContinueHubClient({
-  apiKey: env.apiKey,
-  currentUserSlug: "e2e",
-  orgScopeId: null,
-  apiBase: env.apiBase,
-});
-
-async function loadAssistant(): Promise<AssistantUnrolled> {
+async function loadAssistant(
+  hub: ContinueHubClient,
+): Promise<AssistantUnrolled> {
   const filepathOrSlug =
     process.argv[2] || path.join(os.homedir(), ".continue", "config.yaml");
 
@@ -73,6 +69,9 @@ function introMessage(assistant: AssistantUnrolled, mcpService: MCPService) {
   console.log("- /clear: Clear the chat history");
   console.log("- /help: Show help message");
   console.log("- /models: Show available models");
+  console.log("- /login: Authenticate with your account");
+  console.log("- /logout: Sign out of your current session");
+  console.log("- /whoami: Check who you're currently logged in as");
   for (const prompt of assistant.prompts ?? []) {
     console.log(`- /${prompt.name}: ${prompt.description}`);
   }
@@ -97,9 +96,17 @@ function introMessage(assistant: AssistantUnrolled, mcpService: MCPService) {
 async function chat() {
   // Ensure authenticated
   const isAuthenticated = await ensureAuthenticated(true);
+  const authConfig = loadAuthConfig();
+
+  const hub = new ContinueHubClient({
+    apiKey: authConfig.refreshToken,
+    currentUserSlug: "e2e",
+    orgScopeId: null,
+    apiBase: env.apiBase,
+  });
 
   // Load assistant
-  const assistant = await loadAssistant();
+  const assistant = await loadAssistant(hub);
 
   const mcpService = await MCPService.create(assistant);
 

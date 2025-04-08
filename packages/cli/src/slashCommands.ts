@@ -3,7 +3,7 @@ import chalk from "chalk";
 import {
   isAuthenticated,
   loadAuthConfig,
-  loginWithMagicAuth,
+  login,
   logout,
 } from "./auth/workos.js";
 
@@ -23,6 +23,10 @@ export function handleSlashCommands(
           "Available commands:",
           "/help - Show this help message",
           "/exit - Exit the chat",
+          "/login - Authenticate with your account",
+          "/logout - Sign out of your current session",
+          "/whoami - Check who you're currently logged in as",
+          "/models - List available AI models",
           ...(assistant.prompts?.map(
             (prompt) => `/${prompt.name} - ${prompt.description}`,
           ) ?? []),
@@ -34,8 +38,8 @@ export function handleSlashCommands(
         };
       case "exit":
         return { exit: true, output: "Goodbye!" };
-      case "/login":
-        loginWithMagicAuth()
+      case "login":
+        login()
           .then((config) => {
             console.log(
               chalk.green(
@@ -51,14 +55,14 @@ export function handleSlashCommands(
           output: "Starting login process...",
         };
 
-      case "/logout":
+      case "logout":
         logout();
         return {
           exit: false,
           output: "Logged out successfully",
         };
 
-      case "/whoami":
+      case "whoami":
         if (isAuthenticated()) {
           const config = loadAuthConfig();
           return {

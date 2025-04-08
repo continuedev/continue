@@ -1,21 +1,21 @@
 import axios from "axios";
 import chalk from "chalk";
 import * as fs from "fs";
+import open from "open";
 import * as os from "os";
 import * as path from "path";
 import { createInterface } from "readline";
+import { v4 as uuidv4 } from "uuid";
+import { env } from "../env.js";
+
 // Config file path
 const AUTH_CONFIG_PATH = path.join(os.homedir(), ".continue", "auth.json");
-// Your application's client ID (this is public information)
-const clientId = process.env.WORKOS_CLIENT_ID;
-// Your backend API URL that will handle the WorkOS authentication
-const authApiUrl =
-  process.env.AUTH_API_URL || "https://your-backend-api.com/auth";
 
 interface AuthConfig {
   userId?: string;
   userEmail?: string;
   accessToken?: string;
+  refreshToken?: string;
   expiresAt?: number;
 }
 
@@ -62,7 +62,11 @@ export function isAuthenticated(): boolean {
 
   // Check if token is expired (if we have an expiration)
   if (config.expiresAt && Date.now() > config.expiresAt) {
-    return false;
+    // Try refreshing the token
+    refreshToken(config.refreshToken || "").catch(() => {
+      // If refresh fails, we're not authenticated
+      return false;
+    });
   }
 
   return true;
@@ -86,53 +90,43 @@ function prompt(question: string): Promise<string> {
 }
 
 /**
- * Authenticates using WorkOS Magic Auth
- * This implementation relies on a backend service that manages the WorkOS API key
+ * Gets the auth URL for the token page
  */
-export async function loginWithMagicAuth(): Promise<AuthConfig> {
+function getAuthUrlForTokenPage(useOnboarding: boolean = false): string {
+  const url = new URL("https://api.workos.com/user_management/authorize");
+  const params = {
+    response_type: "code",
+    client_id: env.workOsClientId,
+    redirect_uri: `${env.appUrl}tokens/${useOnboarding ? "onboarding-" : ""}callback`,
+    state: uuidv4(),
+    provider: "authkit",
+  };
+
+  Object.keys(params).forEach((key) =>
+    url.searchParams.append(key, params[key as keyof typeof params]),
+  );
+
+  return url.toString();
+}
+/**
+ * Refreshes the access token using a refresh token
+ */
+async function refreshToken(refreshToken: string): Promise<AuthConfig> {
   try {
-    console.log(
-      chalk.cyan("\nStarting authentication with WorkOS Magic Auth..."),
-    );
-
-    // Get user email
-    const email = await prompt(chalk.yellow("Enter your email: "));
-
-    // Request magic link/code through your backend service
-    console.log(chalk.cyan("Requesting authentication code..."));
-    await axios.post(`${authApiUrl}/generate-magic-auth`, {
-      email,
-      clientId,
+    const response = await axios.post(`${env.apiBase}auth/refresh`, {
+      refreshToken,
     });
 
-    console.log(
-      chalk.green(`\nMagic link sent to ${email}. Please check your email.`),
-    );
-    console.log(chalk.cyan("You can also enter the code manually below."));
-    // Get verification code
-    const code = await prompt(
-      chalk.yellow("Enter the verification code from your email: "),
-    );
+    const { accessToken, refreshToken: newRefreshToken, user } = response.data;
 
-    // Verify the code through your backend service
-    console.log(chalk.cyan("Verifying authentication code..."));
-    const response = await axios.post(`${authApiUrl}/verify-magic-auth`, {
-      email,
-      code,
-      clientId,
-    });
+    // Calculate token expiration (assuming 1 hour validity)
+    const tokenExpiresAt = Date.now() + 60 * 60 * 1000;
 
-    // Extract user and token info from the response
-    const { user, accessToken, expiresIn } = response.data;
-
-    console.log(chalk.green("\nAuthentication successful!"));
-
-    // Calculate token expiration
-    const tokenExpiresAt = Date.now() + expiresIn * 1000;
     const authConfig: AuthConfig = {
       userId: user.id,
       userEmail: user.email,
-      accessToken: accessToken,
+      accessToken,
+      refreshToken: newRefreshToken,
       expiresAt: tokenExpiresAt,
     };
 
@@ -140,6 +134,42 @@ export async function loginWithMagicAuth(): Promise<AuthConfig> {
     saveAuthConfig(authConfig);
 
     return authConfig;
+  } catch (error: any) {
+    console.error(
+      chalk.red("Token refresh error:"),
+      error.response?.data?.message || error.message || error,
+    );
+    throw error;
+  }
+}
+
+/**
+ * Authenticates using the Continue web flow
+ */
+export async function login(
+  useOnboarding: boolean = false,
+): Promise<AuthConfig> {
+  try {
+    console.log(chalk.cyan("\nStarting authentication with Continue..."));
+
+    // Get auth URL using the direct implementation
+    const authUrl = getAuthUrlForTokenPage(useOnboarding);
+    console.log(chalk.green(`Opening browser to sign in at: ${authUrl}`));
+    await open(authUrl);
+
+    console.log(chalk.yellow("\nAfter signing in, you'll receive a token."));
+
+    // Get token from user
+    const token = await prompt(chalk.yellow("Paste your sign-in token here: "));
+
+    console.log(chalk.cyan("Verifying token..."));
+
+    // Exchange token for session
+    const response = await refreshToken(token);
+
+    console.log(chalk.green("\nAuthentication successful!"));
+
+    return response;
   } catch (error: any) {
     console.error(
       chalk.red("Authentication error:"),
