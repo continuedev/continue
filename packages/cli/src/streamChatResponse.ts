@@ -141,10 +141,12 @@ export async function streamChatResponse(
               (tc) => tc.id === currentToolCallId,
             );
             if (toolCall) {
-              toolCall.name = toolCallDelta.function.name;
-              process.stdout.write(
-                `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(toolCall.name)}${chalk.yellow("]")}`,
-              );
+              if (!toolCall.name) {
+                toolCall.name = toolCallDelta.function.name;
+                process.stdout.write(
+                  `\n${chalk.yellow("[Using tool:")} ${chalk.yellow.bold(toolCall.name)}${chalk.yellow("]")}`,
+                );
+              }
             }
           }
 
@@ -194,9 +196,6 @@ export async function streamChatResponse(
     // If we have tool calls, execute them
     if (currentToolCalls.length > 0) {
       for (const toolCall of currentToolCalls) {
-        console.log(
-          `\n${chalk.yellow("[Executing tool:")} ${chalk.yellow.bold(toolCall.name)}${chalk.yellow("]")}`,
-        );
         try {
           // Execute the tool
           const toolResult = await executeToolCall({
@@ -211,9 +210,7 @@ export async function streamChatResponse(
             content: toolResult,
           });
 
-          console.log(
-            `${chalk.green("[Tool result:")} ${chalk.green(toolResult)}${chalk.green("]")}\n`,
-          );
+          console.log(chalk.green(toolResult) + "\n");
         } catch (error) {
           const errorMessage = `Error executing tool ${toolCall.name}: ${error instanceof Error ? error.message : String(error)}`;
           chatHistory.push({
