@@ -122,7 +122,6 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
   const [hidden, setHidden] = useState(calculatedInitiallyHidden);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Track if user has manually toggled visibility
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentDims, setContentDims] = useState({ width: 0, height: 0 });
 
