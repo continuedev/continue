@@ -70,13 +70,13 @@ function convertCustomCommand(
 
 function convertMcp(mcp: any): NonNullable<ConfigYaml["mcpServers"]>[number] {
   const { transport } = mcp;
-  const { command, args, env } = transport;
+  const { command, args, env, server_name } = transport;
 
   return {
     command,
     args,
     env,
-    name: "MCP Server",
+    name: server_name || "MCP Server",
   };
 }
 
