@@ -1,6 +1,12 @@
 import { ModelConfig } from "@continuedev/config-yaml";
 
-import { ContinueConfig, IDE, IdeSettings, LLMOptions } from "../..";
+import {
+  ContinueConfig,
+  IDE,
+  IdeSettings,
+  ILLMLogger,
+  LLMOptions,
+} from "../..";
 import { BaseLLM } from "../../llm";
 import { LLMClasses } from "../../llm/llms";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
@@ -25,14 +31,14 @@ async function modelConfigToBaseLLM({
   model,
   uniqueId,
   ideSettings,
-  writeLog,
+  llmLogger,
   platformConfigMetadata,
   config,
 }: {
   model: ModelConfig;
   uniqueId: string;
   ideSettings: IdeSettings;
-  writeLog: (log: string) => Promise<void>;
+  llmLogger: ILLMLogger;
   platformConfigMetadata: PlatformConfigMetadata | undefined;
   config: ContinueConfig;
 }): Promise<BaseLLM | undefined> {
@@ -54,7 +60,7 @@ async function modelConfigToBaseLLM({
         model.defaultCompletionOptions?.maxTokens ??
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
-    writeLog,
+    logger: llmLogger,
     uniqueId,
     title: model.name,
     systemMessage: config.systemMessage,
@@ -141,7 +147,7 @@ async function autodetectModels({
   ide,
   uniqueId,
   ideSettings,
-  writeLog,
+  llmLogger,
   platformConfigMetadata,
   config,
 }: {
@@ -150,7 +156,7 @@ async function autodetectModels({
   ide: IDE;
   uniqueId: string;
   ideSettings: IdeSettings;
-  writeLog: (log: string) => Promise<void>;
+  llmLogger: ILLMLogger;
   platformConfigMetadata: PlatformConfigMetadata | undefined;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
@@ -171,7 +177,7 @@ async function autodetectModels({
           },
           uniqueId,
           ideSettings,
-          writeLog,
+          llmLogger,
           platformConfigMetadata,
           config,
         });
@@ -189,7 +195,7 @@ export async function llmsFromModelConfig({
   ide,
   uniqueId,
   ideSettings,
-  writeLog,
+  llmLogger,
   platformConfigMetadata,
   config,
 }: {
@@ -197,7 +203,7 @@ export async function llmsFromModelConfig({
   ide: IDE;
   uniqueId: string;
   ideSettings: IdeSettings;
-  writeLog: (log: string) => Promise<void>;
+  llmLogger: ILLMLogger;
   platformConfigMetadata: PlatformConfigMetadata | undefined;
   config: ContinueConfig;
 }): Promise<BaseLLM[]> {
@@ -205,7 +211,7 @@ export async function llmsFromModelConfig({
     model,
     uniqueId,
     ideSettings,
-    writeLog,
+    llmLogger,
     platformConfigMetadata,
     config,
   });
@@ -220,7 +226,7 @@ export async function llmsFromModelConfig({
       ide,
       uniqueId,
       ideSettings,
-      writeLog,
+      llmLogger,
       platformConfigMetadata,
       config,
     });

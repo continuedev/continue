@@ -12,6 +12,7 @@ import {
   ContinueRcJson,
   IDE,
   IdeSettings,
+  ILLMLogger,
   SerializedContinueConfig,
   Tool,
 } from "../../";
@@ -39,7 +40,7 @@ export default async function doLoadConfig(
   ide: IDE,
   ideSettingsPromise: Promise<IdeSettings>,
   controlPlaneClient: ControlPlaneClient,
-  writeLog: (message: string) => Promise<void>,
+  llmLogger: ILLMLogger,
   overrideConfigJson: SerializedContinueConfig | undefined,
   overrideConfigYaml: AssistantUnrolled | undefined,
   platformConfigMetadata: PlatformConfigMetadata | undefined,
@@ -74,7 +75,7 @@ export default async function doLoadConfig(
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
+      llmLogger,
       workOsAccessToken,
       overrideConfigYaml,
       platformConfigMetadata,
@@ -92,7 +93,7 @@ export default async function doLoadConfig(
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
+      llmLogger,
       workOsAccessToken,
       overrideConfigJson,
     );
@@ -160,6 +161,7 @@ export default async function doLoadConfig(
         const serverContextProvider = new MCPContextProvider({
           submenuItems,
           mcpId: server.id,
+          serverName: server.name,
         });
         newConfig.contextProviders.push(serverContextProvider);
       }

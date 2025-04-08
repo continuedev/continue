@@ -115,7 +115,7 @@ class IdeProtocolClient(
                             .handleUpdatedSessionInfo(null)
 
                         // Tell the webview that session info changed
-                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
+                        continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", null, null) { _ -> }
 
                         respond(null)
                     }

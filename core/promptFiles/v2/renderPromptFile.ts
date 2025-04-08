@@ -66,7 +66,7 @@ export async function renderPromptFileV2(
   rawContent: string,
   extras: ContextProviderExtras,
 ): Promise<[ContextItem[], string]> {
-  const [preamble, body] = getPreambleAndBody(rawContent);
+  const [_, body] = getPreambleAndBody(rawContent);
 
   const contextItemsPromises: Promise<ContextItem[]>[] = [];
   const renderedBody = body.replace(/@([^\s]+)/g, (match, name) => {
@@ -75,6 +75,10 @@ export async function renderPromptFileV2(
   });
 
   const contextItems = (await Promise.all(contextItemsPromises)).flat();
+  const renderedPrompt =
+    contextItems.map((item) => item.content).join("\n\n") +
+    "\n\n" +
+    renderedBody;
 
-  return [contextItems, renderedBody];
+  return [contextItems, renderedPrompt];
 }

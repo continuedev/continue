@@ -97,32 +97,36 @@ export function BlockSettingsTopToolbar() {
 
   return (
     <div className="flex w-full items-center justify-between">
-      <div className="xs:flex hidden items-center justify-center text-gray-400">
-        <BlockSettingsToolbarIcon
-          className="-ml-1.5"
-          icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-          tooltip={isToolbarExpanded ? "Collapse sections" : "Expand sections"}
-          isSelected={false}
-          onClick={handleEllipsisClick}
-        />
-        <div
-          className="flex overflow-hidden transition-all duration-200"
-          style={{ width: isToolbarExpanded ? `160px` : "0px" }}
-        >
-          <div className="flex">
-            {sections.map((section) => (
-              <BlockSettingsToolbarIcon
-                key={section.id}
-                icon={section.icon}
-                tooltip={section.tooltip}
-                isSelected={selectedSection === section.id}
-                onClick={() =>
-                  setSelectedSection(
-                    selectedSection === section.id ? null : section.id,
-                  )
-                }
-              />
-            ))}
+      <div className="flex flex-row">
+        <div className="xs:flex hidden items-center justify-center text-gray-400">
+          <BlockSettingsToolbarIcon
+            className="-ml-1.5"
+            icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
+            tooltip={
+              isToolbarExpanded ? "Collapse sections" : "Expand sections"
+            }
+            isSelected={false}
+            onClick={handleEllipsisClick}
+          />
+          <div
+            className="flex overflow-hidden transition-all duration-200"
+            style={{ width: isToolbarExpanded ? `160px` : "0px" }}
+          >
+            <div className="flex">
+              {sections.map((section) => (
+                <BlockSettingsToolbarIcon
+                  key={section.id}
+                  icon={section.icon}
+                  tooltip={section.tooltip}
+                  isSelected={selectedSection === section.id}
+                  onClick={() =>
+                    setSelectedSection(
+                      selectedSection === section.id ? null : section.id,
+                    )
+                  }
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>

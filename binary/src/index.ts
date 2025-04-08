@@ -1,6 +1,7 @@
 process.env.IS_BINARY = "true";
 import { Command } from "commander";
 import { Core } from "core/core";
+import { LLMLogFormatter } from "core/llm/logFormatter";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { IMessenger } from "core/protocol/messenger";
 import { getCoreLogsPath, getPromptLogsPath } from "core/util/paths";
@@ -33,9 +34,8 @@ program.action(async () => {
     const ide = new IpcIde(messenger);
     const promptLogsPath = getPromptLogsPath();
 
-    new Core(messenger, ide, async (text) => {
-      fs.appendFileSync(promptLogsPath, text + "\n\n");
-    });
+    const core = new Core(messenger, ide);
+    new LLMLogFormatter(core.llmLogger, fs.createWriteStream(promptLogsPath));
 
     console.log("[binary] Core started");
   } catch (e) {
