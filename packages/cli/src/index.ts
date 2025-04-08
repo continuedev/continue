@@ -3,6 +3,8 @@ import { ContinueHubClient } from "@continuedev/hub";
 import chalk from "chalk";
 import * as fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
+import * as os from "os";
+import * as path from "path";
 import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { MCPService } from "./mcp.js";
@@ -21,15 +23,8 @@ const hub = new ContinueHubClient({
 });
 
 async function loadAssistant(): Promise<AssistantUnrolled> {
-  const filepathOrSlug = process.argv[2];
-  if (!filepathOrSlug) {
-    console.error(
-      chalk.red(
-        "Error: filepath or slug not provided as a command-line argument.",
-      ),
-    );
-    process.exit(1);
-  }
+  const filepathOrSlug =
+    process.argv[2] || path.join(os.homedir(), ".continue", "config.yaml");
 
   if (!fs.existsSync(filepathOrSlug)) {
     // Assume it's a slug
