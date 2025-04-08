@@ -197,7 +197,11 @@ export class ConfigHandler {
   private async getNonPersonalHubOrg(
     org: OrganizationDescription,
   ): Promise<OrgWithProfiles> {
-    const profiles = await this.getHubProfiles(org.id);
+    const localProfiles = await this.getLocalProfiles({
+      includeGlobal: false,
+      includeWorkspace: true,
+    });
+    const profiles = [...(await this.getHubProfiles(org.id)), ...localProfiles];
     return this.rectifyProfilesForOrg(org, profiles);
   }
 
@@ -208,20 +212,29 @@ export class ConfigHandler {
     slug: undefined,
   };
   private async getPersonalHubOrg() {
-    const allLocalProfiles = await this.getAllLocalProfiles();
+    const localProfiles = await this.getLocalProfiles({
+      includeGlobal: true,
+      includeWorkspace: true,
+    });
     const hubProfiles = await this.getHubProfiles(null);
-    const profiles = [...hubProfiles, ...allLocalProfiles];
+    const profiles = [...hubProfiles, ...localProfiles];
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, profiles);
   }
 
   private async getLocalOrg() {
-    const allLocalProfiles = await this.getAllLocalProfiles();
-    return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, allLocalProfiles);
+    const localProfiles = await this.getLocalProfiles({
+      includeGlobal: true,
+      includeWorkspace: true,
+    });
+    return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, localProfiles);
   }
 
   async getTeamsOrg(org: OrganizationDescription): Promise<OrgWithProfiles> {
     const workspaces = await this.controlPlaneClient.listWorkspaces();
-    const profiles = await this.getAllLocalProfiles();
+    const localProfiles = await this.getLocalProfiles({
+      includeGlobal: true,
+      includeWorkspace: true,
+    });
     workspaces.forEach((workspace) => {
       const profileLoader = new ControlPlaneProfileLoader(
         workspace.id,
@@ -233,9 +246,9 @@ export class ConfigHandler {
         this.reloadConfig.bind(this),
       );
 
-      profiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
+      localProfiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
     });
-    return this.rectifyProfilesForOrg(org, profiles);
+    return this.rectifyProfilesForOrg(org, localProfiles);
   }
 
   private async rectifyProfilesForOrg(
@@ -282,24 +295,37 @@ export class ConfigHandler {
     };
   }
 
-  async getAllLocalProfiles() {
+  async getLocalProfiles(options: {
+    includeGlobal: boolean | undefined;
+    includeWorkspace: boolean | undefined;
+  }) {
     /**
      * Users can define as many local assistants as they want in a `.continue/assistants` folder
      */
-    const assistantFiles = await getAllAssistantFiles(this.ide);
-    const profiles = assistantFiles.map((assistant) => {
-      return new LocalProfileLoader(
-        this.ide,
-        this.ideSettingsPromise,
-        this.controlPlaneClient,
-        this.llmLogger,
-        assistant,
+    const localProfiles: ProfileLifecycleManager[] = [];
+
+    if (options.includeGlobal) {
+      localProfiles.push(this.globalLocalProfileManager);
+    }
+
+    if (options.includeWorkspace) {
+      const assistantFiles = await getAllAssistantFiles(this.ide);
+      const profiles = assistantFiles.map((assistant) => {
+        return new LocalProfileLoader(
+          this.ide,
+          this.ideSettingsPromise,
+          this.controlPlaneClient,
+          this.llmLogger,
+          assistant,
+        );
+      });
+      const localAssistantProfiles = profiles.map(
+        (profile) => new ProfileLifecycleManager(profile, this.ide),
       );
-    });
-    const localAssistantProfiles = profiles.map(
-      (profile) => new ProfileLifecycleManager(profile, this.ide),
-    );
-    return [this.globalLocalProfileManager, ...localAssistantProfiles];
+      localProfiles.push(...localAssistantProfiles);
+    }
+
+    return localProfiles;
   }
 
   //////////////////
