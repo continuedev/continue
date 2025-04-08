@@ -1,12 +1,12 @@
 {
   "name": "@continuedev/cli",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "bin": {
-    "continue": "./dist/index.js"
+    "continue-cli": "dist/index.js"
   },
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
@@ -17,7 +17,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@continuedev/config-yaml": "^1.0.78",
-    "@continuedev/hub": "file:../hub",
+    "@continuedev/hub": "^0.0.6",
     "@continuedev/openai-adapters": "^1.0.18",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "chalk": "^5.4.1",
