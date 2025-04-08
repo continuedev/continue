@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { ContinueHubClient } from "@continuedev/hub";
 import chalk from "chalk";
