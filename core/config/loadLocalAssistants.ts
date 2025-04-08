@@ -53,18 +53,32 @@ export async function getAssistantFilesFromDir(
   }
 }
 
+export interface LoadAssistantFilesOptions {
+  includeGlobal: boolean;
+  includeWorkspace: boolean;
+}
+
 export async function getAllAssistantFiles(
   ide: IDE,
+  options: LoadAssistantFilesOptions,
 ): Promise<{ path: string; content: string }[]> {
   const workspaceDirs = await ide.getWorkspaceDirs();
   let assistantFiles: { path: string; content: string }[] = [];
 
   let dirsToCheck = [ASSISTANTS_FOLDER];
-  const fullDirs = workspaceDirs
-    .map((dir) => dirsToCheck.map((d) => joinPathsToUri(dir, d)))
-    .flat();
+  let fullDirs: string[] = [];
 
-  fullDirs.push(localPathToUri(getGlobalAssistantsPath()));
+  // Workspace .continue/assistants
+  if (options.includeWorkspace) {
+    fullDirs = workspaceDirs
+      .map((dir) => dirsToCheck.map((d) => joinPathsToUri(dir, d)))
+      .flat();
+  }
+
+  // ~/.continue/assistants
+  if (options.includeGlobal) {
+    fullDirs.push(localPathToUri(getGlobalAssistantsPath()));
+  }
 
   assistantFiles = (
     await Promise.all(fullDirs.map((dir) => getAssistantFilesFromDir(ide, dir)))

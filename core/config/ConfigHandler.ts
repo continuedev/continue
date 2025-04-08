@@ -17,7 +17,10 @@ import {
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
-import { getAllAssistantFiles } from "./loadLocalAssistants.js";
+import {
+  getAllAssistantFiles,
+  LoadAssistantFilesOptions,
+} from "./loadLocalAssistants.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   LOCAL_ONBOARDING_PROVIDER_TITLE,
@@ -295,10 +298,7 @@ export class ConfigHandler {
     };
   }
 
-  async getLocalProfiles(options: {
-    includeGlobal: boolean | undefined;
-    includeWorkspace: boolean | undefined;
-  }) {
+  async getLocalProfiles(options: LoadAssistantFilesOptions) {
     /**
      * Users can define as many local assistants as they want in a `.continue/assistants` folder
      */
@@ -309,7 +309,7 @@ export class ConfigHandler {
     }
 
     if (options.includeWorkspace) {
-      const assistantFiles = await getAllAssistantFiles(this.ide);
+      const assistantFiles = await getAllAssistantFiles(this.ide, options);
       const profiles = assistantFiles.map((assistant) => {
         return new LocalProfileLoader(
           this.ide,
