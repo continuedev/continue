@@ -104,8 +104,12 @@ export const PROVIDER_TOOL_SUPPORT: Record<
         "athene-v2",
         "nemotron",
         "llama3-groq",
-        "granite3",
-        "granite-3",
+        // Granite.Code: while the Granite models support tool calling,
+        // the results are not currently good enough to enable agent mode.
+        // This can be overriden in config.yaml by specifying
+        //   capabilities: [tool_use]
+        // "granite3",
+        // "granite-3",
         "aya-expanse",
         "firefunction-v2",
         "mistral",
