@@ -1,5 +1,5 @@
 import {
-  ArrowPathRoundedSquareIcon,
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   BuildingOfficeIcon,
   ChevronDownIcon,
@@ -291,6 +291,20 @@ export default function AssistantSelect() {
 
         <Transition>
           <ListboxOptions className="pb-0">
+            <div className="flex gap-1.5 px-2.5 py-1">
+              <span>Assistants</span>
+              <div
+                className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  refreshProfiles();
+                  buttonRef.current?.click();
+                }}
+              >
+                <ArrowPathIcon className="h-2.5 w-2.5" />
+              </div>
+            </div>
+
             <div
               className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
             >
@@ -314,8 +328,9 @@ export default function AssistantSelect() {
                 }}
               />
 
-              <div className="flex flex-row items-center justify-between gap-1 pr-2">
+              <div className="flex flex-row items-center">
                 <ListboxOption
+                  className="w-full"
                   value={"new-assistant"}
                   fontSizeModifier={-2}
                   onClick={session ? onNewAssistant : () => login(false)}
@@ -330,24 +345,6 @@ export default function AssistantSelect() {
                     New Assistant
                   </div>
                 </ListboxOption>
-                <div
-                  className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    refreshProfiles();
-                    buttonRef.current?.click();
-                  }}
-                >
-                  <ArrowPathRoundedSquareIcon className="h-3 w-3" />
-                  <span
-                    className="hidden sm:flex"
-                    style={{
-                      fontSize: tinyFont,
-                    }}
-                  >
-                    Refresh
-                  </span>
-                </div>
               </div>
 
               <div

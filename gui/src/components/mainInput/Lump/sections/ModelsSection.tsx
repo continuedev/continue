@@ -5,11 +5,7 @@ import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import {
-  selectDefaultModel,
-  setDefaultModel,
-  updateConfig,
-} from "../../../../redux/slices/configSlice";
+import { updateConfig } from "../../../../redux/slices/configSlice";
 import { isJetBrains } from "../../../../util";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
@@ -20,7 +16,6 @@ export function ModelsSection() {
 
   const config = useAppSelector((state) => state.config.config);
   const jetbrains = isJetBrains();
-  const selectedChatModel = useAppSelector(selectDefaultModel);
 
   function handleRoleUpdate(role: ModelRole, model: ModelDescription | null) {
     if (!selectedProfile) {
@@ -43,14 +38,6 @@ export function ModelsSection() {
     });
   }
 
-  // TODO use handleRoleUpdate for chat
-  function handleChatModelSelection(model: ModelDescription | null) {
-    if (!model) {
-      return;
-    }
-    dispatch(setDefaultModel({ title: model.title }));
-  }
-
   return (
     <div>
       <div className="text-[${getFontSize() - 1}px] grid grid-cols-1 gap-x-2 gap-y-1 pb-2 sm:grid-cols-[auto_1fr]">
@@ -58,16 +45,8 @@ export function ModelsSection() {
           displayName="Chat"
           description="Used in the chat interface"
           models={config.modelsByRole.chat}
-          selectedModel={
-            selectedChatModel
-              ? {
-                  title: selectedChatModel.title,
-                  provider: selectedChatModel.provider,
-                  model: selectedChatModel.model,
-                }
-              : null
-          }
-          onSelect={(model) => handleChatModelSelection(model)}
+          selectedModel={config.selectedModelByRole.chat}
+          onSelect={(model) => handleRoleUpdate("chat", model)}
         />
         <ModelRoleSelector
           displayName="Autocomplete"

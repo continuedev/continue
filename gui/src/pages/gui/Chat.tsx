@@ -31,7 +31,7 @@ import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
   newSession,
@@ -105,7 +105,7 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);

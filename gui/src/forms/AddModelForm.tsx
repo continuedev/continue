@@ -7,14 +7,14 @@ import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
 import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
+import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 import {
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
+import { setSelectedChatModel } from "../redux/slices/configSlice";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
-import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
-import { setDefaultModel } from "../redux/slices/configSlice";
-import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -115,7 +115,7 @@ function AddModelForm({
       profileId: "local",
     });
 
-    dispatch(setDefaultModel({ title: model.title, force: true }));
+    dispatch(setSelectedChatModel({ title: model.title, force: true }));
 
     onDone();
   }

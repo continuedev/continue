@@ -3,13 +3,13 @@ import { ChatMessage } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
   selectUseTools,
   setToolGenerated,
-  streamUpdate
+  streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
@@ -29,7 +29,7 @@ export const streamNormalInput = createAsyncThunk<
   ) => {
     // Gather state
     const state = getState();
-    const defaultModel = selectDefaultModel(state);
+    const defaultModel = selectSelectedChatModel(state);
     const toolSettings = state.ui.toolSettings;
     const toolGroupSettings = state.ui.toolGroupSettings;
     const streamAborter = state.session.streamAborter;

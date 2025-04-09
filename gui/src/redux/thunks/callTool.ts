@@ -5,7 +5,7 @@ import { EditToolArgs } from "core/tools/definitions/editFile";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
   cancelToolCall,
@@ -30,7 +30,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
 
-    const defaultModel = selectDefaultModel(state);
+    const defaultModel = selectSelectedChatModel(state);
     if (!defaultModel) {
       throw new Error("No model selected");
     }

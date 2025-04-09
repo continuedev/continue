@@ -14,8 +14,8 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
 import { useAppSelector } from "../../redux/hooks";
 import {
-  selectDefaultModel,
-  setDefaultModel,
+  selectSelectedChatModel,
+  setSelectedChatModel,
 } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
@@ -123,7 +123,7 @@ function ModelOption({
 
 function ModelSelect() {
   const dispatch = useDispatch();
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const allModels = useAppSelector((state) => state.config.config.models);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
@@ -164,7 +164,7 @@ function ModelSelect() {
         let nextIndex = (currentIndex + 1 * direction) % options.length;
         if (nextIndex < 0) nextIndex = options.length - 1;
         const newModelTitle = options[nextIndex].value;
-        dispatch(setDefaultModel({ title: newModelTitle }));
+        dispatch(setSelectedChatModel({ title: newModelTitle }));
       }
     };
 
@@ -199,7 +199,7 @@ function ModelSelect() {
     <Listbox
       onChange={async (val: string) => {
         if (val === defaultModel?.title) return;
-        dispatch(setDefaultModel({ title: val }));
+        dispatch(setSelectedChatModel({ title: val }));
       }}
     >
       <div className="relative flex">

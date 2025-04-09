@@ -11,7 +11,7 @@ import {
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
-import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../../redux/slices/configSlice";
 import {
   selectApplyStateByStreamId,
   selectIsInEditMode,
@@ -81,7 +81,7 @@ export default function StepContainerPreToolbar(
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
 
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
 
   async function onClickApply() {
     if (!defaultModel) {

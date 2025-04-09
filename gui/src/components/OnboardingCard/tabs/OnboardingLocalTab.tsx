@@ -9,12 +9,12 @@ import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { setSelectedChatModel } from "../../../redux/slices/configSlice";
+import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
-import { setDefaultModel } from "../../../redux/slices/configSlice";
-import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 
 const OLLAMA_CHECK_INTERVAL_MS = 3000;
 
@@ -137,7 +137,7 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
 
             // Set the selected model to the local chat model
             dispatch(
-              setDefaultModel({
+              setSelectedChatModel({
                 title: LOCAL_ONBOARDING_CHAT_TITLE,
                 force: true, // Because it doesn't exist in the webview's config object yet
               }),

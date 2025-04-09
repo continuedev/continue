@@ -20,15 +20,14 @@ export function rectifySelectedModelsFromGlobalContext(
 
   let fellBack = false;
 
-  // chat and summarize not implemented yet
-  // default chat model is stored in GUI still
-
+  // summarize not implemented yet
   const roles: ModelRole[] = [
     "autocomplete",
     "apply",
     "edit",
     "embed",
     "rerank",
+    "chat",
   ];
 
   for (const role of roles) {

@@ -2,7 +2,7 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, ContextItem } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   addContextItemsAtIndex,
   setActive,
@@ -27,7 +27,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
       streamThunkWrapper(async () => {
         const state = getState();
         const initialHistory = state.session.history;
-        const defaultModel = selectDefaultModel(state);
+        const defaultModel = selectSelectedChatModel(state);
 
         if (!defaultModel) {
           throw new Error("No model selected");

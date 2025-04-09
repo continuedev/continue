@@ -9,7 +9,7 @@ import {
 } from "core";
 import * as URI from "uri-js";
 import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import { ThunkApiType } from "../store";
 
 export const gatherContext = createAsyncThunk<
@@ -37,7 +37,7 @@ export const gatherContext = createAsyncThunk<
     { dispatch, extra, getState },
   ) => {
     const state = getState();
-    const defaultModel = selectDefaultModel(state);
+    const defaultModel = selectSelectedChatModel(state);
     const defaultContextProviders =
       state.config.config.experimental?.defaultContext ?? [];
 

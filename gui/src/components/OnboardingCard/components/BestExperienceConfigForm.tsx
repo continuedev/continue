@@ -5,7 +5,7 @@ import { Button, Input, InputSubtext, lightGray } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import { setDefaultModel } from "../../../redux/slices/configSlice";
+import { setSelectedChatModel } from "../../../redux/slices/configSlice";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 
 const { anthropic, mistral } = providers;
@@ -61,7 +61,9 @@ function BestExperienceConfigForm({
       model: repoMapConfig,
       role: "repoMapFileSelection",
     });
-    dispatch(setDefaultModel({ title: chatModelConfig.title, force: true }));
+    dispatch(
+      setSelectedChatModel({ title: chatModelConfig.title, force: true }),
+    );
 
     if (!!autocompleteApiKey) {
       await ideMessenger.request("addAutocompleteModel", {
