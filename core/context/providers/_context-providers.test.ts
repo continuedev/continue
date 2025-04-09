@@ -45,7 +45,7 @@ async function getContextProviderExtras(
     config,
     embeddingsProvider: config.selectedModelByRole.embed,
     fetch: fetch,
-    llm: config.models[0],
+    llm: config.modelsByRole.chat[0],
     reranker: config.selectedModelByRole.rerank,
     selectedCode: [],
   };

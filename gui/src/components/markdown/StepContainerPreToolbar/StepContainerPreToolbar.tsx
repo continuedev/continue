@@ -11,7 +11,7 @@ import {
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
-import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../../redux/slices/configSlice";
 import {
   selectApplyStateByStreamId,
   selectIsInEditMode,
@@ -31,6 +31,7 @@ const TopDiv = styled.div`
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
+  margin-top: 8px !important;
   background-color: ${vscEditorBackground};
   min-width: 0;
 `;
@@ -81,10 +82,10 @@ export default function StepContainerPreToolbar(
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
 
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
 
   async function onClickApply() {
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       return;
     }
 
@@ -97,7 +98,6 @@ export default function StepContainerPreToolbar(
       streamId: props.codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
-      curSelectedModelTitle: defaultModel.title,
     });
   }
 

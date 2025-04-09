@@ -14,6 +14,7 @@ import {
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
+import { getSecureID } from "../utils/getSecureID.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
@@ -427,6 +428,9 @@ class Bedrock extends BaseLLM {
 
     // Standard text message
     if (typeof message.content === "string") {
+      if (addCaching) {
+        message.content += getSecureID();
+      }
       const content: any[] = [{ text: message.content }];
       if (addCaching) {
         content.push({ cachePoint: { type: "default" } });
@@ -444,6 +448,9 @@ class Bedrock extends BaseLLM {
       // Process all parts first
       message.content.forEach((part) => {
         if (part.type === "text") {
+          if (addCaching) {
+            part.text += getSecureID();
+          }
           content.push({ text: part.text });
         } else if (part.type === "imageUrl" && part.imageUrl) {
           try {

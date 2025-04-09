@@ -114,6 +114,7 @@ models:
   - name: My Voyage Reranker
     provider: voyage
     apiKey: <YOUR_VOYAGE_KEY>
+    roles:
       - rerank
 
   - name: My Starcoder

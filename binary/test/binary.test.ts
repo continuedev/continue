@@ -234,15 +234,17 @@ describe("Test Suite", () => {
       result: { config },
     } = await messenger.request("config/getSerializedProfileInfo", undefined);
 
-    expect(config!.models.some((m) => m.title === model.title)).toBe(true);
+    expect(config!.modelsByRole.chat.some((m) => m.title === model.title)).toBe(
+      true,
+    );
 
     await messenger.request("config/deleteModel", { title: model.title });
     const {
       result: { config: configAfterDelete },
     } = await messenger.request("config/getSerializedProfileInfo", undefined);
-    expect(configAfterDelete!.models.some((m) => m.title === model.title)).toBe(
-      false,
-    );
+    expect(
+      configAfterDelete!.modelsByRole.chat.some((m) => m.title === model.title),
+    ).toBe(false);
   });
 
   it("should make an LLM completion", async () => {

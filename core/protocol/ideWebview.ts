@@ -17,7 +17,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     {
       text: string;
       streamId: string;
-      curSelectedModelTitle: string;
       filepath?: string;
       toolCallId?: string;
     },
@@ -52,7 +51,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     {
       prompt: MessageContent;
       range: RangeInFileWithContents;
-      selectedModelTitle: string;
     },
     void,
   ];

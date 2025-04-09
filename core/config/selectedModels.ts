@@ -20,15 +20,14 @@ export function rectifySelectedModelsFromGlobalContext(
 
   let fellBack = false;
 
-  // chat and summarize not implemented yet
-  // default chat model is stored in GUI still
-
+  // summarize not implemented yet
   const roles: ModelRole[] = [
     "autocomplete",
     "apply",
     "edit",
     "embed",
     "rerank",
+    "chat",
   ];
 
   for (const role of roles) {
@@ -52,8 +51,12 @@ export function rectifySelectedModelsFromGlobalContext(
       fellBack = true;
     }
 
-    if (newModel?.getConfigurationStatus() !== LLMConfigurationStatuses.VALID) {
-      break;
+    // Currently only check for configuration status for apply
+    if (
+      role === "apply" &&
+      newModel?.getConfigurationStatus() !== LLMConfigurationStatuses.VALID
+    ) {
+      continue;
     }
 
     configCopy.selectedModelByRole[role] = newModel;

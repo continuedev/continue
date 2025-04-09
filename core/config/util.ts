@@ -95,7 +95,7 @@ export function getModelByRole<T extends keyof ExperimentalModelRoles>(
     return undefined;
   }
 
-  const matchingModel = config.models.find(
+  const matchingModel = config.modelsByRole.chat.find(
     (model) => model.title === roleTitle,
   );
 

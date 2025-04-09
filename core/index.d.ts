@@ -1393,7 +1393,6 @@ export interface Config {
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ILLM[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1417,7 +1416,6 @@ export interface ContinueConfig {
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
