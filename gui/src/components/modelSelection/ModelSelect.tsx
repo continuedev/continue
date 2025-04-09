@@ -121,7 +121,7 @@ function ModelOption({
 function ModelSelect() {
   const dispatch = useAppDispatch();
   const selectedChatModel = useAppSelector(selectSelectedChatModel);
-  const allModels = useAppSelector(
+  const allChatModels = useAppSelector(
     (state) => state.config.config.modelsByRole.chat,
   );
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -141,7 +141,7 @@ function ModelSelect() {
 
   useEffect(() => {
     setOptions(
-      allModels
+      allChatModels
         .filter((m) => !m.roles || m.roles.includes("chat"))
         .map((model) => {
           return {
@@ -151,7 +151,7 @@ function ModelSelect() {
           };
         }),
     );
-  }, [allModels]);
+  }, [allChatModels]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
