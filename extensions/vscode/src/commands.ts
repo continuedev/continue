@@ -389,11 +389,6 @@ const getCommandsMap: (
       promptText = `${config.systemMessage}\n\n${promptText}`;
     }
     
-    // Add explicit instruction to respond in Hindi
-    if (!promptText.toLowerCase().includes("hindi")) {
-      promptText = "Always respond in Hindi.\n\n" + promptText;
-    }
-    
     await verticalDiffManager.streamEdit(
       promptText,
       llm,
