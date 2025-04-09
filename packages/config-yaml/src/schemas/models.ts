@@ -47,6 +47,8 @@ export const completionOptionsSchema = z.object({
   topK: z.number().optional(),
   stop: z.array(z.string()).optional(),
   n: z.number().optional(),
+  reasoning: z.boolean().optional(),
+  reasoningBudgetTokens: z.number().optional(),
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
