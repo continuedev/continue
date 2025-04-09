@@ -3,7 +3,11 @@ import {
   ConfigResult,
   FQSN,
   FullSlug,
+  PlatformClient,
+  RegistryClient,
   SecretResult,
+  unrollAssistant,
+  unrollAssistantFromContent,
 } from "@continuedev/config-yaml";
 import { IContinueHubClient } from "./IContinueHubClient.js";
 
@@ -11,20 +15,29 @@ interface ContinueHubClientOptions {
   apiKey?: string;
   apiBase?: string;
   fetchOptions?: RequestInit;
+  onPremProxyUrl?: string;
+  orgScopeId: string | null;
+  currentUserSlug: string;
 }
 
 export class ContinueHubClient implements IContinueHubClient {
   private readonly apiKey?: string;
   private readonly apiBase: string;
   private readonly fetchOptions?: RequestInit;
+  private readonly onPremProxyUrl?: string | null;
+  private readonly orgScopeId: string | null;
+  private readonly currentUserSlug: string;
 
   constructor(options: ContinueHubClientOptions) {
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase ?? "https://api.continue.dev";
     this.fetchOptions = options.fetchOptions;
+    this.onPremProxyUrl = options.onPremProxyUrl;
+    this.orgScopeId = options.orgScopeId;
+    this.currentUserSlug = options.currentUserSlug;
   }
 
-  private async request(path: string, init: RequestInit): Promise<Response> {
+  async request(path: string, init: RequestInit): Promise<Response> {
     const url = new URL(path, this.apiBase).toString();
 
     const finalInit: RequestInit = {
@@ -117,5 +130,61 @@ export class ContinueHubClient implements IContinueHubClient {
     } catch (e) {
       return null;
     }
+  }
+
+  async loadAssistant(slug: string): Promise<AssistantUnrolled> {
+    const result = await unrollAssistant(
+      slug,
+      new RegistryClient(this.apiKey, this.apiBase),
+      {
+        currentUserSlug: this.currentUserSlug,
+        onPremProxyUrl: this.onPremProxyUrl ?? null,
+        orgScopeId: this.orgScopeId,
+        platformClient: new LocalPlatformClient(this.orgScopeId, this),
+        renderSecrets: true,
+      },
+    );
+
+    return result;
+  }
+
+  async loadAssistantFromContent(content: string): Promise<AssistantUnrolled> {
+    const result = await unrollAssistantFromContent(
+      {
+        ownerSlug: "",
+        packageSlug: "",
+        versionSlug: "",
+      },
+      content,
+      new RegistryClient(this.apiKey, this.apiBase),
+      {
+        currentUserSlug: this.currentUserSlug,
+        onPremProxyUrl: this.onPremProxyUrl ?? null,
+        orgScopeId: this.orgScopeId,
+        platformClient: new LocalPlatformClient(this.orgScopeId, this),
+        renderSecrets: true,
+      },
+    );
+
+    return result;
+  }
+}
+
+class LocalPlatformClient implements PlatformClient {
+  constructor(
+    private orgScopeId: string | null,
+    private readonly hubClient: ContinueHubClient,
+  ) {}
+
+  async resolveFQSNs(fqsns: FQSN[]): Promise<(SecretResult | undefined)[]> {
+    if (fqsns.length === 0) {
+      return [];
+    }
+
+    const resp = await this.hubClient.request("ide/sync-secrets", {
+      method: "POST",
+      body: JSON.stringify({ fqsns, orgScopeId: this.orgScopeId }),
+    });
+    return (await resp.json()) as any;
   }
 }

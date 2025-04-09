@@ -7,10 +7,16 @@
     "tsc:watch:binary": "tsc --project binary/tsconfig.json --watch --noEmit --pretty"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
     "@typescript-eslint/parser": "^7.8.0",
     "eslint-plugin-import": "^2.29.1",
     "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.8"
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "@types/readline-sync": "^1.4.8",
+    "dotenv": "^16.4.7",
+    "openai": "^4.90.0",
+    "readline-sync": "^1.4.10"
   }
 }
