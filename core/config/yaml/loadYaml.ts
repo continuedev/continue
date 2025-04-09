@@ -157,7 +157,7 @@ async function configYamlToContinueConfig(
       summarize: [],
     },
     selectedModelByRole: {
-      chat: null, // not currently used - defaultModel on GUI is used
+      chat: null,
       edit: null, // not currently used
       apply: null,
       embed: null,

@@ -1,41 +1,31 @@
 import { ModelRole } from "@continuedev/config-yaml";
 import { ModelDescription } from "core";
-import { useContext } from "react";
 import { useAuth } from "../../../../context/Auth";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import { updateConfig } from "../../../../redux/slices/configSlice";
+import { updateSelectedModelByRole } from "../../../../redux/thunks";
 import { isJetBrains } from "../../../../util";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 export function ModelsSection() {
   const { selectedProfile } = useAuth();
   const dispatch = useAppDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
 
   const config = useAppSelector((state) => state.config.config);
   const jetbrains = isJetBrains();
 
   function handleRoleUpdate(role: ModelRole, model: ModelDescription | null) {
-    if (!selectedProfile) {
+    if (!model) {
       return;
     }
-    // Optimistic update
+
     dispatch(
-      updateConfig({
-        ...config,
-        selectedModelByRole: {
-          ...config.selectedModelByRole,
-          [role]: model,
-        },
+      updateSelectedModelByRole({
+        role,
+        selectedProfile,
+        modelTitle: model.title,
       }),
     );
-    ideMessenger.post("config/updateSelectedModel", {
-      profileId: selectedProfile.id,
-      role,
-      title: model?.title ?? null,
-    });
   }
 
   return (

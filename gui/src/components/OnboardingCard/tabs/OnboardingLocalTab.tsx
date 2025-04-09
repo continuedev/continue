@@ -6,11 +6,12 @@ import {
   LOCAL_ONBOARDING_PROVIDER_TITLE,
 } from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 import { Button } from "../..";
+import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { setSelectedChatModel } from "../../../redux/slices/configSlice";
+import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
+import { updateSelectedModelByRole } from "../../../redux/thunks";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
@@ -23,13 +24,14 @@ interface OnboardingLocalTabProps {
 }
 
 function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const { submitOnboarding } = useSubmitOnboarding("Local", isDialog);
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
     string[]
   >([]);
+  const { selectedProfile } = useAuth();
 
   const [isOllamaConnected, setIsOllamaConnected] = useState(false);
 
@@ -135,11 +137,11 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
               dispatch(setShowDialog(false));
             }
 
-            // Set the selected model to the local chat model
             dispatch(
-              setSelectedChatModel({
-                title: LOCAL_ONBOARDING_CHAT_TITLE,
-                force: true, // Because it doesn't exist in the webview's config object yet
+              updateSelectedModelByRole({
+                selectedProfile,
+                role: "chat",
+                modelTitle: LOCAL_ONBOARDING_CHAT_TITLE,
               }),
             );
           }}

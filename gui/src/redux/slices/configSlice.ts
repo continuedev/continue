@@ -78,24 +78,6 @@ export const configSlice = createSlice({
     ) => {
       state.config = config;
     },
-    setSelectedChatModel: (
-      state,
-      { payload }: PayloadAction<{ title: string; force?: boolean }>,
-    ) => {
-      const model = state.config.modelsByRole["chat"].find(
-        (model) => model.title === payload.title,
-      );
-
-      if (!model && !payload.force) return;
-
-      state.config = {
-        ...state.config,
-        selectedModelByRole: {
-          ...state.config.selectedModelByRole,
-          chat: model ?? null,
-        },
-      };
-    },
   },
   selectors: {
     selectSelectedChatModelContextLength: (state): number => {
@@ -113,8 +95,7 @@ export const configSlice = createSlice({
   },
 });
 
-export const { updateConfig, setConfigResult, setSelectedChatModel } =
-  configSlice.actions;
+export const { updateConfig, setConfigResult } = configSlice.actions;
 
 export const {
   selectSelectedChatModelContextLength,
