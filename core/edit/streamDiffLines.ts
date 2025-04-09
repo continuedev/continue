@@ -26,38 +26,14 @@ function constructPrompt(
   // Create a messages array with system message at the beginning
   const messages: ChatMessage[] = [];
   
-  // Combine systemMessage and rules into one system message
-  // Make sure to prioritize language rules like 'Always respond in Hindi'
+  // Get the systemMessage from the LLM
   let systemContent = llm.systemMessage ?? "";
   
-  // Extract and prioritize language-related rules first
-  let languageRules = "";
-  let otherRules = "";
-  
-  // Add rules if they exist
+  // Add rules if they exist (without special handling for language rules)
   if (llm.rules && llm.rules.length > 0) {
-    // Process rules and prioritize language-related ones
-    llm.rules.forEach(rule => {
-      const ruleText = typeof rule === "string" ? rule : rule.rule;
-      if (ruleText.toLowerCase().includes("language") || 
-          ruleText.toLowerCase().includes("respond in") || 
-          ruleText.toLowerCase().includes("hindi") || 
-          ruleText.toLowerCase().includes("english")) {
-        languageRules += ruleText + "\n";
-      } else {
-        otherRules += ruleText + "\n";
-      }
-    });
-    
-    // Combine system message with rules, putting language rules first
-    let rulesContent = "";
-    if (languageRules) {
-      rulesContent += languageRules.trim();
-    }
-    if (otherRules) {
-      if (rulesContent) rulesContent += "\n\n";
-      rulesContent += otherRules.trim();
-    }
+    const rulesContent = llm.rules
+      .map(rule => typeof rule === "string" ? rule : rule.rule)
+      .join("\n");
     
     // Combine systemMessage and rules
     if (systemContent && rulesContent) {
