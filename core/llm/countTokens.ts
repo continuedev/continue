@@ -4,6 +4,7 @@ import {
   ChatMessage,
   MessageContent,
   MessagePart,
+  Tool,
   UserChatMessage,
 } from "../index.js";
 
@@ -15,7 +16,6 @@ import {
   LlamaAsyncEncoder,
 } from "./asyncEncoder.js";
 import { autodetectTemplateType } from "./autodetect.js";
-import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
 import { isRuleActive } from "./rules/isRuleActive.js";
 import { extractPathsFromCodeBlocks } from "./utils/extractPathsFromCodeBlocks.js";
@@ -220,6 +220,8 @@ function pruneStringFromTop(
   return encoding.decode(tokens.slice(tokens.length - maxTokens));
 }
 
+const MAX_TOKEN_BUFFER_FOR_SAFETY = 3000;
+
 function pruneRawPromptFromTop(
   modelName: string,
   contextLength: number,
@@ -227,20 +229,20 @@ function pruneRawPromptFromTop(
   tokensForCompletion: number,
 ): string {
   const maxTokens =
-    contextLength - tokensForCompletion - TOKEN_BUFFER_FOR_SAFETY;
+    contextLength - tokensForCompletion - Math.max(MAX_TOKEN_BUFFER_FOR_SAFETY, contextLength*;
   return pruneStringFromTop(modelName, maxTokens, prompt);
 }
 
-function pruneRawPromptFromBottom(
-  modelName: string,
-  contextLength: number,
-  prompt: string,
-  tokensForCompletion: number,
-): string {
-  const maxTokens =
-    contextLength - tokensForCompletion - TOKEN_BUFFER_FOR_SAFETY;
-  return pruneStringFromBottom(modelName, maxTokens, prompt);
-}
+// function pruneRawPromptFromBottom(
+//   modelName: string,
+//   contextLength: number,
+//   prompt: string,
+//   tokensForCompletion: number,
+// ): string {
+//   const maxTokens =
+//     contextLength - tokensForCompletion - TOKEN_BUFFER_FOR_SAFETY;
+//   return pruneStringFromBottom(modelName, maxTokens, prompt);
+// }
 
 function summarize(message: ChatMessage): string {
   return `${renderChatMessage(message).substring(0, 100)}...`;
@@ -514,7 +516,7 @@ function compileChatMessages({
   maxTokens,
   supportsImages,
   prompt,
-  functions,
+  tools,
   systemMessage,
   rules,
 }: {
@@ -524,7 +526,7 @@ function compileChatMessages({
   maxTokens: number;
   supportsImages: boolean;
   prompt: string | undefined;
-  functions: any[] | undefined;
+  tools: Tool[] | undefined;
   systemMessage: string | undefined;
   rules: Rule[];
 }): ChatMessage[] {
