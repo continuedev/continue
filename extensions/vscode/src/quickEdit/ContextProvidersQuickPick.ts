@@ -43,7 +43,7 @@ export async function getContextProvidersString(
           ide,
           embeddingsProvider: config.selectedModelByRole.embed,
           reranker: config.selectedModelByRole.rerank,
-          llm: config.models[0],
+          llm: config.selectedModelByRole.chat,
           fullInput: "",
           selectedCode: [],
           fetch: (url, init) =>
