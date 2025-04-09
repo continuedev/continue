@@ -92,6 +92,7 @@ export default async function doLoadConfig(options: {
       controlPlaneClient,
       orgScopeId,
       packageIdentifier,
+      workOsAccessToken,
     });
     newConfig = result.config;
     errors = result.errors;
