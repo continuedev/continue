@@ -8,7 +8,10 @@ const DEFAULT_SYSTEM_MESSAGE = `<important_rules>
 const CANCELED_TOOL_CALL_MESSAGE =
   "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
 
-export function constructMessages(history: ChatHistoryItem[]): ChatMessage[] {
+export function constructMessages(
+  history: ChatHistoryItem[],
+  baseChatSystemMessage: string | undefined,
+): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
@@ -16,7 +19,7 @@ export function constructMessages(history: ChatHistoryItem[]): ChatMessage[] {
 
   msgs.push({
     role: "system",
-    content: DEFAULT_SYSTEM_MESSAGE,
+    content: baseChatSystemMessage ?? DEFAULT_SYSTEM_MESSAGE,
   });
 
   for (let i = 0; i < filteredHistory.length; i++) {

@@ -194,7 +194,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this.baseSystemMessage = options.baseSystemMessage;
+    this.systemMessage = options.systemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -305,7 +305,7 @@ export abstract class BaseLLM implements ILLM {
       supportsImages: this.supportsImages(),
       prompt: undefined,
       functions,
-      baseSystemMessage: this.baseSystemMessage,
+      systemMessage: this.systemMessage,
       rules: this.rules ?? [],
     });
   }
@@ -317,12 +317,41 @@ export abstract class BaseLLM implements ILLM {
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
-    const baseSystemMessage = this.baseSystemMessage;
-    if (baseSystemMessage) {
-      msgs.unshift({ role: "system", content: baseSystemMessage });
+    const systemMessage = this.systemMessage;
+    if (systemMessage) {
+      msgs.unshift({ role: "system", content: systemMessage });
     }
 
     return this.templateMessages(msgs);
+  }
+
+  private _compilePromptForLog(
+    prompt: string,
+    completionOptions: CompletionOptions,
+  ): string {
+    const completionOptionsLog = JSON.stringify(
+      {
+        contextLength: this.contextLength,
+        ...completionOptions,
+      },
+      null,
+      2,
+    );
+
+    let requestOptionsLog = "";
+    if (this.requestOptions) {
+      requestOptionsLog = JSON.stringify(this.requestOptions, null, 2);
+    }
+
+    return (
+      "##### Completion options #####\n" +
+      completionOptionsLog +
+      (requestOptionsLog
+        ? "\n\n##### Request options #####\n" + requestOptionsLog
+        : "") +
+      "\n\n##### Prompt #####\n" +
+      prompt
+    );
   }
 
   private _logEnd(
@@ -1143,13 +1172,13 @@ export abstract class BaseLLM implements ILLM {
   public renderPromptTemplate(
     template: PromptTemplate,
     history: ChatMessage[],
-    templateVariables: Record<string, string>,
+    otherData: Record<string, string>,
     canPutWordsInModelsMouth = false,
   ): string | ChatMessage[] {
     if (typeof template === "string") {
       const data: any = {
         history: history,
-        ...templateVariables,
+        ...otherData,
       };
       if (history.length > 0 && history[0].role === "system") {
         data.system_message = history.shift()!.content;
@@ -1159,7 +1188,7 @@ export abstract class BaseLLM implements ILLM {
       return compiledTemplate(data);
     }
     const rendered = template(history, {
-      ...templateVariables,
+      ...otherData,
       supportsCompletions: this.supportsCompletions() ? "true" : "false",
       supportsPrefill: this.supportsPrefill() ? "true" : "false",
     });

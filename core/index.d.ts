@@ -592,9 +592,6 @@ export interface LLMOptions {
   maxEmbeddingChunkSize?: number;
   maxEmbeddingBatchSize?: number;
 
-  // Chat options
-  baseChatSystemMessage?: string;
-
   // Cloudflare options
   accountId?: string;
 
@@ -1043,6 +1040,7 @@ export interface ModelDescription {
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
+  baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   cacheBehavior?: CacheBehavior;

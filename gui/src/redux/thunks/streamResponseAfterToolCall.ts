@@ -59,7 +59,10 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         dispatch(setActive());
 
         const updatedHistory = getState().session.history;
-        const messages = constructMessages([...updatedHistory]);
+        const messages = constructMessages(
+          [...updatedHistory],
+          selectedChatModel?.baseChatSystemMessage,
+        );
         unwrapResult(await dispatch(streamNormalInput({ messages })));
       }),
     );
