@@ -15,7 +15,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@continuedev/config-yaml": "^1.0.79",
+    "@continuedev/config-yaml": "file:../packages/config-yaml",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.0.18",
     "@reduxjs/toolkit": "^2.3.0",
