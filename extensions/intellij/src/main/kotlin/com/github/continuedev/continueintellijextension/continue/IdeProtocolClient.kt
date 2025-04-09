@@ -504,17 +504,6 @@ class IdeProtocolClient(
                                             applyCodeBlockModel = selectedModels?.get("chat") as? Map<*, *>
                                         }
 
-                                          // If neither "apply" nor "chat" models are available in selectedModelByRole,
-                                        // fallback to modelsByRole.chat[0]
-                                        if (applyCodeBlockModel == null) {
-                                            val modelsByRole = config["modelsByRole"] as? Map<*, *>
-                                            val chatModels = modelsByRole?.get("chat") as? List<*>
-                                            if (chatModels != null && chatModels.isNotEmpty()) {
-                                                applyCodeBlockModel = chatModels[0] as? Map<*, *>
-                                            }
-                                        }
-
-
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)
                                         } else {

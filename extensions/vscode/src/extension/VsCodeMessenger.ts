@@ -180,9 +180,7 @@ export class VsCodeMessenger {
       }
 
       let llm =
-        config.selectedModelByRole.apply ??
-        config.selectedModelByRole.chat ??
-        config.modelsByRole.chat[0];
+        config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
 
       if (!llm) {
         vscode.window.showErrorMessage(
