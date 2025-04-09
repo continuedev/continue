@@ -6,7 +6,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useIsOSREnabled from "../../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../../hooks/useUpdatingRef";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../../redux/slices/configSlice";
 import { selectIsInEditMode } from "../../../redux/slices/sessionSlice";
 import InputToolbar, { ToolbarOptions } from "../InputToolbar";
 import { ComboBoxItem } from "../types";
@@ -46,7 +46,7 @@ export function TipTapEditor(props: TipTapEditorProps) {
 
   const isOSREnabled = useIsOSREnabled();
 
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const historyLength = useAppSelector((store) => store.session.history.length);

@@ -11,10 +11,8 @@ import {
   IContextProvider,
   IDE,
   IdeSettings,
-  ILLM,
   ILLMLogger,
 } from "../index.js";
-import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
 import {
@@ -22,10 +20,6 @@ import {
   getAllDotContinueYamlFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
-import {
-  LOCAL_ONBOARDING_CHAT_MODEL,
-  LOCAL_ONBOARDING_PROVIDER_TITLE,
-} from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
@@ -176,22 +170,22 @@ export class ConfigHandler {
 
     return await Promise.all(
       assistants.map(async (assistant) => {
-        const profileLoader = await PlatformProfileLoader.create(
-          {
+        const profileLoader = await PlatformProfileLoader.create({
+          configResult: {
             ...assistant.configResult,
             config: assistant.configResult.config,
           },
-          assistant.ownerSlug,
-          assistant.packageSlug,
-          assistant.iconUrl,
-          assistant.configResult.config?.version ?? "latest",
-          this.controlPlaneClient,
-          this.ide,
-          this.ideSettingsPromise,
-          this.llmLogger,
-          assistant.rawYaml,
-          orgScopeId,
-        );
+          ownerSlug: assistant.ownerSlug,
+          packageSlug: assistant.packageSlug,
+          iconUrl: assistant.iconUrl,
+          versionSlug: assistant.configResult.config?.version ?? "latest",
+          controlPlaneClient: this.controlPlaneClient,
+          ide: this.ide,
+          ideSettingsPromise: this.ideSettingsPromise,
+          llmLogger: this.llmLogger,
+          rawYaml: assistant.rawYaml,
+          orgScopeId: orgScopeId,
+        });
 
         return new ProfileLifecycleManager(profileLoader, this.ide);
       }),
@@ -502,27 +496,6 @@ export class ConfigHandler {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
-  }
-
-  // Only used till we move to using selectedModelByRole.chat
-  async llmFromTitle(title?: string): Promise<ILLM> {
-    const { config } = await this.loadConfig();
-    const model = config?.models.find((m) => m.title === title);
-    if (!model) {
-      if (title === LOCAL_ONBOARDING_PROVIDER_TITLE) {
-        // Special case, make calls to Ollama before we have it in the config
-        const ollama = new Ollama({
-          model: LOCAL_ONBOARDING_CHAT_MODEL,
-        });
-        return ollama;
-      } else if (config?.models?.length) {
-        return config?.models[0];
-      }
-
-      throw new Error("No model found");
-    }
-
-    return model;
   }
 
   // Ancient method of adding custom providers through vs code

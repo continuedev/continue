@@ -18,7 +18,6 @@ import { stripImages } from "core/util/messageContent";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
-import { ILLM } from "core";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -180,19 +179,14 @@ export class VsCodeMessenger {
         return;
       }
 
-      let llm: ILLM | null | undefined = config.selectedModelByRole.apply;
+      let llm =
+        config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
 
       if (!llm) {
-        llm = config.models.find(
-          (model) => model.title === data.curSelectedModelTitle,
+        vscode.window.showErrorMessage(
+          `No model with roles "apply" or "chat" found in config.`,
         );
-
-        if (!llm) {
-          vscode.window.showErrorMessage(
-            `Model ${data.curSelectedModelTitle} not found in config.`,
-          );
-          return;
-        }
+        return;
       }
 
       const fastLlm = getModelByRole(config, "repoMapFileSelection") ?? llm;
@@ -229,7 +223,7 @@ export class VsCodeMessenger {
 
         await verticalDiffManager.streamEdit(
           prompt,
-          llm.title,
+          llm,
           data.streamId,
           undefined,
           undefined,
@@ -292,9 +286,19 @@ export class VsCodeMessenger {
       const { start, end } = msg.data.range.range;
       const verticalDiffManager = await verticalDiffManagerPromise;
 
+      const configHandler = await configHandlerPromise;
+      const { config } = await configHandler.loadConfig();
+
+      const model =
+        config?.selectedModelByRole.edit ?? config?.selectedModelByRole.chat;
+
+      if (!model) {
+        throw new Error("No Edit or Chat model selected");
+      }
+
       const fileAfterEdit = await verticalDiffManager.streamEdit(
         stripImages(prompt),
-        msg.data.selectedModelTitle,
+        model,
         "edit",
         undefined,
         undefined,

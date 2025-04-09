@@ -88,7 +88,6 @@ export default async function doLoadConfig(options: {
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
       overrideConfigYaml,
       controlPlaneClient,
       orgScopeId,
@@ -269,7 +268,7 @@ async function injectControlPlaneProxyInfo(
     }
   });
 
-  config.models.forEach((model) => {
+  config.modelsByRole.chat.forEach((model) => {
     if (model.providerName === "continue-proxy") {
       (model as ContinueProxy).controlPlaneProxyInfo = info;
     }

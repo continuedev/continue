@@ -48,10 +48,20 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
 export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.union([schema, blockItemWrapperSchema(schema)]);
 
+export const commonMetadataSchema = z.object({
+  tags: z.string().optional(),
+  sourceCodeUrl: z.string().optional(),
+  description: z.string().optional(),
+  author: z.string().optional(),
+  license: z.string().optional(),
+  iconUrl: z.string().optional(),
+});
+
 export const baseConfigYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
   schema: z.string().optional(),
+  metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
 });
 
 export const configYamlSchema = baseConfigYamlSchema.extend({

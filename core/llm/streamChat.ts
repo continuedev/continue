@@ -23,19 +23,22 @@ export async function* llmStreamChat(
     void TTS.kill();
   }
 
-  const { title, legacySlashCommandData, completionOptions, messages } =
-    msg.data;
+  const { legacySlashCommandData, completionOptions, messages } = msg.data;
 
-  const model = await configHandler.llmFromTitle(title);
+  const model = config.selectedModelByRole.chat;
+
+  if (!model) {
+    throw new Error("No chat model selected");
+  }
 
   // Log to return in case of error
   const errorPromptLog = {
-    modelTitle: model.title ?? model.model,
+    modelTitle: model?.title ?? model?.model,
     completion: "",
     prompt: "",
     completionOptions: {
       ...msg.data.completionOptions,
-      model: model.model,
+      model: model?.model,
     },
   };
 

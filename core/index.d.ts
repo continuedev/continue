@@ -1,5 +1,6 @@
 import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -162,6 +163,8 @@ export interface ILLM extends LLMOptions {
     otherData: Record<string, string>,
     canPutWordsInModelsMouth?: boolean,
   ): string | ChatMessage[];
+
+  getConfigurationStatus(): LLMConfigurationStatuses;
 }
 
 export interface ModelInstaller {
@@ -1061,6 +1064,7 @@ export interface ModelDescription {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
+  configurationStatus?: LLMConfigurationStatuses;
 }
 
 export interface EmbedOptions {
@@ -1389,7 +1393,6 @@ export interface Config {
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ILLM[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1413,7 +1416,6 @@ export interface ContinueConfig {
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
