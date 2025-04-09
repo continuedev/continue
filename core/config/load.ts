@@ -423,6 +423,7 @@ async function intermediateToFinalConfig(
     if (!embedConfig) {
       return null;
     }
+    // config.ts-injected ILLM
     if ("providerName" in embedConfig) {
       return embedConfig;
     }
@@ -464,6 +465,7 @@ async function intermediateToFinalConfig(
     if (!rerankingConfig) {
       return null;
     }
+    // config.ts-injected ILLM
     if ("providerName" in rerankingConfig) {
       return rerankingConfig;
     }
@@ -488,6 +490,7 @@ async function intermediateToFinalConfig(
       };
       return new rerankerClass(llmOptions, (url: string | URL, init: any) =>
         fetchwithRequestOptions(url, init, {
+          ...config.requestOptions,
           ...params?.requestOptions,
         }),
       );
