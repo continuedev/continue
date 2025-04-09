@@ -645,6 +645,7 @@ jobs:
       - install-vscode
       - vscode-checks
       - core-tests
+      - package-tests
       - vscode-get-test-file-matrix
       - vscode-package-extension
       - vscode-download-e2e-dependencies
