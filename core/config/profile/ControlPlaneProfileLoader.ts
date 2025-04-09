@@ -62,18 +62,19 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       )) as any);
     const serializedConfig: SerializedContinueConfig = settings;
 
-    return await doLoadConfig(
-      this.ide,
-      this.ideSettingsPromise,
-      this.controlPlaneClient,
-      this.llmLogger,
-      serializedConfig,
-      undefined,
-      undefined,
-      this.workspaceId,
-      undefined,
-      null,
-    );
+    return await doLoadConfig({
+      ide: this.ide,
+      ideSettingsPromise: this.ideSettingsPromise,
+      controlPlaneClient: this.controlPlaneClient,
+      llmLogger: this.llmLogger,
+      overrideConfigJson: serializedConfig,
+      profileId: this.workspaceId,
+      orgScopeId: null,
+      packageIdentifier: {
+        uriType: "file",
+        filePath: "", // TODO
+      },
+    });
   }
 
   setIsActive(isActive: boolean): void {}

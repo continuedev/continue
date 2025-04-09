@@ -5,7 +5,7 @@ import {
   DEFAULT_IGNORE_FILETYPES,
 } from "../indexing/ignore";
 import { walkDir } from "../indexing/walkDir";
-import { getGlobalAssistantsPath } from "../util/paths";
+import { getGlobalFolderWithName } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 import { joinPathsToUri } from "../util/uri";
 
@@ -67,16 +67,16 @@ export function getDotContinueSubDirs(
 ): string[] {
   let fullDirs: string[] = [];
 
-  // Workspace .continue/assistants
+  // Workspace .continue/<subDirName>
   if (options.includeWorkspace) {
     fullDirs = workspaceDirs.map((dir) =>
       joinPathsToUri(dir, ".continue", subDirName),
     );
   }
 
-  // ~/.continue/assistants
+  // ~/.continue/<subDirName>
   if (options.includeGlobal) {
-    fullDirs.push(localPathToUri(getGlobalAssistantsPath()));
+    fullDirs.push(localPathToUri(getGlobalFolderWithName(subDirName)));
   }
 
   return fullDirs;

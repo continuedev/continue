@@ -89,21 +89,23 @@ export default class PlatformProfileLoader implements IProfileLoader {
       };
     }
 
-    const results = await doLoadConfig(
-      this.ide,
-      this.ideSettingsPromise,
-      this.controlPlaneClient,
-      this.llmLogger,
-      undefined,
-      this.configResult.config,
-      {
-        ownerSlug: this.ownerSlug,
-        packageSlug: this.packageSlug,
+    const results = await doLoadConfig({
+      ide: this.ide,
+      ideSettingsPromise: this.ideSettingsPromise,
+      controlPlaneClient: this.controlPlaneClient,
+      llmLogger: this.llmLogger,
+      overrideConfigYaml: this.configResult.config,
+      profileId: this.description.id,
+      orgScopeId: this.orgScopeId,
+      packageIdentifier: {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: this.ownerSlug,
+          packageSlug: this.packageSlug,
+          versionSlug: this.versionSlug,
+        },
       },
-      this.description.id,
-      undefined,
-      this.orgScopeId,
-    );
+    });
 
     return {
       config: results.config,

@@ -5,6 +5,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   ModelRole,
+  PackageIdentifier,
 } from "@continuedev/config-yaml";
 
 import {
@@ -34,20 +35,31 @@ import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
-import { PlatformConfigMetadata } from "./PlatformProfileLoader";
+export default async function doLoadConfig(options: {
+  ide: IDE;
+  ideSettingsPromise: Promise<IdeSettings>;
+  controlPlaneClient: ControlPlaneClient;
+  llmLogger: ILLMLogger;
+  overrideConfigJson?: SerializedContinueConfig;
+  overrideConfigYaml?: AssistantUnrolled;
+  profileId: string;
+  overrideConfigYamlByPath?: string;
+  orgScopeId: string | null;
+  packageIdentifier: PackageIdentifier;
+}): Promise<ConfigResult<ContinueConfig>> {
+  const {
+    ide,
+    ideSettingsPromise,
+    controlPlaneClient,
+    llmLogger,
+    overrideConfigJson,
+    overrideConfigYaml,
+    profileId,
+    overrideConfigYamlByPath,
+    orgScopeId,
+    packageIdentifier,
+  } = options;
 
-export default async function doLoadConfig(
-  ide: IDE,
-  ideSettingsPromise: Promise<IdeSettings>,
-  controlPlaneClient: ControlPlaneClient,
-  llmLogger: ILLMLogger,
-  overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  profileId: string,
-  overrideConfigYamlByPath: string | undefined,
-  orgScopeId: string | null,
-): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
@@ -70,7 +82,7 @@ export default async function doLoadConfig(
   let configLoadInterrupted = false;
 
   if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
-    const result = await loadContinueConfigFromYaml(
+    const result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
       ideInfo,
@@ -78,11 +90,10 @@ export default async function doLoadConfig(
       llmLogger,
       workOsAccessToken,
       overrideConfigYaml,
-      platformConfigMetadata,
       controlPlaneClient,
-      configYamlPath,
       orgScopeId,
-    );
+      packageIdentifier,
+    });
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;

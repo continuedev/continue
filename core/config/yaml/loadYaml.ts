@@ -1,5 +1,3 @@
-import fs from "node:fs";
-
 import {
   AssistantUnrolled,
   BLOCK_TYPES,
@@ -7,12 +5,13 @@ import {
   ConfigValidationError,
   isAssistantUnrolledNonNullable,
   ModelRole,
-  parseAssistantUnrolled,
+  PackageIdentifier,
   RegistryClient,
-  unrollAssistantFromContent,
+  unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
+import { dirname } from "node:path";
 
 import {
   ContinueConfig,
@@ -37,41 +36,64 @@ import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandF
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { allTools } from "../../tools";
 import { GlobalContext } from "../../util/GlobalContext";
-import { getConfigYamlPath } from "../../util/paths";
 import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
-import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
 
-async function loadConfigYaml(
-  rawYaml: string,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  controlPlaneClient: ControlPlaneClient,
-  orgScopeId: string | null,
-  ideSettings: IdeSettings,
-  ide: IDE,
-): Promise<ConfigResult<AssistantUnrolled>> {
+async function loadConfigYaml(options: {
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  controlPlaneClient: ControlPlaneClient;
+  orgScopeId: string | null;
+  ideSettings: IdeSettings;
+  ide: IDE;
+  packageIdentifier: PackageIdentifier;
+}): Promise<ConfigResult<AssistantUnrolled>> {
+  const {
+    overrideConfigYaml,
+    controlPlaneClient,
+    orgScopeId,
+    ideSettings,
+    ide,
+    packageIdentifier,
+  } = options;
+
+  // Add local .continue blocks
+  const allLocalBlocks: PackageIdentifier[] = [];
+  for (const blockType of BLOCK_TYPES) {
+    const localBlocks = await getAllDotContinueYamlFiles(
+      ide,
+      { includeGlobal: true, includeWorkspace: true },
+      blockType,
+    );
+    allLocalBlocks.push(
+      ...localBlocks.map((b) => ({
+        uriType: "file" as const,
+        filePath: b.path,
+      })),
+    );
+  }
+
   let config =
     overrideConfigYaml ??
     // This is how we allow use of blocks locally
-    (await unrollAssistantFromContent(
-      {
-        ownerSlug: "",
-        packageSlug: "",
-        versionSlug: "",
-      },
-      rawYaml,
-      new RegistryClient(
-        await controlPlaneClient.getAccessToken(),
-        getControlPlaneEnvSync(
+    (await unrollAssistant(
+      packageIdentifier,
+      new RegistryClient({
+        accessToken: await controlPlaneClient.getAccessToken(),
+        apiBase: getControlPlaneEnvSync(
           ideSettings.continueTestEnvironment,
           ideSettings.enableControlServerBeta,
         ).CONTROL_PLANE_URL,
-      ),
+        rootPath:
+          packageIdentifier.uriType === "file"
+            ? dirname(getCleanUriPath(packageIdentifier.filePath))
+            : undefined,
+      }),
       {
         currentUserSlug: "",
         onPremProxyUrl: null,
@@ -82,6 +104,7 @@ async function loadConfigYaml(
           ide,
         ),
         renderSecrets: true,
+        injectBlocks: allLocalBlocks,
       },
     ));
 
@@ -110,17 +133,27 @@ async function loadConfigYaml(
   };
 }
 
-async function configYamlToContinueConfig(
-  config: AssistantUnrolled,
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  allowFreeTrial: boolean = true,
-): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+async function configYamlToContinueConfig(options: {
+  config: AssistantUnrolled;
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  workOsAccessToken: string | undefined;
+  allowFreeTrial?: boolean;
+}): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+  let {
+    config,
+    ide,
+    ideSettings,
+    ideInfo,
+    uniqueId,
+    llmLogger,
+    allowFreeTrial,
+  } = options;
+  allowFreeTrial = allowFreeTrial ?? true;
+
   const localErrors: ConfigValidationError[] = [];
 
   const continueConfig: ContinueConfig = {
@@ -232,7 +265,6 @@ async function configYamlToContinueConfig(
         uniqueId,
         ideSettings,
         llmLogger,
-        platformConfigMetadata,
         config: continueConfig,
       });
 
@@ -422,35 +454,39 @@ async function configYamlToContinueConfig(
   return { config: continueConfig, errors: localErrors };
 }
 
-export async function loadContinueConfigFromYaml(
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  controlPlaneClient: ControlPlaneClient,
-  configYamlPath: string | undefined,
-  orgScopeId: string | null,
-): Promise<ConfigResult<ContinueConfig>> {
-  const rawYaml =
-    overrideConfigYaml === undefined
-      ? fs.readFileSync(
-          configYamlPath ?? getConfigYamlPath(ideInfo.ideType),
-          "utf-8",
-        )
-      : "";
+export async function loadContinueConfigFromYaml(options: {
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  workOsAccessToken: string | undefined;
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  controlPlaneClient: ControlPlaneClient;
+  orgScopeId: string | null;
+  packageIdentifier: PackageIdentifier;
+}): Promise<ConfigResult<ContinueConfig>> {
+  const {
+    ide,
+    ideSettings,
+    ideInfo,
+    uniqueId,
+    llmLogger,
+    workOsAccessToken,
+    overrideConfigYaml,
+    controlPlaneClient,
+    orgScopeId,
+    packageIdentifier,
+  } = options;
 
-  const configYamlResult = await loadConfigYaml(
-    rawYaml,
+  const configYamlResult = await loadConfigYaml({
     overrideConfigYaml,
     controlPlaneClient,
     orgScopeId,
     ideSettings,
     ide,
-  );
+    packageIdentifier,
+  });
 
   if (!configYamlResult.config || configYamlResult.configLoadInterrupted) {
     return {
@@ -460,40 +496,16 @@ export async function loadContinueConfigFromYaml(
     };
   }
 
-  // Add local .continue blocks
-  for (const blockType of BLOCK_TYPES) {
-    const localBlocks = await getAllDotContinueYamlFiles(
-      ide,
-      { includeGlobal: true, includeWorkspace: true },
-      blockType,
-    );
-
-    for (const block of localBlocks) {
-      const parsedYaml = parseAssistantUnrolled(block.content);
-
-      const inlineBlock = parsedYaml[blockType]?.[0];
-      if (inlineBlock) {
-        configYamlResult.config[blockType] = [
-          ...(configYamlResult.config[blockType] ?? []),
-          inlineBlock as any,
-        ];
-      }
-    }
-
-    configYamlResult.config;
-  }
-
   const { config: continueConfig, errors: localErrors } =
-    await configYamlToContinueConfig(
-      configYamlResult.config,
+    await configYamlToContinueConfig({
+      config: configYamlResult.config,
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,
       workOsAccessToken,
-      platformConfigMetadata,
-    );
+    });
 
   try {
     const systemPromptDotFile = await getSystemPromptDotFile(ide);

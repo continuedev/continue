@@ -2,7 +2,8 @@ import * as fs from "fs";
 import {
   decodeSecretLocation,
   FQSN,
-  FullSlug,
+  PackageIdentifier,
+  packageIdentifierToShorthandSlug,
   PlatformClient,
   PlatformSecretStore,
   Registry,
@@ -90,18 +91,24 @@ describe("E2E Scenarios", () => {
   };
 
   const registry: Registry = {
-    getContent: async function (fullSlug: FullSlug): Promise<string> {
+    getContent: async function (id: PackageIdentifier): Promise<string> {
+      const slug = packageIdentifierToShorthandSlug(id);
       return fs
-        .readFileSync(
-          `./src/__tests__/packages/${fullSlug.ownerSlug}/${fullSlug.packageSlug}.yaml`,
-        )
+        .readFileSync(`./src/__tests__/packages/${slug}.yaml`)
         .toString();
     },
   };
 
   it("should unroll assistant with a single block that doesn't exist", async () => {
     const unrolledConfig = await unrollAssistant(
-      "test-org/assistant-with-non-existing-block",
+      {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: "test-org",
+          packageSlug: "assistant-with-non-existing-block",
+          versionSlug: "latest",
+        },
+      },
       registry,
       {
         renderSecrets: true,
@@ -117,7 +124,14 @@ describe("E2E Scenarios", () => {
 
   it("should correctly unroll assistant", async () => {
     const unrolledConfig = await unrollAssistant(
-      "test-org/assistant",
+      {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: "test-org",
+          packageSlug: "assistant",
+          versionSlug: "latest",
+        },
+      },
       registry,
       {
         renderSecrets: true,
@@ -195,7 +209,14 @@ describe("E2E Scenarios", () => {
 
   it("should correctly unroll assistant with injected blocks", async () => {
     const unrolledConfig = await unrollAssistant(
-      "test-org/assistant",
+      {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: "test-org",
+          packageSlug: "assistant",
+          versionSlug: "latest",
+        },
+      },
       registry,
       {
         renderSecrets: true,
@@ -206,9 +227,12 @@ describe("E2E Scenarios", () => {
         // Add an injected block
         injectBlocks: [
           {
-            ownerSlug: "test-org",
-            packageSlug: "rules",
-            versionSlug: "latest",
+            uriType: "slug",
+            fullSlug: {
+              ownerSlug: "test-org",
+              packageSlug: "rules",
+              versionSlug: "latest",
+            },
           },
         ],
       },
