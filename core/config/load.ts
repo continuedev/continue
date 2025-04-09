@@ -8,7 +8,6 @@ import {
   ConfigValidationError,
   ModelRole,
 } from "@continuedev/config-yaml";
-import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as JSONC from "comment-json";
 import * as tar from "tar";
 
@@ -38,7 +37,6 @@ import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index";
-import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
@@ -46,9 +44,8 @@ import CustomContextProviderClass from "../context/providers/CustomContextProvid
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
 import { useHub } from "../control-plane/env";
-import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
-import { llmFromDescription } from "../llm/llms";
+import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
 import { LLMReranker } from "../llm/llms/llm";
@@ -435,38 +432,32 @@ async function intermediateToFinalConfig({
   function getEmbeddingsILLM(
     embedConfig: EmbeddingsProviderDescription | ILLM | undefined,
   ): ILLM | null {
-    if (!embedConfig) {
-      return null;
-    }
-    if ("providerName" in embedConfig) {
-      return embedConfig;
-    }
-    const { provider, ...options } = embedConfig;
-    const embeddingsProviderClass = allEmbeddingsProviders[provider];
-    if (embeddingsProviderClass) {
-      if (
-        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-      ) {
-        return new embeddingsProviderClass();
-      } else {
-        const llmOptions: LLMOptions = {
-          model: options.model ?? "UNSPECIFIED",
-          ...options,
-        };
-        return new embeddingsProviderClass(
-          llmOptions,
-          (url: string | URL, init: any) =>
-            fetchwithRequestOptions(url, init, {
-              ...config.requestOptions,
-              ...options.requestOptions,
-            }),
-        );
+    if (embedConfig) {
+      // config.ts-injected ILLM
+      if ("providerName" in embedConfig) {
+        return embedConfig;
       }
-    } else {
-      errors.push({
-        fatal: false,
-        message: `Embeddings provider ${provider} not found. Using default`,
-      });
+      const { provider, ...options } = embedConfig;
+      if (provider === "transformers.js") {
+        return new TransformersJsEmbeddingsProvider();
+      } else {
+        const cls = LLMClasses.find((c) => c.providerName === provider);
+        if (cls) {
+          const llmOptions: LLMOptions = {
+            model: options.model ?? "UNSPECIFIED",
+            ...options,
+          };
+          return new cls(llmOptions);
+        } else {
+          errors.push({
+            fatal: false,
+            message: `Embeddings provider ${provider} not found`,
+          });
+        }
+      }
+    }
+    if (ideInfo.ideType === "vscode") {
+      return new TransformersJsEmbeddingsProvider();
     }
     return null;
   }
@@ -479,11 +470,11 @@ async function intermediateToFinalConfig({
     if (!rerankingConfig) {
       return null;
     }
+    // config.ts-injected ILLM
     if ("providerName" in rerankingConfig) {
       return rerankingConfig;
     }
     const { name, params } = config.reranker as RerankerDescription;
-    const rerankerClass = AllRerankers[name];
 
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
@@ -496,16 +487,20 @@ async function intermediateToFinalConfig({
       } else {
         return new LLMReranker(llm);
       }
-    } else if (rerankerClass) {
-      const llmOptions: LLMOptions = {
-        model: "rerank-2",
-        ...params,
-      };
-      return new rerankerClass(llmOptions, (url: string | URL, init: any) =>
-        fetchwithRequestOptions(url, init, {
-          ...params?.requestOptions,
-        }),
-      );
+    } else {
+      const cls = LLMClasses.find((c) => c.providerName === name);
+      if (cls) {
+        const llmOptions: LLMOptions = {
+          model: params?.model,
+          ...params,
+        };
+        return new cls(llmOptions);
+      } else {
+        errors.push({
+          fatal: false,
+          message: `Unknown reranking provider ${name}`,
+        });
+      }
     }
     return null;
   }

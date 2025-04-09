@@ -13,7 +13,6 @@ import {
   unrollAssistantFromContent,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
-import { fetchwithRequestOptions } from "@continuedev/fetch";
 
 import {
   ContinueConfig,
@@ -24,14 +23,12 @@ import {
   ILLMLogger,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
-import { AllRerankers } from "../../context/allRerankers";
 import { MCPManagerSingleton } from "../../context/mcp";
 import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
 import { ControlPlaneClient } from "../../control-plane/client";
-import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
@@ -274,59 +271,25 @@ async function configYamlToContinueConfig({
       }
 
       if (model.roles?.includes("embed")) {
-        const { provider, ...options } = model;
-        const embeddingsProviderClass = allEmbeddingsProviders[provider];
-        if (embeddingsProviderClass) {
-          if (
-            embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-          ) {
+        const { provider } = model;
+        if (provider === "transformers.js") {
+          if (ideInfo.ideType === "vscode") {
             continueConfig.modelsByRole.embed.push(
-              new embeddingsProviderClass(),
+              new TransformersJsEmbeddingsProvider(),
             );
           } else {
-            continueConfig.modelsByRole.embed.push(
-              new embeddingsProviderClass(
-                {
-                  ...options,
-                  title: options.name,
-                },
-                (url: string | URL, init: any) =>
-                  fetchwithRequestOptions(url, init, {
-                    ...options.requestOptions,
-                  }),
-              ),
-            );
+            localErrors.push({
+              fatal: false,
+              message: `Transformers.js embeddings provider not supported in this IDE.`,
+            });
           }
         } else {
-          localErrors.push({
-            fatal: false,
-            message: `Unsupported embeddings model provider found: ${provider}`,
-          });
+          continueConfig.modelsByRole.embed.push(...llms);
         }
       }
 
       if (model.roles?.includes("rerank")) {
-        const { provider, ...options } = model;
-        const rerankerClass = AllRerankers[provider];
-        if (rerankerClass) {
-          continueConfig.modelsByRole.rerank.push(
-            new rerankerClass(
-              {
-                ...options,
-                title: options.name,
-              },
-              (url: string | URL, init: any) =>
-                fetchwithRequestOptions(url, init, {
-                  ...options.requestOptions,
-                }),
-            ),
-          );
-        } else {
-          localErrors.push({
-            fatal: false,
-            message: `Unsupported reranking model provider found: ${provider}`,
-          });
-        }
+        continueConfig.modelsByRole.rerank.push(...llms);
       }
     } catch (e) {
       localErrors.push({
