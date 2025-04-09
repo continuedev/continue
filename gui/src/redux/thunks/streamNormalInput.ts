@@ -29,7 +29,8 @@ export const streamNormalInput = createAsyncThunk<
   ) => {
     // Gather state
     const state = getState();
-    const defaultModel = selectSelectedChatModel(state);
+    const selectedChatModel = selectSelectedChatModel(state);
+
     const toolSettings = state.ui.toolSettings;
     const toolGroupSettings = state.ui.toolGroupSettings;
     const streamAborter = state.session.streamAborter;

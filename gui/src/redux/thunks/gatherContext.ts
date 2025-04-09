@@ -37,7 +37,8 @@ export const gatherContext = createAsyncThunk<
     { dispatch, extra, getState },
   ) => {
     const state = getState();
-    const defaultModel = selectSelectedChatModel(state);
+    const selectedChatModel = selectSelectedChatModel(state);
+
     const defaultContextProviders =
       state.config.config.experimental?.defaultContext ?? [];
 

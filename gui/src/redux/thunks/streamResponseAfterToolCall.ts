@@ -27,7 +27,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
       streamThunkWrapper(async () => {
         const state = getState();
         const initialHistory = state.session.history;
-        const defaultModel = selectSelectedChatModel(state);
+        const selectedChatModel = selectSelectedChatModel(state);
 
         if (!defaultModel) {
           throw new Error("No model selected");

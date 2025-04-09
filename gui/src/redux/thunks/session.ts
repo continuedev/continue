@@ -167,7 +167,8 @@ export const saveCurrentSession = createAsyncThunk<
     // Now save previous session and update chat title if relevant
     let title = state.session.title;
     if (title === NEW_SESSION_TITLE) {
-      const defaultModel = selectSelectedChatModel(state);
+      const selectedChatModel = selectSelectedChatModel(state);
+
       if (!state.config.config?.disableSessionTitles && defaultModel) {
         let assistantResponse = state.session.history
           ?.filter((h) => h.message.role === "assistant")[0]

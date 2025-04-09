@@ -30,7 +30,8 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
 
-    const defaultModel = selectSelectedChatModel(state);
+    const selectedChatModel = selectSelectedChatModel(state);
+
     if (!defaultModel) {
       throw new Error("No model selected");
     }

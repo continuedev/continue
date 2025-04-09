@@ -34,7 +34,8 @@ export const streamResponseThunk = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const defaultModel = selectSelectedChatModel(state);
+        const selectedChatModel = selectSelectedChatModel(state);
+
         const slashCommands = state.config.config.slashCommands || [];
         const inputIndex = index ?? state.session.history.length; // Either given index or concat to end
 

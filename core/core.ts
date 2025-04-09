@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
@@ -33,6 +32,7 @@ import { TTS } from "./util/tts";
 import {
   DiffLine,
   IdeSettings,
+  ModelDescription,
   RangeInFile,
   type ContextItemId,
   type IDE,
@@ -494,32 +494,7 @@ export class Core {
 
     on("completeOnboarding", this.handleCompleteOnboarding);
 
-    on("addAutocompleteModel", (msg) => {
-      const model = msg.data.model;
-      editConfigFile(
-        (config) => {
-          return {
-            ...config,
-            tabAutocompleteModel: model,
-          };
-        },
-        (config) => ({
-          ...config,
-          models: [
-            ...(config.models ?? []),
-            {
-              name: model.title,
-              provider: model.provider,
-              model: model.model,
-              apiKey: model.apiKey,
-              roles: ["autocomplete"],
-              apiBase: model.apiBase,
-            },
-          ],
-        }),
-      );
-      void this.configHandler.reloadConfig();
-    });
+    on("addAutocompleteModel", this.handleAddAutocompleteModel);
 
     on("stats/getTokensPerDay", async (msg) => {
       const rows = await DevDataSqliteDb.getTokensPerDay();
@@ -530,7 +505,6 @@ export class Core {
       return rows;
     });
 
-    // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config || config.disableIndexing) {
@@ -616,11 +590,7 @@ export class Core {
       }
     });
 
-    on("files/opened", async ({ data }) => {
-      if (data?.uris?.length) {
-        // Do something on files opened
-      }
-    });
+    on("files/opened", async () => {});
 
     // Docs, etc. indexing
     on("indexing/reindex", async (msg) => {
@@ -635,7 +605,6 @@ export class Core {
     });
     on("indexing/setPaused", async (msg) => {
       if (msg.data.type === "docs") {
-        // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
     });
     on("docs/initStatuses", async (msg) => {
@@ -740,16 +709,45 @@ export class Core {
         throw new Error("No chat model selected");
       }
 
-      // Count the size of the file tokenwise
       const tokens = countTokens(item.content);
 
-      // File exceeds context length of the model
       if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
         return true;
       }
 
       return false;
     });
+  }
+
+  private handleAddAutocompleteModel(
+    msg: Message<{
+      model: ModelDescription;
+    }>,
+  ) {
+    const model = msg.data.model;
+    editConfigFile(
+      (config) => {
+        return {
+          ...config,
+          tabAutocompleteModel: model,
+        };
+      },
+      (config) => ({
+        ...config,
+        models: [
+          ...(config.models ?? []),
+          {
+            name: model.title,
+            provider: model.provider,
+            model: model.model,
+            apiKey: model.apiKey,
+            roles: ["autocomplete"],
+            apiBase: model.apiBase,
+          },
+        ],
+      }),
+    );
+    void this.configHandler.reloadConfig();
   }
 
   private async handleFilesChanged({
