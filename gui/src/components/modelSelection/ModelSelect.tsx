@@ -121,7 +121,9 @@ function ModelOption({
 function ModelSelect() {
   const dispatch = useAppDispatch();
   const selectedChatModel = useAppSelector(selectSelectedChatModel);
-  const allModels = useAppSelector((state) => state.config.config.models);
+  const allModels = useAppSelector(
+    (state) => state.config.config.modelsByRole.chat,
+  );
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);

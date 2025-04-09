@@ -20,7 +20,6 @@ const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
     },
   ],
   contextProviders: [],
-  models: [],
   tools: [],
   mcpServerStatuses: [],
   usePlatform: true,

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as URI from "uri-js";
 import { v4 as uuidv4 } from "uuid";
@@ -60,7 +61,13 @@ async function* streamDiffLinesGenerator(
   msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
 ): AsyncGenerator<DiffLine> {
   const data = msg.data;
-  const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
+  const llm = (await configHandler.loadConfig()).config?.selectedModelByRole
+    .chat;
+
+  if (!llm) {
+    throw new Error("No chat model selected");
+  }
+
   for await (const diffLine of streamDiffLines(
     data.prefix,
     data.highlighted,
@@ -430,7 +437,13 @@ export class Core {
     );
 
     on("llm/complete", async (msg) => {
-      const model = await this.configHandler.llmFromTitle(msg.data.title);
+      const model = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!model) {
+        throw new Error("No chat model selected");
+      }
+
       const completion = await model.complete(
         msg.data.prompt,
         new AbortController().signal,
@@ -449,9 +462,13 @@ export class Core {
     });
 
     on("chatDescriber/describe", async (msg) => {
-      const currentModel = await this.configHandler.llmFromTitle(
-        msg.data.selectedModelTitle,
-      );
+      const currentModel = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!currentModel) {
+        throw new Error("No chat model selected");
+      }
+
       return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
 
@@ -681,7 +698,12 @@ export class Core {
         throw new Error(`Tool ${toolCall.function.name} not found`);
       }
 
-      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+      const llm = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!llm) {
+        throw new Error("No chat model selected");
+      }
 
       const contextItems = await callTool(
         tool,
@@ -711,7 +733,12 @@ export class Core {
         return false;
       }
 
-      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+      const llm = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!llm) {
+        throw new Error("No chat model selected");
+      }
 
       // Count the size of the file tokenwise
       const tokens = countTokens(item.content);
@@ -789,8 +816,13 @@ export class Core {
     }
 
     const model =
-      config.models.find((model) => model.title === msg.data.title) ??
-      config.models.find((model) => model.title?.startsWith(msg.data.title));
+      config.modelsByRole.chat.find(
+        (model) => model.title === msg.data.title,
+      ) ??
+      config.modelsByRole.chat.find((model) =>
+        model.title?.startsWith(msg.data.title),
+      );
+
     try {
       if (model) {
         return await model.listModels();
@@ -854,10 +886,15 @@ export class Core {
       return [];
     }
 
-    const { name, query, fullInput, selectedCode, selectedModelTitle } =
-      msg.data;
+    const { name, query, fullInput, selectedCode } = msg.data;
 
-    const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+    const llm = (await this.configHandler.loadConfig()).config
+      ?.selectedModelByRole.chat;
+
+    if (!llm) {
+      throw new Error("No chat model selected");
+    }
+
     const provider =
       config.contextProviders?.find(
         (provider) => provider.description.title === name,

@@ -125,7 +125,6 @@ async function configYamlToContinueConfig(
   const localErrors: ConfigValidationError[] = [];
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    models: [],
     tools: [...allTools],
     mcpServerStatuses: [],
     systemMessage: undefined,
@@ -221,10 +220,6 @@ async function configYamlToContinueConfig(
         platformConfigMetadata,
         config: continueConfig,
       });
-
-      if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
-        continueConfig.models.push(...llms);
-      }
 
       if (model.roles?.includes("chat")) {
         continueConfig.modelsByRole.chat.push(...llms);
@@ -323,7 +318,7 @@ async function configYamlToContinueConfig(
 
   if (allowFreeTrial) {
     // Obtain auth token (iff free trial being used)
-    const freeTrialModels = continueConfig.models.filter(
+    const freeTrialModels = continueConfig.modelsByRole.chat.filter(
       (model) => model.providerName === "free-trial",
     );
     if (freeTrialModels.length > 0) {
@@ -338,14 +333,15 @@ async function configYamlToContinueConfig(
           message: `Failed to obtain GitHub auth token for free trial:\n${e instanceof Error ? e.message : e}`,
         });
         // Remove free trial models
-        continueConfig.models = continueConfig.models.filter(
-          (model) => model.providerName !== "free-trial",
-        );
+        continueConfig.modelsByRole.chat =
+          continueConfig.modelsByRole.chat.filter(
+            (model) => model.providerName !== "free-trial",
+          );
       }
     }
   } else {
     // Remove free trial models
-    continueConfig.models = continueConfig.models.filter(
+    continueConfig.modelsByRole.chat = continueConfig.modelsByRole.chat.filter(
       (model) => model.providerName !== "free-trial",
     );
   }

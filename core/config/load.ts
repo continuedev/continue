@@ -504,7 +504,6 @@ async function intermediateToFinalConfig(
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    models,
     tools: [...allTools],
     mcpServerStatuses: [],
     slashCommands: config.slashCommands ?? [],
@@ -544,7 +543,7 @@ async function intermediateToFinalConfig(
   // Handle experimental modelRole config values for apply and edit
   const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;
   if (inlineEditModel) {
-    const match = continueConfig.models.find(
+    const match = continueConfig.modelsByRole.chat.find(
       (m) => m.title === inlineEditModel,
     );
     if (match) {
@@ -563,7 +562,7 @@ async function intermediateToFinalConfig(
     "applyCodeBlock",
   )?.title;
   if (applyBlockModel) {
-    const match = continueConfig.models.find(
+    const match = continueConfig.modelsByRole.chat.find(
       (m) => m.title === applyBlockModel,
     );
     if (match) {
@@ -617,7 +616,6 @@ async function finalToBrowserConfig(
 ): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
-    models: final.models.map(llmToSerializedModelDescription),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
     slashCommands: final.slashCommands?.map(

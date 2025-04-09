@@ -258,7 +258,7 @@ async function injectControlPlaneProxyInfo(
     }
   });
 
-  config.models.forEach((model) => {
+  config.modelsByRole.chat.forEach((model) => {
     if (model.providerName === "continue-proxy") {
       (model as ContinueProxy).controlPlaneProxyInfo = info;
     }
