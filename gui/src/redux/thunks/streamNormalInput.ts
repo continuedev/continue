@@ -52,7 +52,7 @@ export const streamNormalInput = createAsyncThunk<
               ),
             }
           : {},
-        title: defaultModel.title,
+        title: selectedChatModel.title,
         messages,
         legacySlashCommandData,
       },
@@ -82,8 +82,8 @@ export const streamNormalInput = createAsyncThunk<
             data: {
               prompt: next.value.prompt,
               completion: next.value.completion,
-              modelProvider: defaultModel.provider,
-              modelTitle: defaultModel.title,
+              modelProvider: selectedChatModel.provider,
+              modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
             },
           });
@@ -94,8 +94,8 @@ export const streamNormalInput = createAsyncThunk<
         //     data: {
         //       prompt: next.value.prompt,
         //       completion: next.value.completion,
-        //       modelProvider: defaultModel.provider,
-        //       modelTitle: defaultModel.title,
+        //       modelProvider: selectedChatModel.provider,
+        //       modelTitle: selectedChatModel.title,
         //     },
         //   });
         // }

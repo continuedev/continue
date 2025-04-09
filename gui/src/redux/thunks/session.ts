@@ -169,7 +169,7 @@ export const saveCurrentSession = createAsyncThunk<
     if (title === NEW_SESSION_TITLE) {
       const selectedChatModel = selectSelectedChatModel(state);
 
-      if (!state.config.config?.disableSessionTitles && defaultModel) {
+      if (!state.config.config?.disableSessionTitles && selectedChatModel) {
         let assistantResponse = state.session.history
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
@@ -180,7 +180,7 @@ export const saveCurrentSession = createAsyncThunk<
               "chatDescriber/describe",
               {
                 text: assistantResponse,
-                selectedModelTitle: defaultModel.title,
+                selectedModelTitle: selectedChatModel.title,
               },
             );
             if (result.status === "success" && result.content) {
