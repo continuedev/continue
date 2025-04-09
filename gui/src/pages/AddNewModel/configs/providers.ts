@@ -161,6 +161,40 @@ export const providers: Partial<Record<string, ProviderInfo>> = {
     packages: [models.llama31Chat, models.deepseek],
     apiKeyUrl: "https://function.network/join-waitlist",
   },
+  ovhcloud: {
+    title: "OVHcloud",
+    provider: "ovhcloud",
+    refPage: "ovhcloud",
+    description:
+      "OVHcloud AI Endpoints is a serverless inference API that provides access to a curated selection of models (e.g., Llama, Mistral, Qwen, Deepseek). It is designed with security and data privacy in mind and is compliant with GDPR.",
+    longDescription: `To get started, create an API key on the OVHcloud [AI Endpoints website](https://endpoints.ai.cloud.ovh.net/). For more information, including pricing, visit the OVHcloud [AI Endpoints product page](https://www.ovhcloud.com/en/public-cloud/ai-endpoints/).`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API key",
+        placeholder: "Enter your AI Endpoints API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "ovhcloud.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [
+      models.llama318bChat,
+      models.llama3170bChat,
+      models.llama3370bChat,
+      models.codestralMamba,
+      models.mistralOs,
+      models.mistralNemo,
+      models.Qwen25Coder32b,
+      models.deepseekR1DistillLlama70B,
+    ],
+    apiKeyUrl: "https://endpoints.ai.cloud.ovh.net/",
+  },
   scaleway: {
     title: "Scaleway",
     provider: "scaleway",

@@ -37,6 +37,7 @@ export const OpenAIConfigSchema = BasePlusConfig.extend({
     z.literal("deepinfra"),
     z.literal("groq"),
     z.literal("nvidia"),
+    z.literal("ovhcloud"),
     z.literal("fireworks"),
     z.literal("together"),
     z.literal("novita"),
