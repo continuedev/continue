@@ -73,7 +73,11 @@ import { localPathToUri } from "../util/pathToUri";
 
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
-import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
+import {
+  getModelByRole,
+  isSupportedLanceDbCpuTargetForLinux,
+  serializePromptTemplates,
+} from "./util";
 import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
@@ -604,7 +608,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     completionOptions: llm.completionOptions,
     systemMessage: llm.systemMessage,
     requestOptions: llm.requestOptions,
-    promptTemplates: llm.promptTemplates as any,
+    promptTemplates: serializePromptTemplates(llm.promptTemplates),
     capabilities: llm.capabilities,
     roles: llm.roles,
     configurationStatus: llm.getConfigurationStatus(),
