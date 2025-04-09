@@ -24,6 +24,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
         this.options.title || ContinueProxyContextProvider.description.title,
       displayTitle:
         this.options.displayTitle ||
+        this.options.name || 
         ContinueProxyContextProvider.description.displayTitle,
       description:
         this.options.description ||

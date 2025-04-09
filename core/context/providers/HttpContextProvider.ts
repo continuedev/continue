@@ -16,18 +16,20 @@ class HttpContextProvider extends BaseContextProvider {
 
   override get description(): ContextProviderDescription {
     return {
-      title: this.options.title || "http",
-      displayTitle: this.options.displayTitle || "HTTP",
+      title: this.options.title || HttpContextProvider.description.title,
+      displayTitle:
+        this.options.displayTitle ||
+        this.options.name ||
+        HttpContextProvider.description.displayTitle,
       description:
-        this.options.description ||
-        "Retrieve a context item from a custom server",
-      type: "normal",
+        this.options.description || HttpContextProvider.description.description,
+      type: HttpContextProvider.description.type,
       renderInlineAs:
         this.options.renderInlineAs ||
         HttpContextProvider.description.renderInlineAs,
     };
   }
-
+  
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,
