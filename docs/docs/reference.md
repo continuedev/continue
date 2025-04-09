@@ -147,7 +147,7 @@ The `models` section defines the language models used in your configuration. Mod
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
 - `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are [`edit`](./customize/model-roles/edit.mdx#prompt-templating) and [`apply`](./customize/model-roles/apply.mdx#prompt-templating).
 - `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
-  - `baseSystemPrompt`: Can be used to override the default system prompt.
+  - `baseSystemMessage`: Can be used to override the default system prompt.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
   - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
   - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.

@@ -77,38 +77,18 @@ export type PromptTemplateFunction = (
 
 export type PromptTemplate = string | PromptTemplateFunction;
 
-export interface ILLM extends LLMOptions {
+type RequiredLLMOptions =
+  | "uniqueId"
+  | "contextLength"
+  | "embeddingId"
+  | "maxEmbeddingChunkSize"
+  | "maxEmbeddingBatchSize"
+  | "completionOptions";
+
+export interface ILLM
+  extends Omit<LLMOptions, RequiredLLMOptions>,
+    Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
-
-  uniqueId: string;
-  model: string;
-
-  title?: string;
-  systemMessage?: string;
-  contextLength: number;
-  maxStopWords?: number;
-  completionOptions: CompletionOptions;
-  requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, PromptTemplate>;
-  templateMessages?: (messages: ChatMessage[]) => string;
-  llmLogger?: ILLMLogger;
-  llmRequestHook?: (model: string, prompt: string) => any;
-  apiKey?: string;
-  apiBase?: string;
-  cacheBehavior?: CacheBehavior;
-  capabilities?: ModelCapability;
-  roles?: ModelRole[];
-
-  deployment?: string;
-  apiVersion?: string;
-  apiType?: string;
-  region?: string;
-  projectId?: string;
-
-  // Embedding options
-  embeddingId: string;
-  maxEmbeddingChunkSize: number;
-  maxEmbeddingBatchSize: number;
 
   complete(
     prompt: string,
@@ -580,6 +560,7 @@ export interface LLMOptions {
   title?: string;
   uniqueId?: string;
   systemMessage?: string;
+  baseSystem?: string;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -610,6 +591,9 @@ export interface LLMOptions {
   embeddingId?: string;
   maxEmbeddingChunkSize?: number;
   maxEmbeddingBatchSize?: number;
+
+  // Chat options
+  baseChatSystemMessage?: string;
 
   // Cloudflare options
   accountId?: string;

@@ -33,7 +33,6 @@ import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { Telemetry } from "../util/posthog.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
-import { serializePromptTemplates } from "../config/util.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -127,7 +126,7 @@ export abstract class BaseLLM implements ILLM {
   model: string;
 
   title?: string;
-  _systemMessage?: string;
+  systemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
@@ -195,7 +194,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this._systemMessage = options.systemMessage;
+    this.baseSystemMessage = options.baseSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -267,11 +266,6 @@ export abstract class BaseLLM implements ILLM {
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
   }
 
-  get systemMessage() {
-    const serializedTemplates = serializePromptTemplates(this.promptTemplates);
-    return serializedTemplates?.baseSystemPrompt ?? this._systemMessage;
-  }
-
   getConfigurationStatus() {
     return LLMConfigurationStatuses.VALID;
   }
@@ -311,7 +305,7 @@ export abstract class BaseLLM implements ILLM {
       supportsImages: this.supportsImages(),
       prompt: undefined,
       functions,
-      systemMessage: this.systemMessage,
+      baseSystemMessage: this.baseSystemMessage,
       rules: this.rules ?? [],
     });
   }
@@ -323,9 +317,9 @@ export abstract class BaseLLM implements ILLM {
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
-    const systemMessage = this.systemMessage;
-    if (systemMessage) {
-      msgs.unshift({ role: "system", content: systemMessage });
+    const baseSystemMessage = this.baseSystemMessage;
+    if (baseSystemMessage) {
+      msgs.unshift({ role: "system", content: baseSystemMessage });
     }
 
     return this.templateMessages(msgs);
