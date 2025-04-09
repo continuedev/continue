@@ -13,3 +13,27 @@ When editing code, Chat and Edit model output often doesn't clearly align with e
 Generally speaking, models proficient in chat and edit can also be used for applying code.
 
 Explore apply models in [the hub](https://hub.continue.dev/explore/models?roles=apply).
+
+## Prompt templating
+
+You can customize the prompt template used for applying code changes by setting the `promptTemplates.apply` property in your model configuration. Continue uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
+
+Available variables for the apply template:
+
+- `{{{original_code}}}` - The original code before changes
+- `{{{new_code}}}` - The new code after changes
+
+Example:
+
+```yaml
+models:
+  - name: My Custom Applier
+    provider: anthropic
+    model: claude-3-5-sonnet-latest
+    promptTemplates:
+      apply: |
+        Original: {{{original_code}}}
+        New: {{{new_code}}}
+
+        Please generate the final code without any markers or explanations.
+```

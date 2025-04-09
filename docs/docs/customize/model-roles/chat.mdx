@@ -363,3 +363,26 @@ If your local machine can run a 16B parameter model, then we recommend running D
 ## Other experiences
 
 There are many more models and providers you can use with Chat beyond those mentioned above. Read more [here](../model-roles/chat.mdx)
+
+## Prompt templating
+
+You can customize the system prompt used for chat interactions by setting the `promptTemplates.baseSystemPrompt` property in your model configuration. Continue uses [Handlebars syntax](https://handlebarsjs.com/guide/) for templating.
+
+Available variables for the chat template:
+
+- `{{{history}}}` - The conversation history
+- `{{{system_message}}}` - The default system message (if provided)
+
+Example:
+
+```yaml
+models:
+  - name: My Custom Chat Model
+    provider: openai
+    model: gpt-4o
+    promptTemplates:
+      baseSystemPrompt: |
+        You are an expert coding assistant specialized in JavaScript development.
+        Always provide code examples when explaining concepts.
+        {{{system_message}}}
+```
