@@ -611,6 +611,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     template: llm.template,
     completionOptions: llm.completionOptions,
     systemMessage: llm.systemMessage,
+    baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),
     capabilities: llm.capabilities,

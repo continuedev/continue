@@ -560,6 +560,7 @@ export interface LLMOptions {
   title?: string;
   uniqueId?: string;
   systemMessage?: string;
+  baseChatSystemMessage?: string;
   baseSystem?: string;
   contextLength?: number;
   maxStopWords?: number;
