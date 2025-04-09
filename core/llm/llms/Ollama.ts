@@ -89,10 +89,10 @@ type OllamaBaseResponse = {
   model: string;
   created_at: string;
 } & (
-    | {
+  | {
       done: false;
     }
-    | {
+  | {
       done: true;
       done_reason: string;
       total_duration: number; // Time spent generating the response in nanoseconds
@@ -103,7 +103,7 @@ type OllamaBaseResponse = {
       eval_duration: number; // Time spent generating the response in nanoseconds
       context: number[]; // An encoding of the conversation used in this response; can be sent in the next request to keep conversational memory
     }
-  );
+);
 
 type OllamaErrorResponse = {
   error: string;
@@ -112,14 +112,14 @@ type OllamaErrorResponse = {
 type OllamaRawResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-    response: string; // the generated response
-  });
+      response: string; // the generated response
+    });
 
 type OllamaChatResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-    message: OllamaChatMessage;
-  });
+      message: OllamaChatMessage;
+    });
 
 interface OllamaTool {
   type: "function";
@@ -365,7 +365,7 @@ class Ollama extends BaseLLM implements ModelInstaller {
             if ("error" in j) {
               throw new Error(j.error);
             }
-            j.response ??= ''
+            j.response ??= "";
             yield j.response;
           } catch (e) {
             throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);

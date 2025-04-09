@@ -1,4 +1,4 @@
-import { ModelRole, Rule } from "@continuedev/config-yaml";
+import { ModelRole } from "@continuedev/config-yaml";
 import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import {
@@ -25,6 +25,7 @@ import {
   PromptLog,
   PromptTemplate,
   RequestOptions,
+  RuleWithSource,
   TemplateType,
 } from "../index.js";
 import mergeJson from "../util/merge.js";
@@ -126,7 +127,6 @@ export abstract class BaseLLM implements ILLM {
   model: string;
 
   title?: string;
-  systemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
@@ -147,8 +147,8 @@ export abstract class BaseLLM implements ILLM {
 
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
-  roles?: ModelRole[];
-  rules?: Rule[];
+  roles: ModelRole[];
+  rules?: RuleWithSource[];
 
   deployment?: string;
   apiVersion?: string;
@@ -194,7 +194,6 @@ export abstract class BaseLLM implements ILLM {
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this.systemMessage = options.systemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -247,7 +246,7 @@ export abstract class BaseLLM implements ILLM {
     }
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
-    this.roles = options.roles;
+    this.role = options.role;
     this.rules = options.rules;
 
     this.deployment = options.deployment;
@@ -286,7 +285,7 @@ export abstract class BaseLLM implements ILLM {
   private _compileChatMessages(
     options: CompletionOptions,
     messages: ChatMessage[],
-    functions?: any[],
+    completionRole: ModelRole,
   ) {
     let contextLength = this.contextLength;
     if (
@@ -296,6 +295,12 @@ export abstract class BaseLLM implements ILLM {
       contextLength =
         CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
     }
+    // ??
+    // getSystemMessage({
+    //   userMessage: lastUserMessage,
+    //   rules,
+    //   currentModel: modelName,
+    // }),
 
     return compileChatMessages({
       modelName: options.model,
@@ -304,10 +309,15 @@ export abstract class BaseLLM implements ILLM {
       maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
       supportsImages: this.supportsImages(),
       prompt: undefined,
-      functions,
-      systemMessage: this.systemMessage,
+      completionRole,
       rules: this.rules ?? [],
     });
+  }
+
+  getSystemMessage(messages: ChatMessage[]): string | undefined {
+    const userMessage = messages.findLast((msg) => msg.role === "user");
+    // return getSystemMessage(messages);
+    return undefined;
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
@@ -317,7 +327,7 @@ export abstract class BaseLLM implements ILLM {
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
-    const systemMessage = this.systemMessage;
+    const systemMessage = this.getSystemMessage(msgs);
     if (systemMessage) {
       msgs.unshift({ role: "system", content: systemMessage });
     }
@@ -918,7 +928,12 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = this._compileChatMessages(completionOptions, _messages);
+    const completionRole = options?.completionRole ?? "chat";
+    const messages = this._compileChatMessages(
+      completionOptions,
+      _messages,
+      completionRole,
+    );
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)

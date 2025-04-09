@@ -2,7 +2,7 @@ export function replaceSlashCommandWithPromptInChatHistory(
   history: any[],
   commandName: string,
   renderedPrompt: string,
-  systemMessage?: string,
+  systemMessageOverride?: string,
 ) {
   const messages = [...history];
 
@@ -30,10 +30,12 @@ export function replaceSlashCommandWithPromptInChatHistory(
     }
   }
 
-  if (systemMessage) {
-    messages[0]?.role === "system"
-      ? (messages[0].content = systemMessage)
-      : messages.unshift({ role: "system", content: systemMessage });
+  if (systemMessageOverride) {
+    if (messages[0]?.role === "system") {
+      messages[0].content = systemMessageOverride;
+    } else {
+      messages.unshift({ role: "system", content: systemMessageOverride });
+    }
   }
 
   return messages;

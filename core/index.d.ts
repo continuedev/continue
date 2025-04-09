@@ -1,4 +1,4 @@
-import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
@@ -84,7 +84,7 @@ export interface ILLM extends LLMOptions {
   model: string;
 
   title?: string;
-  systemMessage?: string;
+  // systemMessage?: string;
   contextLength: number;
   maxStopWords?: number;
   completionOptions: CompletionOptions;
@@ -482,6 +482,7 @@ export interface ChatHistoryItem {
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
   log?: boolean;
   model?: string;
+  completionRole?: ModelRole;
 }
 
 export type ToastType = "info" | "error" | "warning";
@@ -579,7 +580,7 @@ export interface LLMOptions {
 
   title?: string;
   uniqueId?: string;
-  systemMessage?: string;
+  // systemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -589,7 +590,7 @@ export interface LLMOptions {
   templateMessages?: (messages: ChatMessage[]) => string;
   logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
-  rules?: Rule[];
+  rules?: RuleWithSource[];
   apiKey?: string;
 
   // continueProperties
@@ -1393,7 +1394,7 @@ export interface Config {
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
   slashCommands: SlashCommand[];
@@ -1408,7 +1409,7 @@ export interface ContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: Rule[];
+  rules: RuleWithSource[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1416,7 +1417,7 @@ export interface ContinueConfig {
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
   slashCommands: SlashCommandDescription[];
@@ -1430,7 +1431,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: Rule[];
+  rules?: RuleWithSource[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
@@ -1477,4 +1478,13 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+}
+
+interface RuleWithSource {
+  name?: string;
+  slug?: string;
+  source: "default" | "yaml" | "systemMessage" | ".continuerules";
+  if?: string;
+  rule: string;
+  description?: string;
 }

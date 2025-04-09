@@ -94,9 +94,11 @@ class VertexAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage =
       !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const filteredSystemMessages : ChatMessage[] = messages.filter((m) => m.role === "system");
+    const filteredSystemMessages: ChatMessage[] = messages.filter(
+      (m) => m.role === "system",
+    );
     let systemMessage: string = "";
-    if(filteredSystemMessages.length > 0) {
+    if (filteredSystemMessages.length > 0) {
       systemMessage = renderChatMessage(filteredSystemMessages[0]);
     }
     const apiURL = new URL(

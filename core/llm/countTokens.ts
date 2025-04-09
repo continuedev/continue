@@ -4,10 +4,11 @@ import {
   ChatMessage,
   MessageContent,
   MessagePart,
+  RuleWithSource,
   UserChatMessage,
 } from "../index.js";
 
-import { Rule } from "@continuedev/config-yaml";
+import { ModelRole } from "@continuedev/config-yaml";
 import { renderChatMessage } from "../util/messageContent.js";
 import {
   AsyncEncoder,
@@ -465,13 +466,13 @@ function getMessageStringContent(message?: UserChatMessage): string {
     .join("\n");
 }
 
-const getSystemMessage = ({
+export const getSystemMessage = ({
   userMessage,
   rules,
   currentModel,
 }: {
   userMessage?: UserChatMessage;
-  rules: Rule[];
+  rules: RuleWithSource[];
   currentModel: string;
 }) => {
   const messageStringContent = getMessageStringContent(userMessage);
@@ -485,27 +486,9 @@ const getSystemMessage = ({
         currentModel,
       });
     })
-    .map((rule) => {
-      if (typeof rule === "string") {
-        return rule;
-      }
-      return rule.rule;
-    })
+    .map((rule) => rule.rule)
     .join("\n");
 };
-
-function getLastUserMessage(
-  messages: ChatMessage[],
-): UserChatMessage | undefined {
-  // Iterate backwards through messages to find the last user message
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].role === "user") {
-      return messages[i] as UserChatMessage;
-    }
-  }
-
-  return undefined;
-}
 
 function compileChatMessages({
   modelName,
@@ -514,8 +497,8 @@ function compileChatMessages({
   maxTokens,
   supportsImages,
   prompt,
-  functions,
-  systemMessage,
+  completionRole,
+  baseSystemMessage,
   rules,
 }: {
   modelName: string;
@@ -524,9 +507,9 @@ function compileChatMessages({
   maxTokens: number;
   supportsImages: boolean;
   prompt: string | undefined;
-  functions: any[] | undefined;
-  systemMessage: string | undefined;
-  rules: Rule[];
+  completionRole: ModelRole;
+  baseSystemMessage: string | undefined;
+  rules: RuleWithSource[];
 }): ChatMessage[] {
   let msgsCopy = msgs
     ? msgs
@@ -537,6 +520,11 @@ function compileChatMessages({
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
   if (prompt) {
+    if (msgsCopy[msgsCopy.length - 1]?.role === "user") {
+      throw new Error(
+        "Message compilation: cannot use prompt, already a user message present",
+      );
+    }
     const promptMsg: ChatMessage = {
       role: "user",
       content: prompt,
@@ -544,32 +532,17 @@ function compileChatMessages({
     msgsCopy.push(promptMsg);
   }
 
-  const lastUserMessage = getLastUserMessage(msgsCopy);
-
+  // const
+  // getSystemMessage({
+  //   userMessage: lastUserMessage,
+  //   rules,
+  //   currentModel: modelName,
+  // }),
   msgsCopy = addSystemMessage({
     messages: msgsCopy,
-    systemMessage:
-      systemMessage ??
-      getSystemMessage({
-        userMessage: lastUserMessage,
-        rules,
-        currentModel: modelName,
-      }),
+    systemMessage,
     originalMessages: msgs,
   });
-
-  let functionTokens = 0;
-  if (functions) {
-    for (const func of functions) {
-      functionTokens += countTokens(JSON.stringify(func), modelName);
-    }
-  }
-
-  if (maxTokens + functionTokens + TOKEN_BUFFER_FOR_SAFETY >= contextLength) {
-    throw new Error(
-      `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response. Try increasing the contextLength parameter of the model in your config.json.`,
-    );
-  }
 
   // If images not supported, convert MessagePart[] to string
   if (!supportsImages) {
@@ -585,7 +558,7 @@ function compileChatMessages({
     modelName,
     msgsCopy,
     contextLength,
-    functionTokens + maxTokens + TOKEN_BUFFER_FOR_SAFETY,
+    maxTokens + TOKEN_BUFFER_FOR_SAFETY,
   );
 
   if (history.length >= 2 && history[history.length - 2].role === "system") {

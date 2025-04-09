@@ -14,10 +14,10 @@ import {
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
-import { getSecureID } from "../utils/getSecureID.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { PROVIDER_TOOL_SUPPORT } from "../toolSupport.js";
+import { getSecureID } from "../utils/getSecureID.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
@@ -287,8 +287,10 @@ class Bedrock extends BaseLLM {
   ): any {
     const convertedMessages = this._convertMessages(messages);
 
+    const systemMessage = this.getSystemMessage(messages);
+
     const shouldCacheSystemMessage =
-      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
+      !!systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const enablePromptCaching =
       shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation;
 
@@ -305,10 +307,10 @@ class Bedrock extends BaseLLM {
     return {
       modelId: options.model,
       messages: convertedMessages,
-      system: this.systemMessage
+      system: systemMessage
         ? shouldCacheSystemMessage
-          ? [{ text: this.systemMessage }, { cachePoint: { type: "default" } }]
-          : [{ text: this.systemMessage }]
+          ? [{ text: systemMessage }, { cachePoint: { type: "default" } }]
+          : [{ text: systemMessage }]
         : undefined,
       toolConfig:
         supportsTools && options.tools

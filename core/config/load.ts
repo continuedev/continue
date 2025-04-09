@@ -530,6 +530,7 @@ async function intermediateToFinalConfig({
       rerank: newReranker ?? null,
       summarize: null, // Not implemented
     },
+    rules: [],
   };
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
@@ -606,7 +607,6 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     contextLength: llm.contextLength,
     template: llm.template,
     completionOptions: llm.completionOptions,
-    systemMessage: llm.systemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: llm.promptTemplates as any,
     capabilities: llm.capabilities,
@@ -621,7 +621,6 @@ async function finalToBrowserConfig(
 ): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
-    systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
     slashCommands: final.slashCommands?.map(
       ({ run, ...slashCommandDescription }) => slashCommandDescription,

@@ -35,7 +35,7 @@ describe("BaseLLM", () => {
       const options: LLMOptions = {
         model: "gpt-3.5-turbo",
         uniqueId: "testId",
-        systemMessage: "Test System Message",
+        rules: [{ rule: "Test System Message", source: "systemMessage" }],
         contextLength: 1024,
         completionOptions: {
           model: "some-model",
@@ -62,7 +62,6 @@ describe("BaseLLM", () => {
       expect(instance.title).toBeDefined();
       expect(instance.uniqueId).toBe("testId");
       expect(instance.model).toBe("gpt-3.5-turbo");
-      expect(instance.systemMessage).toBe("Test System Message");
       expect(instance.contextLength).toBe(1024);
       expect(instance.completionOptions.maxTokens).toBe(150);
       expect(instance.requestOptions).toEqual({});

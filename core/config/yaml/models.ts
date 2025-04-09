@@ -63,7 +63,6 @@ async function modelConfigToBaseLLM({
     logger: llmLogger,
     uniqueId,
     title: model.name,
-    systemMessage: config.systemMessage,
     rules: config.rules,
     promptTemplates: model.promptTemplates,
     capabilities: {
