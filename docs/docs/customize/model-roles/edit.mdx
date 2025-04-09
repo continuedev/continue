@@ -63,16 +63,20 @@ Available variables for the edit template:
 
 Example:
 
-````yaml
+```yaml
 models:
-  - name: My Custom Editor
+  - name: My Custom Edit Template
     provider: openai
     model: gpt-4o
     promptTemplates:
       edit: |
-        Please modify this code:
-        ```{{{language}}}
+        `Here is the code before editing:
+        \`\`\`{{{language}}}
         {{{codeToEdit}}}
-        ```
-        According to this request: {{{userInput}}}
-````
+        \`\`\`
+
+        Here is the edit requested:
+        "{{{userInput}}}"
+
+        Here is the code after editing:`
+```
