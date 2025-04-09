@@ -152,6 +152,33 @@ jobs:
           cd gui
           npx tsc --noEmit
 
+  config-packages-checks:
+    needs: install-root
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Check config-types
+        run: |
+          cd packages/config-types
+          npx tsc --noEmit
+          ## No tests to run
+
+      - name: Check config-yaml
+        run: |
+          cd packages/config-yaml
+          npx tsc --noEmit
+          npm test
+
   binary-checks:
     needs: [install-root, install-core]
     runs-on: ubuntu-latest
@@ -627,6 +654,7 @@ jobs:
       - vscode-e2e-tests
       - gui-tests
       - jetbrains-tests
+      - config-packages-checks
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed
