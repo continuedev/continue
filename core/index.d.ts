@@ -132,6 +132,7 @@ export interface ILLM extends LLMOptions {
     messages: ChatMessage[],
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    messageOptions?: MessageOptions,
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
@@ -139,6 +140,11 @@ export interface ILLM extends LLMOptions {
     signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
+
+  compileChatMessages(
+    options: LLMFullCompletionOptions,
+    messages: ChatMessage[],
+  ): { compiledChatMessages: ChatMEssage[]; lastMessageTruncated: boolean };
 
   embed(chunks: string[]): Promise<number[][]>;
 
@@ -1475,4 +1481,8 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+}
+
+export interface MessageOptions {
+  precompiled: boolean;
 }

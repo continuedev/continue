@@ -20,6 +20,7 @@ import type {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  MessageOptions,
   ModelDescription,
   PromptLog,
   RangeInFile,
@@ -115,12 +116,21 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     string,
   ];
+  "llm/compileChat": [
+    {
+      title: string;
+      messages: ChatMessage[];
+      options: LLMFullCompletionOptions;
+    },
+    { compiledChatMessages: ChatMessage[]; lastMessageTruncated: boolean },
+  ];
   "llm/listModels": [{ title: string }, string[] | undefined];
   "llm/streamChat": [
     {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
+      messageOptions: MessageOptions;
       legacySlashCommandData?: {
         command: SlashCommandDescription;
         input: string;

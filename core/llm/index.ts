@@ -20,6 +20,7 @@ import {
   ILLMLogger,
   LLMFullCompletionOptions,
   LLMOptions,
+  MessageOptions,
   ModelCapability,
   ModelInstaller,
   PromptLog,
@@ -879,6 +880,15 @@ export abstract class BaseLLM implements ILLM {
     return { role: "assistant" as const, content: completion };
   }
 
+  compileChatMessages(
+    options: LLMFullCompletionOptions,
+    messages: ChatMessage[],
+  ) {
+    let { completionOptions } = this._parseCompletionOptions(options);
+    completionOptions = this._modifyCompletionOptions(completionOptions);
+    return this._compileChatMessages(completionOptions, messages);
+  }
+
   protected modifyChatBody(
     body: ChatCompletionCreateParams,
   ): ChatCompletionCreateParams {
@@ -903,6 +913,7 @@ export abstract class BaseLLM implements ILLM {
     _messages: ChatMessage[],
     signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
+    messageOptions?: MessageOptions,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     let { completionOptions, logEnabled } =
       this._parseCompletionOptions(options);
@@ -913,7 +924,16 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const messages = this._compileChatMessages(completionOptions, _messages);
+    const { precompiled } = messageOptions ?? {};
+
+    let messages = _messages;
+    if (!precompiled) {
+      const { compiledChatMessages } = this._compileChatMessages(
+        completionOptions,
+        _messages,
+      );
+      messages = compiledChatMessages;
+    }
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)

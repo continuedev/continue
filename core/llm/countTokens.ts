@@ -251,12 +251,14 @@ function pruneChatHistory(
   chatHistory: ChatMessage[],
   contextLength: number,
   tokensForCompletion: number,
-): ChatMessage[] {
+): { prunedChatHistory: ChatMessage[]; lastMessageTruncated: boolean } {
   let totalTokens =
     tokensForCompletion +
     chatHistory.reduce((acc, message) => {
       return acc + countChatMessageTokens(modelName, message);
     }, 0);
+
+  let lastMessageTruncated = false;
 
   // 0. Prune any messages that take up more than 1/3 of the context length
   const zippedMessagesAndTokens: [ChatMessage, number][] = [];
@@ -363,8 +365,10 @@ function pruneChatHistory(
       tokensForCompletion,
     );
     totalTokens = contextLength;
+    lastMessageTruncated = true;
   }
-  return chatHistory;
+
+  return { prunedChatHistory: chatHistory, lastMessageTruncated };
 }
 
 function messageIsEmpty(message: ChatMessage): boolean {
@@ -527,7 +531,7 @@ function compileChatMessages({
   functions: any[] | undefined;
   systemMessage: string | undefined;
   rules: Rule[];
-}): ChatMessage[] {
+}): { compiledChatMessages: ChatMessage[]; lastMessageTruncated: boolean } {
   let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
@@ -581,7 +585,7 @@ function compileChatMessages({
     }
   }
 
-  const history = pruneChatHistory(
+  const { prunedChatHistory: history, lastMessageTruncated } = pruneChatHistory(
     modelName,
     msgsCopy,
     contextLength,
@@ -595,7 +599,7 @@ function compileChatMessages({
 
   const flattenedHistory = flattenMessages(history);
 
-  return flattenedHistory;
+  return { compiledChatMessages: flattenedHistory, lastMessageTruncated };
 }
 
 export {
