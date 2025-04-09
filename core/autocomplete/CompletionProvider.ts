@@ -30,7 +30,11 @@ const ERRORS_TO_IGNORE = [
   "operation was aborted",
 ];
 
-export class CompletionProvider {
+export interface Disposable {
+  dispose(): void;
+}
+
+export class CompletionProvider implements Disposable {
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
@@ -38,6 +42,8 @@ export class CompletionProvider {
   private completionStreamer: CompletionStreamer;
   private loggingService = new AutocompleteLoggingService();
   private contextRetrievalService: ContextRetrievalService;
+
+  private acceptListeners: ((completionId: string, outcome: AutocompleteOutcome) => void)[] = [];
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -48,6 +54,10 @@ export class CompletionProvider {
   ) {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
+  }
+
+  public dispose(): void {
+    this.acceptListeners = [];
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -105,6 +115,19 @@ export class CompletionProvider {
     this.loggingService.cancel();
   }
 
+  public onAccept(listener: (completionId: string, outcome: AutocompleteOutcome) => void): Disposable {
+    this.acceptListeners.push(listener);
+
+    return {
+      dispose: () => {
+        const index = this.acceptListeners.indexOf(listener);
+        if (index !== -1) {
+          this.acceptListeners.splice(index, 1);
+        }
+      }
+    };
+  }
+
   public accept(completionId: string) {
     const outcome = this.loggingService.accept(completionId);
     if (!outcome) {
@@ -114,6 +137,8 @@ export class CompletionProvider {
       outcome.completion,
       outcome.filepath,
     );
+
+    for (const listener of this.acceptListeners) listener(completionId, outcome);
   }
 
   public markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
