@@ -42,7 +42,7 @@ export const gatherContext = createAsyncThunk<
     const defaultContextProviders =
       state.config.config.experimental?.defaultContext ?? [];
 
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       console.error(
         "gatherContext thunk: Cannot gather context, no model selected",
       );

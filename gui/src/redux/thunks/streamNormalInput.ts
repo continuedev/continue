@@ -35,10 +35,10 @@ export const streamNormalInput = createAsyncThunk<
     const toolGroupSettings = state.ui.toolGroupSettings;
     const streamAborter = state.session.streamAborter;
     const useTools = selectUseTools(state);
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       throw new Error("Default model not defined");
     }
-    const includeTools = useTools && modelSupportsTools(defaultModel);
+    const includeTools = useTools && modelSupportsTools(selectedChatModel);
 
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(

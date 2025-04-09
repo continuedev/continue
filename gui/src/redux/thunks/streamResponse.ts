@@ -35,11 +35,9 @@ export const streamResponseThunk = createAsyncThunk<
       streamThunkWrapper(async () => {
         const state = getState();
         const selectedChatModel = selectSelectedChatModel(state);
-
-        const slashCommands = state.config.config.slashCommands || [];
         const inputIndex = index ?? state.session.history.length; // Either given index or concat to end
 
-        if (!defaultModel) {
+        if (!selectedChatModel) {
           throw new Error("No chat model selected");
         }
 

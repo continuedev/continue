@@ -32,7 +32,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     const selectedChatModel = selectSelectedChatModel(state);
 
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       throw new Error("No model selected");
     }
 
@@ -77,7 +77,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     } else {
       const result = await extra.ideMessenger.request("tools/call", {
         toolCall: toolCallState.toolCall,
-        selectedModelTitle: defaultModel.title,
+        selectedModelTitle: selectedChatModel.title,
       });
       if (result.status === "error") {
         errorMessage = result.error;

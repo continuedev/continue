@@ -82,10 +82,10 @@ export default function StepContainerPreToolbar(
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
 
-  const defaultModel = useAppSelector(selectSelectedChatModel);
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
 
   async function onClickApply() {
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       return;
     }
 

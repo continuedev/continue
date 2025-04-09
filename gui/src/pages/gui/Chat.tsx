@@ -105,7 +105,7 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const defaultModel = useAppSelector(selectSelectedChatModel);
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -165,7 +165,7 @@ export function Chat() {
           "Cannot submit message while awaiting tool confirmation",
         );
       }
-      if (defaultModel?.provider === "free-trial") {
+      if (selectedChatModel?.provider === "free-trial") {
         const newCount = incrementFreeTrialCount();
 
         if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
@@ -224,7 +224,7 @@ export function Chat() {
     },
     [
       history,
-      defaultModel,
+      selectedChatModel,
       streamResponse,
       isSingleRangeEditOrInsertion,
       codeToEdit,
@@ -233,7 +233,7 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       console.error("No selected chat model");
       return;
     }
@@ -248,7 +248,7 @@ export function Chat() {
       defaultContextProviders: [],
       availableSlashCommands: [],
       dispatch,
-      selectedModelTitle: defaultModel.title,
+      selectedModelTitle: selectedChatModel.title,
     });
 
     const prompt = [
