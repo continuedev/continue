@@ -52,7 +52,11 @@ export function rectifySelectedModelsFromGlobalContext(
       fellBack = true;
     }
 
-    if (newModel?.getConfigurationStatus() !== LLMConfigurationStatuses.VALID) {
+    // Currently only check for configuration status for apply
+    if (
+      role === "apply" &&
+      newModel?.getConfigurationStatus() !== LLMConfigurationStatuses.VALID
+    ) {
       break;
     }
 

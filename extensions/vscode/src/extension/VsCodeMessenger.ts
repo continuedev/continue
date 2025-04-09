@@ -18,7 +18,6 @@ import { stripImages } from "core/util/messageContent";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
-import { ILLM } from "core";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -180,19 +179,16 @@ export class VsCodeMessenger {
         return;
       }
 
-      let llm: ILLM | null | undefined = config.selectedModelByRole.apply;
+      let llm =
+        config.selectedModelByRole.apply ??
+        config.selectedModelByRole.chat ??
+        config.modelsByRole.chat[0];
 
       if (!llm) {
-        llm = config.models.find(
-          (model) => model.title === data.curSelectedModelTitle,
+        vscode.window.showErrorMessage(
+          `No model with roles "apply" or "chat" found in config.`,
         );
-
-        if (!llm) {
-          vscode.window.showErrorMessage(
-            `Model ${data.curSelectedModelTitle} not found in config.`,
-          );
-          return;
-        }
+        return;
       }
 
       const fastLlm = getModelByRole(config, "repoMapFileSelection") ?? llm;

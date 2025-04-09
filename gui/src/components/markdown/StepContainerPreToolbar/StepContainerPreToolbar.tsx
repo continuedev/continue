@@ -97,7 +97,6 @@ export default function StepContainerPreToolbar(
       streamId: props.codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
-      curSelectedModelTitle: defaultModel.title,
     });
   }
 

@@ -43,7 +43,6 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
-import { LLMConfigurationStatuses } from "../../llm/constants";
 import { llmsFromModelConfig } from "./models";
 
 export class LocalPlatformClient implements PlatformClient {
@@ -237,31 +236,6 @@ async function configYamlToContinueConfig(
 
       if (model.roles?.includes("apply")) {
         continueConfig.modelsByRole.apply.push(...llms);
-
-        if (
-          llms.every(
-            (llm) =>
-              llm.getConfigurationStatus() !== LLMConfigurationStatuses.VALID,
-          )
-        ) {
-          const chatModelForApplyFallback = config.models?.find((model) =>
-            model.roles?.includes("chat"),
-          );
-          if (chatModelForApplyFallback) {
-            const [chatLlmForApplyFallback] = await llmsFromModelConfig({
-              model: chatModelForApplyFallback,
-              ide,
-              uniqueId,
-              ideSettings,
-              llmLogger,
-              platformConfigMetadata,
-              config: continueConfig,
-            });
-
-            continueConfig.modelsByRole.apply.unshift(chatLlmForApplyFallback);
-            continueConfig.selectedModelByRole.apply = chatLlmForApplyFallback;
-          }
-        }
       }
 
       if (model.roles?.includes("edit")) {

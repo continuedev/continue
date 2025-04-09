@@ -38,6 +38,10 @@ const ModelRoleSelector = ({
   const ideMessenger = useContext(IdeMessengerContext);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
+  const noConfiguredModels = models.every(
+    (model) => model.configurationStatus !== LLMConfigurationStatuses.VALID,
+  );
+
   function handleSelect(title: string | null) {
     onSelect(models.find((m) => m.title === title) ?? null);
   }
@@ -81,6 +85,8 @@ const ModelRoleSelector = ({
           >
             {models.length === 0 ? (
               <span className="text-lightgray line-clamp-1 italic">{`No ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
+            ) : noConfiguredModels ? (
+              <span className="text-lightgray line-clamp-1 italic">{`No valid ${displayName} models${["Chat", "Apply", "Edit"].includes(displayName) ? ". Using chat model" : ""}`}</span>
             ) : (
               <span className="line-clamp-1">
                 {selectedModel?.title ?? `Select ${displayName} model`}

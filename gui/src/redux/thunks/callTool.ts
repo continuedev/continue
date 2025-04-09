@@ -54,7 +54,6 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
           args,
           extra.ideMessenger,
           state.session.activeToolStreamId[0],
-          defaultModel.title,
           toolCallState.toolCallId,
         );
       } catch (e) {
@@ -125,7 +124,6 @@ async function customGuiEditImpl(
   args: EditToolArgs,
   ideMessenger: IIdeMessenger,
   streamId: string,
-  modelTitle: string,
   toolCallId: string,
 ) {
   const firstUriMatch = await resolveRelativePathInDir(
@@ -138,7 +136,6 @@ async function customGuiEditImpl(
   const apply = await ideMessenger.request("applyToFile", {
     streamId,
     text: args.new_contents,
-    curSelectedModelTitle: modelTitle,
     toolCallId,
     filepath: firstUriMatch,
   });
