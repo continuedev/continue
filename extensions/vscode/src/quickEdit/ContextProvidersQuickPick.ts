@@ -34,7 +34,7 @@ export async function getContextProvidersString(
             provider.description.displayTitle === selectedProvider.label,
         );
 
-        if (!provider) {
+        if (!provider || !config.selectedModelByRole.chat) {
           return [];
         }
 
