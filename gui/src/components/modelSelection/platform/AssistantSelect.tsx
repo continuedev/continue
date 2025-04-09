@@ -99,7 +99,7 @@ const AssistantSelectOption = ({
           fontSize: tinyFont,
         }}
       >
-        <div className="flex w-full items-center justify-between bg-transparent">
+        <div className="flex w-full items-center justify-between gap-2 bg-transparent">
           <div className="flex w-full items-center gap-1.5">
             <div className="flex h-4 w-4 flex-shrink-0">
               <AssistantIcon assistant={profile} />
