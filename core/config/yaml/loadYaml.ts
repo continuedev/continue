@@ -2,9 +2,11 @@ import fs from "node:fs";
 
 import {
   AssistantUnrolled,
+  BLOCK_TYPES,
   ConfigResult,
   ConfigValidationError,
   ModelRole,
+  parseAssistantUnrolled,
   RegistryClient,
   unrollAssistantFromContent,
   validateConfigYaml,
@@ -40,6 +42,7 @@ import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
 
@@ -431,6 +434,29 @@ export async function loadContinueConfigFromYaml(
       config: undefined,
       configLoadInterrupted: true,
     };
+  }
+
+  // Add local .continue blocks
+  for (const blockType of BLOCK_TYPES) {
+    const localBlocks = await getAllDotContinueYamlFiles(
+      ide,
+      { includeGlobal: true, includeWorkspace: true },
+      blockType,
+    );
+
+    for (const block of localBlocks) {
+      const parsedYaml = parseAssistantUnrolled(block.content);
+
+      const inlineBlock = parsedYaml[blockType]?.[0];
+      if (inlineBlock) {
+        configYamlResult.config[blockType] = [
+          ...(configYamlResult.config[blockType] ?? []),
+          inlineBlock as any,
+        ];
+      }
+    }
+
+    configYamlResult.config;
   }
 
   const { config: continueConfig, errors: localErrors } =
