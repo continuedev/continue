@@ -82,7 +82,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     } else {
       modelName = model;
     }
-    
+
     if (
       ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
         (part) => modelName.toLowerCase().includes(part),
@@ -92,6 +92,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     }
     if (
       [
+        "cogito",
         "llama3.3",
         "qwq",
         "llama3.2",

@@ -50,6 +50,7 @@ export const SubmenuContextProvidersProvider = ({
 }) => {
   const ideMessenger = useContext(IdeMessengerContext);
   const submenuContextProviders = useAppSelector(selectSubmenuContextProviders);
+  const lastProviders = useRef(submenuContextProviders);
   const disableIndexing = useAppSelector(
     (store) => store.config.config.disableIndexing,
   );
@@ -356,15 +357,22 @@ export const SubmenuContextProvidersProvider = ({
   );
 
   // Reload all submenu items on the initial config load
-  // TODO - could refresh on any change
-  const initialLoad = useRef(false);
   useEffect(() => {
-    if (!submenuContextProviders.length || initialLoad.current) {
+    if (!submenuContextProviders.length) {
       return;
     }
-    void loadSubmenuItems("all");
-    initialLoad.current = true;
-  }, [loadSubmenuItems, submenuContextProviders, initialLoad]);
+    // Refresh submenu items when new titles detected
+    const newTitles = submenuContextProviders
+      .filter(
+        (provider) =>
+          !lastProviders.current.find((p) => p.title === provider.title),
+      )
+      .map((provider) => provider.title);
+    if (newTitles.length > 0) {
+      loadSubmenuItems(newTitles);
+    }
+    lastProviders.current = submenuContextProviders;
+  }, [loadSubmenuItems, submenuContextProviders]);
 
   return (
     <SubmenuContextProvidersContext.Provider

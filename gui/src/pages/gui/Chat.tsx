@@ -21,7 +21,7 @@ import TimelineItem from "../../components/gui/TimelineItem";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
 import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
@@ -31,7 +31,7 @@ import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
   newSession,
@@ -75,6 +75,8 @@ const StepsDiv = styled.div`
   }
 `;
 
+export const MAIN_EDITOR_INPUT_ID = "main-editor-input";
+
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
@@ -103,7 +105,7 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -163,7 +165,7 @@ export function Chat() {
           "Cannot submit message while awaiting tool confirmation",
         );
       }
-      if (defaultModel?.provider === "free-trial") {
+      if (selectedChatModel?.provider === "free-trial") {
         const newCount = incrementFreeTrialCount();
 
         if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
@@ -222,7 +224,7 @@ export function Chat() {
     },
     [
       history,
-      defaultModel,
+      selectedChatModel,
       streamResponse,
       isSingleRangeEditOrInsertion,
       codeToEdit,
@@ -231,7 +233,7 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       console.error("No selected chat model");
       return;
     }
@@ -246,7 +248,7 @@ export function Chat() {
       defaultContextProviders: [],
       availableSlashCommands: [],
       dispatch,
-      selectedModelTitle: defaultModel.title,
+      selectedModelTitle: selectedChatModel.title,
     });
 
     const prompt = [
@@ -257,7 +259,6 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
-      selectedModelTitle: defaultModel.title,
     });
 
     dispatch(submitEdit(prompt));
@@ -295,7 +296,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-[2px] overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`mt-3 overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -406,7 +407,7 @@ export function Chat() {
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
-            inputId={"main-editor"}
+            inputId={MAIN_EDITOR_INPUT_ID}
           />
         )}
 

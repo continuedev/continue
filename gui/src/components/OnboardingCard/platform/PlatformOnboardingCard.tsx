@@ -28,7 +28,7 @@ export function PlatformOnboardingCard({ isDialog }: OnboardingCardProps) {
 
   return (
     <ReusableCard
-      showCloseButton={!isDialog && !!config.models.length}
+      showCloseButton={!isDialog && !!config.modelsByRole.chat.length}
       onClose={() => onboardingCard.close()}
     >
       <div className="flex h-full w-full items-center justify-center">

@@ -13,10 +13,7 @@ import {
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppSelector } from "../../redux/hooks";
-import {
-  selectDefaultModel,
-  selectUIConfig,
-} from "../../redux/slices/configSlice";
+import { selectUIConfig } from "../../redux/slices/configSlice";
 import { isJetBrains } from "../../util";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
@@ -56,16 +53,14 @@ export default function StepContainerPreActionButtons({
     streamIdRef.current = uuidv4();
   }
 
-  const defaultModel = useAppSelector(selectDefaultModel);
-
   function onClickApply() {
-    if (!defaultModel || !streamIdRef.current) {
+    if (!streamIdRef.current) {
       return;
     }
+
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       text: codeBlockContent,
-      curSelectedModelTitle: defaultModel.title,
     });
   }
 

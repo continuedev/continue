@@ -11,8 +11,8 @@ data class SetGitHubAuthTokenParams(
 data class ApplyToFileParams(
     val text: String,
     val streamId: String,
-    val curSelectedModelTitle: String,
-    val filepath: String?
+    val filepath: String?,
+    val toolCallId: String?
 )
 
 data class InsertAtCursorParams(

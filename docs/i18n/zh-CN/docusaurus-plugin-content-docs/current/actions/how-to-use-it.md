@@ -24,7 +24,7 @@ Actions 是常见用例的快捷方式。例如，你可能想要审查代码，
 
 通过定义一个 ".prompt 文件" ，也可以编写你自己的斜杠命令。 prompt 文件可以是个简单的文本文件，但是也包含模板，所以你可以引用文件， URL ，高亮代码以及更多。
 
-完整的 .prompt 文件可以参考 [这里](../customize/deep-dives/prompt-files.md) 。
+完整的 .prompt 文件可以参考 [这里](../customize/deep-dives/prompt.md) 。
 
 :::tip[Prompt 库]
 为了帮助你开始，[我们精心编写了一个小的 `.prompt` 文件库](https://github.com/continuedev/prompt-file-examples) 。我们鼓励社区贡献到这个仓库，所以请考虑为你的 prompt 创建一个拉取请求！

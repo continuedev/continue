@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.18",
+  "version": "1.1.22",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -127,6 +127,11 @@
           "default": false,
           "markdownDescription": "Pause Continue's codebase index on start."
         },
+        "continue.enableConsole": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
+        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
@@ -250,6 +255,13 @@
         "command": "continue.viewLogs",
         "category": "Continue",
         "title": "View History",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.clearConsole",
+        "category": "Continue",
+        "title": "Clear Console",
+        "icon": "$(clear-all)",
         "group": "Continue"
       },
       {
@@ -505,6 +517,11 @@
           "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.clearConsole",
+          "group": "navigation@1",
+          "when": "view == continue.continueConsoleView"
         }
       ],
       "editor/title": [
@@ -533,6 +550,13 @@
           "title": "Continue",
           "icon": "media/sidebar-icon.png"
         }
+      ],
+      "panel": [
+        {
+          "id": "continueConsole",
+          "title": "Continue Console",
+          "icon": "$(window)"
+        }
       ]
     },
     "views": {
@@ -543,6 +567,16 @@
           "name": "Continue",
           "icon": "media/sidebar-icon.png",
           "visibility": "visible"
+        }
+      ],
+      "continueConsole": [
+        {
+          "type": "webview",
+          "id": "continue.continueConsoleView",
+          "name": "Continue Console",
+          "icon": "$(window)",
+          "visibility": "visible",
+          "when": "config.continue.enableConsole"
         }
       ]
     },
@@ -625,7 +659,7 @@
     "ovsx": "^0.8.3",
     "rimraf": "^5.0.5",
     "typescript": "^5.6.3",
-    "vite": "^4.3.9",
+    "vite": "^4.5.12",
     "vsce": "^2.15.0",
     "vscode-extension-tester": "^8.10.0"
   },

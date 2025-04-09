@@ -8,7 +8,6 @@ import {
   ConfigValidationError,
   ModelRole,
 } from "@continuedev/config-yaml";
-import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as JSONC from "comment-json";
 import * as tar from "tar";
 
@@ -27,6 +26,7 @@ import {
   IdeSettings,
   IdeType,
   ILLM,
+  ILLMLogger,
   LLMOptions,
   ModelDescription,
   RerankerDescription,
@@ -37,7 +37,6 @@ import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index";
-import { AllRerankers } from "../context/allRerankers";
 import { MCPManagerSingleton } from "../context/mcp";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
@@ -45,9 +44,8 @@ import CustomContextProviderClass from "../context/providers/CustomContextProvid
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
 import { useHub } from "../control-plane/env";
-import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
-import { llmFromDescription } from "../llm/llms";
+import { LLMClasses, llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
 import { LLMReranker } from "../llm/llms/llm";
@@ -216,17 +214,27 @@ export function isContextProviderWithParams(
 }
 
 /** Only difference between intermediate and final configs is the `models` array */
-async function intermediateToFinalConfig(
-  config: Config,
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  writeLog: (log: string) => Promise<void>,
-  workOsAccessToken: string | undefined,
-  loadPromptFiles: boolean = true,
-  allowFreeTrial: boolean = true,
-): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+async function intermediateToFinalConfig({
+  config,
+  ide,
+  ideSettings,
+  ideInfo,
+  uniqueId,
+  llmLogger,
+  workOsAccessToken,
+  loadPromptFiles = true,
+  allowFreeTrial = true,
+}: {
+  config: Config;
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  workOsAccessToken: string | undefined;
+  loadPromptFiles?: boolean;
+  allowFreeTrial?: boolean;
+}): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const errors: ConfigValidationError[] = [];
 
   // Auto-detect models
@@ -238,7 +246,7 @@ async function intermediateToFinalConfig(
         ide.readFile.bind(ide),
         uniqueId,
         ideSettings,
-        writeLog,
+        llmLogger,
         config.completionOptions,
         config.systemMessage,
       );
@@ -260,7 +268,7 @@ async function intermediateToFinalConfig(
                 ide.readFile.bind(ide),
                 uniqueId,
                 ideSettings,
-                writeLog,
+                llmLogger,
                 copyOf(config.completionOptions),
                 config.systemMessage,
               );
@@ -280,7 +288,7 @@ async function intermediateToFinalConfig(
     } else {
       const llm = new CustomLLMClass({
         ...desc,
-        options: { ...desc.options, writeLog } as any,
+        options: { ...desc.options, logger: llmLogger } as any,
       });
       if (llm.model === "AUTODETECT") {
         try {
@@ -289,7 +297,11 @@ async function intermediateToFinalConfig(
             (modelName) =>
               new CustomLLMClass({
                 ...desc,
-                options: { ...desc.options, model: modelName, writeLog },
+                options: {
+                  ...desc.options,
+                  model: modelName,
+                  logger: llmLogger,
+                },
               }),
           );
 
@@ -343,7 +355,7 @@ async function intermediateToFinalConfig(
               ide.readFile.bind(ide),
               uniqueId,
               ideSettings,
-              writeLog,
+              llmLogger,
               config.completionOptions,
               config.systemMessage,
             );
@@ -420,38 +432,32 @@ async function intermediateToFinalConfig(
   function getEmbeddingsILLM(
     embedConfig: EmbeddingsProviderDescription | ILLM | undefined,
   ): ILLM | null {
-    if (!embedConfig) {
-      return null;
-    }
-    if ("providerName" in embedConfig) {
-      return embedConfig;
-    }
-    const { provider, ...options } = embedConfig;
-    const embeddingsProviderClass = allEmbeddingsProviders[provider];
-    if (embeddingsProviderClass) {
-      if (
-        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-      ) {
-        return new embeddingsProviderClass();
-      } else {
-        const llmOptions: LLMOptions = {
-          model: options.model ?? "UNSPECIFIED",
-          ...options,
-        };
-        return new embeddingsProviderClass(
-          llmOptions,
-          (url: string | URL, init: any) =>
-            fetchwithRequestOptions(url, init, {
-              ...config.requestOptions,
-              ...options.requestOptions,
-            }),
-        );
+    if (embedConfig) {
+      // config.ts-injected ILLM
+      if ("providerName" in embedConfig) {
+        return embedConfig;
       }
-    } else {
-      errors.push({
-        fatal: false,
-        message: `Embeddings provider ${provider} not found. Using default`,
-      });
+      const { provider, ...options } = embedConfig;
+      if (provider === "transformers.js") {
+        return new TransformersJsEmbeddingsProvider();
+      } else {
+        const cls = LLMClasses.find((c) => c.providerName === provider);
+        if (cls) {
+          const llmOptions: LLMOptions = {
+            model: options.model ?? "UNSPECIFIED",
+            ...options,
+          };
+          return new cls(llmOptions);
+        } else {
+          errors.push({
+            fatal: false,
+            message: `Embeddings provider ${provider} not found`,
+          });
+        }
+      }
+    }
+    if (ideInfo.ideType === "vscode") {
+      return new TransformersJsEmbeddingsProvider();
     }
     return null;
   }
@@ -464,11 +470,11 @@ async function intermediateToFinalConfig(
     if (!rerankingConfig) {
       return null;
     }
+    // config.ts-injected ILLM
     if ("providerName" in rerankingConfig) {
       return rerankingConfig;
     }
     const { name, params } = config.reranker as RerankerDescription;
-    const rerankerClass = AllRerankers[name];
 
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
@@ -481,16 +487,20 @@ async function intermediateToFinalConfig(
       } else {
         return new LLMReranker(llm);
       }
-    } else if (rerankerClass) {
-      const llmOptions: LLMOptions = {
-        model: "rerank-2",
-        ...params,
-      };
-      return new rerankerClass(llmOptions, (url: string | URL, init: any) =>
-        fetchwithRequestOptions(url, init, {
-          ...params?.requestOptions,
-        }),
-      );
+    } else {
+      const cls = LLMClasses.find((c) => c.providerName === name);
+      if (cls) {
+        const llmOptions: LLMOptions = {
+          model: params?.model,
+          ...params,
+        };
+        return new cls(llmOptions);
+      } else {
+        errors.push({
+          fatal: false,
+          message: `Unknown reranking provider ${name}`,
+        });
+      }
     }
     return null;
   }
@@ -499,7 +509,6 @@ async function intermediateToFinalConfig(
   const continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
-    models,
     tools: [...allTools],
     mcpServerStatuses: [],
     slashCommands: config.slashCommands ?? [],
@@ -539,7 +548,7 @@ async function intermediateToFinalConfig(
   // Handle experimental modelRole config values for apply and edit
   const inlineEditModel = getModelByRole(continueConfig, "inlineEdit")?.title;
   if (inlineEditModel) {
-    const match = continueConfig.models.find(
+    const match = continueConfig.modelsByRole.chat.find(
       (m) => m.title === inlineEditModel,
     );
     if (match) {
@@ -558,7 +567,7 @@ async function intermediateToFinalConfig(
     "applyCodeBlock",
   )?.title;
   if (applyBlockModel) {
-    const match = continueConfig.models.find(
+    const match = continueConfig.modelsByRole.chat.find(
       (m) => m.title === applyBlockModel,
     );
     if (match) {
@@ -602,6 +611,7 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     promptTemplates: llm.promptTemplates as any,
     capabilities: llm.capabilities,
     roles: llm.roles,
+    configurationStatus: llm.getConfigurationStatus(),
   };
 }
 
@@ -611,7 +621,6 @@ async function finalToBrowserConfig(
 ): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
-    models: final.models.map(llmToSerializedModelDescription),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
     slashCommands: final.slashCommands?.map(
@@ -831,7 +840,7 @@ async function loadContinueConfigFromJson(
   ideSettings: IdeSettings,
   ideInfo: IdeInfo,
   uniqueId: string,
-  writeLog: (log: string) => Promise<void>,
+  llmLogger: ILLMLogger,
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ConfigResult<ContinueConfig>> {
@@ -925,15 +934,15 @@ async function loadContinueConfigFromJson(
 
   // Convert to final config format
   const { config: finalConfig, errors: finalErrors } =
-    await intermediateToFinalConfig(
-      intermediate,
+    await intermediateToFinalConfig({
+      config: intermediate,
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
+      llmLogger,
       workOsAccessToken,
-    );
+    });
   return {
     config: finalConfig,
     errors: [...(errors ?? []), ...finalErrors],

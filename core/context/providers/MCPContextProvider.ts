@@ -10,6 +10,7 @@ import { MCPManagerSingleton } from "../mcp";
 
 interface MCPContextProviderOptions {
   mcpId: string;
+  serverName: string;
   submenuItems: ContextSubmenuItem[];
 }
 
@@ -20,6 +21,16 @@ class MCPContextProvider extends BaseContextProvider {
     description: "Model Context Protocol",
     type: "submenu",
   };
+  override get description(): ContextProviderDescription {
+    return {
+      title: `${MCPContextProvider.description.title}-${this.options["mcpId"]}`,
+      displayTitle: this.options["serverName"]
+        ? `${this.options["serverName"]} resources`
+        : "MCP",
+      description: "Model Context Protocol",
+      type: "submenu",
+    };
+  }
 
   static encodeMCPResourceId(mcpId: string, uri: string): string {
     return JSON.stringify({ mcpId, uri });

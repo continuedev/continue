@@ -14,7 +14,7 @@ To make common use cases even more accessible, we provide a handful of other way
 
 ## Quick actions
 
-Quick Actions are displayed as buttons above top-level classes and functions in your source code, letting you invoke actions with one click. They will edit that class or function, but nothing outside of it. They can also be customized with [.prompt files](./prompt-files.md) to perform custom actions.
+Quick Actions are displayed as buttons above top-level classes and functions in your source code, letting you invoke actions with one click. They will edit that class or function, but nothing outside of it. They can also be customized with [.prompt files](./prompts.md) to perform custom actions.
 
 ![quick-actions](/img/quick-actions.png)
 
