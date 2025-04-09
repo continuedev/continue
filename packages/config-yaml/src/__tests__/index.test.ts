@@ -207,15 +207,15 @@ describe("E2E Scenarios", () => {
         injectBlocks: [
           {
             ownerSlug: "test-org",
-            packageSlug: "docs",
+            packageSlug: "rules",
             versionSlug: "latest",
           },
         ],
       },
     );
 
-    // The original docs array should have one item
-    expect(unrolledConfig.docs?.length).toBe(2); // Now 2 with the injected block
+    // The original rules array should have two items
+    expect(unrolledConfig.rules?.length).toBe(3); // Now 3 with the injected block
 
     // Check the original doc is still there
     expect(unrolledConfig.docs?.[0]?.startUrl).toBe(
@@ -223,9 +223,7 @@ describe("E2E Scenarios", () => {
     );
 
     // Check the injected doc block was added
-    expect(unrolledConfig.docs?.[1]?.startUrl).toBe(
-      "https://docs.python.org/release/3.13.1",
-    );
+    expect(unrolledConfig.rules?.[2]).toBe("Be kind");
   });
 
   it.skip("should prioritize org over user / package secrets", () => {});
