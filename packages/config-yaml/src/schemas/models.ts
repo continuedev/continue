@@ -60,7 +60,8 @@ export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
   edit: z.string().optional(),
-});
+  baseSystemPrompt: z.string().optional(),
+} as const);
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
 const baseModelFields = {

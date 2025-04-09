@@ -33,6 +33,7 @@ import { isOllamaInstalled } from "../util/ollamaHelper.js";
 import { Telemetry } from "../util/posthog.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 
+import { serializePromptTemplates } from "../config/util.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -126,7 +127,7 @@ export abstract class BaseLLM implements ILLM {
   model: string;
 
   title?: string;
-  systemMessage?: string;
+  _systemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
@@ -194,7 +195,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this.systemMessage = options.systemMessage;
+    this._systemMessage = options.systemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -266,6 +267,11 @@ export abstract class BaseLLM implements ILLM {
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
   }
 
+  get systemMessage() {
+    const serializedTemplates = serializePromptTemplates(this.promptTemplates);
+    return serializedTemplates?.baseSystemPrompt ?? this._systemMessage;
+  }
+
   getConfigurationStatus() {
     return LLMConfigurationStatuses.VALID;
   }
@@ -323,35 +329,6 @@ export abstract class BaseLLM implements ILLM {
     }
 
     return this.templateMessages(msgs);
-  }
-
-  private _compilePromptForLog(
-    prompt: string,
-    completionOptions: CompletionOptions,
-  ): string {
-    const completionOptionsLog = JSON.stringify(
-      {
-        contextLength: this.contextLength,
-        ...completionOptions,
-      },
-      null,
-      2,
-    );
-
-    let requestOptionsLog = "";
-    if (this.requestOptions) {
-      requestOptionsLog = JSON.stringify(this.requestOptions, null, 2);
-    }
-
-    return (
-      "##### Completion options #####\n" +
-      completionOptionsLog +
-      (requestOptionsLog
-        ? "\n\n##### Request options #####\n" + requestOptionsLog
-        : "") +
-      "\n\n##### Prompt #####\n" +
-      prompt
-    );
   }
 
   private _logEnd(
@@ -1172,13 +1149,13 @@ export abstract class BaseLLM implements ILLM {
   public renderPromptTemplate(
     template: PromptTemplate,
     history: ChatMessage[],
-    otherData: Record<string, string>,
+    templateVariables: Record<string, string>,
     canPutWordsInModelsMouth = false,
   ): string | ChatMessage[] {
     if (typeof template === "string") {
       const data: any = {
         history: history,
-        ...otherData,
+        ...templateVariables,
       };
       if (history.length > 0 && history[0].role === "system") {
         data.system_message = history.shift()!.content;
@@ -1188,7 +1165,7 @@ export abstract class BaseLLM implements ILLM {
       return compiledTemplate(data);
     }
     const rendered = template(history, {
-      ...otherData,
+      ...templateVariables,
       supportsCompletions: this.supportsCompletions() ? "true" : "false",
       supportsPrefill: this.supportsPrefill() ? "true" : "false",
     });
