@@ -174,6 +174,7 @@ export const models: { [key: string]: ModelPackage } = {
       "llama.cpp",
       "replicate",
       "cerebras",
+      "ovhcloud",
       "nebius",
       "scaleway",
     ],
@@ -371,6 +372,7 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
+      "ovhcloud",
       "llama.cpp",
       "replicate",
       "nebius",
@@ -511,7 +513,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 65536,
     },
     icon: "meta.png",
-    providerOptions: [],
+    providerOptions: ["ovhcloud"],
     isOpenSource: false,
   },
   llama3170bChat: {
@@ -524,7 +526,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq", "scaleway", "nebius"],
+    providerOptions: ["groq", "ovhcloud", "scaleway", "nebius"],
     isOpenSource: false,
   },
   llama31405bChat: {
@@ -635,6 +637,7 @@ export const models: { [key: string]: ModelPackage } = {
       "ollama",
       "lmstudio",
       "together",
+      "ovhcloud",
       "llama.cpp",
       "replicate",
       "nebius",
@@ -753,7 +756,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 256_000,
     },
     icon: "mistral.png",
-    providerOptions: ["mistral"],
+    providerOptions: ["ovhcloud", "mistral"],
     isOpenSource: true,
   },
   mistral7b: {
@@ -1400,7 +1403,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32_000,
     },
     icon: "qwen.png",
-    providerOptions: ["scaleway", "nebius", "ncompass"],
+    providerOptions: ["scaleway", "nebius", "ovhcloud", "ncompass"],
     isOpenSource: true,
   },
   grokBeta: {
@@ -1688,7 +1691,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32_000,
     },
     icon: "deepseek.png",
-    providerOptions: ["sambanova"],
+    providerOptions: ["ovhcloud", "sambanova"],
     isOpenSource: true,
   },
   deepseekR1: {

@@ -13,6 +13,7 @@ import Nebius from "../llm/llms/Nebius.js";
 import Nvidia from "../llm/llms/Nvidia.js";
 import Ollama from "../llm/llms/Ollama.js";
 import OpenAI from "../llm/llms/OpenAI.js";
+import OVHcloud from "../llm/llms/OVHcloud.js";
 import SageMaker from "../llm/llms/SageMaker.js";
 import Scaleway from "../llm/llms/Scaleway.js";
 import SiliconFlow from "../llm/llms/SiliconFlow.js";
@@ -42,6 +43,7 @@ export const allEmbeddingsProviders: Record<
   deepinfra: DeepInfra,
   ncompass: NCompass,
   nvidia: Nvidia,
+  ovhcloud: OVHcloud,
   voyage: Voyage,
   mistral: Mistral,
   nebius: Nebius,
