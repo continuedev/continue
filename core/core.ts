@@ -32,6 +32,7 @@ import { TTS } from "./util/tts";
 import {
   DiffLine,
   IdeSettings,
+  ModelDescription,
   RangeInFile,
   type ContextItemId,
   type IDE,
@@ -60,7 +61,13 @@ async function* streamDiffLinesGenerator(
   msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
 ): AsyncGenerator<DiffLine> {
   const data = msg.data;
-  const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
+  const llm = (await configHandler.loadConfig()).config?.selectedModelByRole
+    .chat;
+
+  if (!llm) {
+    throw new Error("No chat model selected");
+  }
+
   for await (const diffLine of streamDiffLines(
     data.prefix,
     data.highlighted,
@@ -430,7 +437,13 @@ export class Core {
     );
 
     on("llm/complete", async (msg) => {
-      const model = await this.configHandler.llmFromTitle(msg.data.title);
+      const model = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!model) {
+        throw new Error("No chat model selected");
+      }
+
       const completion = await model.complete(
         msg.data.prompt,
         new AbortController().signal,
@@ -449,9 +462,13 @@ export class Core {
     });
 
     on("chatDescriber/describe", async (msg) => {
-      const currentModel = await this.configHandler.llmFromTitle(
-        msg.data.selectedModelTitle,
-      );
+      const currentModel = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!currentModel) {
+        throw new Error("No chat model selected");
+      }
+
       return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
 
@@ -477,32 +494,7 @@ export class Core {
 
     on("completeOnboarding", this.handleCompleteOnboarding);
 
-    on("addAutocompleteModel", (msg) => {
-      const model = msg.data.model;
-      editConfigFile(
-        (config) => {
-          return {
-            ...config,
-            tabAutocompleteModel: model,
-          };
-        },
-        (config) => ({
-          ...config,
-          models: [
-            ...(config.models ?? []),
-            {
-              name: model.title,
-              provider: model.provider,
-              model: model.model,
-              apiKey: model.apiKey,
-              roles: ["autocomplete"],
-              apiBase: model.apiBase,
-            },
-          ],
-        }),
-      );
-      void this.configHandler.reloadConfig();
-    });
+    on("addAutocompleteModel", this.handleAddAutocompleteModel);
 
     on("stats/getTokensPerDay", async (msg) => {
       const rows = await DevDataSqliteDb.getTokensPerDay();
@@ -513,7 +505,6 @@ export class Core {
       return rows;
     });
 
-    // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config || config.disableIndexing) {
@@ -599,11 +590,7 @@ export class Core {
       }
     });
 
-    on("files/opened", async ({ data }) => {
-      if (data?.uris?.length) {
-        // Do something on files opened
-      }
-    });
+    on("files/opened", async () => {});
 
     // Docs, etc. indexing
     on("indexing/reindex", async (msg) => {
@@ -618,7 +605,6 @@ export class Core {
     });
     on("indexing/setPaused", async (msg) => {
       if (msg.data.type === "docs") {
-        // this.docsService.setPaused(msg.data.id, msg.data.paused); // not supported yet
       }
     });
     on("docs/initStatuses", async (msg) => {
@@ -681,7 +667,12 @@ export class Core {
         throw new Error(`Tool ${toolCall.function.name} not found`);
       }
 
-      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+      const llm = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
+
+      if (!llm) {
+        throw new Error("No chat model selected");
+      }
 
       const contextItems = await callTool(
         tool,
@@ -711,18 +702,52 @@ export class Core {
         return false;
       }
 
-      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+      const llm = (await this.configHandler.loadConfig()).config
+        ?.selectedModelByRole.chat;
 
-      // Count the size of the file tokenwise
+      if (!llm) {
+        throw new Error("No chat model selected");
+      }
+
       const tokens = countTokens(item.content);
 
-      // File exceeds context length of the model
       if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
         return true;
       }
 
       return false;
     });
+  }
+
+  private handleAddAutocompleteModel(
+    msg: Message<{
+      model: ModelDescription;
+    }>,
+  ) {
+    const model = msg.data.model;
+    editConfigFile(
+      (config) => {
+        return {
+          ...config,
+          tabAutocompleteModel: model,
+        };
+      },
+      (config) => ({
+        ...config,
+        models: [
+          ...(config.models ?? []),
+          {
+            name: model.title,
+            provider: model.provider,
+            model: model.model,
+            apiKey: model.apiKey,
+            roles: ["autocomplete"],
+            apiBase: model.apiBase,
+          },
+        ],
+      }),
+    );
+    void this.configHandler.reloadConfig();
   }
 
   private async handleFilesChanged({
@@ -789,8 +814,13 @@ export class Core {
     }
 
     const model =
-      config.models.find((model) => model.title === msg.data.title) ??
-      config.models.find((model) => model.title?.startsWith(msg.data.title));
+      config.modelsByRole.chat.find(
+        (model) => model.title === msg.data.title,
+      ) ??
+      config.modelsByRole.chat.find((model) =>
+        model.title?.startsWith(msg.data.title),
+      );
+
     try {
       if (model) {
         return await model.listModels();
@@ -854,10 +884,15 @@ export class Core {
       return [];
     }
 
-    const { name, query, fullInput, selectedCode, selectedModelTitle } =
-      msg.data;
+    const { name, query, fullInput, selectedCode } = msg.data;
 
-    const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+    const llm = (await this.configHandler.loadConfig()).config
+      ?.selectedModelByRole.chat;
+
+    if (!llm) {
+      throw new Error("No chat model selected");
+    }
+
     const provider =
       config.contextProviders?.find(
         (provider) => provider.description.title === name,

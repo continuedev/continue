@@ -11,17 +11,11 @@ import {
   IContextProvider,
   IDE,
   IdeSettings,
-  ILLM,
   ILLMLogger,
 } from "../index.js";
-import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
 import { getAllAssistantFiles } from "./loadLocalAssistants.js";
-import {
-  LOCAL_ONBOARDING_CHAT_MODEL,
-  LOCAL_ONBOARDING_PROVIDER_TITLE,
-} from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
@@ -471,27 +465,6 @@ export class ConfigHandler {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
-  }
-
-  // Only used till we move to using selectedModelByRole.chat
-  async llmFromTitle(title?: string): Promise<ILLM> {
-    const { config } = await this.loadConfig();
-    const model = config?.models.find((m) => m.title === title);
-    if (!model) {
-      if (title === LOCAL_ONBOARDING_PROVIDER_TITLE) {
-        // Special case, make calls to Ollama before we have it in the config
-        const ollama = new Ollama({
-          model: LOCAL_ONBOARDING_CHAT_MODEL,
-        });
-        return ollama;
-      } else if (config?.models?.length) {
-        return config?.models[0];
-      }
-
-      throw new Error("No model found");
-    }
-
-    return model;
   }
 
   // Ancient method of adding custom providers through vs code

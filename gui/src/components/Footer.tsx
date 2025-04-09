@@ -1,11 +1,11 @@
 import { useAppSelector } from "../redux/hooks";
-import { selectDefaultModel } from "../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../redux/slices/configSlice";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage } from "../util/localStorage";
 import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
 
 function Footer() {
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
 
   if (defaultModel?.provider === "free-trial") {
     return (
