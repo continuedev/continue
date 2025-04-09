@@ -243,7 +243,7 @@ async function configYamlToContinueConfig(
       }
 
       if (model.roles?.includes("embed")) {
-        const { provider, ...options } = model;
+        const { provider } = model;
         if (provider === "transformers.js") {
           if (ideInfo.ideType === "vscode") {
             continueConfig.modelsByRole.embed.push(
