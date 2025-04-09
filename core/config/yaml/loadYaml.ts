@@ -5,6 +5,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   FQSN,
+  isAssistantUnrolledNonNullable,
   ModelRole,
   PlatformClient,
   RegistryClient,
@@ -93,7 +94,15 @@ async function loadConfigYaml(
         renderSecrets: true,
       },
     ));
-  const errors = validateConfigYaml(config);
+
+  const errors = isAssistantUnrolledNonNullable(config)
+    ? validateConfigYaml(config)
+    : [
+        {
+          fatal: true,
+          message: "Assistant includes blocks that don't exist",
+        },
+      ];
 
   if (errors?.some((error) => error.fatal)) {
     return {
@@ -123,29 +132,13 @@ async function configYamlToContinueConfig(
   allowFreeTrial: boolean = true,
 ): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const localErrors: ConfigValidationError[] = [];
+
   const continueConfig: ContinueConfig = {
     slashCommands: [],
     models: [],
     tools: [...allTools],
     mcpServerStatuses: [],
-    systemMessage: undefined,
-    experimental: {
-      modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
-        transport: {
-          type: "stdio",
-          command: mcpServer.command,
-          args: mcpServer.args ?? [],
-          env: mcpServer.env,
-        },
-      })),
-    },
-    docs: config.docs?.map((doc) => ({
-      title: doc.name,
-      startUrl: doc.startUrl,
-      rootUrl: doc.rootUrl,
-      faviconUrl: doc.faviconUrl,
-    })),
-    rules: config.rules,
+    systemMessage: config.rules?.join("\n"),
     contextProviders: [],
     modelsByRole: {
       chat: [],
@@ -165,7 +158,38 @@ async function configYamlToContinueConfig(
       rerank: null,
       summarize: null,
     },
-    data: config.data,
+  };
+
+  // Right now, if there are any missing packages in the config, then we will just throw an error
+  if (!isAssistantUnrolledNonNullable(config)) {
+    return {
+      config: continueConfig,
+      errors: [
+        {
+          message: "Found missing blocks in config.yaml",
+          fatal: true,
+        },
+      ],
+    };
+  }
+
+  continueConfig.data = config.data;
+  continueConfig.rules = config.rules;
+  continueConfig.docs = config.docs?.map((doc) => ({
+    title: doc.name,
+    startUrl: doc.startUrl,
+    rootUrl: doc.rootUrl,
+    faviconUrl: doc.faviconUrl,
+  }));
+  continueConfig.experimental = {
+    modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
+      transport: {
+        type: "stdio",
+        command: mcpServer.command,
+        args: mcpServer.args ?? [],
+        env: mcpServer.env,
+      },
+    })),
   };
 
   // Prompt files -
