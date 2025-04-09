@@ -22,7 +22,60 @@ function constructPrompt(
   language: string | undefined,
 ): string | ChatMessage[] {
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
-  return llm.renderPromptTemplate(template, [], {
+  
+  // Create a messages array with system message at the beginning
+  const messages: ChatMessage[] = [];
+  
+  // Combine systemMessage and rules into one system message
+  // Make sure to prioritize language rules like 'Always respond in Hindi'
+  let systemContent = llm.systemMessage ?? "";
+  
+  // Extract and prioritize language-related rules first
+  let languageRules = "";
+  let otherRules = "";
+  
+  // Add rules if they exist
+  if (llm.rules && llm.rules.length > 0) {
+    // Process rules and prioritize language-related ones
+    llm.rules.forEach(rule => {
+      const ruleText = typeof rule === "string" ? rule : rule.rule;
+      if (ruleText.toLowerCase().includes("language") || 
+          ruleText.toLowerCase().includes("respond in") || 
+          ruleText.toLowerCase().includes("hindi") || 
+          ruleText.toLowerCase().includes("english")) {
+        languageRules += ruleText + "\n";
+      } else {
+        otherRules += ruleText + "\n";
+      }
+    });
+    
+    // Combine system message with rules, putting language rules first
+    let rulesContent = "";
+    if (languageRules) {
+      rulesContent += languageRules.trim();
+    }
+    if (otherRules) {
+      if (rulesContent) rulesContent += "\n\n";
+      rulesContent += otherRules.trim();
+    }
+    
+    // Combine systemMessage and rules
+    if (systemContent && rulesContent) {
+      systemContent = `${systemContent}\n\n${rulesContent}`;
+    } else if (rulesContent) {
+      systemContent = rulesContent;
+    }
+  }
+  
+  // Add the system message with combined content if not empty
+  if (systemContent) {
+    messages.push({
+      role: "system",
+      content: systemContent
+    });
+  }
+  
+  return llm.renderPromptTemplate(template, messages, {
     userInput,
     prefix,
     codeToEdit: highlighted,

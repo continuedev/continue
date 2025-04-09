@@ -372,8 +372,30 @@ const getCommandsMap: (
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
+    // Get the context menu prompt text
+    let promptText = config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt;
+    
+    // Apply rules from config to ensure they're used in context menu operations
+    if (config.rules && config.rules.length > 0) {
+      // Add rules directly to the prompt text
+      const rulesText = config.rules
+        .map(rule => typeof rule === 'string' ? rule : rule.rule)
+        .join("\n");
+      promptText = `${rulesText}\n\n${promptText}`;
+    }
+    
+    // Add systemMessage if it exists
+    if (config.systemMessage) {
+      promptText = `${config.systemMessage}\n\n${promptText}`;
+    }
+    
+    // Add explicit instruction to respond in Hindi
+    if (!promptText.toLowerCase().includes("hindi")) {
+      promptText = "Always respond in Hindi.\n\n" + promptText;
+    }
+    
     await verticalDiffManager.streamEdit(
-      config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
+      promptText,
       llm,
       undefined,
       onlyOneInsertion,
