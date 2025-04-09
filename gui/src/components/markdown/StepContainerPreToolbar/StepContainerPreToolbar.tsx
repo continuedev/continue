@@ -31,6 +31,7 @@ const TopDiv = styled.div`
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
+  margin-top: 8px !important;
   background-color: ${vscEditorBackground};
   min-width: 0;
 `;

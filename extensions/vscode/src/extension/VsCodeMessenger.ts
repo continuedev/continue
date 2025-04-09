@@ -223,7 +223,7 @@ export class VsCodeMessenger {
 
         await verticalDiffManager.streamEdit(
           prompt,
-          llm.title,
+          llm,
           data.streamId,
           undefined,
           undefined,
@@ -286,9 +286,19 @@ export class VsCodeMessenger {
       const { start, end } = msg.data.range.range;
       const verticalDiffManager = await verticalDiffManagerPromise;
 
+      const configHandler = await configHandlerPromise;
+      const { config } = await configHandler.loadConfig();
+
+      const model =
+        config?.selectedModelByRole.edit ?? config?.selectedModelByRole.chat;
+
+      if (!model) {
+        throw new Error("No Edit or Chat model selected");
+      }
+
       const fileAfterEdit = await verticalDiffManager.streamEdit(
         stripImages(prompt),
-        msg.data.selectedModelTitle,
+        model,
         "edit",
         undefined,
         undefined,

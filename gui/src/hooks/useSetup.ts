@@ -254,26 +254,12 @@ function useSetup() {
     dispatch(updateIndexingStatus(data));
   });
 
-  useWebviewListener(
-    "getDefaultModelTitle",
-    async () => {
-      return defaultModel?.title;
-    },
-    [defaultModel],
-  );
-
   const activeToolStreamId = useAppSelector(
     (store) => store.session.activeToolStreamId,
   );
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      // dispatch(
-      //   updateCurCheckpoint({
-      //     filepath: state.filepath,
-      //     content: state.fileContent,
-      //   }),
-      // );
       dispatch(updateApplyState(state));
       if (
         activeToolStreamId &&
