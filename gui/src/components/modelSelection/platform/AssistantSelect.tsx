@@ -100,9 +100,9 @@ const AssistantSelectOption = ({
         }}
       >
         <div className="flex w-full items-center justify-between gap-2 bg-transparent">
-          <div className="flex w-full items-center gap-1.5">
+          <div className="flex w-full items-center gap-1">
             <div className="flex h-4 w-4 flex-shrink-0">
-              <AssistantIcon assistant={profile} />
+              <AssistantIcon size={3.5} assistant={profile} />
             </div>
             <span
               className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""}`}
@@ -375,7 +375,7 @@ export default function AssistantSelect() {
                   {currentOrg?.iconUrl ? (
                     <img
                       src={currentOrg.iconUrl}
-                      className="h-3 w-3 rounded-full"
+                      className="h-2.5 w-2.5 rounded-full"
                     />
                   ) : (
                     <BuildingOfficeIcon className="h-4 w-4" />
