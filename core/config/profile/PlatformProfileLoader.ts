@@ -142,15 +142,17 @@ export default class PlatformProfileLoader implements IProfileLoader {
       ideSettingsPromise: this.ideSettingsPromise,
       controlPlaneClient: this.controlPlaneClient,
       llmLogger: this.llmLogger,
-      overrideConfigJson: undefined,
       overrideConfigYaml: this.configResult.config,
-      platformConfigMetadata: {
-        ownerSlug: this.ownerSlug,
-        packageSlug: this.packageSlug,
-      },
       profileId: this.description.id,
-      overrideConfigYamlByPath: undefined,
       orgScopeId: this.orgScopeId,
+      packageIdentifier: {
+        uriType: "slug",
+        fullSlug: {
+          ownerSlug: this.ownerSlug,
+          packageSlug: this.packageSlug,
+          versionSlug: this.versionSlug,
+        },
+      },
     });
 
     return {

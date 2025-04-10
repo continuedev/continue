@@ -5,6 +5,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   ModelRole,
+  PackageIdentifier,
 } from "@continuedev/config-yaml";
 
 import {
@@ -34,31 +35,31 @@ import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
-import { PlatformConfigMetadata } from "./PlatformProfileLoader";
-
-export default async function doLoadConfig({
-  ide,
-  ideSettingsPromise,
-  controlPlaneClient,
-  llmLogger,
-  overrideConfigJson,
-  overrideConfigYaml,
-  platformConfigMetadata,
-  profileId,
-  overrideConfigYamlByPath,
-  orgScopeId,
-}: {
+export default async function doLoadConfig(options: {
   ide: IDE;
   ideSettingsPromise: Promise<IdeSettings>;
   controlPlaneClient: ControlPlaneClient;
   llmLogger: ILLMLogger;
-  overrideConfigJson: SerializedContinueConfig | undefined;
-  overrideConfigYaml: AssistantUnrolled | undefined;
-  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  overrideConfigJson?: SerializedContinueConfig;
+  overrideConfigYaml?: AssistantUnrolled;
   profileId: string;
-  overrideConfigYamlByPath: string | undefined;
+  overrideConfigYamlByPath?: string;
   orgScopeId: string | null;
+  packageIdentifier: PackageIdentifier;
 }): Promise<ConfigResult<ContinueConfig>> {
+  const {
+    ide,
+    ideSettingsPromise,
+    controlPlaneClient,
+    llmLogger,
+    overrideConfigJson,
+    overrideConfigYaml,
+    profileId,
+    overrideConfigYamlByPath,
+    orgScopeId,
+    packageIdentifier,
+  } = options;
+
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
@@ -88,10 +89,10 @@ export default async function doLoadConfig({
       uniqueId,
       llmLogger,
       overrideConfigYaml,
-      platformConfigMetadata,
       controlPlaneClient,
-      configYamlPath,
       orgScopeId,
+      packageIdentifier,
+      workOsAccessToken,
     });
     newConfig = result.config;
     errors = result.errors;

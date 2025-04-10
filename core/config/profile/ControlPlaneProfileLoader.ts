@@ -68,11 +68,12 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       controlPlaneClient: this.controlPlaneClient,
       llmLogger: this.llmLogger,
       overrideConfigJson: serializedConfig,
-      overrideConfigYaml: undefined,
-      platformConfigMetadata: undefined,
       profileId: this.workspaceId,
-      overrideConfigYamlByPath: undefined,
       orgScopeId: null,
+      packageIdentifier: {
+        uriType: "file",
+        filePath: "", // TODO
+      },
     });
   }
 

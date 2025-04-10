@@ -1,9 +1,11 @@
 import {
   decodeFQSN,
   decodeFullSlug,
+  decodePackageIdentifier,
   decodePackageSlug,
   encodeFQSN,
   encodeFullSlug,
+  encodePackageIdentifier,
   encodePackageSlug,
   VirtualTags,
 } from "./slugs.js";
@@ -77,6 +79,83 @@ describe("PackageSlug", () => {
   it("should throw error for invalid FQSN format", () => {
     expect(() => decodeFQSN("owner1/package1/owner2/test-secret")).toThrow(
       "Invalid FQSN format: package slug must have two parts",
+    );
+  });
+});
+
+describe("PackageIdentifier", () => {
+  it("should encode/decode slug-based package identifier", () => {
+    const testIdentifier = {
+      uriType: "slug" as const,
+      fullSlug: {
+        ownerSlug: "test-owner",
+        packageSlug: "test-package",
+        versionSlug: "2.1.0",
+      },
+    };
+    const encoded = encodePackageIdentifier(testIdentifier);
+    expect(encoded).toBe("test-owner/test-package@2.1.0");
+
+    const decoded = decodePackageIdentifier(encoded);
+    expect(decoded).toEqual(testIdentifier);
+  });
+
+  it("should encode/decode slug-based package identifier without version", () => {
+    const encoded = "test-owner/test-package";
+    const decoded = decodePackageIdentifier(encoded);
+
+    expect(decoded).toEqual({
+      uriType: "slug",
+      fullSlug: {
+        ownerSlug: "test-owner",
+        packageSlug: "test-package",
+        versionSlug: VirtualTags.Latest,
+      },
+    });
+  });
+
+  it("should encode/decode file-based package identifier with relative path", () => {
+    const testIdentifier = {
+      uriType: "file" as const,
+      filePath: "./path/to/package.yaml",
+    };
+    const encoded = encodePackageIdentifier(testIdentifier);
+    expect(encoded).toBe("./path/to/package.yaml");
+
+    const decoded = decodePackageIdentifier(encoded);
+    expect(decoded).toEqual(testIdentifier);
+  });
+
+  it("should encode/decode file-based package identifier with absolute path", () => {
+    const testIdentifier = {
+      uriType: "file" as const,
+      filePath: "/absolute/path/to/package.yaml",
+    };
+    const encoded = encodePackageIdentifier(testIdentifier);
+    expect(encoded).toBe("/absolute/path/to/package.yaml");
+
+    const decoded = decodePackageIdentifier(encoded);
+    expect(decoded).toEqual(testIdentifier);
+  });
+
+  it("should decode file-based package identifier with file:// protocol", () => {
+    const encoded = "file:///path/to/package.yaml";
+    const decoded = decodePackageIdentifier(encoded);
+
+    expect(decoded).toEqual({
+      uriType: "file" as const,
+      filePath: "/path/to/package.yaml",
+    });
+  });
+
+  it("should throw error for unknown URI type", () => {
+    const invalidIdentifier = {
+      uriType: "invalid",
+      data: "something",
+    };
+
+    expect(() => encodePackageIdentifier(invalidIdentifier as any)).toThrow(
+      "Unknown URI type: invalid",
     );
   });
 });

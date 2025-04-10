@@ -1,13 +1,17 @@
+import { z } from "zod";
 import { ConfigYaml } from "../schemas/index.js";
 
-export type BlockType =
-  | "models"
-  | "context"
-  | "docs"
-  | "mcpServers"
-  | "data"
-  | "rules"
-  | "prompts";
+export const BLOCK_TYPES = [
+  "models",
+  "context",
+  "data",
+  "mcpServers",
+  "rules",
+  "prompts",
+  "docs",
+] as const;
+export type BlockType = (typeof BLOCK_TYPES)[number];
+export const blockTypeSchema = z.enum(BLOCK_TYPES);
 
 export function getBlockType(block: ConfigYaml): BlockType | undefined {
   if (block.context?.length) {

@@ -7,6 +7,7 @@ export enum SecretType {
   NotFound = "not_found",
   ModelsAddOn = "models_add_on",
   FreeTrial = "free_trial",
+  LocalEnv = "local_env",
 }
 
 export interface OrgSecretLocation {
@@ -39,6 +40,11 @@ export interface FreeTrialSecretLocation {
   secretName: string;
 }
 
+export interface LocalEnvSecretLocation {
+  secretType: SecretType.LocalEnv;
+  secretName: string;
+}
+
 /**
  * If not found in user/package/org secrets, then there's a chance it's in
  * - the on-prem proxy
@@ -56,7 +62,8 @@ export type SecretLocation =
   | UserSecretLocation
   | NotFoundSecretLocation
   | ModelsAddOnSecretLocation
-  | FreeTrialSecretLocation;
+  | FreeTrialSecretLocation
+  | LocalEnvSecretLocation;
 
 export function encodeSecretLocation(secretLocation: SecretLocation): string {
   if (secretLocation.secretType === SecretType.Organization) {
@@ -71,6 +78,8 @@ export function encodeSecretLocation(secretLocation: SecretLocation): string {
     return `${SecretType.ModelsAddOn}:${encodePackageSlug(secretLocation.blockSlug)}/${secretLocation.secretName}`;
   } else if (secretLocation.secretType === SecretType.FreeTrial) {
     return `${SecretType.FreeTrial}:${encodePackageSlug(secretLocation.blockSlug)}/${secretLocation.secretName}`;
+  } else if (secretLocation.secretType === SecretType.LocalEnv) {
+    return `${SecretType.LocalEnv}:${secretLocation.secretName}`;
   } else {
     throw new Error(`Invalid secret type: ${secretLocation}`);
   }
@@ -123,6 +132,11 @@ export function decodeSecretLocation(secretLocation: string): SecretLocation {
           packageSlug: parts[1],
         },
       };
+    case SecretType.LocalEnv:
+      return {
+        secretType: SecretType.LocalEnv,
+        secretName,
+      };
     default:
       throw new Error(`Invalid secret type: ${secretType}`);
   }
@@ -140,7 +154,8 @@ export interface FoundSecretResult {
     | OrgSecretLocation
     | PackageSecretLocation
     | ModelsAddOnSecretLocation
-    | FreeTrialSecretLocation;
+    | FreeTrialSecretLocation
+    | LocalEnvSecretLocation;
   fqsn: FQSN;
 }
 

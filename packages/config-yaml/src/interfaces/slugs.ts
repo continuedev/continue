@@ -2,8 +2,63 @@ export interface PackageSlug {
   ownerSlug: string;
   packageSlug: string;
 }
+
 export interface FullSlug extends PackageSlug {
   versionSlug: string;
+}
+
+// Identifier roughly equals URI, except that we want to provide shorthand for slugs and filepaths
+// Later it is possible to allow URIs as well since they can be uniquely parsed
+interface BasePackageIdentifier {
+  uriType: "file" | "slug";
+}
+
+interface FullSlugIdentifier extends BasePackageIdentifier {
+  uriType: "slug";
+  fullSlug: FullSlug;
+}
+
+interface FileIdentifier extends BasePackageIdentifier {
+  uriType: "file";
+  filePath: string;
+}
+
+export type PackageIdentifier = FullSlugIdentifier | FileIdentifier;
+
+export function encodePackageIdentifier(identifier: PackageIdentifier): string {
+  switch (identifier.uriType) {
+    case "slug":
+      return encodeFullSlug(identifier.fullSlug);
+    case "file":
+      // For file paths, just return the path directly without a prefix
+      return identifier.filePath;
+    default:
+      throw new Error(`Unknown URI type: ${(identifier as any).uriType}`);
+  }
+}
+
+export function decodePackageIdentifier(identifier: string): PackageIdentifier {
+  // Shorthand: if it starts with . or /, then it's a path
+  if (identifier.startsWith(".") || identifier.startsWith("/")) {
+    return {
+      uriType: "file",
+      filePath: identifier,
+    };
+  }
+  // Keep support for explicit file:// protocol
+  else if (identifier.startsWith("file://")) {
+    return {
+      uriType: "file",
+      filePath: identifier.substring(7),
+    };
+  }
+  // Otherwise, it's a slug
+  else {
+    return {
+      uriType: "slug",
+      fullSlug: decodeFullSlug(identifier),
+    };
+  }
 }
 
 export enum VirtualTags {

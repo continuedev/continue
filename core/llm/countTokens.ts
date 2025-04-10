@@ -307,6 +307,10 @@ function pruneChatHistory(
   // 1. Replace beyond last 5 messages with summary
   let i = 0;
   while (totalTokens > contextLength && i < chatHistory.length - 5) {
+    if (chatHistory[i].role !== "assistant") {
+      i++;
+      continue;
+    }
     const message = chatHistory[i];
     totalTokens -= countTokens(message.content, modelName);
     totalTokens += countTokens(summarize(message), modelName);
