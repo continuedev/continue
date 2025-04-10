@@ -156,9 +156,6 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
         </Button>
         <AddModelButtonSubtext />
         <SkipLocalOnboardingSubtext onClick={onClickSubmitOnboarding} />
-        <Button>
-
-        </Button>
       </div>
     </div>
   );
