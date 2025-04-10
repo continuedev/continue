@@ -49,21 +49,25 @@ models:
     provider: ollama
 ```
 
-#### Local Blocks
+### Local Blocks
 
-You can also reference blocks that are defined locally, using either a path relative to the assistant file or an absolute path. For example:
+It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
 
-```yaml
-name: My Local Assistant
-version: 1.0.0
-schema: v1
+Place your YAML files in the following folders:
 
-rules:
-  - uses: ../blocks/unit-test-rules.yaml
+Assistants:
 
-models:
-  - uses: ../blocks/my-model.yaml
-```
+- `.continue/assistants` - for assistants
+
+Blocks:
+
+- `.continue/rules` - for rules
+- `.continue/models` - for models
+- `.continue/prompts` - for prompts
+- `.continue/context` - for context providers
+- `.continue/docs` - for docs
+- `.continue/data` - for data
+- `.continue/mcpServers` - for MCP Servers
 
 ### Inputs
 
