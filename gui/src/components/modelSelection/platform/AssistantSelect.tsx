@@ -256,7 +256,7 @@ export default function AssistantSelect() {
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
         <span
-          className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+          className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
         >
           Create your first assistant
         </span>
@@ -278,7 +278,7 @@ export default function AssistantSelect() {
               <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
             <span
-              className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
             >
               {selectedProfile.title}
             </span>
