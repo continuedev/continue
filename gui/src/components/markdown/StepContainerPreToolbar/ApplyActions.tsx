@@ -52,9 +52,11 @@ export default function ApplyActions(props: ApplyActionsProps) {
     case "streaming":
       return (
         <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
-          <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+          <span className="inline-flex w-min items-center gap-2 text-center text-xs text-gray-400">
             Applying changes
-            <Spinner />
+            <div>
+              <Spinner />
+            </div>
           </span>
         </div>
       );

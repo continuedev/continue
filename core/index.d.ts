@@ -77,38 +77,18 @@ export type PromptTemplateFunction = (
 
 export type PromptTemplate = string | PromptTemplateFunction;
 
-export interface ILLM extends LLMOptions {
+type RequiredLLMOptions =
+  | "uniqueId"
+  | "contextLength"
+  | "embeddingId"
+  | "maxEmbeddingChunkSize"
+  | "maxEmbeddingBatchSize"
+  | "completionOptions";
+
+export interface ILLM
+  extends Omit<LLMOptions, RequiredLLMOptions>,
+    Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
-
-  uniqueId: string;
-  model: string;
-
-  title?: string;
-  // systemMessage?: string;
-  contextLength: number;
-  maxStopWords?: number;
-  completionOptions: CompletionOptions;
-  requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, PromptTemplate>;
-  templateMessages?: (messages: ChatMessage[]) => string;
-  llmLogger?: ILLMLogger;
-  llmRequestHook?: (model: string, prompt: string) => any;
-  apiKey?: string;
-  apiBase?: string;
-  cacheBehavior?: CacheBehavior;
-  capabilities?: ModelCapability;
-  roles?: ModelRole[];
-
-  deployment?: string;
-  apiVersion?: string;
-  apiType?: string;
-  region?: string;
-  projectId?: string;
-
-  // Embedding options
-  embeddingId: string;
-  maxEmbeddingChunkSize: number;
-  maxEmbeddingBatchSize: number;
 
   complete(
     prompt: string,
@@ -580,7 +560,7 @@ export interface LLMOptions {
 
   title?: string;
   uniqueId?: string;
-  // systemMessage?: string;
+  baseChatSystemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -1048,9 +1028,8 @@ export interface ModelDescription {
   model: string;
   apiKey?: string;
 
-  // continueProperties
-  apiKeyLocation?: string;
   apiBase?: string;
+  apiKeyLocation?: string;
   orgScopeId?: string | null;
 
   onPremProxyUrl?: string | null;
@@ -1059,7 +1038,7 @@ export interface ModelDescription {
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
-  systemMessage?: string;
+  baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   cacheBehavior?: CacheBehavior;
@@ -1068,7 +1047,7 @@ export interface ModelDescription {
   configurationStatus?: LLMConfigurationStatuses;
 }
 
-export interface EmbedOptions {
+export interface JSONEmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
@@ -1089,11 +1068,11 @@ export interface EmbedOptions {
   projectId?: string;
 }
 
-export interface EmbeddingsProviderDescription extends EmbedOptions {
+export interface JSONEmbeddingsProviderDescription extends JSONEmbedOptions {
   provider: string;
 }
 
-export interface RerankerDescription {
+export interface JSONRerankerDescription {
   name: string;
   params?: { [key: string]: any };
 }
@@ -1313,11 +1292,42 @@ export interface AnalyticsConfig {
   clientKey?: string;
 }
 
+export interface JSONModelDescription {
+  title: string;
+  provider: string;
+  model: string;
+  apiKey?: string;
+  apiBase?: string;
+
+  apiKeyLocation?: string;
+  onPremProxyUrl?: string | null; // not included in schema/docs
+
+  contextLength?: number;
+  maxStopWords?: number;
+  template?: TemplateType;
+  completionOptions?: BaseCompletionOptions;
+  systemMessage?: string;
+  requestOptions?: RequestOptions;
+  cacheBehavior?: CacheBehavior;
+
+  region?: string;
+  profile?: string;
+  modelArn?: string;
+  apiType?: "openai" | "azure";
+  apiVersion?: string;
+  deployment?: string;
+  projectId?: string;
+  accountId?: string;
+  aiGatewaySlug?: string;
+  useLegacyCompletionsEndpoint?: boolean;
+  deploymentId?: string;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
+  models: JSONModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1327,11 +1337,11 @@ export interface SerializedContinueConfig {
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
-  embeddingsProvider?: EmbeddingsProviderDescription;
-  tabAutocompleteModel?: ModelDescription | ModelDescription[];
+  embeddingsProvider?: JSONEmbeddingsProviderDescription;
+  tabAutocompleteModel?: JSONModelDescription | JSONModelDescription[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
-  reranker?: RerankerDescription;
+  reranker?: JSONRerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
@@ -1348,11 +1358,11 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
-  /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
+  /** Each entry in this array will originally be a JSONModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
    * Continue will do the rest of the work to construct prompt templates, handle context items, prune context, etc.
    */
-  models: (CustomLLM | ModelDescription)[];
+  models: (CustomLLM | JSONModelDescription)[];
   /** A system message to be followed by all of your models */
   systemMessage?: string;
   /** The default completion options for all models */
@@ -1372,18 +1382,18 @@ export interface Config {
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
   userToken?: string;
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
-  embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
+  embeddingsProvider?: JSONEmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
     | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+    | JSONModelDescription
+    | (CustomLLM | JSONModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
   ui?: ContinueUIConfig;
   /** Options for the reranker */
-  reranker?: RerankerDescription | ILLM;
+  reranker?: JSONRerankerDescription | ILLM;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
   /** Analytics configuration */

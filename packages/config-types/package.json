@@ -12,6 +12,7 @@
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/node": "^20.11.19",
     "typescript": "^5.5.2"
   },
   "dependencies": {

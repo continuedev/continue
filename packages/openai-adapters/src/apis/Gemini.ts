@@ -139,8 +139,7 @@ export class GeminiApi implements BaseLlmApi {
           parts:
             typeof msg.content === "string"
               ? [{ text: msg.content }]
-              : // @ts-ignore
-                msg.content.map(this._oaiPartToGeminiPart),
+              : msg.content.map(this._oaiPartToGeminiPart),
         };
       })
       .filter((c) => c !== null);
@@ -149,7 +148,7 @@ export class GeminiApi implements BaseLlmApi {
     const finalBody: any = {
       generationConfig,
       contents,
-      // if this.systemMessage is defined, reformat it for Gemini API
+      // if there is a system message, reformat it for Gemini API
       ...(sysMsg &&
         !isV1API && {
           systemInstruction: { parts: [{ text: sysMsg.content }] },

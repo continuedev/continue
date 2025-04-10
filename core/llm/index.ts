@@ -127,6 +127,7 @@ export abstract class BaseLLM implements ILLM {
   model: string;
 
   title?: string;
+  baseChatSystemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
@@ -147,7 +148,7 @@ export abstract class BaseLLM implements ILLM {
 
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
-  roles: ModelRole[];
+  roles?: ModelRole[];
   rules?: RuleWithSource[];
 
   deployment?: string;
@@ -194,6 +195,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
+    this.baseChatSystemMessage = options.baseChatSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -246,7 +248,7 @@ export abstract class BaseLLM implements ILLM {
     }
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
-    this.role = options.role;
+    this.roles = options.roles;
     this.rules = options.rules;
 
     this.deployment = options.deployment;
@@ -310,6 +312,7 @@ export abstract class BaseLLM implements ILLM {
       supportsImages: this.supportsImages(),
       prompt: undefined,
       completionRole,
+      baseSystemMessage: this.baseChatSystemMessage,
       rules: this.rules ?? [],
     });
   }

@@ -18,8 +18,6 @@ import {
   ContinueConfig,
   ContinueRcJson,
   CustomContextProvider,
-  CustomLLM,
-  EmbeddingsProviderDescription,
   IContextProvider,
   IDE,
   IdeInfo,
@@ -27,9 +25,10 @@ import {
   IdeType,
   ILLM,
   ILLMLogger,
+  JSONEmbeddingsProviderDescription,
+  JSONRerankerDescription,
   LLMOptions,
   ModelDescription,
-  RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
@@ -70,7 +69,11 @@ import { localPathToUri } from "../util/pathToUri";
 
 import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
-import { getModelByRole, isSupportedLanceDbCpuTargetForLinux } from "./util";
+import {
+  getModelByRole,
+  isSupportedLanceDbCpuTargetForLinux,
+  serializePromptTemplates,
+} from "./util";
 import { validateConfig } from "./validation.js";
 
 export function resolveSerializedConfig(
@@ -201,12 +204,6 @@ async function serializedToIntermediateConfig(
   return config;
 }
 
-function isModelDescription(
-  llm: ModelDescription | CustomLLM,
-): llm is ModelDescription {
-  return (llm as ModelDescription).title !== undefined;
-}
-
 export function isContextProviderWithParams(
   contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
@@ -240,7 +237,7 @@ async function intermediateToFinalConfig({
   // Auto-detect models
   let models: BaseLLM[] = [];
   for (const desc of config.models) {
-    if (isModelDescription(desc)) {
+    if ("title" in desc) {
       const llm = await llmFromDescription(
         desc,
         ide.readFile.bind(ide),
@@ -349,7 +346,7 @@ async function intermediateToFinalConfig({
           ? config.tabAutocompleteModel
           : [config.tabAutocompleteModel]
         ).map(async (desc) => {
-          if (isModelDescription(desc)) {
+          if ("title" in desc) {
             const llm = await llmFromDescription(
               desc,
               ide.readFile.bind(ide),
@@ -430,7 +427,7 @@ async function intermediateToFinalConfig({
 
   // Embeddings Provider
   function getEmbeddingsILLM(
-    embedConfig: EmbeddingsProviderDescription | ILLM | undefined,
+    embedConfig: JSONEmbeddingsProviderDescription | ILLM | undefined,
   ): ILLM | null {
     if (embedConfig) {
       // config.ts-injected ILLM
@@ -465,7 +462,7 @@ async function intermediateToFinalConfig({
 
   // Reranker
   function getRerankingILLM(
-    rerankingConfig: ILLM | RerankerDescription | undefined,
+    rerankingConfig: ILLM | JSONRerankerDescription | undefined,
   ): ILLM | null {
     if (!rerankingConfig) {
       return null;
@@ -474,7 +471,7 @@ async function intermediateToFinalConfig({
     if ("providerName" in rerankingConfig) {
       return rerankingConfig;
     }
-    const { name, params } = config.reranker as RerankerDescription;
+    const { name, params } = config.reranker as JSONRerankerDescription;
 
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
@@ -607,8 +604,10 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     contextLength: llm.contextLength,
     template: llm.template,
     completionOptions: llm.completionOptions,
+    systemMessage: llm.systemMessage,
+    baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
-    promptTemplates: llm.promptTemplates as any,
+    promptTemplates: serializePromptTemplates(llm.promptTemplates),
     capabilities: llm.capabilities,
     roles: llm.roles,
     configurationStatus: llm.getConfigurationStatus(),

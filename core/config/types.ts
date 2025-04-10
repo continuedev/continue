@@ -958,7 +958,7 @@ declare global {
     cacheBehavior?: CacheBehavior;
   }
   
-  export interface EmbedOptions {
+  export interface JSONEmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;
@@ -982,7 +982,7 @@ declare global {
     provider: string;
   }
   
-  export interface RerankerDescription {
+  export interface JSONRerankerDescription {
     name: string;
     params?: { [key: string]: any };
   }
@@ -1161,7 +1161,7 @@ declare global {
     tabAutocompleteModel?: ModelDescription | ModelDescription[];
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
     ui?: ContinueUIConfig;
-    reranker?: RerankerDescription;
+    reranker?: JSONRerankerDescription;
     experimental?: ExperimentalConfig;
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
@@ -1212,7 +1212,7 @@ declare global {
     /** UI styles customization */
     ui?: ContinueUIConfig;
     /** Options for the reranker */
-    reranker?: RerankerDescription | ILLM;
+    reranker?: JSONRerankerDescription | ILLM;
     /** Experimental configuration */
     experimental?: ExperimentalConfig;
     /** Analytics configuration */
@@ -1255,7 +1255,7 @@ declare global {
     userToken?: string;
     embeddingsProvider?: string;
     ui?: ContinueUIConfig;
-    reranker?: RerankerDescription;
+    reranker?: JSONRerankerDescription;
     experimental?: ExperimentalConfig;
     analytics?: AnalyticsConfig;
     docs?: SiteIndexingConfig[];
