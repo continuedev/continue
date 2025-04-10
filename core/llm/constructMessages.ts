@@ -1,8 +1,32 @@
 import { ChatHistoryItem, ChatMessage, MessagePart } from "../";
 import { normalizeToMessageParts } from "../util/messageContent";
 
-const DEFAULT_SYSTEM_MESSAGE = `<important_rules>
-  Always include the language and file name in the info string when you write code blocks. If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'.
+const DEFAULT_SYSTEM_MESSAGE = `\
+<important_rules>
+  Always include the language and file name in the info string when you write code blocks. 
+  If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
+
+  When addressing code modification requests, present a concise code snippet that
+  emphasizes only the necessary changes and uses abbreviated placeholders for
+  unmodified sections. For instance:
+
+  \`\`\`typescript /path/to/file
+  // ... rest of code here ...
+
+  {{ modified code here }}
+
+  // ... rest of code here ...
+
+  {{ another modification }}
+
+  // ... rest of code here ...
+  \`\`\`
+
+  Since users have access to their complete file, they prefer reading only the
+  relevant modifications. It's perfectly acceptable to omit unmodified portions
+  at the beginning, middle, or end of files using these "lazy" comments. Only
+  provide the complete file when explicitly requested. Include a concise explanation
+  of changes unless the user specifically asks for code only.
 </important_rules>`;
 
 const CANCELED_TOOL_CALL_MESSAGE =
