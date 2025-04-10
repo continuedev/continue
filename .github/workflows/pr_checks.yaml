@@ -208,11 +208,17 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Install gui dependencies
         if: steps.gui-cache.outputs.cache-hit != 'true'
@@ -246,11 +252,17 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Type check
         run: |
@@ -283,11 +295,17 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Install binary dependencies
         if: steps.binary-cache.outputs.cache-hit != 'true'
@@ -326,11 +344,17 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Install vscode dependencies
         if: steps.vscode-cache.outputs.cache-hit != 'true'
@@ -366,11 +390,17 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Type check and lint
         run: |
@@ -393,11 +423,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Run core tests
         run: |
@@ -426,11 +462,17 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Get test files
         id: vscode-get-test-file-matrix
@@ -475,11 +517,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Package extension
         run: |
@@ -514,11 +562,17 @@ jobs:
           path: extensions/vscode/e2e/storage
           key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Download Dependencies
         if: steps.storage-cache.outputs.cache-hit != 'true'
@@ -582,11 +636,17 @@ jobs:
           name: vscode-e2e-dependencies
           path: extensions/vscode/e2e/storage
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Fix VSCode binary permissions
         run: |
@@ -650,11 +710,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Install GUI dependencies
         if: steps.gui-cache.outputs.cache-hit != 'true'
@@ -677,11 +743,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
