@@ -13,6 +13,7 @@ import { useAppDispatch } from "../../../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../../redux/thunks";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
+import SkipLocalOnboardingSubtext from "../../SkipLocalOnboardingSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
@@ -102,6 +103,23 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
     return () => clearInterval(intervalId);
   }, []);
 
+  const onClickSubmitOnboarding = () => {
+    submitOnboarding();
+
+    if (isDialog) {
+      dispatch(setDialogMessage(undefined));
+      dispatch(setShowDialog(false));
+    }
+
+    dispatch(
+      updateSelectedModelByRole({
+        selectedProfile,
+        role: "chat",
+        modelTitle: LOCAL_ONBOARDING_CHAT_TITLE,
+      }),
+    );
+  }
+
   return (
     <div className="mt-3 flex flex-col gap-1 px-2">
       <div className="flex flex-col">
@@ -127,30 +145,20 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
         hasDownloaded={hasDownloadedEmbeddingsModel}
       />
 
+
       <div className="mt-4 w-full">
         <Button
-          onClick={() => {
-            submitOnboarding();
-
-            if (isDialog) {
-              dispatch(setDialogMessage(undefined));
-              dispatch(setShowDialog(false));
-            }
-
-            dispatch(
-              updateSelectedModelByRole({
-                selectedProfile,
-                role: "chat",
-                modelTitle: LOCAL_ONBOARDING_CHAT_TITLE,
-              }),
-            );
-          }}
+          onClick={onClickSubmitOnboarding}
           className="w-full"
           disabled={!allDownloaded}
         >
           Connect
         </Button>
         <AddModelButtonSubtext />
+        <SkipLocalOnboardingSubtext onClick={onClickSubmitOnboarding} />
+        <Button>
+
+        </Button>
       </div>
     </div>
   );
