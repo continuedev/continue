@@ -131,8 +131,9 @@ function ModelSelect() {
 
   // Sort so that options without an API key are at the end
   useEffect(() => {
-    const enabledOptions = options.filter((option) => option.apiKey !== "");
-    const disabledOptions = options.filter((option) => option.apiKey === "");
+    const alphaSort = options.sort((a, b) => a.title.localeCompare(b.title));
+    const enabledOptions = alphaSort.filter((option) => option.apiKey !== "");
+    const disabledOptions = alphaSort.filter((option) => option.apiKey === "");
 
     const sorted = [...enabledOptions, ...disabledOptions];
 
