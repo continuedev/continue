@@ -374,6 +374,7 @@ jobs:
       - name: Type check and lint
         run: |
           cd extensions/vscode
+          npm run write-build-timestamp
           npx tsc --noEmit
           npm run lint
 
