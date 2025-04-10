@@ -223,7 +223,7 @@ function ModelSelect() {
           ref={buttonRef}
           className="h-[18px] gap-1 border-none text-gray-400"
         >
-          <span className="line-clamp-1 hover:brightness-110">
+          <span className="line-clamp-1 break-all hover:brightness-110">
             {modelSelectTitle(selectedChatModel) || "Select model"}
           </span>
           <ChevronDownIcon
