@@ -127,29 +127,22 @@ jobs:
           node-version-file: ".nvmrc"
 
       - uses: actions/cache@v4
+        id: root-cache
         with:
           path: node_modules
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
-      - name: Build and check config-types
-        run: |
-          cd packages/config-types
-          npx tsc --noEmit
-          npm run build
-          ## No tests to run
-
-      - name: Build and check config-yaml
-        run: |
-          cd packages/config-yaml
-          npx tsc --noEmit
-          npm test
-          npm run build
-
-      - name: Upload config-yaml build
-        uses: actions/upload-artifact@v4
+      - uses: actions/cache@v4
+        id: core-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: core/node_modules
+          key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Install core dependencies
+        if: steps.core-cache.outputs.cache-hit != 'true'
+        run: |
+          cd core
+          npm ci
 
   core-checks:
     needs: [install-core, install-config-packages]
