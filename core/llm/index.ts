@@ -127,6 +127,7 @@ export abstract class BaseLLM implements ILLM {
 
   title?: string;
   systemMessage?: string;
+  baseChatSystemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
@@ -195,6 +196,7 @@ export abstract class BaseLLM implements ILLM {
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.systemMessage = options.systemMessage;
+    this.baseChatSystemMessage = options.baseChatSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
