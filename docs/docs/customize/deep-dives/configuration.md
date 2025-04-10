@@ -5,16 +5,22 @@ keywords: [config, settings, customize]
 
 # Configuration
 
+You can easily access your assistant configuration from the Continue Chat sidebar. Open the sidebar by pressing <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) and click the Assistant selector above the main chat input. Then, you can hover over an assistant and click the `new window` (hub assistants) or `gear` (local assistants) icon.
+
+![configure an assistant](/img/configure-continue.png)
+
+## Hub Assistants
+
+Hub Assistants can be managed in [the Hub](https://hub.continue.dev). See [Editing an Assistant](../../hub/assistants/edit-an-assistant.md)
+
 ## YAML Config
 
-Continue can be deeply customized. Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
+Local user-level configuration is stored and can be edited in your home directory in `config.yaml`:
 
-To open `config.yaml`, you can click the "gear" icon in the header of the Continue Chat sidebar to open the settings page, and then click `Open Config File` to open the file. When editing this file, you can see the available options suggested as you type, or check the reference below.
+To open `config.yaml`, you can click the "gear" icon in the header of the Continue Chat sidebar to open the settings page, and then click `Open Assistant configuration` to open the file. When editing this file, you can see the available options suggested as you type, or check the reference below.
 
 - `~/.continue/config.yaml` (MacOS / Linux)
 - `%USERPROFILE%\.continue\config.yaml` (Windows)
-
-To open your configuration file, you can click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can see the available options suggested as you type, or check the reference below.
 
 When you save a config file from the IDE, Continue will automatically refresh to take into account your changes. A config file is automatically created the first time you use Continue, and always automatically generated with default values if it doesn't exist.
 
@@ -49,7 +55,9 @@ Example
 
 ### `config.ts`
 
-To programatically extend `config.json`, you can place a `config.ts` script in same directory as `config.json` and export a `modifyConfig` function, like:
+`config.yaml` or `config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically extend Continue configuration, you can use a `config.ts` file, placed at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
+
+`config.ts` must export a `modifyConfig` function, like:
 
 ```ts title="config.ts"
 export function modifyConfig(config: Config): Config {
@@ -75,4 +83,4 @@ export function modifyConfig(config: Config): Config {
 }
 ```
 
-This can be used for slash commands and custom context providers.
+For examples of how to use `config.ts`, see [writing custom slash commands](../tutorials/build-your-own-slash-command.md#custom-slash-commands) or [writing custom context providers](../tutorials/build-your-own-context-provider.mdx).

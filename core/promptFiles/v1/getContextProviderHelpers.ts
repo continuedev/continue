@@ -19,12 +19,12 @@ export function getContextProviderHelpers(
     async (helperContext: any) => {
       const items = await provider.getContextItems(helperContext, {
         config: context.config,
-        embeddingsProvider: context.config.embeddingsProvider,
+        embeddingsProvider: context.config.selectedModelByRole.embed,
         fetch: context.fetch,
         fullInput: context.input,
         ide: context.ide,
         llm: context.llm,
-        reranker: context.config.reranker,
+        reranker: context.config.selectedModelByRole.rerank,
         selectedCode: context.selectedCode,
       });
 

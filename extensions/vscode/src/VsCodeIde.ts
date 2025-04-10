@@ -2,14 +2,15 @@ import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
 
 import { Range } from "core";
-import { enableHubContinueDev, EXTENSION_NAME } from "core/control-plane/env";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import { GetGhTokenArgs } from "core/protocol/ide";
-import { editConfigJson, getConfigJsonPath } from "core/util/paths";
+import { editConfigFile, getConfigJsonPath } from "core/util/paths";
+import * as URI from "uri-js";
 import * as vscode from "vscode";
 
-import * as URI from "uri-js";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { Repository } from "./otherExtensions/git";
+import { SecretStorage } from "./stubs/SecretStorage";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -28,7 +29,6 @@ import type {
   TerminalOptions,
   Thread,
 } from "core";
-import { SecretStorage } from "./stubs/SecretStorage";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -155,26 +155,39 @@ class VsCodeIde implements IDE {
               );
 
               // Remove free trial models
-              editConfigJson((config) => {
-                let tabAutocompleteModel = undefined;
-                if (Array.isArray(config.tabAutocompleteModel)) {
-                  tabAutocompleteModel = config.tabAutocompleteModel.filter(
-                    (model) => model.provider !== "free-trial",
-                  );
-                } else if (
-                  config.tabAutocompleteModel?.provider === "free-trial"
-                ) {
-                  tabAutocompleteModel = undefined;
-                }
+              editConfigFile(
+                (config) => {
+                  let tabAutocompleteModel = undefined;
+                  if (Array.isArray(config.tabAutocompleteModel)) {
+                    tabAutocompleteModel = config.tabAutocompleteModel.filter(
+                      (model) => model.provider !== "free-trial",
+                    );
+                  } else if (
+                    config.tabAutocompleteModel?.provider === "free-trial"
+                  ) {
+                    tabAutocompleteModel = undefined;
+                  }
 
-                return {
-                  ...config,
-                  models: config.models.filter(
-                    (model) => model.provider !== "free-trial",
-                  ),
-                  tabAutocompleteModel,
-                };
-              });
+                  return {
+                    ...config,
+                    models: config.models.filter(
+                      (model) => model.provider !== "free-trial",
+                    ),
+                    tabAutocompleteModel,
+                  };
+                },
+                (config) => {
+                  return {
+                    ...config,
+                    models: config.models?.filter(
+                      (model) =>
+                        !(
+                          "provider" in model && model.provider === "free-trial"
+                        ),
+                    ),
+                  };
+                },
+              );
             } else if (selection === "Learn more") {
               vscode.env.openExternal(
                 vscode.Uri.parse(
@@ -212,18 +225,27 @@ class VsCodeIde implements IDE {
           .showInformationMessage(
             "We'll only ask you to log in if using the free trial. To avoid this prompt, make sure to remove free trial models from your config.json",
             "Remove for me",
-            "Open config.json",
+            "Open Assistant configuration",
           )
           .then((selection) => {
             if (selection === "Remove for me") {
-              editConfigJson((configJson) => {
-                configJson.models = configJson.models.filter(
-                  (model) => model.provider !== "free-trial",
-                );
-                configJson.tabAutocompleteModel = undefined;
-                return configJson;
-              });
-            } else if (selection === "Open config.json") {
+              editConfigFile(
+                (configJson) => {
+                  configJson.models = configJson.models.filter(
+                    (model) => model.provider !== "free-trial",
+                  );
+                  configJson.tabAutocompleteModel = undefined;
+                  return configJson;
+                },
+                (config) => {
+                  config.models = config.models?.filter(
+                    (model) =>
+                      !("provider" in model && model.provider === "free-trial"),
+                  );
+                  return config;
+                },
+              );
+            } else if (selection === "Open Assistant configuration") {
               this.openFile(getConfigJsonPath());
             }
           });
@@ -533,24 +555,15 @@ class VsCodeIde implements IDE {
       .map((t) => (t.input as vscode.TabInputText).uri.toString());
   }
 
-  private async _searchDir(query: string, dir: string): Promise<string> {
-    const relativeDir = vscode.Uri.parse(dir).fsPath;
+  runRipgrepQuery(dirUri: string, args: string[]) {
+    const relativeDir = vscode.Uri.parse(dirUri).fsPath;
     const ripGrepUri = vscode.Uri.joinPath(
       getExtensionUri(),
       "out/node_modules/@vscode/ripgrep/bin/rg",
     );
-    const p = child_process.spawn(
-      ripGrepUri.fsPath,
-      [
-        "-i", // Case-insensitive search
-        "-C",
-        "2", // Show 2 lines of context
-        "-e",
-        query, // Pattern to search for
-        ".", // Directory to search in
-      ],
-      { cwd: relativeDir },
-    );
+    const p = child_process.spawn(ripGrepUri.fsPath, args, {
+      cwd: relativeDir,
+    });
     let output = "";
 
     p.stdout.on("data", (data) => {
@@ -572,13 +585,118 @@ class VsCodeIde implements IDE {
     });
   }
 
+  async getFileResults(pattern: string): Promise<string[]> {
+    const MAX_FILE_RESULTS = 200;
+    if (vscode.env.remoteName) {
+      // TODO better tests for this remote search implementation
+      // throw new Error("Ripgrep not supported, this workspace is remote");
+
+      // IMPORTANT: findFiles automatically accounts for .gitignore
+      const ignoreFiles = await vscode.workspace.findFiles(
+        "**/.continueignore",
+        null,
+      );
+
+      const ignoreGlobs: Set<string> = new Set();
+      for (const file of ignoreFiles) {
+        const content = await vscode.workspace.fs.readFile(file);
+        const filePath = vscode.workspace.asRelativePath(file);
+        const fileDir = filePath
+          .replace(/\\/g, "/")
+          .replace(/\/$/, "")
+          .split("/")
+          .slice(0, -1)
+          .join("/");
+
+        const patterns = Buffer.from(content)
+          .toString()
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(
+            (line) => line && !line.startsWith("#") && !pattern.startsWith("!"),
+          );
+        // VSCode does not support negations
+
+        patterns
+          // Handle prefix
+          .map((pattern) => {
+            const normalizedPattern = pattern.replace(/\\/g, "/");
+
+            if (normalizedPattern.startsWith("/")) {
+              if (fileDir) {
+                return `{/,}${normalizedPattern}`;
+              } else {
+                return `${fileDir}/${normalizedPattern.substring(1)}`;
+              }
+            } else {
+              if (fileDir) {
+                return `${fileDir}/${normalizedPattern}`;
+              } else {
+                return `**/${normalizedPattern}`;
+              }
+            }
+          })
+          // Handle suffix
+          .map((pattern) => {
+            return pattern.endsWith("/") ? `${pattern}**/*` : pattern;
+          })
+          .forEach((pattern) => {
+            ignoreGlobs.add(pattern);
+          });
+      }
+
+      const ignoreGlobsArray = Array.from(ignoreGlobs);
+
+      const results = await vscode.workspace.findFiles(
+        pattern,
+        ignoreGlobs.size ? `{${ignoreGlobsArray.join(",")}}` : null,
+        MAX_FILE_RESULTS,
+      );
+      return results.map((result) => vscode.workspace.asRelativePath(result));
+    } else {
+      const results: string[] = [];
+      for (const dir of await this.getWorkspaceDirs()) {
+        const dirResults = await this.runRipgrepQuery(dir, [
+          "--files",
+          "--iglob",
+          pattern,
+          "--ignore-file",
+          ".continueignore",
+          "--ignore-file",
+          ".gitignore",
+        ]);
+
+        results.push(dirResults);
+      }
+
+      return results.join("\n").split("\n").slice(0, MAX_FILE_RESULTS);
+    }
+  }
+
   async getSearchResults(query: string): Promise<string> {
-    const results = [];
+    if (vscode.env.remoteName) {
+      throw new Error("Ripgrep not supported, this workspace is remote");
+    }
+    const results: string[] = [];
     for (const dir of await this.getWorkspaceDirs()) {
-      results.push(await this._searchDir(query, dir));
+      const dirResults = await this.runRipgrepQuery(dir, [
+        "-i", // Case-insensitive search
+        "--ignore-file",
+        ".continueignore",
+        "--ignore-file",
+        ".gitignore",
+        "-C",
+        "2", // Show 2 lines of context
+        "--heading", // Only show filepath once per result
+        "-e",
+        query, // Pattern to search for
+        ".", // Directory to search in
+      ]);
+
+      results.push(dirResults);
     }
 
-    return results.join("\n\n");
+    return results.join("\n");
   }
 
   async getProblems(fileUri?: string | undefined): Promise<Problem[]> {
@@ -645,9 +763,7 @@ class VsCodeIde implements IDE {
         "enableContinueForTeams",
         false,
       ),
-      continueTestEnvironment: settings.get<boolean>("enableContinueHub")
-        ? "production"
-        : "none",
+      continueTestEnvironment: "production",
       pauseCodebaseIndexOnStart: settings.get<boolean>(
         "pauseCodebaseIndexOnStart",
         false,
@@ -662,15 +778,6 @@ class VsCodeIde implements IDE {
 
   async getIdeSettings(): Promise<IdeSettings> {
     const ideSettings = this.getIdeSettingsSync();
-
-    // Feature flag for when hub is enabled
-    if (ideSettings.continueTestEnvironment !== "production") {
-      const enableHub = await enableHubContinueDev();
-      if (enableHub) {
-        ideSettings.continueTestEnvironment = "production";
-      }
-    }
-
     return ideSettings;
   }
 }

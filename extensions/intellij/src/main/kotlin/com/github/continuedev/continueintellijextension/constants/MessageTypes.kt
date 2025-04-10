@@ -23,6 +23,7 @@ class MessageTypes {
             "getCurrentFile",
             "getPinnedFiles",
             "getSearchResults",
+            "getFileResults",
             "getProblems",
             "subprocess",
             "getBranch",
@@ -58,19 +59,16 @@ class MessageTypes {
         // Note: If updating these values, make a corresponding update in
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
-            "configError",
             "configUpdate",
-            "getDefaultModelTitle",
             "indexProgress", // Codebase
             "indexing/statusUpdate", // Docs, etc.
             "addContextItem",
             "refreshSubmenuItems",
             "isContinueInputFocused",
-            "didChangeAvailableProfiles",
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
-            "docs/suggestions",
+            "didCloseFiles",
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -83,14 +81,15 @@ class MessageTypes {
             "history/save",
             "devdata/log",
             "config/addModel",
-            "config/addContextProvider",
             "config/newPromptFile",
             "config/ideSettingsUpdate",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
-            "config/listProfiles",
+            "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
+            "config/updateSelectedModel",
+            "mcp/reloadServer",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -100,10 +99,8 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
-            "command/run",
             "tts/kill",
             "llm/complete",
-            "llm/streamComplete",
             "llm/streamChat",
             "llm/listModels",
             "streamDiffLines",
@@ -119,7 +116,6 @@ class MessageTypes {
             "indexing/reindex",
             "indexing/abort",
             "indexing/setPaused",
-            "docs/getSuggestedDocs",
             "docs/initStatuses",
             "docs/getDetails",
             //
@@ -129,8 +125,7 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
-            "controlPlane/listOrganizations"
-
+            "isItemTooBig",
         )
     }
 }

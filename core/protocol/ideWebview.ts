@@ -4,7 +4,6 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 import type {
   ApplyState,
   CodeToEdit,
-  ContextSubmenuItem,
   EditStatus,
   MessageContent,
   RangeInFileWithContents,
@@ -18,8 +17,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     {
       text: string;
       streamId: string;
-      curSelectedModelTitle: string;
       filepath?: string;
+      toolCallId?: string;
     },
     void,
   ];
@@ -49,11 +48,10 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   acceptDiff: [{ filepath: string; streamId?: string }, void];
   rejectDiff: [{ filepath: string; streamId?: string }, void];
   "edit/sendPrompt": [
-    { prompt: MessageContent; range: RangeInFileWithContents },
-    void,
-  ];
-  "edit/acceptReject": [
-    { accept: boolean; onlyFirst: boolean; filepath: string },
+    {
+      prompt: MessageContent;
+      range: RangeInFileWithContents;
+    },
     void,
   ];
   "edit/exit": [{ shouldFocusEditor: boolean }, void];

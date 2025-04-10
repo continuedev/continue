@@ -6,28 +6,46 @@ import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
 export type ConfigState = {
   configError: ConfigValidationError[] | undefined;
   config: BrowserSerializedContinueConfig;
-  defaultModelTitle: string;
+};
+
+const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
+  slashCommands: [
+    {
+      name: "share",
+      description: "Export the current chat session to markdown",
+    },
+    {
+      name: "cmd",
+      description: "Generate a shell command",
+    },
+  ],
+  contextProviders: [],
+  tools: [],
+  mcpServerStatuses: [],
+  usePlatform: true,
+  modelsByRole: {
+    chat: [],
+    apply: [],
+    edit: [],
+    summarize: [],
+    autocomplete: [],
+    rerank: [],
+    embed: [],
+  },
+  selectedModelByRole: {
+    chat: null,
+    apply: null,
+    edit: null,
+    summarize: null,
+    autocomplete: null,
+    rerank: null,
+    embed: null,
+  },
 };
 
 const initialState: ConfigState = {
   configError: undefined,
-  defaultModelTitle: "GPT-4",
-  config: {
-    slashCommands: [
-      {
-        name: "share",
-        description: "Export the current chat session to markdown",
-      },
-      {
-        name: "cmd",
-        description: "Generate a shell command",
-      },
-    ],
-    contextProviders: [],
-    models: [],
-    tools: [],
-    usePlatform: true,
-  },
+  config: EMPTY_CONFIG,
 };
 
 export const configSlice = createSlice({
@@ -43,17 +61,15 @@ export const configSlice = createSlice({
       const { config, errors } = result;
       state.configError = errors;
 
+      // If an error is found in config on save,
+      // We must invalidate the GUI config too,
+      // Since core won't be able to load config
+      // Don't invalidate the loaded config
       if (!config) {
-        return;
+        state.config = EMPTY_CONFIG;
+      } else {
+        state.config = config;
       }
-
-      const defaultModelTitle =
-        config.models.find((model) => model.title === state.defaultModelTitle)
-          ?.title ||
-        config.models[0]?.title ||
-        "";
-      state.config = config;
-      state.defaultModelTitle = defaultModelTitle;
     },
     updateConfig: (
       state,
@@ -61,51 +77,16 @@ export const configSlice = createSlice({
     ) => {
       state.config = config;
     },
-    setConfigError: (
-      state,
-      { payload: error }: PayloadAction<ConfigValidationError[] | undefined>,
-    ) => {
-      state.configError = error;
-    },
-    setDefaultModel: (
-      state,
-      { payload }: PayloadAction<{ title: string; force?: boolean }>,
-    ) => {
-      const model = state.config.models.find(
-        (model) => model.title === payload.title,
-      );
-      if (!model && !payload.force) return;
-      return {
-        ...state,
-        defaultModelTitle: payload.title,
-      };
-    },
-    cycleDefaultModel: (state, { payload }: PayloadAction<"next" | "prev">) => {
-      const currentIndex = state.config.models.findIndex(
-        (model) => model.title === state.defaultModelTitle,
-      );
-      const nextIndex =
-        (currentIndex +
-          (payload === "next" ? 1 : -1) +
-          state.config.models.length) %
-        state.config.models.length;
-      return {
-        ...state,
-        defaultModelTitle: state.config.models[nextIndex].title,
-      };
-    },
   },
   selectors: {
-    selectDefaultModel: (state) => {
-      return state.config.models.find(
-        (model) => model.title === state.defaultModelTitle,
-      );
-    },
-    selectDefaultModelContextLength: (state): number => {
+    selectSelectedChatModelContextLength: (state): number => {
       return (
-        configSlice.getSelectors().selectDefaultModel(state)?.contextLength ||
+        state.config.selectedModelByRole.chat?.contextLength ||
         DEFAULT_MAX_TOKENS
       );
+    },
+    selectSelectedChatModel: (state) => {
+      return state.config.selectedModelByRole.chat;
     },
     selectUIConfig: (state) => {
       return state.config?.ui ?? null;
@@ -113,18 +94,12 @@ export const configSlice = createSlice({
   },
 });
 
-export const {
-  setDefaultModel,
-  cycleDefaultModel,
-  updateConfig,
-  setConfigResult,
-  setConfigError,
-} = configSlice.actions;
+export const { updateConfig, setConfigResult } = configSlice.actions;
 
 export const {
-  selectDefaultModel,
-  selectDefaultModelContextLength,
+  selectSelectedChatModelContextLength,
   selectUIConfig,
+  selectSelectedChatModel,
 } = configSlice.selectors;
 
 export default configSlice.reducer;

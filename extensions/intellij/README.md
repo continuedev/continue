@@ -4,9 +4,7 @@
 
 <div align="center">
 
-[**Continue**](https://docs.continue.dev) is the leading open-source AI code assistant.
-
-You can connect any models and any context to build custom autocomplete and chat experiences inside [**VS Code**](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [**JetBrains**](https://plugins.jetbrains.com/plugin/22707-continue-extension) IDEs.
+[**Continue**](https://docs.continue.dev) enables developers to create, share, and use custom AI code assistants with our open-source [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extension and [hub of models, rules, prompts, docs, and other building blocks](https://hub.continue.dev).
 
 </div>
 
@@ -30,11 +28,11 @@ To enable it, simply click the "Continue" button in the status bar at the bottom
 
 Highlight a block of code, describe your code changes, and a diff will be streamed inline to your file which you can accept or reject.
 
-## Actions
+## Agent
 
-[Actions](https://continue.dev/docs/actions/how-to-use-it) are shortcuts for common use cases.
+[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
 
-For example, you might want to review code, write tests, or add a docstring.
+Agent equips the Chat model with the tools needed to handle a wide range of coding tasks, allowing the model to make decisions and save you the work of manually finding context and performing actions.
 
 </div>
 

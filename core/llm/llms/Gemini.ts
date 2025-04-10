@@ -4,6 +4,7 @@ import {
   CompletionOptions,
   LLMOptions,
   MessagePart,
+  TextMessagePart,
   ToolCallDelta,
 } from "../../index.js";
 import { findLast } from "../../util/findLast.js";
@@ -69,20 +70,84 @@ class Gemini extends BaseLLM {
     }
   }
 
+  /**
+   * Removes the system message and merges it with the next user message if present.
+   * @param messages Array of chat messages
+   * @returns Modified array with system message merged into user message if applicable
+   */
   public removeSystemMessage(messages: ChatMessage[]): ChatMessage[] {
-    // should be public for use within VertexAI
-    const msgs = [...messages];
+    // If no messages or first message isn't system, return copy of original messages
+    if (messages.length === 0 || messages[0]?.role !== "system") {
+      return [...messages];
+    }
 
-    if (msgs[0]?.role === "system") {
-      const sysMsg = msgs.shift()?.content;
-      // @ts-ignore
-      if (msgs[0]?.role === "user") {
-        // @ts-ignore
-        msgs[0].content = `System message - follow these instructions in every response: ${sysMsg}\n\n---\n\n${msgs[0].content}`;
+    // Extract system message
+    const systemMessage: ChatMessage = messages[0];
+
+    // Extract system content based on its type
+    let systemContent = "";
+
+    if (typeof systemMessage.content === "string") {
+      systemContent = systemMessage.content;
+    } else if (Array.isArray(systemMessage.content)) {
+      const contentArray: Array<MessagePart> =
+        systemMessage.content as Array<MessagePart>;
+
+      const concatenatedText = contentArray
+        .filter((part): part is TextMessagePart => part.type === "text")
+        .map((part) => part.text)
+        .join(" ");
+
+      systemContent = concatenatedText ? concatenatedText : "";
+    } else if (
+      systemMessage.content &&
+      typeof systemMessage.content === "object"
+    ) {
+      const typedContent = systemMessage.content as TextMessagePart;
+      systemContent = typedContent?.text || "";
+    }
+
+    // Create new array without the system message
+    const remainingMessages: ChatMessage[] = messages.slice(1);
+
+    // Check if there's a user message to merge with
+    if (remainingMessages.length > 0 && remainingMessages[0].role === "user") {
+      const userMessage: ChatMessage = remainingMessages[0];
+      const prefix = `System message - follow these instructions in every response: ${systemContent}\n\n---\n\n`;
+
+      // Merge based on user content type
+      if (typeof userMessage.content === "string") {
+        userMessage.content = prefix + userMessage.content;
+      } else if (Array.isArray(userMessage.content)) {
+        const contentArray: Array<MessagePart> =
+          userMessage.content as Array<MessagePart>;
+        const textPart = contentArray.find((part) => part.type === "text") as
+          | TextMessagePart
+          | undefined;
+
+        if (textPart) {
+          textPart.text = prefix + textPart.text;
+        } else {
+          userMessage.content.push({
+            type: "text",
+            text: prefix,
+          } as TextMessagePart);
+        }
+      } else if (
+        userMessage.content &&
+        typeof userMessage.content === "object"
+      ) {
+        const typedContent = userMessage.content as TextMessagePart;
+        userMessage.content = [
+          {
+            type: "text",
+            text: prefix + (typedContent.text || ""),
+          } as TextMessagePart,
+        ];
       }
     }
 
-    return msgs;
+    return remainingMessages;
   }
 
   protected async *_streamChat(
@@ -134,21 +199,11 @@ class Gemini extends BaseLLM {
         };
   }
 
-  private async *streamChatGemini(
+  public prepareBody(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
-  ): AsyncGenerator<ChatMessage> {
-    const apiURL = new URL(
-      `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
-      this.apiBase,
-    );
-    // This feels hacky to repeat code from above function but was the quickest
-    // way to ensure system message re-formatting isn't done if user has specified v1
-    const apiBase = this.apiBase || Gemini.defaultOptions.apiBase!; // Determine if it's a v1 API call based on apiBase
-    const isV1API = apiBase.includes("/v1/");
-
-    // Convert chat messages to contents
+    isV1API: boolean,
+  ): GeminiChatRequestBody {
     const body: GeminiChatRequestBody = {
       contents: messages
         .filter((msg) => !(msg.role === "system" && isV1API))
@@ -303,15 +358,14 @@ class Gemini extends BaseLLM {
         }
       }
     }
+    return body;
+  }
 
-    const response = await this.fetch(apiURL, {
-      method: "POST",
-      body: JSON.stringify(body),
-      signal,
-    });
-
+  public async *processGeminiResponse(
+    stream: AsyncIterable<string>,
+  ): AsyncGenerator<ChatMessage> {
     let buffer = "";
-    for await (const chunk of streamResponse(response)) {
+    for await (const chunk of stream) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
         buffer = buffer.slice(1);
@@ -423,6 +477,35 @@ class Gemini extends BaseLLM {
       } else {
         buffer = "";
       }
+    }
+  }
+
+  private async *streamChatGemini(
+    messages: ChatMessage[],
+    signal: AbortSignal,
+    options: CompletionOptions,
+  ): AsyncGenerator<ChatMessage> {
+    const apiURL = new URL(
+      `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
+      this.apiBase,
+    );
+    // This feels hacky to repeat code from above function but was the quickest
+    // way to ensure system message re-formatting isn't done if user has specified v1
+    const apiBase = this.apiBase || Gemini.defaultOptions.apiBase!; // Determine if it's a v1 API call based on apiBase
+    const isV1API = apiBase.includes("/v1/");
+
+    // Convert chat messages to contents
+    const body = this.prepareBody(messages, options, isV1API);
+
+    const response = await this.fetch(apiURL, {
+      method: "POST",
+      body: JSON.stringify(body),
+      signal,
+    });
+    for await (const message of this.processGeminiResponse(
+      streamResponse(response),
+    )) {
+      yield message;
     }
   }
   private async *streamChatBison(

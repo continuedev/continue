@@ -16,6 +16,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -26,7 +27,9 @@ import com.intellij.openapi.vfs.VirtualFileManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.lang.IllegalStateException
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 
 class IdeProtocolClient(
@@ -41,6 +44,10 @@ class IdeProtocolClient(
         VirtualFileManager.getInstance().addAsyncFileListener(
             AsyncFileSaveListener(continuePluginService), ContinuePluginDisposable.getInstance(project)
         )
+    }
+
+    fun updateLastFileSaveTimestamp() {
+        (ide as IntelliJIDE).updateLastFileSaveTimestamp()
     }
 
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
@@ -108,7 +115,7 @@ class IdeProtocolClient(
                             .handleUpdatedSessionInfo(null)
 
                         // Tell the webview that session info changed
-                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
+                        continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", null, null) { _ -> }
 
                         respond(null)
                     }
@@ -341,6 +348,15 @@ class IdeProtocolClient(
                         respond(results)
                     }
 
+                    "getFileResults" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            GetFileResultsParams::class.java
+                        )
+                        val results = ide.getFileResults(params.pattern)
+                        respond(results)
+                    }
+
                     "getOpenFiles" -> {
                         val openFiles = ide.getOpenFiles()
                         respond(openFiles)
@@ -417,23 +433,55 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             ApplyToFileParams::class.java
                         )
+                        val filepath = params.filepath
 
-                        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+                        continuePluginService.sendToWebview("updateApplyState", mapOf(
+                            "streamId" to params.streamId,
+                            "status" to "streaming",
+                            "fileContent" to params.text,
+                            "toolCallId" to params.toolCallId,
+                            "filepath" to filepath
+                        ))
+
+
+                        fun closeStream () {
+                            continuePluginService.sendToWebview("updateApplyState", mapOf(
+                                "numDiffs" to 0,
+                                "streamId" to params.streamId,
+                                "status" to "closed",
+                                "fileContent" to params.text,
+                                "toolCallId" to params.toolCallId,
+                                "filepath" to filepath
+                            ))
+                        }
+
+                        var editor: Editor? = null;
+
+                        if (!filepath.isNullOrEmpty()) {
+                            val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
+                            if (virtualFile != null) {
+                                ApplicationManager.getApplication().invokeAndWait {
+                                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
+                                }
+                            }
+                        }
+                        editor = FileEditorManager.getInstance(project).selectedTextEditor
 
                         if (editor == null) {
                             ide.showToast(ToastType.ERROR, "No active editor to apply edits to")
+                            closeStream()
                             respond(null)
                             return@launch
                         }
 
                         if (editor.document.text.trim().isEmpty()) {
                             WriteCommandAction.runWriteCommandAction(project) {
-                                editor.document.insertString(0, msg)
+                                editor.document.insertString(0, params.text)
                             }
+                            closeStream()
                             respond(null)
                             return@launch
                         }
-
 
                         val llm: Any = try {
                             suspendCancellableCoroutine { continuation ->
@@ -442,25 +490,28 @@ class IdeProtocolClient(
                                     null,
                                     null
                                 ) { response ->
-                                    val responseObject = response as Map<*, *>
-                                    val responseContent = responseObject["content"] as Map<*, *>
-                                    val result = responseContent["result"] as Map<*, *>
-                                    val config = result["config"] as Map<String, Any>
+                                    try {
+                                        val responseObject = response as Map<*, *>
+                                        val responseContent = responseObject["content"] as Map<*, *>
+                                        val result = responseContent["result"] as Map<*, *>
+                                        val config = result["config"] as Map<*, *>
 
-                                    val applyCodeBlockModel = getModelByRole(config, "applyCodeBlock")
+                                        val selectedModels = config["selectedModelByRole"] as? Map<*, *>
+                                        var applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
+                                        
+                                        // If "apply" role model is not found, try "chat" role
+                                        if (applyCodeBlockModel == null) {
+                                            applyCodeBlockModel = selectedModels?.get("chat") as? Map<*, *>
+                                        }
 
-                                    if (applyCodeBlockModel != null) {
-                                        continuation.resume(applyCodeBlockModel)
-                                    }
-
-                                    val models =
-                                        config["models"] as List<Map<String, Any>>
-                                    val curSelectedModel = models.find { it["title"] == params.curSelectedModelTitle }
-
-                                    if (curSelectedModel == null) {
-                                        return@request
-                                    } else {
-                                        continuation.resume(curSelectedModel)
+                                        if (applyCodeBlockModel != null) {
+                                            continuation.resume(applyCodeBlockModel)
+                                        } else {
+                                            // If neither "apply" nor "chat" models are available, return with exception
+                                            continuation.resumeWithException(IllegalStateException("No 'apply' or 'chat' model found in configuration."))
+                                        }
+                                    } catch (e: Exception) {
+                                        continuation.resumeWithException(e)
                                     }
                                 }
                             }
@@ -470,10 +521,10 @@ class IdeProtocolClient(
                                     ToastType.ERROR, "Failed to fetch model configuration"
                                 )
                             }
+                            closeStream()
                             respond(null)
                             return@launch
                         }
-
 
                         val diffStreamService = project.service<DiffStreamService>()
                         // Clear all diff blocks before running the diff stream
@@ -509,7 +560,11 @@ class IdeProtocolClient(
                                 editor,
                                 rif?.range?.start?.line ?: 0,
                                 rif?.range?.end?.line ?: (editor.document.lineCount - 1),
-                                {}, {})
+                                {}, 
+                                {}, 
+                                params.streamId,
+                                params.toolCallId
+                            )
 
                         diffStreamService.register(diffStreamHandler, editor)
 
@@ -587,20 +642,5 @@ class IdeProtocolClient(
 
     fun deleteAtIndex(index: Int) {
         continuePluginService.sendToWebview("deleteAtIndex", DeleteAtIndex(index), uuid())
-    }
-
-    private fun getModelByRole(
-        config: Any,
-        role: Any
-    ): Any? {
-        val experimental = (config as? Map<*, *>)?.get("experimental") as? Map<*, *>
-        val roleTitle = (experimental?.get("modelRoles") as? Map<*, *>)?.get(role) as? String ?: return null
-
-        val models = (config as? Map<*, *>)?.get("models") as? List<*>
-        val matchingModel = models?.find { model ->
-            (model as? Map<*, *>)?.get("title") == roleTitle
-        }
-
-        return matchingModel
     }
 }

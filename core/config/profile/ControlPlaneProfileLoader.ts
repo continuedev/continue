@@ -2,10 +2,12 @@ import { ConfigJson } from "@continuedev/config-types";
 import { ConfigResult } from "@continuedev/config-yaml";
 
 import { ControlPlaneClient } from "../../control-plane/client.js";
+import { PRODUCTION_ENV } from "../../control-plane/env.js";
 import {
   ContinueConfig,
   IDE,
   IdeSettings,
+  ILLMLogger,
   SerializedContinueConfig,
 } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
@@ -26,7 +28,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
-    private writeLog: (message: string) => Promise<void>,
+    private llmLogger: ILLMLogger,
     private readonly onReload: () => void,
   ) {
     this.description = {
@@ -40,6 +42,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       },
       title: workspaceTitle,
       errors: undefined,
+      uri: `${PRODUCTION_ENV.APP_URL}workspaces/${workspaceId}`,
     };
 
     setInterval(async () => {
@@ -59,21 +62,18 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       )) as any);
     const serializedConfig: SerializedContinueConfig = settings;
 
-    const results = await doLoadConfig(
-      this.ide,
-      this.ideSettingsPromise,
-      this.controlPlaneClient,
-      this.writeLog,
-      serializedConfig,
-      undefined,
-      undefined,
-      this.workspaceId,
-    );
-
-    return {
-      ...results,
-      errors: [], // Don't do config validation here, it happens in admin panel
-    };
+    return await doLoadConfig({
+      ide: this.ide,
+      ideSettingsPromise: this.ideSettingsPromise,
+      controlPlaneClient: this.controlPlaneClient,
+      llmLogger: this.llmLogger,
+      overrideConfigJson: serializedConfig,
+      overrideConfigYaml: undefined,
+      platformConfigMetadata: undefined,
+      profileId: this.workspaceId,
+      overrideConfigYamlByPath: undefined,
+      orgScopeId: null,
+    });
   }
 
   setIsActive(isActive: boolean): void {}

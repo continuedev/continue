@@ -34,16 +34,16 @@ export async function getContextProvidersString(
             provider.description.displayTitle === selectedProvider.label,
         );
 
-        if (!provider) {
+        if (!provider || !config.selectedModelByRole.chat) {
           return [];
         }
 
         return provider.getContextItems("", {
           config,
           ide,
-          embeddingsProvider: config.embeddingsProvider,
-          reranker: config.reranker,
-          llm: config.models[0],
+          embeddingsProvider: config.selectedModelByRole.embed,
+          reranker: config.selectedModelByRole.rerank,
+          llm: config.selectedModelByRole.chat,
           fullInput: "",
           selectedCode: [],
           fetch: (url, init) =>

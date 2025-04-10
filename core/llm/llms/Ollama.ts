@@ -1,12 +1,19 @@
 import { JSONSchema7, JSONSchema7Object } from "json-schema";
 
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  ChatMessageRole,
+  CompletionOptions,
+  LLMOptions,
+  ModelInstaller,
+} from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
+import { getRemoteModelInfo } from "../../util/ollamaHelper.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 type OllamaChatMessage = {
-  role: "tool" | "user" | "assistant" | "system";
+  role: ChatMessageRole;
   content: string;
   images?: string[] | null;
   tool_calls?: {
@@ -82,10 +89,10 @@ type OllamaBaseResponse = {
   model: string;
   created_at: string;
 } & (
-  | {
+    | {
       done: false;
     }
-  | {
+    | {
       done: true;
       done_reason: string;
       total_duration: number; // Time spent generating the response in nanoseconds
@@ -96,7 +103,7 @@ type OllamaBaseResponse = {
       eval_duration: number; // Time spent generating the response in nanoseconds
       context: number[]; // An encoding of the conversation used in this response; can be sent in the next request to keep conversational memory
     }
-);
+  );
 
 type OllamaErrorResponse = {
   error: string;
@@ -105,14 +112,14 @@ type OllamaErrorResponse = {
 type OllamaRawResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-      response: string; // the generated response
-    });
+    response: string; // the generated response
+  });
 
 type OllamaChatResponse =
   | OllamaErrorResponse
   | (OllamaBaseResponse & {
-      message: OllamaChatMessage;
-    });
+    message: OllamaChatMessage;
+  });
 
 interface OllamaTool {
   type: "function";
@@ -123,7 +130,7 @@ interface OllamaTool {
   };
 }
 
-class Ollama extends BaseLLM {
+class Ollama extends BaseLLM implements ModelInstaller {
   static providerName = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:11434/",
@@ -139,12 +146,17 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
+
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: headers,
       body: JSON.stringify({ name: this._getModel() }),
     })
       .then(async (response) => {
@@ -323,12 +335,16 @@ class Ollama extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers,
       body: JSON.stringify(this._getGenerateOptions(options, prompt)),
       signal,
     });
@@ -349,6 +365,7 @@ class Ollama extends BaseLLM {
             if ("error" in j) {
               throw new Error(j.error);
             }
+            j.response ??= ''
             yield j.response;
           } catch (e) {
             throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
@@ -384,13 +401,16 @@ class Ollama extends BaseLLM {
       }));
       chatOptions.stream = false; // Cannot set stream = true for tools calls
     }
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
 
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers,
       body: JSON.stringify(chatOptions),
       signal,
     });
@@ -467,12 +487,16 @@ class Ollama extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers,
       body: JSON.stringify(this._getGenerateOptions(options, prefix, suffix)),
       signal,
     });
@@ -504,11 +528,19 @@ class Ollama extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const response = await this.fetch(
       // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
       this.getEndpoint("api/tags"),
       {
         method: "GET",
+        headers: headers,
       },
     );
     const data = await response.json();
@@ -522,16 +554,20 @@ class Ollama extends BaseLLM {
   }
 
   protected async _embed(chunks: string[]): Promise<number[][]> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.apiKey) {
+      headers.Authorization = `Bearer ${this.apiKey}`;
+    }
     const resp = await this.fetch(new URL("api/embed", this.apiBase), {
       method: "POST",
       body: JSON.stringify({
         model: this.model,
         input: chunks,
       }),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
+      headers: headers,
     });
 
     if (!resp.ok) {
@@ -545,6 +581,45 @@ class Ollama extends BaseLLM {
       throw new Error("Ollama generated empty embedding");
     }
     return embedding;
+  }
+
+  public async installModel(
+    modelName: string,
+    signal: AbortSignal,
+    progressReporter?: (task: string, increment: number, total: number) => void,
+  ): Promise<any> {
+    const modelInfo = await getRemoteModelInfo(modelName, signal);
+    if (!modelInfo) {
+      throw new Error(`'${modelName}' not found in the Ollama registry!`);
+    }
+    const response = await fetch(this.getEndpoint("api/pull"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({ name: modelName }),
+      signal,
+    });
+
+    const reader = response.body?.getReader();
+    //TODO: generate proper progress based on modelInfo size
+    while (true) {
+      const { done, value } = (await reader?.read()) || {
+        done: true,
+        value: undefined,
+      };
+      if (done) {
+        break;
+      }
+
+      const chunk = new TextDecoder().decode(value);
+      const lines = chunk.split("\n").filter(Boolean);
+      for (const line of lines) {
+        const data = JSON.parse(line);
+        progressReporter?.(data.status, data.completed, data.total);
+      }
+    }
   }
 }
 

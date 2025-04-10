@@ -5,9 +5,10 @@ import { themeIcons } from "seti-file-icons";
 
 export interface FileIconProps {
   filename: string;
-  height: string;
-  width: string;
+  height: `${number}px`;
+  width: `${number}px`;
 }
+
 export default function FileIcon({ filename, height, width }: FileIconProps) {
   const file = useMemo(() => {
     if (filename.includes(" (")) {
@@ -45,7 +46,7 @@ export default function FileIcon({ filename, height, width }: FileIconProps) {
         height: height,
         fill: color,
         flexShrink: 0,
-        display: "block",
+        display: "flex",
       }}
     />
   );

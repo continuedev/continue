@@ -1,20 +1,9 @@
 import * as z from "zod";
+import { dataSchema } from "./data/index.js";
 import { modelSchema, partialModelSchema } from "./models.js";
-
-export const dataSchema = z.object({
-  destination: z.string(),
-  levels: z.string().optional(),
-});
 
 export const contextSchema = z.object({
   provider: z.string(),
-  params: z.any().optional(),
-});
-
-const toolSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  run: z.string(),
   params: z.any().optional(),
 });
 
@@ -39,6 +28,16 @@ const docSchema = z.object({
   faviconUrl: z.string().optional(),
 });
 
+const ruleObjectSchema = z.object({
+  name: z.string(),
+  rule: z.string(),
+  if: z.string().optional(),
+});
+
+const ruleSchema = z.union([z.string(), ruleObjectSchema]);
+
+export type Rule = z.infer<typeof ruleSchema>;
+
 export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.object({
     uses: z.string(),
@@ -49,9 +48,23 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
 export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.union([schema, blockItemWrapperSchema(schema)]);
 
-export const configYamlSchema = z.object({
+export const commonMetadataSchema = z.object({
+  tags: z.string().optional(),
+  sourceCodeUrl: z.string().optional(),
+  description: z.string().optional(),
+  author: z.string().optional(),
+  license: z.string().optional(),
+  iconUrl: z.string().optional(),
+});
+
+export const baseConfigYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
+  schema: z.string().optional(),
+  metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
+});
+
+export const configYamlSchema = baseConfigYamlSchema.extend({
   models: z
     .array(
       z.union([
@@ -66,12 +79,11 @@ export const configYamlSchema = z.object({
     .optional(),
   context: z.array(blockOrSchema(contextSchema)).optional(),
   data: z.array(blockOrSchema(dataSchema)).optional(),
-  tools: z.array(blockOrSchema(toolSchema)).optional(),
   mcpServers: z.array(blockOrSchema(mcpServerSchema)).optional(),
   rules: z
     .array(
       z.union([
-        z.string(),
+        ruleSchema,
         z.object({
           uses: z.string(),
           with: z.record(z.string()).optional(),
@@ -85,37 +97,55 @@ export const configYamlSchema = z.object({
 
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
 
-export const assistantUnrolledSchema = z.object({
-  name: z.string(),
-  version: z.string(),
-  models: z.array(modelSchema).optional(),
-  context: z.array(contextSchema).optional(),
-  data: z.array(dataSchema).optional(),
-  tools: z.array(toolSchema).optional(),
-  mcpServers: z.array(mcpServerSchema).optional(),
-  rules: z.array(z.string()).optional(),
-  prompts: z.array(promptSchema).optional(),
-  docs: z.array(docSchema).optional(),
+export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
+  models: z.array(modelSchema.nullable()).optional(),
+  context: z.array(contextSchema.nullable()).optional(),
+  data: z.array(dataSchema.nullable()).optional(),
+  mcpServers: z.array(mcpServerSchema.nullable()).optional(),
+  rules: z.array(ruleSchema.nullable()).optional(),
+  prompts: z.array(promptSchema.nullable()).optional(),
+  docs: z.array(docSchema.nullable()).optional(),
 });
 
 export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
 
-export const blockSchema = z
-  .object({
-    name: z.string(),
-    version: z.string(),
-  })
-  .and(
-    z.union([
-      z.object({ models: z.array(modelSchema).length(1) }),
-      z.object({ context: z.array(contextSchema).length(1) }),
-      z.object({ data: z.array(dataSchema).length(1) }),
-      z.object({ tools: z.array(toolSchema).length(1) }),
-      z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
-      z.object({ rules: z.array(z.string()).length(1) }),
-      z.object({ prompts: z.array(promptSchema).length(1) }),
-      z.object({ docs: z.array(docSchema).length(1) }),
-    ]),
-  );
+export const assistantUnrolledSchemaNonNullable = baseConfigYamlSchema.extend({
+  models: z.array(modelSchema).optional(),
+  context: z.array(contextSchema).optional(),
+  data: z.array(dataSchema).optional(),
+  mcpServers: z.array(mcpServerSchema).optional(),
+  rules: z.array(ruleSchema).optional(),
+  prompts: z.array(promptSchema).optional(),
+  docs: z.array(docSchema).optional(),
+});
+
+export type AssistantUnrolledNonNullable = z.infer<
+  typeof assistantUnrolledSchemaNonNullable
+>;
+
+export const isAssistantUnrolledNonNullable = (
+  a: AssistantUnrolled,
+): a is AssistantUnrolledNonNullable =>
+  (!a.models || a.models.every((m) => m !== null)) &&
+  (!a.context || a.context.every((c) => c !== null)) &&
+  (!a.data || a.data.every((d) => d !== null)) &&
+  (!a.mcpServers || a.mcpServers.every((s) => s !== null)) &&
+  (!a.rules || a.rules.every((r) => r !== null)) &&
+  (!a.prompts || a.prompts.every((p) => p !== null)) &&
+  (!a.docs || a.docs.every((d) => d !== null));
+
+export const blockSchema = baseConfigYamlSchema.and(
+  z.union([
+    z.object({ models: z.array(modelSchema).length(1) }),
+    z.object({ context: z.array(contextSchema).length(1) }),
+    z.object({ data: z.array(dataSchema).length(1) }),
+    z.object({ mcpServers: z.array(mcpServerSchema).length(1) }),
+    z.object({
+      rules: z.array(ruleSchema).length(1),
+    }),
+    z.object({ prompts: z.array(promptSchema).length(1) }),
+    z.object({ docs: z.array(docSchema).length(1) }),
+  ]),
+);
 
 export type Block = z.infer<typeof blockSchema>;

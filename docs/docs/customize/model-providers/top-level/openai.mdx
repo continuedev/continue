@@ -3,8 +3,8 @@ title: OpenAI
 slug: ../openai
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 :::info
 You can get an API key from the [OpenAI console](https://platform.openai.com/account/api-keys)
@@ -21,7 +21,7 @@ We recommend configuring **GPT-4o** as your chat model.
     - name: GPT-4o
       provider: openai
       model: gpt-4o
-      apiKey: <YOUR_HUGGINGFACE_TEI_API_KEY>
+      apiKey: <YOUR_OPENAI_API_KEY>
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -32,7 +32,7 @@ We recommend configuring **GPT-4o** as your chat model.
         "title": "GPT-4o",
         "provider": "openai", 
         "model": "gpt-4o",
-        "apiKey": "<YOUR_HUGGINGFACE_TEI_API_KEY>"
+        "apiKey": "<YOUR_OPENAI_API_KEY>"
       }
     ]
   }
@@ -44,7 +44,7 @@ We recommend configuring **GPT-4o** as your chat model.
 
 OpenAI currently does not offer any autocomplete models.
 
-[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+[Click here](../../model-roles/autocomplete.md) to see a list of autocomplete model providers.
 
 ## Embeddings model
 
@@ -57,7 +57,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     - name: OpenAI Embeddings
       provider: openai
       model: text-embedding-3-large
-      apiKey: <YOUR_HUGGINGFACE_TEI_API_KEY>
+      apiKey: <YOUR_OPENAI_API_KEY>
       roles:
         - embed
   ```
@@ -68,7 +68,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     "embeddingsProvider": {
       "provider": "openai",
       "model": "text-embedding-3-large", 
-      "apiKey": "<YOUR_HUGGINGFACE_TEI_API_KEY>"
+      "apiKey": "<YOUR_OPENAI_API_KEY>"
     }
   }
   ```
@@ -79,7 +79,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 OpenAI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.mdx) to see a list of reranking model providers.
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking model providers.
 
 ## OpenAI compatible servers / APIs
 

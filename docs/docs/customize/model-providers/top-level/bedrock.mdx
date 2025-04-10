@@ -3,8 +3,8 @@ title: Amazon Bedrock
 slug: ../bedrock
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 Amazon Bedrock is a fully managed service on AWS that provides access to foundation models from various AI companies through a single API.
 
@@ -19,8 +19,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
     - name: Claude 3.5 Sonnet
       provider: bedrock
       model: anthropic.claude-3-5-sonnet-20240620-v1:0
-      region: us-east-1
-      profile: bedrock
+      env:
+        region: us-east-1
+        profile: bedrock
       roles:
         - chat
   ```
@@ -53,8 +54,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
     - name: Claude 3.5 Sonnet
       provider: bedrock
       model: us.anthropic.claude-3-5-sonnet-20241022-v2:0
-      region: us-east-1
-      profile: bedrock
+      env:
+        region: us-east-1
+        profile: bedrock
       roles:
         - chat
   ```
@@ -78,9 +80,9 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
 ## Autocomplete model
 
-Bedrock currently does not offer any autocomplete models. However, [Codestral from Mistral](https://mistral.ai/news/codestral-2501/) and [Point from Poolisde](https://aws.amazon.com/bedrock/poolside/) will be supported in the near future.
+Bedrock currently does not offer any autocomplete models. However, [Codestral from Mistral](https://mistral.ai/news/codestral-2501/) and [Point from Poolside](https://aws.amazon.com/bedrock/poolside/) will be supported in the near future.
 
-In the meantime, you can view a list of autocomplete model providers [here](../../model-types/autocomplete.md).
+In the meantime, you can view a list of autocomplete model providers [here](../../model-roles/autocomplete.md).
 
 ## Embeddings model
 
@@ -93,7 +95,8 @@ We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazo
     - name: Embeddings Model
       provider: bedrock
       model: amazon.titan-embed-text-v2:0
-      region: us-west-2
+      env:
+        region: us-west-2
       roles:
         - embed
   ```
@@ -123,7 +126,8 @@ We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may
     - name: Bedrock Reranker
       provider: bedrock
       model: cohere.rerank-v3-5:0
-      region: us-west-2
+      env:
+        region: us-west-2
       roles:
         - rerank
   ```

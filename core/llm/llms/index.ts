@@ -2,6 +2,7 @@ import {
   BaseCompletionOptions,
   IdeSettings,
   ILLM,
+  ILLMLogger,
   LLMOptions,
   ModelDescription,
 } from "../..";
@@ -18,6 +19,7 @@ import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Deepseek from "./Deepseek";
+import Docker from "./Docker";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
@@ -26,6 +28,7 @@ import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
+import Inception from "./Inception";
 import Kindo from "./Kindo";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
@@ -34,11 +37,14 @@ import Mistral from "./Mistral";
 import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
+import NCompass from "./NCompass";
 import Nebius from "./Nebius";
+import Novita from "./Novita";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
+import { Relace } from "./Relace";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
@@ -48,7 +54,6 @@ import ContinueProxy from "./stubs/ContinueProxy";
 import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
-import Novita from "./Novita";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
@@ -81,9 +86,11 @@ export const LLMClasses = [
   Flowise,
   Groq,
   Fireworks,
+  NCompass,
   ContinueProxy,
   Cloudflare,
   Deepseek,
+  Docker,
   Msty,
   Azure,
   WatsonX,
@@ -100,6 +107,8 @@ export const LLMClasses = [
   xAI,
   SiliconFlow,
   Scaleway,
+  Relace,
+  Inception,
 ];
 
 export async function llmFromDescription(
@@ -107,7 +116,7 @@ export async function llmFromDescription(
   readFile: (filepath: string) => Promise<string>,
   uniqueId: string,
   ideSettings: IdeSettings,
-  writeLog: (log: string) => Promise<void>,
+  llmLogger: ILLMLogger,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
@@ -137,7 +146,7 @@ export async function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
     systemMessage,
-    writeLog,
+    logger: llmLogger,
     uniqueId,
   };
 

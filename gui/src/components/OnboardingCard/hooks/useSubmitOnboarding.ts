@@ -1,15 +1,13 @@
+import { OnboardingModes } from "core/protocol/core";
 import { usePostHog } from "posthog-js/react";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
-import { OnboardingModes } from "core/protocol/core";
-import { useTutorialCard } from "../../../hooks/useTutorialCard";
 import { useOnboardingCard } from "./useOnboardingCard";
 
 export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
   const posthog = usePostHog();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { openTutorialCard } = useTutorialCard();
   const { close: closeOnboardingCard } = useOnboardingCard();
 
   function submitOnboarding() {
@@ -30,9 +28,6 @@ export function useSubmitOnboarding(mode: OnboardingModes, isDialog = false) {
 
       // Local state
       setLocalStorage("onboardingStatus", "Completed");
-
-      // Show tutorial card
-      openTutorialCard();
 
       // Move to next step in onboarding
       ideMessenger.post("showTutorial", undefined);

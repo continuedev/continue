@@ -1,5 +1,4 @@
 import { streamSse } from "@continuedev/fetch";
-import fetch from "node-fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -14,7 +13,7 @@ import {
 } from "openai/resources/index";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
-import { maybeCustomFetch } from "../util.js";
+import { customFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -31,13 +30,14 @@ export class OpenAIApi implements BaseLlmApi {
     this.openai = new OpenAI({
       apiKey: config.apiKey,
       baseURL: this.apiBase,
-      fetch: maybeCustomFetch(config.requestOptions),
+      fetch: customFetch(config.requestOptions),
     });
   }
 
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
-    // o-series models
-    if (body.model.startsWith("o")) {
+    // o-series models - only apply for official OpenAI API
+    const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
+    if (isOfficialOpenAIAPI && body.model.startsWith("o")) {
       // a) use max_completion_tokens instead of max_tokens
       body.max_completion_tokens = body.max_tokens;
       body.max_tokens = undefined;
@@ -100,7 +100,7 @@ export class OpenAIApi implements BaseLlmApi {
     signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     const endpoint = new URL("fim/completions", this.apiBase);
-    const resp = await fetch(endpoint, {
+    const resp = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify({
         model: body.model,
@@ -139,7 +139,7 @@ export class OpenAIApi implements BaseLlmApi {
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     const endpoint = new URL("rerank", this.apiBase);
-    const response = await fetch(endpoint, {
+    const response = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {

@@ -1,11 +1,11 @@
-import { ConfigResult, ConfigValidationError } from "@continuedev/config-yaml";
+import { ConfigResult } from "@continuedev/config-yaml";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
   ContextProviderName,
   IndexingProgressUpdate,
   IndexingStatus,
-  PackageDocsResult,
 } from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
@@ -13,11 +13,13 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+      organizations: SerializedOrgWithProfiles[];
+      selectedOrgId: string | null;
+      usingContinueForTeams: boolean;
     },
     void,
   ];
-  configError: [ConfigValidationError[] | undefined, void];
-  getDefaultModelTitle: [undefined, string];
+  getDefaultModelTitle: [undefined, string | undefined];
   indexProgress: [IndexingProgressUpdate, void]; // Codebase
   "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
   refreshSubmenuItems: [
@@ -26,6 +28,7 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
+  didCloseFiles: [{ uris: string[] }, void];
   isContinueInputFocused: [undefined, boolean];
   addContextItem: [
     {
@@ -37,6 +40,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   setTTSActive: [boolean, void];
   getWebviewHistoryLength: [undefined, number];
   getCurrentSessionId: [undefined, string];
-  "docs/suggestions": [PackageDocsResult[], void];
   "jetbrains/setColors": [Record<string, string>, void];
 };

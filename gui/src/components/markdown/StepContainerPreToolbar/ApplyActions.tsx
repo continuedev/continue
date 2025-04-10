@@ -7,6 +7,7 @@ import Spinner from "../../gui/Spinner";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {
+  disableManualApply?: boolean;
   applyState?: ApplyState;
   onClickAccept: () => void;
   onClickReject: () => void;
@@ -51,16 +52,18 @@ export default function ApplyActions(props: ApplyActionsProps) {
     case "streaming":
       return (
         <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
-          <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+          <span className="inline-flex w-min items-center gap-2 text-center text-xs text-gray-400">
             Applying changes
-            <Spinner />
+            <div>
+              <Spinner />
+            </div>
           </span>
         </div>
       );
     case "done":
       return (
-        <div className="xs:pl-2 xs:pr-1 flex items-center rounded bg-zinc-700">
-          <span className="max-xs:hidden xs:mr-1 text-xs text-gray-400">
+        <div className="flex items-center sm:gap-1">
+          <span className="max-xs:hidden text-center text-xs text-gray-400">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
             <span className="max-md:hidden">{` remaining`}</span>
           </span>
@@ -90,10 +93,15 @@ export default function ApplyActions(props: ApplyActionsProps) {
             </span>
           );
         }
-
+        if (props.disableManualApply) {
+          return null;
+        }
         return applyButton("Reapply");
       }
     default:
+      if (props.disableManualApply) {
+        return null;
+      }
       return applyButton("Apply");
   }
 }

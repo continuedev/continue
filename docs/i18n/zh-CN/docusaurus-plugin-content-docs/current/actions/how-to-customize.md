@@ -7,13 +7,13 @@ sidebar_position: 5
 
 ## 内置的斜杠命令
 
-Continue 有一个大的内置斜杠命令库，但是当你首次安装时，我们只显示最常用的一些，比如 "/edit", "/comment" 和 "/share" 。为了添加更多的 action ，你可以打开 [config.json](../json-reference.md) 并添加它们到 `slashCommands` 列表中。
+Continue 有一个大的内置斜杠命令库，但是当你首次安装时，我们只显示最常用的一些，比如 "/edit", "/comment" 和 "/share" 。为了添加更多的 action ，你可以打开 [config.json](../reference.md) 并添加它们到 `slashCommands` 列表中。
 
 ## 定制斜杠命令
 
 有两种方法添加定制斜杠命令：
 
-1. 使用 `.prompt` 文件 - 这是大多数情况下推荐的。[在这里](../customize/deep-dives/prompt-files.md) 查看完整参考。
+1. 使用 `.prompt` 文件 - 这是大多数情况下推荐的。[在这里](../customize/deep-dives/prompts.md) 查看完整参考。
 2. 使用 `config.ts` - 这给你对于 LLM, IDE 和其他重要的入口可编程的访问，通过编写 JavaScript/TypeScript 函数
 
 ### 使用 `config.ts` 定制斜杠命令

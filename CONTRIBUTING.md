@@ -26,7 +26,6 @@
     - [Writing Context Providers](#writing-context-providers)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
-    - [Adding Pre-indexed Documentation](#adding-pre-indexed-documentation)
   - [📐 Continue Architecture](#-continue-architecture)
     - [Continue VS Code Extension](#continue-vs-code-extension)
     - [Continue JetBrains Extension](#continue-jetbrains-extension)
@@ -140,7 +139,7 @@ Similarly, any changes to `core` or `extensions/vscode` will be automatically in
 
 #### JetBrains
 
-See the [`CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBrains extension.
+See [`intellij/CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBrains extension.
 
 ### Our Git Workflow
 
@@ -148,7 +147,7 @@ We keep a single permanent branch: `main`. When we are ready to create a "pre-re
 
 ### Testing
 
-We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on each pull request. If your PR causes one of these tests to fail, we will ask that you resolve the issue before we merge.
+We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on each pull request. If your PR causes one of these tests to fail, we will ask that you to resolve the issue before we merge.
 
 When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
 
@@ -212,17 +211,13 @@ While any model that works with a supported provider can be used with Continue, 
 - LLM Providers: Since many providers use their own custom strings to identify models, you'll have to add the translation from Continue's model name (the one you added to `index.d.ts`) and the model string for each of these providers: [Ollama](./core/llm/llms/Ollama.ts), [Together](./core/llm/llms/Together.ts), and [Replicate](./core/llm/llms/Replicate.ts). You can find their full model lists here: [Ollama](https://ollama.ai/library), [Together](https://docs.together.ai/docs/inference-models), [Replicate](https://replicate.com/collections/streaming-language-models).
 - [Prompt Templates](./core/llm/index.ts) - In this file you'll find the `autodetectTemplateType` function. Make sure that for the model name you just added, this function returns the correct template type. This is assuming that the chat template for that model is already built in Continue. If not, you will have to add the template type and corresponding edit and chat templates.
 
-### Adding Pre-indexed Documentation
-
-Continue's @docs context provider lets you easily reference entire documentation sites and then uses embeddings to add the most relevant pages to context. To make the experience as smooth as possible, we pre-index many of the most popular documentation sites. If you'd like to add new documentation to this list, just add an object to the list in [preIndexedDocs.ts](./core/indexing/docs/preIndexedDocs.ts). `startUrl` is where the crawler will start and `rootUrl` will filter out any pages not on that site and under the path of `rootUrl`.
-
 ## 📐 Continue Architecture
 
 Continue consists of 2 parts that are split so that it can be extended to work in other IDEs as easily as possible:
 
 1. **Continue GUI** - The Continue GUI is a React application that gives the user control over Continue. It displays the current chat history, allows the user to ask questions, invoke slash commands, and use context providers. The GUI also handles most state and holds as much of the logic as possible so that it can be reused between IDEs.
 
-2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/ContinueGUIWebviewViewProvider.ts).
+2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/VsCodeIde.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/ContinueGUIWebviewViewProvider.ts).
 
 ### Continue VS Code Extension
 

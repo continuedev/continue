@@ -1,8 +1,8 @@
 import {
-  BedrockRuntimeClient,
-  InvokeModelWithResponseStreamCommand,
+    BedrockRuntimeClient,
+    InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import { fromIni } from "@aws-sdk/credential-providers";
+import { fromNodeProviderChain } from "@aws-sdk/credential-providers";
 
 import { CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
@@ -77,7 +77,7 @@ class BedrockImport extends BaseLLM {
 
   private async _getCredentials() {
     try {
-      return await fromIni({
+      return await fromNodeProviderChain({
         profile: this.profile,
         ignoreCache: true,
       })();
@@ -85,7 +85,7 @@ class BedrockImport extends BaseLLM {
       console.warn(
         `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
       );
-      return await fromIni()();
+      return await fromNodeProviderChain()();
     }
   }
 }

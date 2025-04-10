@@ -1,22 +1,23 @@
-import { useContext, useRef, useState } from "react";
 import {
+  ArrowLeftEndOnRectangleIcon,
   CommandLineIcon,
   PlayIcon,
-  ArrowLeftEndOnRectangleIcon,
 } from "@heroicons/react/24/outline";
-import { defaultBorderRadius, vscEditorBackground } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { isJetBrains } from "../../util";
-import { isTerminalCodeBlock, getTerminalCommand } from "./utils";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { CopyIconButton } from "../gui/CopyIconButton";
+import { useContext, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
+import {
+  defaultBorderRadius,
+  vscCommandCenterInactiveBorder,
+  vscEditorBackground,
+} from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppSelector } from "../../redux/hooks";
-import {
-  selectDefaultModel,
-  selectUIConfig,
-} from "../../redux/slices/configSlice";
+import { selectUIConfig } from "../../redux/slices/configSlice";
+import { isJetBrains } from "../../util";
+import { CopyIconButton } from "../gui/CopyIconButton";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { getTerminalCommand, isTerminalCodeBlock } from "./utils";
 
 interface StepContainerPreActionButtonsProps {
   language: string | null;
@@ -52,16 +53,14 @@ export default function StepContainerPreActionButtons({
     streamIdRef.current = uuidv4();
   }
 
-  const defaultModel = useAppSelector(selectDefaultModel);
-
   function onClickApply() {
-    if (!defaultModel || !streamIdRef.current) {
+    if (!streamIdRef.current) {
       return;
     }
+
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       text: codeBlockContent,
-      curSelectedModelTitle: defaultModel.title,
     });
   }
 
@@ -84,14 +83,20 @@ export default function StepContainerPreActionButtons({
       tabIndex={-1}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      className="bg-vsc-editor-background border-vsc-input-border relative my-2.5 rounded-md border-[1px] border-solid"
+      className="bg-vsc-editor-background relative my-2.5"
+      style={{
+        border: `1px solid ${vscCommandCenterInactiveBorder}`,
+        borderRadius: defaultBorderRadius,
+      }}
     >
       <div className="h-full w-full overflow-hidden rounded-md">{children}</div>
       {hovering && !isStreaming && (
         <div
-          className="bg-vsc-editor-background border-0.5 border-vsc-input-border z-100 absolute right-3 z-50 flex -translate-y-1/2 gap-1.5 rounded-md border border-solid px-1 py-0.5"
+          className="bg-vsc-editor-background z-100 absolute right-3 z-50 flex -translate-y-1/2 gap-1.5 px-1 py-0.5"
           style={{
             top: !isBottomToolbarPosition ? 0 : "100%",
+            border: `1px solid ${vscCommandCenterInactiveBorder}`,
+            borderRadius: defaultBorderRadius,
           }}
         >
           {shouldRunTerminalCmd && (

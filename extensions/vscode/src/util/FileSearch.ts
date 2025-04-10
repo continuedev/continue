@@ -1,5 +1,6 @@
 import { IDE } from "core";
 import { walkDirs } from "core/indexing/walkDir";
+import { deduplicateArray, splitCamelCaseAndNonAlphaNumeric } from "core/util";
 // @ts-ignore
 import MiniSearch from "minisearch";
 import * as vscode from "vscode";
@@ -17,6 +18,7 @@ export class FileSearch {
   private miniSearch = new MiniSearch<FileMiniSearchResult>({
     fields: ["relativePath", "id"],
     storeFields: ["relativePath", "id"],
+    tokenize: text => deduplicateArray(MiniSearch.getDefault('tokenize')(text).concat(splitCamelCaseAndNonAlphaNumeric(text)), (a, b) => a === b),
     searchOptions: {
       prefix: true,
       fuzzy: 2,
@@ -24,7 +26,9 @@ export class FileSearch {
     },
   });
   private async initializeFileSearchState() {
-    const results = await walkDirs(this.ide);
+    const results = await walkDirs(this.ide, {
+      source: "file search initialization",
+    });
     this.miniSearch.addAll(
       results.flat().map((uri) => ({
         id: uri,

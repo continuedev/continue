@@ -3,8 +3,8 @@ title: Azure AI Foundry
 slug: ../azure
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 Azure AI Foundry is a cloud-based service that provides access to models from OpenAI, Mistral AI, and others, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure AI Foundry resource in the [Azure portal](https://portal.azure.com).
 
@@ -19,20 +19,20 @@ For details on OpenAI model setup, see [Azure OpenAI Service configuration](#azu
 We recommend configuring **GPT-4o** as your chat model.
 
 <Tabs groupId="config-example">
-	<TabItem value="yaml" label="YAML">
-	```yaml title="config.yaml"
-	models:
-	  - name: GPT-4o
-	    provider: azure
-	    model: gpt-4o
-	    apiBase: <YOUR_DEPLOYMENT_BASE>
-	    deployment: <YOUR_DEPLOYMENT_NAME>
-	    apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: GPT-4o
+      provider: azure
+      model: gpt-4o
+      apiBase: <YOUR_DEPLOYMENT_BASE>
+      apiKey: <YOUR_AZURE_API_KEY> # If you use subscription key, try using Azure gateway to rename it apiKey
       env:
-         apiType: azure-foundry # Or "azure-openai" if using OpenAI models
-	```
-	</TabItem>
-	<TabItem value="json" label="JSON">
+        deployment: <YOUR_DEPLOYMENT_NAME>
+        apiType: azure-foundry # Or "azure-openai" if using OpenAI models
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
   ```json title="config.json"
   {
     "models": [{
@@ -46,35 +46,39 @@ We recommend configuring **GPT-4o** as your chat model.
     }]
   }
   ```
-	</TabItem>
+  </TabItem>
 </Tabs>
 
 ## Autocomplete model
 
-We recommend configuring **Codestral** as your autocomplete model.
+We recommend configuring **Codestral** as your autocomplete model. If you use Azure AI Foundry to deploy Codestral:
 
 <Tabs groupId="config-example">
 	<TabItem value="yaml" label="YAML">
-	```yaml title="Package or config.yaml"
+	```yaml title="config.yaml"
   models:
     - name: Codestral
       provider: mistral
       model: codestral-latest
+      apiBase: https://<YOUR_MODEL_NAME>.<YOUR_REGION>.models.ai.azure.com/v1
+      apiKey: <YOUR_AZURE_API_KEY>
       roles:
         - autocomplete
-	```
-	</TabItem>
-	<TabItem value="json" label="JSON">
-	```json title="config.json"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
   {
     "tabAutocompleteModel": {
       "title": "Codestral",
       "provider": "mistral",
-      "model": "codestral-latest"
+      "model": "codestral-latest", 
+      "apiBase": "https://<YOUR_MODEL_NAME>.<YOUR_REGION>.models.ai.azure.com/v1",
+      "apiKey": "<YOUR_AZURE_API_KEY>"
     }
   }
-	```
-	</TabItem>
+  ```
+  </TabItem>
 </Tabs>
 
 ## Embeddings model
@@ -83,15 +87,15 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 <Tabs groupId="config-example">
     <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+    ```yaml title="config.yaml"
     models:
       - name: Text Embedding-3 Large
         provider: azure
         model: text-embedding-3-large
         apiBase: <YOUR_DEPLOYMENT_BASE>
-        deployment: <YOUR_DEPLOYMENT_NAME>
         apiKey: <YOUR_AZURE_API_KEY>
         env:
+          deployment: <YOUR_DEPLOYMENT_NAME>
           apiType: azure
     ```
     </TabItem>
@@ -115,7 +119,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 Azure OpenAI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.mdx) to see a list of reranking models.
+[Click here](../../model-roles/reranking.mdx) to see a list of reranking models.
 
 ## Privacy
 
@@ -135,20 +139,20 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
 
 <Tabs groupId="config-example">
 	<TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+    ```yaml title="config.yaml"
     models:
       - name: GPT-4o Azure
         model: gpt-4o
         provider: openai
         apiBase: https://just-an-example.openai.azure.com
-        deployment: gpt-4o-july
-        apiVersion: 2023-03-15-preview
         apiKey: <YOUR_AZURE_API_KEY>
         env:
-           apiType: azure-openai
+          apiVersion: 2023-03-15-preview
+          deployment: gpt-4o-july
+          apiType: azure-openai
     ```
-	</TabItem>
-	<TabItem value="json" label="JSON">
+  </TabItem>
+  <TabItem value="json" label="JSON">
     ```json title="config.json"
     {
       "title": "GPT-4o Azure",
@@ -161,5 +165,5 @@ For example, a Target URI of `https://just-an-example.openai.azure.com/openai/de
       "apiType": "azure-openai"
     }
     ```
-	</TabItem>
+  </TabItem>
 </Tabs>

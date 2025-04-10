@@ -1,5 +1,5 @@
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 # IBM watsonx
 
@@ -45,15 +45,16 @@ Add the following configuration:
 
 <Tabs groupId="config-example">
 	<TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: watsonx - Model Name
       provider: watsonx
       model: model ID
       apiBase: https://us-south.ml.cloud.ibm.com
-      projectId: PROJECT_ID
       apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
-      apiVersion: 2024-03-14
+      env:
+        projectId: PROJECT_ID
+        apiVersion: 2024-03-14
   ```
 	</TabItem>
 	<TabItem value="json" label="JSON">
@@ -81,15 +82,16 @@ If you are using a custom deployment endpoint, set `deploymentID` to the model's
 
 <Tabs groupId="config-example">
     <TabItem value="yaml" label="YAML">
-    ```yaml title="Package or config.yaml"
+    ```yaml title="config.yaml"
     models:
       - name: watsonx - Model Name
         provider: watsonx
         model: model ID
         apiBase: watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com
         apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
-        apiVersion: 2024-03-14
-        deploymentId: DEPLOYMENT_ID
+        env:
+          apiVersion: 2024-03-14
+          deploymentId: DEPLOYMENT_ID
     ```
     </TabItem>
     <TabItem value="json" label="JSON">
@@ -124,12 +126,10 @@ You can also configure generation parameters, such as temperature, topP, topK, f
       provider: watsonx
       model: ibm/granite-20b-code-instruct
       apiBase: watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com
-      projectId: PROJECT_ID
       apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
-      apiVersion: 2024-03-14
       template: granite
-      contextLength: 8000
       defaultCompletionOptions:
+        contextLength: 8000
         temperature: 0.1
         topP: 0.3
         topK: 20
@@ -138,6 +138,10 @@ You can also configure generation parameters, such as temperature, topP, topK, f
         stop:
           - Question:
           - "\n\n\n"
+      env:
+        projectId: PROJECT_ID
+        apiVersion: 2024-03-14
+        
   ```
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -175,7 +179,7 @@ Granite models are recommended for tab auto complete. The configuration is simil
 
 <Tabs groupId="config-example">
 	<TabItem value="yaml" label="YAML">
-  ```yaml title="Package or config.yaml"
+  ```yaml title="config.yaml"
   models:
     - name: Granite Code 8b
       provider: watsonx
@@ -235,6 +239,39 @@ To view the list of available embeddings models, visit [this page](https://datap
       "projectId": "PROJECT_ID",
       "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
       "apiVersion": "2024-03-14"
+    }
+  }
+  ```
+	</TabItem>
+</Tabs>
+
+## Reranker
+
+<Tabs groupId="config-example">
+	<TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  models:
+    - name: Watsonx Reranker
+      provider: watsonx
+      model: cross-encoder/ms-marco-minilm-l-12-v2
+      apiBase: https://us-south.ml.cloud.ibm.com
+      projectId: PROJECT_ID
+      apiKey: API_KEY/ZENAPI_KEY/USERNAME:PASSWORD
+      apiVersion: 2024-03-14
+  ```
+	</TabItem>
+	<TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "reranker": {
+      "name": "watsonx",
+      "params": {
+        "model": "cross-encoder/ms-marco-minilm-l-12-v2",
+        "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+        "projectId": "PROJECT_ID",
+        "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+        "apiVersion": "2024-03-14"
+      }
     }
   }
   ```

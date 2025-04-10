@@ -1,7 +1,7 @@
 import { type Database } from "sqlite";
-import { Table } from "vectordb";
+import { type Table } from "vectordb";
 
-import { editConfigJson, migrate } from "../../util/paths.js";
+import { editConfigFile, migrate } from "../../util/paths.js";
 
 import DocsService, { SqliteDocsRow } from "./DocsService.js";
 
@@ -58,10 +58,22 @@ export async function runSqliteMigrations(db: Database) {
             const sqliteDocs = await db.all<
               Array<Pick<SqliteDocsRow, "title" | "startUrl">>
             >(`SELECT title, startUrl FROM ${DocsService.sqlitebTableName}`);
-            editConfigJson((config) => ({
-              ...config,
-              docs: [...(config.docs || []), ...sqliteDocs],
-            }));
+            editConfigFile(
+              (config) => ({
+                ...config,
+                docs: [...(config.docs || []), ...sqliteDocs],
+              }),
+              (config) => ({
+                ...config,
+                docs: [
+                  ...(config.docs || []),
+                  ...sqliteDocs.map((doc) => ({
+                    name: doc.title,
+                    startUrl: doc.startUrl,
+                  })),
+                ],
+              }),
+            );
           }
         } finally {
           resolve(undefined);

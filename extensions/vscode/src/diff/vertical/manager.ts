@@ -1,4 +1,4 @@
-import { ChatMessage, DiffLine } from "core";
+import { ChatMessage, DiffLine, ILLM } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
@@ -7,6 +7,7 @@ import * as URI from "uri-js";
 import * as vscode from "vscode";
 
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
+import { handleLLMError } from "../../util/errorHandling";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
@@ -189,6 +190,7 @@ export class VerticalDiffManager {
     diffStream: AsyncGenerator<DiffLine>,
     instant: boolean,
     streamId: string,
+    toolCallId?: string,
   ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
@@ -225,12 +227,13 @@ export class VerticalDiffManager {
             numDiffs,
             fileContent,
             filepath: fileUri,
+            toolCallId,
           }),
       },
     );
 
     if (!diffHandler) {
-      console.warn("Issue occured while creating new vertical diff handler");
+      console.warn("Issue occurred while creating new vertical diff handler");
       return;
     }
 
@@ -255,7 +258,9 @@ export class VerticalDiffManager {
       this.enableDocumentChangeListener();
     } catch (e) {
       this.disableDocumentChangeListener();
-      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      if (!handleLLMError(e)) {
+        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      }
     } finally {
       vscode.commands.executeCommand(
         "setContext",
@@ -267,12 +272,13 @@ export class VerticalDiffManager {
 
   async streamEdit(
     input: string,
-    modelTitle: string | undefined,
+    llm: ILLM,
     streamId?: string,
     onlyOneInsertion?: boolean,
     quickEdit?: string,
     range?: vscode.Range,
     newCode?: string,
+    toolCallId?: string,
   ): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
@@ -302,13 +308,13 @@ export class VerticalDiffManager {
         // Previous diff was a quickEdit
         // Check if user has highlighted a range
         let rangeBool =
-          startLine != endLine ||
-          editor.selection.start.character != editor.selection.end.character;
+          startLine !== endLine ||
+          editor.selection.start.character !== editor.selection.end.character;
 
         // Check if the range is different from the previous range
         let newRangeBool =
-          startLine != existingHandler.range.start.line ||
-          endLine != existingHandler.range.end.line;
+          startLine !== existingHandler.range.start.line ||
+          endLine !== existingHandler.range.end.line;
 
         if (!rangeBool || !newRangeBool) {
           // User did not highlight a new range -> use start/end from the previous quickEdit
@@ -348,12 +354,13 @@ export class VerticalDiffManager {
             numDiffs,
             fileContent,
             filepath: fileUri,
+            toolCallId,
           }),
       },
     );
 
     if (!diffHandler) {
-      console.warn("Issue occured while creating new vertical diff handler");
+      console.warn("Issue occurred while creating new vertical diff handler");
       return undefined;
     }
 
@@ -367,7 +374,6 @@ export class VerticalDiffManager {
       );
     }
 
-    const llm = await this.configHandler.llmFromTitle(modelTitle);
     const rangeContent = editor.document.getText(selectedRange);
     const prefix = pruneLinesFromTop(
       editor.document.getText(
@@ -446,7 +452,9 @@ export class VerticalDiffManager {
       return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {
       this.disableDocumentChangeListener();
-      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      if (!handleLLMError(e)) {
+        vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      }
       return undefined;
     } finally {
       vscode.commands.executeCommand(
