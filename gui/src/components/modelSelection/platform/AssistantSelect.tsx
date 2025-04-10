@@ -301,7 +301,7 @@ export default function AssistantSelect() {
                   buttonRef.current?.click();
                 }}
               >
-                <ArrowPathIcon className="h-2.5 w-2.5" />
+                <ArrowPathIcon className="text-lightgray h-2.5 w-2.5" />
               </div>
             </div>
 
