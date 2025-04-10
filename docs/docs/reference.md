@@ -49,6 +49,22 @@ models:
     provider: ollama
 ```
 
+#### Local Blocks
+
+You can also reference blocks that are defined locally, using either a path relative to the assistant file or an absolute path. For example:
+
+```yaml
+name: My Local Assistant
+version: 1.0.0
+schema: v1
+
+rules:
+  - uses: ../blocks/unit-test-rules.yaml
+
+models:
+  - uses: ../blocks/my-model.yaml
+```
+
 ### Inputs
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
