@@ -292,7 +292,7 @@ export async function unrollBlocks(
 
   const sections: (keyof Omit<
     ConfigYaml,
-    "name" | "version" | "rules" | "schema"
+    "name" | "version" | "rules" | "schema" | "metadata"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // For each section, replace "uses/with" blocks with the real thing
