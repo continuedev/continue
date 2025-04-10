@@ -127,6 +127,7 @@ function ModeSelect() {
           />
         </ListboxButton>
         <ListboxOptions className="min-w-32 max-w-48">
+          {agentModeSupported &&
           <ListboxOption value="agent" disabled={!agentModeSupported}>
             <div className="flex flex-row items-center gap-1.5">
               <SparklesIcon className="h-3 w-3" />
@@ -134,7 +135,7 @@ function ModeSelect() {
             </div>
             {mode === "agent" && <CheckIcon className="ml-auto h-3 w-3" />}
             {!agentModeSupported && <span> (Not supported)</span>}
-          </ListboxOption>
+          </ListboxOption>}
 
           <ListboxOption value="chat">
             <div className="flex flex-row items-center gap-1.5">

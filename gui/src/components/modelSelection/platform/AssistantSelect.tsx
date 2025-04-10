@@ -3,8 +3,7 @@ import {
   BuildingOfficeIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
-  ExclamationTriangleIcon,
-  PlusIcon,
+  ExclamationTriangleIcon
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../../../context/Auth";
@@ -192,6 +191,8 @@ export default function AssistantSelect() {
   const smallFont = useFontSize(-3);
 
   if (!selectedProfile) {
+    return null;
+/*
     return (
       <div
         onClick={() => {
@@ -211,6 +212,7 @@ export default function AssistantSelect() {
         </span>
       </div>
     );
+*/
   }
 
   return profiles && profiles.length > 1 && (

@@ -1,8 +1,6 @@
 import { ModelRole } from "@continuedev/config-yaml";
-import { PlusIcon } from "@heroicons/react/24/outline";
 import { ModelDescription } from "core";
 import { useContext } from "react";
-import { GhostButton } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import AddModelForm from "../../../../forms/AddModelForm";
@@ -17,7 +15,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../../redux/slices/uiSlice";
-import { fontSize, isJetBrains } from "../../../../util";
+import { isJetBrains } from "../../../../util";
 
 export function ModelsSection() {
   const { selectedProfile } = useAuth();
@@ -119,13 +117,14 @@ export function ModelsSection() {
           selectedModel={config.selectedModelByRole.embed}
           onSelect={(model) => handleRoleUpdate("embed", model)}
         />
-        <ModelRoleSelector
+        {config.modelsByRole.rerank.length > 0 && <ModelRoleSelector
           displayName="Rerank"
           description="Used for reranking results from the @codebase and @docs context providers"
           models={config.modelsByRole.rerank}
           selectedModel={config.selectedModelByRole.rerank}
           onSelect={(model) => handleRoleUpdate("rerank", model)}
-        />
+        />}
+        {/*
         <GhostButton
           className="w-full cursor-pointer rounded px-2 text-center text-gray-400 hover:text-gray-300"
           style={{
@@ -140,6 +139,7 @@ export function ModelsSection() {
             <PlusIcon className="h-3 w-3" /> Add Models
           </div>
         </GhostButton>
+        */}
       </div>
     </div>
   );
