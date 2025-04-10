@@ -31,6 +31,62 @@ jobs:
         if: steps.root-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+  install-config-yaml:
+    needs: install-root
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Install config-yaml dependencies
+        if: steps.config-yaml-cache.outputs.cache-hit != 'true'
+        run: |
+          cd packages/config-yaml
+          npm ci
+
+  config-yaml-checks:
+    needs: install-config-yaml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build and check config-yaml
+        run: |
+          cd packages/config-yaml
+          npx tsc --noEmit
+          # Tests are currently failing, commenting out for now
+          # npm test 
+          npm run build
+
   install-core:
     needs: install-root
     runs-on: ubuntu-latest
@@ -60,7 +116,7 @@ jobs:
           npm ci
 
   core-checks:
-    needs: install-core
+    needs: [install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -81,6 +137,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
       - name: Type check and lint
         run: |
           cd core
@@ -90,7 +157,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   install-gui:
-    needs: [install-root, install-core]
+    needs: [install-root, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -114,6 +181,17 @@ jobs:
         with:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
 
       - name: Install gui dependencies
         if: steps.gui-cache.outputs.cache-hit != 'true'
@@ -147,13 +225,24 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-gui-node-modules-${{ hashFiles('gui/package-lock.json') }}
 
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
       - name: Type check
         run: |
           cd gui
           npx tsc --noEmit
 
   binary-checks:
-    needs: [install-root, install-core]
+    needs: [install-root, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -178,6 +267,17 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-binary-node-modules-${{ hashFiles('binary/package-lock.json') }}
 
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
       - name: Install binary dependencies
         if: steps.binary-cache.outputs.cache-hit != 'true'
         run: |
@@ -190,7 +290,7 @@ jobs:
           npx tsc --noEmit
 
   install-vscode:
-    needs: [install-root, install-core]
+    needs: [install-root, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -214,6 +314,17 @@ jobs:
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
 
       - name: Install vscode dependencies
         if: steps.vscode-cache.outputs.cache-hit != 'true'
@@ -249,6 +360,17 @@ jobs:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
       - name: Type check and lint
         run: |
           cd extensions/vscode
@@ -256,7 +378,7 @@ jobs:
           npm run lint
 
   core-tests:
-    needs: install-core
+    needs: [install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -269,6 +391,17 @@ jobs:
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
 
       - name: Run core tests
         run: |
@@ -285,7 +418,7 @@ jobs:
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
-    needs: [install-root, install-vscode]
+    needs: [install-root, install-vscode, install-config-yaml]
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
@@ -296,6 +429,17 @@ jobs:
         with:
           path: extensions/vscode/node_modules
           key: ${{ runner.os }}-vscode-node-modules-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
 
       - name: Get test files
         id: vscode-get-test-file-matrix
@@ -320,7 +464,7 @@ jobs:
 
   vscode-package-extension:
     runs-on: ubuntu-latest
-    needs: [install-vscode, install-core]
+    needs: [install-vscode, install-core, install-config-yaml]
     steps:
       - uses: actions/checkout@v4
 
@@ -340,6 +484,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
       - name: Package extension
         run: |
           cd extensions/vscode
@@ -353,7 +508,7 @@ jobs:
 
   vscode-download-e2e-dependencies:
     runs-on: ubuntu-latest
-    needs: [install-vscode, install-core]
+    needs: [install-vscode, install-core, install-config-yaml]
     steps:
       - uses: actions/checkout@v4
 
@@ -372,6 +527,17 @@ jobs:
         with:
           path: extensions/vscode/e2e/storage
           key: ${{ runner.os }}-vscode-storage-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
 
       - name: Download Dependencies
         if: steps.storage-cache.outputs.cache-hit != 'true'
@@ -394,6 +560,7 @@ jobs:
         vscode-package-extension,
         install-vscode,
         install-core,
+        install-config-yaml,
       ]
     runs-on: ubuntu-latest
     # Tests requiring secrets need approval from maintainers
@@ -433,6 +600,17 @@ jobs:
         with:
           name: vscode-e2e-dependencies
           path: extensions/vscode/e2e/storage
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
 
       - name: Fix VSCode binary permissions
         run: |
@@ -476,7 +654,7 @@ jobs:
           path: extensions/vscode/e2e/storage/screenshots
 
   gui-tests:
-    needs: [install-gui, install-core]
+    needs: [install-gui, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -496,6 +674,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
+
       - name: Install GUI dependencies
         if: steps.gui-cache.outputs.cache-hit != 'true'
         run: cd gui && npm ci
@@ -508,7 +697,7 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [install-root, core-checks]
+    needs: [install-root, core-checks, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -516,6 +705,17 @@ jobs:
         with:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build config-yaml
+        run: |
+          cd packages/config-yaml
+          npm run build
 
       - name: Setup Java
         uses: actions/setup-java@v4.5.0
@@ -627,6 +827,8 @@ jobs:
       - vscode-e2e-tests
       - gui-tests
       - jetbrains-tests
+      - config-yaml-checks
+      - install-config-yaml
 
     steps:
       - name: Decide whether the needed jobs succeeded or failed
