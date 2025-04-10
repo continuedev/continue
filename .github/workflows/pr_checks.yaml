@@ -86,11 +86,13 @@ jobs:
           key: ${{ runner.os }}-root-node-modules-${{ hashFiles('package-lock.json') }}
 
       - uses: actions/cache@v4
+        id: config-types-cache
         with:
           path: packages/config-types/node_modules
           key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
 
       - uses: actions/cache@v4
+        id: config-yaml-cache
         with:
           path: packages/config-yaml/node_modules
           key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
@@ -109,12 +111,6 @@ jobs:
           # Tests are currently failing, commenting out for now
           # npm test 
           npm run build
-
-      - name: Upload config-yaml build
-        uses: actions/upload-artifact@v4
-        with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
 
   install-core:
     needs: install-root
@@ -166,11 +162,17 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-core-node-modules-${{ hashFiles('core/package-lock.json') }}
 
-      - name: Download config-yaml build
-        uses: actions/download-artifact@v4
+      - uses: actions/cache@v4
+        id: config-types-cache
         with:
-          name: config-yaml-build
-          path: packages/config-yaml/dist
+          path: packages/config-types/node_modules
+          key: ${{ runner.os }}-config-types-node-modules-${{ hashFiles('packages/config-types/package-lock.json') }}
+
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
       - name: Type check and lint
         run: |
