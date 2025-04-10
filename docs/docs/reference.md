@@ -69,6 +69,8 @@ Blocks:
 - `.continue/data` - for data
 - `.continue/mcpServers` - for MCP Servers
 
+You can find many examples of each of these block types on the [Continue Explore Page](https://hub.continue.dev/explore/models)
+
 ### Inputs
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
