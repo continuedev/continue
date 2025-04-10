@@ -13,7 +13,7 @@ function SkipLocalOnboardingSubtext({
         className="cursor-pointer underline"
         onClick={onClick}
       >
-        proceed without completing this step
+        proceed without checks
       </span>
     </ButtonSubtext>
   );
