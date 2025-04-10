@@ -291,7 +291,7 @@ export default function AssistantSelect() {
 
         <Transition>
           <ListboxOptions className="pb-0">
-            <div className="flex gap-1.5 px-2.5 py-1">
+            <div className="flex justify-between gap-1.5 px-2.5 py-1">
               <span>Assistants</span>
               <div
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
