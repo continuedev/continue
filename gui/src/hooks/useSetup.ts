@@ -50,6 +50,7 @@ function useSetup() {
         organizations,
         selectedOrgId,
       } = result;
+
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }

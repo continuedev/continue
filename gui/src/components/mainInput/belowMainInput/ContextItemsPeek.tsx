@@ -42,7 +42,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
       const isRangeInFile = name.includes(" (") && name.endsWith(")");
 
       if (isRangeInFile) {
-        const rif = ctxItemToRifWithContents(contextItem);
+        const rif = ctxItemToRifWithContents(contextItem, true);
         ideMessenger.ide.showLines(
           rif.filepath,
           rif.range.start.line,
