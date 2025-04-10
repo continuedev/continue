@@ -9,6 +9,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { vscBadgeBackground, vscBadgeForeground } from "../..";
+import ConfigErrorIndicator from "../../../pages/gui/ConfigError";
 import { fontSize } from "../../../util";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
@@ -130,8 +131,9 @@ export function BlockSettingsTopToolbar() {
           </div>
         </div>
       </div>
-      <div>
+      <div className="flex gap-0.5">
         <AssistantSelect />
+        <ConfigErrorIndicator />
       </div>
     </div>
   );
