@@ -3,9 +3,8 @@ import { generateLines } from "../../diff/util";
 import { supportedLanguages } from "../../util/treeSitter";
 import { getUriFileExtension } from "../../util/uri";
 
-import { deterministicApplyLazyEdit } from "./deterministic";
 import { streamLazyApply } from "./streamLazyApply";
-import { isUnifiedDiffFormat, applyUnifiedDiff } from "./unifiedDiffApply";
+import { applyUnifiedDiff, isUnifiedDiffFormat } from "./unifiedDiffApply";
 
 function canUseInstantApply(filename: string) {
   const fileExtension = getUriFileExtension(filename);
@@ -17,22 +16,21 @@ export async function applyCodeBlock(
   newFile: string,
   filename: string,
   llm: ILLM,
-  fastLlm: ILLM,
 ): Promise<[boolean, AsyncGenerator<DiffLine>]> {
   // This was buggy, removed for now, maybe forever
-  if (false && canUseInstantApply(filename)) {
-    const diffLines = await deterministicApplyLazyEdit(
-      oldFile,
-      newFile,
-      filename,
-    );
+  // if (canUseInstantApply(filename)) {
+  //   const diffLines = await deterministicApplyLazyEdit(
+  //     oldFile,
+  //     newFile,
+  //     filename,
+  //   );
 
-    // Fall back to LLM method if we couldn't apply deterministically
-    if (diffLines !== undefined) {
-      const diffGenerator = generateLines(diffLines!);
-      return [true, diffGenerator];
-    }
-  }
+  //   // Fall back to LLM method if we couldn't apply deterministically
+  //   if (diffLines !== undefined) {
+  //     const diffGenerator = generateLines(diffLines!);
+  //     return [true, diffGenerator];
+  //   }
+  // }
 
   // If the code block is a diff
   if (isUnifiedDiffFormat(newFile)) {
@@ -45,5 +43,5 @@ export async function applyCodeBlock(
     }
   }
 
-  return [false, streamLazyApply(oldFile, filename, newFile, llm, fastLlm)];
+  return [false, streamLazyApply(oldFile, filename, newFile, llm)];
 }
