@@ -1,3 +1,10 @@
+/**
+ * I'm disabling this rule for the entire file under the assumption
+ * that this is a one-time migration script. I'm expecting this
+ * code to be removed in the future.
+ */
+/* eslint-disable max-statements */
+
 import { IDE } from "..";
 import { deduplicateArray } from "../util";
 import { GlobalContext } from "../util/GlobalContext";
