@@ -64,6 +64,40 @@ export type AddParams = {
   favicon?: string;
 };
 
+const markFailedInGlobalContext = (siteIndexingConfig: SiteIndexingConfig) => {
+  const globalContext = new GlobalContext();
+  const failedDocs = globalContext.get("failedDocs") ?? [];
+  const newFailedDocs = failedDocs.filter(
+    (d) => !siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+  );
+  newFailedDocs.push(siteIndexingConfig);
+  globalContext.update("failedDocs", newFailedDocs);
+};
+
+const removeFromFailedGlobalContext = (
+  siteIndexingConfig: SiteIndexingConfig,
+) => {
+  const globalContext = new GlobalContext();
+  const failedDocs = globalContext.get("failedDocs") ?? [];
+  const newFailedDocs = failedDocs.filter(
+    (d) => !siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+  );
+  globalContext.update("failedDocs", newFailedDocs);
+};
+
+const siteIndexingConfigsAreEqual = (
+  config1: SiteIndexingConfig,
+  config2: SiteIndexingConfig,
+) => {
+  return (
+    config1.startUrl === config2.startUrl &&
+    config1.faviconUrl === config2.faviconUrl &&
+    config1.title === config2.title &&
+    config1.maxDepth === config2.maxDepth &&
+    config1.useLocalCrawling === config2.useLocalCrawling
+  );
+};
+
 /*
   General process:
   - On config update:
@@ -436,7 +470,7 @@ export default class DocsService {
       const globalContext = new GlobalContext();
       const failedDocs = globalContext.get("failedDocs") ?? [];
       const hasFailed = failedDocs.find((d) =>
-        this.siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+        siteIndexingConfigsAreEqual(siteIndexingConfig, d),
       );
       if (hasFailed) {
         console.log(
@@ -472,25 +506,6 @@ export default class DocsService {
       console.error("Failed to test embeddings connection", e);
       return;
     }
-
-    const markFailedInGlobalContext = () => {
-      const globalContext = new GlobalContext();
-      const failedDocs = globalContext.get("failedDocs") ?? [];
-      const newFailedDocs = failedDocs.filter(
-        (d) => !this.siteIndexingConfigsAreEqual(siteIndexingConfig, d),
-      );
-      newFailedDocs.push(siteIndexingConfig);
-      globalContext.update("failedDocs", newFailedDocs);
-    };
-
-    const removeFromFailedGlobalContext = () => {
-      const globalContext = new GlobalContext();
-      const failedDocs = globalContext.get("failedDocs") ?? [];
-      const newFailedDocs = failedDocs.filter(
-        (d) => !this.siteIndexingConfigsAreEqual(siteIndexingConfig, d),
-      );
-      globalContext.update("failedDocs", newFailedDocs);
-    };
 
     try {
       this.docsIndexingQueue.add(startUrl);
@@ -630,7 +645,7 @@ export default class DocsService {
         });
 
         // void this.ide.showToast("info", `Failed to index ${startUrl}`);
-        markFailedInGlobalContext();
+        markFailedInGlobalContext(siteIndexingConfig);
         return;
       }
 
@@ -690,7 +705,7 @@ export default class DocsService {
         providers: ["docs"],
       });
 
-      removeFromFailedGlobalContext();
+      removeFromFailedGlobalContext(siteIndexingConfig);
     } catch (e) {
       console.error(
         `Error indexing docs at: ${siteIndexingConfig.startUrl}`,
@@ -711,7 +726,7 @@ export default class DocsService {
         status: "failed",
         progress: 1,
       });
-      markFailedInGlobalContext();
+      markFailedInGlobalContext(siteIndexingConfig);
     } finally {
       this.docsIndexingQueue.delete(startUrl);
     }
@@ -973,10 +988,7 @@ export default class DocsService {
             (d) => d.startUrl === doc.startUrl,
           );
 
-          if (
-            oldConfigDoc &&
-            !this.siteIndexingConfigsAreEqual(oldConfigDoc, doc)
-          ) {
+          if (oldConfigDoc && !siteIndexingConfigsAreEqual(oldConfigDoc, doc)) {
             changedDocs.push(doc);
           } else {
             if (forceReindex) {
@@ -1163,24 +1175,11 @@ export default class DocsService {
     );
   }
 
-  private siteIndexingConfigsAreEqual(
-    config1: SiteIndexingConfig,
-    config2: SiteIndexingConfig,
-  ) {
-    return (
-      config1.startUrl === config2.startUrl &&
-      config1.faviconUrl === config2.faviconUrl &&
-      config1.title === config2.title &&
-      config1.maxDepth === config2.maxDepth &&
-      config1.useLocalCrawling === config2.useLocalCrawling
-    );
-  }
-
   private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
     const doesEquivalentDocExist = this.config.docs?.some((doc) =>
-      this.siteIndexingConfigsAreEqual(doc, siteIndexingConfig),
+      siteIndexingConfigsAreEqual(doc, siteIndexingConfig),
     );
 
     if (!doesEquivalentDocExist) {
