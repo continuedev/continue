@@ -866,7 +866,11 @@ async function loadContinueConfigFromJson(
 
   const systemPromptDotFile = await getSystemPromptDotFile(ide);
   if (systemPromptDotFile) {
-    serialized.systemMessage = systemPromptDotFile;
+    if (serialized.systemMessage) {
+      serialized.systemMessage = `${serialized.systemMessage}\n\n${systemPromptDotFile}`;
+    } else {
+      serialized.systemMessage = systemPromptDotFile;
+    }
   }
 
   // Apply shared config

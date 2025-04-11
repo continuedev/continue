@@ -8,10 +8,11 @@ import {
   ToolCallDelta,
 } from "../../index.js";
 import { findLast } from "../../util/findLast.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 import {
+  GeminiChatContent,
   GeminiChatContentPart,
   GeminiChatRequestBody,
   GeminiChatResponse,
@@ -160,9 +161,10 @@ class Gemini extends BaseLLM {
       this.apiBase ||
       Gemini.defaultOptions?.apiBase ||
       "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
+
     const isV1API = apiBase.includes("/v1/");
 
-    // Conditionally apply removeSystemMessage
+    //
     const convertedMsgs = isV1API
       ? this.removeSystemMessage(messages)
       : messages;
@@ -204,6 +206,10 @@ class Gemini extends BaseLLM {
     options: CompletionOptions,
     isV1API: boolean,
   ): GeminiChatRequestBody {
+    const systemMessage = messages.find(
+      (msg) => msg.role === "system",
+    )?.content;
+
     const body: GeminiChatRequestBody = {
       contents: messages
         .filter((msg) => !(msg.role === "system" && isV1API))
@@ -236,28 +242,35 @@ class Gemini extends BaseLLM {
               ],
             };
           }
-          const assistantMsg = {
-            role:
-              msg.role === "assistant" ? ("model" as const) : ("user" as const),
+          if (msg.role === "assistant") {
+            const assistantMsg: GeminiChatContent = {
+              role: "model",
+              parts:
+                typeof msg.content === "string"
+                  ? [{ text: msg.content }]
+                  : msg.content.map(this.continuePartToGeminiPart),
+            };
+            if (msg.toolCalls) {
+              msg.toolCalls.forEach((toolCall) => {
+                if (toolCall.function?.name && toolCall.function?.arguments) {
+                  assistantMsg.parts.push({
+                    functionCall: {
+                      name: toolCall.function.name,
+                      args: JSON.parse(toolCall.function.arguments),
+                    },
+                  });
+                }
+              });
+            }
+            return assistantMsg;
+          }
+          return {
+            role: "user",
             parts:
               typeof msg.content === "string"
                 ? [{ text: msg.content }]
                 : msg.content.map(this.continuePartToGeminiPart),
           };
-          if (msg.role === "assistant" && msg.toolCalls) {
-            msg.toolCalls.forEach((toolCall) => {
-              if (toolCall.function?.name && toolCall.function?.arguments) {
-                assistantMsg.parts.push({
-                  functionCall: {
-                    name: toolCall.function.name,
-                    args: JSON.parse(toolCall.function.arguments),
-                  },
-                });
-              }
-            });
-          }
-
-          return assistantMsg;
         }),
     };
     if (options) {
@@ -266,8 +279,10 @@ class Gemini extends BaseLLM {
 
     // https://ai.google.dev/gemini-api/docs/api-versions
     if (!isV1API) {
-      if (this.systemMessage) {
-        body.systemInstruction = { parts: [{ text: this.systemMessage }] };
+      if (systemMessage) {
+        body.systemInstruction = {
+          parts: [{ text: stripImages(systemMessage) }],
+        };
       }
       // Convert and add tools if present
       if (options.tools?.length) {
@@ -489,10 +504,8 @@ class Gemini extends BaseLLM {
       `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
       this.apiBase,
     );
-    // This feels hacky to repeat code from above function but was the quickest
-    // way to ensure system message re-formatting isn't done if user has specified v1
-    const apiBase = this.apiBase || Gemini.defaultOptions.apiBase!; // Determine if it's a v1 API call based on apiBase
-    const isV1API = apiBase.includes("/v1/");
+
+    const isV1API = !!this.apiBase?.includes("/v1/");
 
     // Convert chat messages to contents
     const body = this.prepareBody(messages, options, isV1API);

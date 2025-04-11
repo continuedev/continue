@@ -94,7 +94,7 @@ export class GeminiApi implements BaseLlmApi {
           return null; // Don't include system message in contents
         }
 
-        if (msg.role == "assistant" && msg.tool_calls?.length) {
+        if (msg.role === "assistant" && msg.tool_calls?.length) {
           for (const toolCall of msg.tool_calls) {
             toolCallIdToNameMap.set(toolCall.id, toolCall.function.name);
           }
