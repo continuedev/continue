@@ -85,6 +85,14 @@ const removeFromFailedGlobalContext = (
   globalContext.update("failedDocs", newFailedDocs);
 };
 
+const hasIndexingFailed = (siteIndexingConfig: SiteIndexingConfig) => {
+  const globalContext = new GlobalContext();
+  const failedDocs = globalContext.get("failedDocs") ?? [];
+  return failedDocs.find((d) =>
+    siteIndexingConfigsAreEqual(siteIndexingConfig, d),
+  );
+};
+
 const siteIndexingConfigsAreEqual = (
   config1: SiteIndexingConfig,
   config2: SiteIndexingConfig,
@@ -467,12 +475,7 @@ export default class DocsService {
 
     // If not force-reindexing and has failed with same config, don't reattempt
     if (!forceReindex) {
-      const globalContext = new GlobalContext();
-      const failedDocs = globalContext.get("failedDocs") ?? [];
-      const hasFailed = failedDocs.find((d) =>
-        siteIndexingConfigsAreEqual(siteIndexingConfig, d),
-      );
-      if (hasFailed) {
+      if (hasIndexingFailed(siteIndexingConfig)) {
         console.log(
           `Not reattempting to index ${siteIndexingConfig.startUrl}, has already failed with same config`,
         );
