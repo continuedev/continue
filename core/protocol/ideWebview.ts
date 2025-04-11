@@ -11,8 +11,6 @@ import type {
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openUrl: [string, void];
-  // We pass the `curSelectedModel` because we currently cannot access the
-  // default model title in the GUI from JB
   applyToFile: [
     {
       text: string;

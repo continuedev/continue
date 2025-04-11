@@ -9,7 +9,7 @@ interface RunTerminalCommandToolCallProps {
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   return (
     <StyledMarkdownPreview
-      isRenderingInStepContainer={true}
+      isRenderingInStepContainer
       source={`\`\`\`bash .sh\n${props.command ?? ""}\n\`\`\``}
     />
   );

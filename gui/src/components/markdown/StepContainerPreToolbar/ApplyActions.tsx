@@ -37,12 +37,12 @@ export default function ApplyActions(props: ApplyActionsProps) {
 
   const applyButton = (text: string) => (
     <button
-      className={`flex items-center border-none bg-transparent text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+      className={`flex items-center border-none bg-transparent pl-0 text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
       onClick={props.onClickApply}
       style={{ color: lightGray }}
     >
       <div className="flex items-center gap-1 text-gray-400">
-        <PlayIcon className="h-3 w-3" />
+        <PlayIcon className="h-3.5 w-3.5" />
         <span className="xs:inline hidden">{text}</span>
       </div>
     </button>
@@ -53,7 +53,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
       return (
         <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
           <span className="inline-flex w-min items-center gap-2 text-center text-xs text-gray-400">
-            Applying changes
+            Applying
             <div>
               <Spinner />
             </div>

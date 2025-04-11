@@ -29,9 +29,9 @@ export function EditFile(props: EditToolCallProps) {
   return (
     <>
       <StyledMarkdownPreview
-        isRenderingInStepContainer={true}
+        isRenderingInStepContainer
+        disableManualApply
         source={src}
-        disableManualApply={true}
         singleCodeblockStreamId={applyState?.streamId}
         expandCodeblocks={false}
       />
