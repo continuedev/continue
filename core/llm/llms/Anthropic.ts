@@ -30,15 +30,17 @@ class Anthropic extends BaseLLM {
         description: tool.function.description,
         input_schema: tool.function.parameters,
       })),
-      thinking: options.reasoning ? {
-        type: "enabled",
-        budget_tokens: options.reasoningBudgetTokens,
-      } : undefined,
+      thinking: options.reasoning
+        ? {
+            type: "enabled",
+            budget_tokens: options.reasoningBudgetTokens,
+          }
+        : undefined,
       tool_choice: options.toolChoice
         ? {
-          type: "tool",
-          name: options.toolChoice.function.name,
-        }
+            type: "tool",
+            name: options.toolChoice.function.name,
+          }
         : undefined,
     };
 
@@ -70,19 +72,23 @@ class Anthropic extends BaseLLM {
     } else if (message.role === "thinking" && !message.redactedThinking) {
       return {
         role: "assistant",
-        content: [{
-          type: "thinking",
-          thinking: message.content,
-          signature: message.signature
-        }]
+        content: [
+          {
+            type: "thinking",
+            thinking: message.content,
+            signature: message.signature,
+          },
+        ],
       };
     } else if (message.role === "thinking" && message.redactedThinking) {
       return {
         role: "assistant",
-        content: [{
-          type: "redacted_thinking",
-          data: message.redactedThinking
-        }]
+        content: [
+          {
+            type: "redacted_thinking",
+            data: message.redactedThinking,
+          },
+        ],
       };
     }
 
@@ -172,10 +178,11 @@ class Anthropic extends BaseLLM {
       );
     }
 
-    const shouldCacheSystemMessage =
-      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const systemMessage: string = stripImages(
+    const systemMessage = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
     );
 
     const msgs = this.convertMessages(messages);
@@ -195,12 +202,12 @@ class Anthropic extends BaseLLM {
         messages: msgs,
         system: shouldCacheSystemMessage
           ? [
-            {
-              type: "text",
-              text: this.systemMessage,
-              cache_control: { type: "ephemeral" },
-            },
-          ]
+              {
+                type: "text",
+                text: systemMessage,
+                cache_control: { type: "ephemeral" },
+              },
+            ]
           : systemMessage,
       }),
       signal,
@@ -240,7 +247,11 @@ class Anthropic extends BaseLLM {
           // handle redacted thinking
           if (value.content_block.type === "redacted_thinking") {
             console.log("redacted thinking", value.content_block.data);
-            yield { role: "thinking", content: "", redactedThinking: value.content_block.data };
+            yield {
+              role: "thinking",
+              content: "",
+              redactedThinking: value.content_block.data,
+            };
           }
           break;
         case "content_block_delta":
@@ -253,7 +264,11 @@ class Anthropic extends BaseLLM {
               yield { role: "thinking", content: value.delta.thinking };
               break;
             case "signature_delta":
-              yield { role: "thinking", content: "", signature: value.delta.signature };
+              yield {
+                role: "thinking",
+                content: "",
+                signature: value.delta.signature,
+              };
               break;
             case "input_json_delta":
               if (!lastToolUseId || !lastToolUseName) {

@@ -41,6 +41,7 @@ const EMPTY_CONFIG: BrowserSerializedContinueConfig = {
     rerank: null,
     embed: null,
   },
+  rules: [],
 };
 
 const initialState: ConfigState = {

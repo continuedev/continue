@@ -372,14 +372,14 @@ const getCommandsMap: (
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
-    await verticalDiffManager.streamEdit(
-      config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
+    await verticalDiffManager.streamEdit({
+      input:
+        config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       llm,
-      undefined,
       onlyOneInsertion,
-      undefined,
       range,
-    );
+      rules: config.rules,
+    });
   }
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>

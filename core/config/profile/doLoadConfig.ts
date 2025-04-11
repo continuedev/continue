@@ -34,6 +34,7 @@ import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
+import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
 export default async function doLoadConfig({
@@ -119,6 +120,12 @@ export default async function doLoadConfig({
   // TODO using config result but result with non-fatal errors is an antipattern?
   // Remove ability have undefined errors, just have an array
   errors = [...(errors ?? [])];
+
+  // Add rules from .continuerules files
+  const { rules, errors: continueRulesErrors } =
+    await getWorkspaceContinueRuleDotFiles(ide);
+  newConfig.rules.unshift(...rules);
+  errors.push(...continueRulesErrors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);

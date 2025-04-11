@@ -80,16 +80,6 @@ class Replicate extends BaseLLM {
       }
     }
   }
-
-  // protected async *_streamChat(
-  //   messages: ChatMessage[],
-  //   options: CompletionOptions
-  // ): AsyncGenerator<ChatMessage> {
-  //   const resp = await this.complete(
-  //     stripImages(messages[0]?.content || ""),
-  //     options
-  //   );
-  // }
 }
 
 export default Replicate;

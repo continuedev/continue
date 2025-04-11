@@ -1,10 +1,12 @@
+import { RuleWithSource } from "../..";
 import { isRuleActive } from "./isRuleActive";
 
 describe("isRuleActive", () => {
-  const rule = {
+  const rule: RuleWithSource = {
     name: "My Rule",
     rule: "Do no harm",
     if: '${{ contains(current.model.model, "claude-3-7-sonnet") and glob("*.tsx") }}',
+    source: "rules-block",
   };
 
   it("should return false when activePaths is empty", () => {

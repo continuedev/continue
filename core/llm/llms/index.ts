@@ -3,10 +3,11 @@ import {
   IdeSettings,
   ILLM,
   ILLMLogger,
+  JSONModelDescription,
   LLMOptions,
-  ModelDescription,
 } from "../..";
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
+import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
 import { BaseLLM } from "../index";
 
 import Anthropic from "./Anthropic";
@@ -112,13 +113,12 @@ export const LLMClasses = [
 ];
 
 export async function llmFromDescription(
-  desc: ModelDescription,
+  desc: JSONModelDescription,
   readFile: (filepath: string) => Promise<string>,
   uniqueId: string,
   ideSettings: IdeSettings,
   llmLogger: ILLMLogger,
   completionOptions?: BaseCompletionOptions,
-  systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMClasses.find((llm) => llm.providerName === desc.provider);
 
@@ -131,9 +131,15 @@ export async function llmFromDescription(
     ...desc.completionOptions,
   };
 
-  systemMessage = desc.systemMessage ?? systemMessage;
-  if (systemMessage !== undefined) {
-    systemMessage = await renderTemplatedString(systemMessage, readFile, {});
+  let baseChatSystemMessage: string | undefined = undefined;
+  if (desc.systemMessage !== undefined) {
+    baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
+    baseChatSystemMessage += "\n\n";
+    baseChatSystemMessage += await renderTemplatedString(
+      desc.systemMessage,
+      readFile,
+      {},
+    );
   }
 
   let options: LLMOptions = {
@@ -145,7 +151,7 @@ export async function llmFromDescription(
         finalCompletionOptions.maxTokens ??
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
-    systemMessage,
+    baseChatSystemMessage,
     logger: llmLogger,
     uniqueId,
   };

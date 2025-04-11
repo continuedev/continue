@@ -1,6 +1,6 @@
-import { Rule } from "@continuedev/config-yaml";
 import { compileExpression } from "filtrex";
 import { minimatch } from "minimatch";
+import { RuleWithSource } from "../..";
 
 const TEMPLATE_VAR_REGEX = /^\$\{\{(\s*.*?\s*)\}\}$/;
 
@@ -52,14 +52,10 @@ export const isRuleActive = ({
   activePaths,
   currentModel,
 }: {
-  rule: Rule;
+  rule: RuleWithSource;
   activePaths: string[];
   currentModel: string;
 }): boolean => {
-  if (typeof rule === "string") {
-    return true;
-  }
-
   if (rule.if) {
     return evaluateIf({ condition: rule.if, activePaths, currentModel });
   }

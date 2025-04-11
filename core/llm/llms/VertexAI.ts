@@ -1,7 +1,7 @@
 import { GoogleAuth } from "google-auth-library";
 
 import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse, streamSse } from "../stream.js";
 
@@ -11,7 +11,7 @@ import Gemini from "./Gemini.js";
 class VertexAI extends BaseLLM {
   static providerName = "vertexai";
   declare apiBase: string;
-  declare vertexProvider: string;
+  declare vertexProvider: "mistral" | "anthropic" | "gemini" | "unknown";
   declare anthropicInstance: Anthropic;
   declare geminiInstance: Gemini;
 
@@ -92,13 +92,13 @@ class VertexAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage =
-      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const filteredSystemMessages : ChatMessage[] = messages.filter((m) => m.role === "system");
-    let systemMessage: string = "";
-    if(filteredSystemMessages.length > 0) {
-      systemMessage = renderChatMessage(filteredSystemMessages[0]);
-    }
+    const systemMessage = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
+    const shouldCacheSystemMessage = !!(
+      this.cacheBehavior?.cacheSystemMessage && systemMessage
+    );
+
     const apiURL = new URL(
       `publishers/anthropic/models/${options.model}:streamRawPredict`,
       this.apiBase,
@@ -118,7 +118,7 @@ class VertexAI extends BaseLLM {
           ? [
               {
                 type: "text",
-                text: this.systemMessage,
+                text: systemMessage,
                 cache_control: { type: "ephemeral" },
               },
             ]
@@ -142,8 +142,7 @@ class VertexAI extends BaseLLM {
     }
   }
 
-  //Gemini
-
+  // Gemini
   private async *streamChatGemini(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -306,7 +305,7 @@ class VertexAI extends BaseLLM {
     yield (await resp.json()).predictions[0].content;
   }
 
-  //Manager functions
+  // Manager functions
 
   protected async *_streamChat(
     messages: ChatMessage[],
@@ -328,6 +327,8 @@ class VertexAI extends BaseLLM {
     } else {
       if (options.model.includes("bison")) {
         yield* this.streamChatBison(convertedMsgs, options);
+      } else {
+        throw new Error(`Unsupported model: ${options.model}`);
       }
     }
   }

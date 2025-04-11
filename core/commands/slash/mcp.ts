@@ -1,5 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
+import { PromptMessage } from "@modelcontextprotocol/sdk/types.js";
 import { ChatMessage, SlashCommand } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 export function constructMcpSlashCommand(
@@ -22,8 +23,8 @@ export function constructMcpSlashCommand(
       }
 
       const result = await client.getPrompt({ name, arguments: argsObject });
-
-      const messages: ChatMessage[] = result.messages.map((msg) => {
+      const mcpMessages: PromptMessage[] = result.messages;
+      const messages: ChatMessage[] = mcpMessages.map((msg) => {
         if (msg.content.type !== "text") {
           throw new Error(
             "Continue currently only supports text prompts through MCP",
@@ -40,12 +41,22 @@ export function constructMcpSlashCommand(
         return;
       }
 
-      const reversedMessages = [...messages].reverse();
-      const messageToAppendInput =
-        reversedMessages.find((m) => m.role === "user") ??
-        reversedMessages.find((m) => m.role === "assistant") ??
-        reversedMessages[0];
-      messageToAppendInput.content += ` ${userInput}`;
+      if (userInput) {
+        const lastMessage = messages.at(-1);
+        if (!lastMessage || lastMessage.role !== "user") {
+          messages.push({
+            role: "user",
+            content: userInput,
+          });
+        } else {
+          let newContent = renderChatMessage(lastMessage);
+          if (newContent) {
+            newContent += "\n\n";
+          }
+          newContent += userInput;
+          lastMessage.content = newContent;
+        }
+      }
 
       for await (const chunk of context.llm.streamChat(
         messages,

@@ -94,7 +94,7 @@ export class GeminiApi implements BaseLlmApi {
           return null; // Don't include system message in contents
         }
 
-        if (msg.role == "assistant" && msg.tool_calls?.length) {
+        if (msg.role === "assistant" && msg.tool_calls?.length) {
           for (const toolCall of msg.tool_calls) {
             toolCallIdToNameMap.set(toolCall.id, toolCall.function.name);
           }
@@ -149,7 +149,7 @@ export class GeminiApi implements BaseLlmApi {
     const finalBody: any = {
       generationConfig,
       contents,
-      // if this.systemMessage is defined, reformat it for Gemini API
+      // if there is a system message, reformat it for Gemini API
       ...(sysMsg &&
         !isV1API && {
           systemInstruction: { parts: [{ text: sysMsg.content }] },

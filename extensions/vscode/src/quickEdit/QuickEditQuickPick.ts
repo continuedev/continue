@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { IDE, ILLM } from "core";
+import { IDE, ILLM, RuleWithSource } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { DataLogger } from "core/data/log";
 import { Telemetry } from "core/util/posthog";
@@ -243,7 +243,10 @@ export class QuickEdit {
       throw new Error("No model selected");
     }
 
-    await this._streamEditWithInputAndContext(prompt, model);
+    const { config } = await this.configHandler.loadConfig();
+    const rules = config?.rules ?? []; // no need to error - getCurModel above will handle
+
+    await this._streamEditWithInputAndContext(prompt, model, rules);
     this.openAcceptRejectMenu(prompt, path);
   };
 
@@ -295,7 +298,11 @@ export class QuickEdit {
         }`;
   };
 
-  private async _streamEditWithInputAndContext(prompt: string, model: ILLM) {
+  private async _streamEditWithInputAndContext(
+    prompt: string,
+    model: ILLM,
+    rules: RuleWithSource[],
+  ) {
     // Extracts all file references from the prompt string,
     // which are denoted by  an '@' symbol followed by
     // one or more non-whitespace characters.
@@ -319,14 +326,13 @@ export class QuickEdit {
 
     void this.webviewProtocol.request("incrementFtc", undefined);
 
-    await this.verticalDiffManager.streamEdit(
-      prompt,
-      model,
-      undefined,
-      undefined,
-      this.previousInput,
-      this.range,
-    );
+    await this.verticalDiffManager.streamEdit({
+      input: prompt,
+      llm: model,
+      quickEdit: this.previousInput,
+      range: this.range,
+      rules,
+    });
   }
 
   private getInitialItems(): vscode.QuickPickItem[] {
