@@ -67,7 +67,6 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
@@ -862,15 +861,6 @@ async function loadContinueConfigFromJson(
 
   if (!serialized || configLoadInterrupted) {
     return { errors, config: undefined, configLoadInterrupted: true };
-  }
-
-  const systemPromptDotFile = await getSystemPromptDotFile(ide);
-  if (systemPromptDotFile) {
-    if (serialized.systemMessage) {
-      serialized.systemMessage = `${serialized.systemMessage}\n\n${systemPromptDotFile}`;
-    } else {
-      serialized.systemMessage = systemPromptDotFile;
-    }
   }
 
   // Apply shared config

@@ -1497,4 +1497,5 @@ export interface RuleWithSource {
   if?: string;
   rule: string;
   description?: string;
+  ruleFile?: string;
 }

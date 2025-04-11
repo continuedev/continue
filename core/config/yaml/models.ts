@@ -63,7 +63,6 @@ async function modelConfigToBaseLLM({
     logger: llmLogger,
     uniqueId,
     title: model.name,
-    rules: config.rules,
     promptTemplates: model.promptTemplates,
     baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
     capabilities: {

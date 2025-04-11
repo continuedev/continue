@@ -2,6 +2,8 @@ import { ChatHistoryItem, ChatMessage, MessagePart, RuleWithSource } from "../";
 import { normalizeToMessageParts } from "../util/messageContent";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
+export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
+  "https://github.com/continuedev/continue/blob/997dd893231971cc6b21935936aa7514cba065a3/core/llm/constructMessages.ts#L4";
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
   Always include the language and file name in the info string when you write code blocks. 

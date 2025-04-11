@@ -40,7 +40,6 @@ import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { allTools } from "../../tools";
 import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigYamlPath } from "../../util/paths";
-import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
@@ -488,21 +487,6 @@ export async function loadContinueConfigFromYaml({
       platformConfigMetadata,
       allowFreeTrial: true,
     });
-
-  try {
-    const systemPromptDotFile = await getSystemPromptDotFile(ide);
-    if (systemPromptDotFile) {
-      continueConfig.rules.unshift({
-        rule: systemPromptDotFile,
-        source: ".continuerules",
-      });
-    }
-  } catch (e) {
-    localErrors.push({
-      fatal: false,
-      message: `Failed to load system prompt dot file: ${e instanceof Error ? e.message : e}`,
-    });
-  }
 
   // Apply shared config
   // TODO: override several of these values with user/org shared config
