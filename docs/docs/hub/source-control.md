@@ -7,7 +7,7 @@ sidebar_label: Source Control
 
 # Source Control
 
-When managing your custom assistants within an organization, you might want to take advantage of your usual source control workflows. Continue makes this easy with a [GitHub Action](https://github.com/continuedev/continue-publish-action) that automatically syncs your YAML files with hub.continue.dev.
+When managing your custom assistants within an organization, you might want to take advantage of your usual source control workflows. Continue makes this easy with a [GitHub Action](https://github.com/continuedev/continue-publish-action) that automatically syncs your YAML files with hub.continue.dev. We are also planning on adding automations for GitLab, BitBucket, Gitee, and others. If you are interested, please reach out to us on [Discord](https://discord.gg/vapESyrFmJ).
 
 ## Quickstart
 
