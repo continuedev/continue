@@ -1,5 +1,4 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
@@ -16,7 +15,7 @@ export interface ApplyToFileOptions {
 }
 
 /**
- * Handles applying text/code to files in VS Code, including diff generation and streaming
+ * Handles applying text/code to files including diff generation and streaming
  */
 export class ApplyManager {
   constructor(
@@ -106,14 +105,11 @@ export class ApplyManager {
       return;
     }
 
-    const fastLlm = getModelByRole(config, "repoMapFileSelection") ?? llm;
-
     const [instant, diffLines] = await applyCodeBlock(
       editor.document.getText(),
       text,
       getUriPathBasename(editor.document.uri.toString()),
       llm,
-      fastLlm,
     );
 
     if (instant) {
