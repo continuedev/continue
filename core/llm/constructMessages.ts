@@ -99,6 +99,7 @@ export function constructMessages(
     });
   }
 
+  // We dispatch an empty assistant chat message to the history on submission. Don't send it
   const lastMessage = msgs.at(-1);
   if (
     lastMessage &&
