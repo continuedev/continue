@@ -120,16 +120,17 @@ export function useProxyForUnrenderedSecrets(
   if (config.models) {
     for (let i = 0; i < config.models.length; i++) {
       const apiKeyLocation = getUnrenderedSecretLocation(
-        config.models[i].apiKey,
+        config.models[i]?.apiKey,
       );
       if (apiKeyLocation) {
         config.models[i] = {
           ...config.models[i],
+          name: config.models[i]?.name ?? "",
           provider: "continue-proxy",
           model: getContinueProxyModelName(
             packageSlug,
-            config.models[i].provider,
-            config.models[i].model,
+            config.models[i]?.provider ?? "",
+            config.models[i]?.model ?? "",
           ),
           apiKeyLocation: encodeSecretLocation(apiKeyLocation),
           orgScopeId,

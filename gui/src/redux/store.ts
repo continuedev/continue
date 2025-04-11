@@ -10,11 +10,10 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import { IdeMessenger, IIdeMessenger } from "../context/IdeMessenger";
-import { organizationsReducer, profilesReducer } from "./slices";
+import { profilesReducer } from "./slices";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
-import miscReducer from "./slices/miscSlice";
 import sessionReducer from "./slices/sessionSlice";
 import tabsReducer from "./slices/tabsSlice";
 import uiReducer from "./slices/uiSlice";
@@ -26,14 +25,12 @@ export interface ChatMessage {
 
 const rootReducer = combineReducers({
   session: sessionReducer,
-  misc: miscReducer,
   ui: uiReducer,
   editModeState: editModeStateReducer,
   config: configReducer,
   indexing: indexingReducer,
   tabs: tabsReducer,
   profiles: profilesReducer,
-  organizations: organizationsReducer,
 });
 
 const saveSubsetFilters = [
@@ -47,10 +44,6 @@ const saveSubsetFilters = [
     "mode",
     "codeToEdit",
 
-    // TODO consider removing persisted profiles/orgs
-    "availableProfiles",
-    "organizations",
-
     // higher risk to persist
     // codeBlockApplyStates
     // symbols
@@ -62,8 +55,12 @@ const saveSubsetFilters = [
   createFilter("ui", ["toolSettings", "toolGroupSettings"]),
   createFilter("indexing", []),
   createFilter("tabs", ["tabs"]),
-  createFilter("organizations", ["selectedOrganizationId"]),
-  createFilter("profiles", ["preferencesByProfileId", "selectedProfileId"]),
+  createFilter("profiles", [
+    "preferencesByProfileId",
+    "selectedProfileId",
+    "selectedOrganizationId",
+    "organizations",
+  ]),
 ];
 
 const migrations: MigrationManifest = {
@@ -127,7 +124,9 @@ export function setupStore() {
             ideMessenger: new IdeMessenger(),
           },
         },
-      }).concat(logger),
+      }),
+    // This can be uncommented to get detailed Redux logs
+    // .concat(logger),
   });
 }
 

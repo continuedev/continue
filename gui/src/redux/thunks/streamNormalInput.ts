@@ -3,7 +3,7 @@ import { ChatMessage } from "core";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { ToCoreProtocol } from "core/protocol";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
@@ -29,16 +29,16 @@ export const streamNormalInput = createAsyncThunk<
   ) => {
     // Gather state
     const state = getState();
-    const defaultModel = selectDefaultModel(state);
+    const selectedChatModel = selectSelectedChatModel(state);
+
     const toolSettings = state.ui.toolSettings;
     const toolGroupSettings = state.ui.toolGroupSettings;
     const streamAborter = state.session.streamAborter;
     const useTools = selectUseTools(state);
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       throw new Error("Default model not defined");
     }
-
-    const includeTools = useTools && modelSupportsTools(defaultModel);
+    const includeTools = useTools && modelSupportsTools(selectedChatModel);
 
     // Send request
     const gen = extra.ideMessenger.llmStreamChat(
@@ -52,7 +52,7 @@ export const streamNormalInput = createAsyncThunk<
               ),
             }
           : {},
-        title: defaultModel.title,
+        title: selectedChatModel.title,
         messages,
         legacySlashCommandData,
       },
@@ -71,19 +71,19 @@ export const streamNormalInput = createAsyncThunk<
       next = await gen.next();
     }
 
-    // Attach prompt log
+    // Attach prompt log and end thinking for reasoning models
     if (next.done && next.value) {
       dispatch(addPromptCompletionPair([next.value]));
 
       try {
-        if (state.session.mode === "chat") {
+        if (state.session.mode === "chat" || state.session.mode === "agent") {
           extra.ideMessenger.post("devdata/log", {
             name: "chatInteraction",
             data: {
               prompt: next.value.prompt,
               completion: next.value.completion,
-              modelProvider: defaultModel.provider,
-              modelTitle: defaultModel.title,
+              modelProvider: selectedChatModel.provider,
+              modelTitle: selectedChatModel.title,
               sessionId: state.session.id,
             },
           });
@@ -94,8 +94,8 @@ export const streamNormalInput = createAsyncThunk<
         //     data: {
         //       prompt: next.value.prompt,
         //       completion: next.value.completion,
-        //       modelProvider: defaultModel.provider,
-        //       modelTitle: defaultModel.title,
+        //       modelProvider: selectedChatModel.provider,
+        //       modelTitle: selectedChatModel.title,
         //     },
         //   });
         // }

@@ -2,10 +2,11 @@ import { ContinueSDK, SlashCommand } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { getLastNPathParts } from "../../util/uri";
 import { parsePromptFileV1V2 } from "../v2/parsePromptFileV1V2";
+import { renderPromptFileV2 } from "../v2/renderPromptFile";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
-import { updateChatHistory } from "./updateChatHistory";
+import { replaceSlashCommandWithPromptInChatHistory } from "./updateChatHistory";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getLastNPathParts(path, 1).split(".prompt")[0];
@@ -67,8 +68,18 @@ export function slashCommandFromPromptFileV1(
       context.llm.systemMessage = systemMessage;
 
       const userInput = extractUserInput(context.input, name);
-      const renderedPrompt = await renderPromptV1(prompt, context, userInput);
-      const messages = updateChatHistory(
+      const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
+        config: context.config,
+        fullInput: userInput,
+        embeddingsProvider: context.config.modelsByRole.embed[0],
+        reranker: context.config.modelsByRole.rerank[0],
+        llm: context.llm,
+        ide: context.ide,
+        selectedCode: context.selectedCode,
+        fetch: context.fetch,
+      });
+
+      const messages = replaceSlashCommandWithPromptInChatHistory(
         context.history,
         name,
         renderedPrompt,

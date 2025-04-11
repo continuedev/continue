@@ -1,5 +1,5 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -17,12 +17,11 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
-import { getFontSize, isJetBrains } from "../../util";
+import { getFontSize } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
-import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
@@ -69,7 +68,7 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    padding: 16px 8px;
+    padding: 8px;
   }
 
   code {
@@ -114,10 +113,6 @@ const StyledMarkdown = styled.div<{
     line-height: 1.5;
   }
 
-  > *:first-child {
-    margin-top: 8px;
-  }
-
   > *:last-child {
     margin-bottom: 0;
   }
@@ -130,6 +125,9 @@ interface StyledMarkdownPreviewProps {
   scrollLocked?: boolean;
   itemIndex?: number;
   useParentBackgroundColor?: boolean;
+  disableManualApply?: boolean;
+  singleCodeblockStreamId?: string;
+  expandCodeblocks?: boolean;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -196,6 +194,29 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.itemIndex, history, allSymbols]);
   const pastFileInfoRef = useUpdatingRef(pastFileInfo);
 
+  const isLastItem = useMemo(() => {
+    return props.itemIndex && props.itemIndex === history.length - 1;
+  }, [history.length, props.itemIndex]);
+  const isLastItemRef = useUpdatingRef(isLastItem);
+
+  const isStreaming = useAppSelector((store) => store.session.isStreaming);
+  const isStreamingRef = useUpdatingRef(isStreaming);
+
+  const codeblockState = useRef<{ streamId: string; isGenerating: boolean }[]>(
+    [],
+  );
+
+  useEffect(() => {
+    if (props.singleCodeblockStreamId) {
+      codeblockState.current = [
+        {
+          streamId: props.singleCodeblockStreamId,
+          isGenerating: false,
+        },
+      ];
+    }
+  }, [props.singleCodeblockStreamId]);
+
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
       remarkTables,
@@ -219,8 +240,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           node.data = node.data || {};
           node.data.hProperties = node.data.hProperties || {};
 
-          node.data.hProperties["data-isgeneratingcodeblock"] =
-            lastCodeNode === node;
+          node.data.hProperties["data-islastcodeblock"] = lastCodeNode === node;
           node.data.hProperties["data-codeblockcontent"] = node.value;
 
           if (node.meta) {
@@ -280,10 +300,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const preChildProps = preProps?.children?.[0]?.props ?? {};
           const { className, range } = preChildProps;
+
           const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
-          const isGeneratingCodeBlock =
-            preChildProps["data-isgeneratingcodeblock"];
 
           if (!props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;
@@ -291,23 +310,21 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
-          // If we don't have a filepath show the more basic toolbar
-          // that is just action buttons on hover.
-          // We also use this in JB since we haven't yet implemented
-          // the logic forfileUri lazy apply.
-          if (!relativeFilePath || isJetBrains()) {
-            return (
-              <StepContainerPreActionButtons
-                language={language}
-                codeBlockContent={codeBlockContent}
-                codeBlockIndex={codeBlockIndex}
-              >
-                <SyntaxHighlightedPre {...preProps} />
-              </StepContainerPreActionButtons>
-            );
+          const isGeneratingCodeBlock =
+            preChildProps["data-islastcodeblock"] &&
+            isLastItemRef.current &&
+            isStreamingRef.current;
+
+          if (codeblockState.current[codeBlockIndex] === undefined) {
+            codeblockState.current[codeBlockIndex] = {
+              streamId: uuidv4(),
+              isGenerating: isGeneratingCodeBlock,
+            };
+          } else {
+            codeblockState.current[codeBlockIndex].isGenerating =
+              isGeneratingCodeBlock;
           }
 
-          // We use a custom toolbar for codeblocks in the step container
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
@@ -316,6 +333,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               relativeFilepath={relativeFilePath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
               range={range}
+              codeBlockStreamId={
+                codeblockState.current[codeBlockIndex].streamId
+              }
+              expanded={props.expandCodeblocks}
+              disableManualApply={props.disableManualApply}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>

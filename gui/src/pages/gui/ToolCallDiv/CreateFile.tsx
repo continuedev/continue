@@ -7,9 +7,13 @@ interface CreateFileToolCallProps {
 }
 
 export function CreateFile(props: CreateFileToolCallProps) {
-  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilepath ?? "test.txt")} ${props.relativeFilepath}\n${props.fileContents ?? ""}\n\`\`\``;
+  const src = `\`\`\`${getMarkdownLanguageTagForFile(props.relativeFilepath ?? "output.txt")} ${props.relativeFilepath}\n${props.fileContents ?? ""}\n\`\`\``;
 
   return props.relativeFilepath ? (
-    <StyledMarkdownPreview isRenderingInStepContainer={true} source={src} />
+    <StyledMarkdownPreview
+      isRenderingInStepContainer
+      disableManualApply
+      source={src}
+    />
   ) : null;
 }
