@@ -110,12 +110,12 @@ export class MCPManagerSingleton {
   }
 
   private compareEnv(a: StdioOptions, b: StdioOptions): boolean {
-    if (a.env === undefined && b.env === undefined) return true;
-    if (a.env === undefined || b.env === undefined) return false;
-    const aKeys = Object.keys(a.env);
-    const bKeys = Object.keys(b.env);
+    const aEnv = a.env ?? {};
+    const bEnv = b.env ?? {};
+    const aKeys = Object.keys(aEnv);
+    const bKeys = Object.keys(bEnv);
 
-    return aKeys.length === bKeys.length && aKeys.every((key) => b[key] === a[key]);
+    return aKeys.length === bKeys.length && aKeys.every((key) => aEnv[key] === bEnv[key]);
   }
 
   async refreshConnection(serverId: string) {
