@@ -156,15 +156,8 @@ class Gemini extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    // Ensure this.apiBase is used if available, otherwise use default
-    const apiBase =
-      this.apiBase ||
-      Gemini.defaultOptions?.apiBase ||
-      "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
+    const isV1API = this.apiBase?.includes("/v1/");
 
-    const isV1API = apiBase.includes("/v1/");
-
-    //
     const convertedMsgs = isV1API
       ? this.removeSystemMessage(messages)
       : messages;

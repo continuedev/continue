@@ -87,6 +87,11 @@ export function slashCommandFromPromptFileV1(
         const currentSystemMsg = messages.find((msg) => msg.role === "system");
         if (currentSystemMsg) {
           currentSystemMsg.content = systemMessage;
+        } else {
+          messages.unshift({
+            role: "system",
+            content: systemMessage,
+          });
         }
       }
 

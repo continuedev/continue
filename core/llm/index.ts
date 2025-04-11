@@ -308,12 +308,9 @@ export abstract class BaseLLM implements ILLM {
       return prompt;
     }
 
-    const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
+    // NOTE system message no longer supported here
 
-    const systemMessage = msgs.find((msg) => msg.role === "system");
-    if (systemMessage) {
-      msgs.unshift(systemMessage);
-    }
+    const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
     return this.templateMessages(msgs);
   }
