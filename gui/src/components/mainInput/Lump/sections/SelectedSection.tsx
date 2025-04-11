@@ -1,6 +1,7 @@
 import { useLump } from "../LumpContext";
 import { ContextSection } from "./ContextSection";
 import DocsSection from "./docs/DocsSection";
+import { ErrorSection } from "./ErrorSection";
 import { MCPSection } from "./MCPSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
@@ -28,6 +29,8 @@ export function SelectedSection() {
       return <ToolPoliciesSection />;
     case "mcp":
       return <MCPSection />;
+    case "error":
+      return <ErrorSection />;
     default:
       return null;
   }
