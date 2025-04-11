@@ -660,7 +660,7 @@
     "ovsx": "^0.8.3",
     "rimraf": "^5.0.5",
     "typescript": "^5.6.3",
-    "vite": "^4.5.12",
+    "vite": "^4.5.13",
     "vsce": "^2.15.0",
     "vscode-extension-tester": "^8.10.0"
   },
