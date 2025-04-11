@@ -35,7 +35,7 @@ describe("BaseLLM", () => {
       const options: LLMOptions = {
         model: "gpt-3.5-turbo",
         uniqueId: "testId",
-        rules: [{ rule: "Test System Message", source: "systemMessage" }],
+        rules: [{ rule: "Test System Message", source: "json-systemMessage" }],
         contextLength: 1024,
         completionOptions: {
           model: "some-model",

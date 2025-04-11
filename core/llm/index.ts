@@ -287,7 +287,6 @@ export abstract class BaseLLM implements ILLM {
   private _compileChatMessages(
     options: CompletionOptions,
     messages: ChatMessage[],
-    completionRole: ModelRole,
   ) {
     let contextLength = this.contextLength;
     if (
@@ -311,7 +310,6 @@ export abstract class BaseLLM implements ILLM {
       maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
       supportsImages: this.supportsImages(),
       prompt: undefined,
-      completionRole,
       baseSystemMessage: this.baseChatSystemMessage,
       rules: this.rules ?? [],
     });
@@ -931,12 +929,7 @@ export abstract class BaseLLM implements ILLM {
 
     completionOptions = this._modifyCompletionOptions(completionOptions);
 
-    const completionRole = options?.completionRole ?? "chat";
-    const messages = this._compileChatMessages(
-      completionOptions,
-      _messages,
-      completionRole,
-    );
+    const messages = this._compileChatMessages(completionOptions, _messages);
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)

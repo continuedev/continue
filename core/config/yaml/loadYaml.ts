@@ -67,11 +67,11 @@ function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
   if (typeof rule === "string") {
     return {
       rule: rule,
-      source: "yaml",
+      source: "rules-block",
     };
   } else {
     return {
-      source: "yaml",
+      source: "rules-block",
       rule: rule.rule,
       if: rule.if,
       name: rule.name,
@@ -492,7 +492,7 @@ export async function loadContinueConfigFromYaml({
   try {
     const systemPromptDotFile = await getSystemPromptDotFile(ide);
     if (systemPromptDotFile) {
-      continueConfig.rules.push({
+      continueConfig.rules.unshift({
         rule: systemPromptDotFile,
         source: ".continuerules",
       });

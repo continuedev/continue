@@ -462,7 +462,6 @@ export interface ChatHistoryItem {
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
   log?: boolean;
   model?: string;
-  completionRole?: ModelRole;
 }
 
 export type ToastType = "info" | "error" | "warning";
@@ -1068,11 +1067,11 @@ export interface JSONEmbedOptions {
   projectId?: string;
 }
 
-export interface JSONEmbeddingsProviderDescription extends JSONEmbedOptions {
+export interface EmbeddingsProviderDescription extends JSONEmbedOptions {
   provider: string;
 }
 
-export interface JSONRerankerDescription {
+export interface RerankerDescription {
   name: string;
   params?: { [key: string]: any };
 }
@@ -1337,11 +1336,11 @@ export interface SerializedContinueConfig {
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
-  embeddingsProvider?: JSONEmbeddingsProviderDescription;
+  embeddingsProvider?: EmbeddingsProviderDescription;
   tabAutocompleteModel?: JSONModelDescription | JSONModelDescription[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
-  reranker?: JSONRerankerDescription;
+  reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
@@ -1382,7 +1381,7 @@ export interface Config {
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
   userToken?: string;
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
-  embeddingsProvider?: JSONEmbeddingsProviderDescription | ILLM;
+  embeddingsProvider?: EmbeddingsProviderDescription | ILLM;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
     | CustomLLM
@@ -1393,7 +1392,7 @@ export interface Config {
   /** UI styles customization */
   ui?: ContinueUIConfig;
   /** Options for the reranker */
-  reranker?: JSONRerankerDescription | ILLM;
+  reranker?: RerankerDescription | ILLM;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
@@ -1490,10 +1489,15 @@ export interface TerminalOptions {
   terminalName?: string;
 }
 
-interface RuleWithSource {
+export interface RuleWithSource {
   name?: string;
   slug?: string;
-  source: "default" | "yaml" | "systemMessage" | ".continuerules";
+  source:
+    | "default"
+    | "model-chat-options"
+    | "rules-block"
+    | "json-systemMessage"
+    | ".continuerules";
   if?: string;
   rule: string;
   description?: string;

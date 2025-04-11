@@ -20,6 +20,7 @@ import type {
   FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
+  ModelDescription,
   PromptLog,
   RangeInFile,
   SerializedContinueConfig,
@@ -186,17 +187,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "docs/getSuggestedDocs": [undefined, void];
   "docs/initStatuses": [undefined, void];
   "docs/getDetails": [{ startUrl: string }, DocsIndexingDetails];
-  addAutocompleteModel: [
-    {
-      model: {
-        title: string;
-        provider: string;
-        model: string;
-        apiKey?: string;
-      };
-    },
-    void,
-  ];
+  addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
   "tools/call": [

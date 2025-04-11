@@ -18,6 +18,7 @@ import {
   ContinueConfig,
   ContinueRcJson,
   CustomContextProvider,
+  EmbeddingsProviderDescription,
   IContextProvider,
   IDE,
   IdeInfo,
@@ -25,10 +26,9 @@ import {
   IdeType,
   ILLM,
   ILLMLogger,
-  JSONEmbeddingsProviderDescription,
-  JSONRerankerDescription,
   LLMOptions,
   ModelDescription,
+  RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
@@ -236,81 +236,81 @@ async function intermediateToFinalConfig({
 
   // Auto-detect models
   let models: BaseLLM[] = [];
-  for (const desc of config.models) {
-    if ("title" in desc) {
-      const llm = await llmFromDescription(
-        desc,
-        ide.readFile.bind(ide),
-        uniqueId,
-        ideSettings,
-        llmLogger,
-        config.completionOptions,
-        config.systemMessage,
-      );
-      if (!llm) {
-        continue;
-      }
-
-      if (llm.model === "AUTODETECT") {
-        try {
-          const modelNames = await llm.listModels();
-          const detectedModels = await Promise.all(
-            modelNames.map(async (modelName) => {
-              return await llmFromDescription(
-                {
-                  ...desc,
-                  model: modelName,
-                  title: modelName,
-                },
-                ide.readFile.bind(ide),
-                uniqueId,
-                ideSettings,
-                llmLogger,
-                copyOf(config.completionOptions),
-                config.systemMessage,
-              );
-            }),
-          );
-          models.push(
-            ...(detectedModels.filter(
-              (x) => typeof x !== "undefined",
-            ) as BaseLLM[]),
-          );
-        } catch (e) {
-          console.warn("Error listing models: ", e);
+  await Promise.all(
+    config.models.map(async (desc) => {
+      if ("title" in desc) {
+        const llm = await llmFromDescription(
+          desc,
+          ide.readFile.bind(ide),
+          uniqueId,
+          ideSettings,
+          llmLogger,
+          config.completionOptions,
+        );
+        if (!llm) {
+          return;
         }
-      } else {
-        models.push(llm);
-      }
-    } else {
-      const llm = new CustomLLMClass({
-        ...desc,
-        options: { ...desc.options, logger: llmLogger } as any,
-      });
-      if (llm.model === "AUTODETECT") {
-        try {
-          const modelNames = await llm.listModels();
-          const models = modelNames.map(
-            (modelName) =>
-              new CustomLLMClass({
-                ...desc,
-                options: {
-                  ...desc.options,
-                  model: modelName,
-                  logger: llmLogger,
-                },
+
+        if (llm.model === "AUTODETECT") {
+          try {
+            const modelNames = await llm.listModels();
+            const detectedModels = await Promise.all(
+              modelNames.map(async (modelName) => {
+                return await llmFromDescription(
+                  {
+                    ...desc,
+                    model: modelName,
+                    title: modelName,
+                  },
+                  ide.readFile.bind(ide),
+                  uniqueId,
+                  ideSettings,
+                  llmLogger,
+                  copyOf(config.completionOptions),
+                );
               }),
-          );
-
-          models.push(...models);
-        } catch (e) {
-          console.warn("Error listing models: ", e);
+            );
+            models.push(
+              ...(detectedModels.filter(
+                (x) => typeof x !== "undefined",
+              ) as BaseLLM[]),
+            );
+          } catch (e) {
+            console.warn("Error listing models: ", e);
+          }
+        } else {
+          models.push(llm);
         }
       } else {
-        models.push(llm);
+        const llm = new CustomLLMClass({
+          ...desc,
+          options: { ...desc.options, logger: llmLogger } as any,
+        });
+        if (llm.model === "AUTODETECT") {
+          try {
+            const modelNames = await llm.listModels();
+            const models = modelNames.map(
+              (modelName) =>
+                new CustomLLMClass({
+                  ...desc,
+                  options: {
+                    ...desc.options,
+                    model: modelName,
+                    logger: llmLogger,
+                  },
+                }),
+            );
+
+            models.push(...models);
+          } catch (e) {
+            console.warn("Error listing models: ", e);
+          }
+        } else {
+          models.push(llm);
+        }
       }
-    }
-  }
+    }),
+  );
 
   // Prepare models
   for (const model of models) {
@@ -354,7 +354,6 @@ async function intermediateToFinalConfig({
               ideSettings,
               llmLogger,
               config.completionOptions,
-              config.systemMessage,
             );
 
             if (llm?.providerName === "free-trial") {
@@ -427,7 +426,7 @@ async function intermediateToFinalConfig({
 
   // Embeddings Provider
   function getEmbeddingsILLM(
-    embedConfig: JSONEmbeddingsProviderDescription | ILLM | undefined,
+    embedConfig: EmbeddingsProviderDescription | ILLM | undefined,
   ): ILLM | null {
     if (embedConfig) {
       // config.ts-injected ILLM
@@ -462,7 +461,7 @@ async function intermediateToFinalConfig({
 
   // Reranker
   function getRerankingILLM(
-    rerankingConfig: ILLM | JSONRerankerDescription | undefined,
+    rerankingConfig: ILLM | RerankerDescription | undefined,
   ): ILLM | null {
     if (!rerankingConfig) {
       return null;
@@ -471,7 +470,7 @@ async function intermediateToFinalConfig({
     if ("providerName" in rerankingConfig) {
       return rerankingConfig;
     }
-    const { name, params } = config.reranker as JSONRerankerDescription;
+    const { name, params } = config.reranker as RerankerDescription;
 
     if (name === "llm") {
       const llm = models.find((model) => model.title === params?.modelTitle);
@@ -529,6 +528,13 @@ async function intermediateToFinalConfig({
     },
     rules: [],
   };
+
+  if (config.systemMessage) {
+    continueConfig.rules.unshift({
+      rule: config.systemMessage,
+      source: "json-systemMessage",
+    });
+  }
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
@@ -604,7 +610,6 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     contextLength: llm.contextLength,
     template: llm.template,
     completionOptions: llm.completionOptions,
-    systemMessage: llm.systemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),

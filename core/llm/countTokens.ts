@@ -8,7 +8,6 @@ import {
   UserChatMessage,
 } from "../index.js";
 
-import { ModelRole } from "@continuedev/config-yaml";
 import { renderChatMessage } from "../util/messageContent.js";
 import {
   AsyncEncoder,
@@ -497,7 +496,6 @@ function compileChatMessages({
   maxTokens,
   supportsImages,
   prompt,
-  completionRole,
   baseSystemMessage,
   rules,
 }: {
@@ -507,7 +505,6 @@ function compileChatMessages({
   maxTokens: number;
   supportsImages: boolean;
   prompt: string | undefined;
-  completionRole: ModelRole;
   baseSystemMessage: string | undefined;
   rules: RuleWithSource[];
 }): ChatMessage[] {

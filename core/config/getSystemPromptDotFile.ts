@@ -7,14 +7,15 @@ export async function getSystemPromptDotFile(ide: IDE): Promise<string | null> {
 
   let prompts: string[] = [];
   for (const dir of dirs) {
-    const dotFile = joinPathsToUri(dir, SYSTEM_PROMPT_DOT_FILE);
-    if (await ide.fileExists(dotFile)) {
-      try {
+    try {
+      const dotFile = joinPathsToUri(dir, SYSTEM_PROMPT_DOT_FILE);
+      const exists = await ide.fileExists(dotFile);
+      if (exists) {
         const content = await ide.readFile(dotFile);
         prompts.push(content);
-      } catch (e) {
-        // ignore if file doesn't exist
       }
+    } catch (e) {
+      console.error(`Failed to read rules file at ${dir}: ${e}`);
     }
   }
 
