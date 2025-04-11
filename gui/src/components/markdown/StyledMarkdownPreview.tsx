@@ -301,7 +301,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           const preChildProps = preProps?.children?.[0]?.props ?? {};
           const { className, range } = preChildProps;
 
-          // TODO: what is this when we odnt have one?
           const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
 
