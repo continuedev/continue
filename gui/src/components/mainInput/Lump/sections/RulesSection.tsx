@@ -104,7 +104,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
               <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
             </HeaderButtonWithToolTip>{" "}
             {rule.source === "default" ? (
-              <HeaderButtonWithToolTip onClick={handleOpen} text="Edit">
+              <HeaderButtonWithToolTip onClick={handleOpen} text="View">
                 <EyeIcon className="h-3 w-3 text-gray-400" />
               </HeaderButtonWithToolTip>
             ) : (
