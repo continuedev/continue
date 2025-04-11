@@ -15,7 +15,7 @@ Continue supports [many model providers](../../customize/model-providers), inclu
 
 ## Context
 
-Context blocks define a context provider which can be referenced in Chat with `@` to pull in data from external sources such as files and folders, a URL, Jira or Confluence, and Github issues, among others. [Explore context provider blocks](https://hub.continue.dev/explore/context) on the hub.
+Context blocks define a context provider which can be referenced in Chat with `@` to pull in data from external sources such as files and folders, a URL, Jira or Confluence, and GitHub issues, among others. [Explore context provider blocks](https://hub.continue.dev/explore/context) on the hub.
 
 Learn more about context providers [here](../../reference.md#context), and check out [this guide](../../customize/tutorials/build-your-own-context-provider.mdx) to creating your own custom context provider. The `config.yaml` spec for context can be found [`here`](../../reference.md#context).
 
