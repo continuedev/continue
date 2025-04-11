@@ -19,6 +19,7 @@ import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { getSystemMessageWithRules } from "../llm/rules/getSystemMessageWithRules";
 import { gptEditPrompt } from "../llm/templates/edit";
+import { findLast } from "../util/findLast";
 import { Telemetry } from "../util/posthog";
 
 function constructPrompt(
@@ -109,7 +110,9 @@ export async function* streamDiffLines({
           role: "user",
           content: prompt,
         }
-      : prompt.findLast((msg) => msg.role === "user");
+      : (findLast(prompt, (msg) => msg.role === "user") as
+          | UserChatMessage
+          | undefined);
 
   const systemMessage = getSystemMessageWithRules({
     currentModel: llm.model,

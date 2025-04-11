@@ -15,7 +15,12 @@ export function replaceSlashCommandWithPromptInChatHistory(
     }
 
     if (Array.isArray(content)) {
-      if (content.some((part) => part.text?.startsWith(`/${commandName}`))) {
+      if (
+        content.some(
+          (part) =>
+            part.type === "text" && part.text?.startsWith(`/${commandName}`),
+        )
+      ) {
         messages[i] = updateArrayContent(
           messages[i],
           commandName,

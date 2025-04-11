@@ -3,7 +3,9 @@ import {
   ChatMessage,
   RuleWithSource,
   TextMessagePart,
+  UserChatMessage,
 } from "../";
+import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
 import { messageIsEmpty } from "./countTokens";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
@@ -85,7 +87,9 @@ export function constructMessages(
     }
   }
 
-  const userMessage = msgs.findLast((msg) => msg.role === "user");
+  const userMessage = findLast(msgs, (msg) => msg.role === "user") as
+    | UserChatMessage
+    | undefined;
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules,
