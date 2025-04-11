@@ -2,7 +2,7 @@ import { ChatHistoryItem, ChatMessage, MessagePart, RuleWithSource } from "../";
 import { normalizeToMessageParts } from "../util/messageContent";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
-const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
+export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
   Always include the language and file name in the info string when you write code blocks. 
   If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'

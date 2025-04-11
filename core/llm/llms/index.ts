@@ -7,6 +7,7 @@ import {
   LLMOptions,
 } from "../..";
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
+import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
 import { BaseLLM } from "../index";
 
 import Anthropic from "./Anthropic";
@@ -130,10 +131,12 @@ export async function llmFromDescription(
     ...desc.completionOptions,
   };
 
-  let baseChatSystemMessage = desc.systemMessage;
-  if (baseChatSystemMessage !== undefined) {
-    baseChatSystemMessage = await renderTemplatedString(
-      baseChatSystemMessage,
+  let baseChatSystemMessage: string | undefined = undefined;
+  if (desc.systemMessage !== undefined) {
+    baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
+    baseChatSystemMessage += "\n\n";
+    baseChatSystemMessage += await renderTemplatedString(
+      desc.systemMessage,
       readFile,
       {},
     );

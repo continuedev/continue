@@ -25,7 +25,6 @@ import {
   PromptLog,
   PromptTemplate,
   RequestOptions,
-  RuleWithSource,
   TemplateType,
 } from "../index.js";
 import mergeJson from "../util/merge.js";
@@ -149,7 +148,6 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
-  rules?: RuleWithSource[];
 
   deployment?: string;
   apiVersion?: string;
@@ -249,7 +247,6 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
     this.roles = options.roles;
-    this.rules = options.rules;
 
     this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;

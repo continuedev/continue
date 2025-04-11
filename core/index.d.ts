@@ -569,7 +569,6 @@ export interface LLMOptions {
   templateMessages?: (messages: ChatMessage[]) => string;
   logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
-  rules?: RuleWithSource[];
   apiKey?: string;
 
   // continueProperties
@@ -1297,9 +1296,6 @@ export interface JSONModelDescription {
   model: string;
   apiKey?: string;
   apiBase?: string;
-
-  apiKeyLocation?: string;
-  onPremProxyUrl?: string | null; // not included in schema/docs
 
   contextLength?: number;
   maxStopWords?: number;
