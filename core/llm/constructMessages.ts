@@ -1,9 +1,16 @@
-import { ChatHistoryItem, ChatMessage, MessagePart, RuleWithSource } from "../";
+import {
+  ChatHistoryItem,
+  ChatMessage,
+  RuleWithSource,
+  TextMessagePart,
+} from "../";
 import { normalizeToMessageParts } from "../util/messageContent";
+import { messageIsEmpty } from "./countTokens";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
-  "https://github.com/continuedev/continue/blob/997dd893231971cc6b21935936aa7514cba065a3/core/llm/constructMessages.ts#L4";
+  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L8";
+
 export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
   Always include the language and file name in the info string when you write code blocks. 
@@ -53,9 +60,14 @@ export function constructMessages(
       // Gather context items for user messages
       let content = normalizeToMessageParts(historyItem.message);
 
-      const ctxItems = historyItem.contextItems.map((ctxItem) => {
-        return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
-      });
+      const ctxItems = historyItem.contextItems
+        .map((ctxItem) => {
+          return {
+            type: "text",
+            text: `${ctxItem.content}\n`,
+          } as TextMessagePart;
+        })
+        .filter((part) => !!part.text.trim());
 
       content = [...ctxItems, ...content];
       msgs.push({
@@ -80,11 +92,20 @@ export function constructMessages(
     userMessage,
     currentModel: modelName,
   });
-  if (systemMessage) {
+  if (systemMessage.trim()) {
     msgs.unshift({
       role: "system",
-      content: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
+      content: systemMessage,
     });
+  }
+
+  const lastMessage = msgs.at(-1);
+  if (
+    lastMessage &&
+    lastMessage.role === "assistant" &&
+    messageIsEmpty(lastMessage)
+  ) {
+    msgs.pop();
   }
 
   // Remove the "id" from all of the messages

@@ -378,7 +378,7 @@ function pruneChatHistory(
   return chatHistory;
 }
 
-function messageIsEmpty(message: ChatMessage): boolean {
+export function messageIsEmpty(message: ChatMessage): boolean {
   if (typeof message.content === "string") {
     return message.content.trim() === "";
   }
