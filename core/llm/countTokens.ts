@@ -11,6 +11,11 @@ import {
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
+import {
+  chatMessageIsEmpty,
+  flattenMessages,
+  messageHasToolCalls,
+} from "./messages.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -116,31 +121,6 @@ function countTokens(
   } else {
     return encoding.encode(content ?? "", "all", []).length;
   }
-}
-
-function messageHasToolCalls(msg: ChatMessage): boolean {
-  return msg.role === "assistant" && !!msg.toolCalls;
-}
-
-export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
-  const flattened: ChatMessage[] = [];
-
-  for (let i = 0; i < msgs.length; i++) {
-    const msg = msgs[i];
-
-    if (
-      flattened.length > 0 &&
-      flattened[flattened.length - 1].role === msg.role &&
-      !messageHasToolCalls(msg) &&
-      !messageHasToolCalls(flattened[flattened.length - 1])
-    ) {
-      flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
-    } else {
-      flattened.push(msg);
-    }
-  }
-
-  return flattened;
 }
 
 function countChatMessageTokens(
@@ -250,7 +230,7 @@ function pruneChatHistory(
     (msg) => msg.role !== "system",
   );
   if (systemMessage) {
-    chatHistory.splice(-2, 0, systemMessage);
+    chatHistory.splice(-1, 0, systemMessage);
   }
 
   let totalTokens =
@@ -378,46 +358,6 @@ function pruneChatHistory(
   return chatHistory;
 }
 
-export function messageIsEmpty(message: ChatMessage): boolean {
-  if (typeof message.content === "string") {
-    return message.content.trim() === "";
-  }
-  if (Array.isArray(message.content)) {
-    return message.content.every(
-      (item) => item.type === "text" && item.text?.trim() === "",
-    );
-  }
-  return false;
-}
-
-function addSpaceToAnyEmptyMessages(messages: ChatMessage[]): ChatMessage[] {
-  return messages.map((message) => {
-    if (messageIsEmpty(message)) {
-      message.content = " ";
-    }
-    return message;
-  });
-}
-
-function chatMessageIsEmpty(message: ChatMessage): boolean {
-  switch (message.role) {
-    case "system":
-    case "user":
-      return (
-        typeof message.content === "string" && message.content.trim() === ""
-      );
-    case "assistant":
-      return (
-        typeof message.content === "string" &&
-        message.content.trim() === "" &&
-        !message.toolCalls
-      );
-    case "thinking":
-    case "tool":
-      return false;
-  }
-}
-
 function compileChatMessages({
   modelName,
   msgs,
@@ -431,9 +371,9 @@ function compileChatMessages({
   maxTokens: number;
   supportsImages: boolean;
 }): ChatMessage[] {
-  let msgsCopy: ChatMessage[] = addSpaceToAnyEmptyMessages(
-    msgs.map((m) => ({ ...m })),
-  );
+  let msgsCopy: ChatMessage[] = msgs.map((m) => ({ ...m }));
+
+  msgsCopy = msgsCopy.filter((msg) => !chatMessageIsEmpty(msg));
 
   // If images not supported, convert MessagePart[] to string
   if (!supportsImages) {
@@ -461,6 +401,7 @@ export {
   compileChatMessages,
   countTokens,
   countTokensAsync,
+  flattenMessages,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,

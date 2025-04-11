@@ -7,7 +7,7 @@ import {
 } from "../";
 import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
-import { messageIsEmpty } from "./countTokens";
+import { messageIsEmpty } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
