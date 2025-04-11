@@ -1,7 +1,8 @@
-import { ChatHistoryItem, ChatMessage, MessagePart } from "../";
+import { ChatHistoryItem, ChatMessage, MessagePart, RuleWithSource } from "../";
 import { normalizeToMessageParts } from "../util/messageContent";
+import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
-const DEFAULT_SYSTEM_MESSAGE = `\
+const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
   Always include the language and file name in the info string when you write code blocks. 
   If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
@@ -35,16 +36,13 @@ const CANCELED_TOOL_CALL_MESSAGE =
 export function constructMessages(
   history: ChatHistoryItem[],
   baseChatSystemMessage: string | undefined,
+  rules: RuleWithSource[],
+  modelName: string,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
   const msgs: ChatMessage[] = [];
-
-  msgs.push({
-    role: "system",
-    content: baseChatSystemMessage ?? DEFAULT_SYSTEM_MESSAGE,
-  });
 
   for (let i = 0; i < filteredHistory.length; i++) {
     const historyItem = filteredHistory[i];
@@ -71,6 +69,20 @@ export function constructMessages(
     } else {
       msgs.push(historyItem.message);
     }
+  }
+
+  const userMessage = msgs.findLast((msg) => msg.role === "user");
+  const systemMessage = getSystemMessageWithRules({
+    baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
+    rules,
+    userMessage,
+    currentModel: modelName,
+  });
+  if (systemMessage) {
+    msgs.unshift({
+      role: "system",
+      content: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
+    });
   }
 
   // Remove the "id" from all of the messages

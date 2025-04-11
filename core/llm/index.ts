@@ -296,12 +296,6 @@ export abstract class BaseLLM implements ILLM {
       contextLength =
         CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
     }
-    // ??
-    // getSystemMessage({
-    //   userMessage: lastUserMessage,
-    //   rules,
-    //   currentModel: modelName,
-    // }),
 
     return compileChatMessages({
       modelName: options.model,
@@ -309,16 +303,7 @@ export abstract class BaseLLM implements ILLM {
       contextLength,
       maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
       supportsImages: this.supportsImages(),
-      prompt: undefined,
-      baseSystemMessage: this.baseChatSystemMessage,
-      rules: this.rules ?? [],
     });
-  }
-
-  getSystemMessage(messages: ChatMessage[]): string | undefined {
-    const userMessage = messages.findLast((msg) => msg.role === "user");
-    // return getSystemMessage(messages);
-    return undefined;
   }
 
   private _templatePromptLikeMessages(prompt: string): string {
@@ -328,41 +313,12 @@ export abstract class BaseLLM implements ILLM {
 
     const msgs: ChatMessage[] = [{ role: "user", content: prompt }];
 
-    const systemMessage = this.getSystemMessage(msgs);
+    const systemMessage = msgs.find((msg) => msg.role === "system");
     if (systemMessage) {
-      msgs.unshift({ role: "system", content: systemMessage });
+      msgs.unshift(systemMessage);
     }
 
     return this.templateMessages(msgs);
-  }
-
-  private _compilePromptForLog(
-    prompt: string,
-    completionOptions: CompletionOptions,
-  ): string {
-    const completionOptionsLog = JSON.stringify(
-      {
-        contextLength: this.contextLength,
-        ...completionOptions,
-      },
-      null,
-      2,
-    );
-
-    let requestOptionsLog = "";
-    if (this.requestOptions) {
-      requestOptionsLog = JSON.stringify(this.requestOptions, null, 2);
-    }
-
-    return (
-      "##### Completion options #####\n" +
-      completionOptionsLog +
-      (requestOptionsLog
-        ? "\n\n##### Request options #####\n" + requestOptionsLog
-        : "") +
-      "\n\n##### Prompt #####\n" +
-      prompt
-    );
   }
 
   private _logEnd(

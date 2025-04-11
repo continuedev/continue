@@ -64,9 +64,6 @@ export function slashCommandFromPromptFileV1(
     description,
     prompt,
     run: async function* (context) {
-      const originalSystemMessage = context.llm.systemMessage;
-      context.llm.systemMessage = systemMessage;
-
       const userInput = extractUserInput(context.input, name);
       const [_, renderedPrompt] = await renderPromptFileV2(prompt, {
         config: context.config,
@@ -86,6 +83,13 @@ export function slashCommandFromPromptFileV1(
         systemMessage,
       );
 
+      if (systemMessage) {
+        const currentSystemMsg = messages.find((msg) => msg.role === "system");
+        if (currentSystemMsg) {
+          currentSystemMsg.content = systemMessage;
+        }
+      }
+
       for await (const chunk of context.llm.streamChat(
         messages,
         new AbortController().signal,
@@ -93,8 +97,6 @@ export function slashCommandFromPromptFileV1(
       )) {
         yield renderChatMessage(chunk);
       }
-
-      context.llm.systemMessage = originalSystemMessage;
     },
   };
 }

@@ -1,9 +1,11 @@
+import { ChatMessage } from "../..";
+
 export function replaceSlashCommandWithPromptInChatHistory(
-  history: any[],
+  history: ChatMessage[],
   commandName: string,
   renderedPrompt: string,
   systemMessageOverride?: string,
-) {
+): ChatMessage[] {
   const messages = [...history];
 
   for (let i = messages.length - 1; i >= 0; i--) {

@@ -61,23 +61,29 @@ async function* streamDiffLinesGenerator(
   msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
 ): AsyncGenerator<DiffLine> {
   const data = msg.data;
-  const llm = (await configHandler.loadConfig()).config?.selectedModelByRole
-    .chat;
+
+  const { config } = await configHandler.loadConfig();
+  if (!config) {
+    throw new Error("Failed to load config");
+  }
+
+  const llm = config.selectedModelByRole.chat;
 
   if (!llm) {
     throw new Error("No chat model selected");
   }
 
-  for await (const diffLine of streamDiffLines(
-    data.prefix,
-    data.highlighted,
-    data.suffix,
+  for await (const diffLine of streamDiffLines({
+    highlighted: data.highlighted,
+    prefix: data.prefix,
+    suffix: data.suffix,
     llm,
-    data.input,
-    data.language,
-    false,
-    undefined,
-  )) {
+    rules: config.rules,
+    input: data.input,
+    language: data.language,
+    onlyOneInsertion: false,
+    overridePrompt: undefined,
+  })) {
     if (abortedMessageIds.has(msg.messageId)) {
       abortedMessageIds.delete(msg.messageId);
       break;

@@ -1,12 +1,6 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
-import {
-  ChatMessage,
-  MessageContent,
-  MessagePart,
-  RuleWithSource,
-  UserChatMessage,
-} from "../index.js";
+import { ChatMessage, MessageContent, MessagePart } from "../index.js";
 
 import { renderChatMessage } from "../util/messageContent.js";
 import {
@@ -17,8 +11,6 @@ import {
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
-import { isRuleActive } from "./rules/isRuleActive.js";
-import { extractPathsFromCodeBlocks } from "./utils/extractPathsFromCodeBlocks.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -248,10 +240,19 @@ function summarize(message: ChatMessage): string {
 
 function pruneChatHistory(
   modelName: string,
-  chatHistory: ChatMessage[],
+  msgs: ChatMessage[],
   contextLength: number,
   tokensForCompletion: number,
 ): ChatMessage[] {
+  // Move system message to 2nd to last to give it priority
+  const systemMessage = msgs.find((msg) => msg.role === "system");
+  const chatHistory: ChatMessage[] = msgs.filter(
+    (msg) => msg.role !== "system",
+  );
+  if (systemMessage) {
+    chatHistory.splice(-2, 0, systemMessage);
+  }
+
   let totalTokens =
     tokensForCompletion +
     chatHistory.reduce((acc, message) => {
@@ -364,6 +365,16 @@ function pruneChatHistory(
     );
     totalTokens = contextLength;
   }
+
+  // put system message back if applicable
+  if (
+    chatHistory.length > 1 &&
+    chatHistory[chatHistory.length - 2].role === "system"
+  ) {
+    const movedSystemMessage = chatHistory.splice(-2, 1)[0];
+    chatHistory.unshift(movedSystemMessage);
+  }
+
   return chatHistory;
 }
 
@@ -407,139 +418,22 @@ function chatMessageIsEmpty(message: ChatMessage): boolean {
   }
 }
 
-function addSystemMessage({
-  messages,
-  systemMessage,
-  originalMessages,
-}: {
-  messages: ChatMessage[];
-  systemMessage: string | undefined;
-  originalMessages: ChatMessage[] | undefined;
-}): ChatMessage[] {
-  if (
-    !(systemMessage && systemMessage.trim() !== "") &&
-    originalMessages?.[0]?.role !== "system"
-  ) {
-    return messages;
-  }
-
-  let content = "";
-  if (originalMessages?.[0]?.role === "system") {
-    content = renderChatMessage(originalMessages[0]);
-  }
-  if (systemMessage && systemMessage.trim() !== "") {
-    const shouldAddNewLines = content !== "";
-    if (shouldAddNewLines) {
-      content += "\n\n";
-    }
-    content += systemMessage;
-  }
-
-  const systemChatMsg: ChatMessage = {
-    role: "system",
-    content,
-  };
-  // Insert as second to last
-  messages.splice(-1, 0, systemChatMsg);
-  return messages;
-}
-
-function getMessageStringContent(message?: UserChatMessage): string {
-  if (!message) {
-    return "";
-  }
-
-  if (typeof message.content === "string") {
-    return message.content;
-  }
-
-  // Handle MessagePart array
-  return message.content
-    .map((part) => {
-      if (part.type === "text") {
-        return part.text;
-      }
-
-      return "";
-    })
-    .join("\n");
-}
-
-export const getSystemMessage = ({
-  userMessage,
-  rules,
-  currentModel,
-}: {
-  userMessage?: UserChatMessage;
-  rules: RuleWithSource[];
-  currentModel: string;
-}) => {
-  const messageStringContent = getMessageStringContent(userMessage);
-  const filePathsFromMessage = extractPathsFromCodeBlocks(messageStringContent);
-
-  return rules
-    .filter((rule) => {
-      return isRuleActive({
-        rule,
-        activePaths: filePathsFromMessage,
-        currentModel,
-      });
-    })
-    .map((rule) => rule.rule)
-    .join("\n");
-};
-
 function compileChatMessages({
   modelName,
   msgs,
   contextLength,
   maxTokens,
   supportsImages,
-  prompt,
-  baseSystemMessage,
-  rules,
 }: {
   modelName: string;
-  msgs: ChatMessage[] | undefined;
+  msgs: ChatMessage[];
   contextLength: number;
   maxTokens: number;
   supportsImages: boolean;
-  prompt: string | undefined;
-  baseSystemMessage: string | undefined;
-  rules: RuleWithSource[];
 }): ChatMessage[] {
-  let msgsCopy = msgs
-    ? msgs
-        .map((msg) => ({ ...msg }))
-        .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
-    : [];
-
-  msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
-
-  if (prompt) {
-    if (msgsCopy[msgsCopy.length - 1]?.role === "user") {
-      throw new Error(
-        "Message compilation: cannot use prompt, already a user message present",
-      );
-    }
-    const promptMsg: ChatMessage = {
-      role: "user",
-      content: prompt,
-    };
-    msgsCopy.push(promptMsg);
-  }
-
-  // const
-  // getSystemMessage({
-  //   userMessage: lastUserMessage,
-  //   rules,
-  //   currentModel: modelName,
-  // }),
-  msgsCopy = addSystemMessage({
-    messages: msgsCopy,
-    systemMessage,
-    originalMessages: msgs,
-  });
+  let msgsCopy: ChatMessage[] = addSpaceToAnyEmptyMessages(
+    msgs.map((m) => ({ ...m })),
+  );
 
   // If images not supported, convert MessagePart[] to string
   if (!supportsImages) {
@@ -557,11 +451,6 @@ function compileChatMessages({
     contextLength,
     maxTokens + TOKEN_BUFFER_FOR_SAFETY,
   );
-
-  if (history.length >= 2 && history[history.length - 2].role === "system") {
-    const movedSystemMessage = history.splice(-2, 1)[0];
-    history.unshift(movedSystemMessage);
-  }
 
   const flattenedHistory = flattenMessages(history);
 

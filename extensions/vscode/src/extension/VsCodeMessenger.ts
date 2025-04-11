@@ -221,16 +221,15 @@ export class VsCodeMessenger {
           ? fullEditorRange
           : editor.selection;
 
-        await verticalDiffManager.streamEdit(
-          prompt,
+        await verticalDiffManager.streamEdit({
+          input: prompt,
           llm,
-          data.streamId,
-          undefined,
-          undefined,
-          rangeToApplyTo,
-          data.text,
-          data.toolCallId,
-        );
+          streamId: data.streamId,
+          range: rangeToApplyTo,
+          newCode: data.text,
+          toolCallId: data.toolCallId,
+          rules: config.rules,
+        });
       }
     });
 
@@ -289,6 +288,10 @@ export class VsCodeMessenger {
       const configHandler = await configHandlerPromise;
       const { config } = await configHandler.loadConfig();
 
+      if (!config) {
+        throw new Error("Edit: Failed to load config");
+      }
+
       const model =
         config?.selectedModelByRole.edit ?? config?.selectedModelByRole.chat;
 
@@ -296,17 +299,16 @@ export class VsCodeMessenger {
         throw new Error("No Edit or Chat model selected");
       }
 
-      const fileAfterEdit = await verticalDiffManager.streamEdit(
-        stripImages(prompt),
-        model,
-        "edit",
-        undefined,
-        undefined,
-        new vscode.Range(
+      const fileAfterEdit = await verticalDiffManager.streamEdit({
+        input: stripImages(prompt),
+        llm: model,
+        streamId: "edit",
+        range: new vscode.Range(
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
-      );
+        rules: config.rules,
+      });
 
       void this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
