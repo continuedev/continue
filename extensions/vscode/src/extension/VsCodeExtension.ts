@@ -193,24 +193,11 @@ export class VsCodeExtension {
       let profileId = queryParams.get("profile_id");
       let orgId = queryParams.get("org_id");
 
-      if (orgId && orgId !== "null") {
-        // In case org id is passed with profile id
-        // Make sure org is updated before profile is set
-        if (profileId && profileId !== "null") {
-          this.core.invoke("didChangeSelectedOrg", {
-            id: orgId,
-            profileId,
-          });
-        } else {
-          this.core.invoke("didChangeSelectedOrg", {
-            id: orgId,
-          });
-        }
-      } else if (profileId && profileId !== "null") {
-        this.core.invoke("didChangeSelectedProfile", {
-          id: profileId,
-        });
-      }
+      this.core.invoke("config/refreshProfiles", {
+        selectOrgId: orgId === "null" ? undefined : (orgId ?? undefined),
+        selectProfileId:
+          profileId === "null" ? undefined : (profileId ?? undefined),
+      });
     });
 
     // Battery
