@@ -1,9 +1,9 @@
 import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { StyledActionButton } from "../..";
-import OllamaCompletedStep from "./OllamaCompletedStep";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ToolTip } from "../../gui/Tooltip";
+import OllamaCompletedStep from "./OllamaCompletedStep";
 
 interface OllamaModelDownloadProps {
   title: string;
@@ -27,14 +27,18 @@ function OllamaModelDownload({
 
   return (
     <div className="flex flex-col">
-      <p className="mb-1 mt-4 text-base font-semibold sm:text-lg">{title}</p>
+      <p className="mb-1 mt-4 text-base font-semibold">{title}</p>
       {hasDownloaded ? (
         <OllamaCompletedStep text={command} />
       ) : (
         <>
-          <StyledActionButton data-tooltip-id={id} onClick={onClick}>
+          <StyledActionButton
+            data-tooltip-id={id}
+            onClick={onClick}
+            className="gap-2"
+          >
             <p className="lines m-0 px-0 py-2 font-mono text-xs">{command}</p>
-            <CommandLineIcon width={24} height={24} />
+            <CommandLineIcon width={16} height={16} />
           </StyledActionButton>
 
           <ToolTip id={id} place="top">
