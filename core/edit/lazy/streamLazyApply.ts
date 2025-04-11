@@ -16,7 +16,6 @@ export async function* streamLazyApply(
   filename: string,
   newCode: string,
   llm: ILLM,
-  fastLlm: ILLM,
 ): AsyncGenerator<DiffLine> {
   const promptFactory = lazyApplyPromptForModel(llm.model, llm.providerName);
   if (!promptFactory) {
@@ -39,7 +38,7 @@ export async function* streamLazyApply(
       oldCode,
       linesBefore,
       linesAfter,
-      fastLlm,
+      llm,
     )) {
       yield line;
     }
