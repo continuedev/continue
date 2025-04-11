@@ -1,4 +1,5 @@
 package com.github.continuedev.continueintellijextension.activities
+import IntelliJIDE
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
@@ -152,17 +153,12 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
             val connection = ApplicationManager.getApplication().messageBus.connect()
             connection.subscribe(SettingsListener.TOPIC, object : SettingsListener {
                 override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
-                    continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
-                    continuePluginService.sendToWebview(
-                        "didChangeIdeSettings", mapOf(
-                            "settings" to mapOf(
-                                "remoteConfigServerUrl" to settings.remoteConfigServerUrl,
-                                "remoteConfigSyncPeriod" to settings.remoteConfigSyncPeriod,
-                                "userToken" to settings.userToken,
-                                "enableControlServerBeta" to settings.enableContinueTeamsBeta
-                            )
-                        )
-                    )
+                    continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", mapOf(
+                        "remoteConfigServerUrl" to settings.remoteConfigServerUrl,
+                        "remoteConfigSyncPeriod" to settings.remoteConfigSyncPeriod,
+                        "userToken" to settings.userToken,
+                        "enableControlServerBeta" to settings.enableContinueTeamsBeta
+                    ), null) { _ -> }
                 }
             })
 
@@ -185,6 +181,8 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
                     // Notify core of content changes
                     if (changedURIs.isNotEmpty()) {
+                        continuePluginService.updateLastFileSaveTimestamp()
+
                         val data = mapOf("uris" to changedURIs)
                         continuePluginService.coreMessenger?.request("files/changed", data, null) { _ -> }
                     }
@@ -236,7 +234,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                     "sessionInfo" to initialSessionInfo
                 )
                 continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
-                continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
             }
 
             connection.subscribe(AuthListener.TOPIC, object : AuthListener {
@@ -253,7 +250,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         data,
                         null
                     ) { _ -> }
-                    continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
                 }
             })
 

@@ -37,7 +37,7 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
 
   return (
     <ReusableCard
-      showCloseButton={!isDialog && !!config.models.length}
+      showCloseButton={!isDialog && !!config.modelsByRole.chat.length}
       onClose={() => onboardingCard.close()}
       testId="onboarding-card"
     >

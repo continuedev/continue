@@ -8,8 +8,8 @@ import {
   SlashCommandDescription,
 } from "core";
 import * as URI from "uri-js";
-import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
-import { selectDefaultModel } from "../slices/configSlice";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import { ThunkApiType } from "../store";
 
 export const gatherContext = createAsyncThunk<
@@ -37,11 +37,12 @@ export const gatherContext = createAsyncThunk<
     { dispatch, extra, getState },
   ) => {
     const state = getState();
-    const defaultModel = selectDefaultModel(state);
+    const selectedChatModel = selectSelectedChatModel(state);
+
     const defaultContextProviders =
       state.config.config.experimental?.defaultContext ?? [];
 
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       console.error(
         "gatherContext thunk: Cannot gather context, no model selected",
       );
@@ -57,12 +58,12 @@ export const gatherContext = createAsyncThunk<
         defaultContextProviders,
         availableSlashCommands: state.config.config.slashCommands,
         dispatch,
-        selectedModelTitle: defaultModel.title,
+        selectedModelTitle: selectedChatModel.title,
       });
 
     // Automatically use currently open file
     if (!modifiers.noContext) {
-      const usingFreeTrial = defaultModel.provider === "free-trial";
+      const usingFreeTrial = selectedChatModel.provider === "free-trial";
 
       const currentFileResponse = await extra.ideMessenger.request(
         "context/getContextItems",
@@ -71,7 +72,7 @@ export const gatherContext = createAsyncThunk<
           query: "non-mention-usage",
           fullInput: "",
           selectedCode: [],
-          selectedModelTitle: defaultModel.title,
+          selectedModelTitle: selectedChatModel.title,
         },
       );
       if (currentFileResponse.status === "success") {

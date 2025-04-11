@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { SlashCommandDescription } from "core";
-import { ProfileDescription } from "core/config/ConfigHandler";
+import { SerializedOrgWithProfiles } from "core/config/ProfileLifecycleManager";
 
 const DEFAULT_SLASH_COMMANDS_BOOKMARKS_COUNT = 5;
 
@@ -13,15 +13,40 @@ export interface PreferencesState {
 }
 
 export interface ProfilesState {
-  availableProfiles: ProfileDescription[] | null;
+  organizations: SerializedOrgWithProfiles[];
   selectedProfileId: string | null;
+  selectedOrganizationId: string | null;
   preferencesByProfileId: Record<string, PreferencesState>;
 }
 
 const initialState: ProfilesState = {
-  availableProfiles: null,
-  selectedProfileId: null,
   preferencesByProfileId: {},
+  selectedProfileId: null,
+  selectedOrganizationId: null,
+  organizations: [
+    {
+      id: "personal",
+      profiles: [
+        {
+          title: "Local Assistant",
+          id: "local",
+          errors: [],
+          profileType: "local",
+          uri: "",
+          iconUrl: "",
+          fullSlug: {
+            ownerSlug: "",
+            packageSlug: "",
+            versionSlug: "",
+          },
+        },
+      ],
+      slug: "",
+      selectedProfileId: "local",
+      name: "Personal",
+      iconUrl: "",
+    },
+  ],
 };
 
 export const profilesSlice = createSlice({
@@ -30,12 +55,27 @@ export const profilesSlice = createSlice({
   reducers: {
     setSelectedProfile: (state, { payload }: PayloadAction<string | null>) => {
       state.selectedProfileId = payload;
+      const currentOrg = state.organizations.find(
+        (o) => o.id === state.selectedOrganizationId,
+      );
+      if (currentOrg) {
+        currentOrg.selectedProfileId = payload;
+      }
     },
-    setAvailableProfiles: (
+    setOrganizations: (
       state,
-      { payload }: PayloadAction<ProfileDescription[] | null>,
+      { payload }: PayloadAction<SerializedOrgWithProfiles[]>,
     ) => {
-      state.availableProfiles = payload;
+      state.organizations = payload;
+    },
+    setSelectedOrgId: (state, { payload }: PayloadAction<string | null>) => {
+      state.selectedOrganizationId = payload;
+      const org = state.organizations.find((o) => o.id === payload);
+      if (org) {
+        state.selectedProfileId = org.selectedProfileId;
+      } else {
+        state.selectedProfileId = null;
+      }
     },
     initializeProfilePreferences: (
       state,
@@ -102,14 +142,26 @@ export const profilesSlice = createSlice({
   },
   selectors: {
     selectSelectedProfile: (state) => {
-      return (
-        state.availableProfiles?.find(
+      const selectedOrg = state.organizations.find(
+        (org) => org.id === state.selectedOrganizationId,
+      );
+      if (selectedOrg) {
+        const profile = selectedOrg.profiles.find(
           (profile) => profile.id === state.selectedProfileId,
+        );
+        return profile ?? null;
+      } else {
+        return null;
+      }
+    },
+
+    selectCurrentOrg: (state) => {
+      return (
+        state.organizations.find(
+          (org) => org.id === state.selectedOrganizationId,
         ) ?? null
       );
     },
-
-    selectSelectedProfileId: (state) => state.selectedProfileId,
 
     selectBookmarkedSlashCommands: (state) => {
       if (!state.selectedProfileId) return [];
@@ -122,18 +174,19 @@ export const profilesSlice = createSlice({
 });
 
 export const {
-  setAvailableProfiles,
   setSelectedProfile,
   bookmarkSlashCommand,
   unbookmarkSlashCommand,
   initializeProfilePreferences,
+  setOrganizations,
+  setSelectedOrgId,
 } = profilesSlice.actions;
 
 export const {
   selectSelectedProfile,
-  selectSelectedProfileId,
   selectBookmarkedSlashCommands,
   selectPreferencesByProfileId,
+  selectCurrentOrg,
 } = profilesSlice.selectors;
 
 export const { reducer: profilesReducer } = profilesSlice;

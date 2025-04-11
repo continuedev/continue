@@ -142,17 +142,16 @@ The `models` section defines the language models used in your configuration. Mod
 - `name` (**required**): A unique name to identify the model within your configuration.
 - `provider` (**required**): The provider of the model (e.g., `openai`, `ollama`).
 - `model` (**required**): The specific model name (e.g., `gpt-4`, `starcoder`).
+- `apiBase`: Can be used to override the default API base that is specified per model
 - `roles`: An array specifying the roles this model can fulfill, such as `chat`, `autocomplete`, `embed`, `rerank`, `edit`, `apply`, `summarize`. The default value is `[chat, edit, apply, summarize]`. Note that the `summarize` role is not currently used.
 - `capabilities`: Array of strings denoting model capabilities, which will overwrite Continue's autodetection based on provider and model. Supported capabilities include `tool_use` and `image_input`.
+- `promptTemplates`: Can be used to override the default prompt templates for different model roles. Valid values are [`edit`](./customize/model-roles/edit.mdx#prompt-templating) and [`apply`](./customize/model-roles/apply.mdx#prompt-templating).
+- `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
+  - `baseSystemMessage`: Can be used to override the default system prompt.
 - `embedOptions`: If the model includes role `embed`, these settings apply for embeddings:
-
   - `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
   - `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
-
 - `defaultCompletionOptions`: Default completion options for model settings.
-
-  **Properties:**
-
   - `contextLength`: Maximum context length of the model, typically in tokens.
   - `maxTokens`: Maximum number of tokens to generate in a completion.
   - `temperature`: Controls the randomness of the completion. Values range from `0.0` (deterministic) to `1.0` (random).
@@ -160,11 +159,7 @@ The `models` section defines the language models used in your configuration. Mod
   - `topK`: Maximum number of tokens considered at each step.
   - `stop`: An array of stop tokens that will terminate the completion.
   - `n`: Number of completions to generate.
-
 - `requestOptions`: HTTP request options specific to the model.
-
-  **Properties:**
-
   - `timeout`: Timeout for each request to the language model.
   - `verifySsl`: Whether to verify SSL certificates for requests.
   - `caBundlePath`: Path to a custom CA bundle for HTTP requests.
@@ -177,7 +172,7 @@ The `models` section defines the language models used in your configuration. Mod
     - `key`: Path to the client certificate key file.
     - `passphrase`: Optional passphrase for the client certificate key file.
 
-#### Example:
+#### Example
 
 ```yaml title="config.yaml"
 models:
@@ -227,7 +222,7 @@ More information about usage/params for each context provider can be found [here
 
 ```yaml title="config.yaml"
 context:
-  - provider: files
+  - provider: file
   - provider: code
   - provider: codebase
     params:
@@ -474,7 +469,8 @@ models:
   - name: qwen2.5-coder-7b
     <<: *model_defaults
     model: qwen2.5-coder-7b
-    useLegacyCompletionsEndpoint: false
+    env:
+      useLegacyCompletionsEndpoint: false
     roles:
       - autocomplete
 ```

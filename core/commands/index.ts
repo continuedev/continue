@@ -1,6 +1,7 @@
 import { CustomCommand, SlashCommand, SlashCommandDescription } from "../";
 import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
 import { replaceSlashCommandWithPromptInChatHistory } from "../promptFiles/v1/updateChatHistory";
+import { renderPromptFileV2 } from "../promptFiles/v2/renderPromptFile";
 import { renderChatMessage } from "../util/messageContent";
 
 import SlashCommands from "./slash";
@@ -15,7 +16,16 @@ export function slashFromCustomCommand(
     name: commandName,
     description: customCommand.description ?? "",
     prompt: customCommand.prompt,
-    run: async function* ({ input, llm, history, ide, completionOptions }) {
+    run: async function* ({
+      input,
+      llm,
+      history,
+      ide,
+      completionOptions,
+      config,
+      selectedCode,
+      fetch,
+    }) {
       // Render prompt template
       let renderedPrompt: string;
       if (customCommand.prompt.includes("{{{ input }}}")) {
@@ -25,7 +35,21 @@ export function slashFromCustomCommand(
           { input },
         );
       } else {
-        renderedPrompt = customCommand.prompt + "\n\n" + input;
+        const renderedPromptFile = await renderPromptFileV2(
+          customCommand.prompt,
+          {
+            config,
+            llm,
+            ide,
+            selectedCode,
+            fetch,
+            fullInput: input,
+            embeddingsProvider: config.modelsByRole.embed[0],
+            reranker: config.modelsByRole.rerank[0],
+          },
+        );
+
+        renderedPrompt = renderedPromptFile[1];
       }
 
       // Replaces slash command messages with the rendered prompt

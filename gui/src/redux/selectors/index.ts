@@ -1,5 +1,8 @@
 import { createSelector } from "@reduxjs/toolkit";
-import { ComboBoxItemType } from "../../components/mainInput/types";
+import {
+  ComboBoxItem,
+  ComboBoxItemType,
+} from "../../components/mainInput/types";
 import { RootState } from "../store";
 
 export const selectSlashCommandComboBoxInputs = createSelector(
@@ -11,7 +14,8 @@ export const selectSlashCommandComboBoxInputs = createSelector(
           title: cmd.name,
           description: cmd.description,
           type: "slashCommand" as ComboBoxItemType,
-        };
+          content: cmd.prompt,
+        } as ComboBoxItem;
       }) || []
     );
   },

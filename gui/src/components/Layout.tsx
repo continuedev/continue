@@ -6,14 +6,12 @@ import { AuthProvider } from "../context/Auth";
 import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { selectUseHub } from "../redux/selectors";
 import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
 import {
   addCodeToEdit,
   newSession,
   selectIsInEditMode,
   setMode,
-  updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
@@ -127,20 +125,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "updateApplyState",
-    async (state) => {
-      // dispatch(
-      //   updateCurCheckpoint({
-      //     filepath: state.filepath,
-      //     content: state.fileContent,
-      //   }),
-      // );
-      dispatch(updateApplyState(state));
-    },
-    [],
-  );
-
-  useWebviewListener(
     "openOnboardingCard",
     async () => {
       onboardingCard.open("Best");
@@ -249,21 +233,6 @@ const Layout = () => {
       onboardingCard.open("Quickstart");
     }
   }, [location]);
-
-  const useHub = useAppSelector(selectUseHub);
-
-  // Existing users that have already seen the onboarding card
-  // should be shown an intro card for hub.continue.dev
-  // useEffect(() => {
-  //   if (useHub !== true) {
-  //     return;
-  //   }
-  //   const seenHubIntro = getLocalStorage("seenHubIntro");
-  //   if (!onboardingCard.show && !seenHubIntro) {
-  //     onboardingCard.setActiveTab("ExistingUserHubIntro");
-  //   }
-  //   setLocalStorage("seenHubIntro", true);
-  // }, [onboardingCard.show, useHub]);
 
   return (
     <LocalStorageProvider>

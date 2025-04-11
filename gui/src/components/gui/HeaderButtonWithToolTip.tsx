@@ -48,7 +48,7 @@ const HeaderButtonWithToolTip = React.forwardRef<
       </HeaderButton>
 
       <ToolTip id={tooltipId} place={props.tooltipPlacement ?? "bottom"}>
-        {props.text}
+        <span className="text-xs">{props.text}</span>
       </ToolTip>
     </>
   );

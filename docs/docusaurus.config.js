@@ -286,7 +286,7 @@ const config = {
             ],
           },
           {
-            to: "/customize/deep-dives/prompt-files",
+            to: "/customize/deep-dives/prompts",
             from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
           // TODO - actions redirects
@@ -488,6 +488,10 @@ const config = {
           {
             to: "/getting-started/install",
             from: "/getting-started",
+          },
+          {
+            to: "/customize/deep-dives/prompts",
+            from: "/customize/deep-dives/prompt-files",
           },
         ],
       },

@@ -28,7 +28,6 @@ import { showTutorial } from "../util/tutorial";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { ILLM } from "core";
 
 /**
  * A shared messenger class between Core and Webview
@@ -133,6 +132,7 @@ export class VsCodeMessenger {
         streamId: data.streamId,
         status: "streaming",
         fileContent: data.text,
+        toolCallId: data.toolCallId,
       });
 
       if (data.filepath) {
@@ -164,6 +164,7 @@ export class VsCodeMessenger {
           status: "closed",
           numDiffs: 0,
           fileContent: data.text,
+          toolCallId: data.toolCallId,
         });
 
         return;
@@ -178,19 +179,14 @@ export class VsCodeMessenger {
         return;
       }
 
-      let llm: ILLM | null | undefined = config.selectedModelByRole.apply;
+      let llm =
+        config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
 
       if (!llm) {
-        llm = config.models.find(
-          (model) => model.title === data.curSelectedModelTitle,
+        vscode.window.showErrorMessage(
+          `No model with roles "apply" or "chat" found in config.`,
         );
-
-        if (!llm) {
-          vscode.window.showErrorMessage(
-            `Model ${data.curSelectedModelTitle} not found in config.`,
-          );
-          return;
-        }
+        return;
       }
 
       const fastLlm = getModelByRole(config, "repoMapFileSelection") ?? llm;
@@ -211,6 +207,7 @@ export class VsCodeMessenger {
           diffLines,
           instant,
           data.streamId,
+          data.toolCallId,
         );
       } else {
         const prompt = `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`;
@@ -226,12 +223,13 @@ export class VsCodeMessenger {
 
         await verticalDiffManager.streamEdit(
           prompt,
-          llm.title,
+          llm,
           data.streamId,
           undefined,
           undefined,
           rangeToApplyTo,
           data.text,
+          data.toolCallId,
         );
       }
     });
@@ -288,9 +286,19 @@ export class VsCodeMessenger {
       const { start, end } = msg.data.range.range;
       const verticalDiffManager = await verticalDiffManagerPromise;
 
+      const configHandler = await configHandlerPromise;
+      const { config } = await configHandler.loadConfig();
+
+      const model =
+        config?.selectedModelByRole.edit ?? config?.selectedModelByRole.chat;
+
+      if (!model) {
+        throw new Error("No Edit or Chat model selected");
+      }
+
       const fileAfterEdit = await verticalDiffManager.streamEdit(
         stripImages(prompt),
-        msg.data.selectedModelTitle,
+        model,
         "edit",
         undefined,
         undefined,
@@ -390,6 +398,9 @@ export class VsCodeMessenger {
     });
     this.onWebviewOrCore("getSearchResults", async (msg) => {
       return ide.getSearchResults(msg.data.query);
+    });
+    this.onWebviewOrCore("getFileResults", async (msg) => {
+      return ide.getFileResults(msg.data.pattern);
     });
     this.onWebviewOrCore("subprocess", async (msg) => {
       return ide.subprocess(msg.data.command, msg.data.cwd);

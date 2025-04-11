@@ -3,6 +3,8 @@ import { useContext } from "react";
 import { Button, ButtonSubtext } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { selectCurrentOrg } from "../../../../redux";
+import { useAppSelector } from "../../../../redux/hooks";
 import { hasPassedFTL } from "../../../../util/freeTrial";
 import ContinueLogo from "../../../gui/ContinueLogo";
 import { useOnboardingCard } from "../../hooks";
@@ -17,6 +19,7 @@ export default function MainTab({
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const auth = useAuth();
+  const currentOrg = useAppSelector(selectCurrentOrg);
 
   function onGetStarted() {
     auth.login(true).then((success) => {
@@ -29,7 +32,7 @@ export default function MainTab({
   function openPastFreeTrialOnboarding() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "setup-models",
-      orgSlug: auth.selectedOrganization?.slug,
+      orgSlug: currentOrg?.slug,
     });
     onboardingCard.close(isDialog);
   }

@@ -88,7 +88,6 @@ export class RootPathContextService {
       default:
         // const type = node.type;
         // console.log(getSyntaxTreeString(node));
-        // debugger;
 
         query = await getQueryForFile(
           filepath,
@@ -165,7 +164,6 @@ export class RootPathContextService {
     )) {
       const key = RootPathContextService.keyFromNode(parentKey, astNode);
       // const type = astNode.type;
-      // debugger;
 
       const foundInCache = this.cache.get(key);
       const newSnippets =
