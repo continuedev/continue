@@ -60,7 +60,6 @@ class MessageTypes {
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
             "configUpdate",
-            "getDefaultModelTitle",
             "indexProgress", // Codebase
             "indexing/statusUpdate", // Docs, etc.
             "addContextItem",
@@ -126,6 +125,7 @@ class MessageTypes {
             "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
+            "isItemTooBig",
         )
     }
 }

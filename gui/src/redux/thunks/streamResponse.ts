@@ -4,7 +4,7 @@ import { InputModifiers } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import posthog from "posthog-js";
 import { v4 as uuidv4 } from "uuid";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   submitEditorAndInitAtIndex,
   updateHistoryItemAtIndex,
@@ -34,11 +34,10 @@ export const streamResponseThunk = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const defaultModel = selectDefaultModel(state);
-        const slashCommands = state.config.config.slashCommands || [];
+        const selectedChatModel = selectSelectedChatModel(state);
         const inputIndex = index ?? state.session.history.length; // Either given index or concat to end
 
-        if (!defaultModel) {
+        if (!selectedChatModel) {
           throw new Error("No chat model selected");
         }
 
@@ -86,7 +85,10 @@ export const streamResponseThunk = createAsyncThunk<
 
         // Construct messages from updated history
         const updatedHistory = getState().session.history;
-        const messages = constructMessages([...updatedHistory]);
+        const messages = constructMessages(
+          [...updatedHistory],
+          selectedChatModel?.baseChatSystemMessage,
+        );
 
         posthog.capture("step run", {
           step_name: "User Input",

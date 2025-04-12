@@ -59,6 +59,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "didChangeSelectedOrg",
     "tools/call",
     "controlPlane/openUrl",
+    "isItemTooBig",
   ];
 
 // Message types to pass through from core to webview
@@ -67,7 +68,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
 export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
   [
     "configUpdate",
-    "getDefaultModelTitle",
     "indexProgress", // Codebase
     "indexing/statusUpdate", // Docs, etc.
     "addContextItem",

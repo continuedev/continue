@@ -5,6 +5,7 @@ import {
   ConfigResult,
   ConfigValidationError,
   FQSN,
+  isAssistantUnrolledNonNullable,
   ModelRole,
   PlatformClient,
   RegistryClient,
@@ -12,7 +13,6 @@ import {
   unrollAssistantFromContent,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
-import { fetchwithRequestOptions } from "@continuedev/fetch";
 
 import {
   ContinueConfig,
@@ -23,14 +23,12 @@ import {
   ILLMLogger,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
-import { AllRerankers } from "../../context/allRerankers";
 import { MCPManagerSingleton } from "../../context/mcp";
 import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../../context/providers/index";
 import { ControlPlaneClient } from "../../control-plane/client";
-import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
 import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandFromPromptFile";
@@ -93,7 +91,15 @@ async function loadConfigYaml(
         renderSecrets: true,
       },
     ));
-  const errors = validateConfigYaml(config);
+
+  const errors = isAssistantUnrolledNonNullable(config)
+    ? validateConfigYaml(config)
+    : [
+        {
+          fatal: true,
+          message: "Assistant includes blocks that don't exist",
+        },
+      ];
 
   if (errors?.some((error) => error.fatal)) {
     return {
@@ -111,41 +117,32 @@ async function loadConfigYaml(
   };
 }
 
-async function configYamlToContinueConfig(
-  config: AssistantUnrolled,
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  allowFreeTrial: boolean = true,
-): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
+async function configYamlToContinueConfig({
+  config,
+  ide,
+  ideSettings,
+  ideInfo,
+  uniqueId,
+  llmLogger,
+  platformConfigMetadata,
+  allowFreeTrial = true,
+}: {
+  config: AssistantUnrolled;
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  allowFreeTrial: boolean;
+}): Promise<{ config: ContinueConfig; errors: ConfigValidationError[] }> {
   const localErrors: ConfigValidationError[] = [];
+
   const continueConfig: ContinueConfig = {
     slashCommands: [],
-    models: [],
     tools: [...allTools],
     mcpServerStatuses: [],
-    systemMessage: undefined,
-    experimental: {
-      modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
-        transport: {
-          type: "stdio",
-          command: mcpServer.command,
-          args: mcpServer.args ?? [],
-          env: mcpServer.env,
-        },
-      })),
-    },
-    docs: config.docs?.map((doc) => ({
-      title: doc.name,
-      startUrl: doc.startUrl,
-      rootUrl: doc.rootUrl,
-      faviconUrl: doc.faviconUrl,
-    })),
-    rules: config.rules,
+    systemMessage: config.rules?.join("\n"),
     contextProviders: [],
     modelsByRole: {
       chat: [],
@@ -157,7 +154,7 @@ async function configYamlToContinueConfig(
       summarize: [],
     },
     selectedModelByRole: {
-      chat: null, // not currently used - defaultModel on GUI is used
+      chat: null,
       edit: null, // not currently used
       apply: null,
       embed: null,
@@ -165,7 +162,38 @@ async function configYamlToContinueConfig(
       rerank: null,
       summarize: null,
     },
-    data: config.data,
+  };
+
+  // Right now, if there are any missing packages in the config, then we will just throw an error
+  if (!isAssistantUnrolledNonNullable(config)) {
+    return {
+      config: continueConfig,
+      errors: [
+        {
+          message: "Found missing blocks in config.yaml",
+          fatal: true,
+        },
+      ],
+    };
+  }
+
+  continueConfig.data = config.data;
+  continueConfig.rules = config.rules;
+  continueConfig.docs = config.docs?.map((doc) => ({
+    title: doc.name,
+    startUrl: doc.startUrl,
+    rootUrl: doc.rootUrl,
+    faviconUrl: doc.faviconUrl,
+  }));
+  continueConfig.experimental = {
+    modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
+      transport: {
+        type: "stdio",
+        command: mcpServer.command,
+        args: mcpServer.args ?? [],
+        env: mcpServer.env,
+      },
+    })),
   };
 
   // Prompt files -
@@ -222,10 +250,6 @@ async function configYamlToContinueConfig(
         config: continueConfig,
       });
 
-      if (modelsArrayRoles.some((role) => model.roles?.includes(role))) {
-        continueConfig.models.push(...llms);
-      }
-
       if (model.roles?.includes("chat")) {
         continueConfig.modelsByRole.chat.push(...llms);
       }
@@ -247,59 +271,25 @@ async function configYamlToContinueConfig(
       }
 
       if (model.roles?.includes("embed")) {
-        const { provider, ...options } = model;
-        const embeddingsProviderClass = allEmbeddingsProviders[provider];
-        if (embeddingsProviderClass) {
-          if (
-            embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-          ) {
+        const { provider } = model;
+        if (provider === "transformers.js") {
+          if (ideInfo.ideType === "vscode") {
             continueConfig.modelsByRole.embed.push(
-              new embeddingsProviderClass(),
+              new TransformersJsEmbeddingsProvider(),
             );
           } else {
-            continueConfig.modelsByRole.embed.push(
-              new embeddingsProviderClass(
-                {
-                  ...options,
-                  title: options.name,
-                },
-                (url: string | URL, init: any) =>
-                  fetchwithRequestOptions(url, init, {
-                    ...options.requestOptions,
-                  }),
-              ),
-            );
+            localErrors.push({
+              fatal: false,
+              message: `Transformers.js embeddings provider not supported in this IDE.`,
+            });
           }
         } else {
-          localErrors.push({
-            fatal: false,
-            message: `Unsupported embeddings model provider found: ${provider}`,
-          });
+          continueConfig.modelsByRole.embed.push(...llms);
         }
       }
 
       if (model.roles?.includes("rerank")) {
-        const { provider, ...options } = model;
-        const rerankerClass = AllRerankers[provider];
-        if (rerankerClass) {
-          continueConfig.modelsByRole.rerank.push(
-            new rerankerClass(
-              {
-                ...options,
-                title: options.name,
-              },
-              (url: string | URL, init: any) =>
-                fetchwithRequestOptions(url, init, {
-                  ...options.requestOptions,
-                }),
-            ),
-          );
-        } else {
-          localErrors.push({
-            fatal: false,
-            message: `Unsupported reranking model provider found: ${provider}`,
-          });
-        }
+        continueConfig.modelsByRole.rerank.push(...llms);
       }
     } catch (e) {
       localErrors.push({
@@ -323,7 +313,7 @@ async function configYamlToContinueConfig(
 
   if (allowFreeTrial) {
     // Obtain auth token (iff free trial being used)
-    const freeTrialModels = continueConfig.models.filter(
+    const freeTrialModels = continueConfig.modelsByRole.chat.filter(
       (model) => model.providerName === "free-trial",
     );
     if (freeTrialModels.length > 0) {
@@ -338,14 +328,15 @@ async function configYamlToContinueConfig(
           message: `Failed to obtain GitHub auth token for free trial:\n${e instanceof Error ? e.message : e}`,
         });
         // Remove free trial models
-        continueConfig.models = continueConfig.models.filter(
-          (model) => model.providerName !== "free-trial",
-        );
+        continueConfig.modelsByRole.chat =
+          continueConfig.modelsByRole.chat.filter(
+            (model) => model.providerName !== "free-trial",
+          );
       }
     }
   } else {
     // Remove free trial models
-    continueConfig.models = continueConfig.models.filter(
+    continueConfig.modelsByRole.chat = continueConfig.modelsByRole.chat.filter(
       (model) => model.providerName !== "free-trial",
     );
   }
@@ -408,19 +399,31 @@ async function configYamlToContinueConfig(
   return { config: continueConfig, errors: localErrors };
 }
 
-export async function loadContinueConfigFromYaml(
-  ide: IDE,
-  ideSettings: IdeSettings,
-  ideInfo: IdeInfo,
-  uniqueId: string,
-  llmLogger: ILLMLogger,
-  workOsAccessToken: string | undefined,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  controlPlaneClient: ControlPlaneClient,
-  configYamlPath: string | undefined,
-  orgScopeId: string | null,
-): Promise<ConfigResult<ContinueConfig>> {
+export async function loadContinueConfigFromYaml({
+  ide,
+  ideSettings,
+  ideInfo,
+  uniqueId,
+  llmLogger,
+  // workOsAccessToken,
+  overrideConfigYaml,
+  platformConfigMetadata,
+  controlPlaneClient,
+  configYamlPath,
+  orgScopeId,
+}: {
+  ide: IDE;
+  ideSettings: IdeSettings;
+  ideInfo: IdeInfo;
+  uniqueId: string;
+  llmLogger: ILLMLogger;
+  // workOsAccessToken: string | undefined;
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  controlPlaneClient: ControlPlaneClient;
+  configYamlPath: string | undefined;
+  orgScopeId: string | null;
+}): Promise<ConfigResult<ContinueConfig>> {
   const rawYaml =
     overrideConfigYaml === undefined
       ? fs.readFileSync(
@@ -446,16 +449,16 @@ export async function loadContinueConfigFromYaml(
   }
 
   const { config: continueConfig, errors: localErrors } =
-    await configYamlToContinueConfig(
-      configYamlResult.config,
+    await configYamlToContinueConfig({
+      config: configYamlResult.config,
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
       platformConfigMetadata,
-    );
+      allowFreeTrial: true,
+    });
 
   try {
     const systemPromptDotFile = await getSystemPromptDotFile(ide);

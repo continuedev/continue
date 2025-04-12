@@ -48,10 +48,20 @@ export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
 export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
   z.union([schema, blockItemWrapperSchema(schema)]);
 
+export const commonMetadataSchema = z.object({
+  tags: z.string().optional(),
+  sourceCodeUrl: z.string().optional(),
+  description: z.string().optional(),
+  author: z.string().optional(),
+  license: z.string().optional(),
+  iconUrl: z.string().optional(),
+});
+
 export const baseConfigYamlSchema = z.object({
   name: z.string(),
   version: z.string(),
   schema: z.string().optional(),
+  metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
 });
 
 export const configYamlSchema = baseConfigYamlSchema.extend({
@@ -88,6 +98,18 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
 export type ConfigYaml = z.infer<typeof configYamlSchema>;
 
 export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
+  models: z.array(modelSchema.nullable()).optional(),
+  context: z.array(contextSchema.nullable()).optional(),
+  data: z.array(dataSchema.nullable()).optional(),
+  mcpServers: z.array(mcpServerSchema.nullable()).optional(),
+  rules: z.array(ruleSchema.nullable()).optional(),
+  prompts: z.array(promptSchema.nullable()).optional(),
+  docs: z.array(docSchema.nullable()).optional(),
+});
+
+export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
+
+export const assistantUnrolledSchemaNonNullable = baseConfigYamlSchema.extend({
   models: z.array(modelSchema).optional(),
   context: z.array(contextSchema).optional(),
   data: z.array(dataSchema).optional(),
@@ -97,7 +119,20 @@ export const assistantUnrolledSchema = baseConfigYamlSchema.extend({
   docs: z.array(docSchema).optional(),
 });
 
-export type AssistantUnrolled = z.infer<typeof assistantUnrolledSchema>;
+export type AssistantUnrolledNonNullable = z.infer<
+  typeof assistantUnrolledSchemaNonNullable
+>;
+
+export const isAssistantUnrolledNonNullable = (
+  a: AssistantUnrolled,
+): a is AssistantUnrolledNonNullable =>
+  (!a.models || a.models.every((m) => m !== null)) &&
+  (!a.context || a.context.every((c) => c !== null)) &&
+  (!a.data || a.data.every((d) => d !== null)) &&
+  (!a.mcpServers || a.mcpServers.every((s) => s !== null)) &&
+  (!a.rules || a.rules.every((r) => r !== null)) &&
+  (!a.prompts || a.prompts.every((p) => p !== null)) &&
+  (!a.docs || a.docs.every((d) => d !== null));
 
 export const blockSchema = baseConfigYamlSchema.and(
   z.union([

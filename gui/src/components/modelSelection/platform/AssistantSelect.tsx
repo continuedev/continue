@@ -1,5 +1,5 @@
 import {
-  ArrowPathRoundedSquareIcon,
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   BuildingOfficeIcon,
   ChevronDownIcon,
@@ -99,10 +99,10 @@ const AssistantSelectOption = ({
           fontSize: tinyFont,
         }}
       >
-        <div className="flex w-full items-center justify-between bg-transparent">
-          <div className="flex w-full items-center gap-1.5">
+        <div className="flex w-full items-center justify-between gap-2 bg-transparent">
+          <div className="flex w-full items-center gap-1">
             <div className="flex h-4 w-4 flex-shrink-0">
-              <AssistantIcon assistant={profile} />
+              <AssistantIcon size={3.5} assistant={profile} />
             </div>
             <span
               className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""}`}
@@ -256,7 +256,7 @@ export default function AssistantSelect() {
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
         <span
-          className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+          className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
         >
           Create your first assistant
         </span>
@@ -278,7 +278,7 @@ export default function AssistantSelect() {
               <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
             <span
-              className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
             >
               {selectedProfile.title}
             </span>
@@ -291,6 +291,20 @@ export default function AssistantSelect() {
 
         <Transition>
           <ListboxOptions className="pb-0">
+            <div className="flex justify-between gap-1.5 px-2.5 py-1">
+              <span>Assistants</span>
+              <div
+                className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  refreshProfiles();
+                  buttonRef.current?.click();
+                }}
+              >
+                <ArrowPathIcon className="text-lightgray h-2.5 w-2.5" />
+              </div>
+            </div>
+
             <div
               className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
             >
@@ -314,8 +328,9 @@ export default function AssistantSelect() {
                 }}
               />
 
-              <div className="flex flex-row items-center justify-between gap-1 pr-2">
+              <div className="flex flex-row items-center">
                 <ListboxOption
+                  className="w-full"
                   value={"new-assistant"}
                   fontSizeModifier={-2}
                   onClick={session ? onNewAssistant : () => login(false)}
@@ -330,24 +345,6 @@ export default function AssistantSelect() {
                     New Assistant
                   </div>
                 </ListboxOption>
-                <div
-                  className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    refreshProfiles();
-                    buttonRef.current?.click();
-                  }}
-                >
-                  <ArrowPathRoundedSquareIcon className="h-3 w-3" />
-                  <span
-                    className="hidden sm:flex"
-                    style={{
-                      fontSize: tinyFont,
-                    }}
-                  >
-                    Refresh
-                  </span>
-                </div>
               </div>
 
               <div
@@ -378,7 +375,7 @@ export default function AssistantSelect() {
                   {currentOrg?.iconUrl ? (
                     <img
                       src={currentOrg.iconUrl}
-                      className="h-3 w-3 rounded-full"
+                      className="h-2.5 w-2.5 rounded-full"
                     />
                   ) : (
                     <BuildingOfficeIcon className="h-4 w-4" />

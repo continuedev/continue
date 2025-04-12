@@ -46,6 +46,7 @@ import {
   DEFAULT_MAX_BATCH_SIZE,
   DEFAULT_MAX_CHUNK_SIZE,
   DEFAULT_MAX_TOKENS,
+  LLMConfigurationStatuses,
 } from "./constants.js";
 import {
   compileChatMessages,
@@ -126,6 +127,7 @@ export abstract class BaseLLM implements ILLM {
 
   title?: string;
   systemMessage?: string;
+  baseChatSystemMessage?: string;
   contextLength: number;
   maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
@@ -194,6 +196,7 @@ export abstract class BaseLLM implements ILLM {
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.systemMessage = options.systemMessage;
+    this.baseChatSystemMessage = options.baseChatSystemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
@@ -263,6 +266,10 @@ export abstract class BaseLLM implements ILLM {
     this.maxEmbeddingChunkSize =
       options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
     this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
+  }
+
+  getConfigurationStatus() {
+    return LLMConfigurationStatuses.VALID;
   }
 
   protected createOpenAiAdapter() {

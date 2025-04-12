@@ -5,7 +5,6 @@ import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProvide
 import { VscThemeProvider } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
 import ConfigPage from "./pages/config";
-import ConfigErrorPage from "./pages/config-error";
 import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
 import History from "./pages/history";
@@ -33,10 +32,6 @@ const router = createMemoryRouter([
       {
         path: "/stats",
         element: <Stats />,
-      },
-      {
-        path: ROUTES.CONFIG_ERROR,
-        element: <ConfigErrorPage />,
       },
       {
         path: ROUTES.CONFIG,

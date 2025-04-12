@@ -5,3 +5,4 @@ export { streamNormalInput } from "./streamNormalInput";
 export { streamResponseThunk } from "./streamResponse";
 export { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 export { streamThunkWrapper } from "./streamThunkWrapper";
+export { updateSelectedModelByRole } from "./updateSelectedModelByRole";

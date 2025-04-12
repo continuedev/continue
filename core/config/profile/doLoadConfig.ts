@@ -36,18 +36,29 @@ import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
-export default async function doLoadConfig(
-  ide: IDE,
-  ideSettingsPromise: Promise<IdeSettings>,
-  controlPlaneClient: ControlPlaneClient,
-  llmLogger: ILLMLogger,
-  overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  profileId: string,
-  overrideConfigYamlByPath: string | undefined,
-  orgScopeId: string | null,
-): Promise<ConfigResult<ContinueConfig>> {
+export default async function doLoadConfig({
+  ide,
+  ideSettingsPromise,
+  controlPlaneClient,
+  llmLogger,
+  overrideConfigJson,
+  overrideConfigYaml,
+  platformConfigMetadata,
+  profileId,
+  overrideConfigYamlByPath,
+  orgScopeId,
+}: {
+  ide: IDE;
+  ideSettingsPromise: Promise<IdeSettings>;
+  controlPlaneClient: ControlPlaneClient;
+  llmLogger: ILLMLogger;
+  overrideConfigJson: SerializedContinueConfig | undefined;
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  profileId: string;
+  overrideConfigYamlByPath: string | undefined;
+  orgScopeId: string | null;
+}): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
@@ -70,19 +81,18 @@ export default async function doLoadConfig(
   let configLoadInterrupted = false;
 
   if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
-    const result = await loadContinueConfigFromYaml(
+    const result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
       llmLogger,
-      workOsAccessToken,
       overrideConfigYaml,
       platformConfigMetadata,
       controlPlaneClient,
       configYamlPath,
       orgScopeId,
-    );
+    });
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
@@ -258,7 +268,7 @@ async function injectControlPlaneProxyInfo(
     }
   });
 
-  config.models.forEach((model) => {
+  config.modelsByRole.chat.forEach((model) => {
     if (model.providerName === "continue-proxy") {
       (model as ContinueProxy).controlPlaneProxyInfo = info;
     }

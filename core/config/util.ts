@@ -7,6 +7,7 @@ import {
   IDE,
   ILLM,
   ModelDescription,
+  PromptTemplate,
 } from "../";
 import { GlobalContext } from "../util/GlobalContext";
 import { editConfigFile } from "../util/paths";
@@ -94,7 +95,7 @@ export function getModelByRole<T extends keyof ExperimentalModelRoles>(
     return undefined;
   }
 
-  const matchingModel = config.models.find(
+  const matchingModel = config.modelsByRole.chat.find(
     (model) => model.title === roleTitle,
   );
 
@@ -168,4 +169,23 @@ async function showUnsupportedCpuToast(ide: IDE) {
       "https://docs.continue.dev/troubleshooting#i-received-a-codebase-indexing-disabled---your-linux-system-lacks-required-cpu-features-avx2-fma-notification",
     );
   }
+}
+
+/**
+ * This is required because users are only able to define prompt templates as a
+ * string, while internally we also allow prompt templates to be functions
+ * @param templates
+ * @returns
+ */
+export function serializePromptTemplates(
+  templates: Record<string, PromptTemplate> | undefined,
+): Record<string, string> | undefined {
+  if (!templates) return undefined;
+
+  return Object.fromEntries(
+    Object.entries(templates).map(([key, template]) => {
+      const serialized = typeof template === "function" ? "" : template;
+      return [key, serialized];
+    }),
+  );
 }

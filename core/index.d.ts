@@ -1,5 +1,6 @@
 import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -76,38 +77,18 @@ export type PromptTemplateFunction = (
 
 export type PromptTemplate = string | PromptTemplateFunction;
 
-export interface ILLM extends LLMOptions {
+type RequiredLLMOptions =
+  | "uniqueId"
+  | "contextLength"
+  | "embeddingId"
+  | "maxEmbeddingChunkSize"
+  | "maxEmbeddingBatchSize"
+  | "completionOptions";
+
+export interface ILLM
+  extends Omit<LLMOptions, RequiredLLMOptions>,
+    Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
-
-  uniqueId: string;
-  model: string;
-
-  title?: string;
-  systemMessage?: string;
-  contextLength: number;
-  maxStopWords?: number;
-  completionOptions: CompletionOptions;
-  requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, PromptTemplate>;
-  templateMessages?: (messages: ChatMessage[]) => string;
-  llmLogger?: ILLMLogger;
-  llmRequestHook?: (model: string, prompt: string) => any;
-  apiKey?: string;
-  apiBase?: string;
-  cacheBehavior?: CacheBehavior;
-  capabilities?: ModelCapability;
-  roles?: ModelRole[];
-
-  deployment?: string;
-  apiVersion?: string;
-  apiType?: string;
-  region?: string;
-  projectId?: string;
-
-  // Embedding options
-  embeddingId: string;
-  maxEmbeddingChunkSize: number;
-  maxEmbeddingBatchSize: number;
 
   complete(
     prompt: string,
@@ -162,6 +143,8 @@ export interface ILLM extends LLMOptions {
     otherData: Record<string, string>,
     canPutWordsInModelsMouth?: boolean,
   ): string | ChatMessage[];
+
+  getConfigurationStatus(): LLMConfigurationStatuses;
 }
 
 export interface ModelInstaller {
@@ -577,6 +560,7 @@ export interface LLMOptions {
   title?: string;
   uniqueId?: string;
   systemMessage?: string;
+  baseChatSystemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
@@ -1056,11 +1040,13 @@ export interface ModelDescription {
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
+  baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
   roles?: ModelRole[];
+  configurationStatus?: LLMConfigurationStatuses;
 }
 
 export interface EmbedOptions {
@@ -1389,7 +1375,6 @@ export interface Config {
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ILLM[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1413,7 +1398,6 @@ export interface ContinueConfig {
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;

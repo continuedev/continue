@@ -37,12 +37,12 @@ export default function ApplyActions(props: ApplyActionsProps) {
 
   const applyButton = (text: string) => (
     <button
-      className={`flex items-center border-none bg-transparent text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+      className={`flex items-center border-none bg-transparent pl-0 text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
       onClick={props.onClickApply}
       style={{ color: lightGray }}
     >
       <div className="flex items-center gap-1 text-gray-400">
-        <PlayIcon className="h-3 w-3" />
+        <PlayIcon className="h-3.5 w-3.5" />
         <span className="xs:inline hidden">{text}</span>
       </div>
     </button>
@@ -52,33 +52,35 @@ export default function ApplyActions(props: ApplyActionsProps) {
     case "streaming":
       return (
         <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
-          <span className="inline-flex items-center gap-2 text-xs text-gray-400">
-            Applying changes
+          <span className="inline-flex w-min items-center gap-2 text-center text-xs text-gray-400">
+            Applying
             <Spinner />
           </span>
         </div>
       );
     case "done":
       return (
-        <div className="flex items-center sm:gap-1">
+        <div className="flex items-center rounded bg-zinc-700 px-1.5 sm:gap-1">
           <span className="max-xs:hidden text-center text-xs text-gray-400">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
             <span className="max-md:hidden">{` remaining`}</span>
           </span>
 
-          <ToolbarButtonWithTooltip
-            onClick={onClickReject}
-            tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
-          >
-            <XMarkIcon className="h-4 w-4 text-red-600 hover:brightness-125" />
-          </ToolbarButtonWithTooltip>
+          <div className="flex">
+            <ToolbarButtonWithTooltip
+              onClick={onClickReject}
+              tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
+            >
+              <XMarkIcon className="h-3.5 w-3.5 text-red-600 hover:brightness-125" />
+            </ToolbarButtonWithTooltip>
 
-          <ToolbarButtonWithTooltip
-            onClick={props.onClickAccept}
-            tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
-          >
-            <CheckIcon className="h-4 w-4 text-green-600 hover:brightness-125" />
-          </ToolbarButtonWithTooltip>
+            <ToolbarButtonWithTooltip
+              onClick={props.onClickAccept}
+              tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
+            >
+              <CheckIcon className="h-3.5 w-3.5 text-green-600 hover:brightness-125" />
+            </ToolbarButtonWithTooltip>
+          </div>
         </div>
       );
     case "closed":
@@ -87,7 +89,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
           return (
             <span className="flex items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
               <span className="max-sm:hidden">Applied</span>
-              <CheckIcon className="h-4 w-4 hover:brightness-125 sm:px-1" />
+              <CheckIcon className="h-3.5 w-3.5 hover:brightness-125 sm:px-1" />
             </span>
           );
         }

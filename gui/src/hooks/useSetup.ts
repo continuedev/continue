@@ -11,7 +11,7 @@ import {
 } from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
-  selectDefaultModel,
+  selectSelectedChatModel,
   setConfigResult,
 } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
@@ -35,7 +35,7 @@ function useSetup() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const selectedProfileId = useAppSelector(
     (store) => store.profiles.selectedProfileId,
   );
@@ -50,6 +50,7 @@ function useSetup() {
         organizations,
         selectedOrgId,
       } = result;
+
       if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
@@ -253,26 +254,12 @@ function useSetup() {
     dispatch(updateIndexingStatus(data));
   });
 
-  useWebviewListener(
-    "getDefaultModelTitle",
-    async () => {
-      return defaultModel?.title;
-    },
-    [defaultModel],
-  );
-
   const activeToolStreamId = useAppSelector(
     (store) => store.session.activeToolStreamId,
   );
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      // dispatch(
-      //   updateCurCheckpoint({
-      //     filepath: state.filepath,
-      //     content: state.fileContent,
-      //   }),
-      // );
       dispatch(updateApplyState(state));
       if (
         activeToolStreamId &&
