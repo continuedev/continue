@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { lightGray, vscForeground } from "../..";
 import { getMetaKeyLabel } from "../../../util";
 import Spinner from "../../gui/Spinner";
-import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
+import { ToolbarButtonWithTooltip } from "../../StepContainer/StepContainerPreToolbar/ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {
   disableManualApply?: boolean;
