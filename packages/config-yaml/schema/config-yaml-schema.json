@@ -13,6 +13,39 @@
         "schema": {
           "type": "string"
         },
+        "metadata": {
+          "allOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "tags": {
+                  "type": "string"
+                },
+                "sourceCodeUrl": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "author": {
+                  "type": "string"
+                },
+                "license": {
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
         "models": {
           "type": "array",
           "items": {
@@ -160,6 +193,15 @@
                           },
                           "maxBatchSize": {
                             "type": "number"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "chatOptions": {
+                        "type": "object",
+                        "properties": {
+                          "baseSystemMessage": {
+                            "type": "string"
                           }
                         },
                         "additionalProperties": false
@@ -361,6 +403,15 @@
                         },
                         "additionalProperties": false
                       },
+                      "chatOptions": {
+                        "type": "object",
+                        "properties": {
+                          "baseSystemMessage": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
                       "promptTemplates": {
                         "type": "object",
                         "properties": {
@@ -555,6 +606,15 @@
                             },
                             "additionalProperties": false
                           },
+                          "chatOptions": {
+                            "type": "object",
+                            "properties": {
+                              "baseSystemMessage": {
+                                "type": "string"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
                           "promptTemplates": {
                             "type": "object",
                             "properties": {
@@ -728,6 +788,15 @@
                               },
                               "maxBatchSize": {
                                 "type": "number"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "chatOptions": {
+                            "type": "object",
+                            "properties": {
+                              "baseSystemMessage": {
+                                "type": "string"
                               }
                             },
                             "additionalProperties": false
