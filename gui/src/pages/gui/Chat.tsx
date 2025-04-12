@@ -37,8 +37,7 @@ import {
   newSession,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
-  setInactive,
-  updateToolCallOutput,
+  updateToolCallOutput
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
@@ -278,14 +277,16 @@ export function Chat() {
   useWebviewListener(
     "toolCallPartialOutput",
     async (data) => {
-      console.log("toolCallPartialOutput", data);
-      // Update tool call output in Redux store
-      dispatch(
-        updateToolCallOutput({
-          toolCallId: data.toolCallId,
-          contextItems: data.contextItems,
-        }),
-      );
+      if (data && typeof data === "object" && "toolCallId" in data && "contextItems" in data) {
+        console.log("toolCallPartialOutput", data);
+        // Update tool call output in Redux store
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: data.toolCallId,
+            contextItems: data.contextItems,
+          }),
+        );
+      }
     },
     [dispatch],
   );

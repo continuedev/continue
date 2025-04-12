@@ -252,6 +252,7 @@ export class Core {
     this.registerMessageHandlers(ideSettingsPromise);
   }
 
+  /* eslint-disable max-lines-per-function */
   private registerMessageHandlers(ideSettingsPromise: Promise<IdeSettings>) {
     const on = this.messenger.on.bind(this.messenger);
 
@@ -626,14 +627,18 @@ export class Core {
     });
 
     on("didChangeSelectedProfile", async (msg) => {
-      await this.configHandler.setSelectedProfileId(msg.data.id);
+      if (msg.data.id) {
+        await this.configHandler.setSelectedProfileId(msg.data.id);
+      }
     });
 
     on("didChangeSelectedOrg", async (msg) => {
-      await this.configHandler.setSelectedOrgId(
-        msg.data.id,
-        msg.data.profileId,
-      );
+      if (msg.data.id) {
+        await this.configHandler.setSelectedOrgId(
+          msg.data.id,
+          msg.data.profileId || undefined,
+        );
+      }
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
@@ -686,7 +691,7 @@ export class Core {
         toolCallId: string, 
         contextItems: any[]
       }) => {
-        this.messenger.send("toolCallPartialOutput", params);
+        this.messenger.send("toolCallPartialOutput" as any, params);
       };
 
       const contextItems = await callTool(
