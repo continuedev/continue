@@ -59,11 +59,11 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "addAutocompleteModel",
     "didChangeSelectedProfile",
     "didChangeSelectedOrg",
-  "tools/call",
-  "controlPlane/openUrl",
-  "isItemTooBig",
-  "process/markAsBackgrounded",
-  "process/isBackgrounded",
+    "tools/call",
+    "controlPlane/openUrl",
+    "isItemTooBig",
+    "process/markAsBackgrounded",
+    "process/isBackgrounded",
   ];
 
 // Message types to pass through from core to webview
