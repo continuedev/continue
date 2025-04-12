@@ -56,7 +56,6 @@ import {
 } from "../../util/freeTrial";
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import ConfigErrorIndicator from "./ConfigError";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
@@ -454,7 +453,6 @@ export function Chat() {
                 </div>
               )}
             </div>
-            <ConfigErrorIndicator />
           </div>
 
           {hasPendingApplies && isSingleRangeEditOrInsertion && (
