@@ -148,6 +148,9 @@ function InputToolbar(props: InputToolbarProps) {
                       for (const file of files) {
                         props.onImageFileSelected?.(file);
                       }
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
                     }}
                   />
                   <HoverItem className="">
