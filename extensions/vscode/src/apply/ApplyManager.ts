@@ -39,27 +39,41 @@ export class ApplyManager {
     });
 
     if (filepath) {
-      const fileExists = await this.ide.fileExists(filepath);
-      if (!fileExists) {
-        await this.ide.writeFile(filepath, "");
-        await this.ide.openFile(filepath);
-      }
-      await this.ide.openFile(filepath);
+      await this.ensureFileOpen(filepath);
     }
 
-    const editor = vscode.window.activeTextEditor;
-    if (!editor) {
+    const { activeTextEditor } = vscode.window;
+    if (!activeTextEditor) {
       vscode.window.showErrorMessage("No active editor to apply edits to");
       return;
     }
 
-    // Handle empty document case
-    if (!editor.document.getText().trim()) {
-      await this.handleEmptyDocument(editor, text, streamId, toolCallId);
-      return;
-    }
+    const hasExistingDocument = !!activeTextEditor.document.getText().trim();
 
-    await this.handleExistingDocument(editor, text, streamId, toolCallId);
+    if (hasExistingDocument) {
+      await this.handleExistingDocument(
+        activeTextEditor,
+        text,
+        streamId,
+        toolCallId,
+      );
+    } else {
+      await this.handleEmptyDocument(
+        activeTextEditor,
+        text,
+        streamId,
+        toolCallId,
+      );
+    }
+  }
+
+  private async ensureFileOpen(filepath: string): Promise<void> {
+    const fileExists = await this.ide.fileExists(filepath);
+    if (!fileExists) {
+      await this.ide.writeFile(filepath, "");
+      await this.ide.openFile(filepath);
+    }
+    await this.ide.openFile(filepath);
   }
 
   private async handleEmptyDocument(
@@ -88,13 +102,14 @@ export class ApplyManager {
     toolCallId?: string,
   ) {
     const configHandler = await this.configHandlerPromise;
-    const verticalDiffManager = await this.verticalDiffManagerPromise;
 
     const { config } = await configHandler.loadConfig();
     if (!config) {
       vscode.window.showErrorMessage("Config not loaded");
       return;
     }
+
+    const verticalDiffManager = await this.verticalDiffManagerPromise;
 
     const llm =
       config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
@@ -120,8 +135,22 @@ export class ApplyManager {
         toolCallId,
       );
     } else {
-      await this.handleNonInstantDiff(editor, text, llm, streamId, toolCallId);
+      await this.handleNonInstantDiff(
+        editor,
+        text,
+        llm,
+        streamId,
+        verticalDiffManager,
+        toolCallId,
+      );
     }
+  }
+
+  /**
+   * Creates a prompt for applying code edits
+   */
+  private getApplyPrompt(text: string): string {
+    return `The following code was suggested as an edit:\n\`\`\`\n${text}\n\`\`\`\nPlease apply it to the previous code.`;
   }
 
   private async handleNonInstantDiff(
@@ -129,11 +158,10 @@ export class ApplyManager {
     text: string,
     llm: any,
     streamId: string,
+    verticalDiffManager: VerticalDiffManager,
     toolCallId?: string,
   ) {
-    const verticalDiffManager = await this.verticalDiffManagerPromise;
-
-    const prompt = `The following code was suggested as an edit:\n\`\`\`\n${text}\n\`\`\`\nPlease apply it to the previous code.`;
+    const prompt = this.getApplyPrompt(text);
     const fullEditorRange = new vscode.Range(
       0,
       0,
