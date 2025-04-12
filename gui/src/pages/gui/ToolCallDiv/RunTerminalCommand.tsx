@@ -1,70 +1,126 @@
+import { AnyAction, ThunkDispatch } from "@reduxjs/toolkit";
 import { ToolCallState } from "core";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
-import styled from "styled-components";
 import { Fragment } from "react";
+import { useDispatch } from "react-redux";
+import styled from "styled-components";
+import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
+import { continueTerminalCommand } from "../../../redux/thunks/continueTerminalCommand";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
   toolCallState: ToolCallState;
+  toolCallId: string | undefined;
 }
 
-const OutputContainer = styled.div`
-  margin-top: 8px;
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
-  padding-top: 8px;
-`;
-
-const OutputTitle = styled.div`
+const CommandStatus = styled.div`
   font-size: 12px;
-  color: #888;
-  margin-bottom: 4px;
+  color: #666;
+  margin-top: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
   display: flex;
   align-items: center;
 `;
 
-const RunningDot = styled.div`
+const StatusIcon = styled.span<{ status: 'running' | 'completed' | 'failed' | 'background' }>`
   width: 8px;
   height: 8px;
-  background-color: #4caf50;
   border-radius: 50%;
-  margin-left: 6px;
-  animation: pulse 1.5s infinite;
+  margin-right: 8px;
+  background-color: ${props => 
+    props.status === 'running' ? '#4caf50' : 
+    props.status === 'completed' ? '#4caf50' : 
+    props.status === 'background' ? '#2196f3' : 
+    '#f44336'};
+  ${props => props.status === 'running' ? 'animation: pulse 1.5s infinite;' : ''}
+`;
+
+// Removed unused styled components
+
+const BackgroundLink = styled.a`
+  font-size: 12px;
+  color: #0077cc;
+  margin-left: 12px;
+  cursor: pointer;
+  text-decoration: none;
   
-  @keyframes pulse {
-    0% {
-      opacity: 0.4;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0.4;
-    }
+  &:hover {
+    text-decoration: underline;
   }
 `;
 
+// Extract status message from terminal output
+function parseTerminalOutput(output: string): {
+  commandOutput: string;
+  statusMessage: string | null;
+} {
+  // Match status messages like [Command is running...], [Command completed], etc.
+  const statusRegex = /\n\[(Command .+?)\]$/;
+  const match = output.match(statusRegex);
+  
+  if (match) {
+    return {
+      commandOutput: output.replace(statusRegex, ''),
+      statusMessage: match[1]
+    };
+  }
+  
+  return {
+    commandOutput: output,
+    statusMessage: null
+  };
+}
+
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
+  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
+  
   // Find the terminal output from context items if available
-  const terminalOutput = props.toolCallState.output?.find(
+  const terminalItem = props.toolCallState.output?.find(
     item => item.name === "Terminal"
-  )?.content || "";
+  );
+  
+  const terminalOutput = terminalItem?.content || "";
+  const { commandOutput, statusMessage } = parseTerminalOutput(terminalOutput);
   
   const isRunning = props.toolCallState.status === "calling";
-  const hasOutput = terminalOutput.length > 0;
+  const hasOutput = commandOutput.length > 0;
+  
+  // Determine status type
+  let statusType: 'running' | 'completed' | 'failed' | 'background' = 'completed';
+  if (isRunning) {
+    statusType = 'running';
+  } else if (statusMessage?.includes('failed')) {
+    statusType = 'failed';
+  } else if (statusMessage?.includes('background')) {
+    statusType = 'background';
+  }
 
   return (
     <Fragment>
       <StyledMarkdownPreview
         isRenderingInStepContainer={true}
         source={`\`\`\`bash .sh\n$ ${props.command ?? ""}${(hasOutput || isRunning) ? 
-          `\n${terminalOutput || "Waiting for output..."}` 
+          `\n${commandOutput || "Waiting for output..."}` 
           : ""}\n\`\`\``}
       />
       
-      {isRunning && (
-        <OutputTitle style={{ marginTop: '8px' }}>
-          Running <RunningDot />
-        </OutputTitle>
+      {(statusMessage || isRunning) && (
+        <CommandStatus>
+          <StatusIcon status={statusType} />
+          {isRunning ? "Running" : statusMessage}
+          {isRunning && props.toolCallId && (
+            <BackgroundLink 
+              onClick={() => {
+                // Dispatch the action to continue the command in the background
+                dispatch(continueTerminalCommand({ 
+                  toolCallId: props.toolCallId as string
+                }));
+              }}
+            >
+              Continue in background
+            </BackgroundLink>
+          )}
+        </CommandStatus>
       )}
     </Fragment>
   );

@@ -200,4 +200,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { item: ContextItemWithId; selectedModelTitle: string | undefined },
     boolean,
   ];
+  "process/markAsBackgrounded": [{ toolCallId: string }, void];
+  "process/isBackgrounded": [{ toolCallId: string }, boolean];
 };

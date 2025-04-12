@@ -732,6 +732,20 @@ export class Core {
 
       return false;
     });
+
+    // Process state handlers
+    on("process/markAsBackgrounded", async ({ data: { toolCallId } }) => {
+      const { markProcessAsBackgrounded } = await import("./tools/implementations/processState");
+      markProcessAsBackgrounded(toolCallId);
+    });
+    
+    on("process/isBackgrounded", async ({ data: { toolCallId }, messageId }) => {
+      const { isProcessBackgrounded } = await import("./tools/implementations/processState");
+      const isBackgrounded = isProcessBackgrounded(toolCallId);
+      // Need to manually send response since we can't return value directly
+      this.send("process/isBackgroundedResponse", { isBackgrounded }, messageId);
+      return true; // Return true to indicate the message was handled successfully
+    });
   }
 
   private handleAddAutocompleteModel(
