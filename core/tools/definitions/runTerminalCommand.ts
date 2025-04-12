@@ -13,16 +13,21 @@ export const runTerminalCommandTool: Tool = {
     name: BuiltInToolNames.RunTerminalCommand,
     description:
       "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands. Do NOT perform actions requiring special/admin priveleges.",
-    parameters: {
-      type: "object",
-      required: ["command"],
-      properties: {
-        command: {
-          type: "string",
-          description:
-            "The command to run. This will be passed directly into the IDE shell.",
+      parameters: {
+        type: "object",
+        required: ["command"],
+        properties: {
+          command: {
+            type: "string",
+            description:
+              "The command to run. This will be passed directly into the IDE shell.",
+          },
+          waitForCompletion: {
+            type: "boolean",
+            description:
+              "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground.",
+          },
         },
       },
-    },
   },
 };

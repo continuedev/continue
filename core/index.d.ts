@@ -1484,6 +1484,7 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+  waitForCompletion?: boolean;
 }
 
 export interface RuleWithSource {

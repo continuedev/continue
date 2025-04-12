@@ -10,8 +10,22 @@ interface RunInTerminalButtonProps {
 export function RunInTerminalButton({ command }: RunInTerminalButtonProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
+  // Extract just the command line (the line after $ or the first line)
+  function extractCommand(cmd: string): string {
+    // If the command contains a $ prompt, extract the line after it
+    if (cmd.includes('$')) {
+      const match = cmd.match(/\$\s*([^\n]+)/);
+      return match ? match[1].trim() : '';
+    }
+    
+    // Otherwise, just take the first line
+    return cmd.split('\n')[0].trim();
+  }
+
   function runInTerminal() {
-    void ideMessenger.post("runCommand", { command });
+    // Extract just the command line
+    const extractedCommand = extractCommand(command);
+    void ideMessenger.post("runCommand", { command: extractedCommand });
   }
 
   return (
