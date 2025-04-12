@@ -499,6 +499,19 @@ jobs:
           name: e2e-failure-screenshots
           path: extensions/vscode/e2e/storage/screenshots
 
+      - name: Find e2e log file
+        if: always()
+        run: |
+          echo "Searching for e2e.log file..."
+          find $GITHUB_WORKSPACE -name "e2e.log" -type f
+
+      - name: Upload e2e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs-${{ matrix.test_file }}-${{ matrix.command }}
+          path: e2e.log
+
   gui-tests:
     needs: [install-gui, install-core]
     runs-on: ubuntu-latest

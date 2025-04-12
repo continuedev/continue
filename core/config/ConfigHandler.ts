@@ -15,6 +15,7 @@ import {
 } from "../index.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
+import { logger } from "../util/logger.js";
 import {
   ASSISTANTS,
   getAllDotContinueYamlFiles,
@@ -477,9 +478,14 @@ export class ConfigHandler {
         configLoadInterrupted: true,
       };
     }
-    return await this.currentProfile.loadConfig(
+    const config = await this.currentProfile.loadConfig(
       this.additionalContextProviders,
     );
+
+    if (config.errors?.length) {
+      logger.warn("Errors loading config: ", config.errors);
+    }
+    return config;
   }
 
   async openConfigProfile(profileId?: string) {
