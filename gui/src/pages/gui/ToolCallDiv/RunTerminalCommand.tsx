@@ -55,8 +55,8 @@ function parseTerminalOutput(output: string): {
   commandOutput: string;
   statusMessage: string | null;
 } {
-  // Match status messages like [Command is running...], [Command completed], etc.
-  const statusRegex = /\n\[(Command .+?)\]$/;
+  // Match status messages like [Command is running...], [Command completed], [Background command failed with...], etc.
+  const statusRegex = /\n\[(Command .+?|Background .+?)\]$/;
   const match = output.match(statusRegex);
   
   if (match) {
