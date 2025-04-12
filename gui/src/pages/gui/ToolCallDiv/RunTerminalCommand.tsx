@@ -72,40 +72,64 @@ function parseTerminalOutput(output: string): {
   };
 }
 
-const OutputContainer = styled.div`
-  margin-top: 8px;
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
-  padding-top: 8px;
-`;
-
-const OutputTitle = styled.div`
+const CommandStatus = styled.div`
   font-size: 12px;
-  color: #888;
-  margin-bottom: 4px;
+  color: #666;
+  margin-top: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
   display: flex;
   align-items: center;
 `;
 
-const RunningDot = styled.div`
+const StatusIcon = styled.span<{ status: 'running' | 'completed' | 'failed' | 'background' }>`
   width: 8px;
   height: 8px;
-  background-color: #4caf50;
   border-radius: 50%;
-  margin-left: 6px;
-  animation: pulse 1.5s infinite;
+  margin-right: 8px;
+  background-color: ${props => 
+    props.status === 'running' ? '#4caf50' : 
+    props.status === 'completed' ? '#4caf50' : 
+    props.status === 'background' ? '#2196f3' : 
+    '#f44336'};
+  ${props => props.status === 'running' ? 'animation: pulse 1.5s infinite;' : ''}
+`;
+
+// Removed unused styled components
+
+const BackgroundLink = styled.a`
+  font-size: 12px;
+  color: #0077cc;
+  margin-left: 12px;
+  cursor: pointer;
+  text-decoration: none;
   
-  @keyframes pulse {
-    0% {
-      opacity: 0.4;
-    }
-    50% {
-      opacity: 1;
-    }
-    100% {
-      opacity: 0.4;
-    }
+  &:hover {
+    text-decoration: underline;
   }
 `;
+
+// Extract status message from terminal output
+function parseTerminalOutput(output: string): {
+  commandOutput: string;
+  statusMessage: string | null;
+} {
+  // Match status messages like [Command is running...], [Command completed], etc.
+  const statusRegex = /\n\[(Command .+?)\]$/;
+  const match = output.match(statusRegex);
+  
+  if (match) {
+    return {
+      commandOutput: output.replace(statusRegex, ''),
+      statusMessage: match[1]
+    };
+  }
+  
+  return {
+    commandOutput: output,
+    statusMessage: null
+  };
+}
 
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
