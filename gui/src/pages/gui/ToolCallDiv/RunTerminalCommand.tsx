@@ -18,6 +18,7 @@ const CommandStatus = styled.div`
   margin-top: 8px;
   padding-left: 8px;
   padding-right: 8px;
+  padding-bottom: 8px;
   display: flex;
   align-items: center;
 `;
