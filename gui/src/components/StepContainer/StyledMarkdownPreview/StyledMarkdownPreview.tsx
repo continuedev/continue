@@ -12,19 +12,19 @@ import {
   vscBackground,
   vscEditorBackground,
   vscForeground,
-} from "..";
-import useUpdatingRef from "../../hooks/useUpdatingRef";
-import { useAppSelector } from "../../redux/hooks";
-import { selectUIConfig } from "../../redux/slices/configSlice";
-import { getContextItemsFromHistory } from "../../redux/thunks/updateFileSymbols";
-import { getFontSize } from "../../util";
-import { ToolTip } from "../gui/Tooltip";
-import FilenameLink from "./FilenameLink";
+} from "../..";
+import useUpdatingRef from "../../../hooks/useUpdatingRef";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectUIConfig } from "../../../redux/slices/configSlice";
+import { getContextItemsFromHistory } from "../../../redux/thunks/updateFileSymbols";
+import { getFontSize } from "../../../util";
+import { ToolTip } from "../../gui/Tooltip";
+import FilenameLink from "../FilenameLink";
+import StepContainerPreToolbar from "../StepContainerPreToolbar";
+import SymbolLink from "../SymbolLink";
+import { SyntaxHighlightedPre } from "../SyntaxHighlightedPre";
 import "./katex.css";
 import "./markdown.css";
-import StepContainerPreToolbar from "./StepContainerPreToolbar";
-import SymbolLink from "./SymbolLink";
-import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { isSymbolNotRif, matchCodeToSymbolOrFile } from "./utils";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";

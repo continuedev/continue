@@ -15,7 +15,7 @@ import {
   selectIsInEditMode,
 } from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
-import { isTerminalCodeBlock } from "../utils";
+import { isTerminalCodeBlock } from "../StyledMarkdownPreview/utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
 import { FileInfo } from "./FileInfo";

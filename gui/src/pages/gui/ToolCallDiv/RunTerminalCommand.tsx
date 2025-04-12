@@ -1,5 +1,5 @@
 import { ToolCallState } from "core";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../../components/StepContainer/StyledMarkdownPreview/StyledMarkdownPreview";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
