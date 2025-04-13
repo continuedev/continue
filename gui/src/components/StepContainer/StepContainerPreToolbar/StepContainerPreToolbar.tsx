@@ -98,16 +98,13 @@ export default function StepContainerPreToolbar({
     undefined,
   );
 
-  const shouldShowCreateFile = relativeFilepath && fileExists === false;
   const isNextCodeBlock = nextCodeBlockIndex === codeBlockIndex;
   const hasFileExtension =
     relativeFilepath && /\.[0-9a-z]+$/i.test(relativeFilepath);
 
   // If we are creating a file, we already render that in the button
   // so we don't want to dispaly it twice here
-  const displayFilepath = shouldShowCreateFile
-    ? undefined
-    : (relativeFilepath ?? appliedFileUri);
+  const displayFilepath = relativeFilepath ?? appliedFileUri;
 
   async function getFileUriToApplyTo() {
     // If we've already resolved a file URI (from clicking apply), use that
@@ -218,7 +215,7 @@ export default function StepContainerPreToolbar({
             <FileInfo
               filepath={displayFilepath}
               range={range}
-              onClick={onClickFilename}
+              onClick={fileExists ? onClickFilename : undefined}
             />
           ) : (
             <span className="text-lightgray ml-2 select-none capitalize">
@@ -242,11 +239,8 @@ export default function StepContainerPreToolbar({
 
               {isTerminalCodeBlock(language, codeBlockContent) ? (
                 <RunInTerminalButton command={codeBlockContent} />
-              ) : shouldShowCreateFile ? (
-                <CreateFileButton
-                  filepath={relativeFilepath}
-                  onClick={onClickApply}
-                />
+              ) : !fileExists ? (
+                <CreateFileButton onClick={onClickApply} />
               ) : (
                 <ApplyActions
                   disableManualApply={disableManualApply}
