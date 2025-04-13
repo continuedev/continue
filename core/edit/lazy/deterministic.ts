@@ -15,6 +15,19 @@ type AstReplacements = Array<{
   replacementNodes: Parser.SyntaxNode[];
 }>;
 
+/**
+ * Using this as a flag to slowly reintroduce lazy applies.
+ * With this set, we will only attempt to deterministically apply
+ * when there are no lazy blocks and then just replace the whole file,
+ * and otherwise never use instant apply
+ */
+const ONLY_FULL_FILE_REWRITE = true;
+
+const LAZY_COMMENT_REGEX = /\.{3}\s*(.+?)\s*\.{3}/;
+export function isLazyText(text: string): boolean {
+  return LAZY_COMMENT_REGEX.test(text);
+}
+
 function reconstructNewFile(
   oldFile: string,
   newFile: string,
@@ -135,6 +148,15 @@ export async function deterministicApplyLazyEdit(
   let newTree = parser.parse(newLazyFile);
   let reconstructedNewFile: string | undefined = undefined;
 
+  // See comments on `ONLY_FULL_FILE_REWRITE` for context
+  if (ONLY_FULL_FILE_REWRITE) {
+    if (!isLazyText(newTree.rootNode.text)) {
+      return myersDiff(oldFile, newLazyFile);
+    } else {
+      return undefined;
+    }
+  }
+
   // If there is no lazy block anywhere, we add our own to the outsides
   // so that large chunks of the file don't get removed
   if (!findInAst(newTree.rootNode, isLazyBlock)) {
@@ -198,11 +220,6 @@ export async function deterministicApplyLazyEdit(
   return diff;
 }
 
-const LAZY_COMMENT_REGEX = /\.{3}\s*(.+?)\s*\.{3}/;
-export function isLazyLine(text: string): boolean {
-  return LAZY_COMMENT_REGEX.test(text);
-}
-
 function isLazyBlock(node: Parser.SyntaxNode): boolean {
   // Special case for "{/* ... existing code ... */}"
   if (
@@ -213,7 +230,7 @@ function isLazyBlock(node: Parser.SyntaxNode): boolean {
     return true;
   }
 
-  return node.type.includes("comment") && isLazyLine(node.text);
+  return node.type.includes("comment") && isLazyText(node.text);
 }
 
 function stringsWithinLevDistThreshold(
