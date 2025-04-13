@@ -200,7 +200,10 @@ export function History() {
         </table>
       </div>
       <div className="flex flex-col items-end justify-center border-0 border-t border-solid border-gray-400 px-2 py-1.5 text-sm">
-        <i className="">{`Data is saved in ${platform === "windows" ? "%USERPROFILE%/.continue" : "~/.continue/sessions"}`}</i>
+        <i
+          className=""
+          data-testid="history-sessions-note"
+        >{`Data is saved in ${platform === "windows" ? "%USERPROFILE%/.continue" : "~/.continue/sessions"}`}</i>
         <span
           className="cursor-pointer text-xs text-gray-400 hover:underline"
           onClick={showClearSessionsDialog}
