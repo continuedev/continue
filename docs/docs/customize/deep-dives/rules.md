@@ -5,15 +5,49 @@ keywords: [rules, .continuerules, system, prompt, message]
 
 # Rules
 
-Rules are used to provide instructions to **chat** models. They are inserted into the system message for all chat requests. Rules are _only_ used during Chat, they are not used for autocomplete or other roles.
+Rules are used to provide instructions to the model for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Agent](../../agent/how-to-use-it.md) requests.
 
-## Hub `rules` blocks
+Rules are **_NOT_** included in most other requests, such as [autocomplete](./autocomplete.mdx) or [apply](../model-roles/apply.mdx).
+
+You can view the current rules by clicking the pen icon above the main toolbar:
+
+![rules input toolbar section](/img/notch-rules.png)
+
+To form the system message, rules are joined with new lines, in the order they appear in the toolbar.
+
+## `rules` blocks
 
 Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
 
+These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally. Rules blocks can be simple text, or have the following properties:
+
+- `name` (**required**): A display name/title for the rule
+- `rule` (**required**): The text content of the rule
+
+Examples:
+
+```yaml title="config.yaml"
+rules:
+  - uses: myprofile/my-mood-setter
+    with:
+      MOOD: happy
+  - Always annotate Python functions with their parameter and return types
+  - Always write Google style docstrings for functions and classes
+  - name: Server-side components
+    rule: When writing Next.js React components, use server-side components where possible instead of client components.
+```
+
+## Chat System Message
+
+Continue includes a simple default system message for [Chat](../../chat/how-to-use-it.md) and [Agent](../../agent/how-to-use-it.md) requests, to help the model provide reliable codeblock formats in its output.
+
+This can be viewed in the rules section of the toolbar (see above), or visit the source code [here](https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L4)
+
+Advanced users can override this system message for a specific model if needed by using `chatOptions.baseSystemMessage`. See the [`config.yaml` reference](../../reference.md#models).
+
 ## `.continuerules`
 
-You can create a project-specific system message by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
+You can create project-specific rules by adding a `.continuerules` file to the root of your project. This file is raw text and its full contents will be used as rules.
 
 ### Simple Examples
 
