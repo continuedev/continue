@@ -54,15 +54,15 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       return rule.name;
     } else {
       if (rule.source === ".continuerules") {
-        return "Workspace rules";
+        return "Project rules";
       } else if (rule.source === "default") {
-        return "Default System Chat Message";
+        return "Default chat system message";
       } else if (rule.source === "json-systemMessage") {
         return "JSON systemMessage)";
       } else if (rule.source === "model-chat-options") {
         return "Base System Chat Message";
       } else {
-        return "Unnamed assistant rule";
+        return "Assistant rule";
       }
     }
   }, [rule]);
