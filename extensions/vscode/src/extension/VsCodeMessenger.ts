@@ -78,7 +78,6 @@ export class VsCodeMessenger {
     private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly workOsAuthProvider: WorkOsAuthProvider,
     private readonly editDecorationManager: EditDecorationManager,
-    private readonly applyManager: ApplyManager,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -126,7 +125,19 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("applyToFile", async ({ data }) => {
-      await this.applyManager.applyToFile(data);
+      const [verticalDiffManager, configHandler] = await Promise.all([
+        verticalDiffManagerPromise,
+        configHandlerPromise,
+      ]);
+
+      const applyManager = new ApplyManager(
+        this.ide,
+        webviewProtocol,
+        verticalDiffManager,
+        configHandler,
+      );
+
+      await applyManager.applyToFile(data);
     });
 
     this.onWebview("showTutorial", async (msg) => {

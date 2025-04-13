@@ -14,7 +14,6 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
-import { ApplyManager } from "../apply";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 import {
   monitorBatteryChanges,
@@ -61,7 +60,6 @@ export class VsCodeExtension {
   private workOsAuthProvider: WorkOsAuthProvider;
   private fileSearch: FileSearch;
   private uriHandler = new UriEventHandler();
-  private applyManager: ApplyManager;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -115,13 +113,6 @@ export class VsCodeExtension {
       FromCoreProtocol
     >();
 
-    this.applyManager = new ApplyManager(
-      this.ide,
-      this.sidebar.webviewProtocol,
-      verticalDiffManagerPromise,
-      configHandlerPromise,
-    );
-
     new VsCodeMessenger(
       inProcessMessenger,
       this.sidebar.webviewProtocol,
@@ -130,7 +121,6 @@ export class VsCodeExtension {
       configHandlerPromise,
       this.workOsAuthProvider,
       this.editDecorationManager,
-      this.applyManager,
     );
 
     this.core = new Core(inProcessMessenger, this.ide);
