@@ -21,8 +21,8 @@ export class ApplyManager {
   constructor(
     private readonly ide: VsCodeIde,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
-    private readonly verticalDiffManagerPromise: Promise<VerticalDiffManager>,
-    private readonly configHandlerPromise: Promise<ConfigHandler>,
+    private readonly verticalDiffManager: VerticalDiffManager,
+    private readonly configHandler: ConfigHandler,
   ) {}
 
   async applyToFile({
@@ -101,15 +101,11 @@ export class ApplyManager {
     streamId: string,
     toolCallId?: string,
   ) {
-    const configHandler = await this.configHandlerPromise;
-
-    const { config } = await configHandler.loadConfig();
+    const { config } = await this.configHandler.loadConfig();
     if (!config) {
       vscode.window.showErrorMessage("Config not loaded");
       return;
     }
-
-    const verticalDiffManager = await this.verticalDiffManagerPromise;
 
     const llm =
       config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
@@ -128,7 +124,7 @@ export class ApplyManager {
     );
 
     if (instant) {
-      await verticalDiffManager.streamDiffLines(
+      await this.verticalDiffManager.streamDiffLines(
         diffLines,
         instant,
         streamId,
@@ -140,7 +136,7 @@ export class ApplyManager {
         text,
         llm,
         streamId,
-        verticalDiffManager,
+        this.verticalDiffManager,
         toolCallId,
       );
     }
