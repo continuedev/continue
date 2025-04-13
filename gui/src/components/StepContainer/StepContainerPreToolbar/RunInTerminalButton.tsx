@@ -18,7 +18,7 @@ export default function RunInTerminalButton({
 
   return (
     <div
-      className={`flex items-center border-none bg-transparent text-xs text-gray-400 text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+      className={`text-lightgray flex items-center border-none bg-transparent text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
       onClick={runInTerminal}
     >
       <div
@@ -27,7 +27,7 @@ export default function RunInTerminalButton({
       >
         <>
           <CommandLineIcon className="h-3 w-3 hover:brightness-125" />
-          <span className="text-gray-400 max-sm:hidden">Run</span>
+          <span className="text-lightgray max-sm:hidden">Run</span>
         </>
       </div>
     </div>

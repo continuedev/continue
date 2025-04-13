@@ -8,6 +8,7 @@ import {
   vscEditorBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useFileExists } from "../../../hooks";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
 import {
@@ -18,6 +19,7 @@ import { getFontSize } from "../../../util";
 import { isTerminalCodeBlock } from "../StyledMarkdownPreview/utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
+import CreateFileButton from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import InsertButton from "./InsertButton";
@@ -77,11 +79,8 @@ export default function StepContainerPreToolbar({
     expanded ?? (isInEditMode ? false : true),
   );
 
-  // We store the resolved file URI to ensure we use the same file when
-  // accepting/rejecting diffs, even if no `relativeFilepath` is provided
-  const [resolvedFileUri, setResolvedFileUri] = useState<string | undefined>(
-    undefined,
-  );
+  const { fileExists, refreshFileExists } = useFileExists(relativeFilepath);
+
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
   );
@@ -90,16 +89,30 @@ export default function StepContainerPreToolbar({
     selectApplyStateByStreamId(state, codeBlockStreamId),
   );
 
+  /**
+   * In the case where `relativeFilepath` is defined, this will just be the resolved URI
+   * of `relativeFilepath`. However, if no `relativeFilepath` is defined, then this will
+   * be the URI of the currently open file at the time the user clicks "Apply".
+   */
+  const [appliedFileUri, setAppliedFileUri] = useState<string | undefined>(
+    undefined,
+  );
+
+  const shouldShowCreateFile = relativeFilepath && fileExists === false;
   const isNextCodeBlock = nextCodeBlockIndex === codeBlockIndex;
   const hasFileExtension =
     relativeFilepath && /\.[0-9a-z]+$/i.test(relativeFilepath);
 
-  const displayFilepath = relativeFilepath ?? resolvedFileUri;
+  // If we are creating a file, we already render that in the button
+  // so we don't want to dispaly it twice here
+  const displayFilepath = shouldShowCreateFile
+    ? undefined
+    : (relativeFilepath ?? appliedFileUri);
 
-  async function getFileUri() {
+  async function getFileUriToApplyTo() {
     // If we've already resolved a file URI (from clicking apply), use that
-    if (resolvedFileUri) {
-      return resolvedFileUri;
+    if (appliedFileUri) {
+      return appliedFileUri;
     }
 
     // If a relative filepath was provided, try to resolve it
@@ -120,23 +133,24 @@ export default function StepContainerPreToolbar({
   }
 
   async function onClickApply() {
-    const fileUri = await getFileUri();
+    const fileUri = await getFileUriToApplyTo();
     if (!fileUri) {
       ideMessenger.ide.showToast(
         "error",
         "Could not resolve filepath to apply changes",
       );
-
       return;
     }
 
-    setResolvedFileUri(fileUri);
-
+    // applyToFile will create the file if it doesn't exist
     ideMessenger.post("applyToFile", {
       streamId: codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
     });
+
+    setAppliedFileUri(fileUri);
+    refreshFileExists();
   }
 
   function onClickInsertAtCursor() {
@@ -153,7 +167,7 @@ export default function StepContainerPreToolbar({
   );
 
   async function handleDiffAction(action: "accept" | "reject") {
-    const filepath = await getFileUri();
+    const filepath = await getFileUriToApplyTo();
     if (!filepath) {
       ideMessenger.ide.showToast(
         "error",
@@ -167,13 +181,13 @@ export default function StepContainerPreToolbar({
       streamId: codeBlockStreamId,
     });
 
-    setResolvedFileUri(undefined);
+    setAppliedFileUri(undefined);
   }
 
   function onClickFilename() {
-    if (resolvedFileUri) {
+    if (appliedFileUri) {
       ideMessenger.post("showFile", {
-        filepath: resolvedFileUri,
+        filepath: appliedFileUri,
       });
     }
 
@@ -184,8 +198,8 @@ export default function StepContainerPreToolbar({
     }
   }
 
-  // We want until there is an extension in the filepath to avoid rendering
-  //  an incomplete filepath
+  // We wait until there is an extension in the filepath to avoid rendering
+  // an incomplete filepath
   if (relativeFilepath && !hasFileExtension) {
     return children;
   }
@@ -196,7 +210,7 @@ export default function StepContainerPreToolbar({
         <div className="flex max-w-72 flex-row items-center">
           <ChevronDownIcon
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
+            className={`text-lightgray h-3.5 w-3.5 flex-shrink-0 cursor-pointer hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
@@ -207,7 +221,9 @@ export default function StepContainerPreToolbar({
               onClick={onClickFilename}
             />
           ) : (
-            <span className="ml-2 capitalize text-gray-400">{language}</span>
+            <span className="text-lightgray ml-2 select-none capitalize">
+              {language}
+            </span>
           )}
         </div>
 
@@ -219,11 +235,18 @@ export default function StepContainerPreToolbar({
             />
           ) : (
             <>
-              <InsertButton onInsert={onClickInsertAtCursor} />
-              <CopyButton text={codeBlockContent} />
+              <div className="xs:flex hidden items-center gap-2.5">
+                <InsertButton onInsert={onClickInsertAtCursor} />
+                <CopyButton text={codeBlockContent} />
+              </div>
 
               {isTerminalCodeBlock(language, codeBlockContent) ? (
                 <RunInTerminalButton command={codeBlockContent} />
+              ) : shouldShowCreateFile ? (
+                <CreateFileButton
+                  filepath={relativeFilepath}
+                  onClick={onClickApply}
+                />
               ) : (
                 <ApplyActions
                   disableManualApply={disableManualApply}

@@ -16,7 +16,7 @@ export default function GeneratingCodeLoader({
       : `${numLinesCodeBlock} lines generated`;
 
   return (
-    <span className="inline-flex items-center gap-2 text-gray-400">
+    <span className="text-lightgray inline-flex items-center gap-2">
       {showLineCount ? linesGeneratedText : "Generating"}
       <Spinner />
     </span>
