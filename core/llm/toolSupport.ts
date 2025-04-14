@@ -72,6 +72,17 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  mistral: (model) => {
+    // https://docs.mistral.ai/capabilities/function_calling/
+    return [
+      "codestral",
+      "mistral-large",
+      "mistral-small",
+      "pixtral",
+      "ministral",
+      "mistral-nemo"
+    ].some((part) => model.toLowerCase().includes(part));
+  },
   // https://ollama.com/search?c=tools
   ollama: (model) => {
     let modelName = "";
