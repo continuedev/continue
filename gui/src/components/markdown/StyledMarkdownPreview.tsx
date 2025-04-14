@@ -22,7 +22,6 @@ import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
-import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
@@ -301,6 +300,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const preChildProps = preProps?.children?.[0]?.props ?? {};
           const { className, range } = preChildProps;
+
           const relativeFilePath = preChildProps["data-relativefilepath"];
           const codeBlockContent = preChildProps["data-codeblockcontent"];
 
@@ -310,22 +310,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanguageFromClassName(className);
 
-          if (!relativeFilePath) {
-            return (
-              <StepContainerPreActionButtons
-                language={language}
-                codeBlockContent={codeBlockContent}
-                codeBlockIndex={codeBlockIndex}
-              >
-                <SyntaxHighlightedPre {...preProps} />
-              </StepContainerPreActionButtons>
-            );
-          }
-
           const isGeneratingCodeBlock =
             preChildProps["data-islastcodeblock"] &&
             isLastItemRef.current &&
-            !isStreamingRef.current;
+            isStreamingRef.current;
 
           if (codeblockState.current[codeBlockIndex] === undefined) {
             codeblockState.current[codeBlockIndex] = {
@@ -337,7 +325,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               isGeneratingCodeBlock;
           }
 
-          // We use a custom toolbar for codeblocks in the step container
           return (
             <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}

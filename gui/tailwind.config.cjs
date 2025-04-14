@@ -43,6 +43,7 @@ module.exports = {
         "list-active": "var(--vscode-list-activeSelectionBackground, #1bbe84)",
         "list-active-foreground":
           "var(--vscode-quickInputList-focusForeground, var(--vscode-editor-foreground))",
+        badge: "var(--vscode-badge-background, #1bbe84)",
       },
     },
   },

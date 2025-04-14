@@ -6,6 +6,7 @@ import { getMarkdownLanguageTagForFile } from "core/util";
 import * as URI from "uri-js";
 import * as vscode from "vscode";
 
+import { isFastApplyModel } from "../../apply/utils";
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { handleLLMError } from "../../util/errorHandling";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
@@ -356,6 +357,7 @@ export class VerticalDiffManager {
       startLine,
       endLine,
       {
+        instant: isFastApplyModel(llm),
         input,
         onStatusUpdate: (status, numDiffs, fileContent) =>
           streamId &&

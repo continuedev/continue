@@ -11,9 +11,9 @@ export function CreateFile(props: CreateFileToolCallProps) {
 
   return props.relativeFilepath ? (
     <StyledMarkdownPreview
-      isRenderingInStepContainer={true}
+      isRenderingInStepContainer
+      disableManualApply
       source={src}
-      disableManualApply={true}
     />
   ) : null;
 }
