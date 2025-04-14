@@ -709,7 +709,7 @@ export class Core {
         throw new Error("No chat model selected");
       }
 
-      const tokens = countTokens(item.content);
+      const tokens = countTokens(item.content, llm.model);
 
       if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
         return true;
