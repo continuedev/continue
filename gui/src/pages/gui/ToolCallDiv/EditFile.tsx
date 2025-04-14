@@ -1,7 +1,7 @@
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { useMemo } from "react";
-import AcceptRejectAllButtons from "../../../components/StepContainer/AcceptRejectAllButtons";
-import StyledMarkdownPreview from "../../../components/StepContainer/StyledMarkdownPreview/StyledMarkdownPreview";
+import AcceptRejectAllButtons from "../../../components/AcceptRejectAllButtons";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 import { useAppSelector } from "../../../redux/hooks";
 
 type EditToolCallProps = {
