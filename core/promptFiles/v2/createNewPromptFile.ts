@@ -79,7 +79,7 @@ export async function createNewPromptFileV2(
 
 function getContentsForNewBlock(blockType: BlockType): ConfigYaml {
   const configYaml: ConfigYaml = {
-    name: `New ${blockType}`,
+    name: `New ${blockType.slice(0, -1)}`,
     version: "0.0.1",
     schema: "v1",
   };
@@ -156,7 +156,10 @@ export async function createNewWorkspaceBlockFile(
   let fileUri: string;
   do {
     const suffix = counter === 0 ? "" : `-${counter}`;
-    fileUri = joinPathsToUri(baseDirUri, `new-${blockType}${suffix}.yaml`);
+    fileUri = joinPathsToUri(
+      baseDirUri,
+      `new-${blockType.slice(0, -1)}${suffix}.yaml`,
+    );
     counter++;
   } while (await ide.fileExists(fileUri));
 
