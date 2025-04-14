@@ -37,9 +37,9 @@ export async function applyCodeBlock(
   }
 
   // If the code block is a diff
-  if (isUnifiedDiffFormat(newFile)) {
+  if (isUnifiedDiffFormat(newLazyFile)) {
     try {
-      const diffLines = applyUnifiedDiff(oldFile, newFile);
+      const diffLines = applyUnifiedDiff(oldFile, newLazyFile);
       return {
         isInstantApply: true,
         diffLinesGenerator: generateLines(diffLines!),
@@ -51,6 +51,6 @@ export async function applyCodeBlock(
 
   return {
     isInstantApply: false,
-    diffLinesGenerator: streamLazyApply(oldFile, filename, newFile, llm),
+    diffLinesGenerator: streamLazyApply(oldFile, filename, newLazyFile, llm),
   };
 }
