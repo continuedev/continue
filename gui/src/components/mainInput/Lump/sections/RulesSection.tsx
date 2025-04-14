@@ -9,11 +9,17 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { defaultBorderRadius, vscCommandCenterActiveBorder } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
+import {
+  generateRuleId,
+  initializeRules,
+  selectRuleEnabled,
+  toggleRule,
+} from "../../../../redux/slices/rulesSlice";
 import {
   setDialogMessage,
   setShowDialog,
@@ -29,8 +35,12 @@ interface RuleCardProps {
 const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const [isEnabled, setIsEnabled] = useState(true);
 
+  // Generate a stable ID for this rule
+  const ruleId = useMemo(() => generateRuleId(rule), [rule]);
+
+  // Get the enabled state from redux
+  const isEnabled = useAppSelector((state) => selectRuleEnabled(state, ruleId));
   const handleOpen = async () => {
     if (rule.slug) {
       ideMessenger.request("controlPlane/openUrl", {
@@ -81,7 +91,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   }
 
   const handleToggle = () => {
-    setIsEnabled(!isEnabled);
+    dispatch(toggleRule({ ruleId, enabled: !isEnabled }));
   };
 
   const smallFont = useFontSize(-2);
@@ -161,6 +171,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
 export function RulesSection() {
   const { selectedProfile } = useAuth();
+  const dispatch = useAppDispatch();
 
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
@@ -217,6 +228,12 @@ export function RulesSection() {
 
     return rules;
   }, [config, selectedProfile, mode]);
+
+  // Initialize all rules in the Redux store on component mount
+  useEffect(() => {
+    const ruleIds = sortedRules.map((rule) => generateRuleId(rule));
+    dispatch(initializeRules(ruleIds));
+  }, [sortedRules, dispatch]);
 
   return (
     <div className="flex flex-col gap-3">
