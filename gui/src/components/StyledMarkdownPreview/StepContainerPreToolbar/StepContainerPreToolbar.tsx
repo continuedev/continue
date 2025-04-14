@@ -59,7 +59,7 @@ export interface StepContainerPreToolbarProps {
   disableManualApply?: boolean;
 }
 
-export default function StepContainerPreToolbar({
+export function StepContainerPreToolbar({
   codeBlockContent,
   language,
   relativeFilepath,

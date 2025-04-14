@@ -23,10 +23,6 @@ const commonTerminalCommands = [
   "bundle",
 ];
 
-export function getTerminalCommand(text: string): string {
-  return text.startsWith("$ ") ? text.slice(2) : text;
-}
-
 export function isTerminalCodeBlock(
   language: string | undefined | null,
   text: string,
