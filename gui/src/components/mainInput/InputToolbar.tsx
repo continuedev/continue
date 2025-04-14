@@ -158,7 +158,7 @@ function InputToolbar(props: InputToolbarProps) {
                         fileInputRef.current?.click();
                       }}
                     />
-                    <ToolTip id="image-tooltip" place="top-middle">
+                    <ToolTip id="image-tooltip" place="top">
                       Attach an image
                     </ToolTip>
                   </HoverItem>
@@ -171,7 +171,7 @@ function InputToolbar(props: InputToolbarProps) {
                   className="h-3 w-3 hover:brightness-125"
                 />
 
-                <ToolTip id="add-context-item-tooltip" place="top-middle">
+                <ToolTip id="add-context-item-tooltip" place="top">
                   Add context (files, docs, urls, etc.)
                 </ToolTip>
               </HoverItem>
