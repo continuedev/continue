@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import * as fs from "node:fs";
 import * as os from "node:os";
 
 import {
@@ -16,10 +17,15 @@ import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { isModelInstaller } from "core/llm";
 import { startLocalOllama } from "core/util/ollamaHelper";
-import { getDevDataFilePath } from "core/util/paths";
+import {
+  getConfigJsonPath,
+  getConfigYamlPath,
+  getDevDataFilePath,
+} from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
+import * as YAML from "yaml";
 
 import {
   getAutocompleteStatusBarDescription,
@@ -39,6 +45,8 @@ import { Battery } from "./util/battery";
 import { getMetaKeyLabel } from "./util/util";
 import { VsCodeIde } from "./VsCodeIde";
 
+import { convertJsonToYamlConfig } from "../../../packages/config-yaml/dist";
+import { openEditorAndRevealRange } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -1007,6 +1015,35 @@ const getCommandsMap: (
           `Failed to install '${modelName}': ${message}`,
         );
       }
+    },
+    "continue.convertConfigJsonToConfigYaml": async () => {
+      const configJson = fs.readFileSync(getConfigJsonPath(), "utf-8");
+      const parsed = JSON.parse(configJson);
+      const configYaml = convertJsonToYamlConfig(parsed);
+
+      const configYamlPath = getConfigYamlPath();
+      fs.writeFileSync(configYamlPath, YAML.stringify(configYaml));
+
+      // Open config.yaml
+      await openEditorAndRevealRange(
+        vscode.Uri.file(configYamlPath),
+        undefined,
+        undefined,
+        false,
+      );
+
+      vscode.window
+        .showInformationMessage(
+          "Your config.json has been converted to the new config.yaml format. If you need to switch back to config.json, you can delete or rename config.yaml.",
+          "Read the docs",
+        )
+        .then((selection) => {
+          if (selection === "Read the docs") {
+            vscode.env.openExternal(
+              vscode.Uri.parse("https://docs.continue.dev/yaml-migration"),
+            );
+          }
+        });
     },
   };
 };
