@@ -8,6 +8,7 @@ import {
   vscEditorBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useFileExists } from "../../../hooks";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
 import {
@@ -60,7 +61,7 @@ export interface StepContainerPreToolbarProps {
   disableManualApply?: boolean;
 }
 
-export default function StepContainerPreToolbar({
+export function StepContainerPreToolbar({
   codeBlockContent,
   language,
   relativeFilepath,
