@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import {
+  AssistantChatMessage,
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -337,75 +338,39 @@ class Gemini extends BaseLLM {
         // Check for existence of each level before accessing the final 'text' property
         const content = data?.candidates?.[0]?.content;
         if (content) {
-          const supportedParts: MessagePart[] = [];
+          const textParts: MessagePart[] = [];
           const toolCalls: ToolCallDelta[] = [];
-
-          // Process all parts first to maintain order
-          const processedParts: Array<{
-            type: "content" | "tool" | "toolCall";
-            data: any;
-          }> = [];
 
           for (const part of content.parts) {
             if ("text" in part) {
-              supportedParts.push({ type: "text", text: part.text });
-            } else if ("inlineData" in part) {
-              supportedParts.push({
-                type: "imageUrl",
-                imageUrl: {
-                  url: `data:image/jpeg;base64,${part.inlineData.data}`,
-                },
-              });
+              textParts.push({ type: "text", text: part.text });
             } else if ("functionCall" in part) {
-              // Queue function call
-              processedParts.push({
-                type: "toolCall",
-                data: {
-                  type: "function",
-                  id: part.functionCall.id ?? uuidv4(),
-                  function: {
-                    name: part.functionCall.name,
-                    arguments:
-                      typeof part.functionCall.args === "string"
-                        ? part.functionCall.args
-                        : JSON.stringify(part.functionCall.args),
-                  },
-                },
-              });
-            } else if ("functionResponse" in part) {
-              // Queue function response
-              processedParts.push({
-                type: "tool",
-                data: {
-                  role: "tool",
-                  content: part.functionResponse.response.output as string,
-                  toolCallId: part.functionResponse.name,
+              toolCalls.push({
+                type: "function",
+                id: part.functionCall.id ?? uuidv4(),
+                function: {
+                  name: part.functionCall.name,
+                  arguments:
+                    typeof part.functionCall.args === "string"
+                      ? part.functionCall.args
+                      : JSON.stringify(part.functionCall.args),
                 },
               });
             } else {
+              // Note: function responses shouldn't be streamed, images not supported
               console.warn("Unsupported gemini part type received", part);
             }
           }
 
-          // If we have supported content parts, yield them first
-          if (supportedParts.length) {
-            yield {
-              role: "assistant",
-              content: supportedParts,
-            };
+          const assistantMessage: AssistantChatMessage = {
+            role: "assistant",
+            content: textParts.length ? textParts : "",
+          };
+          if (toolCalls.length > 0) {
+            assistantMessage.toolCalls = toolCalls;
           }
-
-          // Then process tool calls and responses in order
-          for (const part of processedParts) {
-            if (part.type === "toolCall") {
-              yield {
-                role: "assistant",
-                content: "",
-                toolCalls: [part.data],
-              };
-            } else if (part.type === "tool") {
-              yield part.data;
-            }
+          if (textParts.length || toolCalls.length) {
+            yield assistantMessage;
           }
         } else {
           // Handle the case where the expected data structure is not found
