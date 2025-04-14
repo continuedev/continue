@@ -3,10 +3,8 @@ import {
   ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
-import { debounce } from "lodash";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import styled from "styled-components";
-import { v4 as uuidv4 } from "uuid";
 import {
   defaultBorderRadius,
   vscCommandCenterInactiveBorder,
@@ -15,28 +13,28 @@ import {
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
-import {
-  selectDefaultModel,
-  selectUIConfig,
-} from "../../../redux/slices/configSlice";
+import { selectDefaultModel } from "../../../redux/slices/configSlice";
 import {
   selectApplyStateByStreamId,
   selectIsInEditMode,
 } from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
-import { CopyIconButton } from "../../gui/CopyIconButton";
-import HeaderButtonWithToolTip from "../../gui/HeaderButtonWithToolTip";
 import { childrenToText, isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
+import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
+import InsertButton from "./InsertButton";
 import RunInTerminalButton from "./RunInTerminalButton";
 
 const TopDiv = styled.div`
+  display: flex;
+  flex-direction: column;
   outline: 1px solid ${vscCommandCenterInactiveBorder};
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
+  margin-top: 8px !important;
   background-color: ${vscEditorBackground};
   min-width: 0;
 `;
@@ -45,7 +43,6 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: inherit;
   font-size: ${getFontSize() - 2}px;
   padding: 4px 6px;
   margin: 0;
@@ -56,34 +53,45 @@ const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
 export interface StepContainerPreToolbarProps {
   codeBlockContent: string;
   language: string | null;
-  relativeFilepath: string;
+  relativeFilepath?: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
+  codeBlockStreamId: string;
   range?: string;
   children: any;
   expanded?: boolean;
-  hideApply?: boolean;
+  disableManualApply?: boolean;
 }
 
-export default function StepContainerPreToolbar(
-  props: StepContainerPreToolbarProps,
-) {
+export default function StepContainerPreToolbar({
+  codeBlockContent,
+  language,
+  relativeFilepath,
+  isGeneratingCodeBlock,
+  codeBlockIndex,
+  codeBlockStreamId,
+  range,
+  children,
+  expanded,
+  disableManualApply,
+}: StepContainerPreToolbarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const streamIdRef = useRef<string>(uuidv4());
-  const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const [isExpanded, setIsExpanded] = useState(
-    props.expanded ?? (isInEditMode ? false : true),
+    expanded ?? (isInEditMode ? false : true),
   );
-  const [codeBlockContent, setCodeBlockContent] = useState("");
-  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
+  // We store the resolved file URI to ensure we use the same file when
+  // accepting/rejecting diffs, even if no `relativeFilepath` is provided
+  const [resolvedFileUri, setResolvedFileUri] = useState<string | undefined>(
+    undefined,
+  );
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
   );
 
   const applyState = useAppSelector((state) =>
-    selectApplyStateByStreamId(state, streamIdRef.current),
+    selectApplyStateByStreamId(state, codeBlockStreamId),
   );
 
   const uiConfig = useAppSelector(selectUIConfig);
@@ -92,38 +100,60 @@ export default function StepContainerPreToolbar(
 
   const toolTipPlacement = isBottomToolbarPosition ? "top" : "bottom";
 
-  // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
-  // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
-  // we are done generating based on whether the next node in the tree is not a codeblock.
-  // The tree parsing logic for Remark is defined on page load, so we can't access state
-  // during the actual tree parsing.
-  const isGeneratingCodeBlock = !isStreaming
-    ? false
-    : props.isGeneratingCodeBlock;
+  const isNextCodeBlock = nextCodeBlockIndex === codeBlockIndex;
+  const hasFileExtension =
+    relativeFilepath && /\.[0-9a-z]+$/i.test(relativeFilepath);
 
-  const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
-  const hasFileExtension = /\.[0-9a-z]+$/i.test(props.relativeFilepath);
+  const displayFilepath = relativeFilepath ?? resolvedFileUri;
 
-  const defaultModel = useAppSelector(selectDefaultModel);
+  async function getFileUri() {
+    // If we've already resolved a file URI (from clicking apply), use that
+    if (resolvedFileUri) {
+      return resolvedFileUri;
+    }
+
+    // If a relative filepath was provided, try to resolve it
+    if (relativeFilepath) {
+      return await inferResolvedUriFromRelativePath(
+        relativeFilepath,
+        ideMessenger.ide,
+      );
+    }
+
+    // If no filepath was provided, get the current file
+    const currentFile = await ideMessenger.ide.getCurrentFile();
+    if (currentFile) {
+      return currentFile.path;
+    }
+
+    return undefined;
+  }
 
   async function onClickApply() {
-    if (!defaultModel) {
+    const fileUri = await getFileUri();
+    if (!fileUri) {
+      ideMessenger.ide.showToast(
+        "error",
+        "Could not resolve filepath to apply changes",
+      );
+
       return;
     }
 
-    let fileUri = await inferResolvedUriFromRelativePath(
-      props.relativeFilepath,
-      ideMessenger.ide,
-    );
+    setResolvedFileUri(fileUri);
 
     ideMessenger.post("applyToFile", {
-      streamId: streamIdRef.current,
+      streamId: codeBlockStreamId,
       filepath: fileUri,
       text: codeBlockContent,
-      curSelectedModelTitle: defaultModel.title,
     });
   }
 
+  function onClickInsertAtCursor() {
+    ideMessenger.post("insertAtCursor", { text: codeBlockContent });
+  }
+
+  // TODO: This logic should be moved to a thunk
   // Handle apply keyboard shortcut
   useWebviewListener(
     "applyCodeFromChat",
@@ -132,88 +162,67 @@ export default function StepContainerPreToolbar(
     !isNextCodeBlock,
   );
 
-  useEffect(() => {
-    if (codeBlockContent === "") {
-      setCodeBlockContent(childrenToText(props.children.props.children));
-    } else {
-      const debouncedEffect = debounce(() => {
-        setCodeBlockContent(childrenToText(props.children.props.children));
-      }, 100);
-
-      debouncedEffect();
-
-      return () => {
-        debouncedEffect.cancel();
-      };
+  async function handleDiffAction(action: "accept" | "reject") {
+    const filepath = await getFileUri();
+    if (!filepath) {
+      ideMessenger.ide.showToast(
+        "error",
+        `Could not resolve filepath to ${action} changes`,
+      );
+      return;
     }
-  }, [props.children, codeBlockContent]);
 
-  // Temporarily disabling auto apply for Edit mode
-  // useEffect(() => {
-  //   const hasCompletedGenerating =
-  //     wasGeneratingRef.current && !isGeneratingCodeBlock;
-
-  //   const shouldAutoApply = hasCompletedGenerating && isInEditMode;
-
-  //   if (shouldAutoApply) {
-  //     onClickApply();
-  //   }
-
-  //   wasGeneratingRef.current = isGeneratingCodeBlock;
-  // }, [isGeneratingCodeBlock]);
-
-  async function onClickAcceptApply() {
-    const fileUri = await inferResolvedUriFromRelativePath(
-      props.relativeFilepath,
-      ideMessenger.ide,
-    );
-    ideMessenger.post("acceptDiff", {
-      filepath: fileUri,
-      streamId: streamIdRef.current,
+    ideMessenger.post(`${action}Diff`, {
+      filepath,
+      streamId: codeBlockStreamId,
     });
+
+    setResolvedFileUri(undefined);
   }
 
-  async function onClickRejectApply() {
-    const fileUri = await inferResolvedUriFromRelativePath(
-      props.relativeFilepath,
-      ideMessenger.ide,
-    );
-    ideMessenger.post("rejectDiff", {
-      filepath: fileUri,
-      streamId: streamIdRef.current,
-    });
-  }
+  function onClickFilename() {
+    if (resolvedFileUri) {
+      ideMessenger.post("showFile", {
+        filepath: resolvedFileUri,
+      });
+    }
 
-  function onClickExpand() {
-    setIsExpanded(!isExpanded);
+    if (relativeFilepath) {
+      ideMessenger.post("showFile", {
+        filepath: relativeFilepath,
+      });
+    }
   }
 
   // We want until there is an extension in the filepath to avoid rendering
-  // an incomplete filepath
-  if (!hasFileExtension) {
-    return props.children;
+  //  an incomplete filepath
+  if (relativeFilepath && !hasFileExtension) {
+    return children;
   }
 
   return (
     <TopDiv>
-      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
-        <div className="flex min-w-0 max-w-[45%] items-center">
+      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip gap-3">
+        <div className="flex max-w-72 flex-row items-center">
           <ChevronDownIcon
-            onClick={onClickExpand}
-            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`h-3.5 w-3.5 flex-shrink-0 cursor-pointer text-gray-400 hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
-          <div className="w-full min-w-0">
+          {displayFilepath ? (
             <FileInfo
-              relativeFilepath={props.relativeFilepath}
-              range={props.range}
+              filepath={displayFilepath}
+              range={range}
+              onClick={onClickFilename}
             />
-          </div>
+          ) : (
+            <span className="ml-2 capitalize text-gray-400">{language}</span>
+          )}
         </div>
 
-        <div className="flex items-center gap-3 max-sm:gap-1.5">
-          {isGeneratingCodeBlock && (
+        <div className="flex items-center gap-2.5">
+          {isGeneratingCodeBlock ? (
             <GeneratingCodeLoader
               showLineCount={!isExpanded}
               codeBlockContent={codeBlockContent}
@@ -222,22 +231,7 @@ export default function StepContainerPreToolbar(
 
           {!isGeneratingCodeBlock && (
             <>
-              <CopyIconButton
-                text={props.codeBlockContent}
-                tooltipPlacement={toolTipPlacement}
-              />
-              <HeaderButtonWithToolTip
-                text="Insert at cursor"
-                style={{ backgroundColor: vscEditorBackground }}
-                onClick={() =>
-                  ideMessenger.post("insertAtCursor", {
-                    text: codeBlockContent,
-                  })
-                }
-                tooltipPlacement={toolTipPlacement}
-              >
-                <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
-              </HeaderButtonWithToolTip>
+              <CopyButton text={props.codeBlockContent} />
               {props.hideApply ||
                 (isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
                   <RunInTerminalButton command={props.codeBlockContent} />
@@ -255,13 +249,7 @@ export default function StepContainerPreToolbar(
       </ToolbarDiv>
 
       {isExpanded && (
-        <div
-          className={`overflow-hidden overflow-y-auto ${
-            isExpanded ? "opacity-100" : "max-h-0 opacity-0"
-          }`}
-        >
-          {props.children}
-        </div>
+        <div className="overflow-hidden overflow-y-auto">{children}</div>
       )}
     </TopDiv>
   );

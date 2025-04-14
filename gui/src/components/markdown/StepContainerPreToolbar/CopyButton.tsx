@@ -1,6 +1,6 @@
 import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
+import { lightGray } from "../..";
 import useCopy from "../../../hooks/useCopy";
-import { lightGray, vscForeground } from "../..";
 
 interface CopyButtonProps {
   text: string;
@@ -11,23 +11,17 @@ export default function CopyButton({ text }: CopyButtonProps) {
 
   return (
     <div
-      className={`flex items-center border-none bg-transparent text-xs text-gray-400 text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+      className={`flex cursor-pointer items-center border-none bg-transparent text-xs outline-none hover:brightness-125`}
       onClick={copyText}
     >
       <div
-        className="max-2xs:hidden flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
+        className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
         style={{ color: lightGray }}
       >
         {copied ? (
-          <>
-            <CheckIcon className="h-3 w-3 text-green-500 hover:brightness-125" />
-            <span className="max-sm:hidden">Copied</span>
-          </>
+          <CheckIcon className="h-3.5 w-3.5 text-green-500 hover:brightness-125" />
         ) : (
-          <>
-            <ClipboardIcon className="h-3 w-3 hover:brightness-125" />
-            <span className="text-gray-400 max-sm:hidden">Copy</span>
-          </>
+          <ClipboardIcon className="h-3.5 w-3.5 hover:brightness-125" />
         )}
       </div>
     </div>

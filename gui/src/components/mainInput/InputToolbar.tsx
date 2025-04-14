@@ -14,7 +14,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
   selectIsInEditMode,
@@ -92,17 +92,22 @@ interface InputToolbarProps {
 function InputToolbar(props: InputToolbarProps) {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const toolCallState = useAppSelector(selectCurrentToolCall);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
+  const activeToolCallStreamId = useAppSelector(
+    (store) => store.session.activeToolStreamId,
+  );
 
   const isEnterDisabled =
     props.disabled ||
     isEditModeAndNoCodeToEdit ||
-    toolCallState?.status === "generated";
+    toolCallState?.status === "generated" ||
+    !!activeToolCallStreamId;
+
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =

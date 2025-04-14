@@ -1,5 +1,7 @@
 import { createNewFileTool } from "./definitions/createNewFile";
-import { exactSearchTool } from "./definitions/exactSearch";
+import { editFileTool } from "./definitions/editFile";
+import { globSearchTool } from "./definitions/globSearch";
+import { grepSearchTool } from "./definitions/grepSearch";
 import { lsTool } from "./definitions/lsTool";
 import { readCurrentlyOpenFileTool } from "./definitions/readCurrentlyOpenFile";
 import { readFileTool } from "./definitions/readFile";
@@ -9,10 +11,12 @@ import { viewDiffTool } from "./definitions/viewDiff";
 
 export const allTools = [
   readFileTool,
+  editFileTool,
   createNewFileTool,
   runTerminalCommandTool,
 
-  exactSearchTool,
+  grepSearchTool,
+  globSearchTool,
   searchWebTool,
   viewDiffTool,
   readCurrentlyOpenFileTool,

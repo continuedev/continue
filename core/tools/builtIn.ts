@@ -1,9 +1,11 @@
 export enum BuiltInToolNames {
   ReadFile = "builtin_read_file",
+  EditExistingFile = "builtin_edit_existing_file",
   ReadCurrentlyOpenFile = "builtin_read_currently_open_file",
   CreateNewFile = "builtin_create_new_file",
   RunTerminalCommand = "builtin_run_terminal_command",
-  ExactSearch = "builtin_exact_search",
+  GrepSearch = "builtin_grep_search",
+  FileGlobSearch = "builtin_file_glob_search",
   SearchWeb = "builtin_search_web",
   ViewDiff = "builtin_view_diff",
   LSTool = "builtin_ls",

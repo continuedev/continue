@@ -4,7 +4,6 @@ import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 import type {
   ApplyState,
   CodeToEdit,
-  ContextSubmenuItem,
   EditStatus,
   MessageContent,
   RangeInFileWithContents,
@@ -12,14 +11,12 @@ import type {
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openUrl: [string, void];
-  // We pass the `curSelectedModel` because we currently cannot access the
-  // default model title in the GUI from JB
   applyToFile: [
     {
       text: string;
       streamId: string;
-      curSelectedModelTitle: string;
       filepath?: string;
+      toolCallId?: string;
     },
     void,
   ];
@@ -52,7 +49,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     {
       prompt: MessageContent;
       range: RangeInFileWithContents;
-      selectedModelTitle: string;
     },
     void,
   ];

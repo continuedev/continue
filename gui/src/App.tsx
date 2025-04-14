@@ -1,10 +1,10 @@
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
+import { MainEditorProvider } from "./components/mainInput/TipTapEditor";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
 import { VscThemeProvider } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
 import ConfigPage from "./pages/config";
-import ConfigErrorPage from "./pages/config-error";
 import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
 import History from "./pages/history";
@@ -34,10 +34,6 @@ const router = createMemoryRouter([
         element: <Stats />,
       },
       {
-        path: ROUTES.CONFIG_ERROR,
-        element: <ConfigErrorPage />,
-      },
-      {
         path: ROUTES.CONFIG,
         element: <ConfigPage />,
       },
@@ -57,9 +53,11 @@ function SetupListeners() {
 function App() {
   return (
     <VscThemeProvider>
-      <SubmenuContextProvidersProvider>
-        <RouterProvider router={router} />
-      </SubmenuContextProvidersProvider>
+      <MainEditorProvider>
+        <SubmenuContextProvidersProvider>
+          <RouterProvider router={router} />
+        </SubmenuContextProvidersProvider>
+      </MainEditorProvider>
       <SetupListeners />
     </VscThemeProvider>
   );

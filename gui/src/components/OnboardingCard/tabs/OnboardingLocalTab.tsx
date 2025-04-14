@@ -6,15 +6,15 @@ import {
   LOCAL_ONBOARDING_PROVIDER_TITLE,
 } from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { Button } from "../..";
+import { Button, ButtonSubtext } from "../..";
+import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import AddModelButtonSubtext from "../../AddModelButtonSubtext";
+import { useAppDispatch } from "../../../redux/hooks";
+import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
+import { updateSelectedModelByRole } from "../../../redux/thunks";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
-import { setDefaultModel } from "../../../redux/slices/configSlice";
-import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 
 const OLLAMA_CHECK_INTERVAL_MS = 3000;
 
@@ -23,13 +23,14 @@ interface OnboardingLocalTabProps {
 }
 
 function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const { submitOnboarding } = useSubmitOnboarding("Local", isDialog);
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
     string[]
   >([]);
+  const { selectedProfile } = useAuth();
 
   const [isOllamaConnected, setIsOllamaConnected] = useState(false);
 
@@ -100,10 +101,42 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
     return () => clearInterval(intervalId);
   }, []);
 
+  const onClickSubmitOnboarding = () => {
+    submitOnboarding();
+
+    if (isDialog) {
+      dispatch(setDialogMessage(undefined));
+      dispatch(setShowDialog(false));
+    }
+
+    dispatch(
+      updateSelectedModelByRole({
+        selectedProfile,
+        role: "chat",
+        modelTitle: LOCAL_ONBOARDING_CHAT_TITLE,
+      }),
+    );
+  };
+
+  const onClickSkip = () => {
+    submitOnboarding();
+
+    ideMessenger.post("config/openProfile", {
+      profileId: undefined,
+    });
+
+    if (isDialog) {
+      dispatch(setDialogMessage(undefined));
+      dispatch(setShowDialog(false));
+    }
+  };
+
   return (
     <div className="mt-3 flex flex-col gap-1 px-2">
       <div className="flex flex-col">
-        <p className="mb-0 text-lg font-bold leading-tight">Install Ollama</p>
+        <p className="mb-0 pb-1 text-base font-bold leading-tight">
+          Install Ollama
+        </p>
         <OllamaStatus isOllamaConnected={isOllamaConnected} />
       </div>
 
@@ -127,28 +160,17 @@ function OnboardingLocalTab({ isDialog }: OnboardingLocalTabProps) {
 
       <div className="mt-4 w-full">
         <Button
-          onClick={() => {
-            submitOnboarding();
-
-            if (isDialog) {
-              dispatch(setDialogMessage(undefined));
-              dispatch(setShowDialog(false));
-            }
-
-            // Set the selected model to the local chat model
-            dispatch(
-              setDefaultModel({
-                title: LOCAL_ONBOARDING_CHAT_TITLE,
-                force: true, // Because it doesn't exist in the webview's config object yet
-              }),
-            );
-          }}
+          onClick={onClickSubmitOnboarding}
           className="w-full"
           disabled={!allDownloaded}
         >
           Connect
         </Button>
-        <AddModelButtonSubtext />
+        <ButtonSubtext>
+          <span className="cursor-pointer underline" onClick={onClickSkip}>
+            Skip and configure manually
+          </span>
+        </ButtonSubtext>
       </div>
     </div>
   );

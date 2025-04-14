@@ -15,3 +15,14 @@ This happens on the server, unless using local mode.
 ## Client rendering
 
 The unrolled config.yaml is then rendered on the client. This is done by replacing all user secret template variables with their values and replacing all other secrets with secret locations.
+
+## Publishing
+
+Make sure you are logged into the npm registry with `npm login`.
+
+Then, bump the version in `package.json` and then run:
+
+```bash
+npm run build
+npm publish --access public
+```

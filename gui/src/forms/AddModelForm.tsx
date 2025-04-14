@@ -1,20 +1,21 @@
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { useDispatch } from "react-redux";
 import { Button, Input, InputSubtext, StyledActionButton } from "../components";
 import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
 import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
+import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
+import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 import {
   ProviderInfo,
   providers,
 } from "../pages/AddNewModel/configs/providers";
+import { useAppDispatch } from "../redux/hooks";
+import { updateSelectedModelByRole } from "../redux/thunks";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
-import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
-import { setDefaultModel } from "../redux/slices/configSlice";
-import { DisplayInfo } from "../pages/AddNewModel/configs/models";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -33,13 +34,14 @@ function AddModelForm({
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
     providers["openai"]!,
   );
+  const dispatch = useAppDispatch();
+  const { selectedProfile } = useAuth();
 
   const [selectedModel, setSelectedModel] = useState(
     selectedProvider.packages[0],
   );
 
   const formMethods = useForm();
-  const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
   const popularProviderTitles = [
@@ -115,7 +117,13 @@ function AddModelForm({
       profileId: "local",
     });
 
-    dispatch(setDefaultModel({ title: model.title, force: true }));
+    dispatch(
+      updateSelectedModelByRole({
+        selectedProfile,
+        role: "chat",
+        modelTitle: model.title,
+      }),
+    );
 
     onDone();
   }
