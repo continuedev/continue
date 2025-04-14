@@ -1,5 +1,5 @@
 import { JSONSchema7Object } from "json-schema";
-import { Tool } from "../../../../core/index.js";
+import { ChatCompletionTool } from "openai/resources/index.mjs";
 
 // https://ai.google.dev/api/generate-content
 export interface GeminiGenerationConfig {
@@ -142,8 +142,8 @@ function convertJsonSchemaToGeminiSchema(jsonSchema: any): GeminiObjectSchema {
 
 // https://ai.google.dev/api/caching#FunctionDeclaration
 // Note "reponse" field (schema showing function output structure) is not supported at the moment
-export function convertContinueToolToGeminiFunction(
-  tool: Tool,
+export function convertOpenAIToolToGeminiFunction(
+  tool: ChatCompletionTool,
 ): GeminiToolFunctionDeclaration {
   if (!tool.function.name) {
     throw new Error("Function name required");
