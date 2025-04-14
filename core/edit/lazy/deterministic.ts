@@ -15,6 +15,11 @@ type AstReplacements = Array<{
   replacementNodes: Parser.SyntaxNode[];
 }>;
 
+const LAZY_COMMENT_REGEX = /\.{3}\s*(.+?)\s*\.{3}/;
+export function isLazyText(text: string): boolean {
+  return LAZY_COMMENT_REGEX.test(text);
+}
+
 function reconstructNewFile(
   oldFile: string,
   newFile: string,
@@ -121,11 +126,23 @@ function nodeSurroundedInLazyBlocks(
 }
 
 // TODO: If we don't have high confidence, return undefined to fall back to slower methods
-export async function deterministicApplyLazyEdit(
-  oldFile: string,
-  newLazyFile: string,
-  filename: string,
-): Promise<DiffLine[] | undefined> {
+export async function deterministicApplyLazyEdit({
+  oldFile,
+  newLazyFile,
+  filename,
+  /**
+   * Using this as a flag to slowly reintroduce lazy applies.
+   * With this set, we will only attempt to deterministically apply
+   * when there are no lazy blocks and then just replace the whole file,
+   * and otherwise never use instant apply
+   */
+  onlyFullFileRewrite = false,
+}: {
+  oldFile: string;
+  newLazyFile: string;
+  filename: string;
+  onlyFullFileRewrite?: boolean;
+}): Promise<DiffLine[] | undefined> {
   const parser = await getParserForFile(filename);
   if (!parser) {
     return undefined;
@@ -134,6 +151,14 @@ export async function deterministicApplyLazyEdit(
   const oldTree = parser.parse(oldFile);
   let newTree = parser.parse(newLazyFile);
   let reconstructedNewFile: string | undefined = undefined;
+
+  if (onlyFullFileRewrite) {
+    if (!isLazyText(newTree.rootNode.text)) {
+      return myersDiff(oldFile, newLazyFile);
+    } else {
+      return undefined;
+    }
+  }
 
   // If there is no lazy block anywhere, we add our own to the outsides
   // so that large chunks of the file don't get removed
@@ -198,11 +223,6 @@ export async function deterministicApplyLazyEdit(
   return diff;
 }
 
-const LAZY_COMMENT_REGEX = /\.{3}\s*(.+?)\s*\.{3}/;
-export function isLazyLine(text: string): boolean {
-  return LAZY_COMMENT_REGEX.test(text);
-}
-
 function isLazyBlock(node: Parser.SyntaxNode): boolean {
   // Special case for "{/* ... existing code ... */}"
   if (
@@ -213,7 +233,7 @@ function isLazyBlock(node: Parser.SyntaxNode): boolean {
     return true;
   }
 
-  return node.type.includes("comment") && isLazyLine(node.text);
+  return node.type.includes("comment") && isLazyText(node.text);
 }
 
 function stringsWithinLevDistThreshold(
