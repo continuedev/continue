@@ -100,9 +100,9 @@ const AssistantSelectOption = ({
         }}
       >
         <div className="flex w-full items-center justify-between gap-2 bg-transparent">
-          <div className="flex w-full items-center gap-1.5">
+          <div className="flex w-full items-center gap-1">
             <div className="flex h-4 w-4 flex-shrink-0">
-              <AssistantIcon assistant={profile} />
+              <AssistantIcon size={3.5} assistant={profile} />
             </div>
             <span
               className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""}`}
@@ -256,7 +256,7 @@ export default function AssistantSelect() {
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
         <span
-          className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+          className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
         >
           Create your first assistant
         </span>
@@ -278,7 +278,7 @@ export default function AssistantSelect() {
               <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
             <span
-              className={`line-clamp-1 select-none ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
             >
               {selectedProfile.title}
             </span>
@@ -291,7 +291,7 @@ export default function AssistantSelect() {
 
         <Transition>
           <ListboxOptions className="pb-0">
-            <div className="flex gap-1.5 px-2.5 py-1">
+            <div className="flex justify-between gap-1.5 px-2.5 py-1">
               <span>Assistants</span>
               <div
                 className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
@@ -301,7 +301,7 @@ export default function AssistantSelect() {
                   buttonRef.current?.click();
                 }}
               >
-                <ArrowPathIcon className="h-2.5 w-2.5" />
+                <ArrowPathIcon className="text-lightgray h-2.5 w-2.5" />
               </div>
             </div>
 
@@ -375,7 +375,7 @@ export default function AssistantSelect() {
                   {currentOrg?.iconUrl ? (
                     <img
                       src={currentOrg.iconUrl}
-                      className="h-3 w-3 rounded-full"
+                      className="h-2.5 w-2.5 rounded-full"
                     />
                   ) : (
                     <BuildingOfficeIcon className="h-4 w-4" />

@@ -14,7 +14,7 @@
     "eqeqeq": "error",
     "complexity": ["error", { "max": 36 }],
     "max-lines-per-function": ["error", { "max": 472 }],
-    "max-statements": ["error", { "max": 114 }],
+    "max-statements": ["error", { "max": 108 }],
     "max-depth": ["error", { "max": 6 }],
     "max-nested-callbacks": ["error", { "max": 4 }],
     "max-params": ["error", { "max": 8 }]

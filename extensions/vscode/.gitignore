@@ -3,6 +3,7 @@ node_modules/
 out/
 .vscode-test/
 data/
+src/.buildTimestamp.ts
 src/client
 .continue
 
