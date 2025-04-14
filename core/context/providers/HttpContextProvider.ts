@@ -2,6 +2,7 @@ import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
+  IDE,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 
@@ -13,6 +14,24 @@ class HttpContextProvider extends BaseContextProvider {
     type: "normal",
     renderInlineAs: "",
   };
+
+  private async getWorkspacePath(ide: IDE, url: URL) {
+    try {
+      const currentFile = await ide.getCurrentFile();
+      const hostname = url.hostname.toLowerCase();
+      const isLocalServer= hostname === "localhost" ||
+             hostname === "127.0.0.1" ||
+             hostname.startsWith("192.168.") ||
+             hostname === "[::1]";
+
+      return isLocalServer ?
+             (await ide.getWorkspaceDirs()).find(workspaceDirectory => {
+               return currentFile?.path.startsWith(workspaceDirectory)
+             }) : undefined
+    } catch (e) {
+      return undefined;
+    }
+  }
 
   override get description(): ContextProviderDescription {
     return {
@@ -32,7 +51,8 @@ class HttpContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const response = await extras.fetch(new URL(this.options.url), {
+    const parsedUrl = new URL(this.options.url)
+    const response = await extras.fetch(parsedUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -42,6 +62,7 @@ class HttpContextProvider extends BaseContextProvider {
         query: query || "",
         fullInput: extras.fullInput,
         options: this.options.options,
+        workspacePath: await this.getWorkspacePath(extras.ide, parsedUrl),
       }),
     });
 
