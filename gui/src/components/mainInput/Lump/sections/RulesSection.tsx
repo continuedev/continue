@@ -9,7 +9,7 @@ import {
   DEFAULT_CHAT_SYSTEM_MESSAGE,
   DEFAULT_CHAT_SYSTEM_MESSAGE_URL,
 } from "core/llm/constructMessages";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo, useState } from "react";
 import { defaultBorderRadius, vscCommandCenterActiveBorder } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
@@ -29,6 +29,7 @@ interface RuleCardProps {
 const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+  const [isEnabled, setIsEnabled] = useState(true);
 
   const handleOpen = async () => {
     if (rule.slug) {
@@ -79,6 +80,10 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     );
   }
 
+  const handleToggle = () => {
+    setIsEnabled(!isEnabled);
+  };
+
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
   return (
@@ -86,6 +91,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
       style={{
         borderRadius: defaultBorderRadius,
         border: `1px solid ${vscCommandCenterActiveBorder}`,
+        opacity: isEnabled ? 1 : 0.5,
       }}
       className="flex flex-col px-2 py-1.5 transition-colors"
     >
@@ -100,6 +106,18 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             {title}
           </span>
           <div className="flex flex-row items-start gap-1">
+            <HeaderButtonWithToolTip
+              onClick={handleToggle}
+              text={isEnabled ? "Disable" : "Enable"}
+            >
+              <div
+                className={`h-3 w-6 rounded-full transition-colors ${isEnabled ? "bg-blue-500" : "bg-gray-400"}`}
+              >
+                <div
+                  className={`h-3 w-3 transform rounded-full bg-white transition-transform ${isEnabled ? "translate-x-3" : "translate-x-0"}`}
+                />
+              </div>
+            </HeaderButtonWithToolTip>
             <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
               <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
             </HeaderButtonWithToolTip>{" "}
