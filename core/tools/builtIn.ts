@@ -16,3 +16,5 @@ export enum BuiltInToolNames {
 }
 
 export const BUILT_IN_GROUP_NAME = "Built-In";
+
+export const CLIENT_TOOLS = [BuiltInToolNames.EditExistingFile];

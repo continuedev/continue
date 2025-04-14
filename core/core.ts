@@ -683,23 +683,13 @@ export class Core {
 
       const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
-      const contextItems = await callTool(
+      const contextItems = await callTool(tool, toolCall.function.arguments, {
+        ide: this.ide,
+        llm,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
         tool,
-        JSON.parse(toolCall.function.arguments || "{}"),
-        {
-          ide: this.ide,
-          llm,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-          tool,
-        },
-      );
-
-      if (tool.faviconUrl) {
-        contextItems.forEach((item) => {
-          item.icon = tool.faviconUrl;
-        });
-      }
+      });
 
       return { contextItems };
     });

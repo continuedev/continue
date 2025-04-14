@@ -891,7 +891,6 @@ export abstract class BaseLLM implements ILLM {
       contextLength: this.contextLength,
       maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
       supportsImages: this.supportsImages(),
-      prompt: undefined,
       tools: options.tools,
       systemMessage: this.systemMessage,
       rules: this.rules ?? [],

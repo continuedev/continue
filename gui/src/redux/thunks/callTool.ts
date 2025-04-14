@@ -58,7 +58,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
           toolCallState.toolCallId,
         );
       } catch (e) {
-        errorMessage = "Failed to call edit tool";
+        errorMessage = `Failed to call ${toolCallState.toolCall.function.name} tool`;
         if (e instanceof Error) {
           errorMessage = e.message;
         }
@@ -92,15 +92,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       const wrapped = await dispatch(
         streamResponseAfterToolCall({
           toolCallId: toolCallState.toolCallId,
-          toolOutput: [
-            {
-              icon: "problems",
-              name: "Tool Call Error",
-              description: "Tool Call Failed",
-              content: `${toolCallState.toolCall.function.name} failed with the message:\n\n${errorMessage}\n\nPlease try something else or request further instructions.`,
-              hidden: false,
-            },
-          ],
+          toolOutput: [],
         }),
       );
       unwrapResult(wrapped);

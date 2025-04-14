@@ -151,6 +151,51 @@ export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
   return flattened;
 }
 
+// https://community.openai.com/t/how-to-calculate-the-tokens-when-using-function-call/266573/10
+function countToolsTokens(tools: Tool[], modelName: string): number {
+  const count = (value: string) =>
+    encodingForModel(modelName).encode(value).length;
+
+  let numTokens = 12;
+
+  for (const tool of tools) {
+    let functionTokens = count(tool.function.name);
+    if (tool.function.description) {
+      functionTokens += count(tool.function.description);
+    }
+    const props = tool.function.parameters?.properties;
+    if (props) {
+      for (const key in props) {
+        functionTokens += count(key);
+        const fields = props[key];
+        if (fields) {
+          const fieldType = fields["type"];
+          const fieldDesc = fields["description"];
+          const fieldEnum = fields["enum"];
+          if (fieldType && typeof fieldType === "string") {
+            functionTokens += 2;
+            functionTokens += count(fieldType);
+          }
+          if (fieldDesc && typeof fieldDesc === "string") {
+            functionTokens += 2;
+            functionTokens += count(fieldDesc);
+          }
+          if (fieldEnum && Array.isArray(fieldEnum)) {
+            functionTokens -= 3;
+            for (const e of fieldEnum) {
+              functionTokens += 3;
+              functionTokens += typeof e === "string" ? count(e) : 5;
+            }
+          }
+        }
+      }
+    }
+    numTokens += functionTokens;
+  }
+
+  return numTokens + 12;
+}
+
 function countChatMessageTokens(
   modelName: string,
   chatMessage: ChatMessage,
@@ -158,8 +203,38 @@ function countChatMessageTokens(
   // Doing simpler, safer version of what is here:
   // https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
   // every message follows <|im_start|>{role/name}\n{content}<|end|>\n
-  const TOKENS_PER_MESSAGE: number = 4;
-  return countTokens(chatMessage.content, modelName) + TOKENS_PER_MESSAGE;
+  const BASE_TOKENS = 4;
+  const TOOL_CALL_EXTRA_TOKENS = 10;
+  const TOOL_OUTPUT_EXTRA_TOKENS = 10;
+  let tokens = BASE_TOKENS;
+
+  if (chatMessage.content) {
+    tokens += countTokens(chatMessage.content, modelName);
+  }
+
+  if ("toolCalls" in chatMessage && chatMessage.toolCalls) {
+    for (const call of chatMessage.toolCalls) {
+      tokens += TOOL_CALL_EXTRA_TOKENS;
+      tokens += countTokens(JSON.stringify(call), modelName); // TODO hone this
+    }
+  }
+
+  if (chatMessage.role === "thinking") {
+    if (chatMessage.redactedThinking) {
+      tokens += countTokens(chatMessage.redactedThinking, modelName);
+    }
+    if (chatMessage.signature) {
+      tokens += countTokens(chatMessage.signature, modelName);
+    }
+  }
+
+  if (chatMessage.role === "tool") {
+    tokens += TOOL_OUTPUT_EXTRA_TOKENS; // safety
+    if (chatMessage.toolCallId) {
+      tokens += countTokens(chatMessage.toolCallId, modelName);
+    }
+  }
+  return tokens;
 }
 
 function pruneLinesFromTop(
@@ -220,7 +295,14 @@ function pruneStringFromTop(
   return encoding.decode(tokens.slice(tokens.length - maxTokens));
 }
 
-const MAX_TOKEN_BUFFER_FOR_SAFETY = 3000;
+const MAX_TOKEN_SAFETY_BUFFER = 1000;
+const TOKEN_BUFFER_PROPORTION = 0.07;
+function getTokenBufferSafety(contextLength: number) {
+  return Math.min(
+    MAX_TOKEN_SAFETY_BUFFER,
+    contextLength * TOKEN_BUFFER_PROPORTION,
+  );
+}
 
 function pruneRawPromptFromTop(
   modelName: string,
@@ -229,7 +311,7 @@ function pruneRawPromptFromTop(
   tokensForCompletion: number,
 ): string {
   const maxTokens =
-    contextLength - tokensForCompletion - Math.max(MAX_TOKEN_BUFFER_FOR_SAFETY, contextLength*;
+    contextLength - tokensForCompletion - getTokenBufferSafety(contextLength);
   return pruneStringFromTop(modelName, maxTokens, prompt);
 }
 
@@ -245,128 +327,97 @@ function pruneRawPromptFromTop(
 // }
 
 function summarize(message: ChatMessage): string {
-  return `${renderChatMessage(message).substring(0, 100)}...`;
+  return `(Truncated message): ${renderChatMessage(message).substring(0, 100)}...`;
 }
 
 function pruneChatHistory(
   modelName: string,
   chatHistory: ChatMessage[],
-  contextLength: number,
-  tokensForCompletion: number,
+  inputTokensAvailable: number,
 ): ChatMessage[] {
-  let totalTokens =
-    tokensForCompletion +
-    chatHistory.reduce((acc, message) => {
-      return acc + countChatMessageTokens(modelName, message);
-    }, 0);
-
-  // 0. Prune any messages that take up more than 1/3 of the context length
-  const zippedMessagesAndTokens: [ChatMessage, number][] = [];
-
-  // Zipped ChatMessage with its token counts
-  chatHistory.forEach((message) => {
-    const zippedItem: [ChatMessage, number] = [
-      message,
-      countTokens(message.content, modelName),
-    ];
-    zippedMessagesAndTokens.push(zippedItem);
+  let currentTokens = 0;
+  const messagesWithTokens = chatHistory.map((message) => {
+    const tokens = countChatMessageTokens(modelName, message);
+    currentTokens += tokens;
+    return {
+      ...message,
+      tokens,
+    };
   });
 
-  const zippedLongerThanOneThird = zippedMessagesAndTokens.filter(
-    ([_message, tokens]: [ChatMessage, number]) => tokens > contextLength / 3,
-  );
+  const sysMessage = messagesWithTokens.find((msg) => msg.role === "system");
+  const sysMessageTokens = sysMessage?.tokens ?? 0;
 
-  zippedLongerThanOneThird.sort(
-    (
-      [_messageA, tokensA]: [ChatMessage, number],
-      [_messageB, tokensB]: [ChatMessage, number],
-    ) => {
-      return tokensB - tokensA;
-    },
-  );
+  const lastUserMessage = messagesWithTokens.at(-1);
+  // if (lastMessage?.role === "user")
+  // General strategy:
+  // Walk from the oldest messages forward to last 5, removing while still above token limit
+  // Once at the last 5, attempt to summarize if summarizable
+  // Then, double check no latent tool responses that don't have their preceding calls
+  // Until under token count
 
-  const longerThanOneThird = zippedLongerThanOneThird.map(
-    ([message, _token]: [ChatMessage, number]) => message,
-  );
-  const distanceFromThird = zippedLongerThanOneThird.map(
-    ([_message, token]: [ChatMessage, number]) => token - contextLength / 3,
-  );
-
-  for (let i = 0; i < longerThanOneThird.length; i++) {
-    // Prune line-by-line from the top
-    const message = longerThanOneThird[i];
-    const content = renderChatMessage(message);
-    const deltaNeeded = totalTokens - contextLength;
-    const delta = Math.min(deltaNeeded, distanceFromThird[i]);
-    message.content = pruneStringFromTop(
-      modelName,
-      countTokens(message.content, modelName) - delta,
-      content,
-    );
-    totalTokens -= delta;
+  // 1. Remove entire messages until the last 5
+  while (
+    messagesWithTokens.length > 5 &&
+    currentTokens > inputTokensAvailable
+  ) {
+    const message = messagesWithTokens.shift()!;
+    currentTokens -= message.tokens;
   }
 
-  // 1. Replace beyond last 5 messages with summary
-  let i = 0;
-  while (totalTokens > contextLength && i < chatHistory.length - 5) {
-    const message = chatHistory[i];
-    totalTokens -= countTokens(message.content, modelName);
-    totalTokens += countTokens(summarize(message), modelName);
-    message.content = summarize(message);
-    i++;
-  }
-
-  // 2. Remove entire messages until the last 5
-  while (chatHistory.length > 5 && totalTokens > contextLength) {
-    const message = chatHistory.shift()!;
-    totalTokens -= countTokens(message.content, modelName);
+  // At this point make sure no latent tool response without corresponding call
+  while (messagesWithTokens[0]?.role === "tool") {
+    const message = messagesWithTokens.shift()!;
+    currentTokens -= message.tokens;
   }
 
   // 3. Truncate message in the last 5, except last 1
-  i = 0;
+  let i = 0;
   while (
-    totalTokens > contextLength &&
-    chatHistory.length > 0 &&
-    i < chatHistory.length - 1
+    totalTokens > inputTokensAvailable &&
+    messagesWithTokens.length > 0 &&
+    i < messagesWithTokens.length - 1
   ) {
-    const message = chatHistory[i];
-    totalTokens -= countTokens(message.content, modelName);
+    const message = messagesWithTokens[i];
+    totalTokens -= message.tokens;
     totalTokens += countTokens(summarize(message), modelName);
     message.content = summarize(message);
     i++;
   }
 
   // 4. Remove entire messages in the last 5, except last 1
-  while (totalTokens > contextLength && chatHistory.length > 1) {
+  while (totalTokens > inputTokensAvailable && messagesWithTokens.length > 1) {
     // If tool call/response detected prune both (can't have response with no call)
     // TODO prune lines from tool response before pruning both messages
     if (
-      chatHistory.length > 2 &&
-      messageHasToolCalls(chatHistory[0]) &&
-      chatHistory[1].role === "tool"
+      messagesWithTokens.length > 2 &&
+      messageHasToolCalls(messagesWithTokens[0]) &&
+      messagesWithTokens[1].role === "tool"
     ) {
-      const firstMessage = chatHistory.shift()!;
-      const secondMessage = chatHistory.shift()!;
-      totalTokens -= countTokens(firstMessage.content, modelName);
-      totalTokens -= countTokens(secondMessage.content, modelName);
+      const firstMessage = messagesWithTokens.shift()!;
+      const secondMessage = messagesWithTokens.shift()!;
+      totalTokens -= firstMessage.tokens;
+      totalTokens -= secondMessage.tokens;
     } else {
-      const message = chatHistory.shift()!;
-      totalTokens -= countTokens(message.content, modelName);
+      const message = messagesWithTokens.shift()!;
+      totalTokens -= message.tokens;
     }
   }
 
-  // 5. Truncate last message
-  if (totalTokens > contextLength && chatHistory.length > 0) {
-    const message = chatHistory[0];
-    message.content = pruneRawPromptFromTop(
-      modelName,
-      contextLength,
-      renderChatMessage(message),
-      tokensForCompletion,
+  if (currentTokens > inputTokensAvailable) {
+    throw new Error(
+      "Unable to prune chat history to fit into model's context window",
     );
-    totalTokens = contextLength;
   }
-  return chatHistory;
+
+  if (messagesWithTokens.length === 0) {
+    throw new Error("Error processing chat history");
+  }
+
+  return messagesWithTokens.map((msg) => {
+    const { tokens, ...rest } = msg;
+    return rest;
+  });
 }
 
 function messageIsEmpty(message: ChatMessage): boolean {
@@ -515,7 +566,6 @@ function compileChatMessages({
   contextLength,
   maxTokens,
   supportsImages,
-  prompt,
   tools,
   systemMessage,
   rules,
@@ -525,11 +575,22 @@ function compileChatMessages({
   contextLength: number;
   maxTokens: number;
   supportsImages: boolean;
-  prompt: string | undefined;
   tools: Tool[] | undefined;
   systemMessage: string | undefined;
   rules: Rule[];
 }): ChatMessage[] {
+  let toolTokens = 0;
+  if (tools) {
+    toolTokens = countToolsTokens(tools, modelName);
+  }
+
+  const safetyBuffer = getTokenBufferSafety(contextLength);
+  if (toolTokens + maxTokens + safetyBuffer >= contextLength) {
+    throw new Error(
+      `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response.${toolTokens ? toolTokens + "tools tokens included in the request may also cause this issue" : ""}`,
+    );
+  }
+
   let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
@@ -537,14 +598,6 @@ function compileChatMessages({
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
-
-  if (prompt) {
-    const promptMsg: ChatMessage = {
-      role: "user",
-      content: prompt,
-    };
-    msgsCopy.push(promptMsg);
-  }
 
   const lastUserMessage = getLastUserMessage(msgsCopy);
 
@@ -560,19 +613,6 @@ function compileChatMessages({
     originalMessages: msgs,
   });
 
-  let functionTokens = 0;
-  if (functions) {
-    for (const func of functions) {
-      functionTokens += countTokens(JSON.stringify(func), modelName);
-    }
-  }
-
-  if (maxTokens + functionTokens + TOKEN_BUFFER_FOR_SAFETY >= contextLength) {
-    throw new Error(
-      `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response. Try increasing the contextLength parameter of the model in your config.json.`,
-    );
-  }
-
   // If images not supported, convert MessagePart[] to string
   if (!supportsImages) {
     for (const msg of msgsCopy) {
@@ -586,8 +626,7 @@ function compileChatMessages({
   const history = pruneChatHistory(
     modelName,
     msgsCopy,
-    contextLength,
-    functionTokens + maxTokens + TOKEN_BUFFER_FOR_SAFETY,
+    contextLength - toolTokens - maxTokens - safetyBuffer,
   );
 
   if (history.length >= 2 && history[history.length - 2].role === "system") {
