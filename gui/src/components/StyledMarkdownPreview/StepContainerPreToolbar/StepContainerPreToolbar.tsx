@@ -15,7 +15,7 @@ import {
   selectIsInEditMode,
 } from "../../../redux/slices/sessionSlice";
 import { getFontSize } from "../../../util";
-import { isTerminalCodeBlock } from "../StyledMarkdownPreview/utils";
+import { isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
 import { FileInfo } from "./FileInfo";
@@ -59,7 +59,7 @@ export interface StepContainerPreToolbarProps {
   disableManualApply?: boolean;
 }
 
-export default function StepContainerPreToolbar({
+export function StepContainerPreToolbar({
   codeBlockContent,
   language,
   relativeFilepath,

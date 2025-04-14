@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 import styled from "styled-components";
 import FileIcon from "../FileIcon";
-import StyledMarkdownPreview from "../StepContainer/StyledMarkdownPreview/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../StyledMarkdownPreview";
 
 export interface CodeToEditListItemProps {
   code: CodeToEdit;

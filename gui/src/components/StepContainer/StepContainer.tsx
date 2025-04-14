@@ -8,9 +8,9 @@ import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 import { deleteMessage } from "../../redux/slices/sessionSlice";
 import { getFontSize } from "../../util";
+import StyledMarkdownPreview from "../StyledMarkdownPreview";
 import Reasoning from "./Reasoning";
 import ResponseActions from "./ResponseActions";
-import StyledMarkdownPreview from "./StyledMarkdownPreview/StyledMarkdownPreview";
 import ThinkingIndicator from "./ThinkingIndicator";
 
 interface StepContainerProps {

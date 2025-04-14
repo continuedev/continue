@@ -1,5 +1,5 @@
 import { getMarkdownLanguageTagForFile } from "core/util";
-import StyledMarkdownPreview from "../../../components/StepContainer/StyledMarkdownPreview/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 
 interface CreateFileToolCallProps {
   relativeFilepath: string;
