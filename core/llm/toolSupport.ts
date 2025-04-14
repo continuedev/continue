@@ -36,8 +36,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       model.toLowerCase().startsWith("gpt-4") ||
       model.toLowerCase().startsWith("o3")
     ) return true;
-     return false;
-  }
+    return false;
+  },
   openai: (model) => {
     // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
     if (
