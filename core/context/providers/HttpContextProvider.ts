@@ -1,3 +1,4 @@
+import isLocalhost from "is-localhost-ip";
 import {
   ContextItem,
   ContextProviderDescription,
@@ -18,13 +19,8 @@ class HttpContextProvider extends BaseContextProvider {
   private async getWorkspacePath(ide: IDE, url: URL) {
     try {
       const currentFile = await ide.getCurrentFile();
-      const hostname = url.hostname.toLowerCase();
-      const isLocalServer= hostname === "localhost" ||
-             hostname === "127.0.0.1" ||
-             hostname.startsWith("192.168.") ||
-             hostname === "[::1]";
-
-      return isLocalServer ?
+      // `isLocalhost` actually also returns true for other local addresses, not just localhost
+      return await isLocalhost(url.hostname) ?
              (await ide.getWorkspaceDirs()).find(workspaceDirectory => {
                return currentFile?.path.startsWith(workspaceDirectory)
              }) : undefined
