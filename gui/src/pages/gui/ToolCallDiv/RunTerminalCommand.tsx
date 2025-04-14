@@ -3,7 +3,7 @@ import { ToolCallState } from "core";
 import { Fragment } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 import { continueTerminalCommand } from "../../../redux/thunks/continueTerminalCommand";
 
 interface RunTerminalCommandToolCallProps {
