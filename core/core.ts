@@ -782,7 +782,8 @@ export class Core {
         if (
           uri.endsWith(".continuerc.json") ||
           uri.endsWith(".prompt") ||
-          uri.endsWith(SYSTEM_PROMPT_DOT_FILE)
+          uri.endsWith(SYSTEM_PROMPT_DOT_FILE) ||
+          (uri.includes(".continue") && uri.endsWith(".yaml"))
         ) {
           await this.configHandler.reloadConfig();
         } else if (
