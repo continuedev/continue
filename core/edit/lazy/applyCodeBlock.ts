@@ -13,7 +13,7 @@ function canUseInstantApply(filename: string) {
 
 export async function applyCodeBlock(
   oldFile: string,
-  newFile: string,
+  newLazyFile: string,
   filename: string,
   llm: ILLM,
 ): Promise<{
@@ -21,11 +21,12 @@ export async function applyCodeBlock(
   diffLinesGenerator: AsyncGenerator<DiffLine>;
 }> {
   if (canUseInstantApply(filename)) {
-    const diffLines = await deterministicApplyLazyEdit(
+    const diffLines = await deterministicApplyLazyEdit({
       oldFile,
-      newFile,
+      newLazyFile,
       filename,
-    );
+      onlyFullFileRewrite: true,
+    });
 
     if (diffLines !== undefined) {
       return {

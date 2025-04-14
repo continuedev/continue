@@ -1,0 +1,6 @@
+name: Continue Repo rules
+version: 1.0.0
+schema: v1
+
+mcpServers:
+  - uses: continuedev/continue-repo-rules

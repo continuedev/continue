@@ -21,11 +21,11 @@ async function collectDiffs(
 ): Promise<{ ourDiffs: DiffLine[]; myersDiffs: any }> {
   const ourDiffs: DiffLine[] = [];
 
-  for (const diffLine of (await deterministicApplyLazyEdit(
+  for (const diffLine of (await deterministicApplyLazyEdit({
     oldFile,
-    newFile,
+    newLazyFile: newFile,
     filename,
-  )) ?? []) {
+  })) ?? []) {
     ourDiffs.push(diffLine);
   }
 
@@ -84,7 +84,7 @@ async function expectDiff(file: string) {
 }
 
 // Skipped while we have `ONLY_FULL_FILE_REWRITE` enabled
-describe.skip("deterministicApplyLazyEdit(", () => {
+describe("deterministicApplyLazyEdit(", () => {
   test("no changes", async () => {
     const file = dedent`
         function test() {

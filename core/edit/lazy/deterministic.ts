@@ -15,14 +15,6 @@ type AstReplacements = Array<{
   replacementNodes: Parser.SyntaxNode[];
 }>;
 
-/**
- * Using this as a flag to slowly reintroduce lazy applies.
- * With this set, we will only attempt to deterministically apply
- * when there are no lazy blocks and then just replace the whole file,
- * and otherwise never use instant apply
- */
-const ONLY_FULL_FILE_REWRITE = true;
-
 const LAZY_COMMENT_REGEX = /\.{3}\s*(.+?)\s*\.{3}/;
 export function isLazyText(text: string): boolean {
   return LAZY_COMMENT_REGEX.test(text);
@@ -134,11 +126,23 @@ function nodeSurroundedInLazyBlocks(
 }
 
 // TODO: If we don't have high confidence, return undefined to fall back to slower methods
-export async function deterministicApplyLazyEdit(
-  oldFile: string,
-  newLazyFile: string,
-  filename: string,
-): Promise<DiffLine[] | undefined> {
+export async function deterministicApplyLazyEdit({
+  oldFile,
+  newLazyFile,
+  filename,
+  /**
+   * Using this as a flag to slowly reintroduce lazy applies.
+   * With this set, we will only attempt to deterministically apply
+   * when there are no lazy blocks and then just replace the whole file,
+   * and otherwise never use instant apply
+   */
+  onlyFullFileRewrite = false,
+}: {
+  oldFile: string;
+  newLazyFile: string;
+  filename: string;
+  onlyFullFileRewrite?: boolean;
+}): Promise<DiffLine[] | undefined> {
   const parser = await getParserForFile(filename);
   if (!parser) {
     return undefined;
@@ -148,8 +152,7 @@ export async function deterministicApplyLazyEdit(
   let newTree = parser.parse(newLazyFile);
   let reconstructedNewFile: string | undefined = undefined;
 
-  // See comments on `ONLY_FULL_FILE_REWRITE` for context
-  if (ONLY_FULL_FILE_REWRITE) {
+  if (onlyFullFileRewrite) {
     if (!isLazyText(newTree.rootNode.text)) {
       return myersDiff(oldFile, newLazyFile);
     } else {
