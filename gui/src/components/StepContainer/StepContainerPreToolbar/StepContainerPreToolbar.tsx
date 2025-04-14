@@ -19,7 +19,7 @@ import { getFontSize } from "../../../util";
 import { isTerminalCodeBlock } from "../StyledMarkdownPreview/utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
-import CreateFileButton from "./CreateFileButton";
+import { CreateFileButton } from "./CreateFileButton";
 import { FileInfo } from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import InsertButton from "./InsertButton";

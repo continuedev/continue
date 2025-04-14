@@ -5,7 +5,7 @@ interface CreateFileButtonProps {
   onClick: () => void;
 }
 
-export default function CreateFileButton({ onClick }: CreateFileButtonProps) {
+export function CreateFileButton({ onClick }: CreateFileButtonProps) {
   return (
     <>
       <button
