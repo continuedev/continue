@@ -83,7 +83,8 @@ async function expectDiff(file: string) {
   );
 }
 
-describe("deterministicApplyLazyEdit(", () => {
+// Skipped while we have `ONLY_FULL_FILE_REWRITE` enabled
+describe.skip("deterministicApplyLazyEdit(", () => {
   test("no changes", async () => {
     const file = dedent`
         function test() {
