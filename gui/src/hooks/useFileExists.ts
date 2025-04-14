@@ -39,7 +39,5 @@ export function useFileExists(filepath?: string) {
     resolveUri();
   }, [filepath, ideMessenger.ide]);
 
-  console.log({ fileExists, resolvedUri });
-
   return { fileExists, refreshFileExists };
 }
