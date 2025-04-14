@@ -223,7 +223,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
           : textNode.nodeValue?.toLowerCase();
         let startIndex = 0;
         while (
-          (startIndex = nodeTextValue?.indexOf(query, startIndex)) !== -1
+          (startIndex = nodeTextValue?.indexOf(query, startIndex) ?? -1) !== -1
         ) {
           // Create a range to measure the size and position of the match
           const range = document.createRange();
