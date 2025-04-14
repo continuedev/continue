@@ -12,6 +12,7 @@ import {
 import { vscBadgeForeground } from "../..";
 import { useAppSelector } from "../../../redux/hooks";
 import { fontSize } from "../../../util";
+import { ToolTip } from "../../gui/Tooltip";
 import AssistantSelect from "../../modelSelection/platform/AssistantSelect";
 import HoverItem from "../InputToolbar/HoverItem";
 import { useLump } from "./LumpContext";
@@ -47,7 +48,11 @@ function BlockSettingsToolbarIcon(
   const isErrorSection = props.sectionId === "error";
 
   return (
-    <HoverItem px={0} onClick={props.onClick}>
+    <HoverItem
+      px={0}
+      onClick={props.onClick}
+      data-tooltip-id={`lump-${props.tooltip}-tooltip`}
+    >
       <div
         role="button"
         tabIndex={0}
@@ -88,6 +93,9 @@ function BlockSettingsToolbarIcon(
           </span>
         </div>
       </div>
+      <ToolTip id={`lump-${props.tooltip}-tooltip`} place="top-middle">
+        {props.tooltip}
+      </ToolTip>
     </HoverItem>
   );
 }
@@ -122,9 +130,7 @@ export function BlockSettingsTopToolbar() {
           <BlockSettingsToolbarIcon
             className="-ml-1.5"
             icon={isToolbarExpanded ? ChevronLeftIcon : EllipsisHorizontalIcon}
-            tooltip={
-              isToolbarExpanded ? "Collapse sections" : "Expand sections"
-            }
+            tooltip={isToolbarExpanded ? "Collapse Toolbar" : "Expand Toolbar"}
             isSelected={false}
             onClick={handleEllipsisClick}
           />
@@ -151,7 +157,12 @@ export function BlockSettingsTopToolbar() {
         </div>
       </div>
       <div className="flex gap-0.5">
-        <AssistantSelect />
+        <HoverItem data-tooltip-id="assistant-select-tooltip">
+          <AssistantSelect />
+          <ToolTip id="assistant-select-tooltip" place="top-middle">
+            Select Assistant
+          </ToolTip>
+        </HoverItem>
       </div>
     </div>
   );
