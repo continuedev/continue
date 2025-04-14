@@ -83,5 +83,4 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "didCloseFiles",
     "toolCallPartialOutput",
     "process/isBackgroundedResponse",
-    "docs/suggestions",
   ];
