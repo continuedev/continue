@@ -21,7 +21,10 @@ import {
   customFetch,
   embedding,
 } from "../util.js";
-import { GeminiToolFunctionDeclaration } from "../util/gemini-types.js";
+import {
+  convertOpenAIToolToGeminiFunction,
+  GeminiToolFunctionDeclaration,
+} from "../util/gemini-types.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -164,71 +167,15 @@ export class GeminiApi implements BaseLlmApi {
         // Same difference
         const functions: GeminiToolFunctionDeclaration[] = [];
         oaiBody.tools.forEach((tool) => {
-          if (tool.function.description && tool.function.name) {
-            const fn: GeminiToolFunctionDeclaration = {
-              description: tool.function.description,
-              name: tool.function.name,
-            };
-
-            if (
-              tool.function.parameters &&
-              "type" in tool.function.parameters
-              // && typeof tool.function.parameters.type === "string"
-            ) {
-              if (tool.function.parameters.type === "object") {
-                // Gemini can't take an empty object
-                // So if empty object param is present just don't add parameters
-                if (
-                  JSON.stringify(tool.function.parameters.properties) === "{}"
-                ) {
-                  functions.push(fn);
-                  return;
-                }
-              }
-              // Helper function to recursively clean JSON Schema objects
-              const cleanJsonSchema = (schema: any): any => {
-                if (!schema || typeof schema !== "object") return schema;
-
-                if (Array.isArray(schema)) {
-                  return schema.map(cleanJsonSchema);
-                }
-
-                const {
-                  $schema,
-                  additionalProperties,
-                  default: defaultValue,
-                  ...rest
-                } = schema;
-
-                // Recursively clean nested properties
-                if (rest.properties) {
-                  rest.properties = Object.entries(rest.properties).reduce(
-                    (acc, [key, value]) => ({
-                      ...acc,
-                      [key]: cleanJsonSchema(value),
-                    }),
-                    {},
-                  );
-                }
-
-                // Clean items in arrays
-                if (rest.items) {
-                  rest.items = cleanJsonSchema(rest.items);
-                }
-
-                return rest;
-              };
-
-              // Clean the parameters and convert type to uppercase
-              const cleanedParams = cleanJsonSchema(tool.function.parameters);
-              fn.parameters = {
-                ...cleanedParams,
-                type: (tool.function.parameters as any)?.type?.toUpperCase(),
-              };
-            }
-            functions.push(fn);
+          try {
+            functions.push(convertOpenAIToolToGeminiFunction(tool));
+          } catch (e) {
+            console.warn(
+              `Failed to convert tool to gemini function definition. Skipping: ${JSON.stringify(tool, null, 2)}`,
+            );
           }
         });
+
         if (functions.length) {
           finalBody.tools = [
             {
