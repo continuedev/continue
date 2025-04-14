@@ -251,7 +251,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
           modal: true,
           detail:
             fileSize > 0
-              ? `'${item.title}' is ${formatFileSize(fileSize)} which exceeds the allowed context length and connot be processed by the model`
+              ? `'${item.title}' is ${formatFileSize(fileSize)} which exceeds the allowed context length and cannot be processed by the model`
               : `'${item.title}' could not be loaded. Please check if the file exists and has the correct permissions.`,
         },
       );
