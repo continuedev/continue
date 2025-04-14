@@ -18,7 +18,10 @@ import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { countTokens } from "./llm/countTokens";
 import Ollama from "./llm/llms/Ollama";
-import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
+import {
+  createNewPromptFileV2,
+  createNewWorkspaceBlockFile,
+} from "./promptFiles/v2/createNewPromptFile";
 import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { clipboardCache } from "./util/clipboardCache";
@@ -30,6 +33,7 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
+  ContextItemWithId,
   DiffLine,
   IdeSettings,
   ModelDescription,
@@ -320,6 +324,11 @@ export class Core {
     on("config/newPromptFile", async (msg) => {
       const { config } = await this.configHandler.loadConfig();
       await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
+      await this.configHandler.reloadConfig();
+    });
+
+    on("config/addLocalWorkspaceBlock", async (msg) => {
+      await createNewWorkspaceBlockFile(this.ide, msg.data.blockType);
       await this.configHandler.reloadConfig();
     });
 
@@ -696,27 +705,31 @@ export class Core {
     });
 
     on("isItemTooBig", async ({ data: { item, selectedModelTitle } }) => {
-      const { config } = await this.configHandler.loadConfig();
-
-      if (!config) {
-        return false;
-      }
-
-      const llm = (await this.configHandler.loadConfig()).config
-        ?.selectedModelByRole.chat;
-
-      if (!llm) {
-        throw new Error("No chat model selected");
-      }
-
-      const tokens = countTokens(item.content);
-
-      if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
-        return true;
-      }
-
-      return false;
+      return this.isItemTooBig(item);
     });
+  }
+
+  private async isItemTooBig(item: ContextItemWithId) {
+    const { config } = await this.configHandler.loadConfig();
+
+    if (!config) {
+      return false;
+    }
+
+    const llm = (await this.configHandler.loadConfig()).config
+      ?.selectedModelByRole.chat;
+
+    if (!llm) {
+      throw new Error("No chat model selected");
+    }
+
+    const tokens = countTokens(item.content);
+
+    if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
+      return true;
+    }
+
+    return false;
   }
 
   private handleAddAutocompleteModel(
