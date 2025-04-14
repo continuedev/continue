@@ -6,7 +6,7 @@ import { useContext, useMemo } from "react";
 import { vscBadgeBackground } from "../../../..";
 import { IdeMessengerContext } from "../../../../../context/IdeMessenger";
 import FileIcon from "../../../../FileIcon";
-import StyledMarkdownPreview from "../../../../markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../../../StyledMarkdownPreview";
 import { ExpandableToolbarPreview } from "../../components/ExpandableToolbarPreview";
 import { NodeViewWrapper } from "../../components/NodeViewWrapper";
 

@@ -134,10 +134,10 @@ export function ExpandableToolbarPreview(props: ExpandableToolbarPreviewProps) {
 
   useEffect(() => {
     const resizeObserver = new ResizeObserver(() => {
-      setContentDims({
-        width: contentRef.current?.scrollWidth ?? 0,
-        height: contentRef.current?.scrollHeight ?? 0,
-      });
+      setContentDims(prevValue => ({
+        width: contentRef.current?.scrollWidth ?? prevValue.width,
+        height: contentRef.current?.scrollHeight ?? prevValue.height,
+      }));
     });
 
     if (contentRef.current) {

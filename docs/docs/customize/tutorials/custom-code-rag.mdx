@@ -22,7 +22,7 @@ Most embeddings models can only handle a limited amount of text at once. To get 
 If you use `voyage-code-3`, it has a maximum context length of 16,000 tokens, which is enough to fit most files. This means that in the beginning you can get away with a more naive strategy of truncating files that exceed the limit. In order of easiest to most comprehensive, 3 chunking strategies you can use are:
 
 1. Truncate the file when it goes over the context length: in this case you will always have 1 chunk per file.
-2. Split the file into chunks of a fixed length: starting at the top of the file, add lines you your current chunk until it reaches the limit, then start a new chunk.
+2. Split the file into chunks of a fixed length: starting at the top of the file, add lines in your current chunk until it reaches the limit, then start a new chunk.
 3. Use a recursive, abstract syntax tree (AST)-based strategy: this is the most exact, but most complex. In most cases you can achieve high quality results by using (1) or (2), but if you'd like to try this you can find a reference example in [our code chunker](https://github.com/continuedev/continue/blob/main/core/indexing/chunk/code.ts) or in [LlamaIndex](https://docs.llamaindex.ai/en/stable/api_reference/node_parsers/code/).
 
 As usual in this guide, we recommend starting with the strategy that gives 80% of the benefit with 20% of the effort.
@@ -51,8 +51,8 @@ func = get_registry().get("openai").create(
 class CodeChunks(LanceModel):
     filename: str
     text: str = func.SourceField()
-    # 1536 is the embedding dimension of the `voyage-code-3` model.
-    vector: Vector(1536) = func.VectorField()
+    # 1024 is the default dimension for `voyage-code-3`: https://docs.voyageai.com/docs/embeddings#model-choices
+    vector: Vector(1024) = func.VectorField()
 
 table = db.create_table("code_chunks", schema=CodeChunks, mode="overwrite")
 table.add([
@@ -79,7 +79,7 @@ Regardless of which database or model you have chosen, your script should iterat
 
 In a perfect production version, you would want to build "automatic, incremental indexing", so that you whenever a file changes, that file and nothing else is automatically re-indexed. This has the benefits of perfectly up-to-date embeddings and lower cost.
 
-That said, we highly recommend first building and testing the pipeline before attempting this. Unless your codebase is being entirely rewritten frequently, a full refresh of the index is likely to be sufficient and reasonably cheap.
+That said, we highly recommend first building and testing the pipeline before attempting this. Unless your codebase is being entirely rewritten frequently, an incremental refresh of the index is likely to be sufficient and reasonably cheap.
 :::
 
 At this point, you've written your indexing script and tested that you can make queries from your vector database. Now, you'll want a plan for when to run the indexing script.
