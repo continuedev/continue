@@ -175,50 +175,67 @@ export function convertContinueToolToGeminiFunction(
   return fn;
 }
 
+export type GeminiTextContentPart = {
+  text: string;
+};
+
+export type GeminiInlineDataContentPart = {
+  inlineData: {
+    mimeType: string;
+    data: string;
+  };
+};
+
+export type GeminiFunctionCallContentPart = {
+  functionCall: {
+    id?: string;
+    name: string;
+    args: JSONSchema7Object;
+  };
+};
+
+export type GeminiFunctionResponseContentPart = {
+  functionResponse: {
+    id?: string;
+    name: string;
+    response: JSONSchema7Object;
+  };
+};
+
+export type GeminiFileDataContentPart = {
+  fileData: {
+    fileUri: string;
+    mimeType: string; // See possible values here: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference#filedata
+  };
+};
+
+export type GeminiExecutableCodeContentPart = {
+  executableCode: {
+    language: "PYTHON" | "LANGUAGE_UNSPECIFIED";
+    code: string;
+  };
+};
+
+export type GeminiCodeExecutionResultContentPart = {
+  codeExecutionResult: {
+    outcome:
+      | "OUTCOME_UNSPECIFIED"
+      | "OUTCOME_OK"
+      | "OUTCOME_FAILED"
+      | "OUTCOME_DEADLINE_EXCEEDED";
+    output: string;
+  };
+};
+
 export type GeminiChatContentPart =
-  | {
-      text: string;
-    }
-  | {
-      inlineData: {
-        mimeType: string;
-        data: string;
-      };
-    }
-  | {
-      functionCall: {
-        name: string;
-        args: JSONSchema7Object;
-      };
-    }
-  | {
-      functionResponse: {
-        name: string;
-        response: JSONSchema7Object;
-      };
-    }
-  | {
-      fileData: {
-        fileUri: string;
-        mimeType: string; // See possible values here: https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/inference#filedata
-      };
-    }
-  | {
-      executableCode: {
-        language: "PYTHON" | "LANGUAGE_UNSPECIFIED";
-        code: string;
-      };
-    }
-  | {
-      codeExecutionResult: {
-        outcome:
-          | "OUTCOME_UNSPECIFIED"
-          | "OUTCOME_OK"
-          | "OUTCOME_FAILED"
-          | "OUTCOME_DEADLINE_EXCEEDED";
-        output: string;
-      };
-    };
+  | GeminiTextContentPart
+  | GeminiInlineDataContentPart
+  | GeminiFunctionCallContentPart
+  | GeminiFunctionResponseContentPart
+  | GeminiFileDataContentPart
+  | GeminiExecutableCodeContentPart
+  | GeminiCodeExecutionResultContentPart;
+
 export interface GeminiChatContent {
   role?: "user" | "model";
   parts: GeminiChatContentPart[];

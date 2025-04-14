@@ -14,6 +14,7 @@ import {
   Model,
 } from "openai/resources/index";
 
+import { v4 as uuidv4 } from "uuid";
 import { GeminiConfig } from "../types.js";
 import {
   chatChunk,
@@ -23,6 +24,8 @@ import {
 } from "../util.js";
 import {
   convertOpenAIToolToGeminiFunction,
+  GeminiChatContent,
+  GeminiChatContentPart,
   GeminiToolFunctionDeclaration,
 } from "../util/gemini-types.js";
 import {
@@ -51,9 +54,15 @@ export class GeminiApi implements BaseLlmApi {
   }
 
   private _oaiPartToGeminiPart(
-    part: OpenAI.Chat.Completions.ChatCompletionContentPart,
-  ) {
+    part:
+      | OpenAI.Chat.Completions.ChatCompletionContentPart
+      | OpenAI.Chat.Completions.ChatCompletionContentPartRefusal,
+  ): GeminiChatContentPart {
     switch (part.type) {
+      case "refusal":
+        return {
+          text: part.refusal,
+        };
       case "text":
         return {
           text: part.text,
@@ -91,7 +100,15 @@ export class GeminiApi implements BaseLlmApi {
     const isV1API = url.includes("/v1/");
 
     const toolCallIdToNameMap = new Map<string, string>();
-    const contents = oaiBody.messages
+    oaiBody.messages.forEach((msg) => {
+      if (msg.role === "assistant" && msg.tool_calls) {
+        msg.tool_calls.forEach((call) => {
+          toolCallIdToNameMap.set(call.id, call.function.name);
+        });
+      }
+    });
+
+    const contents: (GeminiChatContent | null)[] = oaiBody.messages
       .map((msg) => {
         if (msg.role === "system" && !isV1API) {
           return null; // Don't include system message in contents
@@ -103,9 +120,10 @@ export class GeminiApi implements BaseLlmApi {
           }
 
           return {
-            role: "model",
+            role: "model" as const,
             parts: msg.tool_calls.map((toolCall) => ({
               functionCall: {
+                id: toolCall.id,
                 name: toolCall.function.name,
                 args: JSON.parse(toolCall.function.arguments || "{}"),
               },
@@ -114,14 +132,15 @@ export class GeminiApi implements BaseLlmApi {
         }
 
         if (msg.role === "tool") {
+          const functionName = toolCallIdToNameMap.get(msg.tool_call_id);
           return {
-            role: "user",
+            role: "user" as const,
             parts: [
               {
                 functionResponse: {
-                  name: msg.tool_call_id,
+                  id: msg.tool_call_id,
+                  name: functionName ?? "unknown",
                   response: {
-                    name: toolCallIdToNameMap.get(msg.tool_call_id),
                     content:
                       typeof msg.content === "string"
                         ? msg.content
@@ -138,12 +157,12 @@ export class GeminiApi implements BaseLlmApi {
         }
 
         return {
-          role: msg.role === "assistant" ? "model" : "user",
+          role:
+            msg.role === "assistant" ? ("model" as const) : ("user" as const),
           parts:
             typeof msg.content === "string"
               ? [{ text: msg.content }]
-              : // @ts-ignore
-                msg.content.map(this._oaiPartToGeminiPart),
+              : msg.content.map(this._oaiPartToGeminiPart),
         };
       })
       .filter((c) => c !== null);
@@ -283,7 +302,7 @@ export class GeminiApi implements BaseLlmApi {
                   tool_calls: [
                     {
                       index: 0,
-                      id: "", // Not supported by Gemini
+                      id: part.functionCall.id ?? uuidv4(),
                       type: "function",
                       function: {
                         name: part.functionCall.name,

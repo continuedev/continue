@@ -1,5 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
 import {
-  AssistantChatMessage,
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -7,7 +7,6 @@ import {
   TextMessagePart,
   ToolCallDelta,
 } from "../../index.js";
-import { findLast } from "../../util/findLast.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -205,20 +204,24 @@ class Gemini extends BaseLLM {
     options: CompletionOptions,
     isV1API: boolean,
   ): GeminiChatRequestBody {
+    const toolCallIdToNameMap = new Map<string, string>();
+    messages.forEach((msg) => {
+      if (msg.role === "assistant" && msg.toolCalls) {
+        msg.toolCalls.forEach((call) => {
+          if (call.id && call.function?.name) {
+            toolCallIdToNameMap.set(call.id, call.function.name);
+          }
+        });
+      }
+    });
+
     const body: GeminiChatRequestBody = {
       contents: messages
         .filter((msg) => !(msg.role === "system" && isV1API))
         .map((msg) => {
           if (msg.role === "tool") {
-            let fn_name = "";
-            const lastToolCallMessage = findLast(
-              messages,
-              (msg) => "toolCalls" in msg && msg.toolCalls?.[0]?.function?.name,
-            ) as AssistantChatMessage;
-            if (lastToolCallMessage) {
-              fn_name = lastToolCallMessage.toolCalls![0]!.function!.name!;
-            }
-            if (!fn_name) {
+            let functionName = toolCallIdToNameMap.get(msg.toolCallId);
+            if (!functionName) {
               console.warn(
                 "Sending tool call response for unidentified tool call",
               );
@@ -228,7 +231,8 @@ class Gemini extends BaseLLM {
               parts: [
                 {
                   functionResponse: {
-                    name: fn_name || "unknown",
+                    id: msg.toolCallId,
+                    name: functionName || "unknown",
                     response: {
                       output: msg.content, // "output" key is opinionated - not all functions will output objects
                     },
@@ -358,7 +362,7 @@ class Gemini extends BaseLLM {
                 type: "toolCall",
                 data: {
                   type: "function",
-                  id: "", // Not supported by gemini
+                  id: part.functionCall.id ?? uuidv4(),
                   function: {
                     name: part.functionCall.name,
                     arguments:
