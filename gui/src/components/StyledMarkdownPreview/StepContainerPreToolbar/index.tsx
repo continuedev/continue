@@ -1,6 +1,6 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { inferResolvedUriFromRelativePath } from "core/util/ideUtils";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -8,7 +8,7 @@ import {
   vscEditorBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useFileExists } from "../../../hooks";
+import { useIdeMessengerRequest } from "../../../hooks";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { useAppSelector } from "../../../redux/hooks";
 import {
@@ -79,7 +79,20 @@ export function StepContainerPreToolbar({
     expanded ?? (isInEditMode ? false : true),
   );
 
-  const { fileExists, refreshFileExists } = useFileExists(relativeFilepath);
+  const [relativeFilepathUri, setRelativeFilepathUri] = useState<string | null>(
+    null,
+  );
+
+  const fileExistsInput = useMemo(
+    () => (relativeFilepathUri ? { filepath: relativeFilepathUri } : null),
+    [relativeFilepathUri],
+  );
+
+  const {
+    result: fileExists,
+    refresh: refreshFileExists,
+    isLoading: isLoadingFileExists,
+  } = useIdeMessengerRequest("fileExists", fileExistsInput);
 
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
@@ -90,8 +103,8 @@ export function StepContainerPreToolbar({
   );
 
   /**
-   * In the case where `relativeFilepath` is defined, this will just be the resolved URI
-   * of `relativeFilepath`. However, if no `relativeFilepath` is defined, then this will
+   * In the case where `relativeFilepath` is defined, this will just be `relativeFilepathUri`.
+   * However, if no `relativeFilepath` is defined, then this will
    * be the URI of the currently open file at the time the user clicks "Apply".
    */
   const [appliedFileUri, setAppliedFileUri] = useState<string | undefined>(
@@ -106,18 +119,37 @@ export function StepContainerPreToolbar({
   // so we don't want to dispaly it twice here
   const displayFilepath = relativeFilepath ?? appliedFileUri;
 
+  // TODO: This logic should be moved to a thunk
+  // Handle apply keyboard shortcut
+  useWebviewListener(
+    "applyCodeFromChat",
+    async () => onClickApply(),
+    [isNextCodeBlock, codeBlockContent],
+    !isNextCodeBlock,
+  );
+
+  useEffect(() => {
+    const getRelativeFilepathUri = async () => {
+      if (relativeFilepath) {
+        const resolvedUri = await inferResolvedUriFromRelativePath(
+          relativeFilepath,
+          ideMessenger.ide,
+        );
+        setRelativeFilepathUri(resolvedUri);
+      }
+    };
+    getRelativeFilepathUri();
+  }, [relativeFilepath, ideMessenger.ide]);
+
   async function getFileUriToApplyTo() {
     // If we've already resolved a file URI (from clicking apply), use that
     if (appliedFileUri) {
       return appliedFileUri;
     }
 
-    // If a relative filepath was provided, try to resolve it
-    if (relativeFilepath) {
-      return await inferResolvedUriFromRelativePath(
-        relativeFilepath,
-        ideMessenger.ide,
-      );
+    // If we have the `relativeFilepathUri`, use that
+    if (relativeFilepathUri) {
+      return relativeFilepathUri;
     }
 
     // If no filepath was provided, get the current file
@@ -154,15 +186,6 @@ export function StepContainerPreToolbar({
     ideMessenger.post("insertAtCursor", { text: codeBlockContent });
   }
 
-  // TODO: This logic should be moved to a thunk
-  // Handle apply keyboard shortcut
-  useWebviewListener(
-    "applyCodeFromChat",
-    async () => onClickApply(),
-    [isNextCodeBlock, codeBlockContent],
-    !isNextCodeBlock,
-  );
-
   async function handleDiffAction(action: "accept" | "reject") {
     const filepath = await getFileUriToApplyTo();
     if (!filepath) {
@@ -194,6 +217,30 @@ export function StepContainerPreToolbar({
       });
     }
   }
+
+  const renderActionButtons = () => {
+    if (isTerminalCodeBlock(language, codeBlockContent)) {
+      return <RunInTerminalButton command={codeBlockContent} />;
+    }
+
+    if (isLoadingFileExists) {
+      return null;
+    }
+
+    if (fileExists) {
+      return (
+        <ApplyActions
+          disableManualApply={disableManualApply}
+          applyState={applyState}
+          onClickApply={onClickApply}
+          onClickAccept={() => handleDiffAction("accept")}
+          onClickReject={() => handleDiffAction("reject")}
+        />
+      );
+    }
+
+    return <CreateFileButton onClick={onClickApply} />;
+  };
 
   // We wait until there is an extension in the filepath to avoid rendering
   // an incomplete filepath
@@ -237,19 +284,7 @@ export function StepContainerPreToolbar({
                 <CopyButton text={codeBlockContent} />
               </div>
 
-              {isTerminalCodeBlock(language, codeBlockContent) ? (
-                <RunInTerminalButton command={codeBlockContent} />
-              ) : !fileExists ? (
-                <CreateFileButton onClick={onClickApply} />
-              ) : (
-                <ApplyActions
-                  disableManualApply={disableManualApply}
-                  applyState={applyState}
-                  onClickApply={onClickApply}
-                  onClickAccept={() => handleDiffAction("accept")}
-                  onClickReject={() => handleDiffAction("reject")}
-                />
-              )}
+              {renderActionButtons()}
             </>
           )}
         </div>

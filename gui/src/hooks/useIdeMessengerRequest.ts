@@ -14,6 +14,7 @@ export function useIdeMessengerRequest<T extends keyof FromWebviewProtocol>(
   const [result, setResult] = useState<
     SuccessWebviewSingleMessage<FromWebviewProtocol[T][1]>["content"] | null
   >(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function makeRequest() {
     if (!data) {
@@ -21,11 +22,16 @@ export function useIdeMessengerRequest<T extends keyof FromWebviewProtocol>(
       return;
     }
 
-    const response = await ideMessenger.request(messageType, data);
-    if (response.status === "success") {
-      setResult(response.content);
-    } else {
-      console.error(`Error in ${messageType} request:`, response.error);
+    setIsLoading(true);
+    try {
+      const response = await ideMessenger.request(messageType, data);
+      if (response.status === "success") {
+        setResult(response.content);
+      } else {
+        console.error(`Error in ${messageType} request:`, response.error);
+      }
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -33,5 +39,5 @@ export function useIdeMessengerRequest<T extends keyof FromWebviewProtocol>(
     makeRequest();
   }, [data, messageType]);
 
-  return { result, refresh: makeRequest };
+  return { result, isLoading, refresh: makeRequest };
 }
