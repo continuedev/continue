@@ -29,6 +29,7 @@ export function useIdeMessengerRequest<T extends keyof FromWebviewProtocol>(
         setResult(response.content);
       } else {
         console.error(`Error in ${messageType} request:`, response.error);
+        setResult(null);
       }
     } finally {
       setIsLoading(false);
