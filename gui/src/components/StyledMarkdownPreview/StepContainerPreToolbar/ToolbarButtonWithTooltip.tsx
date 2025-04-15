@@ -1,7 +1,7 @@
 import { ReactNode, useMemo } from "react";
 import { Tooltip } from "react-tooltip";
-import { lightGray, vscForeground } from "../..";
 import styled from "styled-components";
+import { lightGray, vscForeground } from "../..";
 import { getFontSize } from "../../../util";
 
 export const ToolbarButton = styled.button`
