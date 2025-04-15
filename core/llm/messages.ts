@@ -37,6 +37,7 @@ export function messageIsEmpty(message: ChatMessage): boolean {
   return false;
 }
 
+// some providers don't support empty messages
 export function addSpaceToAnyEmptyMessages(
   messages: ChatMessage[],
 ): ChatMessage[] {
