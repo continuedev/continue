@@ -73,7 +73,6 @@ describe("Apply Test", () => {
     let editorText = await editor.getText();
 
     await TestUtils.waitForSuccess(async () => editorText === fileContent);
-    // expect(editorText).to.equal(fileContent);
 
     ({ view } = await GUIActions.switchToReactIframe());
 
