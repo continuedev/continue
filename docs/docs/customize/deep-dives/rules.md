@@ -13,7 +13,7 @@ You can view the current rules by clicking the pen icon above the main toolbar:
 
 ![rules input toolbar section](/img/notch-rules.png)
 
-To form the system message, rules are joined with new lines, in the order they appear in the toolbar.
+To form the system message, rules are joined with new lines, in the order they appear in the toolbar. This includes the base chat system message ([see below](#chat-system-message)).
 
 ## `rules` blocks
 
@@ -30,7 +30,7 @@ Examples:
 rules:
   - uses: myprofile/my-mood-setter
     with:
-      MOOD: happy
+      TONE: consise
   - Always annotate Python functions with their parameter and return types
   - Always write Google style docstrings for functions and classes
   - name: Server-side components

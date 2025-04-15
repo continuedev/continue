@@ -251,7 +251,7 @@ Example
 rules:
   - uses: myprofile/my-mood-setter
     with:
-      MOOD: happy
+      TONE: concise
   - Always annotate Python functions with their parameter and return types
   - Always write Google style docstrings for functions and classes
   - name: Server-side components
