@@ -734,6 +734,14 @@ export class Core {
       this.send("process/isBackgroundedResponse", { isBackgrounded }, messageId);
       return true; // Return true to indicate the message was handled successfully
     });
+
+    // Handle partial output updates from tool calls
+    on("toolCallPartialOutput", ({ data }) => {
+      // This handler simply forwards the message to the webview
+      // The actual data processing happens in the Chat component's useWebviewListener
+      this.send("toolCallPartialOutput", data);
+      return;
+    });
   }
 
   private async isItemTooBig(item: ContextItemWithId) {

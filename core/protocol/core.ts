@@ -44,6 +44,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   // Special
   ping: [string, string];
   abort: [undefined, void];
+  toolCallPartialOutput: [
+    { toolCallId: string; contextItems: any[] },
+    void,
+  ];
 
   // History
   "history/list": [ListHistoryOptions, SessionMetadata[]];
