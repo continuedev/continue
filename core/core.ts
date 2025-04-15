@@ -700,14 +700,13 @@ export class Core {
         return false;
       }
 
-      const llm = (await this.configHandler.loadConfig()).config
-        ?.selectedModelByRole.chat;
+      const llm = config?.selectedModelByRole.chat;
 
       if (!llm) {
         throw new Error("No chat model selected");
       }
 
-      const tokens = countTokens(item.content);
+      const tokens = countTokens(item.content, llm.model);
 
       if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
         return true;
