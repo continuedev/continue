@@ -186,6 +186,8 @@ export class CompletionProvider {
         helper,
       });
 
+      console.log('debug1 the prompt was->', prompt)
+
       // Completion
       let completion: string | undefined = "";
 
