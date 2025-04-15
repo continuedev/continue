@@ -242,7 +242,13 @@ context:
 
 ### `rules`
 
-List of rules that the LLM should follow. These are inserted into the system message for all chat requests.
+List of rules that the LLM should follow. These are concatenated into the system message for all [Chat](./chat/how-to-use-it.md), [Edit](./edit/how-to-use-it.md), and [Agent](./agent/how-to-use-it.md) requests. See the [rules deep dive](./customize/deep-dives/rules.md) for details.
+
+Explicit rules can either be simple text or an object with the following properties:
+
+- `name` (**required**): A display name/title for the rule
+- `rule` (**required**): The text content of the rule
+<!-- `if` -->
 
 Example
 
@@ -250,9 +256,11 @@ Example
 rules:
   - uses: myprofile/my-mood-setter
     with:
-      MOOD: happy
+      TONE: concise
   - Always annotate Python functions with their parameter and return types
   - Always write Google style docstrings for functions and classes
+  - name: Server-side components
+    rule: When writing Next.js React components, use server-side components where possible instead of client components.
 ```
 
 ---
