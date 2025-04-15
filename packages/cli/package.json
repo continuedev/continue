@@ -21,6 +21,7 @@
     "@continuedev/openai-adapters": "^1.0.18",
     "@modelcontextprotocol/sdk": "^1.9.0",
     "@workos-inc/node": "^7.45.0",
+    "axios": "^1.8.4",
     "chalk": "^5.4.1",
     "diff": "^7.0.0",
     "dotenv": "^16.4.0",
