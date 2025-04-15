@@ -74,7 +74,8 @@ export const PROVIDER_TOOL_SUPPORT: Record<
   },
   mistral: (model) => {
     // https://docs.mistral.ai/capabilities/function_calling/
-    return [
+    return !model.toLowerCase().includes("mamba") &&
+    [
       "codestral",
       "mistral-large",
       "mistral-small",
