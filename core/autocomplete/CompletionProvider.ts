@@ -122,6 +122,7 @@ export class CompletionProvider {
 
   private async _getAutocompleteOptions() {
     const { config } = await this.configHandler.loadConfig();
+    // console.log('debug1 the config was', config?.selectedModelByRole.autocomplete, config.)
     const options = {
       ...DEFAULT_AUTOCOMPLETE_OPTS,
       ...config?.tabAutocompleteOptions,
@@ -152,6 +153,10 @@ export class CompletionProvider {
       const llm = await this._prepareLlm();
       if (!llm) {
         return undefined;
+      }
+
+      if (llm.promptTemplates?.autocomplete) {
+        options.template = llm.promptTemplates.autocomplete as string;
       }
 
       const helper = await HelperVars.create(
