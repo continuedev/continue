@@ -7,6 +7,7 @@ import {
   ContinueConfig,
   IDE,
   IdeSettings,
+  ILLMLogger,
   SerializedContinueConfig,
 } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
@@ -26,7 +27,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     private workspaceTitle: string,
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
-    private writeLog: (message: string) => Promise<void>,
+    private llmLogger: ILLMLogger,
     private readonly onReload: () => void,
   ) {
     this.description = {
@@ -62,18 +63,18 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       )) as any);
     const serializedConfig: SerializedContinueConfig = settings;
 
-    return await doLoadConfig(
-      this.ide,
+    return await doLoadConfig({
+      ide: this.ide,
       ideSettingsPromise,
-      this.controlPlaneClient,
-      this.writeLog,
-      serializedConfig,
-      undefined,
-      undefined,
-      this.workspaceId,
-      undefined,
-      null,
-    );
+      controlPlaneClient: this.controlPlaneClient,
+      llmLogger: this.llmLogger,
+      overrideConfigJson: serializedConfig,
+      overrideConfigYaml: undefined,
+      platformConfigMetadata: undefined,
+      profileId: this.workspaceId,
+      overrideConfigYamlByPath: undefined,
+      orgScopeId: null,
+    });
   }
 
   setIsActive(isActive: boolean): void {}

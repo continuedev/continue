@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.17",
+  "version": "1.1.23",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -126,6 +126,11 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Pause Continue's codebase index on start."
+        },
+        "continue.enableConsole": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable a console to log and explore model inputs and outputs. It can be found in the bottom panel."
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -281,6 +286,14 @@
         "command": "continue.viewLogs",
         "category": "Continue",
         "title": "View History",
+        "group": "Continue",
+        "enablement": "granite.initialized"
+      },
+      {
+        "command": "continue.clearConsole",
+        "category": "Continue",
+        "title": "Clear Console",
+        "icon": "$(clear-all)",
         "group": "Continue",
         "enablement": "granite.initialized"
       },
@@ -556,6 +569,11 @@
           "command": "continue.openConfigPage",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.clearConsole",
+          "group": "navigation@1",
+          "when": "view == continue.continueConsoleView"
         }
       ],
       "editor/title": [
@@ -584,6 +602,13 @@
           "title": "Continue",
           "icon": "media/sidebar-icon.png"
         }
+      ],
+      "panel": [
+        {
+          "id": "continueConsole",
+          "title": "Continue Console",
+          "icon": "$(window)"
+        }
       ]
     },
     "views": {
@@ -594,6 +619,16 @@
           "name": "Continue",
           "icon": "media/sidebar-icon.png",
           "visibility": "visible"
+        }
+      ],
+      "continueConsole": [
+        {
+          "type": "webview",
+          "id": "continue.continueConsoleView",
+          "name": "Continue Console",
+          "icon": "$(window)",
+          "visibility": "visible",
+          "when": "config.continue.enableConsole"
         }
       ]
     },
@@ -624,6 +659,7 @@
     "build-test": "npm run esbuild && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
+    "write-build-timestamp": "node scripts/write-build-timestamp.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
     "package-all": "node scripts/package-all.js",
@@ -650,7 +686,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.4",
-    "@nestjs/common": "^8.4.7",
+    "@nestjs/common": "^11.0.16",
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/chai": "^5.0.1",
     "@types/cors": "^2.8.17",
@@ -676,7 +712,7 @@
     "ovsx": "^0.8.3",
     "rimraf": "^5.0.5",
     "typescript": "^5.6.3",
-    "vite": "^4.3.9",
+    "vite": "^4.5.13",
     "vsce": "^2.15.0",
     "vscode-extension-tester": "^8.10.0"
   },

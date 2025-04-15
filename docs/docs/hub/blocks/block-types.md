@@ -15,7 +15,7 @@ Continue supports [many model providers](../../customize/model-providers), inclu
 
 ## Context
 
-Context blocks define a context provider which can be referenced in Chat with `@` to pull in data from external sources such as files and folders, a URL, Jira or Confluence, and Github issues, among others. [Explore context provider blocks](https://hub.continue.dev/explore/context) on the hub.
+Context blocks define a context provider which can be referenced in Chat with `@` to pull in data from external sources such as files and folders, a URL, Jira or Confluence, and GitHub issues, among others. [Explore context provider blocks](https://hub.continue.dev/explore/context) on the hub.
 
 Learn more about context providers [here](../../reference.md#context), and check out [this guide](../../customize/tutorials/build-your-own-context-provider.mdx) to creating your own custom context provider. The `config.yaml` spec for context can be found [`here`](../../reference.md#context).
 
@@ -41,12 +41,7 @@ Learn more in the [rules deep dive](../../customize/deep-dives/rules.md), and vi
 
 Prompts blocks are pre-written, reusable prompts that can be referenced at any time during chat. They are especially useful as context for repetitive and/or complex tasks. [Explore prompts](https://hub.continue.dev/explore/prompts) on the hub.
 
-Prompt blocks have the same syntax as [prompt files](../../customize/deep-dives/prompt-files.md). There are two important differences between prompt blocks and prompt files:
-
-1. Currently, prompt blocks cannot use context providers
-2. Prompt blocks are stored within `config.yaml` rather than `.continue/prompts` in project directory and
-
-The `config.yaml` spec for `prompts` can be found [here](../../reference.md#prompts).
+Prompt blocks have the same syntax as [prompt files](../../customize/deep-dives/prompts.md). The `config.yaml` spec for `prompts` can be found [here](../../reference.md#prompts).
 
 ## Data
 

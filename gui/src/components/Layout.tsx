@@ -13,7 +13,6 @@ import {
   newSession,
   selectIsInEditMode,
   setMode,
-  updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
@@ -122,20 +121,6 @@ const Layout = () => {
     "incrementFtc",
     async () => {
       incrementFreeTrialCount();
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "updateApplyState",
-    async (state) => {
-      // dispatch(
-      //   updateCurCheckpoint({
-      //     filepath: state.filepath,
-      //     content: state.fileContent,
-      //   }),
-      // );
-      dispatch(updateApplyState(state));
     },
     [],
   );

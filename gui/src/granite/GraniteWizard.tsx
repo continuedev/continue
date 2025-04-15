@@ -29,7 +29,12 @@ import { VSCodeButton } from "../components/VSCodeButton";
 import { DiagnosticMessage } from "./DiagnosticMessage";
 import { ProgressBlock } from "./ProgressBlock";
 import { StatusCheck } from "./StatusCheck";
-import { vscode } from "./utils/vscode";
+
+interface vscode {
+  postMessage(message: any): vscode;
+}
+
+declare const vscode: any;
 
 interface InstallationMode {
   id: string;

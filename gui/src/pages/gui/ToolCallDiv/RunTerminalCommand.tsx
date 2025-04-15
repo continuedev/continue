@@ -1,5 +1,5 @@
 import { ToolCallState } from "core";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
@@ -9,7 +9,7 @@ interface RunTerminalCommandToolCallProps {
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   return (
     <StyledMarkdownPreview
-      isRenderingInStepContainer={true}
+      isRenderingInStepContainer
       source={`\`\`\`bash .sh\n${props.command ?? ""}\n\`\`\``}
     />
   );

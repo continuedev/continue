@@ -50,7 +50,7 @@ export function ExploreBlocksButton(props: { blockType: string }) {
 
   return (
     <GhostButton
-      className="w-full cursor-pointer rounded px-2 text-center text-gray-400 hover:text-gray-300"
+      className="w-full cursor-pointer rounded px-2 py-0.5 text-center text-gray-400 hover:text-gray-300"
       style={{
         fontSize: fontSize(-3),
       }}
@@ -60,7 +60,8 @@ export function ExploreBlocksButton(props: { blockType: string }) {
       }}
     >
       <div className="flex items-center justify-center gap-1">
-        <Icon className="h-3 w-3" /> {text}
+        <Icon className="h-3 w-3 pr-1" />
+        <span className="text-[11px]">{text}</span>
       </div>
     </GhostButton>
   );

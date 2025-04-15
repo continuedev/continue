@@ -1,14 +1,19 @@
 import {
+  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   BuildingOfficeIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
-  ExclamationTriangleIcon
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "../../../context/Auth";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { cycleProfile, selectProfileThunk } from "../../../redux";
+import {
+  selectCurrentOrg,
+  setSelectedOrgId,
+  setSelectedProfile,
+} from "../../../redux";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   fontSize,
@@ -29,19 +34,24 @@ import { useNavigate } from "react-router-dom";
 import { vscCommandCenterInactiveBorder } from "../..";
 import { ROUTES } from "../../../util/navigation";
 import { ToolTip } from "../../gui/Tooltip";
+import { useLump } from "../../mainInput/Lump/LumpContext";
 import { useFontSize } from "../../ui/font";
 import AssistantIcon from "./AssistantIcon";
 
 interface AssistantSelectOptionProps {
   profile: ProfileDescription;
+  selected: boolean;
   onClick: () => void;
 }
+
 const AssistantSelectOption = ({
   profile,
+  selected,
   onClick,
 }: AssistantSelectOptionProps) => {
+  const tinyFont = useFontSize(-4);
+
   const navigate = useNavigate();
-  const [hovered, setHovered] = useState(false);
 
   const hasFatalErrors = useMemo(() => {
     return !!profile.errors?.find((error) => error.fatal);
@@ -51,7 +61,12 @@ const AssistantSelectOption = ({
   const ideMessenger = useContext(IdeMessengerContext);
 
   function handleOptionClick() {
-    dispatch(selectProfileThunk(profile.id));
+    // optimistic update
+    dispatch(setSelectedProfile(profile.id));
+    // notify core which will handle actual update
+    ideMessenger.post("didChangeSelectedProfile", {
+      id: profile.id,
+    });
     onClick();
   }
 
@@ -71,29 +86,34 @@ const AssistantSelectOption = ({
 
   return (
     <ListboxOption
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       value={profile.id}
       disabled={hasFatalErrors}
       onClick={!hasFatalErrors ? handleOptionClick : undefined}
       fontSizeModifier={-2}
+      className={selected ? "bg-list-active text-list-active-foreground" : ""}
     >
-      <div className="flex w-full flex-col gap-0.5">
-        <div className="flex w-full items-center justify-between">
-          <div className="flex w-full items-center">
-            <div className="mr-2 h-4 w-4 flex-shrink-0">
-              <AssistantIcon assistant={profile} />
+      <div
+        className="flex w-full flex-col gap-0.5"
+        style={{
+          fontSize: tinyFont,
+        }}
+      >
+        <div className="flex w-full items-center justify-between gap-2 bg-transparent">
+          <div className="flex w-full items-center gap-1">
+            <div className="flex h-4 w-4 flex-shrink-0">
+              <AssistantIcon size={3.5} assistant={profile} />
             </div>
-            <span className="line-clamp-1 flex-1">{profile.title}</span>
+            <span
+              className={`line-clamp-1 flex-1 ${selected ? "font-semibold" : ""}`}
+            >
+              {profile.title}
+            </span>
           </div>
-          <div className="ml-2 flex items-center">
+          <div className="flex flex-row items-center gap-1">
             {!profile.errors?.length ? (
               isLocalProfile(profile) ? (
                 <Cog6ToothIcon
-                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
-                  style={{
-                    opacity: hovered ? 1 : 0,
-                  }}
+                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -102,10 +122,7 @@ const AssistantSelectOption = ({
                 />
               ) : (
                 <ArrowTopRightOnSquareIcon
-                  style={{
-                    opacity: hovered ? 1 : 0,
-                  }}
-                  className="h-3 w-3 flex-shrink-0 cursor-pointer"
+                  className="text-lightgray h-3 w-3 flex-shrink-0 cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -140,11 +157,11 @@ const AssistantSelectOption = ({
 export default function AssistantSelect() {
   const dispatch = useAppDispatch();
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { selectedProfile, selectedOrganization } = useAuth();
+  const { selectedProfile, refreshProfiles } = useAuth();
+  const currentOrg = useAppSelector(selectCurrentOrg);
+  const orgs = useAppSelector((store) => store.profiles.organizations);
   const ideMessenger = useContext(IdeMessengerContext);
-  const isLumpToolbarExpanded = useAppSelector(
-    (state) => state.ui.isBlockSettingsToolbarExpanded,
-  );
+  const { isToolbarExpanded } = useLump();
 
   const { profiles, session, login } = useAuth();
   const navigate = useNavigate();
@@ -157,14 +174,14 @@ export default function AssistantSelect() {
   function onNewAssistant() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "new",
-      orgSlug: selectedOrganization?.slug,
+      orgSlug: currentOrg?.slug,
     });
     close();
   }
 
   useEffect(() => {
     let lastToggleTime = 0;
-    const DEBOUNCE_MS = 500;
+    const DEBOUNCE_MS = 800;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
@@ -175,8 +192,24 @@ export default function AssistantSelect() {
         const now = Date.now();
 
         if (now - lastToggleTime >= DEBOUNCE_MS) {
-          dispatch(cycleProfile());
           lastToggleTime = now;
+
+          const profileIds = profiles?.map((profile) => profile.id) ?? [];
+          // In case of 1 or 0 profiles just does nothing
+          if (profileIds.length < 2) {
+            return;
+          }
+          let nextId = profileIds[0];
+          if (selectedProfile) {
+            const curIndex = profileIds.indexOf(selectedProfile.id);
+            const nextIndex = (curIndex + 1) % profileIds.length;
+            nextId = profileIds[nextIndex];
+          }
+          // Optimistic update
+          dispatch(setSelectedProfile(nextId));
+          ideMessenger.post("didChangeSelectedProfile", {
+            id: nextId,
+          });
         }
       }
     };
@@ -185,20 +218,38 @@ export default function AssistantSelect() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [currentOrg, selectedProfile]);
+
+  const cycleOrgs = () => {
+    const orgIds = orgs.map((org) => org.id);
+    if (orgIds.length < 2) {
+      return;
+    }
+    let nextId = orgIds[0];
+    if (currentOrg) {
+      const curIndex = orgIds.indexOf(currentOrg.id);
+      const nextIndex = (curIndex + 1) % orgIds.length;
+      nextId = orgIds[nextIndex];
+    }
+    // Optimistic update
+    dispatch(setSelectedOrgId(nextId));
+    ideMessenger.post("didChangeSelectedOrg", {
+      id: nextId,
+    });
+  };
 
   const tinyFont = useFontSize(-4);
   const smallFont = useFontSize(-3);
 
   if (!selectedProfile) {
     return null;
-/*
+    /*
     return (
       <div
         onClick={() => {
           ideMessenger.request("controlPlane/openUrl", {
             path: "/new?type=assistant",
-            orgSlug: selectedOrganization?.slug,
+            orgSlug: currentOrg?.slug,
           });
         }}
         className="flex cursor-pointer select-none items-center gap-1 text-gray-400"
@@ -206,18 +257,18 @@ export default function AssistantSelect() {
       >
         <PlusIcon className="h-3 w-3 flex-shrink-0 select-none" />
         <span
-          className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+          className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
         >
           Create your first assistant
         </span>
       </div>
     );
-*/
+    */
   }
 
   return profiles && profiles.length > 1 && (
     <Listbox>
-      <div className="sm:max-w-4/5 relative flex">
+      <div className="relative">
         <ListboxButton
           data-testid="assistant-select-button"
           ref={buttonRef}
@@ -229,7 +280,7 @@ export default function AssistantSelect() {
               <AssistantIcon size={3} assistant={selectedProfile} />
             </div>
             <span
-              className={`line-clamp-1 select-none ${isLumpToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
+              className={`line-clamp-1 select-none break-all ${isToolbarExpanded ? "xs:hidden sm:line-clamp-1" : ""}`}
             >
               {selectedProfile.title}
             </span>
@@ -242,8 +293,22 @@ export default function AssistantSelect() {
 
         <Transition>
           <ListboxOptions className="pb-0">
+            <div className="flex justify-between gap-1.5 px-2.5 py-1">
+              <span>Assistants</span>
+              <div
+                className="flex cursor-pointer flex-row items-center gap-1 hover:brightness-125"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  refreshProfiles();
+                  buttonRef.current?.click();
+                }}
+              >
+                <ArrowPathIcon className="text-lightgray h-2.5 w-2.5" />
+              </div>
+            </div>
+
             <div
-              className={`thin-scrollbar flex max-h-[300px] flex-col gap-1 overflow-y-auto py-1`}
+              className={`thin-scrollbar flex max-h-[300px] flex-col overflow-y-auto`}
             >
               {profiles?.map((profile, idx) => {
                 return (
@@ -251,6 +316,7 @@ export default function AssistantSelect() {
                     key={idx}
                     profile={profile}
                     onClick={close}
+                    selected={profile.id === selectedProfile.id}
                   />
                 );
               })}
@@ -265,35 +331,38 @@ export default function AssistantSelect() {
               />
 
               <div
-                className="my-0 h-[0.5px]"
-                style={{
-                  backgroundColor: vscCommandCenterInactiveBorder,
-                }}
-              />
-
-              <div
                 className="text-lightgray flex items-center justify-between px-2 py-1"
                 style={{
                   fontSize: tinyFont,
                 }}
               >
-                <span className="block">
+                <span
+                  className="block"
+                  style={{
+                    fontSize: tinyFont - 1,
+                  }}
+                >
                   <code>{getMetaKeyLabel()} ⇧ '</code> to toggle
                 </span>
                 <div
-                  className="flex items-center gap-1"
-                  onClick={() => navigate(ROUTES.CONFIG)}
+                  className="ml-auto flex items-center gap-1"
+                  onClick={cycleOrgs}
                 >
-                  {selectedOrganization?.iconUrl ? (
+                  {currentOrg?.iconUrl ? (
                     <img
-                      src={selectedOrganization.iconUrl}
-                      className="h-4 w-4 rounded-full"
+                      src={currentOrg.iconUrl}
+                      className="h-2.5 w-2.5 rounded-full"
                     />
                   ) : (
                     <BuildingOfficeIcon className="h-4 w-4" />
                   )}
-                  <span className="hover:cursor-pointer hover:underline">
-                    {selectedOrganization?.name || "Personal"}
+                  <span
+                    className="hover:cursor-pointer hover:underline"
+                    style={{
+                      fontSize: tinyFont - 1,
+                    }}
+                  >
+                    {currentOrg?.name || "Personal"}
                   </span>
                 </div>
               </div>

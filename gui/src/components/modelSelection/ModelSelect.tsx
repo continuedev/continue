@@ -2,21 +2,18 @@ import {
   CheckIcon,
   ChevronDownIcon,
   Cog6ToothIcon,
-  CubeIcon
+  CubeIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray } from "..";
 import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
-import { useAppSelector } from "../../redux/hooks";
-import {
-  selectDefaultModel,
-  setDefaultModel,
-} from "../../redux/slices/configSlice";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { updateSelectedModelByRole } from "../../redux/thunks";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { Listbox, ListboxButton, ListboxOption, ListboxOptions } from "../ui";
 
@@ -121,9 +118,11 @@ function ModelOption({
 }
 
 function ModelSelect() {
-  const dispatch = useDispatch();
-  const defaultModel = useAppSelector(selectDefaultModel);
-  const allModels = useAppSelector((state) => state.config.config.models);
+  const dispatch = useAppDispatch();
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
+  const allChatModels = useAppSelector(
+    (state) => state.config.config.modelsByRole.chat,
+  );
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -141,7 +140,7 @@ function ModelSelect() {
 
   useEffect(() => {
     setOptions(
-      allModels
+      allChatModels
         .filter((m) => !m.roles || m.roles.includes("chat"))
         .map((model) => {
           return {
@@ -151,19 +150,30 @@ function ModelSelect() {
           };
         }),
     );
-  }, [allModels]);
+  }, [allChatModels]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "'" && isMetaEquivalentKeyPressed(event as any)) {
+        if (!selectedProfile) {
+          return;
+        }
+
         const direction = event.shiftKey ? -1 : 1;
         const currentIndex = options.findIndex(
-          (option) => option.value === defaultModel?.title,
+          (option) => option.value === selectedChatModel?.title,
         );
         let nextIndex = (currentIndex + 1 * direction) % options.length;
         if (nextIndex < 0) nextIndex = options.length - 1;
         const newModelTitle = options[nextIndex].value;
-        dispatch(setDefaultModel({ title: newModelTitle }));
+
+        dispatch(
+          updateSelectedModelByRole({
+            selectedProfile,
+            role: "chat",
+            modelTitle: newModelTitle,
+          }),
+        );
       }
     };
 
@@ -171,7 +181,7 @@ function ModelSelect() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [options, defaultModel]);
+  }, [options, selectedChatModel]);
 
   function onClickAddModel(e: MouseEvent) {
     e.stopPropagation();
@@ -194,11 +204,16 @@ function ModelSelect() {
   }
 
   return sortedOptions.length > 1 && (
-    // <span className="line-clamp-1">Hiad sfasdfasdf asdfasdf</span>
     <Listbox
       onChange={async (val: string) => {
-        if (val === defaultModel?.title) return;
-        dispatch(setDefaultModel({ title: val }));
+        if (val === selectedChatModel?.title) return;
+        dispatch(
+          updateSelectedModelByRole({
+            selectedProfile,
+            role: "chat",
+            modelTitle: val,
+          }),
+        );
       }}
     >
       <div className="relative flex">
@@ -207,8 +222,8 @@ function ModelSelect() {
           ref={buttonRef}
           className="h-[18px] gap-1 border-none text-gray-400"
         >
-          <span className="line-clamp-1 hover:brightness-110">
-            {modelSelectTitle(defaultModel) || "Select model"}
+          <span className="line-clamp-1 break-all hover:brightness-110">
+            {modelSelectTitle(selectedChatModel) || "Select model"}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0 hover:brightness-110"
@@ -223,7 +238,7 @@ function ModelSelect() {
                 idx={idx}
                 key={idx}
                 showMissingApiKeyMsg={option.apiKey === ""}
-                isSelected={option.value === defaultModel?.title}
+                isSelected={option.value === selectedChatModel?.title}
               />
             ))}
           </div>
