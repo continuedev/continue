@@ -9,6 +9,7 @@ export function CreateFileButton({ onClick }: CreateFileButtonProps) {
   return (
     <>
       <button
+        data-testid="codeblock-toolbar-create"
         className={`text-lightgray flex items-center border-none bg-transparent pl-0 text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
         onClick={onClick}
       >
