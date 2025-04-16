@@ -47,7 +47,7 @@ describe("Apply Test", () => {
 
   after(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
-    await GlobalActions.deleteFile();
+    await GlobalActions.deleteFileFromFolder();
   });
 
   it("Can reject and apply changes from sidebar", async () => {

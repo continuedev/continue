@@ -10,14 +10,15 @@ import { DEFAULT_TIMEOUT } from "../constants";
 import { TestUtils } from "../TestUtils";
 
 export class GlobalActions {
+  static defaultFolder = "e2e/test-continue";
+  public static defaultNewFilename = "test.py";
+
   public static async openTestWorkspace() {
-    await VSBrowser.instance.openResources("e2e/test-continue");
+    await VSBrowser.instance.openResources(GlobalActions.defaultFolder);
     await new Workbench().executeCommand(
       "Notifications: Clear All Notifications",
     );
   }
-
-  public static defaultNewFilename = "test.py";
 
   public static async createAndOpenNewTextFile(): Promise<{
     editor: TextEditor;
@@ -59,14 +60,15 @@ export class GlobalActions {
     return { editor };
   }
 
-  public static async deleteFile(
+  public static async deleteFileFromFolder(
     filename = GlobalActions.defaultNewFilename,
+    folder = GlobalActions.defaultFolder,
   ): Promise<void> {
     const fs = require("fs");
     const path = require("path");
 
-    const workspacePath = path.join(process.cwd(), "e2e", "test-continue");
-    const filePath = path.join(workspacePath, filename);
+    const folderPath = path.join(process.cwd(), folder);
+    const filePath = path.join(folderPath, filename);
 
     try {
       await fs.promises.unlink(filePath);
