@@ -687,8 +687,8 @@ export class Core {
       }
 
       // Define a callback for streaming output updates
-      const onPartialOutput = (params: { 
-        toolCallId: string, 
+      const onPartialOutput = (params: {
+        toolCallId: string,
         contextItems: any[]
       }) => {
         this.messenger.send("toolCallPartialOutput" as any, params);
@@ -726,7 +726,7 @@ export class Core {
       const { markProcessAsBackgrounded } = await import("./tools/implementations/processState");
       markProcessAsBackgrounded(toolCallId);
     });
-    
+
     on("process/isBackgrounded", async ({ data: { toolCallId }, messageId }) => {
       const { isProcessBackgrounded } = await import("./tools/implementations/processState");
       const isBackgrounded = isProcessBackgrounded(toolCallId);
@@ -735,13 +735,6 @@ export class Core {
       return true; // Return true to indicate the message was handled successfully
     });
 
-    // Handle partial output updates from tool calls
-    on("toolCallPartialOutput", ({ data }) => {
-      // This handler simply forwards the message to the webview
-      // The actual data processing happens in the Chat component's useWebviewListener
-      this.send("toolCallPartialOutput", data);
-      return;
-    });
   }
 
   private async isItemTooBig(item: ContextItemWithId) {

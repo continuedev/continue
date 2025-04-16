@@ -8,7 +8,6 @@ import {
 // extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/toolWindow/ContinueBrowser.kt
 export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
   [
-    "toolCallPartialOutput",
     "ping",
     "abort",
     "history/list",

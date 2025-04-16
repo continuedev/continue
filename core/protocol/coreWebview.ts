@@ -7,9 +7,5 @@ export type ToCoreFromWebviewProtocol = ToCoreFromIdeOrWebviewProtocol & {
     { id: string | null; profileId?: string | null },
     void,
   ];
-  toolCallPartialOutput: [
-    { toolCallId: string; contextItems: any[] },
-    void,
-  ];
 };
 export type ToWebviewFromCoreProtocol = ToWebviewFromIdeOrCoreProtocol;

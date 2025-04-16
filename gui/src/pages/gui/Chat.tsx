@@ -277,7 +277,6 @@ export function Chat() {
   useWebviewListener(
     "toolCallPartialOutput",
     async (data) => {
-      if (data && typeof data === "object" && "toolCallId" in data && "contextItems" in data) {
         console.log("toolCallPartialOutput", data);
         // Update tool call output in Redux store
         dispatch(
@@ -286,7 +285,6 @@ export function Chat() {
             contextItems: data.contextItems,
           }),
         );
-      }
     },
     [dispatch],
   );

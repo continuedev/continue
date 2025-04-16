@@ -109,7 +109,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                   removeBackgroundedProcess(toolCallId);
                   return;
                 }
-                
+
                 if (!waitForCompletion) {
                   // Already resolved, just update the UI with final output
                   if (extras.onPartialOutput) {
