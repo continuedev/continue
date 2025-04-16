@@ -18,7 +18,6 @@ import {
   ContinueConfig,
   ContinueRcJson,
   CustomContextProvider,
-  CustomLLM,
   EmbeddingsProviderDescription,
   IContextProvider,
   IDE,
@@ -68,7 +67,6 @@ import {
 } from "../util/paths";
 import { localPathToUri } from "../util/pathToUri";
 
-import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "./sharedConfig";
 import {
   getModelByRole,
@@ -205,12 +203,6 @@ async function serializedToIntermediateConfig(
   return config;
 }
 
-function isModelDescription(
-  llm: ModelDescription | CustomLLM,
-): llm is ModelDescription {
-  return (llm as ModelDescription).title !== undefined;
-}
-
 export function isContextProviderWithParams(
   contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
@@ -243,81 +235,81 @@ async function intermediateToFinalConfig({
 
   // Auto-detect models
   let models: BaseLLM[] = [];
-  for (const desc of config.models) {
-    if (isModelDescription(desc)) {
-      const llm = await llmFromDescription(
-        desc,
-        ide.readFile.bind(ide),
-        uniqueId,
-        ideSettings,
-        llmLogger,
-        config.completionOptions,
-        config.systemMessage,
-      );
-      if (!llm) {
-        continue;
-      }
-
-      if (llm.model === "AUTODETECT") {
-        try {
-          const modelNames = await llm.listModels();
-          const detectedModels = await Promise.all(
-            modelNames.map(async (modelName) => {
-              return await llmFromDescription(
-                {
-                  ...desc,
-                  model: modelName,
-                  title: modelName,
-                },
-                ide.readFile.bind(ide),
-                uniqueId,
-                ideSettings,
-                llmLogger,
-                copyOf(config.completionOptions),
-                config.systemMessage,
-              );
-            }),
-          );
-          models.push(
-            ...(detectedModels.filter(
-              (x) => typeof x !== "undefined",
-            ) as BaseLLM[]),
-          );
-        } catch (e) {
-          console.warn("Error listing models: ", e);
+  await Promise.all(
+    config.models.map(async (desc) => {
+      if ("title" in desc) {
+        const llm = await llmFromDescription(
+          desc,
+          ide.readFile.bind(ide),
+          uniqueId,
+          ideSettings,
+          llmLogger,
+          config.completionOptions,
+        );
+        if (!llm) {
+          return;
         }
-      } else {
-        models.push(llm);
-      }
-    } else {
-      const llm = new CustomLLMClass({
-        ...desc,
-        options: { ...desc.options, logger: llmLogger } as any,
-      });
-      if (llm.model === "AUTODETECT") {
-        try {
-          const modelNames = await llm.listModels();
-          const models = modelNames.map(
-            (modelName) =>
-              new CustomLLMClass({
-                ...desc,
-                options: {
-                  ...desc.options,
-                  model: modelName,
-                  logger: llmLogger,
-                },
+
+        if (llm.model === "AUTODETECT") {
+          try {
+            const modelNames = await llm.listModels();
+            const detectedModels = await Promise.all(
+              modelNames.map(async (modelName) => {
+                return await llmFromDescription(
+                  {
+                    ...desc,
+                    model: modelName,
+                    title: modelName,
+                  },
+                  ide.readFile.bind(ide),
+                  uniqueId,
+                  ideSettings,
+                  llmLogger,
+                  copyOf(config.completionOptions),
+                );
               }),
-          );
-
-          models.push(...models);
-        } catch (e) {
-          console.warn("Error listing models: ", e);
+            );
+            models.push(
+              ...(detectedModels.filter(
+                (x) => typeof x !== "undefined",
+              ) as BaseLLM[]),
+            );
+          } catch (e) {
+            console.warn("Error listing models: ", e);
+          }
+        } else {
+          models.push(llm);
         }
       } else {
-        models.push(llm);
+        const llm = new CustomLLMClass({
+          ...desc,
+          options: { ...desc.options, logger: llmLogger } as any,
+        });
+        if (llm.model === "AUTODETECT") {
+          try {
+            const modelNames = await llm.listModels();
+            const models = modelNames.map(
+              (modelName) =>
+                new CustomLLMClass({
+                  ...desc,
+                  options: {
+                    ...desc.options,
+                    model: modelName,
+                    logger: llmLogger,
+                  },
+                }),
+            );
+
+            models.push(...models);
+          } catch (e) {
+            console.warn("Error listing models: ", e);
+          }
+        } else {
+          models.push(llm);
+        }
       }
-    }
-  }
+    }),
+  );
 
   // Prepare models
   for (const model of models) {
@@ -353,7 +345,7 @@ async function intermediateToFinalConfig({
           ? config.tabAutocompleteModel
           : [config.tabAutocompleteModel]
         ).map(async (desc) => {
-          if (isModelDescription(desc)) {
+          if ("title" in desc) {
             const llm = await llmFromDescription(
               desc,
               ide.readFile.bind(ide),
@@ -361,7 +353,6 @@ async function intermediateToFinalConfig({
               ideSettings,
               llmLogger,
               config.completionOptions,
-              config.systemMessage,
             );
 
             if (llm?.providerName === "free-trial") {
@@ -534,7 +525,15 @@ async function intermediateToFinalConfig({
       rerank: newReranker ?? null,
       summarize: null, // Not implemented
     },
+    rules: [],
   };
+
+  if (config.systemMessage) {
+    continueConfig.rules.unshift({
+      rule: config.systemMessage,
+      source: "json-systemMessage",
+    });
+  }
 
   // Trigger MCP server refreshes (Config is reloaded again once connected!)
   const mcpManager = MCPManagerSingleton.getInstance();
@@ -610,7 +609,6 @@ function llmToSerializedModelDescription(llm: ILLM): ModelDescription {
     contextLength: llm.contextLength,
     template: llm.template,
     completionOptions: llm.completionOptions,
-    systemMessage: llm.systemMessage,
     baseChatSystemMessage: llm.baseChatSystemMessage,
     requestOptions: llm.requestOptions,
     promptTemplates: serializePromptTemplates(llm.promptTemplates),
@@ -626,7 +624,6 @@ async function finalToBrowserConfig(
 ): Promise<BrowserSerializedContinueConfig> {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
-    systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
     slashCommands: final.slashCommands?.map(
       ({ run, ...slashCommandDescription }) => slashCommandDescription,
@@ -864,11 +861,6 @@ async function loadContinueConfigFromJson(
 
   if (!serialized || configLoadInterrupted) {
     return { errors, config: undefined, configLoadInterrupted: true };
-  }
-
-  const systemPromptDotFile = await getSystemPromptDotFile(ide);
-  if (systemPromptDotFile) {
-    serialized.systemMessage = systemPromptDotFile;
   }
 
   // Apply shared config

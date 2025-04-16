@@ -1,4 +1,4 @@
-import { DataDestination, ModelRole, Rule } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
@@ -559,7 +559,6 @@ export interface LLMOptions {
 
   title?: string;
   uniqueId?: string;
-  systemMessage?: string;
   baseChatSystemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
@@ -570,7 +569,6 @@ export interface LLMOptions {
   templateMessages?: (messages: ChatMessage[]) => string;
   logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
-  rules?: Rule[];
   apiKey?: string;
 
   // continueProperties
@@ -1028,9 +1026,8 @@ export interface ModelDescription {
   model: string;
   apiKey?: string;
 
-  // continueProperties
-  apiKeyLocation?: string;
   apiBase?: string;
+  apiKeyLocation?: string;
   orgScopeId?: string | null;
 
   onPremProxyUrl?: string | null;
@@ -1039,7 +1036,6 @@ export interface ModelDescription {
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
-  systemMessage?: string;
   baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
@@ -1049,7 +1045,7 @@ export interface ModelDescription {
   configurationStatus?: LLMConfigurationStatuses;
 }
 
-export interface EmbedOptions {
+export interface JSONEmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
@@ -1070,7 +1066,7 @@ export interface EmbedOptions {
   projectId?: string;
 }
 
-export interface EmbeddingsProviderDescription extends EmbedOptions {
+export interface EmbeddingsProviderDescription extends JSONEmbedOptions {
   provider: string;
 }
 
@@ -1294,11 +1290,39 @@ export interface AnalyticsConfig {
   clientKey?: string;
 }
 
+export interface JSONModelDescription {
+  title: string;
+  provider: string;
+  model: string;
+  apiKey?: string;
+  apiBase?: string;
+
+  contextLength?: number;
+  maxStopWords?: number;
+  template?: TemplateType;
+  completionOptions?: BaseCompletionOptions;
+  systemMessage?: string;
+  requestOptions?: RequestOptions;
+  cacheBehavior?: CacheBehavior;
+
+  region?: string;
+  profile?: string;
+  modelArn?: string;
+  apiType?: "openai" | "azure";
+  apiVersion?: string;
+  deployment?: string;
+  projectId?: string;
+  accountId?: string;
+  aiGatewaySlug?: string;
+  useLegacyCompletionsEndpoint?: boolean;
+  deploymentId?: string;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
+  models: JSONModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1309,7 +1333,7 @@ export interface SerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
-  tabAutocompleteModel?: ModelDescription | ModelDescription[];
+  tabAutocompleteModel?: JSONModelDescription | JSONModelDescription[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
@@ -1329,11 +1353,11 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
-  /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
+  /** Each entry in this array will originally be a JSONModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
    * Continue will do the rest of the work to construct prompt templates, handle context items, prune context, etc.
    */
-  models: (CustomLLM | ModelDescription)[];
+  models: (CustomLLM | JSONModelDescription)[];
   /** A system message to be followed by all of your models */
   systemMessage?: string;
   /** The default completion options for all models */
@@ -1357,8 +1381,8 @@ export interface Config {
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
     | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+    | JSONModelDescription
+    | (CustomLLM | JSONModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1375,7 +1399,7 @@ export interface Config {
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
   slashCommands: SlashCommand[];
@@ -1390,7 +1414,7 @@ export interface ContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: Rule[];
+  rules: RuleWithSource[];
   modelsByRole: Record<ModelRole, ILLM[]>;
   selectedModelByRole: Record<ModelRole, ILLM | null>;
   data?: DataDestination[];
@@ -1398,7 +1422,7 @@ export interface ContinueConfig {
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
   slashCommands: SlashCommandDescription[];
@@ -1412,7 +1436,7 @@ export interface BrowserSerializedContinueConfig {
   docs?: SiteIndexingConfig[];
   tools: Tool[];
   mcpServerStatuses: MCPServerStatus[];
-  rules?: Rule[];
+  rules: RuleWithSource[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   modelsByRole: Record<ModelRole, ModelDescription[]>;
@@ -1459,4 +1483,19 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+}
+
+export interface RuleWithSource {
+  name?: string;
+  slug?: string;
+  source:
+    | "default"
+    | "model-chat-options"
+    | "rules-block"
+    | "json-systemMessage"
+    | ".continuerules";
+  if?: string;
+  rule: string;
+  description?: string;
+  ruleFile?: string;
 }

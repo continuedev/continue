@@ -958,7 +958,7 @@ declare global {
     cacheBehavior?: CacheBehavior;
   }
   
-  export interface EmbedOptions {
+  export interface JSONEmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;

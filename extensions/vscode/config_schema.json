@@ -2655,7 +2655,7 @@
         },
         "systemMessage": {
           "title": "System Message",
-          "description": "A system message that will always be followed by the LLM",
+          "description": "A system message that will always be followed by the LLM for Chat and Edit requests",
           "type": "string"
         },
         "completionOptions": {

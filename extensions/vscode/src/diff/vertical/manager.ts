@@ -1,4 +1,4 @@
-import { ChatMessage, DiffLine, ILLM } from "core";
+import { ChatMessage, DiffLine, ILLM, RuleWithSource } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
@@ -271,16 +271,27 @@ export class VerticalDiffManager {
     }
   }
 
-  async streamEdit(
-    input: string,
-    llm: ILLM,
-    streamId?: string,
-    onlyOneInsertion?: boolean,
-    quickEdit?: string,
-    range?: vscode.Range,
-    newCode?: string,
-    toolCallId?: string,
-  ): Promise<string | undefined> {
+  async streamEdit({
+    input,
+    llm,
+    streamId,
+    onlyOneInsertion,
+    quickEdit,
+    range,
+    newCode,
+    toolCallId,
+    rules,
+  }: {
+    input: string;
+    llm: ILLM;
+    streamId?: string;
+    onlyOneInsertion?: boolean;
+    quickEdit?: string;
+    range?: vscode.Range;
+    newCode?: string;
+    toolCallId?: string;
+    rules: RuleWithSource[];
+  }): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     let editor = vscode.window.activeTextEditor;
@@ -427,16 +438,17 @@ export class VerticalDiffManager {
       const streamedLines: string[] = [];
 
       async function* recordedStream() {
-        const stream = streamDiffLines(
+        const stream = streamDiffLines({
+          highlighted: rangeContent,
           prefix,
-          rangeContent,
           suffix,
           llm,
+          rules,
           input,
-          getMarkdownLanguageTagForFile(fileUri),
-          !!onlyOneInsertion,
+          language: getMarkdownLanguageTagForFile(fileUri),
+          onlyOneInsertion: !!onlyOneInsertion,
           overridePrompt,
-        );
+        });
 
         for await (const line of stream) {
           if (line.type === "new" || line.type === "same") {
