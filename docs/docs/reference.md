@@ -49,6 +49,28 @@ models:
     provider: ollama
 ```
 
+### Local Blocks
+
+It is also possible to define blocks locally in a `.continue` folder. This folder can be located at either the root of your workspace (these will automatically be applied to all assistants when you are in that workspace) or in your home directory at `~/.continue` (these will automatically be applied globally).
+
+Place your YAML files in the following folders:
+
+Assistants:
+
+- `.continue/assistants` - for assistants
+
+Blocks:
+
+- `.continue/rules` - for rules
+- `.continue/models` - for models
+- `.continue/prompts` - for prompts
+- `.continue/context` - for context providers
+- `.continue/docs` - for docs
+- `.continue/data` - for data
+- `.continue/mcpServers` - for MCP Servers
+
+You can find many examples of each of these block types on the [Continue Explore Page](https://hub.continue.dev/explore/models)
+
 ### Inputs
 
 Blocks can be passed user inputs, including hub secrets and raw text values. To create a block that has an input, use mustache templating as follows:
