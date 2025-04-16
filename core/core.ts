@@ -257,9 +257,7 @@ export class Core {
         stack: err.stack,
       });
 
-      // Again, specifically for jetbrains to prevent duplicate error messages
-      // The same logic can currently be found in the webview protocol
-      // bc streaming errors are handled in the GUI
+      // just to prevent duplicate error messages in jetbrains (same logic in webview protocol)
       if (
         ["llm/streamChat", "chatDescriber/describe"].includes(
           message.messageType,
@@ -337,7 +335,13 @@ export class Core {
     });
 
     on("config/refreshProfiles", async (msg) => {
+      const { selectOrgId, selectProfileId } = msg.data ?? {};
       await this.configHandler.refreshAll();
+      if (selectOrgId) {
+        await this.configHandler.setSelectedOrgId(selectOrgId, selectProfileId);
+      } else if (selectProfileId) {
+        await this.configHandler.setSelectedProfileId(selectProfileId);
+      }
     });
 
     on("config/updateSharedConfig", async (msg) => {
@@ -534,10 +538,8 @@ export class Core {
       }
     });
 
-    // File changes
-    // TODO - remove remaining logic for these from IDEs where possible
+    // File changes - TODO - remove remaining logic for these from IDEs where possible
     on("files/changed", this.handleFilesChanged);
-
     const refreshIfNotIgnored = async (uris: string[]) => {
       const toRefresh: string[] = [];
       for (const uri of uris) {
@@ -613,7 +615,6 @@ export class Core {
     on("docs/getDetails", async (msg) => {
       return await this.docsService.getDetails(msg.data.startUrl);
     });
-    //
 
     on("didChangeSelectedProfile", async (msg) => {
       await this.configHandler.setSelectedProfileId(msg.data.id);
@@ -667,10 +668,7 @@ export class Core {
         throw new Error(`Tool ${toolCall.function.name} not found`);
       }
 
-      const llm = (await this.configHandler.loadConfig()).config
-        ?.selectedModelByRole.chat;
-
-      if (!llm) {
+      if (!config.selectedModelByRole.chat) {
         throw new Error("No chat model selected");
       }
 
@@ -679,7 +677,7 @@ export class Core {
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
-          llm,
+          llm: config.selectedModelByRole.chat,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
           tool,

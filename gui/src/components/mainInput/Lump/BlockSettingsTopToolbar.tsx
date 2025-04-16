@@ -116,7 +116,7 @@ export function BlockSettingsTopToolbar() {
   );
 
   return (
-    <div className="flex w-full items-center justify-between">
+    <div className="flex w-full items-center justify-between gap-4">
       <div className="flex flex-row">
         <div className="xs:flex hidden items-center justify-center text-gray-400">
           <BlockSettingsToolbarIcon
@@ -150,7 +150,7 @@ export function BlockSettingsTopToolbar() {
           </div>
         </div>
       </div>
-      <div className="flex gap-0.5">
+      <div className="flex">
         <AssistantSelect />
       </div>
     </div>
