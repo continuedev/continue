@@ -2,7 +2,7 @@ import { DiffLine, ILLM } from "../..";
 import { generateLines } from "../../diff/util";
 import { supportedLanguages } from "../../util/treeSitter";
 import { getUriFileExtension } from "../../util/uri";
-
+import { deterministicApplyLazyEdit } from "./deterministic";
 import { streamLazyApply } from "./streamLazyApply";
 import { applyUnifiedDiff, isUnifiedDiffFormat } from "./unifiedDiffApply";
 
@@ -13,35 +13,44 @@ function canUseInstantApply(filename: string) {
 
 export async function applyCodeBlock(
   oldFile: string,
-  newFile: string,
+  newLazyFile: string,
   filename: string,
   llm: ILLM,
-): Promise<[boolean, AsyncGenerator<DiffLine>]> {
-  // This was buggy, removed for now, maybe forever
-  // if (canUseInstantApply(filename)) {
-  //   const diffLines = await deterministicApplyLazyEdit(
-  //     oldFile,
-  //     newFile,
-  //     filename,
-  //   );
+): Promise<{
+  isInstantApply: boolean;
+  diffLinesGenerator: AsyncGenerator<DiffLine>;
+}> {
+  if (canUseInstantApply(filename)) {
+    const diffLines = await deterministicApplyLazyEdit({
+      oldFile,
+      newLazyFile,
+      filename,
+      onlyFullFileRewrite: true,
+    });
 
-  //   // Fall back to LLM method if we couldn't apply deterministically
-  //   if (diffLines !== undefined) {
-  //     const diffGenerator = generateLines(diffLines!);
-  //     return [true, diffGenerator];
-  //   }
-  // }
+    if (diffLines !== undefined) {
+      return {
+        isInstantApply: true,
+        diffLinesGenerator: generateLines(diffLines!),
+      };
+    }
+  }
 
   // If the code block is a diff
-  if (isUnifiedDiffFormat(newFile)) {
+  if (isUnifiedDiffFormat(newLazyFile)) {
     try {
-      const diffLines = applyUnifiedDiff(oldFile, newFile);
-      const diffGenerator = generateLines(diffLines!);
-      return [true, diffGenerator];
+      const diffLines = applyUnifiedDiff(oldFile, newLazyFile);
+      return {
+        isInstantApply: true,
+        diffLinesGenerator: generateLines(diffLines!),
+      };
     } catch (e) {
       console.error("Failed to apply unified diff", e);
     }
   }
 
-  return [false, streamLazyApply(oldFile, filename, newFile, llm)];
+  return {
+    isInstantApply: false,
+    diffLinesGenerator: streamLazyApply(oldFile, filename, newLazyFile, llm),
+  };
 }

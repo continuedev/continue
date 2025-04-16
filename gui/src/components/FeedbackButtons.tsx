@@ -1,12 +1,12 @@
 import {
-  HandThumbUpIcon,
   HandThumbDownIcon,
+  HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { ChatHistoryItem } from "core";
-import { useState, useContext } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useAppSelector } from "../../redux/hooks";
+import { useContext, useState } from "react";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { useAppSelector } from "../redux/hooks";
+import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 
 export interface FeedbackButtonsProps {
   item: ChatHistoryItem;

@@ -74,7 +74,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/refreshProfiles": [undefined, void];
+  "config/refreshProfiles": [
+    (
+      | undefined
+      | {
+          selectOrgId?: string;
+          selectProfileId?: string;
+        }
+    ),
+    void,
+  ];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
