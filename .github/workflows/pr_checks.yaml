@@ -577,7 +577,7 @@ jobs:
           path: extensions/vscode/e2e/storage
 
   vscode-e2e-tests:
-    name: ${{ matrix.test_file }} (${{ matrix.command }})
+    name: ${{ matrix.test_file || 'unknown' }} (${{ matrix.command }})
     needs:
       [
         vscode-download-e2e-dependencies,
@@ -688,7 +688,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-logs-${{ matrix.test_file }}-${{ matrix.command }}
+          name: e2e-logs-${{ matrix.test_file || 'unknown' }}-${{ replace(matrix.command, ':', '-') }}
           path: extensions/vscode/e2e.log
 
   gui-tests:
