@@ -588,6 +588,10 @@
       {
         "fileMatch": ".continuerc.json",
         "url": "./continue_rc_schema.json"
+      },
+      {
+        "fileMatch": "**/config.yaml",
+        "url": "./config-yaml-schema.json"
       }
     ]
   },
