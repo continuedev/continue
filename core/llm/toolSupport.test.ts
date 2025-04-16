@@ -158,7 +158,6 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
       expect(supportsFn("athene-v2")).toBe(true);
       expect(supportsFn("nemotron-4-340b")).toBe(true);
       expect(supportsFn("llama3-groq")).toBe(true);
-      expect(supportsFn("granite3")).toBe(true);
       expect(supportsFn("aya-expanse")).toBe(true);
       expect(supportsFn("firefunction-v2")).toBe(true);
       expect(supportsFn("mistral-7b")).toBe(true);
@@ -173,6 +172,7 @@ describe("PROVIDER_TOOL_SUPPORT", () => {
     });
 
     it("should return undefined for other models", () => {
+      expect(supportsFn("granite3")).toBeUndefined();
       expect(supportsFn("llama2")).toBeUndefined();
       expect(supportsFn("phi-2")).toBeUndefined();
       expect(supportsFn("falcon")).toBeUndefined();
