@@ -171,6 +171,7 @@ const sidebars = {
         "hub/governance/pricing",
       ],
     },
+    "hub/source-control",
     {
       type: "link",
       label: "Customize",
