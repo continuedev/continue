@@ -22,7 +22,36 @@ function constructPrompt(
   language: string | undefined,
 ): string | ChatMessage[] {
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
-  return llm.renderPromptTemplate(template, [], {
+  
+  // Create a messages array with system message at the beginning
+  const messages: ChatMessage[] = [];
+  
+  // Get the systemMessage from the LLM
+  let systemContent = llm.systemMessage ?? "";
+  
+  // Add rules if they exist (without special handling for language rules)
+  if (llm.rules && llm.rules.length > 0) {
+    const rulesContent = llm.rules
+      .map(rule => typeof rule === "string" ? rule : rule.rule)
+      .join("\n");
+    
+    // Combine systemMessage and rules
+    if (systemContent && rulesContent) {
+      systemContent = `${systemContent}\n\n${rulesContent}`;
+    } else if (rulesContent) {
+      systemContent = rulesContent;
+    }
+  }
+  
+  // Add the system message with combined content if not empty
+  if (systemContent) {
+    messages.push({
+      role: "system",
+      content: systemContent
+    });
+  }
+  
+  return llm.renderPromptTemplate(template, messages, {
     userInput,
     prefix,
     codeToEdit: highlighted,
