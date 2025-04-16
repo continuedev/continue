@@ -60,12 +60,14 @@ export default class LocalProfileLoader implements IProfileLoader {
       ideSettingsPromise: this.ideSettingsPromise,
       controlPlaneClient: this.controlPlaneClient,
       llmLogger: this.llmLogger,
-      overrideConfigJson: undefined,
-      overrideConfigYaml: undefined,
-      platformConfigMetadata: undefined,
       profileId: this.description.id,
       overrideConfigYamlByPath: this.overrideAssistantFile?.path,
       orgScopeId: null,
+      packageIdentifier: {
+        uriType: "file",
+        filePath:
+          this.overrideAssistantFile?.path ?? getPrimaryConfigFilePath(),
+      },
     });
 
     this.description.errors = result.errors;

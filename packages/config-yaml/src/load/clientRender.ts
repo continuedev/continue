@@ -9,7 +9,7 @@ import {
   decodeFQSN,
   encodeFQSN,
   FQSN,
-  PackageSlug,
+  PackageIdentifier,
 } from "../interfaces/slugs.js";
 import { AssistantUnrolled } from "../schemas/index.js";
 import {
@@ -19,7 +19,7 @@ import {
 } from "./unroll.js";
 
 export async function renderSecrets(
-  packageSlug: PackageSlug,
+  packageIdentifier: PackageIdentifier,
   unrolledConfigContent: string,
   clientSecretStore: SecretStore,
   orgScopeId: string | null, // The "scope" that the user is logged in with
@@ -72,7 +72,7 @@ export async function renderSecrets(
   // 7. We update any of the items with the proxy version if there are un-rendered secrets
   const finalConfig = useProxyForUnrenderedSecrets(
     parsedYaml,
-    packageSlug,
+    packageIdentifier,
     orgScopeId,
     onPremProxyUrl,
   );
@@ -103,17 +103,28 @@ export function getUnrenderedSecretLocation(
   return undefined;
 }
 
+export function packageIdentifierToShorthandSlug(
+  id: PackageIdentifier,
+): string {
+  switch (id.uriType) {
+    case "slug":
+      return `${id.fullSlug.ownerSlug}/${id.fullSlug.packageSlug}`;
+    case "file":
+      return "/";
+  }
+}
+
 function getContinueProxyModelName(
-  packageSlug: PackageSlug,
+  packageIdentifier: PackageIdentifier,
   provider: string,
   model: string,
 ): string {
-  return `${packageSlug.ownerSlug}/${packageSlug.packageSlug}/${provider}/${model}`;
+  return `${packageIdentifierToShorthandSlug(packageIdentifier)}/${provider}/${model}`;
 }
 
 export function useProxyForUnrenderedSecrets(
   config: AssistantUnrolled,
-  packageSlug: PackageSlug,
+  packageIdentifier: PackageIdentifier,
   orgScopeId: string | null,
   onPremProxyUrl: string | null,
 ): AssistantUnrolled {
@@ -128,7 +139,7 @@ export function useProxyForUnrenderedSecrets(
           name: config.models[i]?.name ?? "",
           provider: "continue-proxy",
           model: getContinueProxyModelName(
-            packageSlug,
+            packageIdentifier,
             config.models[i]?.provider ?? "",
             config.models[i]?.model ?? "",
           ),
