@@ -509,9 +509,9 @@ export class Core {
       streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
     );
 
-    on("completeOnboarding", this.handleCompleteOnboarding);
+    on("completeOnboarding", this.handleCompleteOnboarding.bind(this));
 
-    on("addAutocompleteModel", this.handleAddAutocompleteModel);
+    on("addAutocompleteModel", this.handleAddAutocompleteModel.bind(this));
 
     on("stats/getTokensPerDay", async (msg) => {
       const rows = await DevDataSqliteDb.getTokensPerDay();
@@ -552,7 +552,7 @@ export class Core {
     });
 
     // File changes - TODO - remove remaining logic for these from IDEs where possible
-    on("files/changed", this.handleFilesChanged);
+    on("files/changed", this.handleFilesChanged.bind(this));
     const refreshIfNotIgnored = async (uris: string[]) => {
       const toRefresh: string[] = [];
       for (const uri of uris) {
