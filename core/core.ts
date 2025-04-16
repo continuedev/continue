@@ -30,6 +30,7 @@ import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import {
+  ContextItemWithId,
   DiffLine,
   IdeSettings,
   ModelDescription,
@@ -46,6 +47,7 @@ import {
   setupLocalConfig,
   setupQuickstartConfig,
 } from "./config/onboarding";
+import { createNewWorkspaceBlockFile } from "./config/workspace/workspaceBlocks";
 import { MCPManagerSingleton } from "./context/mcp";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { shouldIgnore } from "./indexing/shouldIgnore";
@@ -318,6 +320,11 @@ export class Core {
     on("config/newPromptFile", async (msg) => {
       const { config } = await this.configHandler.loadConfig();
       await createNewPromptFileV2(this.ide, config?.experimental?.promptPath);
+      await this.configHandler.reloadConfig();
+    });
+
+    on("config/addLocalWorkspaceBlock", async (msg) => {
+      await createNewWorkspaceBlockFile(this.ide, msg.data.blockType);
       await this.configHandler.reloadConfig();
     });
 
@@ -694,27 +701,31 @@ export class Core {
     });
 
     on("isItemTooBig", async ({ data: { item, selectedModelTitle } }) => {
-      const { config } = await this.configHandler.loadConfig();
-
-      if (!config) {
-        return false;
-      }
-
-      const llm = (await this.configHandler.loadConfig()).config
-        ?.selectedModelByRole.chat;
-
-      if (!llm) {
-        throw new Error("No chat model selected");
-      }
-
-      const tokens = countTokens(item.content);
-
-      if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
-        return true;
-      }
-
-      return false;
+      return this.isItemTooBig(item);
     });
+  }
+
+  private async isItemTooBig(item: ContextItemWithId) {
+    const { config } = await this.configHandler.loadConfig();
+
+    if (!config) {
+      return false;
+    }
+
+    const llm = (await this.configHandler.loadConfig()).config
+      ?.selectedModelByRole.chat;
+
+    if (!llm) {
+      throw new Error("No chat model selected");
+    }
+
+    const tokens = countTokens(item.content);
+
+    if (tokens > llm.contextLength - llm.completionOptions!.maxTokens!) {
+      return true;
+    }
+
+    return false;
   }
 
   private handleAddAutocompleteModel(
