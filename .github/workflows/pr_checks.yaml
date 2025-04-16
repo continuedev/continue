@@ -689,7 +689,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-logs-${{ matrix.test_file }}-${{ matrix.command }}
-          path: e2e.log
+          path: extensions/vscode/e2e.log
 
   gui-tests:
     needs: [install-gui, install-core, install-config-yaml]
