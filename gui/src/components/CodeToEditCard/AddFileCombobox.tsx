@@ -39,6 +39,17 @@ export default function AddFileCombobox({
     }
   }, []);
 
+  useEffect(() => {
+    // update selectedFiles showing only the files that are in codeToEdit
+    setSelectedFiles(
+      (prevSelectedFiles) =>
+        prevSelectedFiles.filter(
+          (file) =>
+            codeToEdit.findIndex((code) => code.filepath === file.id) !== -1,
+        ), 
+    );
+  }, [codeToEdit]);
+
   const filteredFiles =
     query === ""
       ? remainingFiles
