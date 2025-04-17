@@ -161,6 +161,8 @@ function waitForSidebarReady(
   });
 }
 
+let currentSuggestionWidgetInhibitor: vscode.Disposable | null = null;
+
 // Copy everything over from extension.ts
 const getCommandsMap: (
   ide: VsCodeIde,
@@ -793,6 +795,56 @@ const getCommandsMap: (
             );
           }
         });
+    },
+    "continue.disableSuggestionWidget": () => {
+      if (currentSuggestionWidgetInhibitor) return;
+
+      vscode.commands.executeCommand("hideSuggestWidget");
+
+      let inlineCompletionsRegistered = false;
+
+      // Override default:type for the type command and replace it with a version
+      // that side steps the intellisense suggestion widget
+      currentSuggestionWidgetInhibitor = vscode.commands.registerCommand(
+        "type",
+        async (args) => {
+          const editor = vscode.window.activeTextEditor;
+          if (editor) {
+            await editor.edit((editBuilder) => {
+              editor.selections.forEach((selection) => {
+                editBuilder.insert(selection.active, args.text);
+              });
+            });
+          }
+
+          // The default type command handler sets up inline completions initially,
+          // so we need to do the same thing here.
+          if (!inlineCompletionsRegistered) {
+            inlineCompletionsRegistered = true;
+            vscode.commands.executeCommand(
+              "editor.action.inlineSuggest.trigger",
+            );
+          }
+        },
+      );
+
+      // Store the disposable in extension context for later cleanup
+      extensionContext.subscriptions.push(currentSuggestionWidgetInhibitor);
+    },
+    "continue.enableSuggestionWidget": () => {
+      if (currentSuggestionWidgetInhibitor) {
+        const index = extensionContext.subscriptions.indexOf(
+          currentSuggestionWidgetInhibitor,
+        );
+        if (index !== -1)
+          extensionContext.subscriptions.splice(index, 1);
+
+        currentSuggestionWidgetInhibitor.dispose();
+        currentSuggestionWidgetInhibitor = null;
+      }
+    },
+    "continue.isSuggestionWidgetDisabled": () => {
+      return currentSuggestionWidgetInhibitor !== null;
     },
   };
 };
