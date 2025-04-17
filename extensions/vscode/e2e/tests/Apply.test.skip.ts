@@ -8,6 +8,15 @@ import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import { TestUtils } from "../TestUtils";
 
+/**
+ * This file is currently `.skip`'d because the test is consistently failing in CI,
+ * bu consistenly passing locally. Screenshots from CI appear to indicate
+ * that our `GlobalActions.openTestWorkspace` fn isn't actually working, and therefore
+ * our apply button is instead rendering as "Create file" since the file doesn't exist
+ * in our workspace.
+ *
+ * The most recent failing screenshot is here: https://github.com/continuedev/continue/actions/runs/14481877233?pr=5167
+ */
 describe("Apply Test", () => {
   let view: WebView;
   let editor: TextEditor;
