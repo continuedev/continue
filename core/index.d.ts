@@ -153,6 +153,10 @@ export interface ModelInstaller {
     signal: AbortSignal,
     progressReporter?: (task: string, increment: number, total: number) => void,
   ): Promise<any>;
+
+  isInstallingModel(
+    modelName: string
+  ): Promise<boolean>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
