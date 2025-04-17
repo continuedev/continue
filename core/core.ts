@@ -1010,13 +1010,6 @@ export class Core {
       this.indexingCancellationController.signal,
     )) {
       let updateToSend = { ...update };
-      // TODO reconsider this status overwrite?
-      // original goal was to not concern users with edge noncritical errors
-      if (update.status === "failed") {
-        updateToSend.status = "done";
-        updateToSend.desc = "Indexing complete";
-        updateToSend.progress = 1.0;
-      }
 
       void this.messenger.request("indexProgress", updateToSend);
       this.codebaseIndexingState = updateToSend;
@@ -1045,11 +1038,6 @@ export class Core {
       files,
     )) {
       let updateToSend = { ...update };
-      if (update.status === "failed") {
-        updateToSend.status = "done";
-        updateToSend.desc = "Indexing complete";
-        updateToSend.progress = 1.0;
-      }
 
       void this.messenger.request("indexProgress", updateToSend);
       this.codebaseIndexingState = updateToSend;
