@@ -22,6 +22,7 @@ import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
+import IncompatibleExtensionsOverlay from "./IncompatibleExtensionsOverlay";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
 
@@ -56,6 +57,8 @@ const Layout = () => {
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
+
+  const [bumpWithOtherExtensions, setBumpWithOtherExtensions] = useState(false);
 
   useWebviewListener(
     "newSession",
@@ -198,6 +201,11 @@ const Layout = () => {
     [isInEditMode],
   );
 
+  useWebviewListener("checkForIncompatibleExtensions", async (data) => {
+    setBumpWithOtherExtensions(data);
+    return true;
+  });
+
   useEffect(() => {
     const handleKeyDown = (event: any) => {
       if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
@@ -221,51 +229,56 @@ const Layout = () => {
   return showGraniteOnboardingCard ? (
     <GraniteOnboardingCard />
   ) : (
-    <LocalStorageProvider>
-      <AuthProvider>
-        <LayoutTopDiv>
-          <OSRContextMenu />
-          <div
-            style={{
-              scrollbarGutter: "stable both-edges",
-              minHeight: "100%",
-              display: "grid",
-              gridTemplateRows: "1fr auto",
-            }}
-          >
-            <TextDialog
-              showDialog={showDialog}
-              onEnter={() => {
-                dispatch(setShowDialog(false));
+    <>
+      {bumpWithOtherExtensions && <IncompatibleExtensionsOverlay />}
+      <LocalStorageProvider>
+        <AuthProvider>
+          <LayoutTopDiv>
+            <OSRContextMenu />
+            <div
+              style={{
+                scrollbarGutter: "stable both-edges",
+                minHeight: "100%",
+                display: "grid",
+                gridTemplateRows: "1fr auto",
               }}
-              onClose={() => {
-                dispatch(setShowDialog(false));
-              }}
-              message={dialogMessage}
-            />
+            >
+              <TextDialog
+                showDialog={showDialog}
+                onEnter={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                onClose={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                message={dialogMessage}
+              />
 
-            <GridDiv className="">
-              <PostHogPageView />
-              <Outlet />
+              <GridDiv className="">
+                <PostHogPageView />
+                <Outlet />
 
-              {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-                <div
-                  className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-                  role="alert"
-                  onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-                >
-                  <strong className="font-bold">Error!</strong>{" "}
-                  <span className="block sm:inline">Could not load config</span>
-                  <div className="mt-2 underline">Learn More</div>
-                </div>
-              )}
-              <Footer />
-            </GridDiv>
-          </div>
-          <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
-        </LayoutTopDiv>
-      </AuthProvider>
-    </LocalStorageProvider>
+                {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
+                  <div
+                    className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+                    role="alert"
+                    onClick={() => navigate(ROUTES.CONFIG_ERROR)}
+                  >
+                    <strong className="font-bold">Error!</strong>{" "}
+                    <span className="block sm:inline">
+                      Could not load config
+                    </span>
+                    <div className="mt-2 underline">Learn More</div>
+                  </div>
+                )}
+                <Footer />
+              </GridDiv>
+            </div>
+            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+          </LayoutTopDiv>
+        </AuthProvider>
+      </LocalStorageProvider>
+    </>
   );
 };
 

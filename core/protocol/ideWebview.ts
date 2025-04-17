@@ -93,4 +93,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusEdit: [undefined, void];
   focusEditWithoutClear: [undefined, void];
   setShowGraniteOnboardingCard: [boolean, void];
+  checkForIncompatibleExtensions: [boolean, boolean];
 };
