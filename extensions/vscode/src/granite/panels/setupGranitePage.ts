@@ -232,6 +232,7 @@ export class SetupGranitePage {
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src ${webview.cspSource} ${devStyleSrc} 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src ${devConnectSrc} 'self'; img-src https: ${webview.cspSource} data:">
+          <script nonce="${nonce}">const vscode = acquireVsCodeApi();</script>
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>Granite Models</title>
           </head>
