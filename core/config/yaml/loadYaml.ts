@@ -112,7 +112,6 @@ async function loadConfigYaml(
         await controlPlaneClient.getAccessToken(),
         getControlPlaneEnvSync(
           ideSettings.continueTestEnvironment,
-          ideSettings.enableControlServerBeta,
         ).CONTROL_PLANE_URL,
       ),
       {
