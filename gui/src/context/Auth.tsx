@@ -29,7 +29,6 @@ interface AuthContextType {
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
   refreshProfiles: () => void;
-  controlServerBetaEnabled: boolean;
   organizations: OrganizationDescription[];
 }
 
@@ -117,18 +116,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
-  const [controlServerBetaEnabled, setControlServerBetaEnabled] =
-    useState(false);
-
-  // Hacky, remove once continue for teams is deprecated
-  useWebviewListener(
-    "configUpdate",
-    async (msg) => {
-      setControlServerBetaEnabled(msg.usingContinueForTeams);
-    },
-    [],
-  );
-
   const refreshProfiles = useCallback(async () => {
     try {
       await ideMessenger.request("config/refreshProfiles", undefined);
@@ -149,7 +136,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         profiles: currentOrg?.profiles ?? [],
         refreshProfiles,
         organizations: orgs,
-        controlServerBetaEnabled,
       }}
     >
       {children}
