@@ -12,7 +12,10 @@ export const runTerminalCommandTool: Tool = {
   function: {
     name: BuiltInToolNames.RunTerminalCommand,
     description:
-      "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands. Do NOT perform actions requiring special/admin priveleges.",
+      "Run a terminal command in the current directory.\
+      The shell is not stateful and will not remember any previous commands.\
+      When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
+      Do NOT perform actions requiring special/admin privileges.",
       parameters: {
         type: "object",
         required: ["command"],
