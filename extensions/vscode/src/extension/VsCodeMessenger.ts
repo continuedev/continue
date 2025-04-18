@@ -351,6 +351,9 @@ export class VsCodeMessenger {
       await Promise.all(
         sessions.map((session) => workOsAuthProvider.removeSession(session.id)),
       );
+      this.inProcessMessenger.invoke("didChangeControlPlaneSessionInfo", {
+        sessionInfo: undefined,
+      });
       vscode.commands.executeCommand(
         "setContext",
         "continue.isSignedInToControlPlane",
