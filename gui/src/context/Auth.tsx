@@ -112,7 +112,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useWebviewListener(
     "sessionUpdate",
     async (data) => {
-      debugger;
       setSession(data.sessionInfo);
     },
     [],

@@ -61,7 +61,6 @@ export function LumpProvider({ children }: LumpProviderProps) {
 
   // Update displayedSection and visibility when selectedSection changes
   useEffect(() => {
-    debugger;
     if (selectedSection) {
       setDisplayedSection(selectedSection);
       setIsVisible(true);
