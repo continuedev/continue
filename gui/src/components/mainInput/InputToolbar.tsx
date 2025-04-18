@@ -65,7 +65,7 @@ const EnterButton = styled.button<{ isPrimary?: boolean }>`
   cursor: pointer;
 
   :disabled {
-    cursor: wait;
+    cursor: not-allowed;
   }
 `;
 
