@@ -6,9 +6,7 @@
   "scripts": {
     "generate-client:typescript": "openapi-generator-cli generate -i ./openapi.yaml -g typescript-fetch -o ./clients/typescript -c ./openapi-generator-config.json",
     "generate-client:python": "openapi-generator-cli generate -i ./openapi.yaml -g python -o ./clients/python -c ./openapi-generator-config.json",
-    "generate-client:javascript": "openapi-generator-cli generate -i ./openapi.yaml -g javascript -o ./clients/javascript -c ./openapi-generator-config.json",
-    "generate-client:php": "openapi-generator-cli generate -i ./openapi.yaml -g php -o ./clients/php -c ./openapi-generator-config.json",
-    "generate-client:ALL": "npm run generate-client:typescript && npm run generate-client:python && npm run generate-client:javascript && npm run generate-client:php",
+    "generate-client:ALL": "npm run generate-client:typescript && npm run generate-client:python",
     "swagger-ui": "node swagger-ui-server.js"
   },
   "author": "Continue Dev, Inc.",

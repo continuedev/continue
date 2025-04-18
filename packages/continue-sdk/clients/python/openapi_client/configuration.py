@@ -524,7 +524,7 @@ class Configuration:
                 'description': "Production server",
             },
             {
-                'url': "http://localhost:3002",
+                'url': "http://localhost:3001",
                 'description': "Local development server",
             }
         ]
