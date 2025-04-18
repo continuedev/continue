@@ -80,6 +80,7 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "setTTSActive",
     "getWebviewHistoryLength",
     "getCurrentSessionId",
+    "sessionUpdate",
     "didCloseFiles",
     "toolCallPartialOutput",
   ];
