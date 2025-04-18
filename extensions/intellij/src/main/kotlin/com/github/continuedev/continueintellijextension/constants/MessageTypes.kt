@@ -69,6 +69,7 @@ class MessageTypes {
             "getWebviewHistoryLength",
             "getCurrentSessionId",
             "didCloseFiles",
+            "toolCallPartialOutput",
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -127,6 +128,8 @@ class MessageTypes {
             "tools/call",
             "controlPlane/openUrl",
             "isItemTooBig",
+            "process/markAsBackgrounded",
+            "process/isBackgrounded",
         )
     }
 }

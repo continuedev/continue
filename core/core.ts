@@ -26,6 +26,7 @@ import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
+import { isProcessBackgrounded, markProcessAsBackgrounded } from "./util/processTerminalBackgroundStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
@@ -35,6 +36,7 @@ import {
   IdeSettings,
   ModelDescription,
   RangeInFile,
+  type ContextItem,
   type ContextItemId,
   type IDE,
   type IndexingProgressUpdate,
@@ -252,6 +254,7 @@ export class Core {
     this.registerMessageHandlers(ideSettingsPromise);
   }
 
+  /* eslint-disable max-lines-per-function */
   private registerMessageHandlers(ideSettingsPromise: Promise<IdeSettings>) {
     const on = this.messenger.on.bind(this.messenger);
 
@@ -626,14 +629,18 @@ export class Core {
     });
 
     on("didChangeSelectedProfile", async (msg) => {
-      await this.configHandler.setSelectedProfileId(msg.data.id);
+      if (msg.data.id) {
+        await this.configHandler.setSelectedProfileId(msg.data.id);
+      }
     });
 
     on("didChangeSelectedOrg", async (msg) => {
-      await this.configHandler.setSelectedOrgId(
-        msg.data.id,
-        msg.data.profileId,
-      );
+      if (msg.data.id) {
+        await this.configHandler.setSelectedOrgId(
+          msg.data.id,
+          msg.data.profileId || undefined,
+        );
+      }
     });
 
     on("didChangeControlPlaneSessionInfo", async (msg) => {
@@ -666,7 +673,7 @@ export class Core {
       }
     });
 
-    on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
+    on("tools/call", async ({ data: { toolCall, selectedModelTitle }, messageId }) => {
       const { config } = await this.configHandler.loadConfig();
       if (!config) {
         throw new Error("Config not loaded");
@@ -684,6 +691,14 @@ export class Core {
         throw new Error("No chat model selected");
       }
 
+      // Define a callback for streaming output updates
+      const onPartialOutput = (params: {
+        toolCallId: string,
+        contextItems: ContextItem[];
+      }) => {
+        this.messenger.send("toolCallPartialOutput", params);
+      };
+
       const contextItems = await callTool(
         tool,
         JSON.parse(toolCall.function.arguments || "{}"),
@@ -693,6 +708,8 @@ export class Core {
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
           tool,
+          toolCallId: toolCall.id,
+          onPartialOutput,
         },
       );
 
@@ -708,6 +725,17 @@ export class Core {
     on("isItemTooBig", async ({ data: { item, selectedModelTitle } }) => {
       return this.isItemTooBig(item);
     });
+
+    // Process state handlers
+    on("process/markAsBackgrounded", async ({ data: { toolCallId } }) => {
+      markProcessAsBackgrounded(toolCallId);
+    });
+
+    on("process/isBackgrounded", async ({ data: { toolCallId }, messageId }) => {
+      const isBackgrounded = isProcessBackgrounded(toolCallId);
+      return isBackgrounded; // Return true to indicate the message was handled successfully
+    });
+
   }
 
   private async isItemTooBig(item: ContextItemWithId) {

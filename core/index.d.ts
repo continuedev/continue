@@ -395,6 +395,7 @@ export interface ContextItem {
   icon?: string;
   uri?: ContextItemUri;
   hidden?: boolean;
+  status?: string;
 }
 
 export interface ContextItemWithId extends ContextItem {
@@ -964,6 +965,8 @@ export interface ToolExtras {
   llm: ILLM;
   fetch: FetchFunction;
   tool: Tool;
+  toolCallId?: string;
+  onPartialOutput?: (params: { toolCallId: string, contextItems: ContextItem[] }) => void;
 }
 
 export interface Tool {
@@ -1482,6 +1485,7 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+  waitForCompletion?: boolean;
 }
 
 export interface RuleWithSource {

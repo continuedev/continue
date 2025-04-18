@@ -42,4 +42,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   getCurrentSessionId: [undefined, string];
   "jetbrains/setColors": [Record<string, string>, void];
   sessionUpdate: [{ sessionInfo: ControlPlaneSessionInfo | undefined }, void];
+  toolCallPartialOutput: [{ toolCallId: string; contextItems: any[] }, void];
 };

@@ -215,4 +215,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { sessionInfo: ControlPlaneSessionInfo | undefined },
     void,
   ];
+  "process/markAsBackgrounded": [{ toolCallId: string }, void];
+  "process/isBackgrounded": [{ toolCallId: string }, boolean];
 };
