@@ -9,9 +9,10 @@ Agent offers the same functionality as Chat, while also including tools in the r
 
 ## The tool handshake
 
-Tools provide a flexible, powerful way for models to interface with the external world. They are provided to the model as a JSON object with a name and an arguments schema. For example, a `read_file` tool with a `filepath` argument will give the model the ability to request the contents of a specific file. 
+Tools provide a flexible, powerful way for models to interface with the external world. They are provided to the model as a JSON object with a name and an arguments schema. For example, a `read_file` tool with a `filepath` argument will give the model the ability to request the contents of a specific file.
 
 The following handshake describes how Agent uses tools:
+
 1. In Agent mode, available tools are sent along with `user` chat requests
 2. The model can choose to include a tool call in its response
 3. The user gives permission. This step is skipped if the policy for that tool is set to `Automatic`
@@ -32,7 +33,8 @@ Continue includes several built-in tools which provide the model access to IDE f
 - **Create new file** (`builtin_create_new_file`): Create a new file within the project, with path and contents specified by the model
 - **Exact search** (`builtin_exact_search`): perform a `ripgrep` search within the project
 - **Run terminal command** (`builtin_run_terminal_command`): run a terminal command from the workspace root
-- **Search web**  (`builtin_search_web`): Perform a web search to get top results
+- **Search web** (`builtin_search_web`): Perform a web search to get top results
 - **View diff** (`builtin_view_diff`): View the current working git diff
 - **View repo map** (`builtin_view_repo_map`): request a copy of the repository map—same as the [Repo Map Context Provider](../customize/context-providers.mdx#repository-map)
 - **View subdirectory** (`builtin_view_subdirectory`): request a copy of a repo map for a specific directory within the project
+- **Create Rule Block** (`builtin_create_rule_block`): creates a new rule block in `.continue/rules` based on the contents of the conversation
