@@ -51,28 +51,6 @@ const BackgroundLink = styled.a`
   }
 `;
 
-// Extract status message from terminal output
-function parseTerminalOutput(output: string): {
-  commandOutput: string;
-  statusMessage: string | null;
-} {
-  // Match status messages like [Command is running...], [Command completed], [Background command failed with...], etc.
-  const statusRegex = /\n\[(Command .+?|Background .+?)\]$/;
-  const match = output.match(statusRegex);
-
-  if (match) {
-    return {
-      commandOutput: output.replace(statusRegex, ''),
-      statusMessage: match[1]
-    };
-  }
-
-  return {
-    commandOutput: output,
-    statusMessage: null
-  };
-}
-
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   const dispatch = useAppDispatch();
 
@@ -81,11 +59,10 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
     item => item.name === "Terminal"
   );
 
-  const terminalOutput = terminalItem?.content || "";
-  const { commandOutput, statusMessage } = parseTerminalOutput(terminalOutput);
-
+  const terminalContent = terminalItem?.content || "";
+  const statusMessage = terminalItem?.status || "";
   const isRunning = props.toolCallState.status === "calling";
-  const hasOutput = commandOutput.length > 0;
+  const hasOutput = terminalContent.length > 0;
 
   // Determine status type
   let statusType: 'running' | 'completed' | 'failed' | 'background' = 'completed';
@@ -102,7 +79,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
       <StyledMarkdownPreview
         isRenderingInStepContainer
         source={`\`\`\`bash .sh\n$ ${props.command ?? ""}${(hasOutput || isRunning) ?
-          `\n${commandOutput || "Waiting for output..."}`
+          `\n${terminalContent || "Waiting for output..."}`
           : ""}\n\`\`\``}
       />
 
