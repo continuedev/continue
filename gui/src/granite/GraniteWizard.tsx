@@ -12,7 +12,7 @@ import { GB } from "core/granite/commons/sizeUtils";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
 import { isHighEndApple, shouldRecommendLargeModel, SystemInfo } from "core/granite/commons/sysInfo";
 import { formatSize } from "core/granite/commons/textUtils";
-import { compareVersions, MIN_OLLAMA_VERSION } from "core/granite/commons/versions";
+import { checkMinimumServerVersion, MIN_OLLAMA_VERSION } from "core/granite/commons/versions";
 import {
   FINAL_STEP,
   MODELS_STEP,
@@ -94,6 +94,8 @@ interface WizardContextProps {
   >;
   isVisible: boolean;
   setVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  isOllamaOutdated: boolean;
+  setOllamaOutdated: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const WizardContext = createContext<WizardContextProps | undefined>(undefined);
@@ -151,6 +153,7 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
   >("idle");
   const [isOffline, setIsOffline] = useState(false);
   const [isVisible, setVisible] = useState(true);
+  const [isOllamaOutdated, setOllamaOutdated] = useState(false);
 
   return (
     <WizardContext.Provider
@@ -187,6 +190,8 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
         setModelInstallationError,
         isVisible,
         setVisible,
+        isOllamaOutdated,
+        setOllamaOutdated
       }}
     >
       {children}
@@ -265,9 +270,9 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
     ollamaInstallationError,
     ollamaInstallationProgress,
     setOllamaInstallationProgress,
+    isOllamaOutdated
   } = useWizardContext();
   const [systemErrors, setSystemErrors] = useState<string[] | undefined>();
-  const [isOllamaOutdated, setOllamaOutdated] = useState<boolean | undefined>();
   const serverStatus = serverState.status;
   const handleDownload = () => {
     setCurrentStatus(WizardStatus.downloadingOllama);
@@ -300,13 +305,10 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
   useEffect(() => {
     const ollamaVersion = serverState.version;
     const sysErrors = [];
-    if (ollamaVersion && !checkMinimumServerVersion(ollamaVersion )) {
-      setOllamaOutdated(true);
+    if (isOllamaOutdated) {
       sysErrors.push(
         `Ollama v${MIN_OLLAMA_VERSION} is required. Version ${ollamaVersion} is detected`,
       );
-    } else {
-      setOllamaOutdated(false)
     }
     setSystemErrors(sysErrors);
   }, [serverState.version]);
@@ -315,16 +317,11 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
     installationModes.length > 0 && installationModes[0].id === "devspaces";
 
   let serverButton;
-  if (isOllamaOutdated) {
-    serverButton = (
-      <VSCodeButton variant="secondary" disabled>
-        Ollama must be updated
-      </VSCodeButton>
-    );
-  } else if (
+  if (
+    !isOllamaOutdated && (
     serverStatus === ServerStatus.started ||
     serverStatus === ServerStatus.stopped
-  ) {
+  )) {
     serverButton = (
       <VSCodeButton variant="secondary" disabled>
         Complete!
@@ -359,12 +356,10 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
         disabled={isOffline}
         title={installationModes[0].label}
       >
-        Download and Install Ollama
+        Download and {isOllamaOutdated?"Update":"Install"} Ollama
       </VSCodeButton>
     );
   }
-
-  const ollamaAction = isOllamaOutdated?"Update":"install";
 
   return (
     <WizardStep {...props}>
@@ -392,8 +387,12 @@ const OllamaInstallStep: React.FC<StepProps> = (props) => {
           )}
         {!isDevspaces && installationModes.length > 0 && (
           <p className="text-sm text-[--vscode-editor-foreground]">
-            {isOllamaOutdated ?"":"If you prefer, you can also "}
-            <a href="https://ollama.com/download">{ollamaAction} Ollama manually</a>.
+            If you prefer, you can also
+            {!isOllamaOutdated &&
+             <a href="https://ollama.com/download"> install Ollama manually</a>}
+            {isOllamaOutdated &&
+            <a href="https://github.com/ollama/ollama/blob/main/docs/faq.md#how-can-i-upgrade-ollama"> update Ollama manually</a>
+            }.
           </p>
         )}
         {systemErrors?.map((systemError) => (
@@ -425,6 +424,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
     setModelInstallationError,
     systemInfo,
     statusByModel,
+    isOllamaOutdated
   } = useWizardContext();
   const [systemErrors, setSystemErrors] = useState<string[] | undefined>();
 
@@ -479,7 +479,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
       }
     }
     const ollamaVersion = serverState.version;
-    if (ollamaVersion && !checkMinimumServerVersion(ollamaVersion )) {
+    if (isOllamaOutdated) {
       sysErrors.push(
         `Ollama v${MIN_OLLAMA_VERSION} is required. Version ${ollamaVersion} is detected`,
       );
@@ -614,7 +614,7 @@ const ModelSelectionStep: React.FC<StepProps> = (props) => {
                 message="Ollama must be installed"
               />
             )}
-          {serverStatus === ServerStatus.stopped && (
+          {serverStatus === ServerStatus.stopped && !isOllamaOutdated && (
             <DiagnosticMessage
               type="info"
               message="Ollama will be started automatically"
@@ -686,6 +686,7 @@ const WizardContent: React.FC = () => {
     setStatusByModel,
     isVisible,
     setVisible,
+    setOllamaOutdated
   } = useWizardContext();
   const currentStatusRef = useRef(currentStatus);
   const isVisibleRef = useRef(isVisible);
@@ -759,21 +760,20 @@ const WizardContent: React.FC = () => {
         case "status": {
           const data = payload.data;
           const newServerState = data.serverState;
-          const isOllamaOutdated = !checkMinimumServerVersion(newServerState.version );
-          setServerState((oldState) => {
-            if (oldState.version !== undefined && oldState.version !== newServerState.version && isOllamaOutdated) {
-              setActiveStep(OLLAMA_STEP);
-            }
-            return newServerState;
-          });
+          const newVersion: string | undefined = newServerState.version;
+          const isOllamaOutdated = newVersion !== undefined && !checkMinimumServerVersion(newVersion);
+          setOllamaOutdated(isOllamaOutdated);
+          setServerState(newServerState);
 
           const newStepStatuses = data.wizardState.stepStatuses as boolean[];
           setStepStatuses((prevStatuses) => {
-            if (
+            if (prevStatuses[OLLAMA_STEP] && !newStepStatuses[OLLAMA_STEP]) {
+              //Ollama was just uninstalled/downgraded, return to the Ollama step
+              setActiveStep(OLLAMA_STEP);
+            } else if (
               newStepStatuses[OLLAMA_STEP] &&
               !newStepStatuses[MODELS_STEP] &&
-              prevStatuses[OLLAMA_STEP] !== newStepStatuses[OLLAMA_STEP] &&
-              !isOllamaOutdated
+              prevStatuses[OLLAMA_STEP] !== newStepStatuses[OLLAMA_STEP]
             ) {
               setActiveStep(MODELS_STEP);
             }
@@ -936,9 +936,4 @@ function getRequiredSpace(
       const modelInfo = DEFAULT_MODEL_INFO.get(model); //FIXME get from registry
       return sum + (modelInfo ? modelInfo.size : 0);
     }, 0);
-}
-
-function checkMinimumServerVersion(version: string): boolean {
-  const result = compareVersions(version, MIN_OLLAMA_VERSION) >= 0;
-  return result;
 }

@@ -9,6 +9,7 @@ import { SHOW_GRANITE_ONBOARDING_CARD_KEY } from "core/granite/commons/constants
 import { DOWNLOADABLE_MODELS } from "core/granite/commons/modelRequirements";
 import { ProgressData } from "core/granite/commons/progressData";
 import { ModelStatus, ServerStatus } from "core/granite/commons/statuses";
+import { checkMinimumServerVersion } from "core/granite/commons/versions";
 import {
   FINAL_STEP,
   MODELS_STEP,
@@ -482,9 +483,10 @@ export class SetupGranitePage {
       this.getStatusByModel(),
     ]);
     const statusByModelObject = Object.fromEntries(statusByModel); // Convert Map to Object
-    this.wizardState.stepStatuses[OLLAMA_STEP] =
+    const serverVersion = serverState.version;
+    this.wizardState.stepStatuses[OLLAMA_STEP] = serverVersion !== undefined && checkMinimumServerVersion(serverVersion) && (
       serverState.status === ServerStatus.started ||
-      serverState.status === ServerStatus.stopped;
+      serverState.status === ServerStatus.stopped);
     webview.postMessage({
       command: "status",
       data: {

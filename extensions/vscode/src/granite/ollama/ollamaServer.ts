@@ -179,6 +179,7 @@ export class OllamaServer implements IModelServer, Disposable {
         installCommand = [
           'clear',
           'set -e',  // Exit immediately if a command exits with a non-zero status
+          'killall "Ollama" || true',
           'brew install --cask ollama',
           'sleep 3',
           'ollama list',  // run ollama list to start the server
@@ -286,8 +287,11 @@ export class OllamaServer implements IModelServer, Disposable {
           status = ModelStatus.stale;
         }
       }
-    } catch (error) {
-      console.log(`Error getting ${modelName} status:`, error);
+    } catch (error : any) {
+      if (error?.cause?.code !== "ECONNREFUSED") {
+        // If it's not Ollama being turned off, what is it?
+        console.log(`Error getting ${modelName} status:`, error);
+      }
       status = ModelStatus.unknown;
     }
     return status;
