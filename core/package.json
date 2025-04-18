@@ -73,6 +73,7 @@
     "http-proxy-agent": "^7.0.1",
     "https-proxy-agent": "^7.0.3",
     "ignore": "^5.3.1",
+    "is-localhost-ip": "^2.0.0",
     "jinja-js": "0.1.8",
     "js-tiktoken": "^1.0.8",
     "jsdom": "^24.0.0",
