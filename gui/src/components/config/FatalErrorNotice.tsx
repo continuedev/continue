@@ -1,9 +1,13 @@
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../redux/hooks";
+import { ROUTES } from "../../util/navigation";
 import { useLump } from "../mainInput/Lump/LumpContext";
 
 export const FatalErrorIndicator = () => {
   const configError = useAppSelector((store) => store.config.configError);
+
+  const navigate = useNavigate();
 
   const hasFatalErrors = useMemo(() => {
     return configError?.some((error) => error.fatal);
@@ -12,6 +16,7 @@ export const FatalErrorIndicator = () => {
   const { setSelectedSection } = useLump();
 
   const showLumpErrorSection = () => {
+    navigate(ROUTES.HOME);
     setSelectedSection("error");
   };
 
