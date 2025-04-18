@@ -79,7 +79,7 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
               onClick={() => dispatch(callTool())}
               data-testid="accept-tool-call-button"
             >
-              Continue
+              Accept
             </AcceptButton>
           </>
         ) : toolCallState.status === "calling" ? (

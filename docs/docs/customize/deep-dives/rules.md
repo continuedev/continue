@@ -17,9 +17,15 @@ To form the system message, rules are joined with new lines, in the order they a
 
 ## `rules` blocks
 
-Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub.
+Rules can be added to an Assistant on the Continue Hub. Explore available rules [here](https://hub.continue.dev/explore/rules), or [create your own](https://hub.continue.dev/new?type=block&blockType=rules) in the Hub. These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally.
 
-These blocks are defined using the [`config.yaml` syntax](../../reference.md#rules) and can also be created locally. Rules blocks can be simple text, or have the following properties:
+:::info Automatically create local rule blocks
+When in Agent mode, you can simply prompt the agent to create a rule for you.
+
+For example, you can say "Create a rule to always use named exports instead of default exports", and a rule will be created for you in `~/.continue/rules`.
+:::
+
+Rules blocks can be simple text, or have the following properties:
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule
