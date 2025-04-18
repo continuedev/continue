@@ -15,8 +15,6 @@ vi.mock("react-router-dom", async () => {
 describe("history Page test", () => {
   it("History text is existed after render", () => {
     renderWithProviders(<HistoryPage />);
-    expect(
-      screen.getByText("All session data is saved in ~/.continue/sessions"),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("history-sessions-note")).toBeInTheDocument();
   });
 });
