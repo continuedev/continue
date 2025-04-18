@@ -111,8 +111,6 @@ class IdeProtocolClient(
                     "logoutOfControlPlane" -> {
                         val authService = service<ContinueAuthService>()
                         authService.signOut()
-                        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
-                            .handleUpdatedSessionInfo(null)
 
                         respond(null)
                     }

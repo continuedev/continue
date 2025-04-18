@@ -71,6 +71,9 @@ class ContinueAuthService {
         setRefreshToken("")
         setAccountId("")
         setAccountLabel("")
+
+        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
+            .handleUpdatedSessionInfo(null)
     }
 
     private fun updateRefreshToken(token: String) {
