@@ -39,20 +39,28 @@ export class AutocompleteLruCache {
     // If the query is "co" and we have "c" -> "ontinue" in the cache,
     // we should return "ntinue" as the completion.
     // Have to make sure we take the key with shortest length
-    const result = await this.db.get(
-      "SELECT key, value FROM cache WHERE ? LIKE key || '%' ORDER BY LENGTH(key) DESC LIMIT 1",
-      truncateSqliteLikePattern(prefix),
-    );
-
-    // Validate that the cached compeltion is a valid completion for the prefix
-    if (result && result.value.startsWith(prefix.slice(result.key.length))) {
-      await this.db.run(
-        "UPDATE cache SET timestamp = ? WHERE key = ?",
-        Date.now(),
-        prefix,
+    const truncatedPrefix = truncateSqliteLikePattern(prefix);
+    try {
+      const result = await this.db.get(
+        "SELECT key, value FROM cache WHERE ? LIKE key || '%' ORDER BY LENGTH(key) DESC LIMIT 1",
+        truncatedPrefix,
       );
-      // And then truncate so we aren't writing something that's already there
-      return result.value.slice(prefix.length - result.key.length);
+      // Validate that the cached completion is a valid completion for the prefix
+      if (
+        result &&
+        result.value.startsWith(truncatedPrefix.slice(result.key.length))
+      ) {
+        await this.db.run(
+          "UPDATE cache SET timestamp = ? WHERE key = ?",
+          Date.now(),
+          truncatedPrefix,
+        );
+        // And then truncate so we aren't writing something that's already there
+        return result.value.slice(truncatedPrefix.length - result.key.length);
+      }
+    } catch (e) {
+      // catches e.g. old SQLITE LIKE OR GLOB PATTERN TOO COMPLEX
+      console.error(e);
     }
 
     return undefined;
@@ -60,13 +68,15 @@ export class AutocompleteLruCache {
 
   async put(prefix: string, completion: string) {
     const release = await this.mutex.acquire();
+
+    const truncatedPrefix = truncateSqliteLikePattern(prefix);
     try {
       await this.db.run("BEGIN TRANSACTION");
 
       try {
         const result = await this.db.get(
           "SELECT key FROM cache WHERE key = ?",
-          prefix,
+          truncatedPrefix,
         );
 
         if (result) {
@@ -74,7 +84,7 @@ export class AutocompleteLruCache {
             "UPDATE cache SET value = ?, timestamp = ? WHERE key = ?",
             completion,
             Date.now(),
-            prefix,
+            truncatedPrefix,
           );
         } else {
           const count = await this.db.get(
@@ -89,7 +99,7 @@ export class AutocompleteLruCache {
 
           await this.db.run(
             "INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)",
-            prefix,
+            truncatedPrefix,
             completion,
             Date.now(),
           );

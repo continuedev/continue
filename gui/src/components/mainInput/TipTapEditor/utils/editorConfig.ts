@@ -1,4 +1,4 @@
-import { Editor } from "@tiptap/core";
+import { Editor, JSONContent } from "@tiptap/core";
 import Document from "@tiptap/extension-document";
 import History from "@tiptap/extension-history";
 import Image from "@tiptap/extension-image";
@@ -21,7 +21,7 @@ import { useInputHistory } from "../../../../hooks/useInputHistory";
 import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
-import { selectDefaultModel } from "../../../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   selectHasCodeToEdit,
@@ -49,6 +49,28 @@ export function getPlaceholderText(
 }
 
 /**
+ * Checks if the editor content is valid for submission.
+ * A valid submission can contain either text content or prompt/code blocks
+ *
+ * @param json The editor JSON content
+ * @returns true if the content is valid for submission, false otherwise
+ */
+export function hasValidEditorContent(json: JSONContent): boolean {
+  // Check for prompt or code blocks
+  const hasPromptOrCodeBlock = json.content?.some(
+    (c) =>
+      c.type === ContinueExtensions.PromptBlock.name ||
+      c.type === ContinueExtensions.CodeBlock.name,
+  );
+
+  // Check for text content
+  const hasTextContent = json.content?.some((c) => c.content);
+
+  // Content is valid if it has either text or special blocks
+  return hasTextContent || hasPromptOrCodeBlock || false;
+}
+
+/**
  * This function is called only once, so we need to use refs to pass in the latest values
  */
 export function createEditorConfig(options: {
@@ -61,7 +83,7 @@ export function createEditorConfig(options: {
   const posthog = usePostHog();
 
   const { getSubmenuContextItems } = useSubmenuContextProviders();
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);
@@ -367,8 +389,8 @@ export function createEditorConfig(options: {
 
       const json = editor.getJSON();
 
-      // Don't do anything if input box is empty
-      if (!json.content?.some((c) => c.content)) {
+      // Don't do anything if input box doesn't have valid content
+      if (!hasValidEditorContent(json)) {
         return;
       }
 

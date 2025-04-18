@@ -18,9 +18,9 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/addModel",
     "config/newPromptFile",
     "config/ideSettingsUpdate",
+    "config/addLocalWorkspaceBlock",
     "config/getSerializedProfileInfo",
     "config/deleteModel",
-    "config/listProfiles",
     "config/refreshProfiles",
     "config/openProfile",
     "config/updateSharedConfig",
@@ -60,7 +60,9 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "didChangeSelectedOrg",
     "tools/call",
     "controlPlane/openUrl",
-    "controlPlane/listOrganizations",
+    "isItemTooBig",
+    "process/markAsBackgrounded",
+    "process/isBackgrounded",
   ];
 
 // Message types to pass through from core to webview
@@ -69,16 +71,14 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
 export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
   [
     "configUpdate",
-    "getDefaultModelTitle",
     "indexProgress", // Codebase
     "indexing/statusUpdate", // Docs, etc.
     "addContextItem",
     "refreshSubmenuItems",
     "isContinueInputFocused",
-    "didChangeAvailableProfiles",
     "setTTSActive",
     "getWebviewHistoryLength",
     "getCurrentSessionId",
     "didCloseFiles",
-    "didSelectOrganization",
+    "toolCallPartialOutput",
   ];

@@ -3,6 +3,8 @@ import { useContext } from "react";
 import { Button, ButtonSubtext } from "../../..";
 import { useAuth } from "../../../../context/Auth";
 import { IdeMessengerContext } from "../../../../context/IdeMessenger";
+import { selectCurrentOrg } from "../../../../redux";
+import { useAppSelector } from "../../../../redux/hooks";
 import { hasPassedFTL } from "../../../../util/freeTrial";
 import ContinueLogo from "../../../gui/ContinueLogo";
 import { useOnboardingCard } from "../../hooks";
@@ -17,6 +19,7 @@ export default function MainTab({
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const auth = useAuth();
+  const currentOrg = useAppSelector(selectCurrentOrg);
 
   function onGetStarted() {
     auth.login(true).then((success) => {
@@ -29,7 +32,7 @@ export default function MainTab({
   function openPastFreeTrialOnboarding() {
     ideMessenger.post("controlPlane/openUrl", {
       path: "setup-models",
-      orgSlug: auth.selectedOrganization?.slug,
+      orgSlug: currentOrg?.slug,
     });
     onboardingCard.close(isDialog);
   }
@@ -93,7 +96,7 @@ export default function MainTab({
         </ButtonSubtext>
       ) : (
         <ButtonSubtext onClick={onRemainLocal}>
-          <div className="mt-4 flex cursor-pointer items-center justify-center gap-1">
+          <div className="flex cursor-pointer items-center justify-center gap-1 hover:brightness-125">
             <span>Or, remain local</span>
             <ChevronRightIcon className="h-3 w-3" />
           </div>

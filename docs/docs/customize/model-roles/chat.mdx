@@ -257,6 +257,14 @@ If your local machine can run an 8B parameter model, then we recommend running L
           model: llama3.1:8b
       ```
       </TabItem>
+      <TabItem value="Msty">
+      ```yaml title="config.yaml"
+      models:
+        - name: Llama 3.1 8B
+          provider: msty
+          model: llama3.1:8b
+      ```
+      </TabItem>
     </Tabs>
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -281,6 +289,19 @@ If your local machine can run an 8B parameter model, then we recommend running L
           {
             "title": "Llama 3.1 8B",
             "provider": "lmstudio",
+            "model": "llama3.1-8b"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+      <TabItem value="Msty">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "Llama 3.1 8B",
+            "provider": "msty",
             "model": "llama3.1-8b"
           }
         ]
@@ -325,6 +346,14 @@ If your local machine can run a 16B parameter model, then we recommend running D
             model: deepseek-coder-v2:16b
         ```
         </TabItem>
+        <TabItem value="Msty">
+        ```yaml title="config.yaml"
+        models:
+          - name: DeepSeek Coder 2 16B
+            provider: msty
+            model: deepseek-coder-v2:16b
+        ```
+        </TabItem>
     </Tabs>
   </TabItem>
   <TabItem value="json" label="JSON">
@@ -350,6 +379,19 @@ If your local machine can run a 16B parameter model, then we recommend running D
           {
             "title": "DeepSeek Coder 2 16B",
             "provider": "lmstudio",
+            "model": "deepseek-coder-v2:16b"
+          }
+        ]
+      }
+      ```
+      </TabItem>
+      <TabItem value="Msty">
+      ```json title="config.json"
+      {
+        "models": [
+          {
+            "title": "DeepSeek Coder 2 16B",
+            "provider": "msty",
             "model": "deepseek-coder-v2:16b"
           }
         ]

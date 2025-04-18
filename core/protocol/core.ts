@@ -1,12 +1,11 @@
 import {
+  BlockType,
   ConfigResult,
   DevDataLogEvent,
   ModelRole,
 } from "@continuedev/config-yaml";
 
 import { AutocompleteInput } from "../autocomplete/util/types";
-import { ProfileDescription } from "../config/ConfigHandler";
-import { OrganizationDescription } from "../config/ProfileLifecycleManager";
 import { SharedConfigSchema } from "../config/sharedConfig";
 import { GlobalContextModelSelections } from "../util/GlobalContext";
 
@@ -32,6 +31,7 @@ import type {
   SlashCommandDescription,
   ToolCall,
 } from "../";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -59,6 +59,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
@@ -66,15 +67,22 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+      organizations: SerializedOrgWithProfiles[];
+      selectedOrgId: string;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/listProfiles": [
-    undefined,
-    { profiles: ProfileDescription[] | null; selectedProfileId: string | null },
+  "config/refreshProfiles": [
+    (
+      | undefined
+      | {
+          selectOrgId?: string;
+          selectProfileId?: string;
+        }
+    ),
+    void,
   ];
-  "config/refreshProfiles": [undefined, void];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
@@ -198,5 +206,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
-  "controlPlane/listOrganizations": [undefined, OrganizationDescription[]];
+  isItemTooBig: [
+    { item: ContextItemWithId; selectedModelTitle: string | undefined },
+    boolean,
+  ];
+  "process/markAsBackgrounded": [{ toolCallId: string }, void];
+  "process/isBackgrounded": [{ toolCallId: string }, boolean];
 };

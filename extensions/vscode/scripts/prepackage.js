@@ -10,7 +10,11 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
-const { copyConfigSchema } = require("./utils");
+const {
+  copyConfigSchema,
+  writeBuildTimestamp,
+  generateConfigYamlSchema,
+} = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
@@ -63,6 +67,9 @@ const isMacTarget = target?.startsWith("darwin");
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
+  // Generate and copy over config-yaml-schema.json
+  generateConfigYamlSchema();
+
   // Copy config schemas to intellij
   copyConfigSchema();
 
@@ -70,6 +77,9 @@ const isMacTarget = target?.startsWith("darwin");
     // This is sometimes run from root dir instead (e.g. in VS Code tasks)
     process.chdir("extensions/vscode");
   }
+
+  // Make sure we have an initial timestamp file
+  writeBuildTimestamp();
 
   // Install node_modules //
   execCmdSync("npm install");

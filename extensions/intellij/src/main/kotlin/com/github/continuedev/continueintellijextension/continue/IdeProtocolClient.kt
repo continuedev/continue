@@ -115,7 +115,7 @@ class IdeProtocolClient(
                             .handleUpdatedSessionInfo(null)
 
                         // Tell the webview that session info changed
-                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
+                        continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", null, null) { _ -> }
 
                         respond(null)
                     }
@@ -497,21 +497,18 @@ class IdeProtocolClient(
                                         val config = result["config"] as Map<*, *>
 
                                         val selectedModels = config["selectedModelByRole"] as? Map<*, *>
-                                        val applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
+                                        var applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
+                                        
+                                        // If "apply" role model is not found, try "chat" role
+                                        if (applyCodeBlockModel == null) {
+                                            applyCodeBlockModel = selectedModels?.get("chat") as? Map<*, *>
+                                        }
 
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)
                                         } else {
-                                            val models =
-                                                config["models"] as List<Map<String, Any>>
-                                            val curSelectedModel =
-                                                models.find { it["title"] == params.curSelectedModelTitle }
-
-                                            if (curSelectedModel == null) {
-                                                continuation.resumeWithException(IllegalStateException("Model '${params.curSelectedModelTitle}' not found in config."))
-                                            } else {
-                                                continuation.resume(curSelectedModel)
-                                            }
+                                            // If neither "apply" nor "chat" models are available, return with exception
+                                            continuation.resumeWithException(IllegalStateException("No 'apply' or 'chat' model found in configuration."))
                                         }
                                     } catch (e: Exception) {
                                         continuation.resumeWithException(e)

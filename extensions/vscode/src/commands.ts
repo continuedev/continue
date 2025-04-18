@@ -12,7 +12,10 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
+import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
 import { walkDirAsync } from "core/indexing/walkDir";
+import { isModelInstaller } from "core/llm";
+import { startLocalOllama } from "core/util/ollamaHelper";
 import { getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
@@ -27,8 +30,8 @@ import {
   setupStatusBar,
   StatusBarStatus,
 } from "./autocomplete/statusBar";
+import { ContinueConsoleWebviewViewProvider } from "./ContinueConsoleWebviewViewProvider";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
-
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
@@ -36,9 +39,6 @@ import { Battery } from "./util/battery";
 import { getMetaKeyLabel } from "./util/util";
 import { VsCodeIde } from "./VsCodeIde";
 
-import { LOCAL_DEV_DATA_VERSION } from "core/data/log";
-import { isModelInstaller } from "core/llm";
-import { startLocalOllama } from "core/util/ollamaHelper";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -318,6 +318,7 @@ const getCommandsMap: (
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -329,6 +330,7 @@ const getCommandsMap: (
   ide,
   extensionContext,
   sidebar,
+  consoleView,
   configHandler,
   verticalDiffManager,
   continueServerClientPromise,
@@ -361,23 +363,23 @@ const getCommandsMap: (
       throw new Error("Config not loaded");
     }
 
-    const modelTitle =
-      config.selectedModelByRole.edit?.title ??
-      (await sidebar.webviewProtocol.request(
-        "getDefaultModelTitle",
-        undefined,
-      ));
+    const llm =
+      config.selectedModelByRole.edit ?? config.selectedModelByRole.chat;
+
+    if (!llm) {
+      throw new Error("No edit or chat model selected");
+    }
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
-    await verticalDiffManager.streamEdit(
-      config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
-      modelTitle,
-      undefined,
+    await verticalDiffManager.streamEdit({
+      input:
+        config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
+      llm,
       onlyOneInsertion,
-      undefined,
       range,
-    );
+      rules: config.rules,
+    });
   }
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
@@ -671,6 +673,9 @@ const getCommandsMap: (
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
+    },
+    "continue.clearConsole": async () => {
+      consoleView.clearLog();
     },
     "continue.viewLogs": async () => {
       captureCommandTelemetry("viewLogs");
@@ -1088,6 +1093,7 @@ export function registerAllCommands(
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
+  consoleView: ContinueConsoleWebviewViewProvider,
   configHandler: ConfigHandler,
   verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
@@ -1103,6 +1109,7 @@ export function registerAllCommands(
       ide,
       extensionContext,
       sidebar,
+      consoleView,
       configHandler,
       verticalDiffManager,
       continueServerClientPromise,

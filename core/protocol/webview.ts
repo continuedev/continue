@@ -1,11 +1,11 @@
 import { ConfigResult } from "@continuedev/config-yaml";
+import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager.js";
 import type {
   BrowserSerializedContinueConfig,
   ContextItemWithId,
   ContextProviderName,
   IndexingProgressUpdate,
   IndexingStatus,
-  PackageDocsResult,
 } from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
@@ -13,6 +13,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     {
       result: ConfigResult<BrowserSerializedContinueConfig>;
       profileId: string | null;
+      organizations: SerializedOrgWithProfiles[];
+      selectedOrgId: string | null;
     },
     void,
   ];
@@ -38,4 +40,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   getWebviewHistoryLength: [undefined, number];
   getCurrentSessionId: [undefined, string];
   "jetbrains/setColors": [Record<string, string>, void];
+  toolCallPartialOutput: [
+    { toolCallId: string; contextItems: any[] },
+    void,
+  ];
 };
