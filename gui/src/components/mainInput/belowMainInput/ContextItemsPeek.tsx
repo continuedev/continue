@@ -1,18 +1,15 @@
-import {
-  ArrowTopRightOnSquareIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
-import { useContext, useMemo, useState } from "react";
-import { AnimatedEllipsis, lightGray, vscBackground } from "../..";
+import { useContext, useMemo } from "react";
+import { AnimatedEllipsis } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectIsGatheringContext } from "../../../redux/slices/sessionSlice";
 import FileIcon from "../../FileIcon";
 import SafeImg from "../../SafeImg";
+import ToggleDiv from "../../ToggleDiv";
 import { getIconFromDropdownItem } from "../AtMentionDropdown";
 import { NAMED_ICONS } from "../icons";
 
@@ -154,8 +151,6 @@ function ContextItemsPeek({
   contextItems,
   isCurrentContextPeek,
 }: ContextItemsPeekProps) {
-  const [open, setOpen] = useState(false);
-
   const ctxItems = useMemo(() => {
     return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
   }, [contextItems]);
@@ -169,54 +164,23 @@ function ContextItemsPeek({
   }
 
   return (
-    <div
-      className={`pl-2 pt-2`}
-      style={{
-        backgroundColor: vscBackground,
-      }}
+    <ToggleDiv
+      title={
+        isGatheringContext ? (
+          <>
+            Gathering context
+            <AnimatedEllipsis />
+          </>
+        ) : (
+          `${ctxItems.length} context ${ctxItems.length > 1 ? "items" : "item"}`
+        )
+      }
     >
-      <div
-        className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
-        onClick={() => setOpen((prev) => !prev)}
-        data-testid="context-items-peek"
-      >
-        <div className="relative mr-1 h-4 w-4">
-          <ChevronRightIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-              open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
-            }`}
-          />
-          <ChevronDownIcon
-            className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-              open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
-            }`}
-          />
-        </div>
-        <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
-          {isGatheringContext ? (
-            <>
-              Gathering context
-              <AnimatedEllipsis />
-            </>
-          ) : (
-            `${ctxItems.length} context ${
-              ctxItems.length > 1 ? "items" : "item"
-            }`
-          )}
-        </span>
-      </div>
-
-      <div
-        className={`mt-2 overflow-y-auto transition-all duration-300 ease-in-out ${
-          open ? "max-h-[50vh] opacity-100" : "max-h-0 opacity-0"
-        }`}
-      >
-        {ctxItems &&
-          ctxItems.map((contextItem, idx) => (
-            <ContextItemsPeekItem key={idx} contextItem={contextItem} />
-          ))}
-      </div>
-    </div>
+      {ctxItems &&
+        ctxItems.map((contextItem, idx) => (
+          <ContextItemsPeekItem key={idx} contextItem={contextItem} />
+        ))}
+    </ToggleDiv>
   );
 }
 
