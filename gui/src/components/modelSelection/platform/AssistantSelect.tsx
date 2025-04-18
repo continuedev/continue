@@ -53,6 +53,7 @@ const AssistantSelectOption = ({
   const tinyFont = useFontSize(-4);
 
   const navigate = useNavigate();
+  const { setSelectedSection } = useLump();
 
   const hasFatalErrors = useMemo(() => {
     return !!profile.errors?.find((error) => error.fatal);
@@ -78,7 +79,8 @@ const AssistantSelectOption = ({
 
   function handleClickError() {
     if (profile.id === "local") {
-      navigate(ROUTES.CONFIG_ERROR);
+      navigate(ROUTES.HOME);
+      setSelectedSection("error");
     } else {
       ideMessenger.post("config/openProfile", { profileId: profile.id });
     }
