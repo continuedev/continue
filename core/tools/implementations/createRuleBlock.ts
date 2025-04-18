@@ -39,24 +39,14 @@ export const createRuleBlockImpl: ToolImpl = async (
     `${safeRuleName}.yaml`,
   );
 
-  try {
-    await extras.ide.writeFile(rulesDirUri, ruleYaml);
-    await extras.ide.openFile(rulesDirUri);
+  await extras.ide.writeFile(rulesDirUri, ruleYaml);
+  await extras.ide.openFile(rulesDirUri);
 
-    return [
-      {
-        name: "Rule Block Created",
-        description: `Created ${args.rule_name} rule`,
-        content: ruleYaml,
-      },
-    ];
-  } catch (error) {
-    return [
-      {
-        name: "Error",
-        description: "Failed to create rule block",
-        content: `Error creating rule block: ${error instanceof Error ? error.message : String(error)}`,
-      },
-    ];
-  }
+  return [
+    {
+      name: "Rule Block Created",
+      description: `Created ${args.rule_name} rule`,
+      content: ruleYaml,
+    },
+  ];
 };
