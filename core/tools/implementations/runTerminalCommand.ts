@@ -95,12 +95,13 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
 
               // If we don't need to wait for completion, resolve immediately
               if (!waitForCompletion) {
+                const status = "Command is running in the background...";
                 resolve([
                   {
                     name: "Terminal",
                     description: "Terminal command output",
                     content: terminalOutput,
-                    status: "Command is runnning in the background...",
+                    status: status,
                   },
                 ]);
               }
