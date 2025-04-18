@@ -68,6 +68,7 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
+            "sessionUpdate",
             "didCloseFiles",
             "toolCallPartialOutput",
         )

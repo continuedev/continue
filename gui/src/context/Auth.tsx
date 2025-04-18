@@ -85,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               setOrganizations(orgs.filter((org) => org.id === "personal")),
             );
             dispatch(setSelectedOrgId("personal"));
+            setSession(undefined);
           }}
           onCancel={() => {
             dispatch(setDialogMessage(undefined));
