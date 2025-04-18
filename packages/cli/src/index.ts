@@ -3,7 +3,6 @@
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { ContinueHubClient } from "@continuedev/hub";
 
-import { Configuration, DefaultApi } from "@continuedev/typescript-sdk";
 import chalk from "chalk";
 import * as fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
@@ -13,6 +12,7 @@ import * as readlineSync from "readline-sync";
 import { CONTINUE_ASCII_ART } from "./asciiArt.js";
 import { ensureAuthenticated } from "./auth/ensureAuth.js";
 import { loadAuthConfig } from "./auth/workos.js";
+import { client } from "./client.js";
 import { env } from "./env.js";
 import { MCPService } from "./mcp.js";
 import { handleSlashCommands } from "./slashCommands.js";
@@ -22,14 +22,7 @@ import {
   streamChatResponse,
 } from "./streamChatResponse.js";
 
-const api = new DefaultApi(
-  new Configuration({
-    basePath: "https://api.continue.dev",
-    accessToken: () => "TOKEN", // Replace with your actual token
-  }),
-);
-
-api
+client
   .listAssistants({
     alwaysUseProxy: "true",
   })

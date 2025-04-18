@@ -20,6 +20,9 @@ interface ContinueHubClientOptions {
   currentUserSlug: string;
 }
 
+/**
+ * @deprecated Use @continuedev/sdk instead
+ */
 export class ContinueHubClient implements IContinueHubClient {
   private readonly apiKey?: string;
   private readonly apiBase: string;
