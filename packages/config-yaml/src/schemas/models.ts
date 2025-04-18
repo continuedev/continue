@@ -80,6 +80,7 @@ const baseModelFields = {
   embedOptions: embedOptionsSchema.optional(),
   chatOptions: chatOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
+  template: z.string().optional(),
   useLegacyCompletionsEndpoint: z.boolean().optional(),
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
