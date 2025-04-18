@@ -7,7 +7,7 @@ export class MCPManagerSingleton {
   private static instance: MCPManagerSingleton;
 
   public onConnectionsRefreshed?: () => void;
-  private connections: Map<string, MCPConnection> = new Map();
+  public connections: Map<string, MCPConnection> = new Map();
 
   private abortController: AbortController = new AbortController();
 
