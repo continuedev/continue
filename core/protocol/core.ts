@@ -1,4 +1,5 @@
 import {
+  BlockType,
   ConfigResult,
   DevDataLogEvent,
   ModelRole,
@@ -58,6 +59,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
@@ -67,12 +69,20 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       profileId: string | null;
       organizations: SerializedOrgWithProfiles[];
       selectedOrgId: string;
-      usingContinueForTeams: boolean;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/refreshProfiles": [undefined, void];
+  "config/refreshProfiles": [
+    (
+      | undefined
+      | {
+          selectOrgId?: string;
+          selectProfileId?: string;
+        }
+    ),
+    void,
+  ];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [

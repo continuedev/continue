@@ -1,12 +1,12 @@
 import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { renderChatMessage } from "core/util/messageContent";
+import { useAppSelector } from "../../redux/hooks";
+import { selectIsInEditMode } from "../../redux/slices/sessionSlice";
+import FeedbackButtons from "../FeedbackButtons";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import EditActions from "./EditActions";
-import FeedbackButtons from "./FeedbackButtons";
-import { useAppSelector } from "../../redux/hooks";
-import { selectIsInEditMode } from "../../redux/slices/sessionSlice";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;

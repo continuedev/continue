@@ -15,7 +15,6 @@ export type ToWebviewFromIdeOrCoreProtocol = {
       profileId: string | null;
       organizations: SerializedOrgWithProfiles[];
       selectedOrgId: string | null;
-      usingContinueForTeams: boolean;
     },
     void,
   ];

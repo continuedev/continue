@@ -6,9 +6,11 @@ import {
   ConfigValidationError,
   FQSN,
   isAssistantUnrolledNonNullable,
+  MCPServer,
   ModelRole,
   PlatformClient,
   RegistryClient,
+  Rule,
   SecretResult,
   unrollAssistantFromContent,
   validateConfigYaml,
@@ -16,11 +18,13 @@ import {
 
 import {
   ContinueConfig,
+  ExperimentalMCPOptions,
   IContextProvider,
   IDE,
   IdeInfo,
   IdeSettings,
   ILLMLogger,
+  RuleWithSource,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
 import { MCPManagerSingleton } from "../../context/mcp";
@@ -36,7 +40,6 @@ import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { allTools } from "../../tools";
 import { GlobalContext } from "../../util/GlobalContext";
 import { getConfigYamlPath } from "../../util/paths";
-import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { PlatformConfigMetadata } from "../profile/PlatformProfileLoader";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
@@ -57,6 +60,35 @@ export class LocalPlatformClient implements PlatformClient {
     const response = await this.client.resolveFQSNs(fqsns, this.orgScopeId);
     return response;
   }
+}
+
+function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
+  if (typeof rule === "string") {
+    return {
+      rule: rule,
+      source: "rules-block",
+    };
+  } else {
+    return {
+      source: "rules-block",
+      rule: rule.rule,
+      if: rule.if,
+      name: rule.name,
+    };
+  }
+}
+
+function convertYamlMcpToContinueMcp(
+  server: MCPServer,
+): ExperimentalMCPOptions {
+  return {
+    transport: {
+      type: "stdio",
+      command: server.command,
+      args: server.args ?? [],
+      env: server.env,
+    },
+  };
 }
 
 async function loadConfigYaml(
@@ -80,7 +112,6 @@ async function loadConfigYaml(
         await controlPlaneClient.getAccessToken(),
         getControlPlaneEnvSync(
           ideSettings.continueTestEnvironment,
-          ideSettings.enableControlServerBeta,
         ).CONTROL_PLANE_URL,
       ),
       {
@@ -142,7 +173,6 @@ async function configYamlToContinueConfig({
     slashCommands: [],
     tools: [...allTools],
     mcpServerStatuses: [],
-    systemMessage: config.rules?.join("\n"),
     contextProviders: [],
     modelsByRole: {
       chat: [],
@@ -162,6 +192,7 @@ async function configYamlToContinueConfig({
       rerank: null,
       summarize: null,
     },
+    rules: [],
   };
 
   // Right now, if there are any missing packages in the config, then we will just throw an error
@@ -177,8 +208,11 @@ async function configYamlToContinueConfig({
     };
   }
 
+  for (const rule of config.rules ?? []) {
+    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+  }
+
   continueConfig.data = config.data;
-  continueConfig.rules = config.rules;
   continueConfig.docs = config.docs?.map((doc) => ({
     title: doc.name,
     startUrl: doc.startUrl,
@@ -186,21 +220,16 @@ async function configYamlToContinueConfig({
     faviconUrl: doc.faviconUrl,
   }));
   continueConfig.experimental = {
-    modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
-      transport: {
-        type: "stdio",
-        command: mcpServer.command,
-        args: mcpServer.args ?? [],
-        env: mcpServer.env,
-      },
-    })),
+    modelContextProtocolServers: config.mcpServers?.map(
+      convertYamlMcpToContinueMcp,
+    ),
   };
 
   // Prompt files -
   try {
     const promptFiles = await getAllPromptFiles(ide, undefined, true);
 
-    for (const file of promptFiles) {
+    promptFiles.forEach((file) => {
       try {
         const slashCommand = slashCommandFromPromptFileV1(
           file.path,
@@ -215,7 +244,7 @@ async function configYamlToContinueConfig({
           message: `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`,
         });
       }
-    }
+    });
   } catch (e) {
     localErrors.push({
       fatal: false,
@@ -236,9 +265,9 @@ async function configYamlToContinueConfig({
   });
 
   // Models
-  const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
+  const defaultModelRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
+    model.roles = model.roles ?? defaultModelRoles; // Default to all 4 chat-esque roles if not specified
     try {
       const llms = await llmsFromModelConfig({
         model,
@@ -405,7 +434,6 @@ export async function loadContinueConfigFromYaml({
   ideInfo,
   uniqueId,
   llmLogger,
-  // workOsAccessToken,
   overrideConfigYaml,
   platformConfigMetadata,
   controlPlaneClient,
@@ -417,7 +445,6 @@ export async function loadContinueConfigFromYaml({
   ideInfo: IdeInfo;
   uniqueId: string;
   llmLogger: ILLMLogger;
-  // workOsAccessToken: string | undefined;
   overrideConfigYaml: AssistantUnrolled | undefined;
   platformConfigMetadata: PlatformConfigMetadata | undefined;
   controlPlaneClient: ControlPlaneClient;
@@ -459,22 +486,6 @@ export async function loadContinueConfigFromYaml({
       platformConfigMetadata,
       allowFreeTrial: true,
     });
-
-  try {
-    const systemPromptDotFile = await getSystemPromptDotFile(ide);
-    if (systemPromptDotFile) {
-      if (continueConfig.systemMessage) {
-        continueConfig.systemMessage += "\n\n" + systemPromptDotFile;
-      } else {
-        continueConfig.systemMessage = systemPromptDotFile;
-      }
-    }
-  } catch (e) {
-    localErrors.push({
-      fatal: false,
-      message: `Failed to load system prompt dot file: ${e instanceof Error ? e.message : e}`,
-    });
-  }
 
   // Apply shared config
   // TODO: override several of these values with user/org shared config

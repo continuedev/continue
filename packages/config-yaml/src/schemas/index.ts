@@ -1,4 +1,5 @@
 import * as z from "zod";
+import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import { modelSchema, partialModelSchema } from "./models.js";
 
@@ -15,11 +16,15 @@ const mcpServerSchema = z.object({
   env: z.record(z.string()).optional(),
 });
 
+export type MCPServer = z.infer<typeof mcpServerSchema>;
+
 const promptSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   prompt: z.string(),
 });
+
+export type Prompt = z.infer<typeof promptSchema>;
 
 const docSchema = z.object({
   name: z.string(),
@@ -27,6 +32,8 @@ const docSchema = z.object({
   rootUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
 });
+
+export type DocsConfig = z.infer<typeof docSchema>;
 
 const ruleObjectSchema = z.object({
   name: z.string(),
@@ -38,15 +45,22 @@ const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
 export type Rule = z.infer<typeof ruleSchema>;
 
-export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
+const defaultUsesSchema = z.string();
+
+export const blockItemWrapperSchema = <T extends z.AnyZodObject>(
+  schema: T,
+  usesSchema: z.ZodTypeAny = defaultUsesSchema,
+) =>
   z.object({
-    uses: z.string(),
+    uses: usesSchema,
     with: z.record(z.string()).optional(),
     override: schema.partial().optional(),
   });
 
-export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
-  z.union([schema, blockItemWrapperSchema(schema)]);
+export const blockOrSchema = <T extends z.AnyZodObject>(
+  schema: T,
+  usesSchema: z.ZodTypeAny = defaultUsesSchema,
+) => z.union([schema, blockItemWrapperSchema(schema, usesSchema)]);
 
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
@@ -64,13 +78,17 @@ export const baseConfigYamlSchema = z.object({
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
 });
 
+const modelsUsesSchema = z
+  .string()
+  .or(z.enum(commonModelSlugs as [string, ...string[]]));
+
 export const configYamlSchema = baseConfigYamlSchema.extend({
   models: z
     .array(
       z.union([
         modelSchema,
         z.object({
-          uses: z.string(),
+          uses: modelsUsesSchema,
           with: z.record(z.string()).optional(),
           override: partialModelSchema.optional(),
         }),
@@ -85,7 +103,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
       z.union([
         ruleSchema,
         z.object({
-          uses: z.string(),
+          uses: defaultUsesSchema,
           with: z.record(z.string()).optional(),
         }),
       ]),

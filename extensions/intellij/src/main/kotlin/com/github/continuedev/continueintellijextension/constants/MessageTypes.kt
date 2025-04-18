@@ -83,6 +83,7 @@ class MessageTypes {
             "config/addModel",
             "config/newPromptFile",
             "config/ideSettingsUpdate",
+            "config/addLocalWorkspaceBlock",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/refreshProfiles",

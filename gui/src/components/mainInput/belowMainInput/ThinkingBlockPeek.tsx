@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscBackground } from "../..";
 import { getFontSize } from "../../../util";
-import StyledMarkdownPreview from "../../markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../StyledMarkdownPreview";
 
 const SpoilerButton = styled.div`
   background-color: ${vscBackground};

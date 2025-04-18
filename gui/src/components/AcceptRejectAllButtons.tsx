@@ -1,10 +1,10 @@
-import { useContext } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
-import { getMetaKeyLabel } from "../../util";
-import { useAppSelector } from "../../redux/hooks";
-import { selectIsSingleRangeEditOrInsertion } from "../../redux/slices/sessionSlice";
+import { useContext } from "react";
+import { IdeMessengerContext } from "../context/IdeMessenger";
+import { useAppSelector } from "../redux/hooks";
+import { selectIsSingleRangeEditOrInsertion } from "../redux/slices/sessionSlice";
+import { getMetaKeyLabel } from "../util";
 
 export interface AcceptRejectAllButtonsProps {
   pendingApplyStates: ApplyState[];
