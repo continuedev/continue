@@ -73,6 +73,7 @@ export function LumpProvider({ children }: LumpProviderProps) {
     }
   }, [selectedSection]);
 
+  // Don't allow selection error section if there are no errors
   useEffect(() => {
     if (selectedSection === "error" && !configError) {
       setSelectedSection(null);
