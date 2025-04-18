@@ -46,11 +46,69 @@ function convertReranker(m: NonNullable<ConfigJson["reranker"]>): ModelYaml {
   };
 }
 
+function withFromContextProvider(
+  contextProvider: NonNullable<ConfigJson["contextProviders"]>[number],
+): Record<string, string> | undefined {
+  const { name, params } = contextProvider;
+
+  switch (name) {
+    case "greptile":
+      return {
+        GITHUB_TOKEN: params?.GithubToken ?? "",
+        GREPTILE_TOKEN: params?.GreptileToken ?? "",
+      };
+    case "jira":
+      return {
+        JIRA_TOKEN: params?.JiraToken ?? "",
+        JIRA_API_VERSION: params?.JiraEmail,
+        JIRA_DOMAIN: params?.JiraDomain ?? "",
+      };
+    case "postgres":
+      return {
+        POSTGRES_HOST: params?.host,
+        POSTGRES_PORT: params?.port,
+        POSTGRES_USER: params?.user,
+        POSTGRES_PASSWORD: params?.password,
+        POSTGRES_DATABASE: params?.database,
+        POSTGRES_SCHEMA: params?.schema,
+      };
+    case "gitlab-mr":
+      return {
+        GITLAB_TOKEN: params?.token,
+        DOMAIN: params?.domain,
+      };
+    case "discord":
+      return {
+        DISCORD_KEY: params?.discordKey,
+        DISCORD_GUILD_ID: params?.guildId,
+        DISCORD_CHANNELS: params?.channels,
+      };
+    case "commits":
+      return {
+        DEPTH: params?.Depth,
+        LAST_N_COMMITS_DEPTH: params?.LastXCommitsDepth,
+      };
+    default:
+      return undefined;
+  }
+}
+
 function convertContext(configJson: ConfigJson): ContextYaml[] {
   const context: ContextYaml[] =
     configJson.contextProviders?.map((ctx) => {
+      // ctx providers that weren't given official blocks
+      if (
+        ["web", "debugger", "issue", "database", "google", "http"].includes(
+          ctx.name,
+        )
+      ) {
+        return {
+          provider: ctx.name,
+          params: ctx.params,
+        };
+      }
       return {
-        uses: `builtin/${ctx.name}`,
+        uses: `continuedev/${ctx.name === "open" ? "open-files" : ctx.name}-context`,
         with: ctx.params,
       };
     }) ?? [];

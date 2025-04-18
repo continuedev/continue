@@ -19,6 +19,8 @@ let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let quickActionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
+let configJsonConverterCodeLensDisposable: vscode.Disposable | undefined =
+  undefined;
 let downloadYamlExtensionCodeLensDisposable: vscode.Disposable | undefined =
   undefined;
 
@@ -98,6 +100,10 @@ export function registerAllCodeLensProviders(
     tutorialCodeLensDisposable.dispose();
   }
 
+  if (configJsonConverterCodeLensDisposable) {
+    configJsonConverterCodeLensDisposable.dispose();
+  }
+
   if (downloadYamlExtensionCodeLensDisposable) {
     downloadYamlExtensionCodeLensDisposable.dispose();
   }
@@ -116,6 +122,11 @@ export function registerAllCodeLensProviders(
     new providers.SuggestionsCodeLensProvider(),
   );
 
+  configJsonConverterCodeLensDisposable = registerCodeLensProvider(
+    "*",
+    new providers.ConfigJsonConverterCodeLensProvider(),
+  );
+
   downloadYamlExtensionCodeLensDisposable = registerCodeLensProvider(
     "yaml",
     new providers.DownloadYamlExtensionCodeLensProvider(),
@@ -131,6 +142,7 @@ export function registerAllCodeLensProviders(
 
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
+  context.subscriptions.push(configJsonConverterCodeLensDisposable);
 
   return { verticalDiffCodeLens };
 }
