@@ -277,7 +277,6 @@ export function Chat() {
   useWebviewListener(
     "toolCallPartialOutput",
     async (data) => {
-        console.log("toolCallPartialOutput", data);
         // Update tool call output in Redux store
         dispatch(
           updateToolCallOutput({

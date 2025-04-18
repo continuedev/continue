@@ -643,13 +643,13 @@ export const sessionSlice = createSlice({
     ) => {
       // Find the tool call with the given ID and update its output
       const { toolCallId, contextItems } = action.payload;
-      
+
       // Find the history item containing the tool call
       const historyItem = state.history.find(
-        (item) => 
+        (item) =>
           item.toolCallState?.toolCallId === toolCallId
       );
-      
+
       if (historyItem && historyItem.toolCallState) {
         historyItem.toolCallState.output = contextItems;
       }
