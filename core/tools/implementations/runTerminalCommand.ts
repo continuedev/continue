@@ -116,7 +116,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                         {
                           name: "Terminal",
                           description: "Terminal command output",
-                          content: terminalOutput + (code === 0
+                          content: terminalOutput + (code === 0 || !code
                             ? "\n[Background command completed]"
                             : `\n[Background command failed with exit code ${code}]`),
                         },

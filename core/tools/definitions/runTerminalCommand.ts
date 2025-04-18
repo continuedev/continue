@@ -15,6 +15,7 @@ export const runTerminalCommandTool: Tool = {
       "Run a terminal command in the current directory.\
       The shell is not stateful and will not remember any previous commands.\
       When a command is run in the background ALWAYS suggest using shell commands to stop it; NEVER suggest using Ctrl+C.\
+      When suggesting subsequent shell commands ALWAYS format them in shell command blocks.\
       Do NOT perform actions requiring special/admin privileges.",
       parameters: {
         type: "object",
