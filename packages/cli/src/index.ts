@@ -2,6 +2,8 @@
 
 import { AssistantUnrolled } from "@continuedev/config-yaml";
 import { ContinueHubClient } from "@continuedev/hub";
+
+import { Configuration, DefaultApi } from "@continuedev/typescript-sdk";
 import chalk from "chalk";
 import * as fs from "fs";
 import { ChatCompletionMessageParam } from "openai/resources.mjs";
@@ -19,6 +21,24 @@ import {
   getLlmFromAssistant,
   streamChatResponse,
 } from "./streamChatResponse.js";
+
+const api = new DefaultApi(
+  new Configuration({
+    basePath: "https://api.continue.dev",
+    accessToken: () => "TOKEN", // Replace with your actual token
+  }),
+);
+
+api
+  .listAssistants({
+    alwaysUseProxy: "true",
+  })
+  .then((result) => {
+    console.log("API result:", result);
+  })
+  .catch((error) => {
+    console.log("API error:", error);
+  });
 
 async function loadAssistant(
   hub: ContinueHubClient,
