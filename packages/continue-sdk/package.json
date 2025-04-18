@@ -1,0 +1,22 @@
+{
+  "name": "@continuedev/sdk",
+  "version": "0.0.1",
+  "description": "SDK for Continue.dev",
+  "type": "module",
+  "scripts": {
+    "generate-client:typescript": "openapi-generator-cli generate -i ./openapi.yaml -g typescript-fetch -o ./clients/typescript -c ./openapi-generator-config.json",
+    "generate-client:python": "openapi-generator-cli generate -i ./openapi.yaml -g python -o ./clients/python -c ./openapi-generator-config.json",
+    "generate-client:javascript": "openapi-generator-cli generate -i ./openapi.yaml -g javascript -o ./clients/javascript -c ./openapi-generator-config.json",
+    "generate-client:php": "openapi-generator-cli generate -i ./openapi.yaml -g php -o ./clients/php -c ./openapi-generator-config.json",
+    "generate-client": "npm run generate-client:typescript && npm run generate-client:python && npm run generate-client:javascript && npm run generate-client:php",
+    "swagger-ui": "node swagger-ui-server.js"
+  },
+  "author": "Continue Dev, Inc.",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@openapitools/openapi-generator-cli": "^2.19.1",
+    "express": "^4.18.2",
+    "js-yaml": "^4.1.0",
+    "swagger-ui-express": "^5.0.0"
+  }
+}
