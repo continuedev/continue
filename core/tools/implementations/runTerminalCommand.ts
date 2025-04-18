@@ -70,7 +70,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               childProc.stderr?.on("data", (data) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
-                
+
                 const newOutput = data.toString();
                 terminalOutput += newOutput;
 
@@ -153,7 +153,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
                   removeBackgroundedProcess(toolCallId);
                   return;
                 }
-                
+
                 reject(error);
               });
             })
@@ -168,7 +168,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
       // Fallback to non-streaming for older clients
       const workspaceDirs = await extras.ide.getWorkspaceDirs();
       const cwd = fileURLToPath(workspaceDirs[0]);
-      
+
       if (!waitForCompletion) {
         // For non-streaming but also not waiting for completion, use spawn
         // but don't attach any listeners other than error
@@ -182,23 +182,23 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             // Redirect to /dev/null equivalent (works cross-platform)
             stdio: 'ignore',
           });
-          
+
           // Even for detached processes, add event handlers to clean up the background process map
           childProc.on("close", () => {
             if (isProcessBackgrounded(toolCallId)) {
               removeBackgroundedProcess(toolCallId);
             }
           });
-          
+
           childProc.on("error", () => {
             if (isProcessBackgrounded(toolCallId)) {
               removeBackgroundedProcess(toolCallId);
             }
           });
-          
+
           // Unref the child to allow the Node.js process to exit
           childProc.unref();
-          
+
           return [
             {
               name: "Terminal",
@@ -211,7 +211,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
             {
               name: "Terminal",
               description: "Terminal command output",
-              content: `Error starting command: ${error.message || error.toString()}`,
+              content: `[Command failed with: ${error.message || error.toString()}]`,
             },
           ];
         }

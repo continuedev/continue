@@ -25,7 +25,7 @@ export const runTerminalCommandTool: Tool = {
           waitForCompletion: {
             type: "boolean",
             description:
-              "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground.",
+              "Whether to wait for the command to complete before returning. Default is true. Set to false to run the command in the background. Set to true to run the command in the foreground and wait to collect the output.",
           },
         },
       },
