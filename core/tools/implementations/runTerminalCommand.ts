@@ -3,12 +3,9 @@ import util from "node:util";
 
 import { fileURLToPath } from "node:url";
 import { ToolImpl } from ".";
-import { isProcessBackgrounded, removeBackgroundedProcess } from "./processState";
+import { isProcessBackgrounded, removeBackgroundedProcess } from "../../util/processTerminalBackgroundStates";
 
 const asyncExec = util.promisify(childProcess.exec);
-
-// Export the process state management functions from the shared module
-export { markProcessAsBackgrounded, removeBackgroundedProcess } from "./processState";
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   // Default to waiting for completion if not specified
@@ -51,7 +48,7 @@ export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
               childProc.stdout?.on("data", (data) => {
                 // Skip if this process has been backgrounded
                 if (isProcessBackgrounded(toolCallId)) return;
-                
+
                 const newOutput = data.toString();
                 terminalOutput += newOutput;
 

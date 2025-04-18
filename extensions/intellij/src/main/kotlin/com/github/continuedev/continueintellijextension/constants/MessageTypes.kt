@@ -70,7 +70,6 @@ class MessageTypes {
             "getCurrentSessionId",
             "didCloseFiles",
             "toolCallPartialOutput",
-            "process/isBackgroundedResponse",
         )
 
         // Note: If updating these values, make a corresponding update in

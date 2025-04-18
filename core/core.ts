@@ -26,6 +26,7 @@ import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigFile, migrateV1DevDataFiles } from "./util/paths";
 import { Telemetry } from "./util/posthog";
+import { isProcessBackgrounded, markProcessAsBackgrounded } from "./util/processTerminalBackgroundStates";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
@@ -35,6 +36,7 @@ import {
   IdeSettings,
   ModelDescription,
   RangeInFile,
+  type ContextItem,
   type ContextItemId,
   type IDE,
   type IndexingProgressUpdate,
@@ -689,9 +691,9 @@ export class Core {
       // Define a callback for streaming output updates
       const onPartialOutput = (params: {
         toolCallId: string,
-        contextItems: any[]
+        contextItems: ContextItem[];
       }) => {
-        this.messenger.send("toolCallPartialOutput" as any, params);
+        this.messenger.send("toolCallPartialOutput", params);
       };
 
       const contextItems = await callTool(
@@ -723,16 +725,12 @@ export class Core {
 
     // Process state handlers
     on("process/markAsBackgrounded", async ({ data: { toolCallId } }) => {
-      const { markProcessAsBackgrounded } = await import("./tools/implementations/processState");
       markProcessAsBackgrounded(toolCallId);
     });
 
     on("process/isBackgrounded", async ({ data: { toolCallId }, messageId }) => {
-      const { isProcessBackgrounded } = await import("./tools/implementations/processState");
       const isBackgrounded = isProcessBackgrounded(toolCallId);
-      // Need to manually send response since we can't return value directly
-      this.send("process/isBackgroundedResponse", { isBackgrounded }, messageId);
-      return true; // Return true to indicate the message was handled successfully
+      return isBackgrounded; // Return true to indicate the message was handled successfully
     });
 
   }

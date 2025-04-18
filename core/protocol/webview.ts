@@ -44,8 +44,4 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     { toolCallId: string; contextItems: any[] },
     void,
   ];
-  "process/isBackgroundedResponse": [
-    { isBackgrounded: boolean },
-    void,
-  ];
 };
