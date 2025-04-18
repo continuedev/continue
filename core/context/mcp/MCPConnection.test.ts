@@ -207,10 +207,13 @@ describe("MCPConnection", () => {
         },
       });
 
-      const abortController = new AbortController();
-      await conn.connectClient(false, abortController.signal);
-      expect(conn.status).toBe("connected");
-      await conn.client.close();
+      try {
+        const abortController = new AbortController();
+        await conn.connectClient(false, abortController.signal);
+        expect(conn.status).toBe("connected");
+      } finally {
+        await conn.disconnect();
+      }
     });
   });
 });

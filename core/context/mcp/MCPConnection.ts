@@ -46,6 +46,12 @@ class MCPConnection {
     this.abortController = new AbortController();
   }
 
+  async disconnect() {
+    this.abortController.abort();
+    await this.client.close();
+    await this.transport.close();
+  }
+
   private constructTransport(options: MCPOptions): Transport {
     switch (options.transport.type) {
       case "stdio":
@@ -133,6 +139,7 @@ class MCPConnection {
               this.transport = this.constructTransport(this.options);
               try {
                 await this.client.connect(this.transport);
+                await this.client.close();
               } catch (error) {
                 // Allow the case where for whatever reason is already connected
                 if (
