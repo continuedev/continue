@@ -12,7 +12,9 @@ import { useAuth } from "../../context/Auth";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectSelectedChatModel } from "../../redux/slices/configSlice";
+import {
+  selectIsInEditMode,
+} from "../../redux/slices/sessionSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { updateSelectedModelByRole } from "../../redux/thunks";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
@@ -120,10 +122,23 @@ function ModelOption({
 
 function ModelSelect() {
   const dispatch = useAppDispatch();
-  const selectedChatModel = useAppSelector(selectSelectedChatModel);
-  const allChatModels = useAppSelector(
-    (state) => state.config.config.modelsByRole.chat,
-  );
+
+  const isInEditMode = useAppSelector(selectIsInEditMode);
+  const config = useAppSelector((state) => state.config.config);
+
+  let selectedModel = null;
+  let allModels = null;
+  if (isInEditMode) {
+    allModels = config.modelsByRole.edit;
+    selectedModel = config.selectedModelByRole.edit;
+  }
+  if (!selectedModel) {
+    selectedModel = config.selectedModelByRole.chat;
+  }
+  if (!allModels || allModels.length === 0) {
+    allModels = config.modelsByRole.chat;
+  }
+
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -141,9 +156,7 @@ function ModelSelect() {
 
   useEffect(() => {
     setOptions(
-      allChatModels
-        .filter((m) => !m.roles || m.roles.includes("chat"))
-        .map((model) => {
+      allModels.map((model) => {
           return {
             value: model.title,
             title: modelSelectTitle(model),
@@ -151,7 +164,7 @@ function ModelSelect() {
           };
         }),
     );
-  }, [allChatModels]);
+  }, [isInEditMode, config]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -162,7 +175,7 @@ function ModelSelect() {
 
         const direction = event.shiftKey ? -1 : 1;
         const currentIndex = options.findIndex(
-          (option) => option.value === selectedChatModel?.title,
+          (option) => option.value === selectedModel?.title,
         );
         let nextIndex = (currentIndex + 1 * direction) % options.length;
         if (nextIndex < 0) nextIndex = options.length - 1;
@@ -182,7 +195,7 @@ function ModelSelect() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [options, selectedChatModel]);
+  }, [options, selectedModel]);
 
   function onClickAddModel(e: MouseEvent) {
     e.stopPropagation();
@@ -207,11 +220,11 @@ function ModelSelect() {
   return (
     <Listbox
       onChange={async (val: string) => {
-        if (val === selectedChatModel?.title) return;
+        if (val === selectedModel?.title) return;
         dispatch(
           updateSelectedModelByRole({
             selectedProfile,
-            role: "chat",
+            role: isInEditMode ? "edit" : "chat",
             modelTitle: val,
           }),
         );
@@ -224,7 +237,7 @@ function ModelSelect() {
           className="h-[18px] gap-1 border-none text-gray-400"
         >
           <span className="line-clamp-1 break-all hover:brightness-110">
-            {modelSelectTitle(selectedChatModel) || "Select model"}
+            {modelSelectTitle(selectedModel) || "Select model"}
           </span>
           <ChevronDownIcon
             className="h-2 w-2 flex-shrink-0 hover:brightness-110"
@@ -239,7 +252,7 @@ function ModelSelect() {
                 idx={idx}
                 key={idx}
                 showMissingApiKeyMsg={option.apiKey === ""}
-                isSelected={option.value === selectedChatModel?.title}
+                isSelected={option.value === selectedModel?.title}
               />
             ))}
           </div>
