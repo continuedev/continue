@@ -1,22 +1,21 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ContextItem } from "core";
-// Remove direct import of markProcessAsBackgrounded
 import { abortStream, acceptToolCall, updateToolCallOutput } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 
 /**
- * This thunk is used to continue running a terminal command in the background
+ * This thunk is used to move a terminal command to the background
  * when the user clicks the "Continue" button in the UI
  * 
- * It marks the command as visually complete without re-running it or stopping
+ * It marks the command as visually complete without stopping
  * the already running process
  */
-export const continueTerminalCommand = createAsyncThunk<
+export const moveTerminalProcessToBackground = createAsyncThunk<
   void,
   { toolCallId: string },
   ThunkApiType
->("chat/continueTerminalCommand", async ({ toolCallId }, { dispatch, getState, extra }) => {
+>("chat/moveTerminalProcessToBackground", async ({ toolCallId }, { dispatch, getState, extra }) => {
   // Find the current tool call
   const state = getState();
   const toolCalls = state.session.history.filter(

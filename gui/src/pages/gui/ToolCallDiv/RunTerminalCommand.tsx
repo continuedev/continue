@@ -4,7 +4,8 @@ import { Fragment } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
-import { continueTerminalCommand } from "../../../redux/thunks/continueTerminalCommand";
+import { moveTerminalProcessToBackground } from "../../../redux/thunks/moveTerminalProcessToBackground";
+import { useAppDispatch } from "../../../redux/hooks";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
@@ -73,7 +74,7 @@ function parseTerminalOutput(output: string): {
 }
 
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
-  const dispatch = useDispatch<ThunkDispatch<any, any, AnyAction>>();
+  const dispatch = useAppDispatch();
 
   // Find the terminal output from context items if available
   const terminalItem = props.toolCallState.output?.find(
@@ -112,13 +113,13 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
           {isRunning && props.toolCallId && (
             <BackgroundLink
               onClick={() => {
-                // Dispatch the action to continue the command in the background
-                dispatch(continueTerminalCommand({
+                // Dispatch the action to move the command to the background
+                dispatch(moveTerminalProcessToBackground({
                   toolCallId: props.toolCallId as string
                 }));
               }}
             >
-              Continue in background
+              Move to background
             </BackgroundLink>
           )}
         </CommandStatus>
