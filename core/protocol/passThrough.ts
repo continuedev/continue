@@ -61,6 +61,8 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "tools/call",
     "controlPlane/openUrl",
     "isItemTooBig",
+    "process/markAsBackgrounded",
+    "process/isBackgrounded",
   ];
 
 // Message types to pass through from core to webview
@@ -78,4 +80,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "getWebviewHistoryLength",
     "getCurrentSessionId",
     "didCloseFiles",
+    "toolCallPartialOutput",
   ];
