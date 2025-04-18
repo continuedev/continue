@@ -114,12 +114,6 @@ class IdeProtocolClient(
                         ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                             .handleUpdatedSessionInfo(null)
 
-                        // Tell the webview that session info changed
-                        val data = mapOf(
-                            "sessionInfo" to null
-                        )
-                        continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
-
                         respond(null)
                     }
 

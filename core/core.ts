@@ -640,6 +640,9 @@ export class Core {
       await this.configHandler.updateControlPlaneSessionInfo(
         msg.data.sessionInfo,
       );
+      this.messenger.send("sessionUpdate", {
+        sessionInfo: msg.data.sessionInfo,
+      });
     });
 
     on("auth/getAuthUrl", async (msg) => {

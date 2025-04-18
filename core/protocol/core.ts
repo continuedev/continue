@@ -32,6 +32,7 @@ import type {
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -209,5 +210,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   isItemTooBig: [
     { item: ContextItemWithId; selectedModelTitle: string | undefined },
     boolean,
+  ];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
   ];
 };

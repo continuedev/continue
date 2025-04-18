@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useWebviewListener(
-    "didChangeControlPlaneSessionInfo",
+    "sessionUpdate",
     async (data) => {
       setSession(data.sessionInfo);
     },
