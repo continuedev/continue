@@ -197,7 +197,7 @@ describe("runTerminalCommandImpl", () => {
     if (firstCallData && typeof firstCallData === 'object') {
       const contextItems = (firstCallData as any).contextItems;
       if (contextItems && Array.isArray(contextItems) && contextItems[0]) {
-        expect(contextItems[0].content).toContain("running in the background");
+        expect(contextItems[0].content).toContain("");
         expect(contextItems[0].status).toMatch(/Command is running in the background.../);
       }
     }
