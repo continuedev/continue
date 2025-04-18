@@ -1,3 +1,5 @@
+import { ILLM } from "core";
+import { isModelInstaller } from "core/llm";
 import * as vscode from "vscode";
 
 function supportSpecialHandling(error: any): boolean {
@@ -9,7 +11,7 @@ function supportSpecialHandling(error: any): boolean {
  * @param error Handles common LLM errors. Currently only handles Ollama-related errors.
  * @returns true if error is handled, false otherwise
  */
-export function handleLLMError(error: any): boolean {
+export async function handleLLMError(error: any): Promise<boolean> {
   if (!supportSpecialHandling(error)) {
     return false;
   }
@@ -23,6 +25,11 @@ export function handleLLMError(error: any): boolean {
   } else if (message.includes("ollama run") && error.llm) {
     //extract model name from error message matching the pattern "ollama run <model-name>"
     modelName = message.match(/`ollama run (.*)`/)?.[1];
+    const llm = error.llm as ILLM;
+    if (isModelInstaller(llm) && await llm.isInstallingModel(modelName!)){
+      console.log(`${llm.providerName} already installing ${modelName}`);
+      return false;
+    }
     message = `Model "${modelName}" is not found in Ollama. You need to install it.`;
     options = [`Install Model`];
   }

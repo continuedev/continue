@@ -87,7 +87,7 @@ export class VsCodeWebviewProtocol
             respond({ done: true, content: response, status: "success" });
           }
         } catch (e: any) {
-          if (handleLLMError(e)) {
+          if (await handleLLMError(e)) {
             // Respond without an error, so the UI doesn't show the error component
             respond({ done: true, status: "error" });
           }

@@ -72,7 +72,7 @@ export class LLMError extends Error {
 }
 
 export function isModelInstaller(provider: any): provider is ModelInstaller {
-  return provider && typeof provider.installModel === "function";
+  return provider && typeof provider.installModel === "function" && typeof provider.isInstallingModel === "function";;
 }
 
 type InteractionStatus = "in_progress" | "success" | "error" | "cancelled";
