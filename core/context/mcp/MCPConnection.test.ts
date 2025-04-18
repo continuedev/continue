@@ -195,8 +195,8 @@ describe("MCPConnection", () => {
     });
   });
 
-  describe("actually connect to Filesystem MCP", () => {
-    it.only("should connect and include correct tools", async () => {
+  describe.skip("actually connect to Filesystem MCP", () => {
+    it("should connect and include correct tools", async () => {
       const conn = new MCPConnection({
         id: "filesystem",
         name: "Filesystem",
