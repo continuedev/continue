@@ -908,7 +908,8 @@ export type TemplateType =
   | "llava"
   | "gemma"
   | "granite"
-  | "llama3";
+  | "llama3"
+  | "mistral";
 
 export interface RequestOptions {
   timeout?: number;

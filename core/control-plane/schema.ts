@@ -43,6 +43,7 @@ const modelDescriptionSchema = z.object({
       "llava",
       "gemma",
       "llama3",
+      "mistral",
     ])
     .optional(),
   completionOptions: z
