@@ -55,12 +55,14 @@ export default function AddFileCombobox({
           setSelectedFiles(files);
           void onSelect(files.map((file) => file.id));
           buttonRef.current?.click();
+          setQuery("");
         }}
       >
         {({ open }) => (
           <div className="relative">
             <ComboboxButton className="hidden" ref={buttonRef} />
             <ComboboxInput
+              value={query}
               ref={inputRef}
               onClick={() => {
                 if (!open) {
