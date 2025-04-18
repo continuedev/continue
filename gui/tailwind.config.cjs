@@ -25,6 +25,9 @@ module.exports = {
       animation: {
         "spin-slow": "spin 6s linear infinite",
       },
+      borderRadius: {
+        default: "5px",
+      },
       colors: {
         lightgray: "#999998",
         "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",
