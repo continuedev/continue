@@ -464,7 +464,7 @@ export class Core {
       );
       return completion;
     });
-    on("llm/listModels", this.handleListModels);
+    on("llm/listModels", this.handleListModels.bind(this));
 
     // Provide messenger to utils so they can interact with GUI + state
     TTS.messenger = this.messenger;
