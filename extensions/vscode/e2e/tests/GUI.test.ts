@@ -237,7 +237,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
-  describe.skip("Chat with tools", () => {
+  describe("Chat with tools", () => {
     it("should render tool call", async () => {
       await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
 
@@ -245,10 +245,41 @@ describe("GUI Test", () => {
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
 
-      await TestUtils.waitForSuccess(
-        () => GUISelectors.getThreadMessageByText(view, "No matches found"), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+      const statusMessage = await TestUtils.waitForSuccess(
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        DEFAULT_TIMEOUT.SM,
       );
-    });
+
+      expect(await statusMessage.getText()).contain(
+        'Continue retrieved search results for "" won\'t be matched because of escaped quotes ""',
+      );
+    }).timeout(DEFAULT_TIMEOUT.MD);
+
+    it("should render tool call requiring approval", async () => {
+      await GUIActions.toggleToolPolicy(view, "builtin_grep_search");
+      await GUIActions.toggleToolPolicy(view, "builtin_grep_search");
+
+      await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
+
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+
+      const acceptToolCallButton = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getAcceptToolCallButton(view),
+      );
+      await acceptToolCallButton.click();
+
+      const statusMessage = await TestUtils.waitForSuccess(
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      const text = await statusMessage.getText();
+      expect(text).contain(
+        'Continue is getting search results for "" won\'t be matched because of escaped quotes ""',
+      );
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
   describe("Context providers", () => {

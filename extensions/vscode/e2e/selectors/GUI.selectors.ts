@@ -38,6 +38,34 @@ export class GUISelectors {
     );
   }
 
+  public static getRejectToolCallButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "reject-tool-call-button",
+    );
+  }
+
+  public static getToolCallStatusMessage(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      "tool-call-status-message",
+    );
+  }
+
+  public static getToolButton(view: WebView) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `block-settings-toolbar-icon-tools`,
+    );
+  }
+
+  public static getToolPolicyButton(view: WebView, toolName: string) {
+    return SelectorUtils.getElementByDataTestId(
+      view,
+      `tool-policy-item-${toolName}`,
+    );
+  }
+
   public static getModelDropdownButton(view: WebView) {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
   }

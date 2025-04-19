@@ -116,4 +116,17 @@ export class GUIActions {
       .keyUp(TestUtils.osControlKey)
       .perform();
   }
+
+  public static async toggleToolPolicy(view: WebView, toolName: string) {
+    const toolButton = await TestUtils.waitForSuccess(() =>
+      GUISelectors.getToolButton(view),
+    );
+    await toolButton.click();
+    const toolPolicyButton = await GUISelectors.getToolPolicyButton(
+      view,
+      toolName,
+    );
+    // Enabled -> Excluded -> Ask first
+    await TestUtils.waitForSuccess(() => toolPolicyButton.click());
+  }
 }

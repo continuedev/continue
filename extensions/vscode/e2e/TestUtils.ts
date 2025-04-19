@@ -31,7 +31,18 @@ export class TestUtils {
       await new Promise((resolve) => setTimeout(resolve, interval));
     }
 
-    throw new Error(`Element not found after ${timeout}ms timeout`);
+    throw new Error(
+      `Element not found after ${timeout}ms timeout: ${locatorFn}`,
+    );
+  }
+
+  public static async logFailure<T>(locatorFn: () => Promise<T>): Promise<T> {
+    try {
+      const result = await locatorFn();
+      return result;
+    } catch (e) {
+      throw new Error(`Element not found: ${locatorFn}`);
+    }
   }
 
   public static async expectNoElement<T>(

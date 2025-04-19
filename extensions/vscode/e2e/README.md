@@ -1,6 +1,6 @@
 ### Setup
 
-When running e2e tests for the first time, or after changing non-test source code:
+When running e2e tests for the first time
 
 ```bash
 npm run e2e:all
@@ -8,11 +8,11 @@ npm run e2e:all
 
 ### Run
 
-Afterward, you can run the tests with as long as you've only changed the e2e test code:
+Depending on what code you update, you can use a faster loop to test your changes:
 
-```bash
-npm run e2e:quick
-```
+- If you update the e2e test code and/or config.yaml/json, you can run `npm run e2e:quick`
+- If you update the extension code, you can run `npm run e2e:recompile`
+- If you update the gui code, you can run `npm run e2e:rebuild-gui`
 
 ### Writing tests
 
