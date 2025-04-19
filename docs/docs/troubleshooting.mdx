@@ -4,8 +4,8 @@ description: Troubleshooting while waiting for help during beta / alpha testing
 keywords: [reload, delete, manually, logs, server, console]
 ---
 
-import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
 
 The Continue VS Code extension is currently in beta, and the JetBrains extension is in Alpha. If you are having trouble, please follow the steps below.
 
@@ -35,13 +35,16 @@ In order to view debug logs, which contain extra information, click the dropdown
 4. Select the `Console` tab
 5. Read the console logs
 
-#### LLM prompt logs
+#### Prompt Logs (Continue Console)
 
-If you're getting a response from the LLM that doesn't seem to make sense, you can
+To view prompt logs/analytics, you can enable the Continue Console.
 
-1. Open the "Output" panel (right next to the terminal)
-2. In the dropdown, select "Continue - LLM Prompts/Completions"
-3. View the exact prompts that were sent to the LLM and the completions received
+1. Open VS Code settings (<kbd>cmd/ctrl</kbd> + <kbd>,</kbd>)
+2. Search for the setting "Continue: Enable Console" and enable it
+3. Reload the window
+4. Open the Continue Console by using the command palette (<kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd>) and searching for "Continue: Focus on Continue Console View"
+
+![Continue Console](../static/img/continue-console.png)
 
 ### JetBrains
 
