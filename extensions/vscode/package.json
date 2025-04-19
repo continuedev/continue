@@ -221,6 +221,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.openConfigPageFromPalette",
+        "category": "Continue",
+        "title": "Open Settings",
+        "group": "Continue"
+      },
+      {
         "command": "continue.toggleTabAutocompleteEnabled",
         "category": "Continue",
         "title": "Toggle Autocomplete Enabled",
@@ -439,6 +445,10 @@
         },
         {
           "command": "continue.newSession"
+        },
+        {
+          "command": "continue.openConfigPage",
+          "when": "false"
         }
       ],
       "editor/context": [
