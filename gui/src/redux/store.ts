@@ -14,6 +14,7 @@ import { profilesReducer } from "./slices";
 import configReducer from "./slices/configSlice";
 import editModeStateReducer from "./slices/editModeState";
 import indexingReducer from "./slices/indexingSlice";
+import rulesReducer from "./slices/rulesSlice";
 import sessionReducer from "./slices/sessionSlice";
 import tabsReducer from "./slices/tabsSlice";
 import uiReducer from "./slices/uiSlice";
@@ -31,6 +32,7 @@ const rootReducer = combineReducers({
   indexing: indexingReducer,
   tabs: tabsReducer,
   profiles: profilesReducer,
+  rules: rulesReducer,
 });
 
 const saveSubsetFilters = [
@@ -61,6 +63,7 @@ const saveSubsetFilters = [
     "selectedOrganizationId",
     "organizations",
   ]),
+  createFilter("rules", ["enabledRules"]),
 ];
 
 const migrations: MigrationManifest = {
