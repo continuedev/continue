@@ -68,6 +68,27 @@ const promptTemplatesSchema = z.object({
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
+const templateSchema = z.enum([
+  "llama2",
+  "alpaca",
+  "zephyr",
+  "phi2",
+  "phind",
+  "anthropic",
+  "chatml",
+  "none",
+  "openchat",
+  "deepseek",
+  "xwin-coder",
+  "neural-chat",
+  "codellama-70b",
+  "llava",
+  "gemma",
+  "granite",
+  "llama3",
+]);
+export type Template = z.infer<typeof templateSchema>;
+
 const baseModelFields = {
   name: z.string(),
   model: z.string(),
@@ -80,6 +101,7 @@ const baseModelFields = {
   embedOptions: embedOptionsSchema.optional(),
   chatOptions: chatOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
+  template: templateSchema.optional(),
   useLegacyCompletionsEndpoint: z.boolean().optional(),
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
