@@ -33,7 +33,7 @@
                     "id": "test_id",
                     "type": "function",
                     "function": {
-                      "name": "builtin_exact_search",
+                      "name": "builtin_grep_search",
                       "arguments": "{\"query\": \"\\\" won't be matched because of escaped quotes \\\"\"}"
                     }
                   }

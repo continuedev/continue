@@ -37,7 +37,7 @@ models:
                 - id: test_id
                   type: function
                   function:
-                    name: builtin_exact_search
+                    name: builtin_grep_search
                     arguments: '{"query": "test query"}'
           - REPEAT_LAST_MSG
     roles:
