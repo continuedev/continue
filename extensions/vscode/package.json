@@ -8,7 +8,6 @@
     "url": "https://github.com/continuedev/continue"
   },
   "extensionKind": [
-    "ui",
     "workspace"
   ],
   "bugs": {
