@@ -20,6 +20,7 @@ import {
 } from "../../../../redux/slices/uiSlice";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 import { useFontSize } from "../../../ui/font";
+import { PublishBlockButton } from "../PublishBlockButton";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 interface RuleCardProps {
@@ -81,6 +82,7 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
 
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
+
   return (
     <div
       style={{
@@ -100,9 +102,12 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             {title}
           </span>
           <div className="flex flex-row items-start gap-1">
-            <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
-              <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
-            </HeaderButtonWithToolTip>{" "}
+            {rule.source === ".continuerules" && rule.ruleFile ? (
+              <PublishBlockButton
+                blockFilepath={rule.ruleFile}
+                blockType="rules"
+              />
+            ) : null}
             {rule.source === "default" ? (
               <HeaderButtonWithToolTip onClick={handleOpen} text="View">
                 <EyeIcon className="h-3 w-3 text-gray-400" />
@@ -112,6 +117,9 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
                 <PencilIcon className="h-3 w-3 text-gray-400" />
               </HeaderButtonWithToolTip>
             )}
+            <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
+              <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
+            </HeaderButtonWithToolTip>
           </div>
         </div>
 
@@ -146,6 +154,7 @@ export function RulesSection() {
 
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
+
   const sortedRules: RuleWithSource[] = useMemo(() => {
     const rules = [...config.rules.map((rule) => ({ ...rule }))];
 
