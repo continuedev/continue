@@ -94,13 +94,13 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
 }
 
 /**
- * @description Template for LLAMA2 messages:
+ * @description Template for Mistral messages:
  *
  * [INST] <<SYS>>
  * {{ system_prompt }}
  * <</SYS>>
  *
- * {{ user_msg_1 }} [/INST] {{ model_answer_1 }} </s><s>[INST] {{ user_msg_2 }} [/INST] {{ model_answer_2 }} [INST] {{ user_msg_3 }} [/INST]
+ * {{ user_msg_1 }} [/INST] {{ model_answer_1 }} [INST] {{ user_msg_2 }} [/INST] {{ model_answer_2 }} [INST] {{ user_msg_3 }} [/INST]
  */
 function mistralTemplateMessages(msgs: ChatMessage[]): string {
   if (msgs.length === 0) {
