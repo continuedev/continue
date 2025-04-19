@@ -175,7 +175,7 @@ jobs:
 
       - name: Build and check config-yaml
         run: |
-          cd packages/config-yaml
+          cd ../../packages/config-yaml
           npm i
           npx tsc --noEmit
           # Tests are currently failing, commenting out for now
