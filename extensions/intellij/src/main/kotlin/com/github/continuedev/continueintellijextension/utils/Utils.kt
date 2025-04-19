@@ -81,3 +81,15 @@ fun uuid(): String {
 }
 
 fun VirtualFile.toUriOrNull(): String? = fileSystem.getNioPath(this)?.toUri()?.toString()?.removeSuffix("/")
+
+inline fun <reified T> Any?.castNestedOrNull(vararg keys: String): T? {
+    return getNestedOrNull(*keys) as? T
+}
+
+fun Any?.getNestedOrNull(vararg keys: String): Any? {
+    var result = this
+    for (key in keys) {
+        result = (result as? Map<*, *>)?.get(key) ?: return null
+    }
+    return result
+}
