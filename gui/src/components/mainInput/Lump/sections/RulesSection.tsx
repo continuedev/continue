@@ -1,7 +1,6 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowsPointingOutIcon,
-  CloudArrowUpIcon,
   EyeIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
@@ -21,6 +20,7 @@ import {
 } from "../../../../redux/slices/uiSlice";
 import HeaderButtonWithToolTip from "../../../gui/HeaderButtonWithToolTip";
 import { useFontSize } from "../../../ui/font";
+import { PublishBlockButton } from "../PublishBlockButton";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 interface RuleCardProps {
@@ -80,35 +80,6 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     );
   }
 
-  async function onClickPublish() {
-    if (!rule.ruleFile) {
-      ideMessenger.post("showToast", [
-        "error",
-        "Failed to find path to rule file",
-      ]);
-      return;
-    }
-
-    const ruleFileContent = await ideMessenger.request("readFile", {
-      filepath: rule.ruleFile,
-    });
-
-    if (ruleFileContent.status !== "success") {
-      ideMessenger.post("showToast", [
-        "error",
-        "Failed to read contents of rule file",
-      ]);
-      return;
-    }
-
-    const encodedRule = encodeURIComponent(ruleFileContent.content);
-
-    ideMessenger.request("controlPlane/openUrl", {
-      path: `new?type=block&blockType=rules&blockContent=${encodedRule}`,
-      orgSlug: undefined,
-    });
-  }
-
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
 
@@ -131,10 +102,11 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             {title}
           </span>
           <div className="flex flex-row items-start gap-1">
-            {rule.source === ".continuerules" ? (
-              <HeaderButtonWithToolTip onClick={onClickPublish} text="Publish">
-                <CloudArrowUpIcon className="h-3 w-3 text-gray-400" />
-              </HeaderButtonWithToolTip>
+            {rule.source === ".continuerules" && rule.ruleFile ? (
+              <PublishBlockButton
+                blockFilepath={rule.ruleFile}
+                blockType="rules"
+              />
             ) : null}
             {rule.source === "default" ? (
               <HeaderButtonWithToolTip onClick={handleOpen} text="View">
