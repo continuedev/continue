@@ -1,6 +1,7 @@
 import { parseConfigYaml } from "@continuedev/config-yaml";
 import {
   ArrowsPointingOutIcon,
+  CloudArrowUpIcon,
   EyeIcon,
   PencilIcon,
 } from "@heroicons/react/24/outline";
@@ -79,8 +80,38 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
     );
   }
 
+  async function onClickPublish() {
+    if (!rule.ruleFile) {
+      ideMessenger.post("showToast", [
+        "error",
+        "Failed to find path to rule file",
+      ]);
+      return;
+    }
+
+    const ruleFileContent = await ideMessenger.request("readFile", {
+      filepath: rule.ruleFile,
+    });
+
+    if (ruleFileContent.status !== "success") {
+      ideMessenger.post("showToast", [
+        "error",
+        "Failed to read contents of rule file",
+      ]);
+      return;
+    }
+
+    const encodedRule = encodeURIComponent(ruleFileContent.content);
+
+    ideMessenger.request("controlPlane/openUrl", {
+      path: `new?type=block&blockType=rules&blockContent=${encodedRule}`,
+      orgSlug: undefined,
+    });
+  }
+
   const smallFont = useFontSize(-2);
   const tinyFont = useFontSize(-3);
+
   return (
     <div
       style={{
@@ -100,9 +131,11 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
             {title}
           </span>
           <div className="flex flex-row items-start gap-1">
-            <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
-              <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
-            </HeaderButtonWithToolTip>{" "}
+            {rule.source === ".continuerules" ? (
+              <HeaderButtonWithToolTip onClick={onClickPublish} text="Publish">
+                <CloudArrowUpIcon className="h-3 w-3 text-gray-400" />
+              </HeaderButtonWithToolTip>
+            ) : null}
             {rule.source === "default" ? (
               <HeaderButtonWithToolTip onClick={handleOpen} text="View">
                 <EyeIcon className="h-3 w-3 text-gray-400" />
@@ -112,6 +145,9 @@ const RuleCard: React.FC<RuleCardProps> = ({ rule }) => {
                 <PencilIcon className="h-3 w-3 text-gray-400" />
               </HeaderButtonWithToolTip>
             )}
+            <HeaderButtonWithToolTip onClick={onClickExpand} text="Expand">
+              <ArrowsPointingOutIcon className="h-3 w-3 text-gray-400" />
+            </HeaderButtonWithToolTip>
           </div>
         </div>
 
@@ -146,6 +182,7 @@ export function RulesSection() {
 
   const config = useAppSelector((store) => store.config.config);
   const mode = useAppSelector((store) => store.session.mode);
+
   const sortedRules: RuleWithSource[] = useMemo(() => {
     const rules = [...config.rules.map((rule) => ({ ...rule }))];
 
