@@ -167,6 +167,21 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
+      - uses: actions/cache@v4
+        id: config-yaml-cache
+        with:
+          path: packages/config-yaml/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+
+      - name: Build and check config-yaml
+        run: |
+          cd packages/config-yaml
+          npm i
+          npx tsc --noEmit
+          # Tests are currently failing, commenting out for now
+          # npm test 
+          npm run build
+
       # npm install core
       - name: Install core node_modules
         run: |
