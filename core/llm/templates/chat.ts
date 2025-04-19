@@ -93,6 +93,58 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+/**
+ * @description Template for Mistral messages:
+ *
+ * [INST] <<SYS>>
+ * {{ system_prompt }}
+ * <</SYS>>
+ *
+ * {{ user_msg_1 }} [/INST] {{ model_answer_1 }} [INST] {{ user_msg_2 }} [/INST] {{ model_answer_2 }} [INST] {{ user_msg_3 }} [/INST]
+ */
+function mistralTemplateMessages(msgs: ChatMessage[]): string {
+  if (msgs.length === 0) {
+    return "";
+  }
+
+  if (msgs[0].role === "assistant") {
+    // These models aren't trained to handle assistant message coming first,
+    // and typically these are just introduction messages from Continue
+    msgs.shift();
+  }
+
+  let prompt = "";
+  let hasSystem = msgs[0].role === "system";
+
+  if (hasSystem && renderChatMessage(msgs[0]).trim() === "") {
+    hasSystem = false;
+    msgs = msgs.slice(1);
+  }
+
+  if (hasSystem) {
+    const systemMessage = `<<SYS>>\n ${msgs[0].content}\n<</SYS>>\n\n`;
+    if (msgs.length > 1) {
+      prompt += `[INST] ${systemMessage} ${msgs[1].content} [/INST]`;
+    } else {
+      prompt += `[INST] ${systemMessage} [/INST]`;
+      return prompt;
+    }
+  }
+
+  for (let i = hasSystem ? 2 : 0; i < msgs.length; i++) {
+    if (msgs[i].role === "user") {
+      prompt += `[INST] ${msgs[i].content} [/INST]`;
+    } else {
+      prompt += msgs[i].content;
+      if (i < msgs.length - 1) {
+        prompt += "\n";
+      }
+    }
+  }
+
+  return prompt;
+}
+
 function anthropicTemplateMessages(messages: ChatMessage[]): string {
   const HUMAN_PROMPT = "\n\nHuman:";
   const AI_PROMPT = "\n\nAssistant:";
@@ -293,6 +345,7 @@ export {
   llama2TemplateMessages,
   llama3TemplateMessages,
   llavaTemplateMessages,
+  mistralTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
   phi2TemplateMessages,

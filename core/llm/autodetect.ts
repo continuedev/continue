@@ -15,6 +15,7 @@ import {
   llama2TemplateMessages,
   llama3TemplateMessages,
   llavaTemplateMessages,
+  mistralTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
   phi2TemplateMessages,
@@ -290,6 +291,7 @@ function autodetectTemplateFunction(
       gemma: gemmaTemplateMessage,
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
+      mistral: mistralTemplateMessages,
       none: null,
     };
 
