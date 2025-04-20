@@ -239,7 +239,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
-  describe.only("Chat with tools", () => {
+  describe("Chat with tools", () => {
     it("should render tool call", async () => {
       await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
 
@@ -257,7 +257,7 @@ describe("GUI Test", () => {
       );
     }).timeout(DEFAULT_TIMEOUT.MD);
 
-    it("should render tool call requiring approval", async () => {
+    it("should call tool after approval", async () => {
       await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
 
       await TestUtils.waitForSuccess(() =>
@@ -280,6 +280,31 @@ describe("GUI Test", () => {
 
       const text = await statusMessage.getText();
       expect(text).contain("the git diff");
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
+    it("should cancel tool", async () => {
+      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
+
+      await TestUtils.waitForSuccess(() =>
+        GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM"),
+      );
+
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+
+      const cancelToolCallButton = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getRejectToolCallButton(view),
+      );
+      await cancelToolCallButton.click();
+
+      const statusMessage = await TestUtils.waitForSuccess(
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      const text = await statusMessage.getText();
+      expect(text).contain("Continue tried to view the git diff");
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
