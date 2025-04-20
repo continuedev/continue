@@ -1304,6 +1304,9 @@ export interface JSONModelDescription {
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
+  chatOptions?: {
+    baseSystemMessage?: string;
+  },
   requestOptions?: RequestOptions;
   cacheBehavior?: CacheBehavior;
 

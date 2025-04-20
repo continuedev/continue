@@ -137,8 +137,8 @@ export async function llmFromDescription(
 
   let baseChatSystemMessage: string | undefined = undefined;
   if (desc.systemMessage !== undefined) {
-    baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
-    baseChatSystemMessage += "\n\n";
+    baseChatSystemMessage = typeof desc.chatOptions?.baseSystemMessage === "string" ? desc.chatOptions.baseSystemMessage : DEFAULT_CHAT_SYSTEM_MESSAGE;
+    baseChatSystemMessage += desc.chatOptions?.baseSystemMessage === "" ? "" : "\n\n";
     baseChatSystemMessage += await renderTemplatedString(
       desc.systemMessage,
       readFile,

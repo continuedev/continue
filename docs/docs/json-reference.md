@@ -30,7 +30,9 @@ Each model has specific configuration options tailored to its provider and funct
 - `template`: Chat template to format messages. Auto-detected for most models but can be overridden. See intelliJ suggestions.
 - `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt).
 - `completionOptions`: Model-specific completion options, same format as top-level [`completionOptions`](#completionoptions), which they override.
-- `systemMessage`: A system message that will precede responses from the LLM.
+- `systemMessage`: A system message that will precede responses from the LLM. Note: If you want to override the default system prompt instead of setting additional instructions, use the `chatOptions.baseSystemMessage` config option.
+- `chatOptions`: If the model includes role `chat`, these settings apply for Chat and Agent mode:
+  - `baseSystemMessage`: Can be used to override the default system prompt.
 - `requestOptions`: Model-specific HTTP request options, same format as top-level [`requestOptions`](#requestoptions), which they override.
 - `apiType`: Specifies the type of API (`openai` or `azure`).
 - `apiVersion`: Azure API version (e.g., `2023-07-01-preview`).

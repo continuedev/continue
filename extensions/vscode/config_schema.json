@@ -410,6 +410,20 @@
           "description": "A system message that will always be followed by the LLM",
           "type": "string"
         },
+        "chatOptions": {
+          "title": "Chat Options",
+          "description": "If the model includes role chat, these settings apply for Chat and Agent mode",
+          "type": "object",
+          "default": {},
+          "properties": {
+            "baseSystemMessage": {
+              "title": "Base System Message",
+              "description": "Can be used to override the default system prompt",
+              "default": "<important_rules>\nAlways include the language and file name in the info string when you write code blocks. \nIf you are editing \"src/main.py\" for example, your code block should start with '```python src/main.py'\nWhen addressing code modification requests, present a concise code snippet that\nemphasizes only the necessary changes and uses abbreviated placeholders for\nunmodified sections. For instance:\n```typescript /path/to/file\n// ... rest of code here ...\n{{ modified code here }}\n// ... rest of code here ...\n{{ another modification }}\n// ... rest of code here ...\n```\nSince users have access to their complete file, they prefer reading only the\nrelevant modifications. It's perfectly acceptable to omit unmodified portions\nat the beginning, middle, or end of files using these \"lazy\" comments. Only\nprovide the complete file when explicitly requested. Include a concise explanation\nof changes unless the user specifically asks for code only.\n</important_rules>",
+              "type": "string"
+            }
+          }
+        },
         "requestOptions": {
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
