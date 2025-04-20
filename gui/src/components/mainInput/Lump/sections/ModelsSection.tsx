@@ -1,54 +1,31 @@
 import { ModelRole } from "@continuedev/config-yaml";
 import { ModelDescription } from "core";
-import { useContext } from "react";
 import { useAuth } from "../../../../context/Auth";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
 import ModelRoleSelector from "../../../../pages/config/ModelRoleSelector";
 import { useAppDispatch, useAppSelector } from "../../../../redux/hooks";
-import {
-  selectDefaultModel,
-  setDefaultModel,
-  updateConfig,
-} from "../../../../redux/slices/configSlice";
+import { updateSelectedModelByRole } from "../../../../redux/thunks";
 import { isJetBrains } from "../../../../util";
 import { ExploreBlocksButton } from "./ExploreBlocksButton";
 
 export function ModelsSection() {
   const { selectedProfile } = useAuth();
   const dispatch = useAppDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
 
   const config = useAppSelector((state) => state.config.config);
   const jetbrains = isJetBrains();
-  const selectedChatModel = useAppSelector(selectDefaultModel);
 
   function handleRoleUpdate(role: ModelRole, model: ModelDescription | null) {
-    if (!selectedProfile) {
-      return;
-    }
-    // Optimistic update
-    dispatch(
-      updateConfig({
-        ...config,
-        selectedModelByRole: {
-          ...config.selectedModelByRole,
-          [role]: model,
-        },
-      }),
-    );
-    ideMessenger.post("config/updateSelectedModel", {
-      profileId: selectedProfile.id,
-      role,
-      title: model?.title ?? null,
-    });
-  }
-
-  // TODO use handleRoleUpdate for chat
-  function handleChatModelSelection(model: ModelDescription | null) {
     if (!model) {
       return;
     }
-    dispatch(setDefaultModel({ title: model.title }));
+
+    dispatch(
+      updateSelectedModelByRole({
+        role,
+        selectedProfile,
+        modelTitle: model.title,
+      }),
+    );
   }
 
   return (
@@ -58,16 +35,8 @@ export function ModelsSection() {
           displayName="Chat"
           description="Used in the chat interface"
           models={config.modelsByRole.chat}
-          selectedModel={
-            selectedChatModel
-              ? {
-                  title: selectedChatModel.title,
-                  provider: selectedChatModel.provider,
-                  model: selectedChatModel.model,
-                }
-              : null
-          }
-          onSelect={(model) => handleChatModelSelection(model)}
+          selectedModel={config.selectedModelByRole.chat}
+          onSelect={(model) => handleRoleUpdate("chat", model)}
         />
         <ModelRoleSelector
           displayName="Autocomplete"

@@ -21,7 +21,7 @@ import { useInputHistory } from "../../../../hooks/useInputHistory";
 import useUpdatingRef from "../../../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../../../redux/hooks";
 import { selectUseActiveFile } from "../../../../redux/selectors";
-import { selectDefaultModel } from "../../../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   selectHasCodeToEdit,
@@ -83,7 +83,7 @@ export function createEditorConfig(options: {
   const posthog = usePostHog();
 
   const { getSubmenuContextItems } = useSubmenuContextProviders();
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const historyLength = useAppSelector((store) => store.session.history.length);

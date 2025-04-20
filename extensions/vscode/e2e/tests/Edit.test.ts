@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import {
-  WebView,
-  VSBrowser,
-  TextEditor,
   CodeLens,
+  TextEditor,
+  VSBrowser,
+  WebView,
 } from "vscode-extension-tester";
 
 import { EditActions } from "../actions/Edit.actions";

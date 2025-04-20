@@ -61,13 +61,18 @@ setup_node_version
 echo "Installing root-level dependencies..."
 npm install
 
+echo "Building config-yaml..."
+pushd packages/config-yaml
+npm install
+npm run build
+popd
+
 echo "Installing Core extension dependencies..."
 pushd core
 ## This flag is set because we pull down Chromium at runtime
 export PUPPETEER_SKIP_DOWNLOAD='true'
 npm install
 npm link
-
 popd
 
 echo "Installing GUI extension dependencies..."
@@ -75,7 +80,6 @@ pushd gui
 npm install
 npm link @continuedev/core
 npm run build
-
 popd
 
 # VSCode Extension (will also package GUI)
@@ -86,18 +90,15 @@ npm install
 npm link @continuedev/core
 npm run prepackage
 npm run package
-
 popd
 
 echo "Installing binary dependencies..."
 pushd binary
 npm install
 npm run build
-
 popd
 
 echo "Installing docs dependencies..."
 pushd docs
 npm install
-
 popd

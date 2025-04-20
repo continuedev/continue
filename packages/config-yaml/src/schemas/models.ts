@@ -58,6 +58,11 @@ export const embedOptionsSchema = z.object({
 });
 export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
 
+export const chatOptionsSchema = z.object({
+  baseSystemMessage: z.string().optional(),
+});
+export type ChatOptions = z.infer<typeof chatOptionsSchema>;
+
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
@@ -75,7 +80,9 @@ const baseModelFields = {
   defaultCompletionOptions: completionOptionsSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
   embedOptions: embedOptionsSchema.optional(),
+  chatOptions: chatOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
+  useLegacyCompletionsEndpoint: z.boolean().optional(),
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),

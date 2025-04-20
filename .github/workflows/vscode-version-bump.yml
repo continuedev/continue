@@ -1,4 +1,4 @@
-name: VS Code Extension Version Bump
+name: Create VS Code main release draft
 on:
   schedule:
     # Runs at 7 AM PST (15:00 UTC) every Friday
@@ -14,6 +14,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all history and tags
+
+      - name: Setup GitHub CLI
+        run: |
+          gh auth login --with-token <<< "${{ github.token }}"
 
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
@@ -96,6 +100,15 @@ jobs:
 
           echo "Pushing branch to origin..."
           git push origin $NEW_BRANCH
+
+          # Add release creation
+          echo "Creating draft release..."
+          gh release create "${NEW_BRANCH}" \
+            --title "${NEW_BRANCH}" \
+            --generate-notes \
+            --draft \
+            --latest \
+            --notes-start-tag "${LAST_1_0_TAG}"
 
           echo "Version bump process completed successfully!"
 

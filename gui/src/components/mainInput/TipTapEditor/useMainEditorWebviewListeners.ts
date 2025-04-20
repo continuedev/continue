@@ -123,8 +123,6 @@ export function useMainEditorWebviewListeners({
         }
       }
 
-      debugger;
-
       editor
         .chain()
         .insertContentAt(index, {

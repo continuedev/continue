@@ -1,16 +1,17 @@
 {
   "scripts": {
-    "tsc:watch": "npx concurrently -n gui,vscode,core,binary -c cyan,magenta,yellow,green \"npm run tsc:watch:gui\" \"npm run tsc:watch:vscode\" \"npm run tsc:watch:core\" \"npm run tsc:watch:binary\"",
+    "tsc:watch": "concurrently -n gui,vscode,core,binary -c cyan,magenta,yellow,green \"npm run tsc:watch:gui\" \"npm run tsc:watch:vscode\" \"npm run tsc:watch:core\" \"npm run tsc:watch:binary\"",
     "tsc:watch:gui": "tsc --project gui/tsconfig.json --watch --noEmit --pretty",
     "tsc:watch:vscode": "tsc --project extensions/vscode/tsconfig.json --watch --noEmit --pretty",
     "tsc:watch:core": "tsc --project core/tsconfig.json --watch --noEmit --pretty",
     "tsc:watch:binary": "tsc --project binary/tsconfig.json --watch --noEmit --pretty"
   },
   "devDependencies": {
-    "typescript": "^5.6.3",
     "@typescript-eslint/parser": "^7.8.0",
+    "concurrently": "^9.1.2",
     "eslint-plugin-import": "^2.29.1",
     "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.8"
+    "prettier-plugin-tailwindcss": "^0.6.8",
+    "typescript": "^5.6.3"
   }
 }
