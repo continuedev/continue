@@ -60,7 +60,11 @@ export const configSlice = createSlice({
       }: PayloadAction<ConfigResult<BrowserSerializedContinueConfig>>,
     ) => {
       const { config, errors } = result;
-      state.configError = errors;
+      if (!errors || errors.length === 0) {
+        state.configError = undefined;
+      } else {
+        state.configError = errors;
+      }
 
       // If an error is found in config on save,
       // We must invalidate the GUI config too,
