@@ -25,7 +25,9 @@ export class TestUtils {
         return result;
       } catch (e) {
         if (Date.now() - startTime >= timeout) {
-          throw new Error(`Element not found after ${timeout}ms timeout`);
+          throw new Error(
+            `Element not found after ${timeout}ms timeout: ${locatorFn}`,
+          );
         }
       }
       await new Promise((resolve) => setTimeout(resolve, interval));

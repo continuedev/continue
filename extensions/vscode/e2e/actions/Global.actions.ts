@@ -13,6 +13,12 @@ export class GlobalActions {
     return VSBrowser.instance.openResources("e2e/test-continue");
   }
 
+  public static async clearAllNotifications() {
+    await new Workbench().executeCommand(
+      "Notifications: Clear All Notifications",
+    );
+  }
+
   public static async createAndOpenNewTextFile(): Promise<{
     editor: TextEditor;
   }> {

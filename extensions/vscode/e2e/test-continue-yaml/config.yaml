@@ -37,8 +37,7 @@ models:
                 - id: test_id
                   type: function
                   function:
-                    name: builtin_grep_search
-                    arguments: '{"query": "test query"}'
+                    name: builtin_view_diff
           - REPEAT_LAST_MSG
     roles:
       - chat

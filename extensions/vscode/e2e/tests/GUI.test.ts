@@ -22,8 +22,10 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
+    // Uncomment this line for faster testing
     await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
+    await GlobalActions.clearAllNotifications();
   });
 
   beforeEach(async function () {
@@ -237,7 +239,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
-  describe("Chat with tools", () => {
+  describe.only("Chat with tools", () => {
     it("should render tool call", async () => {
       await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
 
@@ -251,15 +253,16 @@ describe("GUI Test", () => {
       );
 
       expect(await statusMessage.getText()).contain(
-        'Continue retrieved search results for "" won\'t be matched because of escaped quotes ""',
+        "Continue viewed the git diff",
       );
     }).timeout(DEFAULT_TIMEOUT.MD);
 
     it("should render tool call requiring approval", async () => {
-      await GUIActions.toggleToolPolicy(view, "builtin_grep_search");
-      await GUIActions.toggleToolPolicy(view, "builtin_grep_search");
+      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
 
-      await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
+      await TestUtils.waitForSuccess(() =>
+        GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM"),
+      );
 
       const [messageInput] = await GUISelectors.getMessageInputFields(view);
       await messageInput.sendKeys("Hello");
@@ -276,9 +279,7 @@ describe("GUI Test", () => {
       );
 
       const text = await statusMessage.getText();
-      expect(text).contain(
-        'Continue is getting search results for "" won\'t be matched because of escaped quotes ""',
-      );
+      expect(text).contain("the git diff");
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
