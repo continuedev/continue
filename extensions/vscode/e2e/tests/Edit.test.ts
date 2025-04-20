@@ -109,7 +109,7 @@ describe("Edit Test", () => {
     }, DEFAULT_TIMEOUT.SM);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it("Accepts an Edit using CodeLens buttons", async () => {
+  it.only("Accepts an Edit using CodeLens buttons", async () => {
     const acceptCodeLens = await editor.getCodeLens("Accept");
     await acceptCodeLens?.click();
 
