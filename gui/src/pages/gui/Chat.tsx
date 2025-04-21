@@ -37,7 +37,7 @@ import {
   newSession,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
-  updateToolCallOutput
+  updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
@@ -58,8 +58,6 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
-import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
-import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { useAutoScroll } from "./useAutoScroll";
 
 const StepsDiv = styled.div`
@@ -277,13 +275,13 @@ export function Chat() {
   useWebviewListener(
     "toolCallPartialOutput",
     async (data) => {
-        // Update tool call output in Redux store
-        dispatch(
-          updateToolCallOutput({
-            toolCallId: data.toolCallId,
-            contextItems: data.contextItems,
-          }),
-        );
+      // Update tool call output in Redux store
+      dispatch(
+        updateToolCallOutput({
+          toolCallId: data.toolCallId,
+          contextItems: data.contextItems,
+        }),
+      );
     },
     [dispatch],
   );
@@ -342,12 +340,11 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? (
-                <ToolOutput
-                  contextItems={item.contextItems}
-                  toolCallId={item.message.toolCallId}
-                />
-              ) : item.message.role === "assistant" &&
+              ) : item.message.role === "tool" ? null : // <ToolOutput
+              //   contextItems={item.contextItems}
+              //   toolCallId={item.message.toolCallId}
+              // />
+              item.message.role === "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
@@ -357,6 +354,7 @@ export function Chat() {
                         <ToolCallDiv
                           toolCallState={item.toolCallState!}
                           toolCall={toolCall}
+                          output={history[index + 1]?.contextItems}
                         />
                       </div>
                     );
@@ -410,8 +408,6 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        {toolCallState?.status === "generated" && <ToolCallButtons />}
-
         {isInEditMode && history.length === 0 && <CodeToEditCard />}
 
         {isInEditMode && history.length > 0 ? null : (
