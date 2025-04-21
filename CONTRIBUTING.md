@@ -102,7 +102,7 @@ We welcome contributions from developers of all experience levels - from first-t
 
 #### Pre-requisites
 
-You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+You should have Node.js version 20.19.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
 
 ```bash
 nvm use
