@@ -95,6 +95,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "pixtral",
   "llama3.2",
   "llama-3.2",
+  "llama4"
 ];
 
 function modelSupportsTools(modelDescription: ModelDescription) {
