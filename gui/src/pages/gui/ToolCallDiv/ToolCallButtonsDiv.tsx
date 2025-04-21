@@ -72,7 +72,10 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
           </div>
         ) : toolCallState.status === "generated" ? (
           <>
-            <RejectButton onClick={() => dispatch(cancelTool())}>
+            <RejectButton
+              onClick={() => dispatch(cancelTool())}
+              data-testid="reject-tool-call-button"
+            >
               Cancel
             </RejectButton>
             <AcceptButton

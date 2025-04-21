@@ -105,7 +105,9 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
               {tool?.faviconUrl && (
                 <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
               )}
-              <div className="flex">{statusMessage}</div>
+              <div className="flex" data-testid="tool-call-status-message">
+                {statusMessage}
+              </div>
             </div>
             {!!args.length ? (
               <div
