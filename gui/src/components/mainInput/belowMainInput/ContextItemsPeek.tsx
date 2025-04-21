@@ -2,7 +2,7 @@ import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getUriPathBasename } from "core/util/uri";
-import { useContext, useMemo } from "react";
+import { ComponentType, useContext, useMemo } from "react";
 import { AnimatedEllipsis } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppSelector } from "../../../redux/hooks";
@@ -16,6 +16,7 @@ import { NAMED_ICONS } from "../icons";
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
   isCurrentContextPeek: boolean;
+  icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
 }
 
 interface ContextItemsPeekItemProps {
@@ -150,6 +151,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
 function ContextItemsPeek({
   contextItems,
   isCurrentContextPeek,
+  icon,
 }: ContextItemsPeekProps) {
   const ctxItems = useMemo(() => {
     return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
@@ -165,6 +167,7 @@ function ContextItemsPeek({
 
   return (
     <ToggleDiv
+      icon={icon}
       title={
         isGatheringContext ? (
           <>
