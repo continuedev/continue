@@ -18,7 +18,7 @@ import {
   Tool,
 } from "../../";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
-import { MCPManagerSingleton } from "../../context/mcp";
+import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
@@ -30,6 +30,7 @@ import { getConfigJsonPath, getConfigYamlPath } from "../../util/paths";
 import { localPathOrUriToPath } from "../../util/pathToUri";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
+import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { loadContinueConfigFromJson } from "../load";
 import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
@@ -120,6 +121,12 @@ export default async function doLoadConfig(options: {
   // TODO using config result but result with non-fatal errors is an antipattern?
   // Remove ability have undefined errors, just have an array
   errors = [...(errors ?? [])];
+
+  // Add rules from .continuerules files
+  const { rules, errors: continueRulesErrors } =
+    await getWorkspaceContinueRuleDotFiles(ide);
+  newConfig.rules.unshift(...rules);
+  errors.push(...continueRulesErrors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);

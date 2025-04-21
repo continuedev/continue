@@ -32,7 +32,7 @@ const DraftIssueCommand: SlashCommand = {
     let title = await llm.complete(
       `Generate a title for the GitHub issue requested in this user input: '${input}'. Use no more than 20 words and output nothing other than the title. Do not surround it with quotes. The title is: `,
       new AbortController().signal,
-      { maxTokens: 20 },
+      { maxTokens: 30 },
     );
 
     title = `${removeQuotesAndEscapes(title.trim())}\n\n`;
@@ -40,7 +40,7 @@ const DraftIssueCommand: SlashCommand = {
 
     let body = "";
     const messages: ChatMessage[] = [
-      ...history,
+      ...history.filter((msg) => msg.role !== "system"),
       { role: "user", content: PROMPT(input, title) },
     ];
 

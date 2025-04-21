@@ -4,9 +4,11 @@ import {
   ConfigResult,
   ConfigValidationError,
   isAssistantUnrolledNonNullable,
+  MCPServer,
   ModelRole,
   PackageIdentifier,
   RegistryClient,
+  Rule,
   unrollAssistant,
   validateConfigYaml,
 } from "@continuedev/config-yaml";
@@ -14,14 +16,16 @@ import { dirname } from "node:path";
 
 import {
   ContinueConfig,
+  ExperimentalMCPOptions,
   IContextProvider,
   IDE,
   IdeInfo,
   IdeSettings,
   ILLMLogger,
+  RuleWithSource,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
-import { MCPManagerSingleton } from "../../context/mcp";
+import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
@@ -33,7 +37,6 @@ import { slashCommandFromPromptFileV1 } from "../../promptFiles/v1/slashCommandF
 import { getAllPromptFiles } from "../../promptFiles/v2/getPromptFiles";
 import { allTools } from "../../tools";
 import { GlobalContext } from "../../util/GlobalContext";
-import { getSystemPromptDotFile } from "../getSystemPromptDotFile";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
@@ -41,6 +44,35 @@ import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
 import { llmsFromModelConfig } from "./models";
+
+function convertYamlRuleToContinueRule(rule: Rule): RuleWithSource {
+  if (typeof rule === "string") {
+    return {
+      rule: rule,
+      source: "rules-block",
+    };
+  } else {
+    return {
+      source: "rules-block",
+      rule: rule.rule,
+      if: rule.if,
+      name: rule.name,
+    };
+  }
+}
+
+function convertYamlMcpToContinueMcp(
+  server: MCPServer,
+): ExperimentalMCPOptions {
+  return {
+    transport: {
+      type: "stdio",
+      command: server.command,
+      args: server.args ?? [],
+      env: server.env,
+    },
+  };
+}
 
 async function loadConfigYaml(options: {
   overrideConfigYaml: AssistantUnrolled | undefined;
@@ -82,10 +114,8 @@ async function loadConfigYaml(options: {
       packageIdentifier,
       new RegistryClient({
         accessToken: await controlPlaneClient.getAccessToken(),
-        apiBase: getControlPlaneEnvSync(
-          ideSettings.continueTestEnvironment,
-          ideSettings.enableControlServerBeta,
-        ).CONTROL_PLANE_URL,
+        apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
+          .CONTROL_PLANE_URL,
         rootPath:
           packageIdentifier.uriType === "file"
             ? dirname(getCleanUriPath(packageIdentifier.filePath))
@@ -157,7 +187,6 @@ async function configYamlToContinueConfig(options: {
     slashCommands: [],
     tools: [...allTools],
     mcpServerStatuses: [],
-    systemMessage: config.rules?.join("\n"),
     contextProviders: [],
     modelsByRole: {
       chat: [],
@@ -177,6 +206,7 @@ async function configYamlToContinueConfig(options: {
       rerank: null,
       summarize: null,
     },
+    rules: [],
   };
 
   // Right now, if there are any missing packages in the config, then we will just throw an error
@@ -192,8 +222,11 @@ async function configYamlToContinueConfig(options: {
     };
   }
 
+  for (const rule of config.rules ?? []) {
+    continueConfig.rules.push(convertYamlRuleToContinueRule(rule));
+  }
+
   continueConfig.data = config.data;
-  continueConfig.rules = config.rules;
   continueConfig.docs = config.docs?.map((doc) => ({
     title: doc.name,
     startUrl: doc.startUrl,
@@ -201,21 +234,16 @@ async function configYamlToContinueConfig(options: {
     faviconUrl: doc.faviconUrl,
   }));
   continueConfig.experimental = {
-    modelContextProtocolServers: config.mcpServers?.map((mcpServer) => ({
-      transport: {
-        type: "stdio",
-        command: mcpServer.command,
-        args: mcpServer.args ?? [],
-        env: mcpServer.env,
-      },
-    })),
+    modelContextProtocolServers: config.mcpServers?.map(
+      convertYamlMcpToContinueMcp,
+    ),
   };
 
   // Prompt files -
   try {
     const promptFiles = await getAllPromptFiles(ide, undefined, true);
 
-    for (const file of promptFiles) {
+    promptFiles.forEach((file) => {
       try {
         const slashCommand = slashCommandFromPromptFileV1(
           file.path,
@@ -230,7 +258,7 @@ async function configYamlToContinueConfig(options: {
           message: `Failed to convert prompt file ${file.path} to slash command: ${e instanceof Error ? e.message : e}`,
         });
       }
-    }
+    });
   } catch (e) {
     localErrors.push({
       fatal: false,
@@ -251,9 +279,9 @@ async function configYamlToContinueConfig(options: {
   });
 
   // Models
-  const modelsArrayRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
+  const defaultModelRoles: ModelRole[] = ["chat", "summarize", "apply", "edit"];
   for (const model of config.models ?? []) {
-    model.roles = model.roles ?? modelsArrayRoles; // Default to all 4 chat-esque roles if not specified
+    model.roles = model.roles ?? defaultModelRoles; // Default to all 4 chat-esque roles if not specified
     try {
       const llms = await llmsFromModelConfig({
         model,
@@ -380,7 +408,10 @@ async function configYamlToContinueConfig(options: {
         }
         return undefined;
       }
-      const instance: IContextProvider = new cls(context.params ?? {});
+      const instance: IContextProvider = new cls({
+        name: context.name,
+        ...context.params,
+      });
       return instance;
     })
     .filter((p) => !!p) ?? []) as IContextProvider[];
@@ -465,22 +496,6 @@ export async function loadContinueConfigFromYaml(options: {
       llmLogger,
       workOsAccessToken,
     });
-
-  try {
-    const systemPromptDotFile = await getSystemPromptDotFile(ide);
-    if (systemPromptDotFile) {
-      if (continueConfig.systemMessage) {
-        continueConfig.systemMessage += "\n\n" + systemPromptDotFile;
-      } else {
-        continueConfig.systemMessage = systemPromptDotFile;
-      }
-    }
-  } catch (e) {
-    localErrors.push({
-      fatal: false,
-      message: `Failed to load system prompt dot file: ${e instanceof Error ? e.message : e}`,
-    });
-  }
 
   // Apply shared config
   // TODO: override several of these values with user/org shared config

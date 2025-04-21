@@ -116,17 +116,17 @@ export class ApplyManager {
       return;
     }
 
-    const [instant, diffLines] = await applyCodeBlock(
+    const { isInstantApply, diffLinesGenerator } = await applyCodeBlock(
       editor.document.getText(),
       text,
       getUriPathBasename(editor.document.uri.toString()),
       llm,
     );
 
-    if (instant) {
+    if (isInstantApply) {
       await this.verticalDiffManager.streamDiffLines(
-        diffLines,
-        instant,
+        diffLinesGenerator,
+        isInstantApply,
         streamId,
         toolCallId,
       );
@@ -157,6 +157,12 @@ export class ApplyManager {
     verticalDiffManager: VerticalDiffManager,
     toolCallId?: string,
   ) {
+    const { config } = await this.configHandler.loadConfig();
+    if (!config) {
+      vscode.window.showErrorMessage("Config not loaded");
+      return;
+    }
+
     const prompt = this.getApplyPrompt(text);
     const fullEditorRange = new vscode.Range(
       0,
@@ -168,15 +174,14 @@ export class ApplyManager {
       ? fullEditorRange
       : editor.selection;
 
-    await verticalDiffManager.streamEdit(
-      prompt,
+    await verticalDiffManager.streamEdit({
+      input: prompt,
       llm,
       streamId,
-      undefined,
-      undefined,
-      rangeToApplyTo,
-      text,
+      range: rangeToApplyTo,
+      newCode: text,
       toolCallId,
-    );
+      rules: config.rules,
+    });
   }
 }

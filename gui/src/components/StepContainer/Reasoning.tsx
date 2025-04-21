@@ -10,7 +10,7 @@ import {
   vscQuickInputBackground,
 } from "..";
 import { getFontSize } from "../../util";
-import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../StyledMarkdownPreview";
 
 interface ReasoningProps {
   item: ChatHistoryItem;

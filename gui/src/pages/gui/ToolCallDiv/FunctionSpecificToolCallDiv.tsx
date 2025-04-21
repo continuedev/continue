@@ -34,6 +34,7 @@ function FunctionSpecificToolCallDiv({
         <RunTerminalCommand
           command={args.command}
           toolCallState={toolCallState}
+          toolCallId={toolCall.id}
         />
       );
     default:

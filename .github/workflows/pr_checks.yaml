@@ -4,12 +4,10 @@ on:
   pull_request:
     branches:
       - main
-      - staging
 
   push:
     branches:
       - main
-      - staging
 
 jobs:
   install-root:

@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import {
   AssistantChatMessage,
   ChatMessage,
@@ -7,17 +8,18 @@ import {
   TextMessagePart,
   ToolCallDelta,
 } from "../../index.js";
-import { findLast } from "../../util/findLast.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 import {
+  GeminiChatContent,
   GeminiChatContentPart,
   GeminiChatRequestBody,
   GeminiChatResponse,
   GeminiGenerationConfig,
   GeminiToolFunctionDeclaration,
-} from "./gemini-types.js";
+  convertContinueToolToGeminiFunction,
+} from "./gemini-types";
 
 class Gemini extends BaseLLM {
   static providerName = "gemini";
@@ -155,14 +157,8 @@ class Gemini extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    // Ensure this.apiBase is used if available, otherwise use default
-    const apiBase =
-      this.apiBase ||
-      Gemini.defaultOptions?.apiBase ||
-      "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
-    const isV1API = apiBase.includes("/v1/");
+    const isV1API = this.apiBase?.includes("/v1/");
 
-    // Conditionally apply removeSystemMessage
     const convertedMsgs = isV1API
       ? this.removeSystemMessage(messages)
       : messages;
@@ -204,20 +200,27 @@ class Gemini extends BaseLLM {
     options: CompletionOptions,
     isV1API: boolean,
   ): GeminiChatRequestBody {
+    const toolCallIdToNameMap = new Map<string, string>();
+    messages.forEach((msg) => {
+      if (msg.role === "assistant" && msg.toolCalls) {
+        msg.toolCalls.forEach((call) => {
+          if (call.id && call.function?.name) {
+            toolCallIdToNameMap.set(call.id, call.function.name);
+          }
+        });
+      }
+    });
+    const systemMessage = messages.find(
+      (msg) => msg.role === "system",
+    )?.content;
+
     const body: GeminiChatRequestBody = {
       contents: messages
         .filter((msg) => !(msg.role === "system" && isV1API))
         .map((msg) => {
           if (msg.role === "tool") {
-            let fn_name = "";
-            const lastToolCallMessage = findLast(
-              messages,
-              (msg) => "toolCalls" in msg && msg.toolCalls?.[0]?.function?.name,
-            ) as AssistantChatMessage;
-            if (lastToolCallMessage) {
-              fn_name = lastToolCallMessage.toolCalls![0]!.function!.name!;
-            }
-            if (!fn_name) {
+            let functionName = toolCallIdToNameMap.get(msg.toolCallId);
+            if (!functionName) {
               console.warn(
                 "Sending tool call response for unidentified tool call",
               );
@@ -227,7 +230,8 @@ class Gemini extends BaseLLM {
               parts: [
                 {
                   functionResponse: {
-                    name: fn_name || "unknown",
+                    id: msg.toolCallId,
+                    name: functionName || "unknown",
                     response: {
                       output: msg.content, // "output" key is opinionated - not all functions will output objects
                     },
@@ -236,28 +240,35 @@ class Gemini extends BaseLLM {
               ],
             };
           }
-          const assistantMsg = {
-            role:
-              msg.role === "assistant" ? ("model" as const) : ("user" as const),
+          if (msg.role === "assistant") {
+            const assistantMsg: GeminiChatContent = {
+              role: "model",
+              parts:
+                typeof msg.content === "string"
+                  ? [{ text: msg.content }]
+                  : msg.content.map(this.continuePartToGeminiPart),
+            };
+            if (msg.toolCalls) {
+              msg.toolCalls.forEach((toolCall) => {
+                if (toolCall.function?.name && toolCall.function?.arguments) {
+                  assistantMsg.parts.push({
+                    functionCall: {
+                      name: toolCall.function.name,
+                      args: JSON.parse(toolCall.function.arguments),
+                    },
+                  });
+                }
+              });
+            }
+            return assistantMsg;
+          }
+          return {
+            role: "user",
             parts:
               typeof msg.content === "string"
                 ? [{ text: msg.content }]
                 : msg.content.map(this.continuePartToGeminiPart),
           };
-          if (msg.role === "assistant" && msg.toolCalls) {
-            msg.toolCalls.forEach((toolCall) => {
-              if (toolCall.function?.name && toolCall.function?.arguments) {
-                assistantMsg.parts.push({
-                  functionCall: {
-                    name: toolCall.function.name,
-                    args: JSON.parse(toolCall.function.arguments),
-                  },
-                });
-              }
-            });
-          }
-
-          return assistantMsg;
         }),
     };
     if (options) {
@@ -266,8 +277,10 @@ class Gemini extends BaseLLM {
 
     // https://ai.google.dev/gemini-api/docs/api-versions
     if (!isV1API) {
-      if (this.systemMessage) {
-        body.systemInstruction = { parts: [{ text: this.systemMessage }] };
+      if (systemMessage) {
+        body.systemInstruction = {
+          parts: [{ text: stripImages(systemMessage) }],
+        };
       }
       // Convert and add tools if present
       if (options.tools?.length) {
@@ -276,77 +289,12 @@ class Gemini extends BaseLLM {
         // Same difference
         const functions: GeminiToolFunctionDeclaration[] = [];
         options.tools.forEach((tool) => {
-          if (tool.function.description && tool.function.name) {
-            const fn: GeminiToolFunctionDeclaration = {
-              description: tool.function.description,
-              name: tool.function.name,
-            };
-
-            if (
-              tool.function.parameters &&
-              "type" in tool.function.parameters
-              // && typeof tool.function.parameters.type === "string"
-            ) {
-              // const paramType =  "TYPE_UNSPECIFIED"
-              // | "STRING"
-              // | "NUMBER"
-              // | "INTEGER"
-              // | "BOOLEAN"
-              // | "ARRAY"
-              // | "OBJECT"
-
-              if (tool.function.parameters.type === "object") {
-                // Gemini can't take an empty object
-                // So if empty object param is present just don't add parameters
-                if (
-                  JSON.stringify(tool.function.parameters.properties) === "{}"
-                ) {
-                  functions.push(fn);
-                  return;
-                }
-              }
-              // Helper function to recursively clean JSON Schema objects
-              const cleanJsonSchema = (schema: any): any => {
-                if (!schema || typeof schema !== "object") return schema;
-
-                if (Array.isArray(schema)) {
-                  return schema.map(cleanJsonSchema);
-                }
-
-                const {
-                  $schema,
-                  additionalProperties,
-                  default: defaultValue,
-                  ...rest
-                } = schema;
-
-                // Recursively clean nested properties
-                if (rest.properties) {
-                  rest.properties = Object.entries(rest.properties).reduce(
-                    (acc, [key, value]) => ({
-                      ...acc,
-                      [key]: cleanJsonSchema(value),
-                    }),
-                    {},
-                  );
-                }
-
-                // Clean items in arrays
-                if (rest.items) {
-                  rest.items = cleanJsonSchema(rest.items);
-                }
-
-                return rest;
-              };
-
-              // Clean the parameters and convert type to uppercase
-              const cleanedParams = cleanJsonSchema(tool.function.parameters);
-              fn.parameters = {
-                ...cleanedParams,
-                type: tool.function.parameters.type.toUpperCase(),
-              };
-            }
-            functions.push(fn);
+          try {
+            functions.push(convertContinueToolToGeminiFunction(tool));
+          } catch (e) {
+            console.warn(
+              `Failed to convert tool to gemini function definition. Skipping: ${JSON.stringify(tool, null, 2)}`,
+            );
           }
         });
         if (functions.length) {
@@ -397,75 +345,39 @@ class Gemini extends BaseLLM {
         // Check for existence of each level before accessing the final 'text' property
         const content = data?.candidates?.[0]?.content;
         if (content) {
-          const supportedParts: MessagePart[] = [];
+          const textParts: MessagePart[] = [];
           const toolCalls: ToolCallDelta[] = [];
-
-          // Process all parts first to maintain order
-          const processedParts: Array<{
-            type: "content" | "tool" | "toolCall";
-            data: any;
-          }> = [];
 
           for (const part of content.parts) {
             if ("text" in part) {
-              supportedParts.push({ type: "text", text: part.text });
-            } else if ("inlineData" in part) {
-              supportedParts.push({
-                type: "imageUrl",
-                imageUrl: {
-                  url: `data:image/jpeg;base64,${part.inlineData.data}`,
-                },
-              });
+              textParts.push({ type: "text", text: part.text });
             } else if ("functionCall" in part) {
-              // Queue function call
-              processedParts.push({
-                type: "toolCall",
-                data: {
-                  type: "function",
-                  id: "", // Not supported by gemini
-                  function: {
-                    name: part.functionCall.name,
-                    arguments:
-                      typeof part.functionCall.args === "string"
-                        ? part.functionCall.args
-                        : JSON.stringify(part.functionCall.args),
-                  },
-                },
-              });
-            } else if ("functionResponse" in part) {
-              // Queue function response
-              processedParts.push({
-                type: "tool",
-                data: {
-                  role: "tool",
-                  content: part.functionResponse.response.output as string,
-                  toolCallId: part.functionResponse.name,
+              toolCalls.push({
+                type: "function",
+                id: part.functionCall.id ?? uuidv4(),
+                function: {
+                  name: part.functionCall.name,
+                  arguments:
+                    typeof part.functionCall.args === "string"
+                      ? part.functionCall.args
+                      : JSON.stringify(part.functionCall.args),
                 },
               });
             } else {
+              // Note: function responses shouldn't be streamed, images not supported
               console.warn("Unsupported gemini part type received", part);
             }
           }
 
-          // If we have supported content parts, yield them first
-          if (supportedParts.length) {
-            yield {
-              role: "assistant",
-              content: supportedParts,
-            };
+          const assistantMessage: AssistantChatMessage = {
+            role: "assistant",
+            content: textParts.length ? textParts : "",
+          };
+          if (toolCalls.length > 0) {
+            assistantMessage.toolCalls = toolCalls;
           }
-
-          // Then process tool calls and responses in order
-          for (const part of processedParts) {
-            if (part.type === "toolCall") {
-              yield {
-                role: "assistant",
-                content: "",
-                toolCalls: [part.data],
-              };
-            } else if (part.type === "tool") {
-              yield part.data;
-            }
+          if (textParts.length || toolCalls.length) {
+            yield assistantMessage;
           }
         } else {
           // Handle the case where the expected data structure is not found
@@ -489,10 +401,8 @@ class Gemini extends BaseLLM {
       `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
       this.apiBase,
     );
-    // This feels hacky to repeat code from above function but was the quickest
-    // way to ensure system message re-formatting isn't done if user has specified v1
-    const apiBase = this.apiBase || Gemini.defaultOptions.apiBase!; // Determine if it's a v1 API call based on apiBase
-    const isV1API = apiBase.includes("/v1/");
+
+    const isV1API = !!this.apiBase?.includes("/v1/");
 
     // Convert chat messages to contents
     const body = this.prepareBody(messages, options, isV1API);

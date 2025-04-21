@@ -19,6 +19,8 @@ let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let quickActionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
+let downloadYamlExtensionCodeLensDisposable: vscode.Disposable | undefined =
+  undefined;
 
 /**
  * Registers the Quick Actions CodeLens provider if Quick Actions are enabled.
@@ -96,6 +98,10 @@ export function registerAllCodeLensProviders(
     tutorialCodeLensDisposable.dispose();
   }
 
+  if (downloadYamlExtensionCodeLensDisposable) {
+    downloadYamlExtensionCodeLensDisposable.dispose();
+  }
+
   const verticalDiffCodeLens = new providers.VerticalPerLineCodeLensProvider(
     editorToVerticalDiffCodeLens,
   );
@@ -108,6 +114,11 @@ export function registerAllCodeLensProviders(
   suggestionsCodeLensDisposable = registerCodeLensProvider(
     "*",
     new providers.SuggestionsCodeLensProvider(),
+  );
+
+  downloadYamlExtensionCodeLensDisposable = registerCodeLensProvider(
+    "yaml",
+    new providers.DownloadYamlExtensionCodeLensProvider(),
   );
 
   if (config) {

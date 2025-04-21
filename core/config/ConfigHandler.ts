@@ -4,7 +4,7 @@ import {
   ControlPlaneClient,
   ControlPlaneSessionInfo,
 } from "../control-plane/client.js";
-import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
+import { getControlPlaneEnv } from "../control-plane/env.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -21,7 +21,6 @@ import {
   getAllDotContinueYamlFiles,
   LoadAssistantFilesOptions,
 } from "./loadLocalAssistants.js";
-import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
@@ -140,16 +139,11 @@ export class ConfigHandler {
     const userId = await this.controlPlaneClient.userId;
     if (userId) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
-      if (await useHub(this.ideSettingsPromise)) {
-        const personalHubOrg = await this.getPersonalHubOrg();
-        const hubOrgs = await Promise.all(
-          orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
-        );
-        return [...hubOrgs, personalHubOrg];
-      } else {
-        // Should only ever be one teams org. Will be removed soon anyways
-        return await Promise.all(orgDescs.map((org) => this.getTeamsOrg(org)));
-      }
+      const personalHubOrg = await this.getPersonalHubOrg();
+      const hubOrgs = await Promise.all(
+        orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+      );
+      return [...hubOrgs, personalHubOrg];
     } else {
       return [await this.getLocalOrg()];
     }
@@ -226,28 +220,6 @@ export class ConfigHandler {
       includeWorkspace: true,
     });
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, localProfiles);
-  }
-
-  async getTeamsOrg(org: OrganizationDescription): Promise<OrgWithProfiles> {
-    const workspaces = await this.controlPlaneClient.listWorkspaces();
-    const localProfiles = await this.getLocalProfiles({
-      includeGlobal: true,
-      includeWorkspace: true,
-    });
-    workspaces.forEach((workspace) => {
-      const profileLoader = new ControlPlaneProfileLoader(
-        workspace.id,
-        workspace.name,
-        this.controlPlaneClient,
-        this.ide,
-        this.ideSettingsPromise,
-        this.llmLogger,
-        this.reloadConfig.bind(this),
-      );
-
-      localProfiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
-    });
-    return this.rectifyProfilesForOrg(org, localProfiles);
   }
 
   private async rectifyProfilesForOrg(

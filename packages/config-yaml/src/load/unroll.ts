@@ -331,7 +331,7 @@ export async function unrollBlocks(
     }
   }
 
-  // Rules are a bit different because they can be strings, so hanlde separately
+  // Rules are a bit different because they can be strings, so handle separately
   if (assistant.rules) {
     const rules: (Rule | null)[] = [];
     for (const rule of assistant.rules) {
