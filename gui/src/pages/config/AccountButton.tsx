@@ -1,6 +1,5 @@
 import { UserCircleIcon } from "@heroicons/react/24/solid";
 
-import { useState } from "react";
 import { SecondaryButton } from "../../components";
 import {
   Popover,
@@ -14,7 +13,6 @@ import { useAppSelector } from "../../redux/hooks";
 import { ScopeSelect } from "./ScopeSelect";
 
 export function AccountButton() {
-  const [open, setOpen] = useState(false);
   const { session, logout, login, organizations } = useAuth();
   const selectedOrg = useAppSelector(selectCurrentOrg);
 

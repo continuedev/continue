@@ -4,7 +4,7 @@ import {
   vscCommandCenterInactiveBorder,
   vscInputBackground,
 } from "../..";
-import { LumpProvider, useLump } from "./LumpContext";
+import { useLump } from "./LumpContext";
 import { LumpToolbar } from "./LumpToolbar";
 import { SelectedSection } from "./sections/SelectedSection";
 
@@ -30,20 +30,9 @@ const ContentDiv = styled.div<{ hasSection: boolean; isVisible: boolean }>`
 `;
 
 /**
- * Main component that displays the toolbar and selected content section
- */
-export function Lump() {
-  return (
-    <LumpProvider>
-      <LumpContent />
-    </LumpProvider>
-  );
-}
-
-/**
  * Internal component that consumes the LumpContext
  */
-function LumpContent() {
+export function Lump() {
   const { isLumpVisible, selectedSection } = useLump();
 
   return (

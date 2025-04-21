@@ -47,7 +47,11 @@ function BlockSettingsToolbarIcon(
   const isErrorSection = props.sectionId === "error";
 
   return (
-    <HoverItem px={0} onClick={props.onClick}>
+    <HoverItem
+      px={0}
+      onClick={props.onClick}
+      data-testid={`block-settings-toolbar-icon-${props.sectionId}`}
+    >
       <div
         role="button"
         tabIndex={0}

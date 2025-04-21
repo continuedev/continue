@@ -154,7 +154,13 @@ export async function deterministicApplyLazyEdit({
 
   if (onlyFullFileRewrite) {
     if (!isLazyText(newTree.rootNode.text)) {
-      return myersDiff(oldFile, newLazyFile);
+      const diff = myersDiff(oldFile, newLazyFile);
+
+      if (shouldRejectDiff(diff)) {
+        return undefined;
+      }
+
+      return diff;
     } else {
       return undefined;
     }

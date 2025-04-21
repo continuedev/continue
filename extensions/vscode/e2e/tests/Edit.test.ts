@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import {
-  WebView,
-  VSBrowser,
-  TextEditor,
   CodeLens,
+  TextEditor,
+  VSBrowser,
+  WebView,
 } from "vscode-extension-tester";
 
 import { EditActions } from "../actions/Edit.actions";
@@ -75,7 +75,7 @@ describe("Edit Test", () => {
     return codeLens;
   }
 
-  it("Accepts an Edit in the GUI", async () => {
+  it.only("Accepts an Edit in the GUI", async () => {
     ({ view } = await GUIActions.switchToReactIframe());
 
     await EditActions.acceptEditInGUI(view);
@@ -123,7 +123,7 @@ describe("Edit Test", () => {
     }, DEFAULT_TIMEOUT.SM);
   }).timeout(DEFAULT_TIMEOUT.XL);
 
-  it.only("Rejects an Edit using CodeLens buttons", async () => {
+  it("Rejects an Edit using CodeLens buttons", async () => {
     const rejectCodeLens = await getCodeLensWithRetry(editor, "Reject");
     await rejectCodeLens?.click();
 

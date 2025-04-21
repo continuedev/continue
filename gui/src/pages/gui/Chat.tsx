@@ -37,6 +37,7 @@ import {
   newSession,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
+  updateToolCallOutput
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
@@ -270,6 +271,21 @@ export function Chat() {
       mainTextInputRef.current?.focus?.();
     },
     [mainTextInputRef],
+  );
+
+  // Handle partial tool call output for streaming updates
+  useWebviewListener(
+    "toolCallPartialOutput",
+    async (data) => {
+        // Update tool call output in Redux store
+        dispatch(
+          updateToolCallOutput({
+            toolCallId: data.toolCallId,
+            contextItems: data.contextItems,
+          }),
+        );
+    },
+    [dispatch],
   );
 
   const isLastUserInput = useCallback(

@@ -111,11 +111,6 @@ class IdeProtocolClient(
                     "logoutOfControlPlane" -> {
                         val authService = service<ContinueAuthService>()
                         authService.signOut()
-                        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
-                            .handleUpdatedSessionInfo(null)
-
-                        // Tell the webview that session info changed
-                        continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", null, null) { _ -> }
 
                         respond(null)
                     }
