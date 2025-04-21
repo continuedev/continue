@@ -29,6 +29,7 @@ Rules blocks can be simple text, or have the following properties:
 
 - `name` (**required**): A display name/title for the rule
 - `rule` (**required**): The text content of the rule
+- `if`: Condition for when rule applies (see below)
 
 Examples:
 
@@ -41,7 +42,22 @@ rules:
   - Always write Google style docstrings for functions and classes
   - name: Server-side components
     rule: When writing Next.js React components, use server-side components where possible instead of client components.
+    if: '${{ glob("*.tsx") }}'
 ```
+
+## Conditional Rules
+
+Rules can be conditionally applied based on the model being used and the files being referenced in the conversation. The `if` property supports a template expression syntax that evaluates to a boolean:
+
+```yaml
+if: '${{ contains(current.model.model, "gpt-4") and glob("*.tsx") }}'
+```
+
+**Available functions:
+**
+
+- `contains(current.model.model, "model_name")`: Used to check if a model name contains a specific string
+- `glob(pattern)`: Checks if any of the file paths referenced in the conversation match the glob pattern
 
 ## Chat System Message
 
