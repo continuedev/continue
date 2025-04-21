@@ -27,7 +27,7 @@ function ToggleDiv({ children, title, icon: Icon }: ToggleProps) {
         data-testid="context-items-peek"
       >
         <div className="relative mr-1 h-4 w-4">
-          {Icon && !isHovered ? (
+          {Icon && !isHovered && !open ? (
             <Icon className={`absolute h-4 w-4 text-[${lightGray}]`} />
           ) : (
             <>

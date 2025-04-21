@@ -966,7 +966,10 @@ export interface ToolExtras {
   fetch: FetchFunction;
   tool: Tool;
   toolCallId?: string;
-  onPartialOutput?: (params: { toolCallId: string, contextItems: ContextItem[] }) => void;
+  onPartialOutput?: (params: {
+    toolCallId: string;
+    contextItems: ContextItem[];
+  }) => void;
 }
 
 export interface Tool {
@@ -983,6 +986,7 @@ export interface Tool {
   isCurrently?: string;
   hasAlready?: string;
   readonly: boolean;
+  isInstant?: boolean;
   uri?: string;
   faviconUrl?: string;
   group: string;

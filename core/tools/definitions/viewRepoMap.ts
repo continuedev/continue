@@ -9,6 +9,7 @@ export const viewRepoMapTool: Tool = {
   isCurrently: "getting the repository map",
   hasAlready: "viewed the repository map",
   readonly: true,
+  isInstant: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.ViewRepoMap,

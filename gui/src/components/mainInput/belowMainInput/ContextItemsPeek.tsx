@@ -17,6 +17,8 @@ interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
   isCurrentContextPeek: boolean;
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
+  title?: JSX.Element | string;
+  showWhenNoResults?: boolean;
 }
 
 interface ContextItemsPeekItemProps {
@@ -152,6 +154,8 @@ function ContextItemsPeek({
   contextItems,
   isCurrentContextPeek,
   icon,
+  title,
+  showWhenNoResults,
 }: ContextItemsPeekProps) {
   const ctxItems = useMemo(() => {
     return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
@@ -161,7 +165,11 @@ function ContextItemsPeek({
 
   const indicateIsGathering = isCurrentContextPeek && isGatheringContext;
 
-  if ((!ctxItems || ctxItems.length === 0) && !indicateIsGathering) {
+  if (
+    !showWhenNoResults &&
+    (!ctxItems || ctxItems.length === 0) &&
+    !indicateIsGathering
+  ) {
     return null;
   }
 
@@ -169,20 +177,24 @@ function ContextItemsPeek({
     <ToggleDiv
       icon={icon}
       title={
-        isGatheringContext ? (
+        title ??
+        (isGatheringContext ? (
           <>
             Gathering context
             <AnimatedEllipsis />
           </>
         ) : (
           `${ctxItems.length} context ${ctxItems.length > 1 ? "items" : "item"}`
-        )
+        ))
       }
     >
-      {ctxItems &&
+      {ctxItems.length ? (
         ctxItems.map((contextItem, idx) => (
           <ContextItemsPeekItem key={idx} contextItem={contextItem} />
-        ))}
+        ))
+      ) : (
+        <div className="pl-2 text-xs italic text-gray-400">No results</div>
+      )}
     </ToggleDiv>
   );
 }

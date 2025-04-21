@@ -8,6 +8,7 @@ export const createRuleBlock: Tool = {
   isCurrently: 'creating a rule block for "{{{ rule_name }}}"',
   hasAlready: 'created a rule block for "{{{ rule_name }}}"',
   readonly: false,
+  isInstant: true,
   group: BUILT_IN_GROUP_NAME,
   function: {
     name: BuiltInToolNames.CreateRuleBlock,

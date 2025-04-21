@@ -58,7 +58,6 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
-import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { useAutoScroll } from "./useAutoScroll";
 
 const StepsDiv = styled.div`
@@ -341,12 +340,11 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? (
-                <ToolOutput
-                  contextItems={item.contextItems}
-                  toolCallId={item.message.toolCallId}
-                />
-              ) : item.message.role === "assistant" &&
+              ) : item.message.role === "tool" ? null : // <ToolOutput
+              //   contextItems={item.contextItems}
+              //   toolCallId={item.message.toolCallId}
+              // />
+              item.message.role === "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
@@ -356,6 +354,7 @@ export function Chat() {
                         <ToolCallDiv
                           toolCallState={item.toolCallState!}
                           toolCall={toolCall}
+                          output={history[index + 1]?.contextItems}
                         />
                       </div>
                     );
