@@ -416,29 +416,29 @@ jobs:
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
           AZURE_FOUNDRY_API_KEY: ${{ secrets.AZURE_FOUNDRY_API_KEY }}
 
-  # package-tests:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
+  package-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: actions/setup-node@v4
-  #       with:
-  #         node-version-file: ".nvmrc"
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
-  #     - uses: actions/cache@v4
-  #       with:
-  #         path: core/node_modules
-  #         key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
+      - uses: actions/cache@v4
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-config-yaml-node-modules-${{ hashFiles('packages/config-yaml/package-lock.json') }}
 
-  #     - name: Install dependencies
-  #       run: |
-  #         cd packages/config-yaml
-  #         npm ci
+      - name: Install dependencies
+        run: |
+          cd packages/config-yaml
+          npm ci
 
-  #     - name: Run config-yaml tests
-  #       run: |
-  #         cd packages/config-yaml
-  #         npm test
+      - name: Run config-yaml tests
+        run: |
+          cd packages/config-yaml
+          npm test
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
@@ -683,12 +683,12 @@ jobs:
           echo "Searching for e2e.log file..."
           find $GITHUB_WORKSPACE -name "e2e.log" -type f
 
-      - name: Upload e2e logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-logs-${{ matrix.test_file || 'unknown' }}-${{ replace(matrix.command, ':', '-') }}
-          path: extensions/vscode/e2e.log
+      # - name: Upload e2e logs
+      #   if: always()
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: e2e-logs-${{ matrix.test_file || 'unknown' }}-${{ replace(matrix.command, ':', '-') }}
+      #     path: extensions/vscode/e2e.log
 
   gui-tests:
     needs: [install-gui, install-core, install-config-yaml]
@@ -858,7 +858,7 @@ jobs:
       - install-vscode
       - vscode-checks
       - core-tests
-      # - package-tests
+      - package-tests
       - vscode-get-test-file-matrix
       - vscode-package-extension
       - vscode-download-e2e-dependencies
