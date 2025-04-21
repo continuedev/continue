@@ -44,7 +44,10 @@ function ToggleDiv({ children, title, icon: Icon }: ToggleProps) {
             </>
           )}
         </div>
-        <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
+        <span
+          className="ml-1 text-xs text-gray-400 transition-colors duration-200"
+          data-testid="toggle-div-title"
+        >
           {title}
         </span>
       </div>
