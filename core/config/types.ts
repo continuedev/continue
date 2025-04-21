@@ -658,7 +658,6 @@ declare global {
     remoteConfigServerUrl: string | undefined;
     remoteConfigSyncPeriod: number;
     userToken: string;
-    enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
   }
   

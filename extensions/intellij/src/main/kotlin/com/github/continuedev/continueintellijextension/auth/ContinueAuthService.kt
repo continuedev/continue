@@ -48,10 +48,7 @@ class ContinueAuthService {
     }
 
     init {
-        val settings = service<ContinueExtensionSettings>()
-        if (settings.continueState.enableContinueTeamsBeta) {
-            setupRefreshTokenInterval()
-        }
+        setupRefreshTokenInterval()
     }
 
     fun startAuthFlow(project: Project, useOnboarding: Boolean) {
@@ -74,6 +71,9 @@ class ContinueAuthService {
         setRefreshToken("")
         setAccountId("")
         setAccountLabel("")
+
+        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
+            .handleUpdatedSessionInfo(null)
     }
 
     private fun updateRefreshToken(token: String) {
