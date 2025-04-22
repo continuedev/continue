@@ -52,7 +52,6 @@ class FileSystemIde implements IDE {
       remoteConfigServerUrl: undefined,
       remoteConfigSyncPeriod: 60,
       userToken: "",
-      enableControlServerBeta: false,
       continueTestEnvironment: "none",
       pauseCodebaseIndexOnStart: false,
     };

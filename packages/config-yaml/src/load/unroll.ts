@@ -298,7 +298,7 @@ export async function unrollBlocks(
 
   const sections: (keyof Omit<
     ConfigYaml,
-    "name" | "version" | "rules" | "schema"
+    "name" | "version" | "rules" | "schema" | "metadata"
   >)[] = ["models", "context", "data", "mcpServers", "prompts", "docs"];
 
   // For each section, replace "uses/with" blocks with the real thing
@@ -337,7 +337,7 @@ export async function unrollBlocks(
     }
   }
 
-  // Rules are a bit different because they can be strings, so hanlde separately
+  // Rules are a bit different because they can be strings, so handle separately
   if (assistant.rules) {
     const rules: (Rule | null)[] = [];
     for (const rule of assistant.rules) {

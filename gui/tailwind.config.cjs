@@ -25,6 +25,9 @@ module.exports = {
       animation: {
         "spin-slow": "spin 6s linear infinite",
       },
+      borderRadius: {
+        default: "5px",
+      },
       colors: {
         lightgray: "#999998",
         "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",
@@ -43,6 +46,7 @@ module.exports = {
         "list-active": "var(--vscode-list-activeSelectionBackground, #1bbe84)",
         "list-active-foreground":
           "var(--vscode-quickInputList-focusForeground, var(--vscode-editor-foreground))",
+        badge: "var(--vscode-badge-background, #1bbe84)",
       },
     },
   },

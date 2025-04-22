@@ -3,18 +3,11 @@ import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscButtonBackground,
-  vscButtonForeground,
-  vscForeground,
-  vscInputBackground,
-} from "..";
+import { vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
   selectIsInEditMode,
@@ -31,6 +24,7 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
 import { useFontSize } from "../ui/font";
+import { EnterButton } from "./InputToolbar/EnterButton";
 import HoverItem from "./InputToolbar/HoverItem";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
@@ -47,25 +41,6 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
 
   & > * {
     flex: 0 0 auto;
-  }
-`;
-
-const EnterButton = styled.button<{ isPrimary?: boolean }>`
-  all: unset;
-  padding: 2px 4px;
-  display: flex;
-  align-items: center;
-  background-color: ${(props) =>
-    !props.disabled && props.isPrimary
-      ? vscButtonBackground
-      : lightGray + "33"};
-  border-radius: ${defaultBorderRadius};
-  color: ${(props) =>
-    !props.disabled && props.isPrimary ? vscButtonForeground : vscForeground};
-  cursor: pointer;
-
-  :disabled {
-    cursor: wait;
   }
 `;
 
@@ -92,7 +67,7 @@ interface InputToolbarProps {
 function InputToolbar(props: InputToolbarProps) {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
@@ -148,6 +123,9 @@ function InputToolbar(props: InputToolbarProps) {
                       for (const file of files) {
                         props.onImageFileSelected?.(file);
                       }
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
                     }}
                   />
                   <HoverItem className="">
@@ -158,7 +136,7 @@ function InputToolbar(props: InputToolbarProps) {
                         fileInputRef.current?.click();
                       }}
                     />
-                    <ToolTip id="image-tooltip" place="top-middle">
+                    <ToolTip id="image-tooltip" place="top">
                       Attach an image
                     </ToolTip>
                   </HoverItem>
@@ -171,7 +149,7 @@ function InputToolbar(props: InputToolbarProps) {
                   className="h-3 w-3 hover:brightness-125"
                 />
 
-                <ToolTip id="add-context-item-tooltip" place="top-middle">
+                <ToolTip id="add-context-item-tooltip" place="top">
                   Add context (files, docs, urls, etc.)
                 </ToolTip>
               </HoverItem>

@@ -1,9 +1,10 @@
 import { ContextItem, Tool, ToolExtras } from "..";
-import { MCPManagerSingleton } from "../context/mcp";
+import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
 import { createNewFileImpl } from "./implementations/createNewFile";
+import { createRuleBlockImpl } from "./implementations/createRuleBlock";
 import { fileGlobSearchImpl } from "./implementations/globSearch";
 import { grepSearchImpl } from "./implementations/grepSearch";
 import { lsToolImpl } from "./implementations/lsTool";
@@ -132,6 +133,7 @@ async function callToolFromUri(
 
 // Handles calls for core/non-client tools
 // Returns an error context item if the tool call fails
+// Note: Edit tool is handled on client
 export async function callTool(
   tool: Tool,
   callArgs: string,
@@ -160,6 +162,8 @@ export async function callTool(
         contextItems = await lsToolImpl(args, extras);
       case BuiltInToolNames.ReadCurrentlyOpenFile:
         contextItems = await readCurrentlyOpenFileImpl(args, extras);
+      case BuiltInToolNames.CreateRuleBlock:
+        return await createRuleBlockImpl(args, extras);
       // case BuiltInToolNames.ViewRepoMap:
       //   contextItems = await viewRepoMapImpl(args, extras);
       // case BuiltInToolNames.ViewSubdirectory:

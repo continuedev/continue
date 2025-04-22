@@ -63,9 +63,8 @@ async function modelConfigToBaseLLM({
     logger: llmLogger,
     uniqueId,
     title: model.name,
-    systemMessage: config.systemMessage,
-    rules: config.rules,
     promptTemplates: model.promptTemplates,
+    baseChatSystemMessage: model.chatOptions?.baseSystemMessage,
     capabilities: {
       tools: model.capabilities?.includes("tool_use"),
       uploadImage: model.capabilities?.includes("image_input"),

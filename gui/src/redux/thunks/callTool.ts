@@ -5,7 +5,7 @@ import { EditToolArgs } from "core/tools/definitions/editFile";
 import { resolveRelativePathInDir } from "core/util/ideUtils";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   acceptToolCall,
   cancelToolCall,
@@ -30,8 +30,9 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       return;
     }
 
-    const defaultModel = selectDefaultModel(state);
-    if (!defaultModel) {
+    const selectedChatModel = selectSelectedChatModel(state);
+
+    if (!selectedChatModel) {
       throw new Error("No model selected");
     }
 
@@ -54,7 +55,6 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
           args,
           extra.ideMessenger,
           state.session.activeToolStreamId[0],
-          defaultModel.title,
           toolCallState.toolCallId,
         );
       } catch (e) {
@@ -77,7 +77,7 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     } else {
       const result = await extra.ideMessenger.request("tools/call", {
         toolCall: toolCallState.toolCall,
-        selectedModelTitle: defaultModel.title,
+        selectedModelTitle: selectedChatModel.title,
       });
       if (result.status === "error") {
         errorMessage = result.error;
@@ -117,7 +117,6 @@ async function customGuiEditImpl(
   args: EditToolArgs,
   ideMessenger: IIdeMessenger,
   streamId: string,
-  modelTitle: string,
   toolCallId: string,
 ) {
   const firstUriMatch = await resolveRelativePathInDir(
@@ -130,7 +129,6 @@ async function customGuiEditImpl(
   const apply = await ideMessenger.request("applyToFile", {
     streamId,
     text: args.new_contents,
-    curSelectedModelTitle: modelTitle,
     toolCallId,
     filepath: firstUriMatch,
   });

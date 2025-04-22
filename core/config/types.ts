@@ -658,7 +658,6 @@ declare global {
     remoteConfigServerUrl: string | undefined;
     remoteConfigSyncPeriod: number;
     userToken: string;
-    enableControlServerBeta: boolean;
     pauseCodebaseIndexOnStart: boolean;
   }
   
@@ -958,7 +957,7 @@ declare global {
     cacheBehavior?: CacheBehavior;
   }
   
-  export interface EmbedOptions {
+  export interface JSONEmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;

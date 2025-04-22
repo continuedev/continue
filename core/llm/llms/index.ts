@@ -3,10 +3,11 @@ import {
   IdeSettings,
   ILLM,
   ILLMLogger,
+  JSONModelDescription,
   LLMOptions,
-  ModelDescription,
 } from "../..";
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
+import { DEFAULT_CHAT_SYSTEM_MESSAGE } from "../constructMessages";
 import { BaseLLM } from "../index";
 
 import Anthropic from "./Anthropic";
@@ -27,6 +28,7 @@ import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
+import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import Inception from "./Inception";
 import Kindo from "./Kindo";
@@ -56,6 +58,7 @@ import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
+import Voyage from "./Voyage";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 
@@ -73,6 +76,7 @@ export const LLMClasses = [
   Together,
   Novita,
   HuggingFaceTGI,
+  HuggingFaceTEIEmbeddingsProvider,
   HuggingFaceInferenceAPI,
   Kindo,
   LlamaCpp,
@@ -109,16 +113,16 @@ export const LLMClasses = [
   Scaleway,
   Relace,
   Inception,
+  Voyage,
 ];
 
 export async function llmFromDescription(
-  desc: ModelDescription,
+  desc: JSONModelDescription,
   readFile: (filepath: string) => Promise<string>,
   uniqueId: string,
   ideSettings: IdeSettings,
   llmLogger: ILLMLogger,
   completionOptions?: BaseCompletionOptions,
-  systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMClasses.find((llm) => llm.providerName === desc.provider);
 
@@ -131,9 +135,15 @@ export async function llmFromDescription(
     ...desc.completionOptions,
   };
 
-  systemMessage = desc.systemMessage ?? systemMessage;
-  if (systemMessage !== undefined) {
-    systemMessage = await renderTemplatedString(systemMessage, readFile, {});
+  let baseChatSystemMessage: string | undefined = undefined;
+  if (desc.systemMessage !== undefined) {
+    baseChatSystemMessage = DEFAULT_CHAT_SYSTEM_MESSAGE;
+    baseChatSystemMessage += "\n\n";
+    baseChatSystemMessage += await renderTemplatedString(
+      desc.systemMessage,
+      readFile,
+      {},
+    );
   }
 
   let options: LLMOptions = {
@@ -145,7 +155,7 @@ export async function llmFromDescription(
         finalCompletionOptions.maxTokens ??
         cls.defaultOptions?.completionOptions?.maxTokens,
     },
-    systemMessage,
+    baseChatSystemMessage,
     logger: llmLogger,
     uniqueId,
   };

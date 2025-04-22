@@ -1,5 +1,5 @@
 import { getMarkdownLanguageTagForFile } from "core/util";
-import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../../../components/StyledMarkdownPreview";
 
 interface CreateFileToolCallProps {
   relativeFilepath: string;
@@ -11,9 +11,9 @@ export function CreateFile(props: CreateFileToolCallProps) {
 
   return props.relativeFilepath ? (
     <StyledMarkdownPreview
-      isRenderingInStepContainer={true}
+      isRenderingInStepContainer
+      disableManualApply
       source={src}
-      disableManualApply={true}
     />
   ) : null;
 }

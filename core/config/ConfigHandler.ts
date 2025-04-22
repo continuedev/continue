@@ -4,25 +4,18 @@ import {
   ControlPlaneClient,
   ControlPlaneSessionInfo,
 } from "../control-plane/client.js";
-import { getControlPlaneEnv, useHub } from "../control-plane/env.js";
+import { getControlPlaneEnv } from "../control-plane/env.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   IContextProvider,
   IDE,
   IdeSettings,
-  ILLM,
   ILLMLogger,
 } from "../index.js";
-import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 
 import { getAllAssistantFiles } from "./loadLocalAssistants.js";
-import {
-  LOCAL_ONBOARDING_CHAT_MODEL,
-  LOCAL_ONBOARDING_PROVIDER_TITLE,
-} from "./onboarding.js";
-import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
 import PlatformProfileLoader from "./profile/PlatformProfileLoader.js";
 import {
@@ -141,16 +134,11 @@ export class ConfigHandler {
     const userId = await this.controlPlaneClient.userId;
     if (userId) {
       const orgDescs = await this.controlPlaneClient.listOrganizations();
-      if (await useHub(this.ideSettingsPromise)) {
-        const personalHubOrg = await this.getPersonalHubOrg();
-        const hubOrgs = await Promise.all(
-          orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
-        );
-        return [...hubOrgs, personalHubOrg];
-      } else {
-        // Should only ever be one teams org. Will be removed soon anyways
-        return await Promise.all(orgDescs.map((org) => this.getTeamsOrg(org)));
-      }
+      const personalHubOrg = await this.getPersonalHubOrg();
+      const hubOrgs = await Promise.all(
+        orgDescs.map((org) => this.getNonPersonalHubOrg(org)),
+      );
+      return [...hubOrgs, personalHubOrg];
     } else {
       return [await this.getLocalOrg()];
     }
@@ -172,22 +160,22 @@ export class ConfigHandler {
 
     return await Promise.all(
       assistants.map(async (assistant) => {
-        const profileLoader = await PlatformProfileLoader.create(
-          {
+        const profileLoader = await PlatformProfileLoader.create({
+          configResult: {
             ...assistant.configResult,
             config: assistant.configResult.config,
           },
-          assistant.ownerSlug,
-          assistant.packageSlug,
-          assistant.iconUrl,
-          assistant.configResult.config?.version ?? "latest",
-          this.controlPlaneClient,
-          this.ide,
-          this.ideSettingsPromise,
-          this.llmLogger,
-          assistant.rawYaml,
-          orgScopeId,
-        );
+          ownerSlug: assistant.ownerSlug,
+          packageSlug: assistant.packageSlug,
+          iconUrl: assistant.iconUrl,
+          versionSlug: assistant.configResult.config?.version ?? "latest",
+          controlPlaneClient: this.controlPlaneClient,
+          ide: this.ide,
+          ideSettingsPromise: this.ideSettingsPromise,
+          llmLogger: this.llmLogger,
+          rawYaml: assistant.rawYaml,
+          orgScopeId: orgScopeId,
+        });
 
         return new ProfileLifecycleManager(profileLoader, this.ide);
       }),
@@ -217,25 +205,6 @@ export class ConfigHandler {
   private async getLocalOrg() {
     const allLocalProfiles = await this.getAllLocalProfiles();
     return this.rectifyProfilesForOrg(this.PERSONAL_ORG_DESC, allLocalProfiles);
-  }
-
-  async getTeamsOrg(org: OrganizationDescription): Promise<OrgWithProfiles> {
-    const workspaces = await this.controlPlaneClient.listWorkspaces();
-    const profiles = await this.getAllLocalProfiles();
-    workspaces.forEach((workspace) => {
-      const profileLoader = new ControlPlaneProfileLoader(
-        workspace.id,
-        workspace.name,
-        this.controlPlaneClient,
-        this.ide,
-        this.ideSettingsPromise,
-        this.llmLogger,
-        this.reloadConfig.bind(this),
-      );
-
-      profiles.push(new ProfileLifecycleManager(profileLoader, this.ide));
-    });
-    return this.rectifyProfilesForOrg(org, profiles);
   }
 
   private async rectifyProfilesForOrg(
@@ -471,27 +440,6 @@ export class ConfigHandler {
       const env = await getControlPlaneEnv(this.ide.getIdeSettings());
       await this.ide.openUrl(`${env.APP_URL}${openProfileId}`);
     }
-  }
-
-  // Only used till we move to using selectedModelByRole.chat
-  async llmFromTitle(title?: string): Promise<ILLM> {
-    const { config } = await this.loadConfig();
-    const model = config?.models.find((m) => m.title === title);
-    if (!model) {
-      if (title === LOCAL_ONBOARDING_PROVIDER_TITLE) {
-        // Special case, make calls to Ollama before we have it in the config
-        const ollama = new Ollama({
-          model: LOCAL_ONBOARDING_CHAT_MODEL,
-        });
-        return ollama;
-      } else if (config?.models?.length) {
-        return config?.models[0];
-      }
-
-      throw new Error("No model found");
-    }
-
-    return model;
   }
 
   // Ancient method of adding custom providers through vs code

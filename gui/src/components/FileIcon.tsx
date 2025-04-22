@@ -4,9 +4,9 @@ import { useMemo } from "react";
 import { themeIcons } from "seti-file-icons";
 
 export interface FileIconProps {
-  filename: string;
   height: `${number}px`;
   width: `${number}px`;
+  filename: string;
 }
 
 export default function FileIcon({ filename, height, width }: FileIconProps) {

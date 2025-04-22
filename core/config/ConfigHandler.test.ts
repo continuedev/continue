@@ -19,7 +19,9 @@ describe.skip("Test the ConfigHandler and E2E config loading", () => {
 
   test("should load the default config successfully", async () => {
     const result = await testConfigHandler.loadConfig();
-    expect(result.config!.models.length).toBe(defaultConfig.models?.length);
+    expect(result.config!.modelsByRole.chat.length).toBe(
+      defaultConfig.models?.length,
+    );
   });
 
   test.skip("should add a system message from config.ts", async () => {
