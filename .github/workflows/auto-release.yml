@@ -34,7 +34,6 @@ jobs:
           gh release create "$NEW_VERSION" \
             --generate-notes \
             --title "$NEW_VERSION" \
-            --draft \
             --latest \
             --prerelease
 
@@ -65,6 +64,5 @@ jobs:
           gh release create "$NEW_VERSION" \
             --generate-notes \
             --title "$NEW_VERSION" \
-            --draft \
             --latest \
             --prerelease
