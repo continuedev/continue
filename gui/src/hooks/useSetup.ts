@@ -19,7 +19,6 @@ import {
   acceptToolCall,
   addContextItemsAtIndex,
   setInactive,
-  setToolCallOutput,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
@@ -261,24 +260,26 @@ function useSetup() {
     "updateApplyState",
     async (state) => {
       dispatch(updateApplyState(state));
-      if (
-        activeToolStreamId &&
-        state.streamId === activeToolStreamId[0] &&
-        state.status === "closed"
-      ) {
-        // const output: ContextItem = {
-        //   name: "Edit tool output",
-        //   content: "Completed edit",
-        //   description: "",
-        // };
-        dispatch(acceptToolCall());
-        dispatch(setToolCallOutput([]));
-        dispatch(
-          streamResponseAfterToolCall({
-            toolCallId: activeToolStreamId[1],
-            toolOutput: [],
-          }),
-        );
+      if (activeToolStreamId && state.status === "closed") {
+        const [streamId, toolCallId] = activeToolStreamId;
+        if (state.streamId === streamId) {
+          // const output: ContextItem = {
+          //   name: "Edit tool output",
+          //   content: "Completed edit",
+          //   description: "",
+          // };
+          dispatch(
+            acceptToolCall({
+              toolCallId,
+            }),
+          );
+          // dispatch(setToolCallOutput([]));
+          dispatch(
+            streamResponseAfterToolCall({
+              toolCallId,
+            }),
+          );
+        }
       }
     },
     [activeToolStreamId],

@@ -37,5 +37,8 @@ export const editToolImpl: ClientToolImpl = async (
       }),
     );
   }
-  return undefined;
+  return {
+    respondImmediately: false,
+    output: undefined, // No immediate output.
+  };
 };

@@ -11,35 +11,47 @@ export interface ClientToolExtras {
 }
 
 export interface ClientToolOutput {
-  output?: ContextItem[];
-  errorMessage?: string;
+  output: ContextItem[] | undefined;
+  respondImmediately: boolean;
+}
+
+export interface ClientToolResult extends ClientToolOutput {
+  errorMessage: string | undefined;
 }
 
 export type ClientToolImpl = (
   args: any,
   toolCallId: string,
   extras: ClientToolExtras,
-) => Promise<ContextItem[] | undefined>;
+) => Promise<ClientToolOutput>;
 
 export async function callClientTool(
   toolCall: ToolCall,
   extras: ClientToolExtras,
-): Promise<ClientToolOutput> {
+): Promise<ClientToolResult> {
   const args = JSON.parse(toolCall.function.arguments || "{}");
-  let output: ContextItem[] | undefined = undefined;
   try {
+    let output: ClientToolOutput;
     switch (toolCall.function.name) {
       case BuiltInToolNames.EditExistingFile:
         output = await editToolImpl(args, toolCall.id, extras);
+        break;
       default:
         throw new Error(`Invalid client tool name ${toolCall.function.name}`);
     }
-    return { output };
+    return {
+      ...output,
+      errorMessage: undefined,
+    };
   } catch (e) {
-    let errorMessage = `Failed to call ${toolCall.function.name} tool`;
+    let errorMessage = `${e}`;
     if (e instanceof Error) {
       errorMessage = e.message;
     }
-    return { errorMessage };
+    return {
+      respondImmediately: true,
+      errorMessage,
+      output: undefined,
+    };
   }
 }

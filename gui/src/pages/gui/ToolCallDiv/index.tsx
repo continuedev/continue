@@ -56,6 +56,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       case "done":
         return <CheckIcon className="text-green-500" />;
       case "canceled":
+      case "errored":
         return <XMarkIcon className="text-red-500" />;
     }
   }

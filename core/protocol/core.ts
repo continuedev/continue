@@ -200,7 +200,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
-  "tools/call": [{ toolCall: ToolCall }, { contextItems: ContextItem[] }];
+  "tools/call": [
+    { toolCall: ToolCall },
+    { contextItems: ContextItem[]; errorMessage?: string },
+  ];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
   isItemTooBig: [{ item: ContextItemWithId }, boolean];

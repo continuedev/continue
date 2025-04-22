@@ -7,7 +7,6 @@ import {
 } from "../";
 import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
-import { messageIsEmpty } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
@@ -92,12 +91,6 @@ export function constructMessages(
         ...historyItem.message,
         content,
       });
-    } else if (historyItem.toolCallState?.status === "canceled") {
-      // Canceled tool call
-      msgs.push({
-        ...historyItem.message,
-        content: CANCELED_TOOL_CALL_MESSAGE,
-      });
     } else {
       msgs.push(historyItem.message);
     }
@@ -119,15 +112,7 @@ export function constructMessages(
     });
   }
 
-  // We dispatch an empty assistant chat message to the history on submission. Don't send it
-  const lastMessage = msgs.at(-1);
-  if (
-    lastMessage &&
-    lastMessage.role === "assistant" &&
-    messageIsEmpty(lastMessage)
-  ) {
-    msgs.pop();
-  }
+  // Note, last assistant message is removed on core side
 
   // Remove the "id" from all of the messages
   return msgs.map((msg) => {

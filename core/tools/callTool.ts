@@ -13,7 +13,6 @@ import { readFileImpl } from "./implementations/readFile";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
-import { toolErrorContextItem } from "./toolError";
 
 async function callHttpTool(
   url: string,
@@ -138,7 +137,10 @@ export async function callTool(
   tool: Tool,
   callArgs: string,
   extras: ToolExtras,
-): Promise<ContextItem[]> {
+): Promise<{
+  contextItems: ContextItem[];
+  errorMessage: string | undefined;
+}> {
   const args = JSON.parse(callArgs || "{}");
   const uri = tool.uri ?? tool.function.name;
   try {
@@ -146,28 +148,34 @@ export async function callTool(
     switch (uri) {
       case BuiltInToolNames.ReadFile:
         contextItems = await readFileImpl(args, extras);
+        break;
       case BuiltInToolNames.CreateNewFile:
         contextItems = await createNewFileImpl(args, extras);
+        break;
       case BuiltInToolNames.GrepSearch:
         contextItems = await grepSearchImpl(args, extras);
+        break;
       case BuiltInToolNames.FileGlobSearch:
         contextItems = await fileGlobSearchImpl(args, extras);
+        break;
       case BuiltInToolNames.RunTerminalCommand:
         contextItems = await runTerminalCommandImpl(args, extras);
+        break;
       case BuiltInToolNames.SearchWeb:
         contextItems = await searchWebImpl(args, extras);
+        break;
       case BuiltInToolNames.ViewDiff:
         contextItems = await viewDiffImpl(args, extras);
+        break;
       case BuiltInToolNames.LSTool:
         contextItems = await lsToolImpl(args, extras);
+        break;
       case BuiltInToolNames.ReadCurrentlyOpenFile:
         contextItems = await readCurrentlyOpenFileImpl(args, extras);
+        break;
       case BuiltInToolNames.CreateRuleBlock:
-        return await createRuleBlockImpl(args, extras);
-      // case BuiltInToolNames.ViewRepoMap:
-      //   contextItems = await viewRepoMapImpl(args, extras);
-      // case BuiltInToolNames.ViewSubdirectory:
-      //   contextItems = await viewSubdirectoryImpl(args, extras);
+        contextItems = await createRuleBlockImpl(args, extras);
+        break;
       default:
         contextItems = await callToolFromUri(uri, args, extras);
     }
@@ -176,12 +184,18 @@ export async function callTool(
         item.icon = tool.faviconUrl;
       });
     }
-    return contextItems;
+    return {
+      contextItems,
+      errorMessage: undefined,
+    };
   } catch (e) {
     let errorMessage = `${e}`;
     if (e instanceof Error) {
       errorMessage = e.message;
     }
-    return [toolErrorContextItem(uri, errorMessage)];
+    return {
+      contextItems: [],
+      errorMessage,
+    };
   }
 }

@@ -702,7 +702,7 @@ export class Core {
         this.messenger.send("toolCallPartialOutput", params);
       };
 
-      const contextItems = await callTool(tool, toolCall.function.arguments, {
+      return await callTool(tool, toolCall.function.arguments, {
         ide: this.ide,
         llm: config.selectedModelByRole.chat,
         fetch: (url, init) =>
@@ -711,14 +711,6 @@ export class Core {
         toolCallId: toolCall.id,
         onPartialOutput,
       });
-
-      if (tool.faviconUrl) {
-        contextItems.forEach((item) => {
-          item.icon = tool.faviconUrl;
-        });
-      }
-
-      return { contextItems };
     });
 
     on("isItemTooBig", async ({ data: { item } }) => {
