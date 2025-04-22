@@ -3,10 +3,12 @@ import {
   ChatMessage,
   RuleWithSource,
   TextMessagePart,
+  ToolResultChatMessage,
   UserChatMessage,
 } from "../";
 import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
+import { isUserOrToolMsg } from "./messages";
 import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
 export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
@@ -96,13 +98,15 @@ export function constructMessages(
     }
   }
 
-  const userMessage = findLast(msgs, (msg) => msg.role === "user") as
+  const lastUserMsg = findLast(msgs, (msg) => isUserOrToolMsg) as
     | UserChatMessage
+    | ToolResultChatMessage
     | undefined;
+
   const systemMessage = getSystemMessageWithRules({
     baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
     rules,
-    userMessage,
+    userMessage: lastUserMsg,
     currentModel: modelName,
   });
   if (systemMessage.trim()) {
@@ -111,8 +115,6 @@ export function constructMessages(
       content: systemMessage,
     });
   }
-
-  // Note, last assistant message is removed on core side
 
   // Remove the "id" from all of the messages
   return msgs.map((msg) => {

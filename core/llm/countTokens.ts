@@ -2,7 +2,6 @@ import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 
 import { ChatMessage, MessageContent, MessagePart, Tool } from "../index.js";
 
-import { findLast } from "../util/findLast.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import {
   AsyncEncoder,
@@ -15,6 +14,8 @@ import {
   addSpaceToAnyEmptyMessages,
   chatMessageIsEmpty,
   flattenMessages,
+  isUserOrToolMsg,
+  messageHasToolCallId,
 } from "./messages.js";
 interface Encoding {
   encode: Tiktoken["encode"];
@@ -328,38 +329,53 @@ function compileChatMessages({
     }
   }
 
-  const lastUserMsg = findLast(msgsCopy, (msg) => msg.role === "user");
-  if (!lastUserMsg) {
-    throw new Error("Error parsing chat history: no user message found"); // should never happen
-  }
+  // Extract system message
+  const systemMsg = msgsCopy.find((msg) => msg.role === "system");
+  msgsCopy = msgsCopy.filter((msg) => msg.role !== "system");
 
+  // Remove any empty messages or non-user/tool trailing messages
   msgsCopy = msgsCopy.filter((msg) => !chatMessageIsEmpty(msg));
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
-  // Remove any last messages that aren't user
-  // Then pop the user message too since we've already grabbed it
-  while (msgsCopy.at(-1)?.role !== "user") {
+  while (msgsCopy.length > 1) {
+    if (isUserOrToolMsg(msgsCopy.at(-1))) {
+      break;
+    }
     msgsCopy.pop();
   }
-  msgsCopy.pop();
+
+  const lastUserOrToolMsg = msgsCopy.pop();
+  if (!lastUserOrToolMsg || !isUserOrToolMsg(lastUserOrToolMsg)) {
+    throw new Error("Error parsing chat history: no user/tool message found"); // should never happen
+  }
+
+  let lastToolCallsMsg: ChatMessage | undefined = undefined;
+  if (lastUserOrToolMsg.role === "tool") {
+    lastToolCallsMsg = msgsCopy.pop();
+    if (!messageHasToolCallId(lastToolCallsMsg, lastUserOrToolMsg.toolCallId)) {
+      throw new Error(
+        `Error parsing chat history: tool call found to match tool output for id ${lastUserOrToolMsg.toolCallId}`,
+      );
+    }
+  }
+
+  let lastMessagesTokens = countChatMessageTokens(modelName, lastUserOrToolMsg);
+  if (lastToolCallsMsg) {
+    lastMessagesTokens += countChatMessageTokens(modelName, lastToolCallsMsg);
+  }
 
   // System message
   let systemMsgTokens = 0;
-  const systemMsg = msgsCopy.find((msg) => msg.role === "system");
   if (systemMsg) {
     systemMsgTokens = countChatMessageTokens(modelName, systemMsg);
   }
-  msgsCopy = msgsCopy.filter((msg) => msg.role !== "system");
 
   // Tools
   let toolTokens = 0;
   if (tools) {
     toolTokens = countToolsTokens(tools, modelName);
   }
-
-  // Last user message
-  const lastUserMsgTokens = countChatMessageTokens(modelName, lastUserMsg);
 
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
   const minOutputTokens = getMinResponseTokens(maxTokens);
@@ -368,20 +384,20 @@ function compileChatMessages({
 
   inputTokensAvailable -= toolTokens;
   inputTokensAvailable -= systemMsgTokens;
-  inputTokensAvailable -= lastUserMsgTokens;
+  inputTokensAvailable -= lastMessagesTokens;
 
   // Make sure there's enough context for the non-excludable items
   if (inputTokensAvailable < 0) {
     throw new Error(
       `Not enough context available to include the system message, last user message, and tools.
       There must be at least ${minOutputTokens} tokens remaining for output.
-      Request had the following properties:
+      Request had the following token counts:
       - contextLength: ${contextLength}
-      - token counting safety buffer: ${countingSafetyBuffer}
-      - toolTokens: ~${toolTokens}
-      - systemMsgTokens: ~${systemMsgTokens}
-      - lastUserMsgTokens: ~${lastUserMsgTokens}
-      - maxTokens: ${maxTokens}`,
+      - counting safety buffer: ${countingSafetyBuffer}
+      - tools: ~${toolTokens}
+      - system message: ~${systemMsgTokens}
+      - last user or tool + tool call message tokens: ~${lastMessagesTokens}
+      - max output tokens: ${maxTokens}`,
     );
   }
 
@@ -398,27 +414,28 @@ function compileChatMessages({
 
   while (historyWithTokens.length > 0 && currentTotal > inputTokensAvailable) {
     const message = historyWithTokens.shift()!;
+    currentTotal -= message.tokens;
 
     // At this point make sure no latent tool response without corresponding call
     while (historyWithTokens[0]?.role === "tool") {
       const message = historyWithTokens.shift()!;
       currentTotal -= message.tokens;
     }
-
-    currentTotal -= message.tokens;
   }
 
   // Now reassemble
-  const reassembled: ChatMessage[] = [
-    ...historyWithTokens.map(({ tokens, ...rest }) => rest),
-    lastUserMsg,
-  ];
+  const reassembled: ChatMessage[] = [];
   if (systemMsg) {
-    reassembled.unshift(systemMsg);
+    reassembled.push(systemMsg);
   }
+  reassembled.push(...historyWithTokens.map(({ tokens, ...rest }) => rest));
+  if (lastToolCallsMsg) {
+    reassembled.push(lastToolCallsMsg);
+  }
+  reassembled.push(lastUserOrToolMsg);
 
+  // Flatten the messages (combines adjacent similar messages)
   const flattenedHistory = flattenMessages(reassembled);
-
   return flattenedHistory;
 }
 
