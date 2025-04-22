@@ -56,7 +56,6 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
       // Tool is called on core side
       const result = await extra.ideMessenger.request("tools/call", {
         toolCall: toolCallState.toolCall,
-        selectedModelTitle: selectedChatModel.title,
       });
       if (result.status === "error") {
         errorMessage = result.error;

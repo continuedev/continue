@@ -101,7 +101,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
-      selectedModelTitle: string;
     },
     ContextItemWithId[],
   ];
@@ -156,7 +155,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "chatDescriber/describe": [
     {
-      selectedModelTitle: string;
       text: string;
     },
     string | undefined,
@@ -202,16 +200,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "auth/getAuthUrl": [{ useOnboarding: boolean }, { url: string }];
-  "tools/call": [
-    { toolCall: ToolCall; selectedModelTitle: string },
-    { contextItems: ContextItem[] },
-  ];
+  "tools/call": [{ toolCall: ToolCall }, { contextItems: ContextItem[] }];
   "clipboardCache/add": [{ content: string }, void];
   "controlPlane/openUrl": [{ path: string; orgSlug: string | undefined }, void];
-  isItemTooBig: [
-    { item: ContextItemWithId; selectedModelTitle: string | undefined },
-    boolean,
-  ];
+  isItemTooBig: [{ item: ContextItemWithId }, boolean];
   didChangeControlPlaneSessionInfo: [
     { sessionInfo: ControlPlaneSessionInfo | undefined },
     void,
