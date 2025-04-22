@@ -307,7 +307,7 @@ export default function AssistantSelect() {
                   buttonRef.current?.click();
                 }}
               >
-                <ArrowPathIcon className={cn("text-lightgray h-2.5 w-2.5", loading && 'animate-spin')} />
+                <ArrowPathIcon className={cn("text-lightgray h-2.5 w-2.5", loading && 'animate-spin-slow')} />
               </div>
             </div>
 
