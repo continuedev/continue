@@ -25,6 +25,8 @@ export class OllamaServer implements IModelServer, Disposable {
   protected installingModels = new Set<string>();
   private modelInfoPromises: Map<string, Promise<ModelInfo | undefined>> = new Map();
   private modelInfoResults: Map<string, ModelInfo | undefined> = new Map();
+  private cachedTags?: { timestamp: number, tags: Promise<any[]> };
+
   constructor(private context: ExtensionContext, private name: string = "Ollama", private serverUrl = "http://localhost:11434") { }
 
   dispose(): void {
@@ -32,6 +34,7 @@ export class OllamaServer implements IModelServer, Disposable {
     this.installingModels.clear();
     this.modelInfoPromises.clear();
     this.modelInfoResults.clear();
+    this.cachedTags = undefined;
   }
 
   getName(): string {
@@ -254,15 +257,13 @@ export class OllamaServer implements IModelServer, Disposable {
     return status;
   }
 
-  private cachedTags?: { timestamp: number, tags: any[] };
-
   async getTags(): Promise<any[]> {
     if (!this.cachedTags || (Date.now() - this.cachedTags.timestamp) > 100) {//cache for 100ms
       this.cachedTags = {
         timestamp: Date.now(),
-        tags: await this._getTags(),
+        tags: this._getTags()
       };
-    }
+    };
     return this.cachedTags.tags;
   }
 
