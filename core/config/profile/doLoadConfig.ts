@@ -237,13 +237,13 @@ export default async function doLoadConfig(options: {
   };
 
   if (newConfig.analytics) {
-    await TeamAnalytics.setup(
-      newConfig.analytics,
-      uniqueId,
-      ideInfo.extensionVersion,
-      controlPlaneClient,
-      controlPlaneProxyInfo,
-    );
+    // await TeamAnalytics.setup(
+    //   newConfig.analytics,
+    //   uniqueId,
+    //   ideInfo.extensionVersion,
+    //   controlPlaneClient,
+    //   controlPlaneProxyInfo,
+    // );
   } else {
     await TeamAnalytics.shutdown();
   }
