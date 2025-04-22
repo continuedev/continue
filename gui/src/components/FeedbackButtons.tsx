@@ -3,9 +3,11 @@ import {
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useAppSelector } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { updateFeedback } from "../redux/slices/sessionSlice";
+import { saveCurrentSession } from "../redux/thunks/session";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 
 export interface FeedbackButtonsProps {
@@ -13,12 +15,17 @@ export interface FeedbackButtonsProps {
 }
 
 export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
-  const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
+  const dispatch = useAppDispatch();
   const sessionId = useAppSelector((store) => store.session.id);
+  const feedback = item.feedback;
 
   const sendFeedback = (feedback: boolean) => {
-    setFeedback(feedback);
+    dispatch(updateFeedback({ 
+      messageId: (item.message as any).id,
+      feedback 
+    }));
+
     if (item.promptLogs?.length) {
       for (const promptLog of item.promptLogs) {
         ideMessenger.post("devdata/log", {
@@ -31,6 +38,8 @@ export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
         });
       }
     }
+
+    dispatch(saveCurrentSession({ openNewSession: false, generateTitle: true }));
   };
 
   return (

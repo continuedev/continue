@@ -458,6 +458,7 @@ export interface ChatHistoryItem {
   checkpoint?: Checkpoint;
   isBeforeCheckpoint?: boolean;
   reasoning?: Reasoning;
+  feedback?: boolean;
 }
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {

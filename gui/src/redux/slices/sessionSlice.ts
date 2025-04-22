@@ -35,6 +35,20 @@ import { findCurrentToolCall } from "../util";
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
+  contextItems: ContextItemWithId[];
+  editorState?: any;
+  isGatheringContext?: boolean;
+  buffer?: string;
+  reasoning?: {
+    startAt: number;
+    endAt?: number;
+    active: boolean;
+    text: string;
+  };
+  toolCallState?: ToolCallState;
+  checkpoint?: Record<string, string>;
+  feedback?: boolean;
+
 };
 
 type SessionState = {
@@ -466,7 +480,19 @@ export const sessionSlice = createSlice({
       state.symbols = {};
 
       if (payload) {
-        state.history = payload.history as any;
+        const history = payload.history.map(item => {
+          const messageWithId = {
+            ...item.message,
+            id: (item.message as any).id || uuidv4()
+          };
+
+          return {
+            ...item,
+            message: messageWithId
+          };
+        });
+
+        state.history = history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
         state.curCheckpointIndex = 0;
@@ -595,6 +621,18 @@ export const sessionSlice = createSlice({
       if (payload.status === "done") {
         state.codeBlockApplyStates.curIndex++;
       }
+    },
+    updateFeedback: (state, { payload }: PayloadAction<{ messageId: string; feedback: boolean }>) => {
+      const { messageId, feedback } = payload;
+      state.history = state.history.map(item => {
+        if (item.message.id === messageId) {
+          return {
+            ...item,
+            feedback
+          };
+        }
+        return item;
+      });
     },
     resetNextCodeBlockToApplyIndex: (state) => {
       state.codeBlockApplyStates.curIndex = 0;
@@ -798,6 +836,7 @@ export const {
   deleteSessionMetadata,
   setNewestToolbarPreviewForInput,
   cycleMode,
+  updateFeedback,
 } = sessionSlice.actions;
 
 export const {
