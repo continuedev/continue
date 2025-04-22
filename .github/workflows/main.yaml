@@ -64,6 +64,10 @@ jobs:
             platform: darwin
             arch: arm64
             npm_config_arch: arm64
+          - os: openeuler-2309
+            platform: linux
+            arch: riscv64
+            npm_config_arch: riscv64
     runs-on: ${{ matrix.os }}
     steps:
       # 1. Check-out repository
