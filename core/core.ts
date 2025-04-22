@@ -696,15 +696,6 @@ export class Core {
           throw new Error("No chat model selected");
         }
 
-<<<<<<< HEAD
-      const contextItems = await callTool(tool, toolCall.function.arguments, {
-        ide: this.ide,
-        llm,
-        fetch: (url, init) =>
-          fetchwithRequestOptions(url, init, config.requestOptions),
-        tool,
-      });
-=======
         // Define a callback for streaming output updates
         const onPartialOutput = (params: {
           toolCallId: string;
@@ -713,26 +704,21 @@ export class Core {
           this.messenger.send("toolCallPartialOutput", params);
         };
 
-        const contextItems = await callTool(
+        const contextItems = await callTool(tool, toolCall.function.arguments, {
+          ide: this.ide,
+          llm: config.selectedModelByRole.chat,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
           tool,
-          JSON.parse(toolCall.function.arguments || "{}"),
-          {
-            ide: this.ide,
-            llm: config.selectedModelByRole.chat,
-            fetch: (url, init) =>
-              fetchwithRequestOptions(url, init, config.requestOptions),
-            tool,
-            toolCallId: toolCall.id,
-            onPartialOutput,
-          },
-        );
+          toolCallId: toolCall.id,
+          onPartialOutput,
+        });
 
         if (tool.faviconUrl) {
           contextItems.forEach((item) => {
             item.icon = tool.faviconUrl;
           });
         }
->>>>>>> b8c92f26cad325ff79eca6b5d01fd4ac47b4a88f
 
         return { contextItems };
       },

@@ -1,9 +1,7 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ContextItem } from "core";
-import { BuiltInToolNames } from "core/tools/builtIn";
-import { EditToolArgs } from "core/tools/definitions/editFile";
-import { resolveRelativePathInDir } from "core/util/ideUtils";
-import { IIdeMessenger } from "../../context/IdeMessenger";
+import { CLIENT_TOOLS } from "core/tools/builtIn";
+import { callClientTool } from "../../util/clientTools/callClientTool";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import { selectSelectedChatModel } from "../slices/configSlice";
 import {
@@ -11,7 +9,6 @@ import {
   cancelToolCall,
   setCalling,
   setToolCallOutput,
-  updateApplyState,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
@@ -38,43 +35,25 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
 
     dispatch(setCalling());
 
-    let errorMessage = "";
+    let errorMessage: string | undefined = "";
     let output: ContextItem[] | undefined = undefined;
 
     if (
-      toolCallState.toolCall.function.name === BuiltInToolNames.EditExistingFile
+      CLIENT_TOOLS.find(
+        (toolName) => toolName === toolCallState.toolCall.function.name,
+      )
     ) {
-      const args = JSON.parse(
-        toolCallState.toolCall.function.arguments || "{}",
-      );
-      try {
-        if (!state.session.activeToolStreamId) {
-          throw new Error("Invalid apply state");
-        }
-        await customGuiEditImpl(
-          args,
-          extra.ideMessenger,
-          state.session.activeToolStreamId[0],
-          toolCallState.toolCallId,
-        );
-      } catch (e) {
-        errorMessage = `Failed to call ${toolCallState.toolCall.function.name} tool`;
-        if (e instanceof Error) {
-          errorMessage = e.message;
-        }
-        if (state.session.activeToolStreamId?.[0]) {
-          dispatch(
-            updateApplyState({
-              streamId: state.session.activeToolStreamId[0],
-              status: "closed",
-              toolCallId: toolCallState.toolCallId,
-              numDiffs: 0,
-              filepath: args.filepath,
-            }),
-          );
-        }
-      }
+      // Tool is called on client side
+      const { errorMessage: clientErrorMessage, output: clientOutput } =
+        await callClientTool(toolCallState.toolCall, {
+          dispatch,
+          ideMessenger: extra.ideMessenger,
+          activeToolStreamId: state.session.activeToolStreamId?.[0],
+        });
+      output = clientOutput;
+      errorMessage = clientErrorMessage;
     } else {
+      // Tool is called on core side
       const result = await extra.ideMessenger.request("tools/call", {
         toolCall: toolCallState.toolCall,
         selectedModelTitle: selectedChatModel.title,
@@ -112,27 +91,3 @@ export const callTool = createAsyncThunk<void, undefined, ThunkApiType>(
     // okay for a tool to have no output and need some GUI trigger or other to trigger response e.g. edit tool
   },
 );
-
-async function customGuiEditImpl(
-  args: EditToolArgs,
-  ideMessenger: IIdeMessenger,
-  streamId: string,
-  toolCallId: string,
-) {
-  const firstUriMatch = await resolveRelativePathInDir(
-    args.filepath,
-    ideMessenger.ide,
-  );
-  if (!firstUriMatch) {
-    throw new Error(`${args.filepath} does not exist`);
-  }
-  const apply = await ideMessenger.request("applyToFile", {
-    streamId,
-    text: args.new_contents,
-    toolCallId,
-    filepath: firstUriMatch,
-  });
-  if (apply.status === "error") {
-    throw new Error(apply.error);
-  }
-}
