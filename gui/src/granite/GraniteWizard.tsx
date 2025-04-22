@@ -90,6 +90,8 @@ interface WizardContextProps {
   setOllamaInstallationError: React.Dispatch<
     React.SetStateAction<string | undefined>
   >;
+  isVisible: boolean;
+  setVisible: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const WizardContext = createContext<WizardContextProps | undefined>(undefined);
@@ -144,6 +146,7 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
     "idle" | "downloading" | "complete"
   >("idle");
   const [isOffline, setIsOffline] = useState(false);
+  const [isVisible, setVisible] = useState(true);
 
   return (
     <WizardContext.Provider
@@ -178,6 +181,8 @@ export const WizardProvider: React.FC<WizardProviderProps> = ({ children }) => {
         setIsOffline,
         modelInstallationError,
         setModelInstallationError,
+        isVisible,
+        setVisible,
       }}
     >
       {children}
@@ -620,19 +625,8 @@ export const GraniteWizard: React.FC = () => {
   );
 };
 
-function requestStatus(): void {
-  vscode.postMessage({
-    command: "fetchStatus",
-  });
-}
-
-function init(): void {
-  vscode.postMessage({
-    command: "init",
-  });
-}
-
 const WizardContent: React.FC = () => {
+
   const {
     currentStatus,
     setCurrentStatus,
@@ -652,13 +646,38 @@ const WizardContent: React.FC = () => {
     setOllamaInstallationProgress,
     setOllamaInstallationError,
     setStatusByModel,
+    isVisible,
+    setVisible,
   } = useWizardContext();
   const currentStatusRef = useRef(currentStatus);
+  const isVisibleRef = useRef(isVisible);
+
+  const requestStatus = () => {
+    if(!isVisibleRef.current) {
+      return;
+    }
+
+    vscode.postMessage({
+      command: "fetchStatus",
+    });
+  }
+
+  const init = () => {
+    vscode.postMessage({
+      command: "init",
+    });
+  }
+
 
   // Update ref when currentStatus changes
   useEffect(() => {
     currentStatusRef.current = currentStatus;
   }, [currentStatus]);
+
+  // Update ref when visibility changes
+  useEffect(() => {
+    isVisibleRef.current = isVisible;
+  }, [isVisible]);
 
   const REFETCH_MODELS_INTERVAL_MS = 1500;
 
@@ -671,6 +690,9 @@ const WizardContent: React.FC = () => {
       }
       const currStatus = currentStatusRef.current;
       switch (command) {
+        case "visibilityChange":
+          setVisible(payload.data.isVisible);
+          break;
         case "init": {
           const data = payload.data;
           setInstallationModes(data.installModes);

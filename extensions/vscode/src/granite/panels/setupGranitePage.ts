@@ -74,7 +74,7 @@ export class SetupGranitePage {
       : ({ stepStatuses: [false, false, false] } as WizardState);
 
     // Set up dispose handler with confirmation dialog
-    this._panel.onDidDispose(
+    this._disposables.push(this._panel.onDidDispose(
       async () => {
         // Verify setup is complete by checking if ollama and the models are configured
         const isComplete =
@@ -106,7 +106,17 @@ export class SetupGranitePage {
       },
       null,
       this._disposables,
-    );
+    ));
+
+    // Add visibility change detection in the webview panel
+    this._disposables.push(this._panel.onDidChangeViewState((event) => {
+      this._panel.webview.postMessage({
+        command: "visibilityChange",
+        data: {
+          isVisible: event.webviewPanel.visible
+        }
+      });
+    }));
 
     // Set the HTML content for the webview panel
     this._panel.webview.html = this._getWebviewContent(
