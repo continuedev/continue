@@ -677,6 +677,14 @@ jobs:
           name: e2e-failure-screenshots
           path: extensions/vscode/e2e/storage/screenshots
 
+      - name: Sanitize test file name
+        id: sanitize_filename
+        run: |
+          FILENAME="${{ matrix.test_file }}"
+          SANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion
+          echo "sanitized_test_file=${SANITIZED_FILENAME}" >> $GITHUB_OUTPUT
+
+
       - name: Find e2e log file
         if: always()
         run: |
@@ -687,7 +695,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-logs-${{ matrix.test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+          name: e2e-logs-${{ steps.sanitize_filename.outputs.sanitized_test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
           path: extensions/vscode/e2e.log
 
   gui-tests:
