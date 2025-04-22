@@ -683,12 +683,12 @@ jobs:
           echo "Searching for e2e.log file..."
           find $GITHUB_WORKSPACE -name "e2e.log" -type f
 
-      # - name: Upload e2e logs
-      #   if: always()
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: e2e-logs-${{ matrix.test_file || 'unknown' }}-${{ replace(matrix.command, ':', '-') }}
-      #     path: extensions/vscode/e2e.log
+      - name: Upload e2e logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs-${{ matrix.test_file || 'unknown' }}-${{ matrix.command == 'e2e:ci:run-yaml' && 'yaml' || 'json' }}
+          path: extensions/vscode/e2e.log
 
   gui-tests:
     needs: [install-gui, install-core, install-config-yaml]
