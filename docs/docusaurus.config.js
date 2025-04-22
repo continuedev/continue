@@ -436,6 +436,11 @@ const config = {
             to: "/customize/model-providers/more/openrouter",
             from: "/reference/Model Providers/openrouter",
           },
+          ,
+          {
+            to: "/customize/model-providers/more/openvino_model_server",
+            from: "/reference/Model Providers/openvino_model_server",
+          }
           {
             to: "/customize/model-providers/more/replicatellm",
             from: "/reference/Model Providers/replicatellm",
