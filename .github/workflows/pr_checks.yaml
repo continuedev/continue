@@ -679,6 +679,7 @@ jobs:
 
       - name: Sanitize test file name
         id: sanitize_filename
+        if: always()
         run: |
           FILENAME="${{ matrix.test_file }}"
           SANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion
