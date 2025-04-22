@@ -40,6 +40,7 @@ import { GlobalContext } from "../../util/GlobalContext";
 import { modifyAnyConfigWithSharedConfig } from "../sharedConfig";
 
 import { getControlPlaneEnvSync } from "../../control-plane/env";
+import { logger } from "../../util/logger";
 import { getCleanUriPath } from "../../util/uri";
 import { getAllDotContinueYamlFiles } from "../loadLocalAssistants";
 import { LocalPlatformClient } from "./LocalPlatformClient";
@@ -107,6 +108,15 @@ async function loadConfigYaml(options: {
     );
   }
 
+  const rootPath =
+    packageIdentifier.uriType === "file"
+      ? dirname(getCleanUriPath(packageIdentifier.filePath))
+      : undefined;
+
+  logger.info(
+    `Loading config.yaml from ${JSON.stringify(packageIdentifier)} with root path ${rootPath}`,
+  );
+
   let config =
     overrideConfigYaml ??
     // This is how we allow use of blocks locally
@@ -116,10 +126,7 @@ async function loadConfigYaml(options: {
         accessToken: await controlPlaneClient.getAccessToken(),
         apiBase: getControlPlaneEnvSync(ideSettings.continueTestEnvironment)
           .CONTROL_PLANE_URL,
-        rootPath:
-          packageIdentifier.uriType === "file"
-            ? dirname(getCleanUriPath(packageIdentifier.filePath))
-            : undefined,
+        rootPath,
       }),
       {
         currentUserSlug: "",
