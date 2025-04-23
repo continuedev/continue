@@ -1,4 +1,4 @@
-import { DataDestination, ModelRole } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole, PromptTemplates } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
@@ -395,6 +395,7 @@ export interface ContextItem {
   icon?: string;
   uri?: ContextItemUri;
   hidden?: boolean;
+  status?: string;
 }
 
 export interface ContextItemWithId extends ContextItem {
@@ -565,7 +566,7 @@ export interface LLMOptions {
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, PromptTemplate>;
+  promptTemplates?: Partial<Record<keyof PromptTemplates, PromptTemplate>>;
   templateMessages?: (messages: ChatMessage[]) => string;
   logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
@@ -699,7 +700,6 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
-  enableControlServerBeta: boolean;
   continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
 }
@@ -965,6 +965,11 @@ export interface ToolExtras {
   llm: ILLM;
   fetch: FetchFunction;
   tool: Tool;
+  toolCallId?: string;
+  onPartialOutput?: (params: {
+    toolCallId: string;
+    contextItems: ContextItem[];
+  }) => void;
 }
 
 export interface Tool {
@@ -981,6 +986,7 @@ export interface Tool {
   isCurrently?: string;
   hasAlready?: string;
   readonly: boolean;
+  isInstant?: boolean;
   uri?: string;
   faviconUrl?: string;
   group: string;
@@ -1483,6 +1489,7 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+  waitForCompletion?: boolean;
 }
 
 export interface RuleWithSource {

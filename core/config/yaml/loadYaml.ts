@@ -27,7 +27,7 @@ import {
   RuleWithSource,
 } from "../..";
 import { slashFromCustomCommand } from "../../commands";
-import { MCPManagerSingleton } from "../../context/mcp";
+import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import CodebaseContextProvider from "../../context/providers/CodebaseContextProvider";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import FileContextProvider from "../../context/providers/FileContextProvider";
@@ -112,7 +112,6 @@ async function loadConfigYaml(
         await controlPlaneClient.getAccessToken(),
         getControlPlaneEnvSync(
           ideSettings.continueTestEnvironment,
-          ideSettings.enableControlServerBeta,
         ).CONTROL_PLANE_URL,
       ),
       {
@@ -396,7 +395,10 @@ async function configYamlToContinueConfig({
         }
         return undefined;
       }
-      const instance: IContextProvider = new cls(context.params ?? {});
+      const instance: IContextProvider = new cls({
+        name: context.name,
+        ...context.params,
+      });
       return instance;
     })
     .filter((p) => !!p) ?? []) as IContextProvider[];

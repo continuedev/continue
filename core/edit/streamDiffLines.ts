@@ -123,11 +123,13 @@ export async function* streamDiffLines({
 
   if (systemMessage) {
     if (typeof prompt === "string") {
+      // Removed system prompt because it was causing it to be used for Apply
+      // We should bring it back only for Edit
       prompt = [
-        {
-          role: "system",
-          content: systemMessage,
-        },
+        // {
+        //   role: "system",
+        //   content: systemMessage,
+        // },
         {
           role: "user",
           content: prompt,
@@ -138,10 +140,10 @@ export async function* streamDiffLines({
       if (curSysMsg) {
         curSysMsg.content = systemMessage + "\n\n" + curSysMsg.content;
       } else {
-        prompt.unshift({
-          role: "system",
-          content: systemMessage,
-        });
+        // prompt.unshift({
+        //   role: "system",
+        //   content: systemMessage,
+        // });
       }
     }
   }

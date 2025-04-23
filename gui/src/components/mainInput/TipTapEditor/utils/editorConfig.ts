@@ -30,7 +30,7 @@ import {
 import { AppDispatch } from "../../../../redux/store";
 import { exitEditMode } from "../../../../redux/thunks";
 import { loadLastSession } from "../../../../redux/thunks/session";
-import { getFontSize } from "../../../../util";
+import { getFontSize, isJetBrains } from "../../../../util";
 import * as ContinueExtensions from "../extensions";
 import { TipTapEditorProps } from "../TipTapEditor";
 import { handleImageFile } from "./imageUtils";
@@ -267,6 +267,12 @@ export function createEditorConfig(options: {
               return false;
             },
             Escape: () => {
+              // In JetBrains, this is how we close the sidebar when the input box is focused
+              if (isJetBrains()) {
+                ideMessenger.post("closeSidebar", undefined);
+                return true;
+              }
+
               if (inDropdownRef.current || !isInEditModeRef.current) {
                 ideMessenger.post("focusEditor", undefined);
                 return true;

@@ -24,12 +24,14 @@ interface ToolbarButtonWithTooltipProps {
   onClick: () => void;
   children: ReactNode;
   tooltipContent: string;
+  "data-testid"?: string;
 }
 
 export function ToolbarButtonWithTooltip({
   onClick,
   children,
   tooltipContent,
+  "data-testid": testId,
 }: ToolbarButtonWithTooltipProps) {
   const tooltipId = useMemo(
     () => `tooltip-${Math.random().toString(36).slice(2, 11)}`,
@@ -42,6 +44,7 @@ export function ToolbarButtonWithTooltip({
         onClick={onClick}
         style={{ color: lightGray }}
         data-tooltip-id={tooltipId}
+        data-testid={testId}
         className="px-0.5"
       >
         {children}

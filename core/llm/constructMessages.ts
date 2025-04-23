@@ -20,9 +20,9 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 
   When addressing code modification requests, present a concise code snippet that
   emphasizes only the necessary changes and uses abbreviated placeholders for
-  unmodified sections. For instance:
+  unmodified sections. For example:
 
-  \`\`\`typescript /path/to/file
+  \`\`\`language /path/to/file
   // ... rest of code here ...
 
   {{ modified code here }}
@@ -31,6 +31,22 @@ export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 
   {{ another modification }}
 
+  // ... rest of code here ...
+  \`\`\`
+
+  In existing files, you should always restate the function or class that the snippet belongs to:
+
+  \`\`\`language /path/to/file
+  // ... rest of code here ...
+  
+  function exampleFunction() {
+    // ... rest of code here ...
+    
+    {{ modified code here }}
+    
+    // ... rest of code here ...
+  }
+  
   // ... rest of code here ...
   \`\`\`
 

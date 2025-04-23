@@ -31,6 +31,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  azure: (model) => {
+    if (
+      model.toLowerCase().startsWith("gpt-4") ||
+      model.toLowerCase().startsWith("o3")
+    ) return true;
+    return false;
+  },
   openai: (model) => {
     // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
     if (

@@ -1,4 +1,5 @@
 import { createNewFileTool } from "./definitions/createNewFile";
+import { createRuleBlock } from "./definitions/createRuleBlock";
 import { editFileTool } from "./definitions/editFile";
 import { globSearchTool } from "./definitions/globSearch";
 import { grepSearchTool } from "./definitions/grepSearch";
@@ -14,14 +15,13 @@ export const allTools = [
   editFileTool,
   createNewFileTool,
   runTerminalCommandTool,
-
   grepSearchTool,
   globSearchTool,
   searchWebTool,
   viewDiffTool,
   readCurrentlyOpenFileTool,
-
   lsTool,
+  createRuleBlock,
   // replacing with ls tool for now
   // viewSubdirectoryTool,
   // viewRepoMapTool,

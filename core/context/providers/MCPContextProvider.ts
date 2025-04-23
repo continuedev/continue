@@ -6,7 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
-import { MCPManagerSingleton } from "../mcp";
+import { MCPManagerSingleton } from "../mcp/MCPManagerSingleton";
 
 interface MCPContextProviderOptions {
   mcpId: string;

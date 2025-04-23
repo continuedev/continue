@@ -22,8 +22,10 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(DEFAULT_TIMEOUT.XL);
+    // Uncomment this line for faster testing
     await GUIActions.moveContinueToSidebar(VSBrowser.instance.driver);
     await GlobalActions.openTestWorkspace();
+    await GlobalActions.clearAllNotifications();
   });
 
   beforeEach(async function () {
@@ -237,7 +239,7 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
-  describe.skip("Chat with tools", () => {
+  describe("Chat with tools", () => {
     it("should render tool call", async () => {
       await GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM");
 
@@ -245,10 +247,65 @@ describe("GUI Test", () => {
       await messageInput.sendKeys("Hello");
       await messageInput.sendKeys(Key.ENTER);
 
-      await TestUtils.waitForSuccess(
-        () => GUISelectors.getThreadMessageByText(view, "No matches found"), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+      const statusMessage = await TestUtils.waitForSuccess(
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        DEFAULT_TIMEOUT.SM,
       );
-    });
+
+      expect(await statusMessage.getText()).contain(
+        "Continue viewed the git diff",
+      );
+    }).timeout(DEFAULT_TIMEOUT.MD);
+
+    it("should call tool after approval", async () => {
+      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
+
+      await TestUtils.waitForSuccess(() =>
+        GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM"),
+      );
+
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+
+      const acceptToolCallButton = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getAcceptToolCallButton(view),
+      );
+      await acceptToolCallButton.click();
+
+      const statusMessage = await TestUtils.waitForSuccess(
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      const text = await statusMessage.getText();
+      expect(text).contain("the git diff");
+    }).timeout(DEFAULT_TIMEOUT.XL);
+
+    it("should cancel tool", async () => {
+      await GUIActions.toggleToolPolicy(view, "builtin_view_diff", 2);
+
+      await TestUtils.waitForSuccess(() =>
+        GUIActions.selectModelFromDropdown(view, "TOOL MOCK LLM"),
+      );
+
+      const [messageInput] = await GUISelectors.getMessageInputFields(view);
+      await messageInput.sendKeys("Hello");
+      await messageInput.sendKeys(Key.ENTER);
+
+      const cancelToolCallButton = await TestUtils.waitForSuccess(() =>
+        GUISelectors.getRejectToolCallButton(view),
+      );
+      await cancelToolCallButton.click();
+
+      const statusMessage = await TestUtils.waitForSuccess(
+        () => GUISelectors.getToolCallStatusMessage(view), // Defined in extensions/vscode/e2e/test-continue/config.json's TOOL MOCK LLM that we are calling the exact search tool
+        DEFAULT_TIMEOUT.SM,
+      );
+
+      const text = await statusMessage.getText();
+      expect(text).contain("Continue tried to view the git diff");
+    }).timeout(DEFAULT_TIMEOUT.XL);
   });
 
   describe("Context providers", () => {
