@@ -1,7 +1,7 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
-import { ToolCallDelta, ToolCallState } from "core";
+import { Tool, ToolCallDelta, ToolCallState } from "core";
 import Mustache from "mustache";
-import { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { ToolTip } from "../../../components/gui/Tooltip";
 import { useAppSelector } from "../../../redux/hooks";
 
@@ -10,6 +10,67 @@ interface ToolCallDisplayProps {
   icon: React.ReactNode;
   toolCall: ToolCallDelta;
   toolCallState: ToolCallState;
+}
+
+export function getToolCallStatusMessage(
+  tool: Tool | undefined,
+  toolCallState: ToolCallState,
+) {
+  if (!tool) return "Agent tool use";
+
+  const defaultToolDescription = (
+    <>
+      <code>{tool.displayTitle ?? tool.function.name}</code> <span>tool</span>
+    </>
+  );
+
+  const futureMessage = tool.wouldLikeTo ? (
+    Mustache.render(tool.wouldLikeTo, toolCallState.parsedArgs)
+  ) : (
+    <>
+      <span>use the</span> {defaultToolDescription}
+    </>
+  );
+
+  let intro = "";
+  let message: ReactNode = "";
+
+  if (
+    toolCallState.status === "done" ||
+    (tool.isInstant && toolCallState.status === "calling")
+  ) {
+    intro = "";
+    message = tool.hasAlready ? (
+      Mustache.render(tool.hasAlready, toolCallState.parsedArgs)
+    ) : (
+      <>
+        <span>used the</span> {defaultToolDescription}
+      </>
+    );
+  } else if (toolCallState.status === "generating") {
+    intro = "is generating output to";
+    message = futureMessage;
+  } else if (toolCallState.status === "generated") {
+    intro = "wants to";
+    message = futureMessage;
+  } else if (toolCallState.status === "calling") {
+    intro = "is";
+    message = tool.isCurrently ? (
+      Mustache.render(tool.isCurrently, toolCallState.parsedArgs)
+    ) : (
+      <>
+        <span>calling the</span> {defaultToolDescription}
+      </>
+    );
+  } else if (toolCallState.status === "canceled") {
+    intro = "tried to";
+    message = futureMessage;
+  }
+  return (
+    <div className="block">
+      <span>Continue</span> {intro} {message}
+    </div>
+  );
 }
 
 export function ToolCallDisplay(props: ToolCallDisplayProps) {
@@ -22,14 +83,8 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
     );
   }, [availableTools, props.toolCall]);
 
-  const wouldLikeToMessage = useMemo(() => {
-    if (!tool) return "";
-
-    const rendered = Mustache.render(
-      tool.wouldLikeTo,
-      props.toolCallState.parsedArgs,
-    );
-    return rendered.trim();
+  const statusMessage = useMemo(() => {
+    return getToolCallStatusMessage(tool, props.toolCallState);
   }, [props.toolCallState, tool]);
 
   const args: [string, any][] = useMemo(() => {
@@ -60,16 +115,8 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
               {tool?.faviconUrl && (
                 <img src={tool.faviconUrl} className="h-4 w-4 rounded-sm" />
               )}
-              <div className="">
-                Continue wants to{" "}
-                {wouldLikeToMessage ? (
-                  <span>{wouldLikeToMessage}</span>
-                ) : (
-                  <>
-                    <span>use the</span> <code>{tool?.displayTitle}</code>{" "}
-                    <span>tool</span>
-                  </>
-                )}
+              <div className="flex" data-testid="tool-call-status-message">
+                {statusMessage}
               </div>
             </div>
             {!!args.length ? (
@@ -95,7 +142,7 @@ export function ToolCallDisplay(props: ToolCallDisplayProps) {
               {args.map(([key, value]) => (
                 <div key={key} className="flex gap-2 py-0.5">
                   <span className="text-lightgray">{key}:</span>
-                  <code className="line-clamp-1">{value}</code>
+                  <code className="line-clamp-1">{value.toString()}</code>
                 </div>
               ))}
             </div>

@@ -1,5 +1,4 @@
 import { streamSse } from "@continuedev/fetch";
-import fetch from "node-fetch";
 import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
@@ -14,7 +13,7 @@ import {
 } from "openai/resources/index";
 import { z } from "zod";
 import { OpenAIConfigSchema } from "../types.js";
-import { customFetch, maybeCustomFetch } from "../util.js";
+import { customFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -36,19 +35,25 @@ export class OpenAIApi implements BaseLlmApi {
   }
 
   modifyChatBody<T extends ChatCompletionCreateParams>(body: T): T {
-    // o-series models
-    if (body.model.startsWith("o")) {
-      // a) use max_completion_tokens instead of max_tokens
-      body.max_completion_tokens = body.max_tokens;
-      body.max_tokens = undefined;
+    // o-series models - only apply for official OpenAI API
+    const isOfficialOpenAIAPI = this.apiBase === "https://api.openai.com/v1/";
+    if (isOfficialOpenAIAPI) {
+      if (body.model.startsWith("o")) {
+        // a) use max_completion_tokens instead of max_tokens
+        body.max_completion_tokens = body.max_tokens;
+        body.max_tokens = undefined;
 
-      // b) use "developer" message role rather than "system"
-      body.messages = body.messages.map((message) => {
-        if (message.role === "system") {
-          return { ...message, role: "developer" } as any;
-        }
-        return message;
-      });
+        // b) use "developer" message role rather than "system"
+        body.messages = body.messages.map((message) => {
+          if (message.role === "system") {
+            return { ...message, role: "developer" } as any;
+          }
+          return message;
+        });
+      }
+      if (body.tools?.length && !body.model.startsWith("o3")) {
+        body.parallel_tool_calls = false;
+      }
     }
     return body;
   }

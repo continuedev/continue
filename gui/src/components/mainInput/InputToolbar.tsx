@@ -3,16 +3,11 @@ import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscButtonBackground,
-  vscButtonForeground,
-  vscForeground,
-} from "..";
+import { vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
   selectIsInEditMode,
@@ -21,6 +16,7 @@ import { exitEditMode } from "../../redux/thunks";
 import { loadLastSession } from "../../redux/thunks/session";
 import {
   getAltKeyLabel,
+  getFontSize,
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
@@ -28,21 +24,23 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
 import { useFontSize } from "../ui/font";
-import HoverItem from "./InputToolbar/bottom/HoverItem";
+import { EnterButton } from "./InputToolbar/EnterButton";
+import HoverItem from "./InputToolbar/HoverItem";
 
-const EnterButton = styled.button<{ isPrimary?: boolean }>`
-  all: unset;
-  padding: 2px 4px;
-  display: flex;
+const StyledDiv = styled.div<{ isHidden?: boolean }>`
+  padding-top: 4px;
+  justify-content: space-between;
+  gap: 1px;
+  background-color: ${vscInputBackground};
   align-items: center;
-  background-color: ${(props) =>
-    props.isPrimary ? vscButtonBackground : lightGray + "33"};
-  border-radius: ${defaultBorderRadius};
-  color: ${(props) => (props.isPrimary ? vscButtonForeground : vscForeground)};
-  cursor: pointer;
+  font-size: ${getFontSize() - 2}px;
+  cursor: ${(props) => (props.isHidden ? "default" : "text")};
+  opacity: ${(props) => (props.isHidden ? 0 : 1)};
+  pointer-events: ${(props) => (props.isHidden ? "none" : "auto")};
+  user-select: none;
 
-  :disabled {
-    cursor: wait;
+  & > * {
+    flex: 0 0 auto;
   }
 `;
 
@@ -64,19 +62,27 @@ interface InputToolbarProps {
   toolbarOptions?: ToolbarOptions;
   disabled?: boolean;
   isMainInput?: boolean;
-  lumpOpen: boolean;
-  setLumpOpen: (open: boolean) => void;
 }
 
 function InputToolbar(props: InputToolbarProps) {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const toolCallState = useAppSelector(selectCurrentToolCall);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-  const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
+  const activeToolCallStreamId = useAppSelector(
+    (store) => store.session.activeToolStreamId,
+  );
+
+  const isEnterDisabled =
+    props.disabled ||
+    isEditModeAndNoCodeToEdit ||
+    toolCallState?.status === "generated" ||
+    !!activeToolCallStreamId;
+
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =
@@ -95,7 +101,7 @@ function InputToolbar(props: InputToolbarProps) {
     <>
       <div
         onClick={props.onClick}
-        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none cursor-default opacity-0" : "pointer-events-auto cursor-text opacity-100"}`}
+        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto cursor-text opacity-100"}`}
         style={{
           fontSize: smallFont,
         }}
@@ -117,6 +123,9 @@ function InputToolbar(props: InputToolbarProps) {
                       for (const file of files) {
                         props.onImageFileSelected?.(file);
                       }
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
                     }}
                   />
                   <HoverItem className="">
@@ -127,7 +136,7 @@ function InputToolbar(props: InputToolbarProps) {
                         fileInputRef.current?.click();
                       }}
                     />
-                    <ToolTip id="image-tooltip" place="top-middle">
+                    <ToolTip id="image-tooltip" place="top">
                       Attach an image
                     </ToolTip>
                   </HoverItem>
@@ -140,7 +149,7 @@ function InputToolbar(props: InputToolbarProps) {
                   className="h-3 w-3 hover:brightness-125"
                 />
 
-                <ToolTip id="add-context-item-tooltip" place="top-middle">
+                <ToolTip id="add-context-item-tooltip" place="top">
                   Add context (files, docs, urls, etc.)
                 </ToolTip>
               </HoverItem>

@@ -28,11 +28,11 @@ To enable it, simply click the "Continue" button in the status bar at the bottom
 
 Highlight a block of code, describe your code changes, and a diff will be streamed inline to your file which you can accept or reject.
 
-## Actions
+## Agent
 
-[Actions](https://continue.dev/docs/actions/how-to-use-it) are shortcuts for common use cases.
+[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
 
-For example, you might want to review code, write tests, or add a docstring.
+Agent equips the Chat model with the tools needed to handle a wide range of coding tasks, allowing the model to make decisions and save you the work of manually finding context and performing actions.
 
 </div>
 

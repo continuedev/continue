@@ -31,6 +31,13 @@ export const PROVIDER_TOOL_SUPPORT: Record<
       return true;
     }
   },
+  azure: (model) => {
+    if (
+      model.toLowerCase().startsWith("gpt-4") ||
+      model.toLowerCase().startsWith("o3")
+    ) return true;
+    return false;
+  },
   openai: (model) => {
     // https://platform.openai.com/docs/guides/function-calling#models-supporting-function-calling
     if (
@@ -82,7 +89,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     } else {
       modelName = model;
     }
-    
+
     if (
       ["vision", "math", "guard", "mistrallite", "mistral-openorca"].some(
         (part) => modelName.toLowerCase().includes(part),
@@ -92,6 +99,7 @@ export const PROVIDER_TOOL_SUPPORT: Record<
     }
     if (
       [
+        "cogito",
         "llama3.3",
         "qwq",
         "llama3.2",

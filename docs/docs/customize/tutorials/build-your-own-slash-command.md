@@ -3,7 +3,7 @@ title: Build your own slash command
 ---
 
 :::info
-Slash commands can currently only be added using [`config.json`](../../reference.md) or `config.ts`. The [`YAML Config Format`](../../reference.md) is the new and preferred format. We recommend looking into [Prompt Files](../deep-dives/prompt-files.md) to achieve similar functionality.
+Slash commands can currently only be added using [`config.json`](../../json-reference.md) or `config.ts`. The [`YAML Config Format`](../../reference.md) is the new and preferred format. We recommend looking into [Prompt Files](../deep-dives/prompts.md) to achieve similar functionality.
 :::
 
 There are two ways to add custom slash commands:

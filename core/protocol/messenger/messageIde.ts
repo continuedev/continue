@@ -187,6 +187,10 @@ export class MessageIde implements IDE {
     return this.request("getSearchResults", { query });
   }
 
+  getFileResults(pattern: string): Promise<string[]> {
+    return this.request("getFileResults", { pattern });
+  }
+
   getProblems(fileUri: string): Promise<Problem[]> {
     return this.request("getProblems", { filepath: fileUri });
   }

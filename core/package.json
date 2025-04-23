@@ -43,13 +43,13 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.758.0",
-    "@aws-sdk/client-sagemaker-runtime": "^3.758.0",
-    "@aws-sdk/credential-providers": "^3.758.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.779.0",
+    "@aws-sdk/client-sagemaker-runtime": "^3.777.0",
+    "@aws-sdk/credential-providers": "^3.778.0",
     "@continuedev/config-types": "^1.0.13",
-    "@continuedev/config-yaml": "^1.0.67",
+    "@continuedev/config-yaml": "file:../packages/config-yaml",
     "@continuedev/fetch": "^1.0.4",
-    "@continuedev/llm-info": "^1.0.2",
+    "@continuedev/llm-info": "^1.0.8",
     "@continuedev/openai-adapters": "^1.0.18",
     "@modelcontextprotocol/sdk": "^1.5.0",
     "@mozilla/readability": "^0.5.0",
@@ -66,6 +66,7 @@
     "diff": "^7.0.0",
     "dotenv": "^16.4.5",
     "fastest-levenshtein": "^1.0.16",
+    "filtrex": "^3.1.0",
     "follow-redirects": "^1.15.5",
     "google-auth-library": "^9.14.2",
     "handlebars": "^4.7.8",
@@ -110,6 +111,6 @@
   },
   "engine-strict": true,
   "engines": {
-    "node": ">=20.11.0"
+    "node": ">=20.19.0"
   }
 }

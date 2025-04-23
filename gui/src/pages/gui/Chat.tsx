@@ -5,47 +5,45 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
-import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
+import { InputModifiers, RangeInFileWithContents } from "core";
 import { streamResponse } from "core/llm/stream";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground } from "../../components";
+import AcceptRejectAllButtons from "../../components/AcceptRejectAllButtons";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
-import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
 import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import resolveEditorContent from "../../components/mainInput/tiptap/resolveInput";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
 import { useOnboardingCard } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
-import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
   newSession,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
+  updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
-import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { loadLastSession } from "../../redux/thunks/session";
@@ -57,12 +55,9 @@ import {
 } from "../../util/freeTrial";
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import ConfigErrorIndicator from "./ConfigError";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
-import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
-import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { useAutoScroll } from "./useAutoScroll";
 
 const StepsDiv = styled.div`
@@ -77,6 +72,8 @@ const StepsDiv = styled.div`
     margin: 0px 0px 0px 1px;
   }
 `;
+
+export const MAIN_EDITOR_INPUT_ID = "main-editor-input";
 
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
@@ -106,7 +103,7 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -116,9 +113,7 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
-  const toolCallState = useSelector<RootState, ToolCallState | undefined>(
-    selectCurrentToolCall,
-  );
+  const toolCallState = useAppSelector(selectCurrentToolCall);
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
   );
@@ -163,7 +158,12 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (defaultModel?.provider === "free-trial") {
+      if (toolCallState?.status === "generated") {
+        return console.error(
+          "Cannot submit message while awaiting tool confirmation",
+        );
+      }
+      if (selectedChatModel?.provider === "free-trial") {
         const newCount = incrementFreeTrialCount();
 
         if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
@@ -222,19 +222,21 @@ export function Chat() {
     },
     [
       history,
-      defaultModel,
+      selectedChatModel,
       streamResponse,
       isSingleRangeEditOrInsertion,
       codeToEdit,
+      toolCallState,
     ],
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       console.error("No selected chat model");
       return;
     }
-    const [contextItems, __, userInstructions] = await resolveEditorContent({
+
+    const [contextItems, __, userInstructions, _] = await resolveEditorContent({
       editorState,
       modifiers: {
         noContext: true,
@@ -242,8 +244,9 @@ export function Chat() {
       },
       ideMessenger,
       defaultContextProviders: [],
+      availableSlashCommands: [],
       dispatch,
-      selectedModelTitle: defaultModel.title,
+      selectedModelTitle: selectedChatModel.title,
     });
 
     const prompt = [
@@ -254,7 +257,6 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
-      selectedModelTitle: defaultModel.title,
     });
 
     dispatch(submitEdit(prompt));
@@ -267,6 +269,21 @@ export function Chat() {
       mainTextInputRef.current?.focus?.();
     },
     [mainTextInputRef],
+  );
+
+  // Handle partial tool call output for streaming updates
+  useWebviewListener(
+    "toolCallPartialOutput",
+    async (data) => {
+      // Update tool call output in Redux store
+      dispatch(
+        updateToolCallOutput({
+          toolCallId: data.toolCallId,
+          contextItems: data.contextItems,
+        }),
+      );
+    },
+    [dispatch],
   );
 
   const isLastUserInput = useCallback(
@@ -292,7 +309,7 @@ export function Chat() {
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-[2px] overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`mt-3 overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -323,12 +340,11 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? (
-                <ToolOutput
-                  contextItems={item.contextItems}
-                  toolCallId={item.message.toolCallId}
-                />
-              ) : item.message.role === "assistant" &&
+              ) : item.message.role === "tool" ? null : // <ToolOutput
+              //   contextItems={item.contextItems}
+              //   toolCallId={item.message.toolCallId}
+              // />
+              item.message.role === "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
@@ -338,6 +354,7 @@ export function Chat() {
                         <ToolCallDiv
                           toolCallState={item.toolCallState!}
                           toolCall={toolCall}
+                          output={history[index + 1]?.contextItems}
                         />
                       </div>
                     );
@@ -391,8 +408,6 @@ export function Chat() {
         ))}
       </StepsDiv>
       <div className={"relative"}>
-        {toolCallState?.status === "generated" && <ToolCallButtons />}
-
         {isInEditMode && history.length === 0 && <CodeToEditCard />}
 
         {isInEditMode && history.length > 0 ? null : (
@@ -403,7 +418,7 @@ export function Chat() {
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
-            inputId={"main-editor"}
+            inputId={MAIN_EDITOR_INPUT_ID}
           />
         )}
 
@@ -432,7 +447,6 @@ export function Chat() {
                 </div>
               )}
             </div>
-            <ConfigErrorIndicator />
           </div>
 
           {hasPendingApplies && isSingleRangeEditOrInsertion && (
@@ -460,12 +474,6 @@ export function Chat() {
             />
           )}
         </div>
-      </div>
-
-      <div
-        className={`${history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
-      >
-        <ChatIndexingPeeks />
       </div>
     </>
   );

@@ -1,4 +1,3 @@
-import { FREE_TRIAL_MODELS } from "core/config/default";
 import { useContext } from "react";
 import { useDispatch } from "react-redux";
 import { Button, ButtonSubtext } from "../..";
@@ -7,7 +6,6 @@ import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { isJetBrains } from "../../../util";
 import { useSubmitOnboarding } from "../hooks";
 import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
-import { setDefaultModel } from "../../../redux/slices/configSlice";
 
 interface QuickstartSubmitButtonProps {
   isDialog?: boolean;
@@ -21,10 +19,6 @@ function QuickstartSubmitButton({ isDialog }: QuickstartSubmitButtonProps) {
 
   function onComplete() {
     submitOnboarding();
-
-    // Set Sonnet as the default model
-    const title = FREE_TRIAL_MODELS[0].title;
-    dispatch(setDefaultModel({ title, force: true }));
   }
 
   function openJetBrainsDialog() {

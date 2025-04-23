@@ -12,11 +12,12 @@ import {
   ContinueRcJson,
   IDE,
   IdeSettings,
+  ILLMLogger,
   SerializedContinueConfig,
   Tool,
 } from "../../";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
-import { MCPManagerSingleton } from "../../context/mcp";
+import { MCPManagerSingleton } from "../../context/mcp/MCPManagerSingleton";
 import MCPContextProvider from "../../context/providers/MCPContextProvider";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
@@ -33,20 +34,32 @@ import { migrateJsonSharedConfig } from "../migrateSharedConfig";
 import { rectifySelectedModelsFromGlobalContext } from "../selectedModels";
 import { loadContinueConfigFromYaml } from "../yaml/loadYaml";
 
+import { getWorkspaceContinueRuleDotFiles } from "../getWorkspaceContinueRuleDotFiles";
 import { PlatformConfigMetadata } from "./PlatformProfileLoader";
 
-export default async function doLoadConfig(
-  ide: IDE,
-  ideSettingsPromise: Promise<IdeSettings>,
-  controlPlaneClient: ControlPlaneClient,
-  writeLog: (message: string) => Promise<void>,
-  overrideConfigJson: SerializedContinueConfig | undefined,
-  overrideConfigYaml: AssistantUnrolled | undefined,
-  platformConfigMetadata: PlatformConfigMetadata | undefined,
-  profileId: string,
-  overrideConfigYamlByPath: string | undefined,
-  orgScopeId: string | null,
-): Promise<ConfigResult<ContinueConfig>> {
+export default async function doLoadConfig({
+  ide,
+  ideSettingsPromise,
+  controlPlaneClient,
+  llmLogger,
+  overrideConfigJson,
+  overrideConfigYaml,
+  platformConfigMetadata,
+  profileId,
+  overrideConfigYamlByPath,
+  orgScopeId,
+}: {
+  ide: IDE;
+  ideSettingsPromise: Promise<IdeSettings>;
+  controlPlaneClient: ControlPlaneClient;
+  llmLogger: ILLMLogger;
+  overrideConfigJson: SerializedContinueConfig | undefined;
+  overrideConfigYaml: AssistantUnrolled | undefined;
+  platformConfigMetadata: PlatformConfigMetadata | undefined;
+  profileId: string;
+  overrideConfigYamlByPath: string | undefined;
+  orgScopeId: string | null;
+}): Promise<ConfigResult<ContinueConfig>> {
   const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
@@ -55,7 +68,7 @@ export default async function doLoadConfig(
 
   // Migrations for old config files
   // Removes
-  const configJsonPath = getConfigJsonPath(ideInfo.ideType);
+  const configJsonPath = getConfigJsonPath();
   if (fs.existsSync(configJsonPath)) {
     migrateJsonSharedConfig(configJsonPath, ide);
   }
@@ -69,19 +82,18 @@ export default async function doLoadConfig(
   let configLoadInterrupted = false;
 
   if (overrideConfigYaml || fs.existsSync(configYamlPath)) {
-    const result = await loadContinueConfigFromYaml(
+    const result = await loadContinueConfigFromYaml({
       ide,
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
-      workOsAccessToken,
+      llmLogger,
       overrideConfigYaml,
       platformConfigMetadata,
       controlPlaneClient,
       configYamlPath,
       orgScopeId,
-    );
+    });
     newConfig = result.config;
     errors = result.errors;
     configLoadInterrupted = result.configLoadInterrupted;
@@ -92,7 +104,7 @@ export default async function doLoadConfig(
       ideSettings,
       ideInfo,
       uniqueId,
-      writeLog,
+      llmLogger,
       workOsAccessToken,
       overrideConfigJson,
     );
@@ -108,6 +120,12 @@ export default async function doLoadConfig(
   // TODO using config result but result with non-fatal errors is an antipattern?
   // Remove ability have undefined errors, just have an array
   errors = [...(errors ?? [])];
+
+  // Add rules from .continuerules files
+  const { rules, errors: continueRulesErrors } =
+    await getWorkspaceContinueRuleDotFiles(ide);
+  newConfig.rules.unshift(...rules);
+  errors.push(...continueRulesErrors);
 
   // Rectify model selections for each role
   newConfig = rectifySelectedModelsFromGlobalContext(newConfig, profileId);
@@ -135,7 +153,6 @@ export default async function doLoadConfig(
         faviconUrl: server.faviconUrl,
         readonly: false,
         type: "function" as const,
-        wouldLikeTo: "",
         uri: encodeMCPToolUri(server.id, tool.name),
         group: server.name,
       }));
@@ -161,6 +178,7 @@ export default async function doLoadConfig(
         const serverContextProvider = new MCPContextProvider({
           submenuItems,
           mcpId: server.id,
+          serverName: server.name,
         });
         newConfig.contextProviders.push(serverContextProvider);
       }
@@ -257,7 +275,7 @@ async function injectControlPlaneProxyInfo(
     }
   });
 
-  config.models.forEach((model) => {
+  config.modelsByRole.chat.forEach((model) => {
     if (model.providerName === "continue-proxy") {
       (model as ContinueProxy).controlPlaneProxyInfo = info;
     }

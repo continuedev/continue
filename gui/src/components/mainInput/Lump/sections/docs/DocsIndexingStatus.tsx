@@ -12,6 +12,7 @@ import {
 import { fontSize } from "../../../../../util";
 import ConfirmationDialog from "../../../../dialogs/ConfirmationDialog";
 import EditBlockButton from "../../EditBlockButton";
+import { useLump } from "../../LumpContext";
 import { StatusIndicator } from "./StatusIndicator";
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
@@ -24,6 +25,7 @@ function DocsIndexingStatus({
 }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useAppDispatch();
+  const { hideLump } = useLump();
 
   const status = useAppSelector(
     (store) => store.indexing.indexing.statuses[docConfig.startUrl],
@@ -78,7 +80,7 @@ function DocsIndexingStatus({
   if (hasDeleted) return null;
 
   return (
-    <div className="mt-2 flex w-full flex-col">
+    <div className="mt-1 flex w-full flex-col">
       <div
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
@@ -87,22 +89,10 @@ function DocsIndexingStatus({
           onClick={() => {
             if (status?.url) {
               ideMessenger.post("openUrl", status.url);
+              hideLump();
             }
           }}
         >
-          <StatusIndicator
-            status={status?.status}
-            hoverMessage={
-              status?.status === "failed" ? status?.debugInfo : undefined
-            }
-          />
-          {docConfig.faviconUrl ? (
-            <img
-              src={docConfig.faviconUrl}
-              alt="doc icon"
-              className="h-3 w-3"
-            />
-          ) : null}
           <p
             style={{
               fontSize: fontSize(-3),
@@ -114,7 +104,7 @@ function DocsIndexingStatus({
         </div>
 
         <div className="flex flex-row items-center gap-2">
-          <div className="flex flex-row items-center gap-1 text-gray-400">
+          <div className="flex flex-row items-center gap-2 text-gray-400">
             {status?.status === "indexing" && (
               <span
                 className="text-xs"
@@ -144,7 +134,12 @@ function DocsIndexingStatus({
               />
             )}
 
-            {/* Removed StatusIndicator from here */}
+            <StatusIndicator
+              status={status?.status}
+              hoverMessage={
+                status?.status === "failed" ? status?.debugInfo : undefined
+              }
+            />
           </div>
         </div>
       </div>

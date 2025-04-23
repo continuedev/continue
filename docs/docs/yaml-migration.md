@@ -12,7 +12,7 @@ See also
 
 - [Intro to YAML](https://yaml.org/)
 - [JSON Continue Config Reference](/json-reference)
-- [YAML Continue Config Reference](/yaml-reference)
+- [YAML Continue Config Reference](/reference)
 
 ## Create YAML file
 
@@ -38,9 +38,9 @@ Add all model configurations in `config.json`, including models in `models`, `ta
   - `inlineEdit` -> e.g. `roles: [chat, edit]`
   - `applyCodeBlock` -> e.g. `roles: [chat, apply]`
 
-Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](/yaml-reference#requestoptions)
+Model-level `requestOptions` remain, with minor changes. See [YAML Continue Config Reference](./reference.md#models)
 
-Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](/yaml-reference#completionoptions)
+Model-level `completionOptions` are replaced by `defaultCompletionOptions`, with minor changes. See [YAML Continue Config Reference](./reference.md#models)
 
 <!-- TODO - ollama autodetect supported? -->
 
@@ -114,6 +114,7 @@ models:
   - name: My Voyage Reranker
     provider: voyage
     apiKey: <YOUR_VOYAGE_KEY>
+    roles:
       - rerank
 
   - name: My Starcoder
@@ -327,9 +328,9 @@ mcpServers:
 
 ## Deprecated configuration options
 
-Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/settings.md) (Gear Icon). If found in `config.json`, they will be migrated to the [User Settings Page](./customize/settings.md) and removed from `config.json`.
+Some deprecated `config.json` settings are no longer stored in config and have been moved to be editable through the [User Settings Page](./customize/deep-dives/settings.md) (Gear Icon). If found in `config.json`, they will be auto-migrated to User Settings and removed from `config.json`.
 
-See the [JSON Config Reference](./reference#fully-deprecated-settings) for more information on fully deprecated options.
+See the [JSON Config Reference](./json-reference#fully-deprecated-settings) for more information on fully deprecated options.
 
 The following top-level fields from `config.json` still work when using `config.json` but have been deprecated and don't have a YAML equivalent:
 

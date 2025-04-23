@@ -32,7 +32,6 @@ Choose a name, slug, description, and icon for your assistant.
 
 The easiest way to create an assistant is to click "Create assistant" with the default configuration and then add / remove blocks using the sidebar.
 
-Alternatively, you can edit the assistant YAML directly before clicking "Create assistant". Refer to examples of assistants on [hub.continue.dev](https://hub.continue.dev/explore/assistants) and visit the [YAML Reference](../../yaml-reference.md#complete-yaml-config-example) docs for more details.
+Alternatively, you can edit the assistant YAML directly before clicking "Create assistant". Refer to examples of assistants on [hub.continue.dev](https://hub.continue.dev/explore/assistants) and visit the [YAML Reference](../../reference.md#complete-yaml-config-example) docs for more details.
 
 ![New assistant YAML](/img/hub/assistant-create-yaml.png)
-
