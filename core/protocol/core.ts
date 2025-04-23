@@ -1,4 +1,5 @@
 import {
+  BlockType,
   ConfigResult,
   DevDataLogEvent,
   ModelRole,
@@ -31,6 +32,7 @@ import type {
   ToolCall,
 } from "../";
 import { SerializedOrgWithProfiles } from "../config/ProfileLifecycleManager";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type OnboardingModes = "Local" | "Best" | "Custom" | "Quickstart";
 
@@ -49,6 +51,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, Session];
   "history/save": [Session, void];
+  "history/clear": [undefined, void];
   "devdata/log": [DevDataLogEvent, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
@@ -58,6 +61,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  "config/addLocalWorkspaceBlock": [{ blockType: BlockType }, void];
   "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getSerializedProfileInfo": [
@@ -67,12 +71,20 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       profileId: string | null;
       organizations: SerializedOrgWithProfiles[];
       selectedOrgId: string;
-      usingContinueForTeams: boolean;
     },
   ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, ConfigResult<BrowserSerializedContinueConfig>];
-  "config/refreshProfiles": [undefined, void];
+  "config/refreshProfiles": [
+    (
+      | undefined
+      | {
+          selectOrgId?: string;
+          selectProfileId?: string;
+        }
+    ),
+    void,
+  ];
   "config/openProfile": [{ profileId: string | undefined }, void];
   "config/updateSharedConfig": [SharedConfigSchema, SharedConfigSchema];
   "config/updateSelectedModel": [
@@ -200,4 +212,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { item: ContextItemWithId; selectedModelTitle: string | undefined },
     boolean,
   ];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
+  "process/markAsBackgrounded": [{ toolCallId: string }, void];
+  "process/isBackgrounded": [{ toolCallId: string }, boolean];
 };

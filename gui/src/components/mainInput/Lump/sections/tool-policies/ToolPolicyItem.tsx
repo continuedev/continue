@@ -38,6 +38,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
       style={{
         fontSize: fontSize(-3),
       }}
+      data-testid={`tool-policy-item-${props.tool.function.name}`}
       onClick={(e) => {
         dispatch(toggleToolSetting(props.tool.function.name));
         e.stopPropagation();

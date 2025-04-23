@@ -1,0 +1,129 @@
+openapi: 3.0.0
+info:
+  title: Continue Hub IDE API
+  description: |
+    API for Continue IDE to fetch assistants and other related information.
+    These endpoints are primarily used by the Continue IDE extensions for VS Code and JetBrains.
+  version: 1.0.0
+  contact:
+    name: Continue Dev Team
+    url: https://continue.dev
+servers:
+  - url: https://api.continue.dev
+    description: Production server
+  - url: http://localhost:3001
+    description: Local development server
+paths:
+  /ide/list-assistants:
+    get:
+      summary: List assistants for IDE
+      description: |
+        Returns a complete list of assistants available to the user, with their full configurations,
+        icons, and other metadata needed by the IDE to display and use them.
+
+        This endpoint performs a full refresh of the list of assistants, including unrolling
+        configurations and resolving secrets.
+      operationId: listAssistants
+      parameters:
+        - name: alwaysUseProxy
+          in: query
+          description: Whether to always use the Continue-managed proxy for model requests
+          required: false
+          schema:
+            type: string
+            enum: ["true", "false"]
+        - name: organizationId
+          in: query
+          description: ID of the organization to scope assistants to. If not provided, personal assistants are returned.
+          required: false
+          schema:
+            type: string
+      security:
+        - apiKeyAuth: []
+      responses:
+        "200":
+          description: Successfully retrieved assistants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - configResult
+                    - ownerSlug
+                    - packageSlug
+                  properties:
+                    configResult:
+                      type: object
+                      required:
+                        - config
+                        - configLoadInterrupted
+                      properties:
+                        config:
+                          type: object
+                          description: The unrolled assistant configuration
+                          nullable: true
+                        configLoadInterrupted:
+                          type: boolean
+                          description: Whether the configuration loading was interrupted
+                        errors:
+                          type: array
+                          items:
+                            type: string
+                          nullable: true
+                          description: Any errors that occurred during configuration loading
+                    ownerSlug:
+                      type: string
+                      description: Slug of the user or organization that owns the assistant
+                    packageSlug:
+                      type: string
+                      description: Slug of the assistant package
+                    iconUrl:
+                      type: string
+                      nullable: true
+                      description: Pre-signed URL for the assistant's icon
+                    onPremProxyUrl:
+                      type: string
+                      nullable: true
+                      description: URL of the on-premises proxy if the organization uses one
+                    useOnPremProxy:
+                      type: boolean
+                      nullable: true
+                      description: Whether the organization uses an on-premises proxy
+                    rawYaml:
+                      type: string
+                      description: Raw YAML configuration of the assistant
+        "401":
+          description: Unauthorized - Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Unauthorized"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User not found"
+
+components:
+  securitySchemes:
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      description: |
+        API Key Authentication
+
+        API keys must be prefixed with "con_" and provided in the Authorization header.
+        Example: `Authorization: Bearer con_your_api_key_here`
+
+        API keys can be generated in the Continue Hub web interface under account settings.

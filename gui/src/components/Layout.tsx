@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
@@ -19,8 +19,10 @@ import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
+import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
+import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
@@ -44,13 +46,6 @@ const Layout = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
-  const { pathname } = useLocation();
-
-  const configError = useAppSelector((state) => state.config.configError);
-
-  const hasFatalErrors = useMemo(() => {
-    return configError?.some((error) => error.fatal);
-  }, [configError]);
 
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
@@ -238,45 +233,36 @@ const Layout = () => {
     <LocalStorageProvider>
       <AuthProvider>
         <LayoutTopDiv>
-          <OSRContextMenu />
-          <div
-            style={{
-              scrollbarGutter: "stable both-edges",
-              minHeight: "100%",
-              display: "grid",
-              gridTemplateRows: "1fr auto",
-            }}
-          >
-            <TextDialog
-              showDialog={showDialog}
-              onEnter={() => {
-                dispatch(setShowDialog(false));
+          <LumpProvider>
+            <OSRContextMenu />
+            <div
+              style={{
+                scrollbarGutter: "stable both-edges",
+                minHeight: "100%",
+                display: "grid",
+                gridTemplateRows: "1fr auto",
               }}
-              onClose={() => {
-                dispatch(setShowDialog(false));
-              }}
-              message={dialogMessage}
-            />
+            >
+              <TextDialog
+                showDialog={showDialog}
+                onEnter={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                onClose={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                message={dialogMessage}
+              />
 
-            <GridDiv className="">
-              <PostHogPageView />
-              <Outlet />
-
-              {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-                <div
-                  className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-                  role="alert"
-                  onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-                >
-                  <strong className="font-bold">Error!</strong>{" "}
-                  <span className="block sm:inline">Could not load config</span>
-                  <div className="mt-2 underline">Learn More</div>
-                </div>
-              )}
-              <Footer />
-            </GridDiv>
-          </div>
-          <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+              <GridDiv className="">
+                <PostHogPageView />
+                <Outlet />
+                <FatalErrorIndicator />
+                <Footer />
+              </GridDiv>
+            </div>
+            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+          </LumpProvider>
         </LayoutTopDiv>
       </AuthProvider>
     </LocalStorageProvider>

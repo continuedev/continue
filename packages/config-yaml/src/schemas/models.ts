@@ -65,6 +65,7 @@ export type ChatOptions = z.infer<typeof chatOptionsSchema>;
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
   edit: z.string().optional(),
+  autocomplete: z.string().optional()
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
@@ -80,6 +81,7 @@ const baseModelFields = {
   embedOptions: embedOptionsSchema.optional(),
   chatOptions: chatOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
+  useLegacyCompletionsEndpoint: z.boolean().optional(),
   env: z
     .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
     .optional(),

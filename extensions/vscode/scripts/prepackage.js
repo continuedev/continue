@@ -10,7 +10,11 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
-const { copyConfigSchema, writeBuildTimestamp } = require("./utils");
+const {
+  copyConfigSchema,
+  writeBuildTimestamp,
+  generateConfigYamlSchema,
+} = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
@@ -62,6 +66,9 @@ const isMacTarget = target?.startsWith("darwin");
 
 (async () => {
   console.log("[info] Packaging extension for target ", target);
+
+  // Generate and copy over config-yaml-schema.json
+  generateConfigYamlSchema();
 
   // Copy config schemas to intellij
   copyConfigSchema();

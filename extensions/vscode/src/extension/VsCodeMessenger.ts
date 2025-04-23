@@ -1,6 +1,4 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { getModelByRole } from "core/config/util";
-import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -15,9 +13,9 @@ import {
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
 import { stripImages } from "core/util/messageContent";
-import { getUriPathBasename } from "core/util/uri";
 import * as vscode from "vscode";
 
+import { ApplyManager } from "../apply";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -29,14 +27,13 @@ import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
+type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
+  ToWebviewFromCoreProtocol;
+
 /**
  * A shared messenger class between Core and Webview
  * so we don't have to rewrite some of the handlers
  */
-type TODO = any;
-type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
-  ToWebviewFromCoreProtocol;
-
 export class VsCodeMessenger {
   onWebview<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -128,110 +125,19 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("applyToFile", async ({ data }) => {
-      webviewProtocol.request("updateApplyState", {
-        streamId: data.streamId,
-        status: "streaming",
-        fileContent: data.text,
-        toolCallId: data.toolCallId,
-      });
+      const [verticalDiffManager, configHandler] = await Promise.all([
+        verticalDiffManagerPromise,
+        configHandlerPromise,
+      ]);
 
-      if (data.filepath) {
-        const fileExists = await this.ide.fileExists(data.filepath);
-        if (!fileExists) {
-          await this.ide.writeFile(data.filepath, "");
-          await this.ide.openFile(data.filepath);
-        }
-
-        await this.ide.openFile(data.filepath);
-      }
-
-      // Get active text editor
-      const editor = vscode.window.activeTextEditor;
-
-      if (!editor) {
-        vscode.window.showErrorMessage("No active editor to apply edits to");
-        return;
-      }
-
-      // If document is empty, insert at 0,0 and finish
-      if (!editor.document.getText().trim()) {
-        editor.edit((builder) =>
-          builder.insert(new vscode.Position(0, 0), data.text),
-        );
-
-        void webviewProtocol.request("updateApplyState", {
-          streamId: data.streamId,
-          status: "closed",
-          numDiffs: 0,
-          fileContent: data.text,
-          toolCallId: data.toolCallId,
-        });
-
-        return;
-      }
-
-      // Get LLM from config
-      const configHandler = await configHandlerPromise;
-      const { config } = await configHandler.loadConfig();
-
-      if (!config) {
-        vscode.window.showErrorMessage("Config not loaded");
-        return;
-      }
-
-      let llm =
-        config.selectedModelByRole.apply ?? config.selectedModelByRole.chat;
-
-      if (!llm) {
-        vscode.window.showErrorMessage(
-          `No model with roles "apply" or "chat" found in config.`,
-        );
-        return;
-      }
-
-      const fastLlm = getModelByRole(config, "repoMapFileSelection") ?? llm;
-
-      // Generate the diff and pass through diff manager
-      const [instant, diffLines] = await applyCodeBlock(
-        editor.document.getText(),
-        data.text,
-        getUriPathBasename(editor.document.uri.toString()),
-        llm,
-        fastLlm,
+      const applyManager = new ApplyManager(
+        this.ide,
+        webviewProtocol,
+        verticalDiffManager,
+        configHandler,
       );
 
-      const verticalDiffManager = await this.verticalDiffManagerPromise;
-
-      if (instant) {
-        await verticalDiffManager.streamDiffLines(
-          diffLines,
-          instant,
-          data.streamId,
-          data.toolCallId,
-        );
-      } else {
-        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`;
-        const fullEditorRange = new vscode.Range(
-          0,
-          0,
-          editor.document.lineCount - 1,
-          editor.document.lineAt(editor.document.lineCount - 1).text.length,
-        );
-        const rangeToApplyTo = editor.selection.isEmpty
-          ? fullEditorRange
-          : editor.selection;
-
-        await verticalDiffManager.streamEdit(
-          prompt,
-          llm,
-          data.streamId,
-          undefined,
-          undefined,
-          rangeToApplyTo,
-          data.text,
-          data.toolCallId,
-        );
-      }
+      await applyManager.applyToFile(data);
     });
 
     this.onWebview("showTutorial", async (msg) => {
@@ -289,6 +195,10 @@ export class VsCodeMessenger {
       const configHandler = await configHandlerPromise;
       const { config } = await configHandler.loadConfig();
 
+      if (!config) {
+        throw new Error("Edit: Failed to load config");
+      }
+
       const model =
         config?.selectedModelByRole.edit ?? config?.selectedModelByRole.chat;
 
@@ -296,17 +206,16 @@ export class VsCodeMessenger {
         throw new Error("No Edit or Chat model selected");
       }
 
-      const fileAfterEdit = await verticalDiffManager.streamEdit(
-        stripImages(prompt),
-        model,
-        "edit",
-        undefined,
-        undefined,
-        new vscode.Range(
+      const fileAfterEdit = await verticalDiffManager.streamEdit({
+        input: stripImages(prompt),
+        llm: model,
+        streamId: "edit",
+        range: new vscode.Range(
           new vscode.Position(start.line, start.character),
           new vscode.Position(end.line, end.character),
         ),
-      );
+        rules: config.rules,
+      });
 
       void this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
