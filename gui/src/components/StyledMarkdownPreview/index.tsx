@@ -1,10 +1,6 @@
 import { ctxItemToRifWithContents } from "core/commands/util";
-import clojure from "highlight.js/lib/languages/clojure";
-import Delphi from "highlight.js/lib/languages/Delphi";
-import { common } from "lowlight";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
-import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import styled from "styled-components";
@@ -25,6 +21,7 @@ import { ToolTip } from "../gui/Tooltip";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
+import { rehypeHighlightPlugin } from "./rehypeHighlightPlugin";
 import { StepContainerPreToolbar } from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
@@ -257,12 +254,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypePlugins: [
       rehypeKatex as any,
       {},
-      [
-        rehypeHighlight,
-        {
-          languages: { ...common, clojure, Delphi },
-        } as Options,
-      ],
+      rehypeHighlightPlugin(),
       // Note: An empty obj is the default behavior, but leaving this here for scaffolding to
       // add unsupported languages in the future. We will need to install the `lowlight` package
       // to use the `common` language set in addition to unsupported languages.
