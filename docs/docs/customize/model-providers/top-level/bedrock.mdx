@@ -202,3 +202,28 @@ aws_access_key_id = abcdefg
 aws_secret_access_key = hijklmno
 aws_session_token = pqrstuvwxyz # Optional: means short term creds.
 ```
+
+### Bedrock Agents
+
+Bedrock agents can be configured as providers, allowing you to expose specialized AI tools and domain-specific knowledge bases to developers.
+
+To configure a Bedrock agent, add the following to your `config.json` file:
+
+<Tabs groupId="config-example">
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "models": [
+      {
+        "title": "Bedrock Agent",
+        "provider": "bedrockagent",
+        "agentId": "YOUR_AGENT_ID",
+        "agentAliasId": "YOUR_AGENT_ALIAS_ID",
+        "region": "us-east-1",
+        "profile": "bedrock"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
