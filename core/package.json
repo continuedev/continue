@@ -111,6 +111,6 @@
   },
   "engine-strict": true,
   "engines": {
-    "node": ">=20.11.0"
+    "node": ">=20.19.0"
   }
 }

@@ -12,6 +12,7 @@ import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
 import {
+  addSpaceToAnyEmptyMessages,
   chatMessageIsEmpty,
   flattenMessages,
   messageHasToolCalls,
@@ -374,6 +375,8 @@ function compileChatMessages({
   let msgsCopy: ChatMessage[] = msgs.map((m) => ({ ...m }));
 
   msgsCopy = msgsCopy.filter((msg) => !chatMessageIsEmpty(msg));
+
+  msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
   // If images not supported, convert MessagePart[] to string
   if (!supportsImages) {

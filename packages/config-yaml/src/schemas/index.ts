@@ -1,8 +1,10 @@
 import * as z from "zod";
+import { commonModelSlugs } from "./commonSlugs.js";
 import { dataSchema } from "./data/index.js";
 import { modelSchema, partialModelSchema } from "./models.js";
 
 export const contextSchema = z.object({
+  name: z.string().optional(),
   provider: z.string(),
   params: z.any().optional(),
 });
@@ -44,15 +46,22 @@ const ruleSchema = z.union([z.string(), ruleObjectSchema]);
 
 export type Rule = z.infer<typeof ruleSchema>;
 
-export const blockItemWrapperSchema = <T extends z.AnyZodObject>(schema: T) =>
+const defaultUsesSchema = z.string();
+
+export const blockItemWrapperSchema = <T extends z.AnyZodObject>(
+  schema: T,
+  usesSchema: z.ZodTypeAny = defaultUsesSchema,
+) =>
   z.object({
-    uses: z.string(),
+    uses: usesSchema,
     with: z.record(z.string()).optional(),
     override: schema.partial().optional(),
   });
 
-export const blockOrSchema = <T extends z.AnyZodObject>(schema: T) =>
-  z.union([schema, blockItemWrapperSchema(schema)]);
+export const blockOrSchema = <T extends z.AnyZodObject>(
+  schema: T,
+  usesSchema: z.ZodTypeAny = defaultUsesSchema,
+) => z.union([schema, blockItemWrapperSchema(schema, usesSchema)]);
 
 export const commonMetadataSchema = z.object({
   tags: z.string().optional(),
@@ -70,13 +79,17 @@ export const baseConfigYamlSchema = z.object({
   metadata: z.record(z.string()).and(commonMetadataSchema.partial()).optional(),
 });
 
+const modelsUsesSchema = z
+  .string()
+  .or(z.enum(commonModelSlugs as [string, ...string[]]));
+
 export const configYamlSchema = baseConfigYamlSchema.extend({
   models: z
     .array(
       z.union([
         modelSchema,
         z.object({
-          uses: z.string(),
+          uses: modelsUsesSchema,
           with: z.record(z.string()).optional(),
           override: partialModelSchema.optional(),
         }),
@@ -91,7 +104,7 @@ export const configYamlSchema = baseConfigYamlSchema.extend({
       z.union([
         ruleSchema,
         z.object({
-          uses: z.string(),
+          uses: defaultUsesSchema,
           with: z.record(z.string()).optional(),
         }),
       ]),

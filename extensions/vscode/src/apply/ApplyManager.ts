@@ -116,17 +116,17 @@ export class ApplyManager {
       return;
     }
 
-    const [instant, diffLines] = await applyCodeBlock(
+    const { isInstantApply, diffLinesGenerator } = await applyCodeBlock(
       editor.document.getText(),
       text,
       getUriPathBasename(editor.document.uri.toString()),
       llm,
     );
 
-    if (instant) {
+    if (isInstantApply) {
       await this.verticalDiffManager.streamDiffLines(
-        diffLines,
-        instant,
+        diffLinesGenerator,
+        isInstantApply,
         streamId,
         toolCallId,
       );
