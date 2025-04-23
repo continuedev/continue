@@ -671,7 +671,7 @@ export class Core {
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
       try {
-        const ignore = shouldIgnore(filepath, this.ide);
+        const ignore = await shouldIgnore(filepath, this.ide);
         if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
