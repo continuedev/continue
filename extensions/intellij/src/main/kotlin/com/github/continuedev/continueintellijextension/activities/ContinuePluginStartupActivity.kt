@@ -157,7 +157,6 @@ class ContinuePluginStartupActivity : StartupActivity, DumbAware {
                         "remoteConfigServerUrl" to settings.remoteConfigServerUrl,
                         "remoteConfigSyncPeriod" to settings.remoteConfigSyncPeriod,
                         "userToken" to settings.userToken,
-                        "enableControlServerBeta" to settings.enableContinueTeamsBeta
                     ), null) { _ -> }
                 }
             })

@@ -1,16 +1,28 @@
-import { ChatHistoryItem, ChatMessage, MessagePart } from "../";
+import {
+  ChatHistoryItem,
+  ChatMessage,
+  RuleWithSource,
+  TextMessagePart,
+  UserChatMessage,
+} from "../";
+import { findLast } from "../util/findLast";
 import { normalizeToMessageParts } from "../util/messageContent";
+import { messageIsEmpty } from "./messages";
+import { getSystemMessageWithRules } from "./rules/getSystemMessageWithRules";
 
-const DEFAULT_SYSTEM_MESSAGE = `\
+export const DEFAULT_CHAT_SYSTEM_MESSAGE_URL =
+  "https://github.com/continuedev/continue/blob/main/core/llm/constructMessages.ts#L8";
+
+export const DEFAULT_CHAT_SYSTEM_MESSAGE = `\
 <important_rules>
   Always include the language and file name in the info string when you write code blocks. 
   If you are editing "src/main.py" for example, your code block should start with '\`\`\`python src/main.py'
 
   When addressing code modification requests, present a concise code snippet that
   emphasizes only the necessary changes and uses abbreviated placeholders for
-  unmodified sections. For instance:
+  unmodified sections. For example:
 
-  \`\`\`typescript /path/to/file
+  \`\`\`language /path/to/file
   // ... rest of code here ...
 
   {{ modified code here }}
@@ -19,6 +31,22 @@ const DEFAULT_SYSTEM_MESSAGE = `\
 
   {{ another modification }}
 
+  // ... rest of code here ...
+  \`\`\`
+
+  In existing files, you should always restate the function or class that the snippet belongs to:
+
+  \`\`\`language /path/to/file
+  // ... rest of code here ...
+  
+  function exampleFunction() {
+    // ... rest of code here ...
+    
+    {{ modified code here }}
+    
+    // ... rest of code here ...
+  }
+  
   // ... rest of code here ...
   \`\`\`
 
@@ -35,16 +63,13 @@ const CANCELED_TOOL_CALL_MESSAGE =
 export function constructMessages(
   history: ChatHistoryItem[],
   baseChatSystemMessage: string | undefined,
+  rules: RuleWithSource[],
+  modelName: string,
 ): ChatMessage[] {
   const filteredHistory = history.filter(
     (item) => item.message.role !== "system",
   );
   const msgs: ChatMessage[] = [];
-
-  msgs.push({
-    role: "system",
-    content: baseChatSystemMessage ?? DEFAULT_SYSTEM_MESSAGE,
-  });
 
   for (let i = 0; i < filteredHistory.length; i++) {
     const historyItem = filteredHistory[i];
@@ -53,9 +78,14 @@ export function constructMessages(
       // Gather context items for user messages
       let content = normalizeToMessageParts(historyItem.message);
 
-      const ctxItems = historyItem.contextItems.map((ctxItem) => {
-        return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
-      });
+      const ctxItems = historyItem.contextItems
+        .map((ctxItem) => {
+          return {
+            type: "text",
+            text: `${ctxItem.content}\n`,
+          } as TextMessagePart;
+        })
+        .filter((part) => !!part.text.trim());
 
       content = [...ctxItems, ...content];
       msgs.push({
@@ -71,6 +101,32 @@ export function constructMessages(
     } else {
       msgs.push(historyItem.message);
     }
+  }
+
+  const userMessage = findLast(msgs, (msg) => msg.role === "user") as
+    | UserChatMessage
+    | undefined;
+  const systemMessage = getSystemMessageWithRules({
+    baseSystemMessage: baseChatSystemMessage ?? DEFAULT_CHAT_SYSTEM_MESSAGE,
+    rules,
+    userMessage,
+    currentModel: modelName,
+  });
+  if (systemMessage.trim()) {
+    msgs.unshift({
+      role: "system",
+      content: systemMessage,
+    });
+  }
+
+  // We dispatch an empty assistant chat message to the history on submission. Don't send it
+  const lastMessage = msgs.at(-1);
+  if (
+    lastMessage &&
+    lastMessage.role === "assistant" &&
+    messageIsEmpty(lastMessage)
+  ) {
+    msgs.pop();
   }
 
   // Remove the "id" from all of the messages

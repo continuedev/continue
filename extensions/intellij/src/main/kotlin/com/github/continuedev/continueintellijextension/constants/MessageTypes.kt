@@ -68,7 +68,9 @@ class MessageTypes {
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
+            "sessionUpdate",
             "didCloseFiles",
+            "toolCallPartialOutput",
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -79,10 +81,12 @@ class MessageTypes {
             "history/delete",
             "history/load",
             "history/save",
+            "history/clear",
             "devdata/log",
             "config/addModel",
             "config/newPromptFile",
             "config/ideSettingsUpdate",
+            "config/addLocalWorkspaceBlock",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
             "config/refreshProfiles",
@@ -126,6 +130,8 @@ class MessageTypes {
             "tools/call",
             "controlPlane/openUrl",
             "isItemTooBig",
+            "process/markAsBackgrounded",
+            "process/isBackgrounded",
         )
     }
 }

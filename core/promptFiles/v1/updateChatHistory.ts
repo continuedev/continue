@@ -1,9 +1,11 @@
+import { ChatMessage } from "../..";
+
 export function replaceSlashCommandWithPromptInChatHistory(
-  history: any[],
+  history: ChatMessage[],
   commandName: string,
   renderedPrompt: string,
-  systemMessage?: string,
-) {
+  systemMessageOverride?: string,
+): ChatMessage[] {
   const messages = [...history];
 
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -13,7 +15,12 @@ export function replaceSlashCommandWithPromptInChatHistory(
     }
 
     if (Array.isArray(content)) {
-      if (content.some((part) => part.text?.startsWith(`/${commandName}`))) {
+      if (
+        content.some(
+          (part) =>
+            part.type === "text" && part.text?.startsWith(`/${commandName}`),
+        )
+      ) {
         messages[i] = updateArrayContent(
           messages[i],
           commandName,
@@ -30,10 +37,12 @@ export function replaceSlashCommandWithPromptInChatHistory(
     }
   }
 
-  if (systemMessage) {
-    messages[0]?.role === "system"
-      ? (messages[0].content = systemMessage)
-      : messages.unshift({ role: "system", content: systemMessage });
+  if (systemMessageOverride) {
+    if (messages[0]?.role === "system") {
+      messages[0].content = systemMessageOverride;
+    } else {
+      messages.unshift({ role: "system", content: systemMessageOverride });
+    }
   }
 
   return messages;
