@@ -56,27 +56,31 @@ class CoreMessengerManager(
     }
 
     private fun setupCoreMessenger(continueCorePath: String) {
-        coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
+        try {
+            coreMessenger = CoreMessenger(project, continueCorePath, ideProtocolClient, coroutineScope)
 
-        coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-            val responseObject = response as Map<*, *>
-            val responseContent = responseObject["content"] as Map<*, *>
-            val result = responseContent["result"] as Map<*, *>
-            val config = result["config"] as Map<String, Any>
+            coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
+                val responseObject = response as Map<*, *>
+                val responseContent = responseObject["content"] as Map<*, *>
+                val result = responseContent["result"] as Map<*, *>
+                val config = result["config"] as Map<String, Any>
 
-            val allowAnonymousTelemetry = config?.get("allowAnonymousTelemetry") as? Boolean
-            val telemetryService = service<TelemetryService>()
-            if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
-                telemetryService.setup(getMachineUniqueID())
+                val allowAnonymousTelemetry = config?.get("allowAnonymousTelemetry") as? Boolean
+                val telemetryService = service<TelemetryService>()
+                if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
+                    telemetryService.setup(getMachineUniqueID())
+                }
             }
-        }
 
-        // On exit, use exponential backoff to create another CoreMessenger
-        coreMessenger?.onDidExit {
-            lastBackoffInterval *= 2
-            println("CoreMessenger exited, retrying in $lastBackoffInterval seconds")
-            Thread.sleep((lastBackoffInterval * 1000).toLong())
-            setupCoreMessenger(continueCorePath)
+            // On exit, use exponential backoff to create another CoreMessenger
+            coreMessenger?.onDidExit {
+                lastBackoffInterval *= 2
+                println("CoreMessenger exited, retrying in $lastBackoffInterval seconds")
+                Thread.sleep((lastBackoffInterval * 1000).toLong())
+                setupCoreMessenger(continueCorePath)
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
     }
 }
