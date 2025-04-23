@@ -1,4 +1,4 @@
-import { DataDestination, ModelRole } from "@continuedev/config-yaml";
+import { DataDestination, ModelRole, PromptTemplates } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
 import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
@@ -566,7 +566,7 @@ export interface LLMOptions {
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, PromptTemplate>;
+  promptTemplates?: Partial<Record<keyof PromptTemplates, PromptTemplate>>;
   templateMessages?: (messages: ChatMessage[]) => string;
   logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
