@@ -79,8 +79,11 @@ class CoreMessengerManager(
                 Thread.sleep((lastBackoffInterval * 1000).toLong())
                 setupCoreMessenger(continueCorePath)
             }
-        } catch (e: Throwable) {
-            e.printStackTrace()
+        } catch (err: Throwable) {
+            val telemetryService = service<TelemetryService>()
+            telemetryService.capture("jetbrains_core_start_error", mapOf("error" to err))
+
+            err.printStackTrace()
         }
     }
 }
