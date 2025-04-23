@@ -860,7 +860,7 @@ export abstract class BaseLLM implements ILLM {
       modelName: completionOptions.model,
       msgs: _messages,
       contextLength: this.contextLength,
-      maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+      maxTokens: completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
       supportsImages: this.supportsImages(),
       tools: options.tools,
     });
