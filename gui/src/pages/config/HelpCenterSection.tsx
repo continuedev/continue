@@ -22,10 +22,10 @@ export function HelpCenterSection() {
       <div className="-mx-4 flex flex-col">
         <MoreHelpRow
           title="Documentation"
-          description="Learn how to configure and use Continue"
+          description="Learn how to configure and use Granite.Code"
           Icon={ArrowTopRightOnSquareIcon}
           onClick={() =>
-            ideMessenger.post("openUrl", "https://docs.continue.dev/")
+            ideMessenger.post("openUrl", "https://granitecode.ai/")
           }
         />
 
@@ -36,11 +36,12 @@ export function HelpCenterSection() {
           onClick={() =>
             ideMessenger.post(
               "openUrl",
-              "https://github.com/continuedev/continue/issues/new/choose",
+              "https://github.com/Granite-Code/granite-code/issues/new",
             )
           }
         />
 
+        {/* Disable for Granite.Code
         <MoreHelpRow
           title="Join the community!"
           description="Join us on Discord to stay up-to-date on the latest developments"
@@ -49,6 +50,7 @@ export function HelpCenterSection() {
             ideMessenger.post("openUrl", "https://discord.gg/vapESyrFmJ")
           }
         />
+        */}
 
         <MoreHelpRow
           title="Token usage"
