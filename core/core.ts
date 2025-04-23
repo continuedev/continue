@@ -408,15 +408,21 @@ export class Core {
       if (!config) {
         return [];
       }
-      const items = await config.contextProviders
-        ?.find((provider) => provider.description.title === msg.data.title)
-        ?.loadSubmenuItems({
-          config,
-          ide: this.ide,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-        });
-      return items || [];
+
+      try {
+        const items = await config.contextProviders
+          ?.find((provider) => provider.description.title === msg.data.title)
+          ?.loadSubmenuItems({
+            config,
+            ide: this.ide,
+            fetch: (url, init) =>
+              fetchwithRequestOptions(url, init, config.requestOptions),
+          });
+        return items || [];
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
     });
 
     on("context/getContextItems", this.getContextItems.bind(this));
