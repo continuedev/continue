@@ -50,7 +50,7 @@ export function ApplyActions(props: ApplyActionsProps) {
   switch (props.applyState ? props.applyState.status : null) {
     case "streaming":
       return (
-        <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
+        <div className="flex select-none items-center rounded bg-zinc-700 pl-2 pr-1">
           <span className="text-lightgray inline-flex w-min items-center gap-2 text-center text-xs">
             Applying
             <Spinner />
@@ -59,7 +59,7 @@ export function ApplyActions(props: ApplyActionsProps) {
       );
     case "done":
       return (
-        <div className="flex items-center rounded bg-zinc-700 px-1.5 sm:gap-1">
+        <div className="flex select-none items-center rounded bg-zinc-700 px-1.5 sm:gap-1">
           <span className="max-xs:hidden text-lightgray text-center text-xs">
             {`${props.applyState?.numDiffs === 1 ? "1 diff" : `${props.applyState?.numDiffs} diffs`}`}
           </span>
@@ -87,7 +87,7 @@ export function ApplyActions(props: ApplyActionsProps) {
       if (!hasRejected && props.applyState?.numDiffs === 0) {
         if (showApplied) {
           return (
-            <span className="flex items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
+            <span className="flex select-none items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
               <span className="max-sm:hidden">Applied</span>
               <CheckIcon className="h-3.5 w-3.5 hover:brightness-125 sm:px-1" />
             </span>
