@@ -122,7 +122,6 @@ export class CompletionProvider {
 
   private async _getAutocompleteOptions() {
     const { config } = await this.configHandler.loadConfig();
-    // console.log('debug1 the config was', config?.selectedModelByRole.autocomplete, config.)
     const options = {
       ...DEFAULT_AUTOCOMPLETE_OPTS,
       ...config?.tabAutocompleteOptions,
@@ -185,8 +184,6 @@ export class CompletionProvider {
         workspaceDirs,
         helper,
       });
-
-      console.log('debug1 the prompt was->', prompt)
 
       // Completion
       let completion: string | undefined = "";
