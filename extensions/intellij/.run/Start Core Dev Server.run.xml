@@ -4,6 +4,16 @@
       <env name="CONTINUE_DEVELOPMENT" value="true" />
       <env name="CONTINUE_GLOBAL_DIR" value="$PROJECT_DIR$/extensions/.continue-debug" />
     </envs>
-    <method v="2" />
+    <method v="2">
+      <option name="NpmBeforeRunTask" enabled="true">
+        <package-json value="$PROJECT_DIR$/binary/package.json" />
+        <command value="run" />
+        <scripts>
+          <script value="rebuild" />
+        </scripts>
+        <node-interpreter value="project" />
+        <envs />
+      </option>
+    </method>
   </configuration>
 </component>

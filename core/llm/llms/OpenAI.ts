@@ -102,7 +102,12 @@ class OpenAI extends BaseLLM {
   }
 
   protected supportsPrediction(model: string): boolean {
-    const SUPPORTED_MODELS = ["gpt-4o-mini", "gpt-4o", "mistral-large"];
+    const SUPPORTED_MODELS = [
+      "gpt-4o-mini",
+      "gpt-4o",
+      "mistral-large",
+      "Fast-Apply",
+    ];
     return SUPPORTED_MODELS.some((m) => model.includes(m));
   }
 

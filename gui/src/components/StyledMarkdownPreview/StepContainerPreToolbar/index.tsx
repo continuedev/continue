@@ -227,7 +227,7 @@ export function StepContainerPreToolbar({
       return null;
     }
 
-    if (fileExists) {
+    if (fileExists || !relativeFilepath) {
       return (
         <ApplyActions
           disableManualApply={disableManualApply}
