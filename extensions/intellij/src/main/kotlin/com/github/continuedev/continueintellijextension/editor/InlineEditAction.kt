@@ -133,8 +133,9 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         val content = (response as Map<String, Any>)["content"] as Map<String, Any>
         val result = content["result"] as Map<String, Any>
         val config = result["config"] as Map<String, Any>
-        val models = config["models"] as List<Map<String, Any>>
-        modelTitles.addAll(models.map { it["title"] as String })
+        val models = config["modelsByRole"] as Map<String, Any>
+        val editModels = models["edit"] as List<Map<String, Any>>
+        modelTitles.addAll(editModels.map { it["title"] as String })
     }
 
     // This is a hacky way to not complicate getting model titles with coroutines
