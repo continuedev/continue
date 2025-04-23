@@ -32,4 +32,10 @@ models:
   - name: My Custom Autocomplete Template
     provider: ollama
     model: qwen2.5-coder:1.5b
+    promptTemplates:
+      autocomplete: |
+        `
+        globalThis.importantFunc = importantFunc
+        <|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>
+        `
 ```
