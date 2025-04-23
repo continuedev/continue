@@ -379,9 +379,14 @@ function compileChatMessages({
 
   const countingSafetyBuffer = getTokenCountingBufferSafety(contextLength);
   const minOutputTokens = getMinResponseTokens(maxTokens);
-  let inputTokensAvailable =
-    contextLength - countingSafetyBuffer - minOutputTokens;
 
+  let inputTokensAvailable = contextLength;
+
+  // Leave space for output/safety
+  inputTokensAvailable -= countingSafetyBuffer;
+  inputTokensAvailable -= minOutputTokens;
+
+  // Non-negotiable messages
   inputTokensAvailable -= toolTokens;
   inputTokensAvailable -= systemMsgTokens;
   inputTokensAvailable -= lastMessagesTokens;
