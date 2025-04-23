@@ -9,7 +9,6 @@ import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { fontSize } from "../../util";
-import { AccountButton } from "./AccountButton";
 import { HelpCenterSection } from "./HelpCenterSection";
 import { IndexingSettingsSection } from "./IndexingSettingsSection";
 import KeyboardShortcuts from "./KeyboardShortcuts";
@@ -63,7 +62,7 @@ function ConfigPage() {
           showBorder
           onTitleClick={() => navigate("/")}
           title="Chat"
-          rightContent={<AccountButton />}
+          //rightContent={<AccountButton />}
         />
 
         {/* Tab Headers */}

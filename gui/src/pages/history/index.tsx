@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { History } from "../../components/History";
 import { PageHeader } from "../../components/PageHeader";
 import { getFontSize } from "../../util";
-import { AccountButton } from "../config/AccountButton";
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -16,7 +15,7 @@ export default function HistoryPage() {
         showBorder
         onTitleClick={() => navigate("/")}
         title="Chat"
-        rightContent={<AccountButton />}
+        //rightContent={<AccountButton />}
       />
       <History />
     </div>
