@@ -157,7 +157,7 @@ function countChatMessageTokens(
 ): number {
   // Doing simpler, safer version of what is here:
   // https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
-  // every message follows <|im_start|>{role/name}\n{content}<|end|>\n
+  // every message follows  `{role/name}\n{content}<|end|>\n`
   const TOKENS_PER_MESSAGE: number = 4;
   return countTokens(chatMessage.content, modelName) + TOKENS_PER_MESSAGE;
 }
@@ -167,13 +167,27 @@ function pruneLinesFromTop(
   maxTokens: number,
   modelName: string,
 ): string {
-  let totalTokens = countTokens(prompt, modelName);
   const lines = prompt.split("\n");
-  while (totalTokens > maxTokens && lines.length > 0) {
-    totalTokens -= countTokens(lines.shift()!, modelName);
+  const lineTokens = lines.map((line) => countTokens(line, modelName));
+  let totalTokens = lineTokens.reduce((sum, tokens) => sum + tokens, 0);
+  let start = 0;
+  let currentLines = lines.length;
+
+  // Calculate initial token count including newlines
+  totalTokens += Math.max(0, currentLines - 1); // Add tokens for joining newlines
+
+  // Using indexes instead of array modifications.
+  // Remove lines from the top until the token count is within the limit.
+  while (totalTokens > maxTokens && start < currentLines) {
+    totalTokens -= lineTokens[start];
+    // Decrement token count for the removed line and its preceding/joining newline (if not the last line)
+    if (currentLines - start > 1) {
+      totalTokens--;
+    }
+    start++;
   }
 
-  return lines.join("\n");
+  return lines.slice(start).join("\n");
 }
 
 function pruneLinesFromBottom(
@@ -181,13 +195,26 @@ function pruneLinesFromBottom(
   maxTokens: number,
   modelName: string,
 ): string {
-  let totalTokens = countTokens(prompt, modelName);
   const lines = prompt.split("\n");
-  while (totalTokens > maxTokens && lines.length > 0) {
-    totalTokens -= countTokens(lines.pop()!, modelName);
+  const lineTokens = lines.map((line) => countTokens(line, modelName));
+  let totalTokens = lineTokens.reduce((sum, tokens) => sum + tokens, 0);
+  let end = lines.length;
+
+  // Calculate initial token count including newlines
+  totalTokens += Math.max(0, end - 1); // Add tokens for joining newlines
+
+  // Reverse traversal to avoid array modification
+  // Remove lines from the bottom until the token count is within the limit.
+  while (totalTokens > maxTokens && end > 0) {
+    end--;
+    totalTokens -= lineTokens[end];
+    // Decrement token count for the removed line and its following/joining newline (if not the first line)
+    if (end > 0) {
+      totalTokens--;
+    }
   }
 
-  return lines.join("\n");
+  return lines.slice(0, end).join("\n");
 }
 
 function pruneStringFromBottom(
