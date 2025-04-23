@@ -340,10 +340,8 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? null : // <ToolOutput
-              //   contextItems={item.contextItems}
-              //   toolCallId={item.message.toolCallId}
-              // />
+              ) : item.message.role ===
+                "tool" ? null : // tool output is shown with tool call messages
               item.message.role === "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (

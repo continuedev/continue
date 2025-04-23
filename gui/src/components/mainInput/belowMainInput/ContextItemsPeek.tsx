@@ -25,7 +25,9 @@ interface ContextItemsPeekItemProps {
   contextItem: ContextItemWithId;
 }
 
-function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
+export function ContextItemsPeekItem({
+  contextItem,
+}: ContextItemsPeekItemProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const isUrl = contextItem.uri?.type === "url";
 

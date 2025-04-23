@@ -1,4 +1,4 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ComponentType, useState } from "react";
 import { lightGray, vscBackground } from ".";
 
@@ -30,19 +30,19 @@ function ToggleDiv({ children, title, icon: Icon }: ToggleProps) {
           {Icon && !isHovered && !open ? (
             <Icon className={`absolute h-4 w-4 text-[${lightGray}]`} />
           ) : (
-            <>
-              <ChevronRightIcon
-                className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-                  open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
-                }`}
-              />
-              <ChevronDownIcon
+            // <>
+            <ChevronRightIcon
+              className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
+                open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
+              }`}
+            />
+          )}
+          {/* <ChevronDownIcon
                 className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
                   open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
                 }`}
               />
-            </>
-          )}
+            </> */}
         </div>
         <span
           className="ml-1 text-xs text-gray-400 transition-colors duration-200"
