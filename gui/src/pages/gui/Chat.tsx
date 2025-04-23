@@ -5,101 +5,60 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/react";
-import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
+import { InputModifiers, RangeInFileWithContents } from "core";
 import { streamResponse } from "core/llm/stream";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
-import {
-  Button,
-  defaultBorderRadius,
-  lightGray,
-  vscBackground,
-} from "../../components";
+import { Button, lightGray, vscBackground } from "../../components";
+import AcceptRejectAllButtons from "../../components/AcceptRejectAllButtons";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import FreeTrialOverDialog from "../../components/dialogs/FreeTrialOverDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
-import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
+import { NewSessionButton } from "../../components/mainInput/belowMainInput/NewSessionButton";
+import ThinkingBlockPeek from "../../components/mainInput/belowMainInput/ThinkingBlockPeek";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
-import ThinkingBlockPeek from "../../components/mainInput/ThinkingBlockPeek";
-import AssistantSelect from "../../components/modelSelection/platform/AssistantSelect";
+import { resolveEditorContent } from "../../components/mainInput/TipTapEditor/utils";
 import { useOnboardingCard } from "../../components/OnboardingCard";
-import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
-import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { TabBar } from "../../components/TabBar/TabBar";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseHub } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { submitEdit } from "../../redux/slices/editModeState";
 import {
-  clearLastEmptyResponse,
   newSession,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
-  setInactive,
+  updateToolCallOutput,
 } from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiSlice";
-import { RootState } from "../../redux/store";
 import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { loadLastSession } from "../../redux/thunks/session";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
-import {
-  getFontSize,
-  getMetaKeyLabel,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { isMetaEquivalentKeyPressed } from "../../util";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   incrementFreeTrialCount,
 } from "../../util/freeTrial";
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import ConfigErrorIndicator from "./ConfigError";
 import { EmptyChatBody } from "./EmptyChatBody";
 import { ExploreDialogWatcher } from "./ExploreDialogWatcher";
 import { ToolCallDiv } from "./ToolCallDiv";
-import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
-import ToolOutput from "./ToolCallDiv/ToolOutput";
 import { useAutoScroll } from "./useAutoScroll";
-
-const StopButton = styled.div`
-  background-color: ${vscBackground};
-  width: fit-content;
-  margin-right: auto;
-  margin-left: auto;
-  font-size: ${getFontSize() - 2}px;
-  border: 0.5px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  padding: 4px 8px;
-  color: ${lightGray};
-  cursor: pointer;
-  box-shadow:
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: box-shadow 0.3s ease;
-
-  &:hover {
-    box-shadow:
-      0 6px 8px rgba(0, 0, 0, 0.15),
-      0 3px 6px rgba(0, 0, 0, 0.1);
-  }
-`;
 
 const StepsDiv = styled.div`
   position: relative;
@@ -113,6 +72,8 @@ const StepsDiv = styled.div`
     margin: 0px 0px 0px 1px;
   }
 `;
+
+export const MAIN_EDITOR_INPUT_ID = "main-editor-input";
 
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
@@ -142,8 +103,7 @@ export function Chat() {
   const showSessionTabs = useAppSelector(
     (store) => store.config.config.ui?.showSessionTabs,
   );
-  const defaultModel = useAppSelector(selectDefaultModel);
-  const ttsActive = useAppSelector((state) => state.ui.ttsActive);
+  const selectedChatModel = useAppSelector(selectSelectedChatModel);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -153,9 +113,7 @@ export function Chat() {
     (state) => state.config.config.ui?.showChatScrollbar,
   );
   const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
-  const toolCallState = useSelector<RootState, ToolCallState | undefined>(
-    selectCurrentToolCall,
-  );
+  const toolCallState = useAppSelector(selectCurrentToolCall);
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,
   );
@@ -200,7 +158,12 @@ export function Chat() {
       index?: number,
       editorToClearOnSend?: Editor,
     ) => {
-      if (defaultModel?.provider === "free-trial") {
+      if (toolCallState?.status === "generated") {
+        return console.error(
+          "Cannot submit message while awaiting tool confirmation",
+        );
+      }
+      if (selectedChatModel?.provider === "free-trial") {
         const newCount = incrementFreeTrialCount();
 
         if (newCount === FREE_TRIAL_LIMIT_REQUESTS) {
@@ -259,19 +222,21 @@ export function Chat() {
     },
     [
       history,
-      defaultModel,
+      selectedChatModel,
       streamResponse,
       isSingleRangeEditOrInsertion,
       codeToEdit,
+      toolCallState,
     ],
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    if (!defaultModel) {
+    if (!selectedChatModel) {
       console.error("No selected chat model");
       return;
     }
-    const [contextItems, __, userInstructions] = await resolveEditorContent({
+
+    const [contextItems, __, userInstructions, _] = await resolveEditorContent({
       editorState,
       modifiers: {
         noContext: true,
@@ -279,8 +244,9 @@ export function Chat() {
       },
       ideMessenger,
       defaultContextProviders: [],
+      availableSlashCommands: [],
       dispatch,
-      selectedModelTitle: defaultModel.title,
+      selectedModelTitle: selectedChatModel.title,
     });
 
     const prompt = [
@@ -291,7 +257,6 @@ export function Chat() {
     ideMessenger.post("edit/sendPrompt", {
       prompt,
       range: codeToEdit[0] as RangeInFileWithContents,
-      selectedModelTitle: defaultModel.title,
     });
 
     dispatch(submitEdit(prompt));
@@ -304,6 +269,21 @@ export function Chat() {
       mainTextInputRef.current?.focus?.();
     },
     [mainTextInputRef],
+  );
+
+  // Handle partial tool call output for streaming updates
+  useWebviewListener(
+    "toolCallPartialOutput",
+    async (data) => {
+      // Update tool call output in Redux store
+      dispatch(
+        updateToolCallOutput({
+          toolCallId: data.toolCallId,
+          contextItems: data.contextItems,
+        }),
+      );
+    },
+    [dispatch],
   );
 
   const isLastUserInput = useCallback(
@@ -323,30 +303,13 @@ export function Chat() {
 
   return (
     <>
-      {showPageHeader && (
-        <PageHeader
-          title={isInEditMode ? "Edit Mode" : ""}
-          onTitleClick={
-            isInEditMode
-              ? async () => {
-                  await dispatch(
-                    loadLastSession({ saveCurrentSession: false }),
-                  );
-                  dispatch(exitEditMode());
-                }
-              : undefined
-          }
-          rightContent={useHub && <AssistantSelect />}
-        />
-      )}
-
       {widget}
 
       {!!showSessionTabs && <TabBar />}
 
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`mt-3 overflow-y-scroll ${showPageHeader ? "" : "pt-[8px]"} ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
       >
         {highlights}
         {history.map((item, index: number) => (
@@ -377,12 +340,11 @@ export function Chat() {
                     inputId={item.message.id}
                   />
                 </>
-              ) : item.message.role === "tool" ? (
-                <ToolOutput
-                  contextItems={item.contextItems}
-                  toolCallId={item.message.toolCallId}
-                />
-              ) : item.message.role === "assistant" &&
+              ) : item.message.role === "tool" ? null : // <ToolOutput
+              //   contextItems={item.contextItems}
+              //   toolCallId={item.message.toolCallId}
+              // />
+              item.message.role === "assistant" &&
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
@@ -392,6 +354,7 @@ export function Chat() {
                         <ToolCallDiv
                           toolCallState={item.toolCallState!}
                           toolCall={toolCall}
+                          output={history[index + 1]?.contextItems}
                         />
                       </div>
                     );
@@ -444,32 +407,7 @@ export function Chat() {
           </div>
         ))}
       </StepsDiv>
-      <div className={`relative mt-1`}>
-        <div className="absolute -top-8 right-2 z-30 flex flex-col gap-1">
-          {ttsActive && (
-            <StopButton
-              className=""
-              onClick={() => {
-                ideMessenger.post("tts/kill", undefined);
-              }}
-            >
-              ■ Stop TTS
-            </StopButton>
-          )}
-          {isStreaming && (
-            <StopButton
-              onClick={() => {
-                dispatch(setInactive());
-                dispatch(clearLastEmptyResponse());
-              }}
-            >
-              {getMetaKeyLabel()} ⌫ Cancel
-            </StopButton>
-          )}
-        </div>
-
-        {toolCallState?.status === "generated" && <ToolCallButtons />}
-
+      <div className={"relative"}>
         {isInEditMode && history.length === 0 && <CodeToEditCard />}
 
         {isInEditMode && history.length > 0 ? null : (
@@ -480,7 +418,7 @@ export function Chat() {
             onEnter={(editorState, modifiers, editor) =>
               sendInput(editorState, modifiers, undefined, editor)
             }
-            inputId={"main-editor"}
+            inputId={MAIN_EDITOR_INPUT_ID}
           />
         )}
 
@@ -504,12 +442,11 @@ export function Chat() {
                     className="flex items-center gap-2"
                   >
                     <ArrowLeftIcon className="h-3 w-3" />
-                    Last Session
+                    <span className="text-xs">Last Session</span>
                   </NewSessionButton>
                 </div>
               )}
             </div>
-            <ConfigErrorIndicator />
           </div>
 
           {hasPendingApplies && isSingleRangeEditOrInsertion && (
@@ -537,12 +474,6 @@ export function Chat() {
             />
           )}
         </div>
-      </div>
-
-      <div
-        className={`${history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
-      >
-        <ChatIndexingPeeks />
       </div>
     </>
   );

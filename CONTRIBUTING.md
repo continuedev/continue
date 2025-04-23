@@ -20,13 +20,14 @@
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
     - [Our Git Workflow](#our-git-workflow)
-    - [Testing](#testing)
+    - [Development workflow](#development-workflow)
     - [Formatting](#formatting)
-    - [Writing Slash Commands](#writing-slash-commands)
-    - [Writing Context Providers](#writing-context-providers)
+    - [Testing](#testing)
+    - [Review Process](#review-process)
+    - [Getting help](#getting-help)
+  - [Contribtuing new LLM Providers/Models](#contribtuing-new-llm-providersmodels)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
-    - [Adding Pre-indexed Documentation](#adding-pre-indexed-documentation)
   - [📐 Continue Architecture](#-continue-architecture)
     - [Continue VS Code Extension](#continue-vs-code-extension)
     - [Continue JetBrains Extension](#continue-jetbrains-extension)
@@ -95,11 +96,13 @@ This will start a local server and you can see the documentation rendered in you
 
 ## 🧑‍💻 Contributing Code
 
+We welcome contributions from developers of all experience levels - from first-time contributors to seasoned open source maintainers. While we aim to maintain high standards for reliability and maintainability, our goal is to keep the process as welcoming and straightforward as possible.
+
 ### Environment Setup
 
 #### Pre-requisites
 
-You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+You should have Node.js version 20.19.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
 
 ```bash
 nvm use
@@ -140,51 +143,41 @@ Similarly, any changes to `core` or `extensions/vscode` will be automatically in
 
 #### JetBrains
 
-See the [`CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBrains extension.
+See [`intellij/CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBrains extension.
 
 ### Our Git Workflow
 
 We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the `main` branch titled `v0.9.x-vscode`, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will create a new release titled `v0.8.x-vscode`, triggering a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow is well explained by <http://releaseflow.org>.
 
-### Testing
+### Development workflow
 
-We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on each pull request. If your PR causes one of these tests to fail, we will ask that you resolve the issue before we merge.
-
-When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
+- Open a new issue or comment on an existing one before writing code. This ensures your proposed changes are aligned with the project direction.
+- Keep changes focused. Multiple unrelated fixes should be opened as separate PRs
+- Write or update tests for new functionality
+- Update relevant documentation in the `docs` folder
+- Open a PR against the `main` branch. Make sure to fill in the PR template
 
 ### Formatting
 
 Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install the Prettier extension in VS Code and enable "Format on Save" in your settings.
 
-### Writing Slash Commands
+### Testing
 
-The slash command interface, defined in [core/index.d.ts](./core/index.d.ts), requires you to define a `name` (the text that will be typed to invoke the command), a `description` (the text that will be shown in the slash command menu), and a `run` function that will be called when the command is invoked. The `run` function is an async generator that yields the content to be displayed in the chat. The `run` function is passed a `ContinueSDK` object that can be used to interact with the IDE, call the LLM, and see the chat history, among a few other utilities.
+We have a mix of unit, functional, and e2e test suites, with a primary focus on functional testing. These tests run on each pull request. If your PR causes one of these tests to fail, we will ask that you to resolve the issue before we merge.
 
-```ts
-export interface SlashCommand {
-  name: string;
-  description: string;
-  params?: { [key: string]: any };
-  run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
-}
-```
+When contributing, please update or create the appropriate tests to help verify the correctness of your implementaiton.
 
-There are many example of slash commands in [core/commands/slash](./core/commands/slash) that we recommend borrowing from. Once you've created your new `SlashCommand` in this folder, also be sure to complete the following:
+### Review Process
 
-- Add your command to the array in [core/commands/slash/index.ts](./core/commands/slash/index.ts)
-- Add your command to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what commands are available for your provider when they are editing `config.json`. If there are any parameters that your command accepts, you should also follow existing examples in adding them to the JSON Schema.
+- **Initial Review** - A maintainer will be assigned as primary reviewer
+- **Feedback Loop** - The reviewer may request changes. We value your work, but also want to ensure the code is maintainable and follows our patterns.
+- **Approval & Merge** - Once the PR is approved, it will be merged into the `main` branch.
 
-### Writing Context Providers
+### Getting help
 
-A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The `IContextProvider` interface is defined in [`core/index.d.ts`](./core/index.d.ts), but all built-in context providers extend [`BaseContextProvider`](./core/context/index.ts).
+Join [#contribute on Discord](https://discord.gg/vapESyrFmJ) to engage with maintainers and other contributors.
 
-Before defining your context provider, determine which "type" you want to create. The `"query"` type will show a small text input when selected, giving the user the chance to enter something like a Google search query for the [`GoogleContextProvider`](./core/context/providers/GoogleContextProvider.ts). The `"submenu"` type will open up a submenu of items that can be searched through and selected. Examples are the [`GitHubIssuesContextProvider`](./core/context/providers/GitHubIssuesContextProvider.ts) and the [`DocsContextProvider`](./core/context/providers/DocsContextProvider.ts). The `"normal"` type will just immediately add the context item. Examples include the [`DiffContextProvider`](./core/context/providers/DiffContextProvider.ts) and the [`OpenFilesContextProvider`](./core/context/providers/OpenFilesContextProvider.ts).
-
-After you've written your context provider, make sure to complete the following:
-
-- Add it to the array of context providers in [core/context/providers/index.ts](./core/context/providers/index.ts)
-- Add it to the `ContextProviderName` type in [core/index.d.ts](./core/index.d.ts)
-- Add it to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). If there are any parameters that your context provider accepts, you should also follow existing examples in adding them to the JSON Schema.
+## Contribtuing new LLM Providers/Models
 
 ### Adding an LLM Provider
 
@@ -212,17 +205,13 @@ While any model that works with a supported provider can be used with Continue, 
 - LLM Providers: Since many providers use their own custom strings to identify models, you'll have to add the translation from Continue's model name (the one you added to `index.d.ts`) and the model string for each of these providers: [Ollama](./core/llm/llms/Ollama.ts), [Together](./core/llm/llms/Together.ts), and [Replicate](./core/llm/llms/Replicate.ts). You can find their full model lists here: [Ollama](https://ollama.ai/library), [Together](https://docs.together.ai/docs/inference-models), [Replicate](https://replicate.com/collections/streaming-language-models).
 - [Prompt Templates](./core/llm/index.ts) - In this file you'll find the `autodetectTemplateType` function. Make sure that for the model name you just added, this function returns the correct template type. This is assuming that the chat template for that model is already built in Continue. If not, you will have to add the template type and corresponding edit and chat templates.
 
-### Adding Pre-indexed Documentation
-
-Continue's @docs context provider lets you easily reference entire documentation sites and then uses embeddings to add the most relevant pages to context. To make the experience as smooth as possible, we pre-index many of the most popular documentation sites. If you'd like to add new documentation to this list, just add an object to the list in [preIndexedDocs.ts](./core/indexing/docs/preIndexedDocs.ts). `startUrl` is where the crawler will start and `rootUrl` will filter out any pages not on that site and under the path of `rootUrl`.
-
 ## 📐 Continue Architecture
 
 Continue consists of 2 parts that are split so that it can be extended to work in other IDEs as easily as possible:
 
 1. **Continue GUI** - The Continue GUI is a React application that gives the user control over Continue. It displays the current chat history, allows the user to ask questions, invoke slash commands, and use context providers. The GUI also handles most state and holds as much of the logic as possible so that it can be reused between IDEs.
 
-2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/ContinueGUIWebviewViewProvider.ts).
+2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/VsCodeIde.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/ContinueGUIWebviewViewProvider.ts).
 
 ### Continue VS Code Extension
 

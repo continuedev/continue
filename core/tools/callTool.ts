@@ -1,17 +1,18 @@
 import { ContextItem, Tool, ToolExtras } from "..";
-import { MCPManagerSingleton } from "../context/mcp";
+import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
 import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
 import { createNewFileImpl } from "./implementations/createNewFile";
-import { exactSearchImpl } from "./implementations/exactSearch";
+import { createRuleBlockImpl } from "./implementations/createRuleBlock";
+import { fileGlobSearchImpl } from "./implementations/globSearch";
+import { grepSearchImpl } from "./implementations/grepSearch";
+import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
-import { viewRepoMapImpl } from "./implementations/viewRepoMap";
-import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
 
 async function callHttpTool(
   url: string,
@@ -139,22 +140,29 @@ export async function callTool(
   switch (uri) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
+    // Note: Custom GUI handling for edit
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
-    case BuiltInToolNames.ExactSearch:
-      return await exactSearchImpl(args, extras);
+    case BuiltInToolNames.GrepSearch:
+      return await grepSearchImpl(args, extras);
+    case BuiltInToolNames.FileGlobSearch:
+      return await fileGlobSearchImpl(args, extras);
     case BuiltInToolNames.RunTerminalCommand:
       return await runTerminalCommandImpl(args, extras);
     case BuiltInToolNames.SearchWeb:
       return await searchWebImpl(args, extras);
     case BuiltInToolNames.ViewDiff:
       return await viewDiffImpl(args, extras);
-    case BuiltInToolNames.ViewRepoMap:
-      return await viewRepoMapImpl(args, extras);
-    case BuiltInToolNames.ViewSubdirectory:
-      return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.LSTool:
+      return await lsToolImpl(args, extras);
     case BuiltInToolNames.ReadCurrentlyOpenFile:
       return await readCurrentlyOpenFileImpl(args, extras);
+    case BuiltInToolNames.CreateRuleBlock:
+      return await createRuleBlockImpl(args, extras);
+    // case BuiltInToolNames.ViewRepoMap:
+    //   return await viewRepoMapImpl(args, extras);
+    // case BuiltInToolNames.ViewSubdirectory:
+    //   return await viewSubdirectoryImpl(args, extras);
     default:
       return await callToolFromUri(uri, args, extras);
   }

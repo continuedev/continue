@@ -2,20 +2,28 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
-import { ConfigResult } from "@continuedev/config-yaml";
-import { BrowserSerializedContinueConfig } from "core";
-import { selectProfileThunk } from "../redux";
+import { FromCoreProtocol } from "core/protocol";
+import {
+  initializeProfilePreferences,
+  setOrganizations,
+  setSelectedOrgId,
+  setSelectedProfile,
+} from "../redux";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
-  selectDefaultModel,
+  selectSelectedChatModel,
   setConfigResult,
 } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
+  acceptToolCall,
   addContextItemsAtIndex,
   setInactive,
+  setToolCallOutput,
+  updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import { streamResponseAfterToolCall } from "../redux/thunks";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
@@ -27,25 +35,41 @@ function useSetup() {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
+  const selectedProfileId = useAppSelector(
+    (store) => store.profiles.selectedProfileId,
+  );
 
-  const hasLoadedConfig = useRef(false);
+  const hasDoneInitialConfigLoad = useRef(false);
 
   const handleConfigUpdate = useCallback(
-    async (
-      initial: boolean,
-      result: {
-        result: ConfigResult<BrowserSerializedContinueConfig>;
-        profileId: string | null;
-      },
-    ) => {
-      const { result: configResult, profileId } = result;
-      if (initial && hasLoadedConfig.current) {
+    async (isInitial: boolean, result: FromCoreProtocol["configUpdate"][0]) => {
+      const {
+        result: configResult,
+        profileId,
+        organizations,
+        selectedOrgId,
+      } = result;
+
+      if (isInitial && hasDoneInitialConfigLoad.current) {
         return;
       }
-      hasLoadedConfig.current = true;
+      hasDoneInitialConfigLoad.current = true;
+      dispatch(setOrganizations(organizations));
+      dispatch(setSelectedOrgId(selectedOrgId));
+      dispatch(setSelectedProfile(profileId));
       dispatch(setConfigResult(configResult));
-      dispatch(selectProfileThunk(profileId));
+
+      const isNewProfileId = profileId && profileId !== selectedProfileId;
+
+      if (isNewProfileId) {
+        dispatch(
+          initializeProfilePreferences({
+            defaultSlashCommands: [],
+            profileId,
+          }),
+        );
+      }
 
       // Perform any actions needed with the config
       if (configResult.config?.ui?.fontSize) {
@@ -53,28 +77,31 @@ function useSetup() {
         document.body.style.fontSize = `${configResult.config.ui.fontSize}px`;
       }
     },
-    [dispatch, hasLoadedConfig],
+    [dispatch, hasDoneInitialConfigLoad],
   );
 
-  const loadConfig = useCallback(
+  const initialLoadAuthAndConfig = useCallback(
     async (initial: boolean) => {
+      // const authResult = await ideMessenger.request(
+      //   "auth/getState",
+      //   undefined
+      // )
       const result = await ideMessenger.request(
         "config/getSerializedProfileInfo",
         undefined,
       );
-      if (result.status === "error") {
-        return;
+      if (result.status === "success") {
+        await handleConfigUpdate(initial, result.content);
       }
-      await handleConfigUpdate(initial, result.content);
     },
     [ideMessenger, handleConfigUpdate],
   );
 
   // Load config from the IDE
   useEffect(() => {
-    loadConfig(true);
+    initialLoadAuthAndConfig(true);
     const interval = setInterval(() => {
-      if (hasLoadedConfig.current) {
+      if (hasDoneInitialConfigLoad.current) {
         // Init to run on initial config load
         ideMessenger.post("docs/initStatuses", undefined);
         dispatch(updateFileSymbolsFromHistory());
@@ -82,13 +109,13 @@ function useSetup() {
 
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
-        return;
+      } else {
+        initialLoadAuthAndConfig(true);
       }
-      loadConfig(true);
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [hasLoadedConfig, loadConfig, ideMessenger]);
+  }, [hasDoneInitialConfigLoad, initialLoadAuthAndConfig, ideMessenger]);
 
   useWebviewListener(
     "configUpdate",
@@ -98,7 +125,7 @@ function useSetup() {
       }
       await handleConfigUpdate(false, update);
     },
-    [loadConfig],
+    [handleConfigUpdate],
   );
 
   // Load symbols for chat on any session change
@@ -227,12 +254,34 @@ function useSetup() {
     dispatch(updateIndexingStatus(data));
   });
 
+  const activeToolStreamId = useAppSelector(
+    (store) => store.session.activeToolStreamId,
+  );
   useWebviewListener(
-    "getDefaultModelTitle",
-    async () => {
-      return defaultModel?.title;
+    "updateApplyState",
+    async (state) => {
+      dispatch(updateApplyState(state));
+      if (
+        activeToolStreamId &&
+        state.streamId === activeToolStreamId[0] &&
+        state.status === "closed"
+      ) {
+        // const output: ContextItem = {
+        //   name: "Edit tool output",
+        //   content: "Completed edit",
+        //   description: "",
+        // };
+        dispatch(acceptToolCall());
+        dispatch(setToolCallOutput([]));
+        dispatch(
+          streamResponseAfterToolCall({
+            toolCallId: activeToolStreamId[1],
+            toolOutput: [],
+          }),
+        );
+      }
     },
-    [defaultModel],
+    [activeToolStreamId],
   );
 }
 

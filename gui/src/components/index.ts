@@ -59,6 +59,7 @@ export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, $
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
 export const vscInputBorderFocus = `var(${VSC_FOCUS_BORDER_VAR}, ${lightGray})`;
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
+export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #ffffff)`;
 export const vscCommandCenterActiveBorder = `var(${VSC_COMMAND_CENTER_ACTIVE_BORDER_VAR}, #1bbe84)`;
 export const vscCommandCenterInactiveBorder = `var(${VSC_COMMAND_CENTER_INACTIVE_BORDER_VAR}, #1bbe84)`;
 export const vscFindMatchSelected = `var(${VSC_FIND_MATCH_SELECTED_VAR}, rgba(255, 223, 0))`;
@@ -132,7 +133,7 @@ export const Button = styled.button`
 
 export const SecondaryButton = styled.button`
   padding: 6px 12px;
-  margin: 8px 0;
+  margin: 8px;
   border-radius: ${defaultBorderRadius};
 
   border: 1px solid ${vscInputBorder};
@@ -152,13 +153,12 @@ export const SecondaryButton = styled.button`
 
 export const GhostButton = styled.button`
   padding: 6px 8px;
-  margin: 8px 0;
+  margin: 6px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
   color: ${vscForeground};
-  background-color: transparent;
-
+  background-color: rgba(255, 255, 255, 0.08);
   &:disabled {
     color: gray;
     pointer-events: none;
@@ -166,7 +166,7 @@ export const GhostButton = styled.button`
 
   &:hover:enabled {
     cursor: pointer;
-    background-color: rgba(255, 255, 255, 0.08); /* Subtle hover effect */
+    filter: brightness(125%);
   }
 `;
 

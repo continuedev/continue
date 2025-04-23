@@ -23,7 +23,7 @@ To create a block from scratch, you will need to click “New block” in the to
 
 ![New block button](/img/hub/block-new-button.png)
 
-After filling out information on the block, you will want to create a block following the `config.yaml` [reference documentation](../../yaml-reference.md). Refer to examples of blocks on [hub.continue.dev](https://hub.continue.dev/explore/models) and visit the [YAML Reference](../../yaml-reference.md#complete-yaml-config-example) docs for more details.
+After filling out information on the block, you will want to create a block following the `config.yaml` [reference documentation](../../reference.md). Refer to examples of blocks on [hub.continue.dev](https://hub.continue.dev/explore/models) and visit the [YAML Reference](../../reference.md#complete-yaml-config-example) docs for more details.
 
 ![New block page](/img/hub/block-new-page.png)
 

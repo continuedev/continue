@@ -22,7 +22,6 @@ type UIState = {
   isExploreDialogOpen: boolean;
   hasDismissedExploreDialog: boolean;
   shouldAddFileForEditing: boolean;
-  useTools: boolean;
   toolSettings: { [toolName: string]: ToolSetting };
   toolGroupSettings: { [toolGroupName: string]: ToolGroupSetting };
   ttsActive: boolean;
@@ -43,16 +42,17 @@ export const uiSlice = createSlice({
     ),
     shouldAddFileForEditing: false,
     ttsActive: false,
-    useTools: false,
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
+      [BuiltInToolNames.EditExistingFile]: "allowedWithPermission",
       [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
       [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
-      [BuiltInToolNames.ViewSubdirectory]: "allowedWithoutPermission",
-      [BuiltInToolNames.ViewRepoMap]: "allowedWithoutPermission",
-      [BuiltInToolNames.ExactSearch]: "allowedWithoutPermission",
+      [BuiltInToolNames.GrepSearch]: "allowedWithoutPermission",
+      [BuiltInToolNames.FileGlobSearch]: "allowedWithoutPermission",
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
+      [BuiltInToolNames.LSTool]: "allowedWithoutPermission",
+      [BuiltInToolNames.CreateRuleBlock]: "allowedWithPermission",
     },
     toolGroupSettings: {
       BUILT_IN_GROUP_NAME: "include",
@@ -90,9 +90,6 @@ export const uiSlice = createSlice({
       state.hasDismissedExploreDialog = action.payload;
     },
     // Tools
-    toggleUseTools: (state) => {
-      state.useTools = !state.useTools;
-    },
     addTool: (state, action: PayloadAction<Tool>) => {
       state.toolSettings[action.payload.function.name] =
         "allowedWithPermission";
@@ -137,7 +134,6 @@ export const {
   setShowDialog,
   setIsExploreDialogOpen,
   setHasDismissedExploreDialog,
-  toggleUseTools,
   toggleToolSetting,
   toggleToolGroupSetting,
   addTool,

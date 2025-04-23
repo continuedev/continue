@@ -2,7 +2,7 @@ import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { ChatMessage, ContextItem } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
-import { selectDefaultModel } from "../slices/configSlice";
+import { selectSelectedChatModel } from "../slices/configSlice";
 import {
   addContextItemsAtIndex,
   setActive,
@@ -26,11 +26,10 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       streamThunkWrapper(async () => {
         const state = getState();
-        const useTools = state.ui.useTools;
         const initialHistory = state.session.history;
-        const defaultModel = selectDefaultModel(state);
+        const selectedChatModel = selectSelectedChatModel(state);
 
-        if (!defaultModel) {
+        if (!selectedChatModel) {
           throw new Error("No model selected");
         }
 
@@ -60,7 +59,13 @@ export const streamResponseAfterToolCall = createAsyncThunk<
         dispatch(setActive());
 
         const updatedHistory = getState().session.history;
-        const messages = constructMessages([...updatedHistory]);
+        const messages = constructMessages(
+          [...updatedHistory],
+          selectedChatModel?.baseChatSystemMessage,
+          state.config.config.rules,
+          selectedChatModel.model,
+        );
+
         unwrapResult(await dispatch(streamNormalInput({ messages })));
       }),
     );

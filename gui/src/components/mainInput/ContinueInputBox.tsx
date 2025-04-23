@@ -1,14 +1,14 @@
 import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
-import { useDispatch } from "react-redux";
+import { useMemo } from "react";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
-import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import ContextItemsPeek from "./ContextItemsPeek";
-import TipTapEditor from "./TipTapEditor";
 import { useAppSelector } from "../../redux/hooks";
+import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
+import ContextItemsPeek from "./belowMainInput/ContextItemsPeek";
 import { ToolbarOptions } from "./InputToolbar";
-import { useMemo } from "react";
+import { Lump } from "./Lump";
+import { TipTapEditor } from "./TipTapEditor";
 
 interface ContinueInputBoxProps {
   isEditMode?: boolean;
@@ -116,6 +116,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   return (
     <div className={`${props.hidden ? "hidden" : ""}`}>
       <div className={`relative flex flex-col px-2`}>
+        {props.isMainInput && <Lump />}
         <GradientBorder
           loading={isStreaming && props.isLastUserInput ? 1 : 0}
           borderColor={

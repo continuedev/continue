@@ -35,7 +35,7 @@ class LlamaCpp extends BaseLLM {
       ...this.requestOptions?.headers,
     };
 
-    const resp = await this.fetch(new URL("completion", this.apiBase), {
+    const resp = await this.fetch(new URL("completions", this.apiBase), {
       method: "POST",
       headers,
       body: JSON.stringify({

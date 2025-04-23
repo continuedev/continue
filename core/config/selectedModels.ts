@@ -1,6 +1,7 @@
 import { ModelRole } from "@continuedev/config-yaml";
 
 import { ContinueConfig, ILLM } from "..";
+import { LLMConfigurationStatuses } from "../llm/constants";
 import {
   GlobalContext,
   GlobalContextModelSelections,
@@ -19,19 +20,20 @@ export function rectifySelectedModelsFromGlobalContext(
 
   let fellBack = false;
 
-  // chat and summarize not implemented yet
-  // default chat model is stored in GUI still
-
+  // summarize not implemented yet
   const roles: ModelRole[] = [
     "autocomplete",
     "apply",
     "edit",
     "embed",
     "rerank",
+    "chat",
   ];
+
   for (const role of roles) {
     let newModel: ILLM | null = null;
     const currentSelection = currentForProfile[role] ?? null;
+
     if (currentSelection) {
       const match = continueConfig.modelsByRole[role].find(
         (m) => m.title === currentSelection,
@@ -40,12 +42,23 @@ export function rectifySelectedModelsFromGlobalContext(
         newModel = match;
       }
     }
+
     if (!newModel && continueConfig.modelsByRole[role].length > 0) {
       newModel = continueConfig.modelsByRole[role][0];
     }
+
     if (!(currentSelection === (newModel?.title ?? null))) {
       fellBack = true;
     }
+
+    // Currently only check for configuration status for apply
+    if (
+      role === "apply" &&
+      newModel?.getConfigurationStatus() !== LLMConfigurationStatuses.VALID
+    ) {
+      continue;
+    }
+
     configCopy.selectedModelByRole[role] = newModel;
   }
 

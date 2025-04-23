@@ -3,17 +3,11 @@ import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscButtonBackground,
-  vscButtonForeground,
-  vscForeground,
-  vscInputBackground,
-} from "..";
+import { vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import {
   selectHasCodeToEdit,
   selectIsInEditMode,
@@ -28,8 +22,10 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
+import ModeSelect from "../modelSelection/ModeSelect";
+import { useFontSize } from "../ui/font";
+import { EnterButton } from "./InputToolbar/EnterButton";
 import HoverItem from "./InputToolbar/HoverItem";
-import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -45,22 +41,6 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
 
   & > * {
     flex: 0 0 auto;
-  }
-`;
-
-const EnterButton = styled.button<{ isPrimary?: boolean }>`
-  all: unset;
-  padding: 2px 4px;
-  display: flex;
-  align-items: center;
-  background-color: ${(props) =>
-    props.isPrimary ? vscButtonBackground : lightGray + "33"};
-  border-radius: ${defaultBorderRadius};
-  color: ${(props) => (props.isPrimary ? vscButtonForeground : vscForeground)};
-  cursor: pointer;
-
-  :disabled {
-    cursor: wait;
   }
 `;
 
@@ -87,12 +67,22 @@ interface InputToolbarProps {
 function InputToolbar(props: InputToolbarProps) {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultModel = useAppSelector(selectSelectedChatModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const toolCallState = useAppSelector(selectCurrentToolCall);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-  const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
+  const activeToolCallStreamId = useAppSelector(
+    (store) => store.session.activeToolStreamId,
+  );
+
+  const isEnterDisabled =
+    props.disabled ||
+    isEditModeAndNoCodeToEdit ||
+    toolCallState?.status === "generated" ||
+    !!activeToolCallStreamId;
+
   const toolsSupported = defaultModel && modelSupportsTools(defaultModel);
 
   const supportsImages =
@@ -104,14 +94,20 @@ function InputToolbar(props: InputToolbarProps) {
       defaultModel.capabilities,
     );
 
+  const smallFont = useFontSize(-2);
+  const tinyFont = useFontSize(-3);
+
   return (
     <>
-      <StyledDiv
-        isHidden={props.hidden}
+      <div
         onClick={props.onClick}
-        className="find-widget-skip flex"
+        className={`find-widget-skip bg-vsc-input-background flex select-none flex-row items-center justify-between gap-1 pt-1 ${props.hidden ? "pointer-events-none h-0 cursor-default opacity-0" : "pointer-events-auto cursor-text opacity-100"}`}
+        style={{
+          fontSize: smallFont,
+        }}
       >
-        <div className="flex items-center justify-start gap-2 whitespace-nowrap">
+        <div className="xs:gap-1.5 flex flex-row items-center gap-1">
+          <ModeSelect />
           <ModelSelect />
           <div className="xs:flex -mb-1 hidden items-center text-gray-400 transition-colors duration-200">
             {props.toolbarOptions?.hideImageUpload ||
@@ -127,17 +123,20 @@ function InputToolbar(props: InputToolbarProps) {
                       for (const file of files) {
                         props.onImageFileSelected?.(file);
                       }
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                      }
                     }}
                   />
                   <HoverItem className="">
                     <PhotoIcon
-                      className="h-4 w-4 hover:brightness-125"
+                      className="h-3 w-3 hover:brightness-125"
                       data-tooltip-id="image-tooltip"
                       onClick={(e) => {
                         fileInputRef.current?.click();
                       }}
                     />
-                    <ToolTip id="image-tooltip" place="top-middle">
+                    <ToolTip id="image-tooltip" place="top">
                       Attach an image
                     </ToolTip>
                   </HoverItem>
@@ -147,20 +146,23 @@ function InputToolbar(props: InputToolbarProps) {
               <HoverItem onClick={props.onAddContextItem}>
                 <AtSymbolIcon
                   data-tooltip-id="add-context-item-tooltip"
-                  className="h-4 w-4 hover:brightness-125"
+                  className="h-3 w-3 hover:brightness-125"
                 />
 
-                <ToolTip id="add-context-item-tooltip" place="top-middle">
+                <ToolTip id="add-context-item-tooltip" place="top">
                   Add context (files, docs, urls, etc.)
                 </ToolTip>
               </HoverItem>
             )}
-
-            <ToggleToolsButton disabled={!toolsSupported} />
           </div>
         </div>
 
-        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
+        <div
+          className="flex items-center gap-2 whitespace-nowrap text-gray-400"
+          style={{
+            fontSize: tinyFont,
+          }}
+        >
           {!props.toolbarOptions?.hideUseCodebase && !isInEditMode && (
             <div
               className={`${toolsSupported ? "md:flex" : "int:flex"} hover:underline" hidden transition-colors duration-200`}
@@ -228,7 +230,7 @@ function InputToolbar(props: InputToolbarProps) {
             <span className="md:hidden">⏎</span>
           </EnterButton>
         </div>
-      </StyledDiv>
+      </div>
     </>
   );
 }

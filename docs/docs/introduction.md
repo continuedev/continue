@@ -22,4 +22,4 @@ keywords:
 - [Chat](chat/how-to-use-it) to understand and iterate on code in the sidebar
 - [Autocomplete](autocomplete/how-to-use-it) to receive inline code suggestions as you type
 - [Edit](edit/how-to-use-it) to modify code without leaving your current file
-- [Actions](actions/how-to-use-it) to establish shortcuts for common use cases
+- [Agent](agent/how-to-use-it) to make more substantial changes to your codebase
