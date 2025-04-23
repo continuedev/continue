@@ -100,7 +100,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   const historyKey = props.isEditMode ? "edit" : "chat";
   const placeholder = props.isEditMode
-    ? "Describe how to modify the code - use '#' to add files"
+    ? "Describe changes, '#' to add files"
     : undefined;
 
   const toolbarOptions: ToolbarOptions = props.isEditMode
