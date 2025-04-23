@@ -260,8 +260,13 @@ function useSetup() {
     "updateApplyState",
     async (state) => {
       dispatch(updateApplyState(state));
-      if (activeToolStreamId && state.status === "closed") {
-        const [streamId, toolCallId] = activeToolStreamId;
+      const lastHistoryMsg = history.at(-1);
+      const [streamId, toolCallId] = activeToolStreamId ?? [];
+      if (
+        toolCallId &&
+        state.status === "closed" &&
+        lastHistoryMsg?.toolCallState?.toolCallId === toolCallId
+      ) {
         if (state.streamId === streamId) {
           // const output: ContextItem = {
           //   name: "Edit tool output",
@@ -282,7 +287,7 @@ function useSetup() {
         }
       }
     },
-    [activeToolStreamId],
+    [activeToolStreamId, history],
   );
 }
 
