@@ -678,9 +678,11 @@ const getCommandsMap: (
           description:
             getMetaKeyLabel() + " + K, " + getMetaKeyLabel() + " + A",
         },
+        /* Disable feedback option for Granite.Code
         {
           label: "$(feedback) Give feedback",
         },
+        */
         {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
