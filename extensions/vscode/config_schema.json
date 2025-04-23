@@ -216,7 +216,8 @@
             "siliconflow",
             "function-network",
             "scaleway",
-            "relace"
+            "relace",
+            "morph"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -263,7 +264,8 @@
             "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
             "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings.",
             "### Scaleway\n Generative APIs are serverless endpoints for the most popular AI models.\nHosted in European data centers and priced competitively per million tokens used, models served by Scaleway are ideal for users requiring low latency, full data privacy, and 100% compliance with EU AI Act. To get access to the Scaleway Generative APIs, read the [Quickstart guide](https://www.scaleway.com/en/docs/ai-data/generative-apis/quickstart/) and get a [valid API key](https://www.scaleway.com/en/docs/identity-and-access-management/iam/how-to/create-api-keys/).",
-            "### Relace\n Relace provides a fast apply model. To get started, obtain an API key from [here](https://app.relace.ai/settings/api-keys)."
+            "### Relace\n Relace provides a fast apply model. To get started, obtain an API key from [here](https://app.relace.ai/settings/api-keys).",
+            "### Morph\nMorph provides a fast apply model. To get started, obtain an API key from [here](https://morphllm.com/dashboard)."
           ],
           "type": "string"
         },
