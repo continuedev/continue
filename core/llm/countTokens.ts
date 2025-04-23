@@ -11,6 +11,12 @@ import {
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
 import llamaTokenizer from "./llamaTokenizer.js";
+import {
+  addSpaceToAnyEmptyMessages,
+  chatMessageIsEmpty,
+  flattenMessages,
+  messageHasToolCalls,
+} from "./messages.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -27,9 +33,9 @@ class LlamaEncoding implements Encoding {
 }
 
 class NonWorkerAsyncEncoder implements AsyncEncoder {
-  constructor(private readonly encoding: Encoding) { }
+  constructor(private readonly encoding: Encoding) {}
 
-  async close(): Promise<void> { }
+  async close(): Promise<void> {}
 
   async encode(text: string): Promise<number[]> {
     return this.encoding.encode(text);
@@ -116,31 +122,6 @@ function countTokens(
   } else {
     return encoding.encode(content ?? "", "all", []).length;
   }
-}
-
-function messageHasToolCalls(msg: ChatMessage): boolean {
-  return msg.role === "assistant" && !!msg.toolCalls;
-}
-
-export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
-  const flattened: ChatMessage[] = [];
-
-  for (let i = 0; i < msgs.length; i++) {
-    const msg = msgs[i];
-
-    if (
-      flattened.length > 0 &&
-      flattened[flattened.length - 1].role === msg.role &&
-      !messageHasToolCalls(msg) &&
-      !messageHasToolCalls(flattened[flattened.length - 1])
-    ) {
-      flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
-    } else {
-      flattened.push(msg);
-    }
-  }
-
-  return flattened;
 }
 
 function countChatMessageTokens(
@@ -240,10 +221,19 @@ function summarize(message: ChatMessage): string {
 
 function pruneChatHistory(
   modelName: string,
-  chatHistory: ChatMessage[],
+  msgs: ChatMessage[],
   contextLength: number,
   tokensForCompletion: number,
 ): ChatMessage[] {
+  // Move system message to 2nd to last to give it priority
+  const systemMessage = msgs.find((msg) => msg.role === "system");
+  const chatHistory: ChatMessage[] = msgs.filter(
+    (msg) => msg.role !== "system",
+  );
+  if (systemMessage) {
+    chatHistory.splice(-1, 0, systemMessage);
+  }
+
   let totalTokens =
     tokensForCompletion +
     chatHistory.reduce((acc, message) => {
@@ -251,16 +241,35 @@ function pruneChatHistory(
     }, 0);
 
   // 0. Prune any messages that take up more than 1/3 of the context length
-  const longestMessages = [...chatHistory];
-  longestMessages.sort((a, b) => b.content.length - a.content.length);
+  const zippedMessagesAndTokens: [ChatMessage, number][] = [];
 
-  const longerThanOneThird = longestMessages.filter(
-    (message: ChatMessage) =>
-      countTokens(message.content, modelName) > contextLength / 3,
+  // Zipped ChatMessage with its token counts
+  chatHistory.forEach((message) => {
+    const zippedItem: [ChatMessage, number] = [
+      message,
+      countTokens(message.content, modelName),
+    ];
+    zippedMessagesAndTokens.push(zippedItem);
+  });
+
+  const zippedLongerThanOneThird = zippedMessagesAndTokens.filter(
+    ([_message, tokens]: [ChatMessage, number]) => tokens > contextLength / 3,
   );
-  const distanceFromThird = longerThanOneThird.map(
-    (message: ChatMessage) =>
-      countTokens(message.content, modelName) - contextLength / 3,
+
+  zippedLongerThanOneThird.sort(
+    (
+      [_messageA, tokensA]: [ChatMessage, number],
+      [_messageB, tokensB]: [ChatMessage, number],
+    ) => {
+      return tokensB - tokensA;
+    },
+  );
+
+  const longerThanOneThird = zippedLongerThanOneThird.map(
+    ([message, _token]: [ChatMessage, number]) => message,
+  );
+  const distanceFromThird = zippedLongerThanOneThird.map(
+    ([_message, token]: [ChatMessage, number]) => token - contextLength / 3,
   );
 
   for (let i = 0; i < longerThanOneThird.length; i++) {
@@ -280,7 +289,7 @@ function pruneChatHistory(
   // 1. Replace beyond last 5 messages with summary
   let i = 0;
   while (totalTokens > contextLength && i < chatHistory.length - 5) {
-    const message = chatHistory[0];
+    const message = chatHistory[i];
     totalTokens -= countTokens(message.content, modelName);
     totalTokens += countTokens(summarize(message), modelName);
     message.content = summarize(message);
@@ -288,11 +297,7 @@ function pruneChatHistory(
   }
 
   // 2. Remove entire messages until the last 5
-  while (
-    chatHistory.length > 5 &&
-    totalTokens > contextLength &&
-    chatHistory.length > 0
-  ) {
+  while (chatHistory.length > 5 && totalTokens > contextLength) {
     const message = chatHistory.shift()!;
     totalTokens -= countTokens(message.content, modelName);
   }
@@ -313,8 +318,21 @@ function pruneChatHistory(
 
   // 4. Remove entire messages in the last 5, except last 1
   while (totalTokens > contextLength && chatHistory.length > 1) {
-    const message = chatHistory.shift()!;
-    totalTokens -= countTokens(message.content, modelName);
+    // If tool call/response detected prune both (can't have response with no call)
+    // TODO prune lines from tool response before pruning both messages
+    if (
+      chatHistory.length > 2 &&
+      messageHasToolCalls(chatHistory[0]) &&
+      chatHistory[1].role === "tool"
+    ) {
+      const firstMessage = chatHistory.shift()!;
+      const secondMessage = chatHistory.shift()!;
+      totalTokens -= countTokens(firstMessage.content, modelName);
+      totalTokens -= countTokens(secondMessage.content, modelName);
+    } else {
+      const message = chatHistory.shift()!;
+      totalTokens -= countTokens(message.content, modelName);
+    }
   }
 
   // 5. Truncate last message
@@ -329,111 +347,36 @@ function pruneChatHistory(
     totalTokens = contextLength;
   }
 
+  // put system message back if applicable
+  if (
+    chatHistory.length > 1 &&
+    chatHistory[chatHistory.length - 2].role === "system"
+  ) {
+    const movedSystemMessage = chatHistory.splice(-2, 1)[0];
+    chatHistory.unshift(movedSystemMessage);
+  }
+
   return chatHistory;
 }
 
-function messageIsEmpty(message: ChatMessage): boolean {
-  if (typeof message.content === "string") {
-    return message.content.trim() === "";
-  }
-  if (Array.isArray(message.content)) {
-    return message.content.every(
-      (item) => item.type === "text" && item.text?.trim() === "",
-    );
-  }
-  return false;
-}
+function compileChatMessages({
+  modelName,
+  msgs,
+  contextLength,
+  maxTokens,
+  supportsImages,
+}: {
+  modelName: string;
+  msgs: ChatMessage[];
+  contextLength: number;
+  maxTokens: number;
+  supportsImages: boolean;
+}): ChatMessage[] {
+  let msgsCopy: ChatMessage[] = msgs.map((m) => ({ ...m }));
 
-function addSpaceToAnyEmptyMessages(messages: ChatMessage[]): ChatMessage[] {
-  return messages.map((message) => {
-    if (messageIsEmpty(message)) {
-      message.content = " ";
-    }
-    return message;
-  });
-}
-
-function chatMessageIsEmpty(message: ChatMessage): boolean {
-  switch (message.role) {
-    case "system":
-    case "user":
-      return (
-        typeof message.content === "string" && message.content.trim() === ""
-      );
-    case "assistant":
-      return (
-        typeof message.content === "string" &&
-        message.content.trim() === "" &&
-        !message.toolCalls
-      );
-    case "thinking":
-    case "tool":
-      return false;
-  }
-}
-
-function compileChatMessages(
-  modelName: string,
-  msgs: ChatMessage[] | undefined,
-  contextLength: number,
-  maxTokens: number,
-  supportsImages: boolean,
-  prompt: string | undefined = undefined,
-  functions: any[] | undefined = undefined,
-  systemMessage: string | undefined = undefined,
-): ChatMessage[] {
-  let msgsCopy = msgs
-    ? msgs
-      .map((msg) => ({ ...msg }))
-      .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
-    : [];
+  msgsCopy = msgsCopy.filter((msg) => !chatMessageIsEmpty(msg));
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
-
-  if (prompt) {
-    const promptMsg: ChatMessage = {
-      role: "user",
-      content: prompt,
-    };
-    msgsCopy.push(promptMsg);
-  }
-
-  if (
-    (systemMessage && systemMessage.trim() !== "") ||
-    msgs?.[0]?.role === "system"
-  ) {
-    let content = "";
-    if (msgs?.[0]?.role === "system") {
-      content = renderChatMessage(msgs?.[0]);
-    }
-    if (systemMessage && systemMessage.trim() !== "") {
-      const shouldAddNewLines = content !== "";
-      if (shouldAddNewLines) {
-        content += "\n\n";
-      }
-      content += systemMessage;
-    }
-    const systemChatMsg: ChatMessage = {
-      role: "system",
-      content,
-    };
-    // Insert as second to last
-    // Later moved to top, but want second-priority to last user message
-    msgsCopy.splice(-1, 0, systemChatMsg);
-  }
-
-  let functionTokens = 0;
-  if (functions) {
-    for (const func of functions) {
-      functionTokens += countTokens(JSON.stringify(func), modelName);
-    }
-  }
-
-  if (maxTokens + functionTokens + TOKEN_BUFFER_FOR_SAFETY >= contextLength) {
-    throw new Error(
-      `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response. Try increasing the contextLength parameter of the model in your config.json.`,
-    );
-  }
 
   // If images not supported, convert MessagePart[] to string
   if (!supportsImages) {
@@ -449,13 +392,8 @@ function compileChatMessages(
     modelName,
     msgsCopy,
     contextLength,
-    functionTokens + maxTokens + TOKEN_BUFFER_FOR_SAFETY,
+    maxTokens + TOKEN_BUFFER_FOR_SAFETY,
   );
-
-  if (history.length >= 2 && history[history.length - 2].role === "system") {
-    const movedSystemMessage = history.splice(-2, 1)[0];
-    history.unshift(movedSystemMessage);
-  }
 
   const flattenedHistory = flattenMessages(history);
 
@@ -466,10 +404,10 @@ export {
   compileChatMessages,
   countTokens,
   countTokensAsync,
+  flattenMessages,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop
+  pruneStringFromTop,
 };
-

@@ -97,7 +97,7 @@ describe("walkDir functions", () => {
       );
     });
 
-    it("should handle onlyDirs option", async () => {
+    it("should handle include option", async () => {
       addToTestDir([
         "src/",
         ["src/file1.ts", "content1"],
@@ -109,7 +109,7 @@ describe("walkDir functions", () => {
         (await testIde.getWorkspaceDirs())[0],
         testIde,
         {
-          onlyDirs: true,
+          include: "dirs",
         },
       );
 

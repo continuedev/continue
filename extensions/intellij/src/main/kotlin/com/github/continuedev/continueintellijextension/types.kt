@@ -81,7 +81,6 @@ data class IdeSettings(
     val remoteConfigServerUrl: String?,
     val remoteConfigSyncPeriod: Int,
     val userToken: String,
-    val enableControlServerBeta: Boolean,
     val pauseCodebaseIndexOnStart: Boolean,
     val continueTestEnvironment: String
 )
@@ -159,6 +158,8 @@ interface IDE {
 
     suspend fun getSearchResults(query: String): String
 
+    suspend fun getFileResults(pattern: String): List<String>
+
     // Note: This should be a `Pair<String, String>` but we use `List<Any>` because the keys of `Pair`
     // will serialize to `first and `second` rather than `0` and `1` like in JavaScript
     suspend fun subprocess(command: String, cwd: String? = null): List<Any>
@@ -192,6 +193,10 @@ interface IDE {
 
     // Callbacks
     fun onDidChangeActiveTextEditor(callback: (filepath: String) -> Unit)
+
+    fun updateLastFileSaveTimestamp() {
+        // Default implementation does nothing
+    }
 }
 
 data class GetGhTokenArgs(

@@ -15,9 +15,9 @@ export function fetchwithRequestOptions(
   init?: RequestInit,
   requestOptions?: RequestOptions,
 ): Promise<Response> {
-  let url = url_;
-  if (typeof url === "string") {
-    url = new URL(url);
+  const url = typeof url_ === "string" ? new URL(url_) : url_;
+  if (url.host === "localhost") {
+    url.host = "127.0.0.1";
   }
 
   const TIMEOUT = 7200; // 7200 seconds = 2 hours

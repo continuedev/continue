@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.services
 
+import IntelliJIDE
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessengerManager
 import com.github.continuedev.continueintellijextension.`continue`.DiffManager
@@ -62,5 +63,9 @@ class ContinuePluginService : Disposable, DumbAware {
         } else {
             listener()
         }
+    }
+
+    fun updateLastFileSaveTimestamp() {
+        ideProtocolClient?.updateLastFileSaveTimestamp()
     }
 }

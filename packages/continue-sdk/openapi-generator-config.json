@@ -1,0 +1,14 @@
+{
+  "supportsES6": true,
+  "modelPropertyNaming": "camelCase",
+  "enumPropertyNaming": "UPPERCASE",
+  "apiPackage": "api",
+  "modelPackage": "models",
+  "npmName": "@continuedev/sdk",
+  "npmVersion": "0.0.1",
+  "withInterfaces": true,
+  "nullSafeAdditionalProps": true,
+  "typescriptThreePlus": true,
+  "useSingleRequestParameter": true,
+  "withSeparateModelsAndApi": true
+}

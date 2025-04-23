@@ -23,6 +23,7 @@ typealias getTagsParams = String
 
 data class GetSearchResultsParams(val query: String)
 
+data class GetFileResultsParams(val pattern: String)
 
 data class SaveFileParams(val filepath: String)
 

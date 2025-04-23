@@ -1,21 +1,22 @@
+import { expect } from "chai";
 import {
-  WebDriver,
-  VSBrowser,
   EditorView,
   InputBox,
-  TextEditor,
-  Workbench,
-  WebView,
-  WebElement,
-  until,
   Key,
+  TextEditor,
+  VSBrowser,
+  WebDriver,
+  WebElement,
+  WebView,
+  Workbench,
+  until,
 } from "vscode-extension-tester";
+
+import { GUIActions } from "../actions/GUI.actions";
+import { KeyboardShortcutsActions } from "../actions/KeyboardShortcuts.actions";
 import { DEFAULT_TIMEOUT } from "../constants";
 import { GUISelectors } from "../selectors/GUI.selectors";
-import { GUIActions } from "../actions/GUI.actions";
-import { expect } from "chai";
 import { TestUtils } from "../TestUtils";
-import { KeyboardShortcutsActions } from "../actions/KeyboardShortcuts.actions";
 
 describe("Keyboard Shortcuts", () => {
   let driver: WebDriver;

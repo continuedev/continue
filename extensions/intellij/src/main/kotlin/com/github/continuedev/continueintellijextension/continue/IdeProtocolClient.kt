@@ -16,6 +16,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -23,6 +24,7 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -43,6 +45,10 @@ class IdeProtocolClient(
         VirtualFileManager.getInstance().addAsyncFileListener(
             AsyncFileSaveListener(continuePluginService), ContinuePluginDisposable.getInstance(project)
         )
+    }
+
+    fun updateLastFileSaveTimestamp() {
+        (ide as IntelliJIDE).updateLastFileSaveTimestamp()
     }
 
     fun handleMessage(msg: String, respond: (Any?) -> Unit) {
@@ -106,11 +112,6 @@ class IdeProtocolClient(
                     "logoutOfControlPlane" -> {
                         val authService = service<ContinueAuthService>()
                         authService.signOut()
-                        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
-                            .handleUpdatedSessionInfo(null)
-
-                        // Tell the webview that session info changed
-                        continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", null, uuid())
 
                         respond(null)
                     }
@@ -334,12 +335,29 @@ class IdeProtocolClient(
                         respond(result)
                     }
 
+                    "closeSidebar" -> {
+                        ApplicationManager.getApplication().invokeLater {
+                            val toolWindowManager = ToolWindowManager.getInstance(project)
+                            val toolWindow = toolWindowManager.getToolWindow("Continue")
+                            toolWindow?.hide()
+                        }
+                    }
+
                     "getSearchResults" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
                             GetSearchResultsParams::class.java
                         )
                         val results = ide.getSearchResults(params.query)
+                        respond(results)
+                    }
+
+                    "getFileResults" -> {
+                        val params = Gson().fromJson(
+                            dataElement.toString(),
+                            GetFileResultsParams::class.java
+                        )
+                        val results = ide.getFileResults(params.pattern)
                         respond(results)
                     }
 
@@ -419,11 +437,47 @@ class IdeProtocolClient(
                             dataElement.toString(),
                             ApplyToFileParams::class.java
                         )
+                        val filepath = params.filepath
 
-                        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+                        continuePluginService.sendToWebview(
+                            "updateApplyState", mapOf(
+                                "streamId" to params.streamId,
+                                "status" to "streaming",
+                                "fileContent" to params.text,
+                                "toolCallId" to params.toolCallId,
+                                "filepath" to filepath
+                            )
+                        )
+
+
+                        fun closeStream() {
+                            continuePluginService.sendToWebview(
+                                "updateApplyState", mapOf(
+                                    "numDiffs" to 0,
+                                    "streamId" to params.streamId,
+                                    "status" to "closed",
+                                    "fileContent" to params.text,
+                                    "toolCallId" to params.toolCallId,
+                                    "filepath" to filepath
+                                )
+                            )
+                        }
+
+                        var editor: Editor? = null;
+
+                        if (!filepath.isNullOrEmpty()) {
+                            val virtualFile = VirtualFileManager.getInstance().findFileByUrl(filepath)
+                            if (virtualFile != null) {
+                                ApplicationManager.getApplication().invokeAndWait {
+                                    FileEditorManager.getInstance(project).openFile(virtualFile, true)?.first()
+                                }
+                            }
+                        }
+                        editor = FileEditorManager.getInstance(project).selectedTextEditor
 
                         if (editor == null) {
                             ide.showToast(ToastType.ERROR, "No active editor to apply edits to")
+                            closeStream()
                             respond(null)
                             return@launch
                         }
@@ -432,6 +486,7 @@ class IdeProtocolClient(
                             WriteCommandAction.runWriteCommandAction(project) {
                                 editor.document.insertString(0, params.text)
                             }
+                            closeStream()
                             respond(null)
                             return@launch
                         }
@@ -450,21 +505,18 @@ class IdeProtocolClient(
                                         val config = result["config"] as Map<*, *>
 
                                         val selectedModels = config["selectedModelByRole"] as? Map<*, *>
-                                        val applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
+                                        var applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
+
+                                        // If "apply" role model is not found, try "chat" role
+                                        if (applyCodeBlockModel == null) {
+                                            applyCodeBlockModel = selectedModels?.get("chat") as? Map<*, *>
+                                        }
 
                                         if (applyCodeBlockModel != null) {
                                             continuation.resume(applyCodeBlockModel)
                                         } else {
-                                            val models =
-                                                config["models"] as List<Map<String, Any>>
-                                            val curSelectedModel =
-                                                models.find { it["title"] == params.curSelectedModelTitle }
-
-                                            if (curSelectedModel == null) {
-                                                continuation.resumeWithException(IllegalStateException("Model '${params.curSelectedModelTitle}' not found in config."))
-                                            } else {
-                                                continuation.resume(curSelectedModel)
-                                            }
+                                            // If neither "apply" nor "chat" models are available, return with exception
+                                            continuation.resumeWithException(IllegalStateException("No 'apply' or 'chat' model found in configuration."))
                                         }
                                     } catch (e: Exception) {
                                         continuation.resumeWithException(e)
@@ -477,6 +529,7 @@ class IdeProtocolClient(
                                     ToastType.ERROR, "Failed to fetch model configuration"
                                 )
                             }
+                            closeStream()
                             respond(null)
                             return@launch
                         }
@@ -515,7 +568,11 @@ class IdeProtocolClient(
                                 editor,
                                 rif?.range?.start?.line ?: 0,
                                 rif?.range?.end?.line ?: (editor.document.lineCount - 1),
-                                {}, {})
+                                {},
+                                {},
+                                params.streamId,
+                                params.toolCallId
+                            )
 
                         diffStreamService.register(diffStreamHandler, editor)
 

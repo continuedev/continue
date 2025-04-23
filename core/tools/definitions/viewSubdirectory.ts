@@ -9,6 +9,7 @@ export const viewSubdirectoryTool: Tool = {
   hasAlready: 'viewed a map of "{{{ directory_path }}}"',
   readonly: true,
   group: BUILT_IN_GROUP_NAME,
+  isInstant: true,
   function: {
     name: BuiltInToolNames.ViewSubdirectory,
     description: "View the contents of a subdirectory",
