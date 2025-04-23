@@ -12,8 +12,9 @@ export const cancelStream = createAsyncThunk<void, undefined, ThunkApiType>(
     dispatch(setInactive());
     dispatch(abortStream());
 
+    // In the case tool calls were being generated,
+    // Replace them with
     // If the assistant message is empty, then remove it and the user message, placing the user input in the main text box
-    // TODO: Waiting until next release
     dispatch(clearLastEmptyResponse());
   },
 );

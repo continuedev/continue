@@ -98,7 +98,7 @@ export function constructMessages(
     }
   }
 
-  const lastUserMsg = findLast(msgs, (msg) => isUserOrToolMsg) as
+  const lastUserMsg = findLast(msgs, isUserOrToolMsg) as
     | UserChatMessage
     | ToolResultChatMessage
     | undefined;
