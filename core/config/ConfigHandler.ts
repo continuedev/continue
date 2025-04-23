@@ -279,7 +279,10 @@ export class ConfigHandler {
     if (options.includeWorkspace) {
       const assistantFiles = await getAllDotContinueYamlFiles(
         this.ide,
-        options,
+        {
+          ...options,
+          includeGlobal: false, // Because the global comes from above
+        },
         ASSISTANTS,
       );
       const profiles = assistantFiles.map((assistant) => {
@@ -297,6 +300,7 @@ export class ConfigHandler {
       localProfiles.push(...localAssistantProfiles);
     }
 
+    logger.info("num profiles: ", localProfiles.length);
     return localProfiles;
   }
 

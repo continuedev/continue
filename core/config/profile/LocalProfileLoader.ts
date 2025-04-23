@@ -4,6 +4,7 @@ import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings, ILLMLogger } from "../../index.js";
 import { ProfileDescription } from "../ProfileLifecycleManager.js";
 
+import { logger } from "../../util/logger.js";
 import { getPrimaryConfigFilePath } from "../../util/paths.js";
 import { localPathToUri } from "../../util/pathToUri.js";
 import { getUriPathBasename } from "../../util/uri.js";
@@ -55,6 +56,11 @@ export default class LocalProfileLoader implements IProfileLoader {
   description: ProfileDescription;
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
+    logger.info(
+      "doLoadConfig: ",
+      this.overrideAssistantFile?.path,
+      getPrimaryConfigFilePath(),
+    );
     const result = await doLoadConfig({
       ide: this.ide,
       ideSettingsPromise: this.ideSettingsPromise,
