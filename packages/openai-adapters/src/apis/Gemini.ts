@@ -14,8 +14,20 @@ import {
   Model,
 } from "openai/resources/index";
 
+import { v4 as uuidv4 } from "uuid";
 import { GeminiConfig } from "../types.js";
-import { customFetch, embedding } from "../util.js";
+import {
+  chatChunk,
+  chatChunkFromDelta,
+  customFetch,
+  embedding,
+} from "../util.js";
+import {
+  convertOpenAIToolToGeminiFunction,
+  GeminiChatContent,
+  GeminiChatContentPart,
+  GeminiToolFunctionDeclaration,
+} from "../util/gemini-types.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -42,9 +54,15 @@ export class GeminiApi implements BaseLlmApi {
   }
 
   private _oaiPartToGeminiPart(
-    part: OpenAI.Chat.Completions.ChatCompletionContentPart,
-  ) {
+    part:
+      | OpenAI.Chat.Completions.ChatCompletionContentPart
+      | OpenAI.Chat.Completions.ChatCompletionContentPartRefusal,
+  ): GeminiChatContentPart {
     switch (part.type) {
+      case "refusal":
+        return {
+          text: part.refusal,
+        };
       case "text":
         return {
           text: part.text,
@@ -80,36 +98,113 @@ export class GeminiApi implements BaseLlmApi {
     }
 
     const isV1API = url.includes("/v1/");
-    const contents = oaiBody.messages
+
+    const toolCallIdToNameMap = new Map<string, string>();
+    oaiBody.messages.forEach((msg) => {
+      if (msg.role === "assistant" && msg.tool_calls) {
+        msg.tool_calls.forEach((call) => {
+          toolCallIdToNameMap.set(call.id, call.function.name);
+        });
+      }
+    });
+
+    const contents: (GeminiChatContent | null)[] = oaiBody.messages
       .map((msg) => {
         if (msg.role === "system" && !isV1API) {
           return null; // Don't include system message in contents
         }
+
+        if (msg.role === "assistant" && msg.tool_calls?.length) {
+          for (const toolCall of msg.tool_calls) {
+            toolCallIdToNameMap.set(toolCall.id, toolCall.function.name);
+          }
+
+          return {
+            role: "model" as const,
+            parts: msg.tool_calls.map((toolCall) => ({
+              functionCall: {
+                id: toolCall.id,
+                name: toolCall.function.name,
+                args: JSON.parse(toolCall.function.arguments || "{}"),
+              },
+            })),
+          };
+        }
+
+        if (msg.role === "tool") {
+          const functionName = toolCallIdToNameMap.get(msg.tool_call_id);
+          return {
+            role: "user" as const,
+            parts: [
+              {
+                functionResponse: {
+                  id: msg.tool_call_id,
+                  name: functionName ?? "unknown",
+                  response: {
+                    content:
+                      typeof msg.content === "string"
+                        ? msg.content
+                        : msg.content.map((part) => part.text).join(""),
+                  },
+                },
+              },
+            ],
+          };
+        }
+
         if (!msg.content) {
           return null;
         }
 
         return {
-          role: msg.role === "assistant" ? "model" : "user",
+          role:
+            msg.role === "assistant" ? ("model" as const) : ("user" as const),
           parts:
             typeof msg.content === "string"
               ? [{ text: msg.content }]
-              : // @ts-ignore
-                msg.content.map(this._oaiPartToGeminiPart),
+              : msg.content.map(this._oaiPartToGeminiPart),
         };
       })
       .filter((c) => c !== null);
 
     const sysMsg = oaiBody.messages.find((msg) => msg.role === "system");
-    const finalBody = {
+    const finalBody: any = {
       generationConfig,
       contents,
-      // if this.systemMessage is defined, reformat it for Gemini API
+      // if there is a system message, reformat it for Gemini API
       ...(sysMsg &&
         !isV1API && {
           systemInstruction: { parts: [{ text: sysMsg.content }] },
         }),
     };
+
+    if (!isV1API) {
+      // Convert and add tools if present
+      if (oaiBody.tools?.length) {
+        // Choosing to map all tools to the functionDeclarations of one tool
+        // Rather than map each tool to its own tool + functionDeclaration
+        // Same difference
+        const functions: GeminiToolFunctionDeclaration[] = [];
+        oaiBody.tools.forEach((tool) => {
+          try {
+            functions.push(convertOpenAIToolToGeminiFunction(tool));
+          } catch (e) {
+            console.warn(
+              `Failed to convert tool to gemini function definition. Skipping: ${JSON.stringify(tool, null, 2)}`,
+            );
+          }
+        });
+
+        if (functions.length) {
+          finalBody.tools = [
+            {
+              functionDeclarations: functions,
+            },
+          ];
+        }
+      }
+    }
+
     return finalBody;
   }
 
@@ -156,9 +251,10 @@ export class GeminiApi implements BaseLlmApi {
       `models/${body.model}:streamGenerateContent?key=${this.config.apiKey}`,
       this.apiBase,
     ).toString();
+    const convertedBody = this._convertBody(body, apiURL);
     const resp = await customFetch(this.config.requestOptions)(apiURL, {
       method: "POST",
-      body: JSON.stringify(this._convertBody(body, apiURL)),
+      body: JSON.stringify(convertedBody),
       signal,
     });
 
@@ -190,28 +286,35 @@ export class GeminiApi implements BaseLlmApi {
         if (data.error) {
           throw new Error(data.error.message);
         }
-        // Check for existence of each level before accessing the final 'text' property
-        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
-          yield {
-            id: "",
-            object: "chat.completion.chunk",
-            model: body.model,
-            created: Date.now(),
-            choices: [
-              {
-                index: 0,
-                logprobs: undefined,
-                finish_reason: null,
+
+        const content = data?.candidates?.[0]?.content;
+        if (content) {
+          for (const part of content.parts) {
+            if ("text" in part) {
+              yield chatChunk({
+                content: part.text,
+                model: body.model,
+              });
+            } else if ("functionCall" in part) {
+              yield chatChunkFromDelta({
+                model: body.model,
                 delta: {
-                  role: "assistant",
-                  content: data.candidates[0].content.parts[0].text,
+                  tool_calls: [
+                    {
+                      index: 0,
+                      id: part.functionCall.id ?? uuidv4(),
+                      type: "function",
+                      function: {
+                        name: part.functionCall.name,
+                        arguments: JSON.stringify(part.functionCall.args),
+                      },
+                    },
+                  ],
                 },
-              },
-            ],
-            usage: undefined,
-          };
+              });
+            }
+          }
         } else {
-          // Handle the case where the expected data structure is not found
           console.warn("Unexpected response format:", data);
         }
       }

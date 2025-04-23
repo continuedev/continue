@@ -1,33 +1,32 @@
-import { Transition } from "@headlessui/react";
 import {
   CheckIcon,
   ChevronUpDownIcon,
   CubeIcon,
 } from "@heroicons/react/24/outline";
-import { Dispatch, Fragment, SetStateAction } from "react";
-import { Listbox } from "@headlessui/react";
+import { Fragment } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-  vscButtonBackground,
   vscForeground,
   vscInputBackground,
   vscListActiveBackground,
   vscListActiveForeground,
 } from "..";
 import {
-  DisplayInfo,
-  ModelPackage,
-} from "../../pages/AddNewModel/configs/models";
-import { ProviderInfo } from "../../pages/AddNewModel/configs/providers";
-
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "../../components/ui";
+import { DisplayInfo } from "../../pages/AddNewModel/configs/models";
 export const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
 `;
 
-export const StyledListboxButton = styled(Listbox.Button)`
+export const StyledListboxButton = styled(ListboxButton)`
   cursor: pointer;
   background-color: ${vscBackground};
   text-align: left;
@@ -61,30 +60,29 @@ export const StyledListboxButton = styled(Listbox.Button)`
   }
 `;
 
-export const StyledListboxOptions = styled(Listbox.Options)`
+export const StyledListboxOptions = styled(ListboxOptions)`
   background-color: ${vscInputBackground};
   padding: 0;
 
   position: absolute;
   top: 100%;
   left: 0;
-  right: 0;
 
   margin-top: 0.25rem;
 
+  height: fit-content;
   max-height: 15rem;
-  overflow: auto;
+  width: 60%;
 
   border-radius: ${defaultBorderRadius};
-  overflow-y: scroll;
+  overflow-y: auto;
   z-index: 10;
 
   &:focus {
     outline: none;
   }
 `;
-
-export const StyledListboxOption = styled(Listbox.Option)<{
+export const StyledListboxOption = styled(ListboxOption)<{
   selected: boolean;
 }>`
   background-color: ${({ selected }) =>

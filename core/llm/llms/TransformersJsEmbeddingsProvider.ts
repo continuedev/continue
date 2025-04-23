@@ -49,7 +49,10 @@ export class TransformersJsEmbeddingsProvider extends BaseLLM {
   };
 
   constructor() {
-    super({ model: TransformersJsEmbeddingsProvider.model });
+    super({
+      model: TransformersJsEmbeddingsProvider.model,
+      title: "Transformers.js (Built-In)",
+    });
   }
 
   async embed(chunks: string[]) {

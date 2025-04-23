@@ -2,6 +2,10 @@
 title: Build your own slash command
 ---
 
+:::info
+Slash commands can currently only be added using [`config.json`](../../json-reference.md) or `config.ts`. The [`YAML Config Format`](../../reference.md) is the new and preferred format. We recommend looking into [Prompt Files](../deep-dives/prompts.md) to achieve similar functionality.
+:::
+
 There are two ways to add custom slash commands:
 
 1. With natural language prompts - this is simpler and only requires writing a string or string template.
@@ -18,11 +22,15 @@ You can add custom slash commands by adding to the `customCommands` property in 
 Custom commands are great when you are frequently reusing a prompt. For example, if you've crafted a great prompt and frequently ask the LLM to check for mistakes in your code, you could add a command like this:
 
 ```json title="config.json"
-customCommands=[{
-        "name": "check",
-        "description": "Check for mistakes in my code",
-        "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
-}]
+{
+  "customCommands": [
+    {
+      "name": "check",
+      "description": "Check for mistakes in my code",
+      "prompt": "{{{ input }}}\n\nPlease read the highlighted code and check for any mistakes. You should look for the following, and be extremely vigilant:\n- Syntax errors\n- Logic errors\n- Security vulnerabilities\n- Performance issues\n- Anything else that looks wrong\n\nOnce you find an error, please explain it as clearly as possible, but without using extra words. For example, instead of saying 'I think there is a syntax error on line 5', you should say 'Syntax error on line 5'. Give your answer as one bullet point per mistake found."
+    }
+  ]
+}
 ```
 
 #### Templating

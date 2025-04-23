@@ -1,20 +1,9 @@
-import * as Tabs from "./tabs";
-import { TabTitle, OnboardingCardTabs } from "./components/OnboardingCardTabs";
-import { XMarkIcon } from "@heroicons/react/24/outline";
-import styled from "styled-components";
-import { CloseButton, defaultBorderRadius, vscInputBackground } from "../";
-import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import { useOnboardingCard } from "./hooks/useOnboardingCard";
 import { useAppSelector } from "../../redux/hooks";
-
-const StyledCard = styled.div`
-  margin: auto;
-  border-radius: ${defaultBorderRadius};
-  background-color: ${vscInputBackground};
-  box-shadow:
-    0 20px 25px -5px rgb(0 0 0 / 0.1),
-    0 8px 10px -6px rgb(0 0 0 / 0.1);
-`;
+import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { ReusableCard } from "../ReusableCard";
+import { OnboardingCardTabs, TabTitle } from "./components/OnboardingCardTabs";
+import { useOnboardingCard } from "./hooks/useOnboardingCard";
+import * as Tabs from "./tabs";
 
 export interface OnboardingCardState {
   show?: boolean;
@@ -47,20 +36,16 @@ export function OnboardingCard({ isDialog }: OnboardingCardProps) {
   }
 
   return (
-    <StyledCard
-      className="xs:py-4 xs:px-4 relative px-2 py-3"
-      data-testid="onboarding-card"
+    <ReusableCard
+      showCloseButton={!isDialog && !!config.modelsByRole.chat.length}
+      onClose={() => onboardingCard.close()}
+      testId="onboarding-card"
     >
       <OnboardingCardTabs
         activeTab={onboardingCard.activeTab || "Best"}
         onTabClick={onboardingCard.setActiveTab}
       />
-      {!isDialog && !!config.models.length && (
-        <CloseButton onClick={() => onboardingCard.close()}>
-          <XMarkIcon className="mt-1.5 hidden h-5 w-5 hover:brightness-125 sm:flex" />
-        </CloseButton>
-      )}
-      <div className="content py-4">{renderTabContent()}</div>
-    </StyledCard>
+      {renderTabContent()}
+    </ReusableCard>
   );
 }

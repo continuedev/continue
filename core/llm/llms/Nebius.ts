@@ -10,6 +10,10 @@ class Nebius extends OpenAI {
   };
 
   private static MODEL_IDS: { [name: string]: string } = {
+    "deepseek/deepseek_v3": "deepseek-ai/DeepSeek-V3",
+    "deepseek/deepseek-r1": "deepseek-ai/DeepSeek-R1",
+    "qwen2.5-coder-32b": "Qwen/Qwen2.5-Coder-32B-Instruct-fast",
+    "Qwen/QwQ-32B-Preview": "Qwen/QwQ-32B-Preview",
     "llama3.1-70b-nemotron": "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF-fast",
     "llama3.1-8b": "meta-llama/Meta-Llama-3.1-70B-Instruct-fast",
     "llama3.1-70b": "meta-llama/Meta-Llama-3.1-70B-Instruct-fast",

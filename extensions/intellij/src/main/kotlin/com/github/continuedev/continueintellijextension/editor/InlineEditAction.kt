@@ -133,11 +133,15 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         val content = (response as Map<String, Any>)["content"] as Map<String, Any>
         val result = content["result"] as Map<String, Any>
         val config = result["config"] as Map<String, Any>
-        val models = config["models"] as List<Map<String, Any>>
-        modelTitles.addAll(models.map { it["title"] as String })
+        val models = config["modelsByRole"] as Map<String, Any>
+        val editModels = models["edit"] as List<Map<String, Any>>
+        modelTitles.addAll(editModels.map { it["title"] as String })
     }
 
-    val maxWaitTime = 200
+    // This is a hacky way to not complicate getting model titles with coroutines
+    // 1500 feels like way upper limit of "would be weird if panel showed up after that long"
+    // And should always allow enough time to load config
+    val maxWaitTime = 1500
     val startTime = System.currentTimeMillis()
     while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
         Thread.sleep(20)
@@ -204,7 +208,10 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                 textArea.document.insertString(textArea.caretPosition, ", ", null)
                 textArea.requestFocus()
                 customPanelRef.get().finish()
-            })
+            },
+            null,
+            null
+        )
 
     val diffStreamService = project.service<DiffStreamService>()
     diffStreamService.register(diffStreamHandler, editor)

@@ -4,7 +4,7 @@ import {
   CompletionOptions,
   LLMOptions,
 } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamJSON } from "../stream.js";
 
@@ -67,6 +67,11 @@ class Cohere extends BaseLLM {
       ...this.requestOptions?.headers,
     };
 
+    let preamble: string | undefined = undefined;
+    const systemMessage = messages.find((m) => m.role === "system")?.content;
+    if (systemMessage) {
+      preamble = stripImages(systemMessage);
+    }
     const resp = await this.fetch(new URL("chat", this.apiBase), {
       method: "POST",
       headers,
@@ -74,7 +79,7 @@ class Cohere extends BaseLLM {
         ...this._convertArgs(options),
         message: messages.pop()?.content,
         chat_history: this._convertMessages(messages),
-        preamble: this.systemMessage,
+        preamble,
       }),
       signal,
     });
@@ -117,7 +122,7 @@ class Cohere extends BaseLLM {
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    const resp = await fetch(new URL("rerank", this.apiBase), {
+    const resp = await this.fetch(new URL("rerank", this.apiBase), {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,

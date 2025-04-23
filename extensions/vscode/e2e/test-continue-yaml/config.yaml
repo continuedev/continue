@@ -1,5 +1,6 @@
 name: Test Config
 version: 0.0.1
+schema: v1
 
 rules:
   - TEST_SYS_MSG
@@ -36,8 +37,7 @@ models:
                 - id: test_id
                   type: function
                   function:
-                    name: builtin_exact_search
-                    arguments: '{"query": "test query"}'
+                    name: builtin_view_diff
           - REPEAT_LAST_MSG
     roles:
       - chat

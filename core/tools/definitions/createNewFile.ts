@@ -1,21 +1,27 @@
 import { Tool } from "../..";
-import { BuiltInToolNames } from "../builtIn";
+import { BUILT_IN_GROUP_NAME, BuiltInToolNames } from "../builtIn";
 
 export const createNewFileTool: Tool = {
   type: "function",
   displayTitle: "Create New File",
-  wouldLikeTo: "create a new file",
+  wouldLikeTo: "create a new file at {{{ filepath }}}",
+  isCurrently: "creating a new file at {{{ filepath }}}",
+  hasAlready: "created a new file at {{{ filepath }}}",
+  group: BUILT_IN_GROUP_NAME,
   readonly: false,
+  isInstant: true,
   function: {
     name: BuiltInToolNames.CreateNewFile,
-    description: "Create a new file",
+    description:
+      "Create a new file. Only use this when a file doesn't exist and should be created",
     parameters: {
       type: "object",
       required: ["filepath", "contents"],
       properties: {
         filepath: {
           type: "string",
-          description: "The path where the new file should be created",
+          description:
+            "The path where the new file should be created, relative to the root of the workspace",
         },
         contents: {
           type: "string",

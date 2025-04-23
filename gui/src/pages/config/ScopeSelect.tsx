@@ -1,94 +1,84 @@
-import { Listbox } from "@headlessui/react";
 import {
   BuildingOfficeIcon,
-  ChevronDownIcon,
-  UserCircleIcon,
+  ChevronUpDownIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { UserCircleIcon } from "@heroicons/react/24/solid";
+import { useContext } from "react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+} from "../../components/ui/Listbox";
 import { useAuth } from "../../context/Auth";
-import { useAppDispatch } from "../../redux/hooks";
-import { setOrgId } from "../../redux/thunks/setOrgId";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import {
+  selectCurrentOrg,
+  setSelectedOrgId,
+} from "../../redux/slices/profiles/slice";
 
-const USER_PROFILE_VAL = "personal";
-
-export function ScopeSelect() {
-  const { organizations, selectedOrganization } = useAuth();
-  const [value, setValue] = useState<string>(
-    selectedOrganization?.id || USER_PROFILE_VAL,
+interface ScopeSelectProps {
+  onSelect?: () => void;
+}
+export function ScopeSelect({ onSelect }: ScopeSelectProps) {
+  const { organizations } = useAuth();
+  const ideMessenger = useContext(IdeMessengerContext);
+  const selectedOrgId = useAppSelector(
+    (state) => state.profiles.selectedOrganizationId,
   );
+  const currentOrg = useAppSelector(selectCurrentOrg);
   const dispatch = useAppDispatch();
 
   const handleChange = (newValue: string) => {
-    setValue(newValue);
-
-    const orgId = newValue === USER_PROFILE_VAL ? null : newValue;
-    dispatch(setOrgId(orgId));
+    // optimisitic update
+    dispatch(setSelectedOrgId(newValue));
+    ideMessenger.post("didChangeSelectedOrg", {
+      id: newValue,
+    });
+    onSelect?.();
   };
 
-  const CurScopeEntityFallBackIcon =
-    value === "personal" ? UserCircleIcon : BuildingOfficeIcon;
+  const CurScopeEntityFallBackIcon = selectedOrgId
+    ? BuildingOfficeIcon
+    : UserCircleIcon;
 
-  const selectedDisplay =
-    value === USER_PROFILE_VAL
-      ? { name: "Personal", iconUrl: null }
-      : organizations.find((org) => org.id === value);
+  const selectedDisplay = currentOrg ?? {
+    name: "Personal",
+    iconUrl: null,
+  };
 
   return (
-    <Listbox value={value} onChange={handleChange}>
+    <Listbox value={selectedOrgId} onChange={handleChange}>
       <div className="relative">
-        <Listbox.Button className="border-vsc-input-border text-vsc-foreground hover:bg-vsc-background bg-vsc-input-background flex w-full max-w-[400px] cursor-pointer items-center gap-0.5 rounded border border-solid p-2 hover:opacity-90">
-          <div className="flex w-full items-center justify-between">
-            <div className="flex items-center gap-2">
-              {selectedDisplay?.iconUrl ? (
-                <img src={selectedDisplay.iconUrl} alt="" className="h-5 w-5" />
-              ) : (
-                <CurScopeEntityFallBackIcon className="h-5 w-5" />
-              )}
-              <span className="truncate">
-                {selectedDisplay?.name || "Select Organization"}
-              </span>
-            </div>
-            <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
+        <ListboxButton className="hover:bg-list-active hover:text-list-active-foreground min-w-[140px] justify-between px-4 py-2 sm:min-w-[200px]">
+          <div className="flex items-center gap-2">
+            {selectedDisplay?.iconUrl ? (
+              <img src={selectedDisplay.iconUrl} alt="" className="h-5 w-5" />
+            ) : (
+              <CurScopeEntityFallBackIcon className="h-5 w-5" />
+            )}
+            <span className="truncate">
+              {selectedDisplay?.name || "Select Organization"}
+            </span>
           </div>
-        </Listbox.Button>
+          <ChevronUpDownIcon className="h-5 w-5" aria-hidden="true" />
+        </ListboxButton>
 
-        <Listbox.Options className="bg-vsc-input-background absolute z-50 mt-1 w-full min-w-[200px] list-none overflow-auto rounded p-0 shadow-lg">
-          {organizations.length > 0 && (
-            <>
-              <div className="text-vsc-foreground p-2 font-semibold">
-                Organizations
+        <ListboxOptions className="z-[1000] min-w-[140px] pt-0.5 sm:min-w-[200px]">
+          {organizations.map((org) => (
+            <ListboxOption key={org.id} value={org.id} className="py-2">
+              <div className="flex items-center gap-2">
+                {org.iconUrl ? (
+                  <img src={org.iconUrl} alt="" className="h-5 w-5" />
+                ) : (
+                  <BuildingOfficeIcon className="h-5 w-5" />
+                )}
+                <span>{org.name}</span>
               </div>
-              {organizations.map((org) => (
-                <Listbox.Option
-                  key={org.id}
-                  value={org.id}
-                  className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
-                >
-                  <div className="flex items-center gap-2">
-                    {org.iconUrl ? (
-                      <img src={org.iconUrl} alt="" className="h-5 w-5" />
-                    ) : (
-                      <BuildingOfficeIcon className="h-5 w-5" />
-                    )}
-                    <span>{org.name}</span>
-                  </div>
-                </Listbox.Option>
-              ))}
-
-              <div className="bg-lightgray mx-1 my-1 h-px" />
-            </>
-          )}
-
-          <Listbox.Option
-            value={USER_PROFILE_VAL}
-            className="text-vsc-foreground hover:bg-lightgray/20 cursor-pointer rounded p-2 hover:opacity-90"
-          >
-            <div className="flex items-center gap-2">
-              <UserCircleIcon className="h-5 w-5" />
-              <span>Personal</span>
-            </div>
-          </Listbox.Option>
-        </Listbox.Options>
+            </ListboxOption>
+          ))}
+        </ListboxOptions>
       </div>
     </Listbox>
   );

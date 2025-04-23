@@ -5,21 +5,20 @@ import {
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from "react";
-import { useDispatch } from "react-redux";
-import AccountDialog from "../components/AccountDialog";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { useAppSelector } from "../redux/hooks";
-import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import {
-  selectAvailableProfiles,
-  setAvailableProfiles,
-} from "../redux/slices/sessionSlice";
+  selectCurrentOrg,
+  selectSelectedProfile,
+  setOrganizations,
+  setSelectedOrgId,
+} from "../redux/";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { IdeMessengerContext } from "./IdeMessenger";
 
@@ -27,11 +26,10 @@ interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
   logout: () => void;
   login: (useOnboarding: boolean) => Promise<boolean>;
-  selectedProfile: ProfileDescription | undefined;
-  profiles: ProfileDescription[];
-  controlServerBetaEnabled: boolean;
+  selectedProfile: ProfileDescription | null;
+  profiles: ProfileDescription[] | null;
+  refreshProfiles: () => void;
   organizations: OrganizationDescription[];
-  selectedOrganization: OrganizationDescription | undefined;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -39,34 +37,19 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const dispatch = useAppDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+  // Session
   const [session, setSession] = useState<ControlPlaneSessionInfo | undefined>(
     undefined,
   );
 
-  const [organizations, setOrganizations] = useState<OrganizationDescription[]>(
-    [],
-  );
+  // Orgs
+  const orgs = useAppSelector((store) => store.profiles.organizations);
 
-  const ideMessenger = useContext(IdeMessengerContext);
-
-  const selectedOrganizationId = useAppSelector(
-    (store) => store.session.selectedOrganizationId,
-  );
-
-  const selectedOrganization = useMemo(() => {
-    return organizations.find((p) => p.id === selectedOrganizationId);
-  }, [organizations, selectedOrganizationId]);
-
-  const profiles = useAppSelector(selectAvailableProfiles);
-
-  const selectedProfileId = useAppSelector(
-    (store) => store.session.selectedProfileId,
-  );
-  const selectedProfile = useMemo(() => {
-    return profiles.find((p) => p.id === selectedProfileId);
-  }, [profiles, selectedProfileId]);
-
-  const dispatch = useDispatch();
+  // Profiles
+  const currentOrg = useAppSelector(selectCurrentOrg);
+  const selectedProfile = useAppSelector(selectSelectedProfile);
 
   const login: AuthContextType["login"] = (useOnboarding: boolean) => {
     return new Promise((resolve) => {
@@ -98,92 +81,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           text="Are you sure you want to log out of Continue?"
           onConfirm={() => {
             ideMessenger.post("logoutOfControlPlane", undefined);
+            dispatch(
+              setOrganizations(orgs.filter((org) => org.id === "personal")),
+            );
+            dispatch(setSelectedOrgId("personal"));
+            setSession(undefined);
           }}
           onCancel={() => {
-            dispatch(setDialogMessage(<AccountDialog />));
-            dispatch(setShowDialog(true));
+            dispatch(setDialogMessage(undefined));
+            dispatch(setShowDialog(false));
           }}
         />,
       ),
     );
   };
 
-  useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
-    setSession(data.sessionInfo);
-  });
-
-  useWebviewListener("signInToControlPlane", async () => {
-    login(false);
-  });
-
   useEffect(() => {
-    ideMessenger
-      .request("getControlPlaneSessionInfo", {
+    async function init() {
+      const result = await ideMessenger.request("getControlPlaneSessionInfo", {
         silent: true,
         useOnboarding: false,
-      })
-      .then(
-        (result) => result.status === "success" && setSession(result.content),
-      );
-  }, []);
-
-  const [controlServerBetaEnabled, setControlServerBetaEnabled] =
-    useState(false);
-
-  useEffect(() => {
-    ideMessenger.ide
-      .getIdeSettings()
-      .then(({ enableControlServerBeta, continueTestEnvironment }) => {
-        setControlServerBetaEnabled(enableControlServerBeta);
-        dispatch(
-          setLastControlServerBetaEnabledStatus(enableControlServerBeta),
-        );
       });
-  }, []);
-
-  useEffect(() => {
-    if (session) {
-      ideMessenger
-        .request("controlPlane/listOrganizations", undefined)
-        .then((result) => {
-          if (result.status === "success") {
-            setOrganizations(result.content);
-          }
-        });
-    } else {
-      setOrganizations([]);
+      if (result.status === "success") {
+        setSession(result.content);
+      }
     }
-  }, [session]);
-
-  useWebviewListener(
-    "didChangeIdeSettings",
-    async (msg) => {
-      const { settings } = msg;
-      setControlServerBetaEnabled(settings.enableControlServerBeta);
-      dispatch(
-        setLastControlServerBetaEnabledStatus(settings.enableControlServerBeta),
-      );
-    },
-    [],
-  );
-
-  useEffect(() => {
-    ideMessenger
-      .request("config/listProfiles", undefined)
-      .then(
-        (result) =>
-          result.status === "success" &&
-          dispatch(setAvailableProfiles(result.content)),
-      );
+    void init();
   }, []);
 
   useWebviewListener(
-    "didChangeAvailableProfiles",
+    "sessionUpdate",
     async (data) => {
-      dispatch(setAvailableProfiles(data.profiles));
+      setSession(data.sessionInfo);
     },
     [],
   );
+
+  const refreshProfiles = useCallback(async () => {
+    try {
+      await ideMessenger.request("config/refreshProfiles", undefined);
+      ideMessenger.post("showToast", ["info", "Config refreshed"]);
+    } catch (e) {
+      console.error("Failed to refresh profiles", e);
+      ideMessenger.post("showToast", ["error", "Failed to refresh config"]);
+    }
+  }, [ideMessenger]);
 
   return (
     <AuthContext.Provider
@@ -192,10 +134,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         logout,
         login,
         selectedProfile,
-        profiles,
-        selectedOrganization,
-        organizations,
-        controlServerBetaEnabled,
+        profiles: currentOrg?.profiles ?? [],
+        refreshProfiles,
+        organizations: orgs,
       }}
     >
       {children}

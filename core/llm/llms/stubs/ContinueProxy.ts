@@ -1,13 +1,25 @@
+import {
+  ContinueProperties,
+  decodeSecretLocation,
+  SecretType,
+} from "@continuedev/config-yaml";
+
 import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 
 import type { Chunk, LLMOptions } from "../../../index.js";
+import { LLMConfigurationStatuses } from "../../constants.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
     this.apiKey = value.workOsAccessToken;
-    this.apiBase = new URL("openai/v1/", value.controlPlaneProxyUrl).toString();
+    if (!this.onPremProxyUrl) {
+      this.apiBase = new URL(
+        "model-proxy/v1/",
+        value.controlPlaneProxyUrl,
+      ).toString();
+    }
   }
 
   // The apiKey and apiBase are set to the values for the proxy,
@@ -19,6 +31,11 @@ class ContinueProxy extends OpenAI {
     super(options);
     this.actualApiBase = options.apiBase;
     this.apiKeyLocation = options.apiKeyLocation;
+    this.orgScopeId = options.orgScopeId;
+    this.onPremProxyUrl = options.onPremProxyUrl;
+    if (this.onPremProxyUrl) {
+      this.apiBase = new URL("model-proxy/v1/", this.onPremProxyUrl).toString();
+    }
   }
 
   static providerName = "continue-proxy";
@@ -27,12 +44,27 @@ class ContinueProxy extends OpenAI {
   };
 
   protected extraBodyProperties(): Record<string, any> {
-    return {
-      continueProperties: {
-        apiKeyLocation: this.apiKeyLocation,
-        apiBase: this.actualApiBase,
-      },
+    const continueProperties: ContinueProperties = {
+      apiKeyLocation: this.apiKeyLocation,
+      apiBase: this.actualApiBase,
+      orgScopeId: this.orgScopeId ?? null,
     };
+    return {
+      continueProperties,
+    };
+  }
+
+  getConfigurationStatus() {
+    if (!this.apiKeyLocation) {
+      return LLMConfigurationStatuses.VALID;
+    }
+
+    const secretLocation = decodeSecretLocation(this.apiKeyLocation);
+    if (secretLocation.secretType === SecretType.NotFound) {
+      return LLMConfigurationStatuses.MISSING_API_KEY;
+    }
+
+    return LLMConfigurationStatuses.VALID;
   }
 
   protected _getHeaders() {
@@ -51,7 +83,7 @@ class ContinueProxy extends OpenAI {
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
     const url = new URL("rerank", this.apiBase);
-    const resp = await fetch(url, {
+    const resp = await this.fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -61,6 +93,7 @@ class ContinueProxy extends OpenAI {
         query,
         documents: chunks.map((chunk) => chunk.content),
         model: this.model,
+        ...this.extraBodyProperties(),
       }),
     });
     const data: any = await resp.json();

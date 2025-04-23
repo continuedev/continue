@@ -1,14 +1,18 @@
-import { Cog8ToothIcon, ListBulletIcon } from "@heroicons/react/24/outline";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { useContext } from "react";
-import { GithubIcon } from "../../components/svg/GithubIcon";
-import { DiscordIcon } from "../../components/svg/DiscordIcon";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { Cog8ToothIcon } from "@heroicons/react/24/outline";
 import { DISCORD_LINK, GITHUB_LINK } from "core/util/constants";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
-import { providers } from "../AddNewModel/configs/providers";
+import { useContext } from "react";
 import { Button, SecondaryButton } from "../../components";
+import { DiscordIcon } from "../../components/svg/DiscordIcon";
+import { GithubIcon } from "../../components/svg/GithubIcon";
+import { useAuth } from "../../context/Auth";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { selectSelectedProfile } from "../../redux/";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectUseHub } from "../../redux/selectors";
+import { selectSelectedChatModel } from "../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import { isLocalProfile } from "../../util";
+import { providers } from "../AddNewModel/configs/providers";
 
 interface StreamErrorProps {
   error: unknown;
@@ -16,7 +20,16 @@ interface StreamErrorProps {
 const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const selectedModel = useAppSelector(selectDefaultModel);
+  const selectedModel = useAppSelector(selectSelectedChatModel);
+  const hubEnabled = useAppSelector(selectUseHub);
+  const selectedProfile = useAppSelector(selectSelectedProfile);
+  const { session, refreshProfiles } = useAuth();
+
+  const handleRefreshProfiles = () => {
+    refreshProfiles();
+    dispatch(setShowDialog(false));
+    dispatch(setDialogMessage(undefined));
+  };
 
   // Collect model information to display useful error info
   let modelTitle = "Chat model";
@@ -52,11 +65,13 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   ) {
     message = error["message"];
     const parts = message?.split(" ") ?? [];
-    const status = parts[0] === "HTTP" ? parts[1] : parts[0];
-    if (status) {
-      const code = Number(status);
-      if (!Number.isNaN(statusCode)) {
-        statusCode = code;
+    if (parts.length > 1) {
+      const status = parts[0] === "HTTP" ? parts[1] : parts[0];
+      if (status) {
+        const code = Number(status);
+        if (!Number.isNaN(code)) {
+          statusCode = code;
+        }
       }
     }
   }
@@ -84,7 +99,7 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
       <div>
         <Cog8ToothIcon className="h-4 w-4" />
       </div>
-      <span>Open config</span>
+      <span>Open Assistant configuration</span>
     </SecondaryButton>
   );
 
@@ -139,7 +154,18 @@ const StreamErrorDialog = ({ error }: StreamErrorProps) => {
   if (statusCode === 401) {
     errorContent = (
       <div className="flex flex-col gap-2">
-        <span>{`Likely cause: your API key is invalid.`}</span>
+        {hubEnabled &&
+          session &&
+          selectedProfile &&
+          !isLocalProfile(selectedProfile) && (
+            <div className="flex flex-col gap-1">
+              <span>{`If your hub secret values may have changed, refresh your assistants`}</span>
+              <SecondaryButton onClick={handleRefreshProfiles}>
+                Refresh assistant secrets
+              </SecondaryButton>
+            </div>
+          )}
+        <span>{`It's possible that your API key is invalid.`}</span>
         <div className="flex flex-row flex-wrap gap-2">
           {checkKeysButton}
           {configButton}

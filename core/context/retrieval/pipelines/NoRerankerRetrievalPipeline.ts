@@ -9,7 +9,7 @@ import BaseRetrievalPipeline, {
 
 export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
   async run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
-    const { input, nFinal, filterDirectory, includeEmbeddings } = this.options;
+    const { input, nFinal, filterDirectory, config } = this.options;
 
     // We give 1/4 weight to recently edited files, 1/4 to full text search,
     // and the remaining 1/2 to embeddings
@@ -19,22 +19,42 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     let retrievalResults: Chunk[] = [];
 
-    const ftsChunks = await this.retrieveFts(args, ftsNFinal);
+    let ftsChunks: Chunk[] = [];
+    try {
+      ftsChunks = await this.retrieveFts(args, ftsNFinal);
+    } catch (error) {
+      console.error("Error retrieving FTS chunks:", error);
+    }
 
-    const embeddingsChunks = includeEmbeddings
-      ? await this.retrieveEmbeddings(input, embeddingsNFinal)
-      : [];
+    let embeddingsChunks: Chunk[] = [];
+    try {
+      embeddingsChunks = !!config.selectedModelByRole.embed
+        ? await this.retrieveEmbeddings(input, embeddingsNFinal)
+        : [];
+    } catch (error) {
+      console.error("Error retrieving embeddings:", error);
+    }
 
-    const recentlyEditedFilesChunks =
-      await this.retrieveAndChunkRecentlyEditedFiles(recentlyEditedNFinal);
+    let recentlyEditedFilesChunks: Chunk[] = [];
+    try {
+      recentlyEditedFilesChunks =
+        await this.retrieveAndChunkRecentlyEditedFiles(recentlyEditedNFinal);
+    } catch (error) {
+      console.error("Error retrieving recently edited files:", error);
+    }
 
-    const repoMapChunks = await requestFilesFromRepoMap(
-      this.options.llm,
-      this.options.config,
-      this.options.ide,
-      input,
-      filterDirectory,
-    );
+    let repoMapChunks: Chunk[] = [];
+    try {
+      repoMapChunks = await requestFilesFromRepoMap(
+        this.options.llm,
+        this.options.config,
+        this.options.ide,
+        input,
+        filterDirectory,
+      );
+    } catch (error) {
+      console.error("Error retrieving repo map chunks:", error);
+    }
 
     retrievalResults.push(
       ...recentlyEditedFilesChunks,

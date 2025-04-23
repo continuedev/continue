@@ -1,14 +1,17 @@
-import { ModelConfig } from "@continuedev/config-yaml";
-import { AssistantUnrolled } from "@continuedev/config-yaml/dist/schemas";
+import { AssistantUnrolled, ModelConfig } from "@continuedev/config-yaml";
 
 import { SerializedContinueConfig } from "../..";
 
+/*
+TODO this is not functional
+*/
 export function convertConfigJsonToConfigYaml(
   configJson: SerializedContinueConfig,
 ): AssistantUnrolled {
   return {
-    name: "Local Config",
+    name: "Local Assistant",
     version: "1.0.0",
+    schema: "v1",
     models: [
       ...configJson.models.map(
         (model): ModelConfig => ({
@@ -16,10 +19,11 @@ export function convertConfigJsonToConfigYaml(
           name: model.title,
           // defaultCompletionOptions: model.completionOptions,
           provider: model.provider,
-          roles: ["chat"],
+          roles: ["chat", "edit", "apply", "summarize"],
         }),
       ),
-      //   ... tabAutocompleteModels
+      // TODO
+      // tabAutocompleteModels
       // embeddingsModels
       // rerankModels
     ],

@@ -1,6 +1,6 @@
 import { ConfigJson } from "@continuedev/config-types";
 import { ConfigYaml } from "./schemas/index.js";
-import { ModelRoles } from "./schemas/models.js";
+import { ModelRole } from "./schemas/models.js";
 
 type ModelYaml = NonNullable<ConfigYaml["models"]>[number];
 type ContextYaml = NonNullable<ConfigYaml["context"]>[number];
@@ -8,7 +8,7 @@ type PromptYaml = NonNullable<ConfigYaml["prompts"]>[number];
 
 function convertModel(
   m: ConfigJson["models"][number],
-  roles: ModelRoles[],
+  roles: ModelRole[],
 ): ModelYaml {
   return {
     name: m.title,
@@ -70,13 +70,13 @@ function convertCustomCommand(
 
 function convertMcp(mcp: any): NonNullable<ConfigYaml["mcpServers"]>[number] {
   const { transport } = mcp;
-  const { command, args, env } = transport;
+  const { command, args, env, server_name } = transport;
 
   return {
     command,
     args,
     env,
-    name: "MCP Server",
+    name: server_name || "MCP Server",
   };
 }
 

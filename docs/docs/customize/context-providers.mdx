@@ -1,0 +1,1054 @@
+---
+title: Context providers
+description: Type '@' to select content to the LLM as context
+keywords: [context, "@", provider, LLM]
+---
+
+import TabItem from "@theme/TabItem";
+import Tabs from "@theme/Tabs";
+
+Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider.
+
+As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
+
+![Context Items](/img/context-provider-example.png)
+
+## Context blocks
+
+You can add context providers to assistants using [`context` blocks](../hub/blocks/block-types.md#context). Explore available context blocks in [the hub](https://hub.continue.dev/explore/context).
+
+## Built-in Context Providers
+
+You can add any built-in context-providers in your config file as shown below:
+
+### `@File`
+
+Reference any file in your current workspace.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: file
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "file"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Code`
+
+Reference specific functions or classes from throughout your project.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: code
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "code"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Git Diff`
+
+Reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: diff
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "diff"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Current File`
+
+Reference the currently open file.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: currentFile
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "currentFile"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Terminal`
+
+Reference the last command you ran in your IDE's terminal and its output.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: terminal
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "terminal"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Docs`
+
+Reference the contents from any documentation site.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: docs
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "docs"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Note that this will only enable the `@Docs` context provider.
+
+To use it, you need to add a documentation site to your config file. See the [docs](../customize/deep-dives/docs.mdx) page for more information.
+
+### `@Open`
+
+Reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: open
+      params:
+        onlyPinned: true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "open",
+        "params": {
+          "onlyPinned": true
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Web`
+
+Reference relevant pages from across the web, automatically determined from your input.
+
+Optionally, set `n` to limit the number of results returned (default 6).
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: web
+      params:
+        n: 5
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "web",
+        "params": {
+          "n": 5
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Codebase`
+
+Reference the most relevant snippets from your codebase.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml" 
+  context:
+    - provider: codebase
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "codebase"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Read more about indexing and retrieval [here](../customize/deep-dives/codebase.mdx).
+
+### `@Folder`
+
+Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: folder
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "folder"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Search`
+
+Reference the results of codebase search, just like the results you would get from VS Code search.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: search
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "search"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
+
+### `@Url`
+
+Reference the markdown converted contents of a given URL.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml" 
+  context:
+    - provider: url
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "url"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Clipboard`
+
+Reference recent clipboard items
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: clipboard
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "clipboard"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Tree`
+
+Reference the structure of your current workspace.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: tree
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "tree"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Problems`
+
+Get Problems from the current file.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: problems
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "problems"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### `@Debugger`
+
+Reference the contents of the local variables in the debugger. Currently only available in VS Code.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: debugger
+      params:
+        stackDepth: 3
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "debugger",
+        "params": {
+          "stackDepth": 3
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Uses the top _n_ levels (defaulting to 3) of the call stack for that thread.
+
+### `@Repository Map`
+
+Reference the outline of your codebase. By default, signatures are included along with file in the repo map.
+
+`includeSignatures` params can be set to false to exclude signatures. This could be necessary for large codebases and/or to reduce context size significantly. Signatures will not be included if indexing is disabled.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: repo-map
+      params:
+        includeSignatures: false # default true
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "repo-map",
+        "params": {
+          "includeSignatures": false // default true
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Provides a list of files and the call signatures of top-level classes, functions, and methods in those files. This helps the model better understand how a particular piece of code relates to the rest of the codebase.
+
+In the submenu that appears, you can select either `Entire codebase`, or specify a subfolder to generate the repostiory map from.
+
+This context provider is inpsired by [Aider's repository map](https://aider.chat/2023/10/22/repomap.html).
+
+### `@Operating System`
+
+Reference the architecture and platform of your current operating system.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: os
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "os"
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### Model Context Protocol
+
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then set up your configuration like this:
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  mcpServers:
+    - name: My MCP Server
+      command: uvx
+      args:
+        - mcp-server-sqlite
+        - --db-path
+        - /Users/NAME/test.db
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "experimental": {
+      "modelContextProtocolServers": [
+        {
+          "transport": {
+            "type": "stdio",
+            "command": "uvx",
+            "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+          }  
+        }
+      ]
+    }
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+You'll then be able to type "@" and see "MCP" in the context providers dropdown.
+
+### `@Issue`
+
+Reference the conversation in a GitHub issue.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: issue
+      params:
+        repos:
+          - owner: continuedev
+            repo: continue
+        githubToken: ghp_xxx
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "issue",
+        "params": {
+          "repos": [
+            {
+              "owner": "continuedev",
+              "repo": "continue"
+            }
+          ],
+          "githubToken": "ghp_xxx"
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Make sure to include your own [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) to avoid being rate-limited.
+
+### `@Database`
+
+Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: database
+      params:
+        connections:
+          - name: examplePostgres
+            connection_type: postgres
+            connection:
+              user: username
+              host: localhost
+              database: exampleDB
+              password: yourPassword
+              port: 5432
+          - name: exampleMssql 
+            connection_type: mssql
+            connection:
+              user: username
+              server: localhost
+              database: exampleDB
+              password: yourPassword
+          - name: exampleSqlite
+            connection_type: sqlite
+            connection:
+              filename: /path/to/your/sqlite/database.db
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "database",
+        "params": {
+          "connections": [
+            {
+              "name": "examplePostgres",
+              "connection_type": "postgres", 
+              "connection": {
+                "user": "username",
+                "host": "localhost",
+                "database": "exampleDB",
+                "password": "yourPassword",
+                "port": 5432
+              }
+            },
+            {
+              "name": "exampleMssql",
+              "connection_type": "mssql",
+              "connection": {
+                "user": "username",
+                "server": "localhost",
+                "database": "exampleDB",
+                "password": "yourPassword"
+              }
+            },
+            {
+              "name": "exampleSqlite",
+              "connection_type": "sqlite",
+              "connection": {
+                "filename": "/path/to/your/sqlite/database.db"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Each connection should include a unique name, the `connection_type`, and the necessary connection parameters specific to each database type.
+
+Available connection types:
+
+- `postgres`
+- `mysql`
+- `sqlite`
+
+### `@Postgres`
+
+Reference the schema of a table, and some sample rows
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: postgres
+      params:
+        host: localhost
+        port: 5436
+        user: myuser
+        password: catsarecool
+        database: animals
+        schema: public
+        sampleRows: 3
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "postgres",
+        "params": {
+          "host": "localhost",
+          "port": 5436,
+          "user": "myuser",
+          "password": "catsarecool",
+          "database": "animals",
+          "schema": "public",
+          "sampleRows": 3
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
+
+By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
+
+[Here is a short demo.](https://github.com/continuedev/continue/pull/859)
+
+### `@Google`
+
+Reference the results of a Google search.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: google
+      params:
+        serperApiKey: <YOUR_SERPER.DEV_API_KEY>
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "google",
+        "params": {
+          "serperApiKey": "<YOUR_SERPER.DEV_API_KEY>"
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+For example, type "@Google python tutorial" if you want to search and discuss ways of learning Python.
+
+Note: You can get an API key for free at [serper.dev](https://serper.dev).
+
+### `@Gitlab Merge Request`
+
+Reference an open MR for this branch on GitLab.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: gitlab-mr
+      params:
+        token: "..."
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "gitlab-mr", 
+        "params": {
+          "token": "..."
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope.
+
+#### Using Self-Hosted GitLab
+
+You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: gitlab-mr
+      params:
+        token: "..."
+        domain: "gitlab.example.com"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "gitlab-mr",
+        "params": {
+          "token": "...",
+          "domain": "gitlab.example.com" 
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+#### Filtering Comments
+
+If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
+
+### `@Jira`
+
+Reference the conversation in a Jira issue.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: jira
+      params:
+        domain: company.atlassian.net
+        token: ATATT...
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "jira", 
+        "params": {
+          "domain": "company.atlassian.net",
+          "token": "ATATT..."
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens), or use your `email` and `token`, with token set to your password for basic authentication. If you use your own Atlassian API Token, don't configure your email.
+
+#### Jira Datacenter Support
+
+This context provider supports both Jira API version 2 and 3. It will use version 3 by default since
+that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
+to set the API Version to 2 using the `apiVersion` property.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: jira
+      params:
+        apiVersion: "2"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "jira",
+        "params": {
+          "apiVersion": "2"
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+#### Issue Query
+
+By default, the following query will be used to find issues:
+
+```jql
+assignee = currentUser() AND resolution = Unresolved order by updated DESC
+```
+
+You can override this query by setting the `issueQuery` parameter.
+
+#### Max results
+
+You can set the `maxResults` parameter to limit the number of results returned. The default is `50`.
+
+### `@Discord`
+
+Reference the messages in a Discord channel.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: discord
+      params:
+        discordKey: "bot token"
+        guildId: "1234567890" 
+        channels:
+          - id: "123456"
+            name: "example-channel"
+          - id: "678901" 
+            name: "example-channel-2"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "discord",
+        "params": {
+          "discordKey": "bot token",
+          "guildId": "1234567890",
+          "channels": [
+            {
+              "id": "123456",
+              "name": "example-channel"
+            },
+            {
+              "id": "678901",
+              "name": "example-channel-2" 
+            }
+          ]
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+Make sure to include your own [Bot Token](https://discord.com/developers/applications), and join it to your related server . If you want more granular control over which channels are searched, you can specify a list of channel IDs to search in. If you don't want to specify any channels, just include the guild id(Server ID) and all channels will be included. The provider only reads text channels.
+
+### `@HTTP`
+
+The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: http
+      params:
+        url: "https://api.example.com/v1/users"
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "http", 
+        "params": {
+          "url": "https://api.example.com/v1/users"
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+The receiving URL should expect to receive the following parameters:
+
+```js title="POST parameters"
+{
+  query: string,
+  fullInput: string
+}
+```
+
+The response 200 OK should be a JSON object with the following structure:
+
+```json title="Response"
+[
+  {
+    "name": "",
+    "description": "",
+    "content": ""
+  }
+]
+
+// OR
+{
+  "name": "",
+  "description": "",
+  "content": ""
+}
+```
+
+### `@Commits`
+
+Reference specific git commit metadata and diff or all of the recent commits.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: commit
+      params:
+        Depth: 50
+        LastXCommitsDepth: 10
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "commit", 
+        "params": {
+          "Depth": 50,
+          "LastXCommitsDepth": 10
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+The depth is how many commits will be loaded into the submenu, defaults to 50.
+The LastXCommitsDepth is how many recent commits will be included, defaults to 10.
+
+### `@Greptile`
+
+Query a [Greptile](https://www.greptile.com/) index of the current repo/branch.
+
+<Tabs groupId="config-example">
+  <TabItem value="yaml" label="YAML">
+  ```yaml title="config.yaml"
+  context:
+    - provider: greptile 
+      params:
+        greptileToken: "..."
+        githubToken: "..."
+  ```
+  </TabItem>
+  <TabItem value="json" label="JSON">
+  ```json title="config.json"
+  {
+    "contextProviders": [
+      {
+        "name": "greptile",
+        "params": {
+          "GreptileToken": "...",
+          "GithubToken": "..."
+        }
+      }
+    ]
+  }
+  ```
+  </TabItem>
+</Tabs>
+
+### Requesting Context Providers
+
+Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.

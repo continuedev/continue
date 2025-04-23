@@ -30,11 +30,9 @@ class ContinueSettingsComponent : DumbAware {
     val remoteConfigSyncPeriod: JTextField = JTextField()
     val userToken: JTextField = JTextField()
     val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
-    val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable Continue for Teams Beta")
     val enableOSR: JCheckBox = JCheckBox("Enable Off-Screen Rendering")
     val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
     val showIDECompletionSideBySide: JCheckBox = JCheckBox("Show IDE completions side-by-side")
-    val enableContinueHub: JCheckBox = JCheckBox("Enable Continue Hub")
 
     init {
         val constraints = GridBagConstraints()
@@ -60,15 +58,11 @@ class ContinueSettingsComponent : DumbAware {
         constraints.gridy++
         panel.add(enableTabAutocomplete, constraints)
         constraints.gridy++
-        panel.add(enableContinueTeamsBeta, constraints)
-        constraints.gridy++
         panel.add(enableOSR, constraints)
         constraints.gridy++
         panel.add(displayEditorTooltip, constraints)
         constraints.gridy++
         panel.add(showIDECompletionSideBySide, constraints)
-        constraints.gridy++
-        panel.add(enableContinueHub, constraints)
         constraints.gridy++
 
         // Add a "filler" component that takes up all remaining vertical space
@@ -98,11 +92,10 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var userToken: String? = null
         var enableTabAutocomplete: Boolean = true
         var ghAuthToken: String? = null
-        var enableContinueTeamsBeta: Boolean = false
         var enableOSR: Boolean = shouldRenderOffScreen()
         var displayEditorTooltip: Boolean = true
         var showIDECompletionSideBySide: Boolean = false
-        var continueTestEnvironment: String = "none"
+        var continueTestEnvironment: String = "production"
     }
 
     var continueState: ContinueState = ContinueState()
@@ -213,11 +206,9 @@ class ContinueExtensionConfigurable : Configurable {
                     mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
                     mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
                     mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
-                    mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
                     mySettingsComponent?.enableOSR?.isSelected != settings.continueState.enableOSR ||
                     mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip ||
-                    mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide ||
-                    (if (mySettingsComponent?.enableContinueHub?.isSelected == true) settings.continueState.continueTestEnvironment != "production" else settings.continueState.continueTestEnvironment == "production")
+                    mySettingsComponent?.showIDECompletionSideBySide?.isSelected != settings.continueState.showIDECompletionSideBySide
         return modified
     }
 
@@ -227,14 +218,10 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.remoteConfigSyncPeriod = mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() ?: 60
         settings.continueState.userToken = mySettingsComponent?.userToken?.text
         settings.continueState.enableTabAutocomplete = mySettingsComponent?.enableTabAutocomplete?.isSelected ?: false
-        settings.continueState.enableContinueTeamsBeta =
-            mySettingsComponent?.enableContinueTeamsBeta?.isSelected ?: false
         settings.continueState.enableOSR = mySettingsComponent?.enableOSR?.isSelected ?: true
         settings.continueState.displayEditorTooltip = mySettingsComponent?.displayEditorTooltip?.isSelected ?: true
         settings.continueState.showIDECompletionSideBySide =
             mySettingsComponent?.showIDECompletionSideBySide?.isSelected ?: false
-        settings.continueState.continueTestEnvironment =
-            if (mySettingsComponent?.enableContinueHub?.isSelected == true) "production" else "none"
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC)
             .settingsUpdated(settings.continueState)
@@ -247,13 +234,10 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.remoteConfigSyncPeriod?.text = settings.continueState.remoteConfigSyncPeriod.toString()
         mySettingsComponent?.userToken?.text = settings.continueState.userToken
         mySettingsComponent?.enableTabAutocomplete?.isSelected = settings.continueState.enableTabAutocomplete
-        mySettingsComponent?.enableContinueTeamsBeta?.isSelected = settings.continueState.enableContinueTeamsBeta
         mySettingsComponent?.enableOSR?.isSelected = settings.continueState.enableOSR
         mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
         mySettingsComponent?.showIDECompletionSideBySide?.isSelected =
             settings.continueState.showIDECompletionSideBySide
-        mySettingsComponent?.enableContinueHub?.isSelected =
-            settings.continueState.continueTestEnvironment == "production"
 
         ContinueExtensionSettings.instance.addRemoteSyncJob()
     }

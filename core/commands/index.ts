@@ -1,5 +1,7 @@
 import { CustomCommand, SlashCommand, SlashCommandDescription } from "../";
 import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
+import { replaceSlashCommandWithPromptInChatHistory } from "../promptFiles/v1/updateChatHistory";
+import { renderPromptFileV2 } from "../promptFiles/v2/renderPromptFile";
 import { renderChatMessage } from "../util/messageContent";
 
 import SlashCommands from "./slash";
@@ -7,66 +9,62 @@ import SlashCommands from "./slash";
 export function slashFromCustomCommand(
   customCommand: CustomCommand,
 ): SlashCommand {
+  const commandName = customCommand.name.startsWith("/")
+    ? customCommand.name.substring(1)
+    : customCommand.name;
   return {
-    name: customCommand.name,
+    name: commandName,
     description: customCommand.description ?? "",
-    run: async function* ({ input, llm, history, ide }) {
-      // Remove slash command prefix from input
-      let userInput = input;
-      if (userInput.startsWith(`/${customCommand.name}`)) {
-        userInput = userInput
-          .slice(customCommand.name.length + 1, userInput.length)
-          .trimStart();
-      }
-
+    prompt: customCommand.prompt,
+    run: async function* ({
+      input,
+      llm,
+      history,
+      ide,
+      completionOptions,
+      config,
+      selectedCode,
+      fetch,
+    }) {
       // Render prompt template
-      const promptUserInput = await renderTemplatedString(
-        customCommand.prompt,
-        ide.readFile.bind(ide),
-        { input: userInput },
-      );
+      let renderedPrompt: string;
+      if (customCommand.prompt.includes("{{{ input }}}")) {
+        renderedPrompt = await renderTemplatedString(
+          customCommand.prompt,
+          ide.readFile.bind(ide),
+          { input },
+        );
+      } else {
+        const renderedPromptFile = await renderPromptFileV2(
+          customCommand.prompt,
+          {
+            config,
+            llm,
+            ide,
+            selectedCode,
+            fetch,
+            fullInput: input,
+            embeddingsProvider: config.modelsByRole.embed[0],
+            reranker: config.modelsByRole.rerank[0],
+          },
+        );
 
-      const messages = [...history];
-      // Find the last chat message with this slash command and replace it with the user input
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const message = messages[i];
-        const { role, content } = message;
-        if (role !== "user") {
-          continue;
-        }
-
-        if (
-          Array.isArray(content) &&
-          content.some(
-            (part) =>
-              "text" in part && part.text?.startsWith(`/${customCommand.name}`),
-          )
-        ) {
-          messages[i] = {
-            ...message,
-            content: content.map((part) => {
-              if (
-                "text" in part &&
-                part.text.startsWith(`/${customCommand.name}`)
-              ) {
-                return { type: "text", text: promptUserInput };
-              }
-              return part;
-            }),
-          };
-          break;
-        } else if (
-          typeof content === "string" &&
-          content.startsWith(`/${customCommand.name}`)
-        ) {
-          messages[i] = { ...message, content: promptUserInput };
-          break;
-        }
+        renderedPrompt = renderedPromptFile[1];
       }
+
+      // Replaces slash command messages with the rendered prompt
+      // which INCLUDES the input
+      const messages = replaceSlashCommandWithPromptInChatHistory(
+        history,
+        commandName,
+        renderedPrompt,
+        undefined,
+      );
 
       for await (const chunk of llm.streamChat(
         messages,
         new AbortController().signal,
+        completionOptions,
       )) {
         yield renderChatMessage(chunk);
       }

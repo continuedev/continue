@@ -13,6 +13,7 @@ module.exports = {
       "2xs": "170px", // Smallest width for Primary Sidebar in VS Code
       xs: "250px", // Avg default sidebar width in VS Code
       sm: "330px",
+      int: "380px",
       md: "460px",
       lg: "590px",
       xl: "720px",
@@ -24,38 +25,28 @@ module.exports = {
       animation: {
         "spin-slow": "spin 6s linear infinite",
       },
+      borderRadius: {
+        default: "5px",
+      },
       colors: {
         lightgray: "#999998",
-        "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
-        "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
         "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",
-        "vsc-quick-input-background":
-          "var(--vscode-quickInput-background, var(--vscode-input-background, rgb(45 45 45)))",
         "vsc-background": "var(--vscode-sideBar-background, rgb(30 30 30))",
         "vsc-foreground": "var(--vscode-editor-foreground, #fff)",
-        "vsc-button-background": "var(--vscode-button-background, #1bbe84)",
-        "vsc-button-foreground": "var(--vscode-button-foreground, #ffffff)",
         "vsc-editor-background":
           "var(--vscode-editor-background, var(--vscode-sideBar-background, rgb(30 30 30)))",
-        "vsc-list-active-background":
-          "var(--vscode-list-activeSelectionBackground, #1bbe84)",
-        "vsc-focus-border": "var(--vscode-focus-border, #1bbe84)",
-        "vsc-list-active-foreground":
-          "var(--vscode-quickInputList-focusForeground, var(--vscode-editor-foreground))",
         "vsc-input-border": "var(--vscode-input-border, #999998)",
-        "vsc-input-border-focus": "var(--vscode-focusBorder, #999998)",
-        "vsc-badge-background": "var(--vscode-badge-background, #1bbe84)",
-        "vsc-badge-foreground": "var(--vscode-badge-foreground, #fff)",
-        "vsc-sidebar-border": "var(--vscode-sideBar-border, transparent)",
-        "vsc-find-match":
-          "var(--vscode-editor-findMatchBackground, rgba(255, 255, 0, 0.6))",
-        "vsc-find-match-selected":
-          "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0, 0.8))",
-        "vsc-foreground-muted": "var(--vscode-foreground-muted, #999)",
-        "vsc-description-foreground":
-          "var(--vscode-descriptionForeground, #999)",
-        "vsc-input-placeholder-foreground":
-          "var(--vscode-input-placeholderForeground, #999)",
+        "vsc-commandCenter-inactiveBorder":
+          "var(--vscode-commandCenter-inactiveBorder, #999998)",
+
+        // Starting to make things less vsc-specific
+        // TODO make it all non-IDE-specific naming
+        "find-match-selected":
+          "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0))",
+        "list-active": "var(--vscode-list-activeSelectionBackground, #1bbe84)",
+        "list-active-foreground":
+          "var(--vscode-quickInputList-focusForeground, var(--vscode-editor-foreground))",
+        badge: "var(--vscode-badge-background, #1bbe84)",
       },
     },
   },

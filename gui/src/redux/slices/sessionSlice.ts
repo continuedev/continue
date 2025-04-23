@@ -21,7 +21,7 @@ import {
   ToolCallDelta,
   ToolCallState,
 } from "core";
-import { ProfileDescription } from "core/config/ConfigHandler";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -30,7 +30,6 @@ import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
-import { OrganizationDescription } from "core/config/ProfileLifecycleManager";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -45,14 +44,9 @@ type SessionState = {
   isStreaming: boolean;
   title: string;
   id: string;
-  selectedProfileId: string;
-  availableProfiles: ProfileDescription[];
-  selectedOrganizationId: string | null;
-  availableOrganizations: OrganizationDescription[];
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
-  currentMainEditorContent?: JSONContent;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
@@ -60,7 +54,8 @@ type SessionState = {
     states: ApplyState[];
     curIndex: number;
   };
-  newestCodeblockForInput: Record<string, string>;
+  activeToolStreamId?: [string, string];
+  newestToolbarPreviewForInput: Record<string, string>;
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
@@ -88,23 +83,6 @@ const initialState: SessionState = {
   isStreaming: false,
   title: NEW_SESSION_TITLE,
   id: uuidv4(),
-  selectedProfileId: "local",
-  availableProfiles: [
-    {
-      id: "local",
-      title: "Local",
-      errors: undefined,
-      profileType: "local",
-      fullSlug: {
-        ownerSlug: "",
-        packageSlug: "",
-        versionSlug: "",
-      },
-      iconUrl: "",
-    },
-  ],
-  selectedOrganizationId: "",
-  availableOrganizations: [],
   curCheckpointIndex: 0,
   streamAborter: new AbortController(),
   codeToEdit: [],
@@ -115,7 +93,7 @@ const initialState: SessionState = {
     curIndex: 0,
   },
   lastSessionId: undefined,
-  newestCodeblockForInput: {},
+  newestToolbarPreviewForInput: {},
 };
 
 export const sessionSlice = createSlice({
@@ -135,6 +113,12 @@ export const sessionSlice = createSlice({
       lastMessage.promptLogs = lastMessage.promptLogs
         ? lastMessage.promptLogs.concat(payload)
         : payload;
+
+      // Inactive thinking for reasoning models when '</think>' tag is not received on request completion
+      if (lastMessage.reasoning?.active) {
+        lastMessage.reasoning.active = false;
+        lastMessage.reasoning.endAt = Date.now();
+      }
     },
     setActive: (state) => {
       state.isStreaming = true;
@@ -191,13 +175,13 @@ export const sessionSlice = createSlice({
       {
         payload,
       }: PayloadAction<{
-        index?: number;
+        index: number;
         editorState: JSONContent;
       }>,
     ) => {
       const { index, editorState } = payload;
 
-      if (typeof index === "number" && index < state.history.length) {
+      if (state.history.length && index < state.history.length) {
         // Resubmission - update input message, truncate history after resubmit with new empty response message
         if (index % 2 === 1) {
           console.warn(
@@ -208,6 +192,7 @@ export const sessionSlice = createSlice({
 
         historyItem.message.content = ""; // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
         historyItem.editorState = payload.editorState;
+        historyItem.contextItems = [];
 
         state.history = state.history.slice(0, index + 1).concat({
           message: {
@@ -260,7 +245,7 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       const { index, updates } = payload;
-      if (!state.history[index]) {
+      if (index !== 0 && !state.history[index]) {
         console.error(
           `attempting to update history item at nonexistent index ${index}`,
           updates,
@@ -331,6 +316,22 @@ export const sessionSlice = createSlice({
         for (const message of action.payload) {
           const lastItem = state.history[state.history.length - 1];
           const lastMessage = lastItem.message;
+
+          if (message.role === "thinking" && message.redactedThinking) {
+            console.log("add redacted_thinking blocks");
+
+            state.history.push({
+              message: {
+                role: "thinking",
+                content: "internal reasoning is hidden due to safety reasons",
+                redactedThinking: message.redactedThinking,
+                id: uuidv4(),
+              },
+              contextItems: [],
+            });
+            continue;
+          }
+
           if (
             lastMessage.role !== message.role ||
             // This is for when a tool call comes immediately before/after tool call
@@ -354,15 +355,31 @@ export const sessionSlice = createSlice({
             if (message.role === "assistant" && message.toolCalls?.[0]) {
               const toolCallDelta = message.toolCalls[0];
               if (
-                toolCallDelta.id &&
-                toolCallDelta.function?.arguments &&
-                toolCallDelta.function?.name &&
-                toolCallDelta.type
+                !(
+                  toolCallDelta.id &&
+                  toolCallDelta.function?.arguments &&
+                  toolCallDelta.function?.name &&
+                  toolCallDelta.type
+                )
               ) {
                 console.warn(
                   "Received streamed tool call without required fields",
                   toolCallDelta,
                 );
+              }
+
+              if (
+                toolCallDelta.id &&
+                toolCallDelta.function?.name ===
+                  BuiltInToolNames.EditExistingFile
+              ) {
+                const streamId = uuidv4();
+                state.codeBlockApplyStates.states.push({
+                  streamId,
+                  toolCallId: toolCallDelta.id,
+                  status: "streaming",
+                });
+                state.activeToolStreamId = [streamId, toolCallDelta.id];
               }
               historyItem.toolCallState = toolCallDeltaToState(toolCallDelta);
             }
@@ -393,6 +410,11 @@ export const sessionSlice = createSlice({
                 // Note this only works because new message above
                 // was already rendered from parts to string
                 lastMessage.content += messageContent;
+              }
+            } else if (message.role === "thinking" && message.signature) {
+              if (lastMessage.role === "thinking") {
+                console.log("add signature", message.signature);
+                lastMessage.signature = message.signature;
               }
             } else if (
               message.role === "assistant" &&
@@ -544,49 +566,7 @@ export const sessionSlice = createSlice({
 
       state.history[state.history.length - 1].contextItems = contextItems;
     },
-    setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
-      return {
-        ...state,
-        selectedProfileId: payload,
-      };
-    },
-    setAvailableProfiles: (
-      state,
-      { payload }: PayloadAction<ProfileDescription[]>,
-    ) => {
-      return {
-        ...state,
-        availableProfiles: payload,
-        selectedProfileId: payload.find(
-          (profile) => profile.id === state.selectedProfileId,
-        )
-          ? state.selectedProfileId
-          : payload[0]?.id,
-      };
-    },
-    setSelectedOrganizationId: (
-      state,
-      { payload }: PayloadAction<string | null>,
-    ) => {
-      return {
-        ...state,
-        selectedOrganizationId: payload,
-      };
-    },
-    setAvailableOrganizations: (
-      state,
-      { payload }: PayloadAction<OrganizationDescription[]>,
-    ) => {
-      return {
-        ...state,
-        availableOrganizations: payload,
-        selectedOrganizationId: payload.find(
-          (org) => org.id === state.selectedOrganizationId,
-        )
-          ? state.selectedOrganizationId
-          : payload[0]?.id,
-      };
-    },
+
     updateCurCheckpoint: (
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
@@ -657,6 +637,23 @@ export const sessionSlice = createSlice({
 
       toolCallState.output = action.payload;
     },
+    updateToolCallOutput: (
+      state,
+      action: PayloadAction<{ toolCallId: string; contextItems: ContextItem[] }>,
+    ) => {
+      // Find the tool call with the given ID and update its output
+      const { toolCallId, contextItems } = action.payload;
+
+      // Find the history item containing the tool call
+      const historyItem = state.history.find(
+        (item) =>
+          item.toolCallState?.toolCallId === toolCallId
+      );
+
+      if (historyItem && historyItem.toolCallState) {
+        historyItem.toolCallState.output = contextItems;
+      }
+    },
     cancelToolCall: (state) => {
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
@@ -664,6 +661,7 @@ export const sessionSlice = createSlice({
       toolCallState.status = "canceled";
     },
     acceptToolCall: (state) => {
+      state.activeToolStreamId = undefined;
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
@@ -678,7 +676,15 @@ export const sessionSlice = createSlice({
     setMode: (state, action: PayloadAction<MessageModes>) => {
       state.mode = action.payload;
     },
-    setNewestCodeblocksForInput: (
+    cycleMode: (state, action: PayloadAction<{ isJetBrains: boolean }>) => {
+      const modes = action.payload.isJetBrains
+        ? ["chat", "agent"]
+        : ["chat", "edit", "agent"];
+      const currentIndex = modes.indexOf(state.mode);
+      const nextIndex = (currentIndex + 1) % modes.length;
+      state.mode = modes[nextIndex] as MessageModes;
+    },
+    setNewestToolbarPreviewForInput: (
       state,
       {
         payload,
@@ -687,7 +693,8 @@ export const sessionSlice = createSlice({
         contextItemId: string;
       }>,
     ) => {
-      state.newestCodeblockForInput[payload.inputId] = payload.contextItemId;
+      state.newestToolbarPreviewForInput[payload.inputId] =
+        payload.contextItemId;
     },
   },
   selectors: {
@@ -697,6 +704,9 @@ export const sessionSlice = createSlice({
     },
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
+    },
+    selectCurrentMode: (state) => {
+      return state.mode;
     },
     selectIsSingleRangeEditOrInsertion: (state) => {
       if (state.mode !== "edit") {
@@ -712,11 +722,8 @@ export const sessionSlice = createSlice({
     selectHasCodeToEdit: (state) => {
       return state.codeToEdit.length > 0;
     },
-    selectAvailableProfiles: (state) => {
-      return state.availableProfiles;
-    },
-    selectAvailableOrganizations: (state) => {
-      return state.availableOrganizations;
+    selectUseTools: (state) => {
+      return state.mode === "agent";
     },
   },
   extraReducers: (builder) => {
@@ -746,7 +753,7 @@ export const selectCurrentToolCall = createSelector(
 export const selectApplyStateByStreamId = createSelector(
   [
     (state: RootState) => state.session.codeBlockApplyStates.states,
-    (state: RootState, streamId: string) => streamId,
+    (state: RootState, streamId?: string) => streamId,
   ],
   (states, streamId) => {
     return states.find((state) => state.streamId === streamId);
@@ -768,8 +775,6 @@ export const {
   updateHistoryItemAtIndex,
   clearLastEmptyResponse,
   setMainEditorContentTrigger,
-  setSelectedProfileId,
-  setSelectedOrganizationId,
   deleteMessage,
   setIsGatheringContext,
   updateCurCheckpoint,
@@ -782,26 +787,26 @@ export const {
   removeCodeToEdit,
   setCalling,
   cancelToolCall,
-  setAvailableProfiles,
-  setAvailableOrganizations,
   acceptToolCall,
   setToolGenerated,
   setToolCallOutput,
+  updateToolCallOutput,
   setMode,
   setAllSessionMetadata,
   addSessionMetadata,
   updateSessionMetadata,
   deleteSessionMetadata,
-  setNewestCodeblocksForInput,
+  setNewestToolbarPreviewForInput,
+  cycleMode,
 } = sessionSlice.actions;
 
 export const {
   selectIsGatheringContext,
   selectIsInEditMode,
+  selectCurrentMode,
   selectIsSingleRangeEditOrInsertion,
   selectHasCodeToEdit,
-  selectAvailableProfiles,
-  selectAvailableOrganizations,
+  selectUseTools,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

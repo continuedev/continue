@@ -29,7 +29,15 @@ export const modelRolesSchema = z.enum([
   "apply",
   "summarize",
 ]);
-export type ModelRoles = z.infer<typeof modelRolesSchema>;
+export type ModelRole = z.infer<typeof modelRolesSchema>;
+
+// TODO consider just using array of strings for model capabilities
+// To allow more dynamic string parsing
+export const modelCapabilitySchema = z.union([
+  z.literal("tool_use"),
+  z.literal("image_input"),
+]);
+export type ModelCapability = z.infer<typeof modelCapabilitySchema>;
 
 export const completionOptionsSchema = z.object({
   contextLength: z.number().optional(),
@@ -42,10 +50,22 @@ export const completionOptionsSchema = z.object({
 });
 export type CompletionOptions = z.infer<typeof completionOptionsSchema>;
 
+export const embedOptionsSchema = z.object({
+  maxChunkSize: z.number().optional(),
+  maxBatchSize: z.number().optional(),
+});
+export type EmbedOptions = z.infer<typeof embedOptionsSchema>;
+
+export const chatOptionsSchema = z.object({
+  baseSystemMessage: z.string().optional(),
+});
+export type ChatOptions = z.infer<typeof chatOptionsSchema>;
+
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
   edit: z.string().optional(),
+  autocomplete: z.string().optional()
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
 
@@ -55,9 +75,16 @@ const baseModelFields = {
   apiKey: z.string().optional(),
   apiBase: z.string().optional(),
   roles: modelRolesSchema.array().optional(),
+  capabilities: modelCapabilitySchema.array().optional(),
   defaultCompletionOptions: completionOptionsSchema.optional(),
   requestOptions: requestOptionsSchema.optional(),
+  embedOptions: embedOptionsSchema.optional(),
+  chatOptions: chatOptionsSchema.optional(),
   promptTemplates: promptTemplatesSchema.optional(),
+  useLegacyCompletionsEndpoint: z.boolean().optional(),
+  env: z
+    .record(z.string(), z.union([z.string(), z.boolean(), z.number()]))
+    .optional(),
 };
 
 export const modelSchema = z.union([
@@ -65,6 +92,8 @@ export const modelSchema = z.union([
     ...baseModelFields,
     provider: z.literal("continue-proxy"),
     apiKeyLocation: z.string(),
+    orgScopeId: z.string().nullable(),
+    onPremProxyUrl: z.string().nullable(),
   }),
   z.object({
     ...baseModelFields,

@@ -1,8 +1,9 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { AuthProvider } from "../context/Auth";
+import { LocalStorageProvider } from "../context/LocalStorage";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { focusEdit, setEditStatus } from "../redux/slices/editModeState";
@@ -11,17 +12,17 @@ import {
   newSession,
   selectIsInEditMode,
   setMode,
-  updateApplyState,
 } from "../redux/slices/sessionSlice";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
+import { setShowDialog } from "../redux/slices/uiSlice";
 import { exitEditMode } from "../redux/thunks";
 import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { fontSize, isMetaEquivalentKeyPressed } from "../util";
 import { incrementFreeTrialCount } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
-import AccountDialog from "./AccountDialog";
+import { FatalErrorIndicator } from "./config/FatalErrorNotice";
 import TextDialog from "./dialogs";
 import Footer from "./Footer";
+import { LumpProvider } from "./mainInput/Lump/LumpContext";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import OSRContextMenu from "./OSRContextMenu";
 import PostHogPageView from "./PosthogPageView";
@@ -45,13 +46,6 @@ const Layout = () => {
   const location = useLocation();
   const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
-  const { pathname } = useLocation();
-
-  const configError = useAppSelector((state) => state.config.configError);
-
-  const hasFatalErrors = useMemo(() => {
-    return configError?.some((error) => error.fatal);
-  }, [configError]);
 
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
 
@@ -98,17 +92,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "openDialogMessage",
-    async (message) => {
-      if (message === "account") {
-        dispatch(setShowDialog(true));
-        dispatch(setDialogMessage(<AccountDialog />));
-      }
-    },
-    [],
-  );
-
-  useWebviewListener(
     "addModel",
     async () => {
       navigate("/models");
@@ -132,20 +115,6 @@ const Layout = () => {
     "incrementFtc",
     async () => {
       incrementFreeTrialCount();
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "updateApplyState",
-    async (state) => {
-      // dispatch(
-      //   updateCurCheckpoint({
-      //     filepath: state.filepath,
-      //     content: state.fileContent,
-      //   }),
-      // );
-      dispatch(updateApplyState(state));
     },
     [],
   );
@@ -215,17 +184,21 @@ const Layout = () => {
   );
 
   const isInEditMode = useAppSelector(selectIsInEditMode);
-  useWebviewListener("exitEditMode", async () => {
-    if (!isInEditMode) {
-      return;
-    }
-    dispatch(
-      loadLastSession({
-        saveCurrentSession: false,
-      }),
-    );
-    dispatch(exitEditMode());
-  });
+  useWebviewListener(
+    "exitEditMode",
+    async () => {
+      if (!isInEditMode) {
+        return;
+      }
+      dispatch(
+        loadLastSession({
+          saveCurrentSession: false,
+        }),
+      );
+      dispatch(exitEditMode());
+    },
+    [isInEditMode],
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
@@ -257,54 +230,42 @@ const Layout = () => {
   }, [location]);
 
   return (
-    <AuthProvider>
-      <LayoutTopDiv>
-        <OSRContextMenu />
-        <div
-          style={{
-            scrollbarGutter: "stable both-edges",
-            minHeight: "100%",
-            display: "grid",
-            gridTemplateRows: "1fr auto",
-          }}
-        >
-          <TextDialog
-            showDialog={showDialog}
-            onEnter={() => {
-              dispatch(setShowDialog(false));
-            }}
-            onClose={() => {
-              dispatch(setShowDialog(false));
-            }}
-            message={dialogMessage}
-          />
+    <LocalStorageProvider>
+      <AuthProvider>
+        <LayoutTopDiv>
+          <LumpProvider>
+            <OSRContextMenu />
+            <div
+              style={{
+                scrollbarGutter: "stable both-edges",
+                minHeight: "100%",
+                display: "grid",
+                gridTemplateRows: "1fr auto",
+              }}
+            >
+              <TextDialog
+                showDialog={showDialog}
+                onEnter={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                onClose={() => {
+                  dispatch(setShowDialog(false));
+                }}
+                message={dialogMessage}
+              />
 
-          <GridDiv className="">
-            <PostHogPageView />
-            <Outlet />
-
-            {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-              <div
-                className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-                role="alert"
-                onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-              >
-                <strong className="font-bold">Error!</strong>{" "}
-                <span className="block sm:inline">
-                  Could not load config.json
-                </span>
-                <div className="mt-2 underline">Learn More</div>
-              </div>
-            )}
-            <Footer />
-          </GridDiv>
-        </div>
-        <div
-          style={{ fontSize: `${getFontSize() - 4}px` }}
-          id="tooltip-portal-div"
-        />
-      </LayoutTopDiv>
-    </AuthProvider>
+              <GridDiv className="">
+                <PostHogPageView />
+                <Outlet />
+                <FatalErrorIndicator />
+                <Footer />
+              </GridDiv>
+            </div>
+            <div style={{ fontSize: fontSize(-4) }} id="tooltip-portal-div" />
+          </LumpProvider>
+        </LayoutTopDiv>
+      </AuthProvider>
+    </LocalStorageProvider>
   );
 };
 

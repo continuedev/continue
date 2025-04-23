@@ -9,6 +9,7 @@ interface JiraClientOptions {
   password: string;
   issueQuery?: string;
   apiVersion?: string;
+  maxResults?: string;
   requestOptions?: RequestOptions;
 }
 
@@ -73,6 +74,7 @@ export class JiraClient {
         "assignee = currentUser() AND resolution = Unresolved order by updated DESC",
       apiVersion: "3",
       requestOptions: {},
+      maxResults: "50",
       ...options,
     };
     this.baseUrl = `https://${this.options.domain}/rest/api/${this.options.apiVersion}`;
@@ -146,7 +148,7 @@ export class JiraClient {
           `/search?fields=summary&jql=${
             this.options.issueQuery ??
             "assignee = currentUser() AND resolution = Unresolved order by updated DESC"
-          }`,
+          }&maxResults=${this.options.maxResults ?? "50"}`,
       ),
       {
         method: "GET",

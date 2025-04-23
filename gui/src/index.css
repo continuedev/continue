@@ -2,21 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter/InterDisplay-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono/JetBrainsMono-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+}
+
 :root {
-  --secondary-dark: rgb(37, 37, 38);
-  --vsc-background: rgb(30, 30, 30);
-  --button-color: rgb(113, 28, 59);
-  --button-color-hover: rgba(113, 28, 59, 0.667);
-  --def-border-radius: 5px;
-  --vscode-editor-background: rgb(30, 30, 30);
-  --vscode-editor-foreground: rgb(197, 200, 198);
-  --vscode-textBlockQuote-background: rgba(255, 255, 255, 1);
+  --example-var: rgb(30, 30, 30);
 }
 
 html,
 body,
 #root {
   height: 100%;
+  line-height: 1.3;
   background-color: var(--vscode-editor-background);
   font-family:
     system-ui,
@@ -71,26 +79,6 @@ body {
 .no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
-}
-
-.lines {
-  /* white-space: pre-wrap; */
-  word-break: break-word;
-  overflow: hidden;
-  line-height: 1.375;
-  text-overflow: ellipsis;
-}
-
-.lines-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
-.lines-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
 }
 
 .truncate-start {

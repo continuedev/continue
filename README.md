@@ -8,7 +8,7 @@
 
 <div align="center">
 
-**[Continue](https://docs.continue.dev) is the leading open-source AI code assistant. You can connect any models and any context to build custom autocomplete and chat experiences inside [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
+**[Continue](https://docs.continue.dev) enables developers to create, share, and use custom AI code assistants with our open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions and [hub of models, rules, prompts, docs, and other building blocks](https://hub.continue.dev)**
 
 </div>
 
@@ -44,11 +44,11 @@
 
 ![edit](docs/static/img/edit.gif)
 
-## Actions
+## Agent
 
-[Actions](https://continue.dev/docs/actions/how-to-use-it) are shortcuts for common use cases.
+[Agent](https://continue.dev/docs/agent/how-to-use-it) enables you to make more substantial changes to your codebase
 
-![actions](docs/static/img/actions.gif)
+![agent](docs/static/img/agent.gif)
 
 </div>
 
@@ -58,7 +58,7 @@ Learn about how to install and use Continue in the docs [here](https://continue.
 
 ## Contributing
 
-Check out the [contribution ideas board](https://github.com/orgs/continuedev/projects/2), read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and join [#contribute on Discord](https://discord.gg/vapESyrFmJ)
+Read the [contributing guide](https://github.com/continuedev/continue/blob/main/CONTRIBUTING.md), and join [#contribute on Discord](https://discord.gg/vapESyrFmJ).
 
 ## License
 

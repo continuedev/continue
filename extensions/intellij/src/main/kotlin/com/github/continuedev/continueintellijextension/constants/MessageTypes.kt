@@ -23,6 +23,7 @@ class MessageTypes {
             "getCurrentFile",
             "getPinnedFiles",
             "getSearchResults",
+            "getFileResults",
             "getProblems",
             "subprocess",
             "getBranch",
@@ -41,27 +42,35 @@ class MessageTypes {
             "logoutOfControlPlane",
             "getTerminalContents",
             "showToast",
-            "openUrl"
+            "openUrl",
+            
+            // These only come from the GUI for now but should be here to prevent confusion
+            "toggleDevTools",
+            "showTutorial",
+            
+            // These are jetbrains only and only come from the GUI for now
+            // But again including for consistency
+            "copyText",
+            "jetbrains/isOSREnabled",
+            "jetbrains/getColors",
+            "jetbrains/onLoad"
         )
 
         // Note: If updating these values, make a corresponding update in
         // core/protocol/passThrough.ts
         val PASS_THROUGH_TO_WEBVIEW = listOf(
-            "configError",
             "configUpdate",
-            "getDefaultModelTitle",
             "indexProgress", // Codebase
             "indexing/statusUpdate", // Docs, etc.
             "addContextItem",
             "refreshSubmenuItems",
             "isContinueInputFocused",
-            "didChangeAvailableProfiles",
             "setTTSActive",
             "getWebviewHistoryLength",
             "getCurrentSessionId",
-            "signInToControlPlane",
-            "openDialogMessage",
-            "docs/suggestions",
+            "sessionUpdate",
+            "didCloseFiles",
+            "toolCallPartialOutput",
         )
 
         // Note: If updating these values, make a corresponding update in
@@ -72,16 +81,19 @@ class MessageTypes {
             "history/delete",
             "history/load",
             "history/save",
+            "history/clear",
             "devdata/log",
             "config/addModel",
-            "config/addContextProvider",
             "config/newPromptFile",
             "config/ideSettingsUpdate",
+            "config/addLocalWorkspaceBlock",
             "config/getSerializedProfileInfo",
             "config/deleteModel",
-            "config/listProfiles",
+            "config/refreshProfiles",
             "config/openProfile",
             "config/updateSharedConfig",
+            "config/updateSelectedModel",
+            "mcp/reloadServer",
             "context/getContextItems",
             "context/getSymbolsForFiles",
             "context/loadSubmenuItems",
@@ -91,10 +103,8 @@ class MessageTypes {
             "autocomplete/complete",
             "autocomplete/cancel",
             "autocomplete/accept",
-            "command/run",
             "tts/kill",
             "llm/complete",
-            "llm/streamComplete",
             "llm/streamChat",
             "llm/listModels",
             "streamDiffLines",
@@ -110,18 +120,18 @@ class MessageTypes {
             "indexing/reindex",
             "indexing/abort",
             "indexing/setPaused",
-            "docs/getSuggestedDocs",
             "docs/initStatuses",
+            "docs/getDetails",
             //
             "completeOnboarding",
             "addAutocompleteModel",
-            "profiles/switch",
             "didChangeSelectedProfile",
             "didChangeSelectedOrg",
             "tools/call",
             "controlPlane/openUrl",
-            "controlPlane/listOrganizations"
-
+            "isItemTooBig",
+            "process/markAsBackgrounded",
+            "process/isBackgrounded",
         )
     }
 }

@@ -1,4 +1,6 @@
+import { DataDestination, ModelRole, PromptTemplates } from "@continuedev/config-yaml";
 import Parser from "web-tree-sitter";
+import { LLMConfigurationStatuses } from "./llm/constants";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -60,7 +62,7 @@ export interface IndexingStatus {
   progress: number;
   description: string;
   status: "indexing" | "complete" | "paused" | "failed" | "aborted" | "pending";
-  embeddingsProviderId: string;
+  embeddingsProviderId?: string;
   isReindexing?: boolean;
   debugInfo?: string;
   title: string;
@@ -75,36 +77,18 @@ export type PromptTemplateFunction = (
 
 export type PromptTemplate = string | PromptTemplateFunction;
 
-export interface ILLM extends LLMOptions {
+type RequiredLLMOptions =
+  | "uniqueId"
+  | "contextLength"
+  | "embeddingId"
+  | "maxEmbeddingChunkSize"
+  | "maxEmbeddingBatchSize"
+  | "completionOptions";
+
+export interface ILLM
+  extends Omit<LLMOptions, RequiredLLMOptions>,
+    Required<Pick<LLMOptions, RequiredLLMOptions>> {
   get providerName(): string;
-
-  uniqueId: string;
-  model: string;
-
-  title?: string;
-  systemMessage?: string;
-  contextLength: number;
-  maxStopWords?: number;
-  completionOptions: CompletionOptions;
-  requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, PromptTemplate>;
-  templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
-  llmRequestHook?: (model: string, prompt: string) => any;
-  apiKey?: string;
-  apiBase?: string;
-  cacheBehavior?: CacheBehavior;
-
-  deployment?: string;
-  apiVersion?: string;
-  apiType?: string;
-  region?: string;
-  projectId?: string;
-
-  // Embedding options
-  embeddingId: string;
-  maxEmbeddingChunkSize: number;
-  maxEmbeddingBatchSize: number;
 
   complete(
     prompt: string,
@@ -159,6 +143,16 @@ export interface ILLM extends LLMOptions {
     otherData: Record<string, string>,
     canPutWordsInModelsMouth?: boolean,
   ): string | ChatMessage[];
+
+  getConfigurationStatus(): LLMConfigurationStatuses;
+}
+
+export interface ModelInstaller {
+  installModel(
+    modelName: string,
+    signal: AbortSignal,
+    progressReporter?: (task: string, increment: number, total: number) => void,
+  ): Promise<any>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -177,8 +171,8 @@ export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 export interface ContextProviderExtras {
   config: ContinueConfig;
   fullInput: string;
-  embeddingsProvider: ILLM;
-  reranker: ILLM | undefined;
+  embeddingsProvider: ILLM | null;
+  reranker: ILLM | null;
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
@@ -226,7 +220,6 @@ export interface SiteIndexingConfig {
   maxDepth?: number;
   faviconUrl?: string;
   useLocalCrawling?: boolean;
-  rootUrl?: string; // Currently only used by preindexed docs
 }
 
 export interface DocsIndexingDetails {
@@ -234,7 +227,6 @@ export interface DocsIndexingDetails {
   config: SiteIndexingConfig;
   indexingStatus: IndexingStatus | undefined;
   chunks: Chunk[];
-  isPreIndexedDoc: boolean;
 }
 
 export interface IContextProvider {
@@ -306,7 +298,12 @@ export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
 }
 
-export type ChatMessageRole = "user" | "assistant" | "system" | "tool";
+export type ChatMessageRole =
+  | "user"
+  | "assistant"
+  | "thinking"
+  | "system"
+  | "tool";
 
 export type TextMessagePart = {
   type: "text";
@@ -351,6 +348,14 @@ export interface UserChatMessage {
   content: MessageContent;
 }
 
+export interface ThinkingChatMessage {
+  role: "thinking";
+  content: MessageContent;
+  signature?: string;
+  redactedThinking?: string;
+  toolCalls?: ToolCallDelta[];
+}
+
 export interface AssistantChatMessage {
   role: "assistant";
   content: MessageContent;
@@ -365,6 +370,7 @@ export interface SystemChatMessage {
 export type ChatMessage =
   | UserChatMessage
   | AssistantChatMessage
+  | ThinkingChatMessage
   | SystemChatMessage
   | ToolResultChatMessage;
 
@@ -389,6 +395,7 @@ export interface ContextItem {
   icon?: string;
   uri?: ContextItemUri;
   hidden?: boolean;
+  status?: string;
 }
 
 export interface ContextItemWithId extends ContextItem {
@@ -415,7 +422,7 @@ export interface PromptLog {
   completion: string;
 }
 
-export type MessageModes = "chat" | "edit";
+export type MessageModes = "chat" | "edit" | "agent";
 
 export type ToolStatus =
   | "generating"
@@ -460,26 +467,122 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
 export type ToastType = "info" | "error" | "warning";
 
+export interface LLMInteractionBase {
+  interactionId: string;
+  timestamp: number;
+}
+
+export interface LLMInteractionStartChat extends LLMInteractionBase {
+  kind: "startChat";
+  messages: ChatMessage[];
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionStartComplete extends LLMInteractionBase {
+  kind: "startComplete";
+  prompt: string;
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionStartFim extends LLMInteractionBase {
+  kind: "startFim";
+  prefix: string;
+  suffix: string;
+  options: CompletionOptions;
+}
+
+export interface LLMInteractionChunk extends LLMInteractionBase {
+  kind: "chunk";
+  chunk: string;
+}
+
+export interface LLMInteractionMessage extends LLMInteractionBase {
+  kind: "message";
+  message: ChatMessage;
+}
+
+export interface LLMInteractionEnd extends LLMInteractionBase {
+  promptTokens: number;
+  generatedTokens: number;
+  thinkingTokens: number;
+}
+
+export interface LLMInteractionSuccess extends LLMInteractionEnd {
+  kind: "success";
+}
+
+export interface LLMInteractionCancel extends LLMInteractionEnd {
+  kind: "cancel";
+}
+
+export interface LLMInteractionError extends LLMInteractionEnd {
+  kind: "error";
+  name: string;
+  message: string;
+}
+
+export type LLMInteractionItem =
+  | LLMInteractionStartChat
+  | LLMInteractionStartComplete
+  | LLMInteractionStartFim
+  | LLMInteractionChunk
+  | LLMInteractionMessage
+  | LLMInteractionSuccess
+  | LLMInteractionCancel
+  | LLMInteractionError;
+
+// When we log a LLM interaction, we want to add the interactionId and timestamp
+// in the logger code, so we need a type that omits these members from *each*
+// member of the union. This can be done by using the distributive behavior of
+// conditional types in Typescript.
+//
+// www.typescriptlang.org/docs/handbook/2/conditional-types.html#distributive-conditional-types
+// https://stackoverflow.com/questions/57103834/typescript-omit-a-property-from-all-interfaces-in-a-union-but-keep-the-union-s
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
+  ? Omit<T, K>
+  : never;
+
+export type LLMInteractionItemDetails = DistributiveOmit<
+  LLMInteractionItem,
+  "interactionId" | "timestamp"
+>;
+
+export interface ILLMInteractionLog {
+  logItem(item: LLMInteractionItemDetails): void;
+}
+
+export interface ILLMLogger {
+  createInteractionLog(): ILLMInteractionLog;
+}
+
 export interface LLMOptions {
   model: string;
 
   title?: string;
   uniqueId?: string;
-  systemMessage?: string;
+  baseChatSystemMessage?: string;
   contextLength?: number;
   maxStopWords?: number;
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, PromptTemplate>;
+  promptTemplates?: Partial<Record<keyof PromptTemplates, PromptTemplate>>;
   templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
+  logger?: ILLMLogger;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+
+  // continueProperties
   apiKeyLocation?: string;
-  aiGatewaySlug?: string;
   apiBase?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
+  aiGatewaySlug?: string;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -502,17 +605,16 @@ export interface LLMOptions {
   agentId?: string;
   agentAliasId?: string; 
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP Options
-  capabilities?: ModelCapability;
-
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 
   // IBM watsonx Options
   deploymentId?: string;
+
+  env?: Record<string, string | number | boolean>;
 }
 
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
@@ -536,7 +638,7 @@ export interface CustomLLMWithOptionals {
     signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
-  ) => AsyncGenerator<string>;
+  ) => AsyncGenerator<ChatMessage | string>;
   listModels?: (
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => Promise<string[]>;
@@ -600,8 +702,7 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
-  enableControlServerBeta: boolean;
-  continueTestEnvironment: "none" | "production" | "test" | "local";
+  continueTestEnvironment: "none" | "production" | "staging" | "local";
   pauseCodebaseIndexOnStart: boolean;
 }
 
@@ -674,9 +775,15 @@ export interface IDE {
       }
   >;
 
+  getLastFileSaveTimestamp?(): number;
+
+  updateLastFileSaveTimestamp?(): void;
+
   getPinnedFiles(): Promise<string[]>;
 
   getSearchResults(query: string): Promise<string>;
+
+  getFileResults(pattern: string): Promise<string[]>;
 
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
 
@@ -727,11 +834,13 @@ export interface ContinueSDK {
   selectedCode: RangeInFile[];
   config: ContinueConfig;
   fetch: FetchFunction;
+  completionOptions?: LLMFullCompletionOptions;
 }
 
 export interface SlashCommand {
   name: string;
   description: string;
+  prompt?: string;
   params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
 }
@@ -835,11 +944,7 @@ export interface ContextProviderWithParams {
   params: { [key: string]: any };
 }
 
-export interface SlashCommandDescription {
-  name: string;
-  description: string;
-  params?: { [key: string]: any };
-}
+export type SlashCommandDescription = Omit<SlashCommand, "run">;
 
 export interface CustomCommand {
   name: string;
@@ -862,6 +967,11 @@ export interface ToolExtras {
   llm: ILLM;
   fetch: FetchFunction;
   tool: Tool;
+  toolCallId?: string;
+  onPartialOutput?: (params: {
+    toolCallId: string;
+    contextItems: ContextItem[];
+  }) => void;
 }
 
 export interface Tool {
@@ -874,10 +984,14 @@ export interface Tool {
   };
 
   displayTitle: string;
-  wouldLikeTo: string;
+  wouldLikeTo?: string;
+  isCurrently?: string;
+  hasAlready?: string;
   readonly: boolean;
+  isInstant?: boolean;
   uri?: string;
   faviconUrl?: string;
+  group: string;
 }
 
 interface ToolChoice {
@@ -905,10 +1019,13 @@ export interface BaseCompletionOptions {
   prediction?: Prediction;
   tools?: Tool[];
   toolChoice?: ToolChoice;
+  reasoning?: boolean;
+  reasoningBudgetTokens?: number;
 }
 
 export interface ModelCapability {
   uploadImage?: boolean;
+  tools?: boolean;
 }
 
 export interface ModelDescription {
@@ -916,20 +1033,27 @@ export interface ModelDescription {
   provider: string;
   model: string;
   apiKey?: string;
-  apiKeyLocation?: string;
+
   apiBase?: string;
+  apiKeyLocation?: string;
+  orgScopeId?: string | null;
+
+  onPremProxyUrl?: string | null;
+
   contextLength?: number;
   maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
-  systemMessage?: string;
+  baseChatSystemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
-  capabilities?: ModelCapability;
   cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
+  roles?: ModelRole[];
+  configurationStatus?: LLMConfigurationStatuses;
 }
 
-export interface EmbedOptions {
+export interface JSONEmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
@@ -937,19 +1061,20 @@ export interface EmbedOptions {
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
-  maxChunkSize?: number;
-  maxBatchSize?: number;
+  maxEmbeddingChunkSize?: number;
+  maxEmbeddingBatchSize?: number;
+
   // AWS options
   profile?: string;
 
-  // AWS and GCP Options
+  // AWS and VertexAI Options
   region?: string;
 
-  // GCP and Watsonx Options
+  // VertexAI and Watsonx Options
   projectId?: string;
 }
 
-export interface EmbeddingsProviderDescription extends EmbedOptions {
+export interface EmbeddingsProviderDescription extends JSONEmbedOptions {
   provider: string;
 }
 
@@ -975,6 +1100,11 @@ export interface TabAutocompleteOptions {
   disableInFiles?: string[];
   useImports?: boolean;
   showWhateverWeHaveAtXMs?: number;
+  // true = enabled, false = disabled, number = enabled with priority
+  experimental_includeClipboard: boolean | number;
+  experimental_includeRecentlyVisitedRanges: boolean | number;
+  experimental_includeRecentlyEditedRanges: boolean | number;
+  experimental_includeDiff: boolean | number;
 }
 
 export interface StdioOptions {
@@ -997,8 +1127,54 @@ export interface SSEOptions {
 export type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
 
 export interface MCPOptions {
+  name: string;
+  id: string;
   transport: TransportOptions;
   faviconUrl?: string;
+  timeout?: number;
+}
+
+export type MCPConnectionStatus =
+  | "connecting"
+  | "connected"
+  | "error"
+  | "not-connected";
+
+export interface MCPPrompt {
+  name: string;
+  description?: string;
+  arguments?: {
+    name: string;
+    description?: string;
+    required?: boolean;
+  }[];
+}
+
+// Leaving here to ideate on
+// export type ContinueConfigSource = "local-yaml" | "local-json" | "hub-assistant" | "hub"
+
+export interface MCPResource {
+  name: string;
+  uri: string;
+  description?: string;
+  mimeType?: string;
+}
+export interface MCPTool {
+  name: string;
+  description?: string;
+  inputSchema: {
+    type: "object";
+    properties?: Record<string, any>;
+  };
+}
+
+export interface MCPServerStatus extends MCPOptions {
+  status: MCPConnectionStatus;
+  errors: string[];
+
+  prompts: MCPPrompt[];
+  tools: MCPTool[];
+  resources: MCPResource[];
 }
 
 export interface ContinueUIConfig {
@@ -1007,6 +1183,7 @@ export interface ContinueUIConfig {
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
   codeWrap?: boolean;
+  showSessionTabs?: boolean;
 }
 
 export interface ContextMenuConfig {
@@ -1017,10 +1194,15 @@ export interface ContextMenuConfig {
   fixGrammar?: string;
 }
 
-export interface ModelRoles {
+export interface ExperimentalModelRoles {
+  repoMapFileSelection?: string;
   inlineEdit?: string;
   applyCodeBlock?: string;
-  repoMapFileSelection?: string;
+}
+
+export interface ExperimentalMCPOptions {
+  transport: TransportOptions;
+  faviconUrl?: string;
 }
 
 export type EditStatus =
@@ -1041,6 +1223,7 @@ export interface ApplyState {
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
+  toolCallId?: string;
 }
 
 export interface RangeInFileWithContents {
@@ -1085,7 +1268,7 @@ export type DefaultContextProvider = ContextProviderWithParams & {
 
 export interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
-  modelRoles?: ModelRoles;
+  modelRoles?: ExperimentalModelRoles;
   defaultContext?: DefaultContextProvider[];
   promptPath?: string;
 
@@ -1106,7 +1289,7 @@ export interface ExperimentalConfig {
    * This is needed to crawl a large number of documentation sites that are dynamically rendered.
    */
   useChromiumForDocsCrawling?: boolean;
-  modelContextProtocolServers?: MCPOptions[];
+  modelContextProtocolServers?: ExperimentalMCPOptions[];
 }
 
 export interface AnalyticsConfig {
@@ -1115,11 +1298,39 @@ export interface AnalyticsConfig {
   clientKey?: string;
 }
 
+export interface JSONModelDescription {
+  title: string;
+  provider: string;
+  model: string;
+  apiKey?: string;
+  apiBase?: string;
+
+  contextLength?: number;
+  maxStopWords?: number;
+  template?: TemplateType;
+  completionOptions?: BaseCompletionOptions;
+  systemMessage?: string;
+  requestOptions?: RequestOptions;
+  cacheBehavior?: CacheBehavior;
+
+  region?: string;
+  profile?: string;
+  modelArn?: string;
+  apiType?: "openai" | "azure";
+  apiVersion?: string;
+  deployment?: string;
+  projectId?: string;
+  accountId?: string;
+  aiGatewaySlug?: string;
+  useLegacyCompletionsEndpoint?: boolean;
+  deploymentId?: string;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
+  models: JSONModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
@@ -1130,13 +1341,14 @@ export interface SerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
-  tabAutocompleteModel?: ModelDescription | ModelDescription[];
+  tabAutocompleteModel?: JSONModelDescription | JSONModelDescription[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  data?: DataDestination[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1149,11 +1361,11 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
-  /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
+  /** Each entry in this array will originally be a JSONModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
    * Continue will do the rest of the work to construct prompt templates, handle context items, prune context, etc.
    */
-  models: (CustomLLM | ModelDescription)[];
+  models: (CustomLLM | JSONModelDescription)[];
   /** A system message to be followed by all of your models */
   systemMessage?: string;
   /** The default completion options for all models */
@@ -1177,8 +1389,8 @@ export interface Config {
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
     | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+    | JSONModelDescription
+    | (CustomLLM | JSONModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -1189,51 +1401,54 @@ export interface Config {
   experimental?: ExperimentalConfig;
   /** Analytics configuration */
   analytics?: AnalyticsConfig;
+  data?: DataDestination[];
 }
 
 // in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ILLM[];
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
-  slashCommands?: SlashCommand[];
-  contextProviders?: IContextProvider[];
+  slashCommands: SlashCommand[];
+  contextProviders: IContextProvider[];
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
-  embeddingsProvider: ILLM;
-  tabAutocompleteModels?: ILLM[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
-  reranker?: ILLM;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  mcpServerStatuses: MCPServerStatus[];
+  rules: RuleWithSource[];
+  modelsByRole: Record<ModelRole, ILLM[]>;
+  selectedModelByRole: Record<ModelRole, ILLM | null>;
+  data?: DataDestination[];
 }
 
 export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
-  systemMessage?: string;
+  // systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   requestOptions?: RequestOptions;
-  slashCommands?: SlashCommandDescription[];
-  contextProviders?: ContextProviderDescription[];
+  slashCommands: SlashCommandDescription[];
+  contextProviders: ContextProviderDescription[];
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
-  embeddingsProvider?: string;
   ui?: ContinueUIConfig;
-  reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
   tools: Tool[];
+  mcpServerStatuses: MCPServerStatus[];
+  rules: RuleWithSource[];
   usePlatform: boolean;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  modelsByRole: Record<ModelRole, ModelDescription[]>;
+  selectedModelByRole: Record<ModelRole, ModelDescription | null>;
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
@@ -1276,4 +1491,20 @@ export type PackageDocsResult = {
 export interface TerminalOptions {
   reuseTerminal?: boolean;
   terminalName?: string;
+  waitForCompletion?: boolean;
+}
+
+export interface RuleWithSource {
+  name?: string;
+  slug?: string;
+  source:
+    | "default"
+    | "model-chat-options"
+    | "rules-block"
+    | "json-systemMessage"
+    | ".continuerules";
+  if?: string;
+  rule: string;
+  description?: string;
+  ruleFile?: string;
 }

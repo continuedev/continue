@@ -1,16 +1,18 @@
 import { ContextItem, Tool, ToolExtras } from "..";
-import { MCPManagerSingleton } from "../context/mcp";
+import { MCPManagerSingleton } from "../context/mcp/MCPManagerSingleton";
+import { canParseUrl } from "../util/url";
 import { BuiltInToolNames } from "./builtIn";
 
 import { createNewFileImpl } from "./implementations/createNewFile";
-import { exactSearchImpl } from "./implementations/exactSearch";
+import { createRuleBlockImpl } from "./implementations/createRuleBlock";
+import { fileGlobSearchImpl } from "./implementations/globSearch";
+import { grepSearchImpl } from "./implementations/grepSearch";
+import { lsToolImpl } from "./implementations/lsTool";
 import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
-import { viewRepoMapImpl } from "./implementations/viewRepoMap";
-import { viewSubdirectoryImpl } from "./implementations/viewSubdirectory";
 
 async function callHttpTool(
   url: string,
@@ -55,9 +57,8 @@ async function callToolFromUri(
   args: any,
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
-  // @ts-ignore
-  const canParse = URL.canParse(uri);
-  if (!canParse) {
+  const parseable = canParseUrl(uri);
+  if (!parseable) {
     throw new Error(`Invalid URI: ${uri}`);
   }
   const parsedUri = new URL(uri);
@@ -86,20 +87,44 @@ async function callToolFromUri(
         throw new Error(`Failed to call tool: ${toolName}`);
       }
 
-      return (response.content as any).map((item: any): ContextItem => {
-        if (item.type !== "text") {
-          throw new Error(
-            `Continue received item of type "${item.type}" from MCP tool, but currently only supports "text".`,
-          );
+      const contextItems: ContextItem[] = [];
+      (response.content as any).forEach((item: any) => {
+        if (item.type === "text") {
+          contextItems.push({
+            name: extras.tool.displayTitle,
+            description: "Tool output",
+            content: item.text,
+            icon: extras.tool.faviconUrl,
+          });
+        } else if (item.type === "resource") {
+          // TODO resource change subscribers https://modelcontextprotocol.io/docs/concepts/resources
+          if (item.resource?.blob) {
+            contextItems.push({
+              name: extras.tool.displayTitle,
+              description: "MCP Item Error",
+              content:
+                "Error: tool call received unsupported blob resource item",
+              icon: extras.tool.faviconUrl,
+            });
+          }
+          // TODO account for mimetype? // const mimeType = item.resource.mimeType
+          // const uri = item.resource.uri;
+          contextItems.push({
+            name: extras.tool.displayTitle,
+            description: "Tool output",
+            content: item.resource.text,
+            icon: extras.tool.faviconUrl,
+          });
+        } else {
+          contextItems.push({
+            name: extras.tool.displayTitle,
+            description: "MCP Item Error",
+            content: `Error: tool call received unsupported item of type "${item.type}"`,
+            icon: extras.tool.faviconUrl,
+          });
         }
-        return {
-          name: extras.tool.displayTitle,
-          description: "Tool output",
-          content: item.text,
-          icon: extras.tool.faviconUrl,
-        };
       });
-
+      return contextItems;
     default:
       throw new Error(`Unsupported protocol: ${parsedUri?.protocol}`);
   }
@@ -115,22 +140,29 @@ export async function callTool(
   switch (uri) {
     case BuiltInToolNames.ReadFile:
       return await readFileImpl(args, extras);
+    // Note: Custom GUI handling for edit
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
-    case BuiltInToolNames.ExactSearch:
-      return await exactSearchImpl(args, extras);
+    case BuiltInToolNames.GrepSearch:
+      return await grepSearchImpl(args, extras);
+    case BuiltInToolNames.FileGlobSearch:
+      return await fileGlobSearchImpl(args, extras);
     case BuiltInToolNames.RunTerminalCommand:
       return await runTerminalCommandImpl(args, extras);
     case BuiltInToolNames.SearchWeb:
       return await searchWebImpl(args, extras);
     case BuiltInToolNames.ViewDiff:
       return await viewDiffImpl(args, extras);
-    case BuiltInToolNames.ViewRepoMap:
-      return await viewRepoMapImpl(args, extras);
-    case BuiltInToolNames.ViewSubdirectory:
-      return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.LSTool:
+      return await lsToolImpl(args, extras);
     case BuiltInToolNames.ReadCurrentlyOpenFile:
       return await readCurrentlyOpenFileImpl(args, extras);
+    case BuiltInToolNames.CreateRuleBlock:
+      return await createRuleBlockImpl(args, extras);
+    // case BuiltInToolNames.ViewRepoMap:
+    //   return await viewRepoMapImpl(args, extras);
+    // case BuiltInToolNames.ViewSubdirectory:
+    //   return await viewSubdirectoryImpl(args, extras);
     default:
       return await callToolFromUri(uri, args, extras);
   }

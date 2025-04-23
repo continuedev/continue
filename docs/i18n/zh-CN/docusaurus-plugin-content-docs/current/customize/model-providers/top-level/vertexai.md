@@ -45,13 +45,13 @@ We recommend configuring **Codestral** or **code-gecko** as your autocomplete mo
 
 ## Embeddings model
 
-We recommend configuring **text-embedding-004** as your embeddings model.
+We recommend configuring **text-embedding-005** as your embeddings model.
 
 ```json title="config.json"
 {
   "embeddingsProvider": {
     "provider": "vertexai",
-    "model": "text-embedding-004",
+    "model": "text-embedding-005",
     "projectId": "[PROJECT_ID]",
     "region": "us-central1"
   }
@@ -62,4 +62,4 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 
 <!-- Vertex AI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see a list of reranking model providers. -->
+[Click here](../../model-roles/reranking.md) to see a list of reranking model providers. -->

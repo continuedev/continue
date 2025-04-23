@@ -6,7 +6,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray } from "../..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscCommandCenterInactiveBorder,
+} from "../..";
 import { ToolTip } from "../../gui/Tooltip";
 
 export const OptionDiv = styled.div<{
@@ -45,7 +49,7 @@ export const MAX_HEIGHT_PX = 300;
 
 export const Divider = styled.div`
   height: 0.5px;
-  background-color: ${lightGray};
+  background-color: ${vscCommandCenterInactiveBorder};
 `;
 
 interface ModelOptionProps {
@@ -54,8 +58,7 @@ interface ModelOptionProps {
   disabled: boolean;
   selected: boolean;
   showConfigure: boolean;
-  onLink?: (e: any) => void;
-  onConfigure: (e: any) => void;
+  onOpenConfig: () => void;
   onClick: () => void;
   errors?: ConfigValidationError[];
   onClickError?: (e: any) => void;
@@ -85,16 +88,15 @@ const StyledExclamationTriangleIcon = styled(IconBase).attrs({
 })``;
 
 export function Option({
-  onConfigure,
   children,
   idx,
   disabled,
   onClick,
   showConfigure,
-  onLink,
   selected,
   errors,
   onClickError,
+  onOpenConfig,
 }: ModelOptionProps) {
   const [hovered, setHovered] = useState(false);
 
@@ -119,16 +121,27 @@ export function Option({
         <div className="flex w-full items-center justify-between">
           {children}
           <div className="ml-2 flex items-center">
-            {!errors?.length && showConfigure && (
-              <StyledCog6ToothIcon $hovered={hovered} onClick={onConfigure} />
-            )}
-            {!errors?.length && onLink && (
-              <StyledArrowTopRightOnSquareIcon
-                $hovered={hovered}
-                onClick={onLink}
-              />
-            )}
-            {errors?.length ? (
+            {!errors?.length ? (
+              showConfigure ? (
+                <StyledCog6ToothIcon
+                  $hovered={hovered}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onOpenConfig();
+                  }}
+                />
+              ) : (
+                <StyledArrowTopRightOnSquareIcon
+                  $hovered={hovered}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onOpenConfig();
+                  }}
+                />
+              )
+            ) : (
               <>
                 <StyledExclamationTriangleIcon
                   data-tooltip-id={`${idx}-errors-tooltip`}
@@ -141,7 +154,7 @@ export function Option({
                   {JSON.stringify(errors, null, 2)}
                 </ToolTip>
               </>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
