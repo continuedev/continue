@@ -380,14 +380,14 @@ const getCommandsMap: (
 
     void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
-    await verticalDiffManager.streamEdit(
-      config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
+    await verticalDiffManager.streamEdit({
+      input:
+        config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       llm,
-      undefined,
       onlyOneInsertion,
-      undefined,
       range,
-    );
+      rules: config.rules,
+    });
   }
   return {
     "continue.acceptDiff": async (newFileUri?: string, streamId?: string) =>
@@ -913,7 +913,7 @@ const getCommandsMap: (
 
       quickPick.items = [
         {
-          label: "$(question) Open help center",
+          label: "$(gear) Open settings",
         },
         {
           label: "$(comment) Open chat",
@@ -968,7 +968,10 @@ const getCommandsMap: (
           vscode.commands.executeCommand("continue.focusContinueInput");
         } else if (selectedOption === "$(screen-full) Open full screen chat") {
           vscode.commands.executeCommand("continue.toggleFullScreen");
+        } else if (selectedOption === "$(gear) Open settings") {
+          vscode.commands.executeCommand("continue.navigateTo", "/config");
         }
+
         quickPick.dispose();
       });
       quickPick.show();

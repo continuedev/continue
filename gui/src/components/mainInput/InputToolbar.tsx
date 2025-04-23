@@ -3,14 +3,7 @@ import { InputModifiers } from "core";
 import { modelSupportsImages, modelSupportsTools } from "core/llm/autodetect";
 import { useRef } from "react";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscButtonBackground,
-  vscButtonForeground,
-  vscForeground,
-  vscInputBackground,
-} from "..";
+import { vscInputBackground } from "..";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
@@ -31,6 +24,7 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import ModeSelect from "../modelSelection/ModeSelect";
 import { useFontSize } from "../ui/font";
+import { EnterButton } from "./InputToolbar/EnterButton";
 import HoverItem from "./InputToolbar/HoverItem";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
@@ -47,25 +41,6 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
 
   & > * {
     flex: 0 0 auto;
-  }
-`;
-
-const EnterButton = styled.button<{ isPrimary?: boolean }>`
-  all: unset;
-  padding: 2px 4px;
-  display: flex;
-  align-items: center;
-  background-color: ${(props) =>
-    !props.disabled && props.isPrimary
-      ? vscButtonBackground
-      : lightGray + "33"};
-  border-radius: ${defaultBorderRadius};
-  color: ${(props) =>
-    !props.disabled && props.isPrimary ? vscButtonForeground : vscForeground};
-  cursor: pointer;
-
-  :disabled {
-    cursor: wait;
   }
 `;
 
@@ -147,6 +122,9 @@ function InputToolbar(props: InputToolbarProps) {
                       const files = e.target?.files ?? [];
                       for (const file of files) {
                         props.onImageFileSelected?.(file);
+                      }
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
                       }
                     }}
                   />

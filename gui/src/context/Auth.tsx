@@ -29,7 +29,6 @@ interface AuthContextType {
   selectedProfile: ProfileDescription | null;
   profiles: ProfileDescription[] | null;
   refreshProfiles: () => void;
-  controlServerBetaEnabled: boolean;
   organizations: OrganizationDescription[];
 }
 
@@ -86,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               setOrganizations(orgs.filter((org) => org.id === "personal")),
             );
             dispatch(setSelectedOrgId("personal"));
+            setSession(undefined);
           }}
           onCancel={() => {
             dispatch(setDialogMessage(undefined));
@@ -110,21 +110,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useWebviewListener(
-    "didChangeControlPlaneSessionInfo",
+    "sessionUpdate",
     async (data) => {
       setSession(data.sessionInfo);
-    },
-    [],
-  );
-
-  const [controlServerBetaEnabled, setControlServerBetaEnabled] =
-    useState(false);
-
-  // Hacky, remove once continue for teams is deprecated
-  useWebviewListener(
-    "configUpdate",
-    async (msg) => {
-      setControlServerBetaEnabled(msg.usingContinueForTeams);
     },
     [],
   );
@@ -149,7 +137,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         profiles: currentOrg?.profiles ?? [],
         refreshProfiles,
         organizations: orgs,
-        controlServerBetaEnabled,
       }}
     >
       {children}

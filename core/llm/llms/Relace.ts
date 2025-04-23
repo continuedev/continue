@@ -11,6 +11,10 @@ export class Relace extends OpenAI {
   };
   protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
 
+  protected supportsPrediction(model: string): boolean {
+    return true;
+  }
+
   getConfigurationStatus() {
     if (!this.apiKey) {
       return LLMConfigurationStatuses.MISSING_API_KEY;

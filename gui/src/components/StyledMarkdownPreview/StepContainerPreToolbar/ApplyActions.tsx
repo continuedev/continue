@@ -36,6 +36,7 @@ export function ApplyActions(props: ApplyActionsProps) {
 
   const applyButton = (text: string) => (
     <button
+      data-testid="codeblock-toolbar-apply"
       className="text-lightgray text-[${vscForeground}] flex cursor-pointer items-center border-none bg-transparent pl-0 text-xs outline-none hover:brightness-125"
       onClick={props.onClickApply}
     >
@@ -65,6 +66,7 @@ export function ApplyActions(props: ApplyActionsProps) {
 
           <div className="flex">
             <ToolbarButtonWithTooltip
+              data-testid="codeblock-toolbar-reject"
               onClick={onClickReject}
               tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
             >
@@ -72,6 +74,7 @@ export function ApplyActions(props: ApplyActionsProps) {
             </ToolbarButtonWithTooltip>
 
             <ToolbarButtonWithTooltip
+              data-testid="codeblock-toolbar-accept"
               onClick={props.onClickAccept}
               tooltipContent={`Accept all (${getMetaKeyLabel()}⇧⏎)`}
             >

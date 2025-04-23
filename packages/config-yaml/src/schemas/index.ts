@@ -4,6 +4,7 @@ import { dataSchema } from "./data/index.js";
 import { modelSchema, partialModelSchema } from "./models.js";
 
 export const contextSchema = z.object({
+  name: z.string().optional(),
   provider: z.string(),
   params: z.any().optional(),
 });
@@ -16,11 +17,15 @@ const mcpServerSchema = z.object({
   env: z.record(z.string()).optional(),
 });
 
+export type MCPServer = z.infer<typeof mcpServerSchema>;
+
 const promptSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
   prompt: z.string(),
 });
+
+export type Prompt = z.infer<typeof promptSchema>;
 
 const docSchema = z.object({
   name: z.string(),
@@ -28,6 +33,8 @@ const docSchema = z.object({
   rootUrl: z.string().optional(),
   faviconUrl: z.string().optional(),
 });
+
+export type DocsConfig = z.infer<typeof docSchema>;
 
 const ruleObjectSchema = z.object({
   name: z.string(),

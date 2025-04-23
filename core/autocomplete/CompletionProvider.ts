@@ -154,6 +154,10 @@ export class CompletionProvider {
         return undefined;
       }
 
+      if (llm.promptTemplates?.autocomplete) {
+        options.template = llm.promptTemplates.autocomplete as string;
+      }
+
       const helper = await HelperVars.create(
         input,
         options,
