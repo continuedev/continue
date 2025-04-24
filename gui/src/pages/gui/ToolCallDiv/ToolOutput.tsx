@@ -37,11 +37,13 @@ export function SimpleToolCallUI({
             <ToolCallStatusMessage tool={tool} toolCallState={toolCallState} />
           </div>
           <div>
-            <ArgsToggleIcon
-              isShowing={showingArgs}
-              setIsShowing={setShowingArgs}
-              toolCallId={toolCallState.toolCallId}
-            />
+            {args.length > 0 ? (
+              <ArgsToggleIcon
+                isShowing={showingArgs}
+                setIsShowing={setShowingArgs}
+                toolCallId={toolCallState.toolCallId}
+              />
+            ) : null}
           </div>
         </div>
       }

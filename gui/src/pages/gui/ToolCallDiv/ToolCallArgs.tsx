@@ -20,10 +20,13 @@ export const ArgsToggleIcon = ({
     <>
       <div
         data-tooltip-id={argsTooltipId}
-        onClick={() => setIsShowing(!isShowing)}
-        className={`p-1 hover:opacity-80 ${isShowing ? "bg-red-200" : "bg-white"}`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsShowing(!isShowing);
+        }}
+        className={`hover:bg-vsc-input-background select-none px-1 py-0.5 hover:opacity-80 ${isShowing ? "bg-vsc-input-background" : "bg-transparent"}`}
       >
-        <code>{`{}`}</code>
+        {`{}`}
       </div>
       <ToolTip id={argsTooltipId}>
         {isShowing ? "Hide args" : "Show args"}
