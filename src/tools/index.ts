@@ -1,4 +1,6 @@
+import { parseArgs } from "../args.js";
 import { MCPService } from "../mcp.js";
+import { exitTool } from "./exit.js";
 import { listFilesTool } from "./listFiles.js";
 import { readFileTool } from "./readFile.js";
 import { runTerminalCommandTool } from "./runTerminalCommand.js";
@@ -16,6 +18,8 @@ export const BUILTIN_TOOLS: Tool[] = [
   viewDiffTool,
   searchCodeTool,
   runTerminalCommandTool,
+  // When in headless mode, there is a tool that the LLM can call to make the GitHub Action fail
+  ...(parseArgs().isHeadless ? [exitTool] : []),
 ];
 
 export function getToolsDescription(): string {
@@ -23,7 +27,7 @@ export function getToolsDescription(): string {
     const params = Object.entries(tool.parameters)
       .map(
         ([name, param]) =>
-          `    "${name}": { "type": "${param.type}", "description": "${param.description}", "required": ${param.required} }`,
+          `    "${name}": { "type": "${param.type}", "description": "${param.description}", "required": ${param.required} }`
       )
       .join(",\n");
 
@@ -45,7 +49,7 @@ ${params}
 }
 
 export function extractToolCalls(
-  response: string,
+  response: string
 ): Array<{ name: string; arguments: Record<string, any> }> {
   const toolCallRegex = /<tool>([\s\S]*?)<\/tool>/g;
   const matches = [...response.matchAll(toolCallRegex)];
@@ -122,6 +126,8 @@ export async function executeToolCall(toolCall: {
   try {
     return await tool.run(toolCall.arguments);
   } catch (error) {
-    return `Error executing tool "${toolCall.name}": ${error instanceof Error ? error.message : String(error)}`;
+    return `Error executing tool "${toolCall.name}": ${
+      error instanceof Error ? error.message : String(error)
+    }`;
   }
 }
