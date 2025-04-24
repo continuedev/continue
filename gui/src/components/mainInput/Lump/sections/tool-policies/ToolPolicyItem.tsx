@@ -10,8 +10,8 @@ import {
   addTool,
   toggleToolSetting,
 } from "../../../../../redux/slices/uiSlice";
-import { fontSize } from "../../../../../util";
 import { ToolTip } from "../../../../gui/Tooltip";
+import { useFontSize } from "../../../../ui/font";
 
 interface ToolDropdownItemProps {
   tool: Tool;
@@ -42,12 +42,19 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
     return undefined;
   }, [props.tool.function.parameters]);
 
+  const fontSize = useFontSize(-2);
+
   if (!policy) {
     return null;
   }
 
   return (
-    <div className="flex flex-col">
+    <div
+      className="flex flex-col"
+      style={{
+        fontSize,
+      }}
+    >
       <div className="flex flex-row items-center">
         <div
           className={`hover:bg-list-active hover:text-list-active-foreground xs:gap-1.5 flex flex-1 cursor-pointer flex-row items-center gap-1 py-0.5 pl-1 pr-2`}
@@ -60,7 +67,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
           <div
             className={`flex items-center gap-1 rounded-md`}
             style={{
-              fontSize: fontSize(-3),
+              fontSize,
             }}
           >
             {props.duplicatesDetected ? (
@@ -94,7 +101,7 @@ function ToolPolicyItem(props: ToolDropdownItemProps) {
                 className="h-3 w-3 flex-shrink-0"
               />
             )}
-            <span className="line-clamp-1 break-all text-xs">
+            <span className="line-clamp-1 break-all">
               {props.tool.function.name}
             </span>
           </div>
