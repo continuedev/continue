@@ -56,6 +56,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       case "done":
         return <CheckIcon className="text-green-500" />;
       case "canceled":
+      case "errored":
         return <XMarkIcon className="text-red-500" />;
     }
   }
@@ -74,6 +75,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   const icon =
     props.toolCall.function?.name &&
     toolCallIcons[props.toolCall.function?.name];
+
   if (icon && props.toolCall.id) {
     return (
       <div className="ml-4 mt-2">

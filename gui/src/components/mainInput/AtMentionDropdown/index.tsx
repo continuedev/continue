@@ -25,8 +25,6 @@ import {
   vscQuickInputBackground,
 } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { useAppSelector } from "../../../redux/hooks";
-import { selectSelectedChatModel } from "../../../redux/slices/configSlice";
 import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import { fontSize } from "../../../util";
 import FileIcon from "../../FileIcon";
@@ -162,8 +160,6 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
 
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const selectedModelTitle = useAppSelector(selectSelectedChatModel);
-
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
@@ -191,7 +187,6 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
         query,
         fullInput: "",
         selectedCode,
-        selectedModelTitle: selectedModelTitle?.title ?? "",
       },
     );
 
@@ -204,7 +199,6 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
     // Check if the context item exceeds the context length of the selected model
     const result = await ideMessenger.request("isItemTooBig", {
       item,
-      selectedModelTitle: selectedModelTitle?.title,
     });
 
     if (result.status === "error") {
