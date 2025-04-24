@@ -20,7 +20,7 @@ Local user-level configuration is stored and can be edited in your home director
 - `~/.continue/config.yaml` (MacOS / Linux)
 - `%USERPROFILE%\.continue\config.yaml` (Windows)
 
-To open this `config.yaml`, you need to open the assistants dropdown in the top-right portion of the chat input. On that drop down beside the "Local Assistant" option, select the cog icon. It will open the local `config.yaml`.
+To open this `config.yaml`, you need to open the assistants dropdown in the top-right portion of the chat input. On that dropdown beside the "Local Assistant" option, select the cog icon. It will open the local `config.yaml`.
 
 ![local-config-open-steps](/img/local-config-open-steps.png)
 
