@@ -5,7 +5,10 @@ import { PropsWithChildren } from "react";
 import { Provider } from "react-redux";
 import { MemoryRouter, RouterProps } from "react-router-dom";
 import { AuthProvider } from "../../context/Auth";
+import { IdeMessengerProvider } from "../../context/IdeMessenger";
+import { MockIdeMessenger } from "../../context/MockIdeMessenger";
 import { setupStore } from "../../redux/store";
+import { SetupListeners } from "../../App";
 // As a basic setup, import your same slice reducers
 
 // This type interface extends the default options for render from RTL, as well
@@ -30,9 +33,14 @@ export function renderWithProviders(
 
   const Wrapper = ({ children }: PropsWithChildren) => (
     <MemoryRouter {...routerProps}>
-      <Provider store={store}>
-        <AuthProvider>{children}</AuthProvider>
-      </Provider>
+      <IdeMessengerProvider messenger={new MockIdeMessenger()}>
+        <Provider store={store}>
+          <AuthProvider>
+            {children}
+            <SetupListeners />
+          </AuthProvider>
+        </Provider>
+      </IdeMessengerProvider>
     </MemoryRouter>
   );
 
