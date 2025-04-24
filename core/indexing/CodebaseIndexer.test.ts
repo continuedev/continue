@@ -1,4 +1,3 @@
-import { jest } from "@jest/globals";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "path";
@@ -16,12 +15,10 @@ import { getIndexSqlitePath } from "../util/paths.js";
 
 import { localPathToUri } from "../util/pathToUri.js";
 import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
-import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { getComputeDeleteAddRemove, SqliteDb } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
 import { CodebaseIndex } from "./types.js";
 import { walkDir, walkDirCache } from "./walkDir.js";
-
-jest.useFakeTimers();
 
 const TEST_TS = `\
 function main() {
@@ -211,6 +208,44 @@ describe("CodebaseIndexer", () => {
     expect(files.length).toBe(2);
     expect(files.every((file) => !file.endsWith("main.rs"))).toBe(true);
   });
+
+  test("should successfully re-index after clearing index", async () => {
+    const beforeClearingIndexes = await getAllIndexedFiles();
+    expect(beforeClearingIndexes.length).toBeGreaterThan(0);
+
+    await codebaseIndexer.clearIndexes()
+
+    const afterClearingIndexes = await getAllIndexedFiles();
+    expect(afterClearingIndexes.length).toBe(0);
+
+    const updates = await refreshIndex();
+
+    expect(updates.length).toBeGreaterThan(0);
+
+    const reIndexes = await getAllIndexedFiles();
+    expect(reIndexes.length).toBe(beforeClearingIndexes.length);
+  });
+
+  test.skip('should successfully re-index even if the database was blocked', async () => {
+    const beforeClearingIndexes = await getAllIndexedFiles();
+    expect(beforeClearingIndexes.length).toBeGreaterThan(0);
+
+    const db = await SqliteDb.get()
+    // await db.exec("BEGIN EXCLUSIVE TRANSACTION;")
+    const result = await db.get('SELECT 1')
+    console.log('result=>', result)
+    await codebaseIndexer.clearIndexes()
+
+    const afterClearingIndexes = await getAllIndexedFiles();
+    expect(afterClearingIndexes.length).toBe(0);
+
+    const updates = await refreshIndex();
+
+    expect(updates.length).toBeGreaterThan(0);
+
+    const reIndexes = await getAllIndexedFiles();
+    expect(reIndexes.length).toBe(beforeClearingIndexes.length);
+  })
 
   test("shouldn't index any files when nothing changed", async () => {
     await expectPlan(0, 0, 0, 0);

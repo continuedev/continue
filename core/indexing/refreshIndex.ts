@@ -89,6 +89,7 @@ export class SqliteDb {
     }
 
     SqliteDb.indexSqlitePath = getIndexSqlitePath();
+    console.log('debug2 sqlite path', getIndexSqlitePath())
     SqliteDb.db = await open({
       filename: SqliteDb.indexSqlitePath,
       driver: sqlite3.Database,
@@ -99,6 +100,22 @@ export class SqliteDb {
     await SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;
+  }
+
+  static async close() {
+    if (!SqliteDb.db) {
+      return;
+    }
+    await SqliteDb.db.exec('BEGIN EXCLUSIVE;');
+    
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await SqliteDb.db.close();
+      SqliteDb.db = null;
+    } catch (error) {
+      console.error("Error closing SqliteDb database connection:", error);
+      throw error;
+    }
   }
 }
 
@@ -114,6 +131,7 @@ async function getSavedItemsForTag(
     tag.artifactId,
   );
   const rows = await stmt.all();
+  await stmt.finalize();
   return rows;
 }
 

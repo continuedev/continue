@@ -11,7 +11,7 @@ import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
-import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { getComputeDeleteAddRemove, SqliteDb } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -63,6 +63,9 @@ export class CodebaseIndexer {
     const lanceDbFolder = getLanceDbPath();
 
     try {
+      await SqliteDb.close()
+      await new Promise(resolve=>setTimeout(resolve, 1000))
+
       await fs.unlink(sqliteFilepath);
     } catch (error) {
       console.error(`Error deleting ${sqliteFilepath} folder: ${error}`);
