@@ -16,7 +16,7 @@ dotenv.config();
 const CONTINUE_GLOBAL_DIR = (() => {
   const configPath = process.env.CONTINUE_GLOBAL_DIR;
   if (configPath) {
-    // Convert relative paths to absolute paths based on current working directory
+    // Convert relative path to absolute paths based on current working directory
     return path.isAbsolute(configPath)
       ? configPath
       : path.resolve(process.cwd(), configPath);
