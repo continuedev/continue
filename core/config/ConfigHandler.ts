@@ -300,7 +300,6 @@ export class ConfigHandler {
       localProfiles.push(...localAssistantProfiles);
     }
 
-    logger.info("num profiles: ", localProfiles.length);
     return localProfiles;
   }
 
