@@ -84,7 +84,7 @@ const templateSchema = z.enum([
 /** Prompt templates use Handlebars syntax */
 const promptTemplatesSchema = z.object({
   apply: z.string().optional(),
-  chat: templateSchema.optional(),
+  chatTemplate: templateSchema.optional(),
   edit: z.string().optional(),
 });
 export type PromptTemplates = z.infer<typeof promptTemplatesSchema>;
