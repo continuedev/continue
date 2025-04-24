@@ -1,7 +1,6 @@
 name: PR checks
 
 # PR Checks run on all PRs to the main branch and must pass before merging.
-
 on:
   pull_request:
     branches:
@@ -116,7 +115,7 @@ jobs:
           npm ci
 
   core-checks:
-    needs: [ install-core, install-config-yaml ]
+    needs: [install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -157,7 +156,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
   install-gui:
-    needs: [ install-root, install-core, install-config-yaml ]
+    needs: [install-root, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -242,7 +241,7 @@ jobs:
           npx tsc --noEmit
 
   binary-checks:
-    needs: [ install-root, install-core, install-config-yaml ]
+    needs: [install-root, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -290,7 +289,7 @@ jobs:
           npx tsc --noEmit
 
   install-vscode:
-    needs: [ install-root, install-core, install-config-yaml ]
+    needs: [install-root, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -379,7 +378,7 @@ jobs:
           npm run lint
 
   core-tests:
-    needs: [ install-core, install-config-yaml ]
+    needs: [install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -443,7 +442,7 @@ jobs:
 
   vscode-get-test-file-matrix:
     runs-on: ubuntu-latest
-    needs: [ install-root, install-vscode, install-config-yaml ]
+    needs: [install-root, install-vscode, install-config-yaml]
     outputs:
       test_file_matrix: ${{ steps.vscode-get-test-file-matrix.outputs.test_file_matrix }}
     steps:
@@ -489,7 +488,7 @@ jobs:
 
   vscode-package-extension:
     runs-on: ubuntu-latest
-    needs: [ install-vscode, install-core, install-config-yaml ]
+    needs: [install-vscode, install-core, install-config-yaml]
     steps:
       - uses: actions/checkout@v4
 
@@ -533,7 +532,7 @@ jobs:
 
   vscode-download-e2e-dependencies:
     runs-on: ubuntu-latest
-    needs: [ install-vscode, install-core, install-config-yaml ]
+    needs: [install-vscode, install-core, install-config-yaml]
     steps:
       - uses: actions/checkout@v4
 
@@ -593,7 +592,7 @@ jobs:
       fail-fast: false
       matrix:
         test_file: ${{ fromJson(needs.vscode-get-test-file-matrix.outputs.test_file_matrix) }}
-        command: [ "e2e:ci:run", "e2e:ci:run-yaml" ]
+        command: ["e2e:ci:run", "e2e:ci:run-yaml"]
     steps:
       - uses: actions/checkout@v4
 
@@ -686,7 +685,6 @@ jobs:
           SANITIZED_FILENAME="${FILENAME//\//-}" # Replace / with - using bash parameter expansion
           echo "sanitized_test_file=${SANITIZED_FILENAME}" >> $GITHUB_OUTPUT
 
-
       - name: Find e2e log file
         if: always()
         run: |
@@ -701,7 +699,7 @@ jobs:
           path: extensions/vscode/e2e.log
 
   gui-tests:
-    needs: [ install-gui, install-core, install-config-yaml ]
+    needs: [install-gui, install-core, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -744,7 +742,7 @@ jobs:
           npm test
 
   jetbrains-tests:
-    needs: [ install-root, core-checks, install-config-yaml ]
+    needs: [install-root, core-checks, install-config-yaml]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
