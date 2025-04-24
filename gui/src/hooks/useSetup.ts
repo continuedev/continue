@@ -18,12 +18,11 @@ import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import {
   acceptToolCall,
   addContextItemsAtIndex,
-  setInactive,
-  setToolCallOutput,
   updateApplyState,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import { streamResponseAfterToolCall } from "../redux/thunks";
+import { cancelStream } from "../redux/thunks/cancelStream";
 import { refreshSessionMetadata } from "../redux/thunks/session";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
@@ -138,7 +137,7 @@ function useSetup() {
   // ON LOAD
   useEffect(() => {
     // Override persisted state
-    dispatch(setInactive());
+    dispatch(cancelStream());
 
     const jetbrains = isJetBrains();
     for (const colorVar of VSC_THEME_COLOR_VARS) {
@@ -223,7 +222,7 @@ function useSetup() {
   );
 
   useWebviewListener("setInactive", async () => {
-    dispatch(setInactive());
+    dispatch(cancelStream());
   });
 
   useWebviewListener("setTTSActive", async (status) => {
@@ -260,27 +259,34 @@ function useSetup() {
     "updateApplyState",
     async (state) => {
       dispatch(updateApplyState(state));
+      const lastHistoryMsg = history.at(-1);
+      const [streamId, toolCallId] = activeToolStreamId ?? [];
       if (
-        activeToolStreamId &&
-        state.streamId === activeToolStreamId[0] &&
-        state.status === "closed"
+        toolCallId &&
+        state.status === "closed" &&
+        lastHistoryMsg?.toolCallState?.toolCallId === toolCallId
       ) {
-        // const output: ContextItem = {
-        //   name: "Edit tool output",
-        //   content: "Completed edit",
-        //   description: "",
-        // };
-        dispatch(acceptToolCall());
-        dispatch(setToolCallOutput([]));
-        dispatch(
-          streamResponseAfterToolCall({
-            toolCallId: activeToolStreamId[1],
-            toolOutput: [],
-          }),
-        );
+        if (state.streamId === streamId) {
+          // const output: ContextItem = {
+          //   name: "Edit tool output",
+          //   content: "Completed edit",
+          //   description: "",
+          // };
+          dispatch(
+            acceptToolCall({
+              toolCallId,
+            }),
+          );
+          // dispatch(setToolCallOutput([]));
+          dispatch(
+            streamResponseAfterToolCall({
+              toolCallId,
+            }),
+          );
+        }
       }
     },
-    [activeToolStreamId],
+    [activeToolStreamId, history],
   );
 }
 

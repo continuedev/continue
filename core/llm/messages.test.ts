@@ -1,5 +1,5 @@
 import { ChatMessage } from "..";
-import { flattenMessages } from "./countTokens";
+import { flattenMessages } from "./messages";
 
 describe("flattenMessages", () => {
   it("should return an empty array when given an empty array", () => {

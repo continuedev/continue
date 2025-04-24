@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.1.24",
+  "version": "1.1.25",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -24,7 +24,7 @@
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
-    "node": ">=20.11.0"
+    "node": ">=20.19.0"
   },
   "engine-strict": true,
   "galleryBanner": {

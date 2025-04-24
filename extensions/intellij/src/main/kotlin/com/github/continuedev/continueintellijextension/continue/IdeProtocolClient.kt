@@ -24,6 +24,7 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -334,6 +335,14 @@ class IdeProtocolClient(
                         respond(result)
                     }
 
+                    "closeSidebar" -> {
+                        ApplicationManager.getApplication().invokeLater {
+                            val toolWindowManager = ToolWindowManager.getInstance(project)
+                            val toolWindow = toolWindowManager.getToolWindow("Continue")
+                            toolWindow?.hide()
+                        }
+                    }
+
                     "getSearchResults" -> {
                         val params = Gson().fromJson(
                             dataElement.toString(),
@@ -430,24 +439,28 @@ class IdeProtocolClient(
                         )
                         val filepath = params.filepath
 
-                        continuePluginService.sendToWebview("updateApplyState", mapOf(
-                            "streamId" to params.streamId,
-                            "status" to "streaming",
-                            "fileContent" to params.text,
-                            "toolCallId" to params.toolCallId,
-                            "filepath" to filepath
-                        ))
-
-
-                        fun closeStream () {
-                            continuePluginService.sendToWebview("updateApplyState", mapOf(
-                                "numDiffs" to 0,
+                        continuePluginService.sendToWebview(
+                            "updateApplyState", mapOf(
                                 "streamId" to params.streamId,
-                                "status" to "closed",
+                                "status" to "streaming",
                                 "fileContent" to params.text,
                                 "toolCallId" to params.toolCallId,
                                 "filepath" to filepath
-                            ))
+                            )
+                        )
+
+
+                        fun closeStream() {
+                            continuePluginService.sendToWebview(
+                                "updateApplyState", mapOf(
+                                    "numDiffs" to 0,
+                                    "streamId" to params.streamId,
+                                    "status" to "closed",
+                                    "fileContent" to params.text,
+                                    "toolCallId" to params.toolCallId,
+                                    "filepath" to filepath
+                                )
+                            )
                         }
 
                         var editor: Editor? = null;
@@ -493,7 +506,7 @@ class IdeProtocolClient(
 
                                         val selectedModels = config["selectedModelByRole"] as? Map<*, *>
                                         var applyCodeBlockModel = selectedModels?.get("apply") as? Map<*, *>
-                                        
+
                                         // If "apply" role model is not found, try "chat" role
                                         if (applyCodeBlockModel == null) {
                                             applyCodeBlockModel = selectedModels?.get("chat") as? Map<*, *>
@@ -555,8 +568,8 @@ class IdeProtocolClient(
                                 editor,
                                 rif?.range?.start?.line ?: 0,
                                 rif?.range?.end?.line ?: (editor.document.lineCount - 1),
-                                {}, 
-                                {}, 
+                                {},
+                                {},
                                 params.streamId,
                                 params.toolCallId
                             )

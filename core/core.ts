@@ -408,15 +408,21 @@ export class Core {
       if (!config) {
         return [];
       }
-      const items = await config.contextProviders
-        ?.find((provider) => provider.description.title === msg.data.title)
-        ?.loadSubmenuItems({
-          config,
-          ide: this.ide,
-          fetch: (url, init) =>
-            fetchwithRequestOptions(url, init, config.requestOptions),
-        });
-      return items || [];
+
+      try {
+        const items = await config.contextProviders
+          ?.find((provider) => provider.description.title === msg.data.title)
+          ?.loadSubmenuItems({
+            config,
+            ide: this.ide,
+            fetch: (url, init) =>
+              fetchwithRequestOptions(url, init, config.requestOptions),
+          });
+        return items || [];
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
     });
 
     on("context/getContextItems", this.getContextItems.bind(this));
@@ -665,7 +671,7 @@ export class Core {
 
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
       try {
-        const ignore = shouldIgnore(filepath, this.ide);
+        const ignore = await shouldIgnore(filepath, this.ide);
         if (!ignore) {
           recentlyEditedFilesCache.set(filepath, filepath);
         }
@@ -676,59 +682,44 @@ export class Core {
       }
     });
 
-    on(
-      "tools/call",
-      async ({ data: { toolCall, selectedModelTitle }, messageId }) => {
-        const { config } = await this.configHandler.loadConfig();
-        if (!config) {
-          throw new Error("Config not loaded");
-        }
+    on("tools/call", async ({ data: { toolCall } }) => {
+      const { config } = await this.configHandler.loadConfig();
+      if (!config) {
+        throw new Error("Config not loaded");
+      }
 
-        const tool = config.tools.find(
-          (t) => t.function.name === toolCall.function.name,
-        );
+      const tool = config.tools.find(
+        (t) => t.function.name === toolCall.function.name,
+      );
 
-        if (!tool) {
-          throw new Error(`Tool ${toolCall.function.name} not found`);
-        }
+      if (!tool) {
+        throw new Error(`Tool ${toolCall.function.name} not found`);
+      }
 
-        if (!config.selectedModelByRole.chat) {
-          throw new Error("No chat model selected");
-        }
+      if (!config.selectedModelByRole.chat) {
+        throw new Error("No chat model selected");
+      }
 
-        // Define a callback for streaming output updates
-        const onPartialOutput = (params: {
-          toolCallId: string;
-          contextItems: ContextItem[];
-        }) => {
-          this.messenger.send("toolCallPartialOutput", params);
-        };
+      // Define a callback for streaming output updates
+      const onPartialOutput = (params: {
+        toolCallId: string;
+        contextItems: ContextItem[];
+      }) => {
+        this.messenger.send("toolCallPartialOutput", params);
+      };
 
-        const contextItems = await callTool(
-          tool,
-          JSON.parse(toolCall.function.arguments || "{}"),
-          {
-            ide: this.ide,
-            llm: config.selectedModelByRole.chat,
-            fetch: (url, init) =>
-              fetchwithRequestOptions(url, init, config.requestOptions),
-            tool,
-            toolCallId: toolCall.id,
-            onPartialOutput,
-          },
-        );
+      return await callTool(tool, toolCall.function.arguments, {
+        ide: this.ide,
+        llm: config.selectedModelByRole.chat,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
+        tool,
+        toolCallId: toolCall.id,
+        onPartialOutput,
+      });
+    });
 
-        if (tool.faviconUrl) {
-          contextItems.forEach((item) => {
-            item.icon = tool.faviconUrl;
-          });
-        }
-
-        return { contextItems };
-      },
-    );
-
-    on("isItemTooBig", async ({ data: { item, selectedModelTitle } }) => {
+    on("isItemTooBig", async ({ data: { item } }) => {
       return this.isItemTooBig(item);
     });
 
@@ -927,7 +918,6 @@ export class Core {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
-      selectedModelTitle: string;
     }>,
   ) => {
     const { config } = await this.configHandler.loadConfig();
