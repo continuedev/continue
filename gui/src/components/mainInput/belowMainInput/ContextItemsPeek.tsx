@@ -18,7 +18,7 @@ interface ContextItemsPeekProps {
   isCurrentContextPeek: boolean;
   icon?: ComponentType<React.SVGProps<SVGSVGElement>>;
   title?: JSX.Element | string;
-  showWhenNoResults?: boolean;
+  showWhenNoResults?: string;
 }
 
 interface ContextItemsPeekItemProps {
@@ -195,7 +195,9 @@ function ContextItemsPeek({
           <ContextItemsPeekItem key={idx} contextItem={contextItem} />
         ))
       ) : (
-        <div className="pl-2 text-xs italic text-gray-400">No results</div>
+        <div className="pl-2 text-xs italic text-gray-400">
+          {showWhenNoResults}
+        </div>
       )}
     </ToggleDiv>
   );
