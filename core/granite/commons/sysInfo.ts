@@ -63,8 +63,8 @@ export function hasDiscreteGPU(gpus: GpuInfo[]): boolean {
 
 export function getRecommendedModels(systemInfo: SystemInfo) {
   const defaultGraniteModel = isHighEndMachine(systemInfo)
-    ? "granite3.2:8b" // 8B for powerful systems
-    : "granite3.2:2b"; // 2B for others
+    ? "granite3.3:8b" // 8B for powerful systems
+    : "granite3.3:2b"; // 2B for others
 
   return {
     defaultChatModel: defaultGraniteModel,

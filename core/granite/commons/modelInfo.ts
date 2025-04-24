@@ -8,12 +8,12 @@ export const DEFAULT_MODEL_INFO = new Map<string, ModelInfo>();
     digest: "",
   },
   {
-    id: "granite3.2:2b",
+    id: "granite3.3:2b",
     size: 1.5 * GB,
     digest: "",
   },
   {
-    id: "granite3.2:8b",
+    id: "granite3.3:8b",
     size: 4.9 * GB,
     digest: "",
   },

@@ -1,7 +1,7 @@
 import {
-  AssistantUnrolled,
-  ConfigYaml,
-  ModelConfig,
+    AssistantUnrolled,
+    ConfigYaml,
+    ModelConfig,
 } from "@continuedev/config-yaml";
 
 export const defaultContextProvidersVsCode = [
@@ -48,16 +48,16 @@ const BASE_GRANITE_CONFIG: Partial<ModelConfig> = {
 };
 
 export const DEFAULT_MODEL_GRANITE_SMALL: ModelConfig = {
-  name: "granite3.2:2b",
+  name: "granite3.3:2b",
   provider: "ollama",
-  model: "granite3.2:2b",
+  model: "granite3.3:2b",
   ...BASE_GRANITE_CONFIG,
 };
 
 export const DEFAULT_MODEL_GRANITE_LARGE: ModelConfig = {
-  name: "granite3.2:8b",
+  name: "granite3.3:8b",
   provider: "ollama",
-  model: "granite3.2:8b",
+  model: "granite3.3:8b",
   ...BASE_GRANITE_CONFIG,
 };
 

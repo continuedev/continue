@@ -9,12 +9,12 @@ export interface ModelRequirements {
 }
 
 export const MODEL_REQUIREMENTS: Record<string, ModelRequirements> = {
-  "granite3.2:2b": {
+  "granite3.3:2b": {
     recommendedMemoryBytes: 4 * GB,
     gpuRecommended: false,
     sizeBytes: Math.ceil(1.5 * GB),
   },
-  "granite3.2:8b": {
+  "granite3.3:8b": {
     recommendedMemoryBytes: 10 * GB,
     gpuRecommended: true,
     sizeBytes: Math.ceil(4.9 * GB),
