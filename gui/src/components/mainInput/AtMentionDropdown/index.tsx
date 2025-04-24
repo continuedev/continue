@@ -515,7 +515,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
                       ) : (
                         <DropdownIcon item={item} className="mr-2" />
                       )}
-                      <span title={item.id}>{item.title}</span>
+                      <span title={item.id} className="whitespace-nowrap">{item.title}</span>
                       {"  "}
                     </div>
                     <span
@@ -562,7 +562,7 @@ const AtMentionDropdown = forwardRef((props: AtMentionDropdownProps, ref) => {
               );
             })
           ) : (
-            <ItemDiv className="item">No results</ItemDiv>
+            <ItemDiv className="item whitespace-nowrap">No results</ItemDiv>
           )}
         </>
       )}
