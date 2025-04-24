@@ -1,8 +1,8 @@
 import { useLump } from "../LumpContext";
 import { ContextSection } from "./ContextSection";
 import DocsSection from "./docs/DocsSection";
-import { ErrorSection } from "./ErrorSection";
-import { MCPSection } from "./MCPSection";
+import { ErrorSection } from "./errors/ErrorSection";
+import { MCPSection } from "./mcp/MCPSection";
 import { ModelsSection } from "./ModelsSection";
 import { PromptsSection } from "./PromptsSection";
 import { RulesSection } from "./RulesSection";
