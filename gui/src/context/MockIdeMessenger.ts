@@ -95,7 +95,6 @@ export class MockIdeMessenger implements IIdeMessenger {
     messageType: T,
     data: FromWebviewProtocol[T][0],
   ): Promise<WebviewSingleProtocolMessage<T>> {
-    console.log("request: ", messageType);
     const content = await defaultMockHandleMessage(messageType, data);
     return {
       status: "success",

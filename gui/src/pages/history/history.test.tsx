@@ -19,11 +19,15 @@ describe("history Page test", () => {
     expect(screen.getByTestId("history-sessions-note")).toBeInTheDocument();
   });
 
-  it.skip("History shows the first item in the list", async () => {
-    await act(async () => renderWithProviders(<HistoryPage />));
-    // renderWithProviders(<HistoryPage />);
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    const sessionElement = await screen.findByText("Session 1");
+  it("History shows the first item in the list", async () => {
+    renderWithProviders(<HistoryPage />);
+    const sessionElement = await screen.findByText(
+      "Session 1",
+      {},
+      {
+        timeout: 5000,
+      },
+    );
     expect(sessionElement).toBeInTheDocument();
   });
 });

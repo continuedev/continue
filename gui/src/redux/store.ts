@@ -109,7 +109,9 @@ const persistedReducer = persistReducer<ReturnType<typeof rootReducer>>(
   rootReducer,
 );
 
-export function setupStore() {
+export function setupStore(options: { ideMessenger?: IIdeMessenger }) {
+  const ideMessenger = options.ideMessenger ?? new IdeMessenger();
+
   const logger = createLogger({
     // Customize logger options if needed
     collapsed: true, // Collapse console groups by default
@@ -126,7 +128,7 @@ export function setupStore() {
         serializableCheck: false,
         thunk: {
           extraArgument: {
-            ideMessenger: new IdeMessenger(),
+            ideMessenger,
           },
         },
       }),
@@ -148,7 +150,7 @@ export type AppThunkDispatch = ThunkDispatch<
   UnknownAction
 >;
 
-export const store = setupStore();
+export const store = setupStore({});
 
 export type RootState = ReturnType<typeof rootReducer>;
 
