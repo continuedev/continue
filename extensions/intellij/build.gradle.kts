@@ -185,7 +185,8 @@ tasks {
         channels.set(listOf(environment("RELEASE_CHANNEL").getOrElse("eap")))
 
         // We always hide the stable releases until a few days of EAP have proven them stable
-        hidden.set(environment("RELEASE_CHANNEL").map { it == "default" }.getOrElse(false))
+        val releaseChannel = environment("RELEASE_CHANNEL").getOrElse("eap")
+        hidden.set(releaseChannel == "default")    
     }
 
     runIde {
