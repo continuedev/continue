@@ -125,11 +125,7 @@ async function package(target, os, arch, exe) {
     lancePackageToInstall,
     "@lancedb",
   );
-  // *** esbuild ***
-  // await installNodeModuleInTempDirAndCopyToCurrent(
-  //   "esbuild@0.17.19",
-  //   "@esbuild",
-  // );
+
   await downloadEsbuildBinary(target);
 
   // *** sqlite ***

@@ -391,7 +391,7 @@ const isMacTarget = target?.startsWith("darwin");
     // Download esbuild from npm in tmp and copy over
     console.log("npm installing esbuild binary");
     await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.17.19",
+      "esbuild@0.25.3",
       "@esbuild",
     );
   }
