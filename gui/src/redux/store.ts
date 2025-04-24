@@ -1,4 +1,9 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
+import {
+  combineReducers,
+  configureStore,
+  ThunkDispatch,
+  UnknownAction,
+} from "@reduxjs/toolkit";
 import { createLogger } from "redux-logger";
 import {
   createMigrate,
@@ -130,10 +135,18 @@ export function setupStore() {
   });
 }
 
+export type ThunkExtrasType = { ideMessenger: IIdeMessenger };
+
 export type ThunkApiType = {
   state: RootState;
-  extra: { ideMessenger: IIdeMessenger };
+  extra: ThunkExtrasType;
 };
+
+export type AppThunkDispatch = ThunkDispatch<
+  RootState,
+  ThunkExtrasType,
+  UnknownAction
+>;
 
 export const store = setupStore();
 

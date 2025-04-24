@@ -57,7 +57,10 @@ export function ToolCallStatusMessage({
         <span>calling the</span> {defaultToolDescription}
       </>
     );
-  } else if (toolCallState.status === "canceled") {
+  } else if (
+    toolCallState.status === "canceled" ||
+    toolCallState.status === "errored"
+  ) {
     intro = "tried to";
     message = futureMessage;
   }

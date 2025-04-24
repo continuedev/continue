@@ -12,7 +12,7 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { callTool } from "./callTool";
+import { callCurrentTool } from "./callCurrentTool";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -107,13 +107,17 @@ export const streamNormalInput = createAsyncThunk<
     // If it's a tool call that is automatically accepted, we should call it
     const toolCallState = selectCurrentToolCall(getState());
     if (toolCallState) {
-      dispatch(setToolGenerated());
+      dispatch(
+        setToolGenerated({
+          toolCallId: toolCallState.toolCallId,
+        }),
+      );
 
       if (
         toolSettings[toolCallState.toolCall.function.name] ===
         "allowedWithoutPermission"
       ) {
-        const response = await dispatch(callTool());
+        const response = await dispatch(callCurrentTool());
         unwrapResult(response);
       }
     }

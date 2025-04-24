@@ -428,6 +428,7 @@ export type ToolStatus =
   | "generating"
   | "generated"
   | "calling"
+  | "errored"
   | "done"
   | "canceled";
 

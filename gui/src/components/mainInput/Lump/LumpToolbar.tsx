@@ -5,9 +5,9 @@ import { AnimatedEllipsis } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
-import { callTool } from "../../../redux/thunks/callTool";
+import { callCurrentTool } from "../../../redux/thunks/callCurrentTool";
+import { cancelCurrentToolCall } from "../../../redux/thunks/cancelCurrentToolCall";
 import { cancelStream } from "../../../redux/thunks/cancelStream";
-import { cancelTool } from "../../../redux/thunks/cancelTool";
 import { getFontSize, getMetaKeyLabel } from "../../../util";
 import { EnterButton } from "../InputToolbar/EnterButton";
 import { BlockSettingsTopToolbar } from "./BlockSettingsTopToolbar";
@@ -50,11 +50,11 @@ export function LumpToolbar() {
       if (metaKey && event.key === "Enter") {
         event.preventDefault();
         event.stopPropagation();
-        dispatch(callTool());
+        dispatch(callCurrentTool());
       } else if (metaKey && event.key === "Backspace") {
         event.preventDefault();
         event.stopPropagation();
-        dispatch(cancelTool());
+        dispatch(cancelCurrentToolCall());
       }
     }
   };
@@ -108,7 +108,7 @@ export function LumpToolbar() {
         <div className="flex gap-2 pb-0.5">
           <StopButton
             className="text-gray-400"
-            onClick={() => dispatch(cancelTool())}
+            onClick={() => dispatch(cancelCurrentToolCall())}
             data-testid="reject-tool-call-button"
           >
             {getMetaKeyLabel()} ⌫ Cancel
@@ -116,7 +116,7 @@ export function LumpToolbar() {
           <EnterButton
             isPrimary={true}
             className="text-gray-400"
-            onClick={() => dispatch(callTool())}
+            onClick={() => dispatch(callCurrentTool())}
             data-testid="accept-tool-call-button"
           >
             {getMetaKeyLabel()} ⏎ Continue

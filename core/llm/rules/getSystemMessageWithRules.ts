@@ -1,4 +1,4 @@
-import { RuleWithSource, UserChatMessage } from "../..";
+import { RuleWithSource, ToolResultChatMessage, UserChatMessage } from "../..";
 import { renderChatMessage } from "../../util/messageContent";
 import { extractPathsFromCodeBlocks } from "../utils/extractPathsFromCodeBlocks";
 import { isRuleActive } from "./isRuleActive";
@@ -10,7 +10,7 @@ export const getSystemMessageWithRules = ({
   currentModel,
 }: {
   baseSystemMessage?: string;
-  userMessage: UserChatMessage | undefined;
+  userMessage: UserChatMessage | ToolResultChatMessage | undefined;
   rules: RuleWithSource[];
   currentModel: string;
 }) => {
